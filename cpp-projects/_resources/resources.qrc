@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/shaders">
+        <file>shaders/depth_camera_mesh.frag.glsl</file>
+        <file>shaders/depth_camera_mesh.vert.glsl</file>
+        <file>shaders/fragment.frag.glsl</file>
+        <file>shaders/lines.frag.glsl</file>
+        <file>shaders/lines.vert.glsl</file>
+        <file>shaders/mesh_lighting.frag.glsl</file>
+        <file>shaders/mesh_lighting.vert.glsl</file>
+        <file>shaders/mesh_texture.frag.glsl</file>
+        <file>shaders/mesh_texture.vert.glsl</file>
+        <file>shaders/vertex.vert.glsl</file>
+    </qresource>
+    <qresource prefix="/">
+        <file alias="DefaultStyle">nodes/DefaultStyle.json</file>
+    </qresource>
+    <qresource prefix="/splash">
+        <file alias="ex_vr_splash">splash/exvr_splash.png</file>
+    </qresource>
+</RCC>

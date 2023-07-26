@@ -1,0 +1,165 @@
+
+/*******************************************************************************
+** Toolset-k4-scaner-manager                                                  **
+** MIT License                                                                **
+** Copyright (c) [2018] [Florian Lance]                                       **
+**                                                                            **
+** Permission is hereby granted, free of charge, to any person obtaining a    **
+** copy of this software and associated documentation files (the "Software"), **
+** to deal in the Software without restriction, including without limitation  **
+** the rights to use, copy, modify, merge, publish, distribute, sublicense,   **
+** and/or sell copies of the Software, and to permit persons to whom the      **
+** Software is furnished to do so, subject to the following conditions:       **
+**                                                                            **
+** The above copyright notice and this permission notice shall be included in **
+** all copies or substantial portions of the Software.                        **
+**                                                                            **
+** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR **
+** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,   **
+** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL    **
+** THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER **
+** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING    **
+** FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        **
+** DEALINGS IN THE SOFTWARE.                                                  **
+**                                                                            **
+********************************************************************************/
+
+#pragma once
+
+// base
+#include "network/kinect4/k4_server_network_settings.hpp"
+#include "camera/kinect4/k4_display_settings.hpp"
+#include "camera/kinect4/k4_color_settings.hpp"
+#include "camera/kinect4/k4_device_settings.hpp"
+#include "camera/kinect4/k4_filters.hpp"
+#include "camera/kinect4/k4_model.hpp"
+#include "camera/kinect4/k4_delay.hpp"
+#include "camera/kinect4/k4_recorder_settings.hpp"
+#include "camera/kinect4/k4_calibrator_settings.hpp"
+#include "camera/kinect4/k4_player_settings.hpp"
+
+// 3d-engine
+#include "imgui-tb/imgui_ui_drawer.hpp"
+
+// local
+#include "k4sm_ui_settings.hpp"
+
+#include "k4sm_misc.hpp"
+
+namespace tool {
+
+struct K4GrabberNetworkSettings{
+
+    bool connected = false;
+    std::string name = "0 xxx.xxx.xxx";
+
+    std::string readingAdress;
+    int readingPort;
+    std::string sendingAdress;
+    int sendingPort;
+
+    size_t lastFrameIdReceived = 0;
+};
+
+struct K4GrabberSettings{
+
+    size_t id = 0;
+    K4GrabberNetworkSettings network;
+
+    camera::K4Filters filters;
+    std::string filtersFilePath;
+    camera::K4Filters calibrationFilters = camera::K4Filters::default_init_for_calibration();
+    std::string calibrationFiltersFilePath;
+    camera::K4DeviceSettings device;
+    std::string deviceFilePath;
+    camera::K4ColorSettings color;
+    std::string colorFilePath;
+    camera::K4Model model;
+    std::string modelFilePath;
+    camera::K4Delay delay;
+
+    camera::K4CloudDisplaySettings cloudDisplay;    
+
+    std::int64_t synchroAverageDiff = 0;
+};
+
+struct K4SMGlobalStates{
+    camera::K4RecorderStates recorder;
+    camera::K4PlayerStates player;
+    camera::K4CalibratorStates calibrator;
+};
+
+struct K4SMGlobalDrawerSettings{    
+    graphics::K4CalibratorDrawerSettings calibrator;
+};
+
+
+struct K4SMGlobalSettings{
+
+    bool useNormalFilteringSettings = true;
+
+    K4ServerNetworkSettings network;
+    std::string networkFilePath;
+    ui::K4SMUiSettings ui;
+    camera::K4SceneDisplaySettings sceneDisplay;
+
+    camera::K4RecorderSettings recorder;
+    camera::K4PlayerSettings player;
+    camera::K4CalibratorSettings calibrator;
+};
+
+struct K4SMSettings{
+
+    auto initialize() -> bool;
+
+    // getters
+    static auto host_name() -> std::string;    
+
+    // settings
+    auto process_settings_action(SAction action, STarget target, SType type, SFile file, size_t id) -> void;
+    auto update_model(size_t id, const camera::K4Model &model) -> void;
+
+    // states
+    auto update_recorder_states(camera::K4RecorderStates recorderStates) -> void;
+    auto update_player_states(camera::K4PlayerStates playerStates) -> void;
+    auto update_calibrator_states(camera::K4CalibratorStates calibratorStates) -> void;
+
+
+    // trigger
+    auto trigger_all_models() -> void;
+    auto trigger_all_cloud_display() -> void;
+
+    // tests
+    auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
+
+    K4SMGlobalSettings globalSet;
+    K4SMGlobalStates globalSta;
+    K4SMGlobalDrawerSettings globalDrawerSet;
+    std::vector<K4GrabberSettings> grabbersSet;
+
+    // # colors
+    static const inline ImVec4 selectedC            = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    static const inline ImVec4 connectedSelectedC   = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+    static const inline ImVec4 unselectedC          = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+    static const inline ImVec4 connectedUnselectedC = ImVec4(0.0f, 0.6f, 0.0f, 1.0f);
+
+private:
+
+    std::vector<std::vector<geo::Pt2<int>>> pencils;
+
+    static const inline std::vector<geo::Pt4f> cloudsColors = {
+        {1.0f,0.0f,0.0f, 1.0f},
+        {0.0f,1.0f,0.0f, 1.0f},
+        {0.0f,0.0f,1.0f, 1.0f},
+        {1.0f,1.0f,0.0f, 1.0f},
+        {0.0f,1.0f,1.0f, 1.0f},
+        {1.0f,0.0f,1.0f, 1.0f},
+        {0.5f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,0.5f, 1.0f},
+        {0.5f,0.0f,0.5f, 1.0f},
+        {1.0f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,1.0f, 1.0f},
+        {1.0f,0.0f,0.5f, 1.0f},
+    };
+};
+}

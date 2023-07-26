@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="DefaultStyle">DefaultStyle.json</file>
+        <file>convert.png</file>
+    </qresource>
+</RCC>

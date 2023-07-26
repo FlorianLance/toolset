@@ -1,0 +1,650 @@
+'098d61f3,Florian Lance,Wed, 26 Jul 2023 11:28:54 +0200,up,'
+ 149 files changed, 1570 insertions(+), 433271 deletions(-)
+
+'986262a3,Florian Lance,Tue, 11 Jul 2023 18:19:08 +0200,K4Manager refactoring,'
+ 87 files changed, 3861 insertions(+), 2261 deletions(-)
+
+'e7dbc9fa,Florian Lance,Tue, 4 Jul 2023 18:05:22 +0200,Model view controller refactoring k4 grabber,'
+ 39 files changed, 553 insertions(+), 607 deletions(-)
+
+'db236fd1,Florian Lance,Mon, 3 Jul 2023 18:03:23 +0200,Refactor tests,'
+ 68 files changed, 2152 insertions(+), 1238 deletions(-)
+
+'01731b87,Florian Lance,Wed, 21 Jun 2023 17:37:17 +0200,k4 compression refactoring,'
+ 25 files changed, 814 insertions(+), 736 deletions(-)
+
+'4fc55d1a,Florian Lance,Mon, 19 Jun 2023 17:03:51 +0200,k4player,'
+ 29 files changed, 1067 insertions(+), 335 deletions(-)
+
+'f4c34801,Florian Lance,Wed, 31 May 2023 18:28:57 +0200,K4SM MVC,'
+ 91 files changed, 2239 insertions(+), 960 deletions(-)
+
+'c8fe4662,Florian Lance,Thu, 4 May 2023 09:30:52 +0200,Rework k4 settings and cloud data,'
+ 190 files changed, 7231 insertions(+), 5522 deletions(-)
+
+'ec3f8fe6,Florian Lance,Wed, 12 Apr 2023 18:32:25 +0200,Add K4Bodies detection,'
+ 65 files changed, 1465 insertions(+), 492 deletions(-)
+
+'3c7ccd36,Florian Lance,Mon, 3 Apr 2023 18:06:20 +0200,Recorder refactoring,'
+ 88 files changed, 2645 insertions(+), 3054 deletions(-)
+
+'05af0647,Florian Lance,Tue, 28 Mar 2023 22:53:19 +0200,Fix calibration seed,'
+ 7 files changed, 126 insertions(+), 71 deletions(-)
+
+'a1bfb36a,Florian Lance,Thu, 23 Mar 2023 17:20:58 +0100,Calibration / Colors / K4,'
+ 31 files changed, 140 insertions(+), 105 deletions(-)
+
+'3abf7395,Florian Lance,Tue, 21 Mar 2023 16:07:28 +0100,Delay for k4device,'
+ 63 files changed, 896 insertions(+), 761 deletions(-)
+
+'ad848d94,Florian Lance,Mon, 20 Mar 2023 20:41:17 +0100,Delay for K4 frames,'
+ 52 files changed, 630 insertions(+), 327 deletions(-)
+
+'6f1cca5b,Florian Lance,Thu, 16 Mar 2023 17:29:49 +0100,Calib ui drawers refactoring,'
+ 52 files changed, 2002 insertions(+), 1464 deletions(-)
+
+'3b9a67e0,Florian Lance,Tue, 14 Mar 2023 18:16:57 +0100,Shaders reloading,'
+ 48 files changed, 637 insertions(+), 450 deletions(-)
+
+'24468a00,Florian Lance,Mon, 13 Mar 2023 18:11:05 +0100,End geo::mat refactoring,'
+ 95 files changed, 1228 insertions(+), 1053 deletions(-)
+
+'484cdf22,Florian Lance,Thu, 9 Mar 2023 23:35:38 +0100,geometry refactoring,'
+ 91 files changed, 3523 insertions(+), 3313 deletions(-)
+
+'43a230b0,Florian Lance,Tue, 28 Feb 2023 23:08:05 +0100,Move header only libs / fix color control settings for k4device / Replace std::unordered_map,'
+ 179 files changed, 134053 insertions(+), 778 deletions(-)
+
+'2004f99a,Florian Lance,Sun, 29 Jan 2023 23:23:38 +0100,Clean LFS,'
+ 141 files changed, 432626 insertions(+)
+
+'9d912cc0,Florian Lance,Sun, 29 Jan 2023 23:20:44 +0100,Clean LFS,'
+ 397 files changed, 436542 deletions(-)
+
+'69673cda,Florian Lance,Sun, 29 Jan 2023 23:04:44 +0100,Changes for compiling with Qt5.15 and Qt6.4 / remove lfs,'
+ 73 files changed, 1670 insertions(+), 1530 deletions(-)
+
+'64f8968c,Florian Lance,Thu, 5 Jan 2023 22:33:24 +0100,Update .gitignore,'
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+'015b0b4d,Florian Lance,Thu, 5 Jan 2023 22:32:42 +0100,Add build sub directories,'
+ 563 files changed, 441093 insertions(+), 2 deletions(-)
+
+'12dccc19,Florian Lance,Thu, 5 Jan 2023 22:22:12 +0100,Add k4grabber / k4manager / guardian / scaner-manager / scaner-grabber projects,'
+ 122 files changed, 37854 insertions(+), 26 deletions(-)
+
+'5d32e73e,Florian Lance,Tue, 22 Nov 2022 13:24:41 +0100,Update k4_device.cpp,'
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+'19d6a1c8,Florian Lance,Tue, 22 Nov 2022 10:40:43 +0100,Cloud center,'
+ 3 files changed, 22 insertions(+), 28 deletions(-)
+
+'636422df,Florian Lance,Thu, 17 Nov 2022 11:09:02 +0100,K4 device runtime error management,'
+ 6 files changed, 41 insertions(+), 25 deletions(-)
+
+'b64b1ef3,Florian Lance,Wed, 16 Nov 2022 16:23:23 +0100,Fix full compression sending crash,'
+ 9 files changed, 69 insertions(+), 76 deletions(-)
+
+'b94b787d,Florian Lance,Mon, 14 Nov 2022 17:26:01 +0100,K4,'
+ 8 files changed, 166 insertions(+), 177 deletions(-)
+
+'deb12e06,Florian Lance,Wed, 9 Nov 2022 14:59:44 +0100,udp infos,'
+ 10 files changed, 92 insertions(+), 23 deletions(-)
+
+'1b0a3048,Florian Lance,Tue, 8 Nov 2022 17:31:09 +0100,Device k4 close state,'
+ 7 files changed, 249 insertions(+), 248 deletions(-)
+
+'c6cccbce,Florian Lance,Thu, 3 Nov 2022 17:33:21 +0100,Update qt_convertors.hpp,'
+ 1 file changed, 12 insertions(+), 16 deletions(-)
+
+'02696946,Florian Lance,Wed, 2 Nov 2022 17:36:08 +0100,K4 data,'
+ 5 files changed, 49 insertions(+), 2 deletions(-)
+
+'83c02915,Florian Lance,Tue, 1 Nov 2022 11:58:43 +0100,K4 volumetric invalid header,'
+ 3 files changed, 31 insertions(+), 4 deletions(-)
+
+'96c66d86,Florian Lance,Mon, 31 Oct 2022 17:34:41 +0100,Update ex_select_color_w.cpp,'
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+'e30bd33f,Florian Lance,Tue, 25 Oct 2022 14:38:13 +0200,K4 server,'
+ 5 files changed, 16 insertions(+), 24 deletions(-)
+
+'dbce644e,Florian Lance,Tue, 25 Oct 2022 11:55:37 +0200,Update k4_server_connection.cpp,'
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+'3dd3dc66,Florian Lance,Mon, 24 Oct 2022 13:58:53 +0200,k4 server,'
+ 5 files changed, 12 insertions(+), 5 deletions(-)
+
+'7fdc1599,Florian Lance,Thu, 20 Oct 2022 17:43:42 +0200,Fix K4 dll,'
+ 11 files changed, 133 insertions(+), 74 deletions(-)
+
+'3151c107,Florian Lance,Wed, 19 Oct 2022 17:46:52 +0200,k4 feedbacks,'
+ 7 files changed, 56 insertions(+), 79 deletions(-)
+
+'1e30784d,Florian Lance,Thu, 13 Oct 2022 17:44:52 +0200,Fix colored cloud init,'
+ 9 files changed, 53 insertions(+), 76 deletions(-)
+
+'a1305892,Florian Lance,Tue, 11 Oct 2022 16:48:56 +0200,k4 server data,'
+ 5 files changed, 223 insertions(+), 108 deletions(-)
+
+'6c02e42c,Florian Lance,Mon, 10 Oct 2022 17:13:07 +0200,server data,'
+ 2 files changed, 32 insertions(+), 10 deletions(-)
+
+'2e92c97b,Florian Lance,Mon, 10 Oct 2022 16:56:44 +0200,k4 device mutex,'
+ 9 files changed, 141 insertions(+), 64 deletions(-)
+
+'7835b3be,Florian Lance,Wed, 7 Sep 2022 17:17:28 +0200,mutli binary settings,'
+ 20 files changed, 261 insertions(+), 191 deletions(-)
+
+'d5bfbc57,Florian Lance,Tue, 6 Sep 2022 18:39:19 +0200,Multi settings system,'
+ 28 files changed, 699 insertions(+), 423 deletions(-)
+
+'2637162b,Florian Lance,Thu, 1 Sep 2022 17:48:55 +0200,Fix k4 cloud resource id capture,'
+ 3 files changed, 38 insertions(+), 31 deletions(-)
+
+'9df19dff,Florian Lance,Thu, 25 Aug 2022 17:31:55 +0200,k4 network refactoring,'
+ 27 files changed, 1404 insertions(+), 265 deletions(-)
+
+'665f8c24,Florian Lance,Wed, 24 Aug 2022 17:55:14 +0200,Add k4sm in network,'
+ 19 files changed, 1341 insertions(+), 260 deletions(-)
+
+'8fae414a,Florian Lance,Tue, 16 Aug 2022 17:50:35 +0200,Add color hsv covnerter,'
+ 8 files changed, 478 insertions(+), 48 deletions(-)
+
+'db2b5549,Florian Lance,Mon, 15 Aug 2022 17:35:34 +0200,udp sending packets refactoring,'
+ 14 files changed, 182 insertions(+), 90 deletions(-)
+
+'8d544f4b,Florian Lance,Thu, 11 Aug 2022 17:50:28 +0200,binary settings,'
+ 9 files changed, 95 insertions(+), 14 deletions(-)
+
+'adf7176a,Florian Lance,Wed, 10 Aug 2022 17:58:08 +0200,io data and k4 drawers,'
+ 13 files changed, 569 insertions(+), 337 deletions(-)
+
+'db896cf6,Florian Lance,Tue, 9 Aug 2022 17:53:22 +0200,K4 drawers,'
+ 8 files changed, 398 insertions(+), 136 deletions(-)
+
+'fca2d9ac,Florian Lance,Thu, 4 Aug 2022 16:27:26 +0200,bitmask,'
+ 9 files changed, 474 insertions(+), 186 deletions(-)
+
+'0286e141,Florian Lance,Wed, 3 Aug 2022 18:23:33 +0200,Sphere center algorithm,'
+ 13 files changed, 538 insertions(+), 160 deletions(-)
+
+'ac363ca1,Florian Lance,Tue, 2 Aug 2022 17:40:47 +0200,Imgui fbo,'
+ 15 files changed, 188 insertions(+), 59 deletions(-)
+
+'64ddcc51,Florian Lance,Thu, 28 Jul 2022 17:33:27 +0200,K4 Types,'
+ 5 files changed, 6 insertions(+), 14 deletions(-)
+
+'f6bb8585,Florian Lance,Wed, 27 Jul 2022 15:35:29 +0200,K4 device colors settings,'
+ 7 files changed, 266 insertions(+), 24 deletions(-)
+
+'d8a61a63,Florian Lance,Tue, 26 Jul 2022 17:09:59 +0200,k4a drawers,'
+ 16 files changed, 157 insertions(+), 167 deletions(-)
+
+'f34ead5a,Florian Lance,Mon, 25 Jul 2022 17:35:26 +0200,K4a drawers,'
+ 7 files changed, 563 insertions(+), 185 deletions(-)
+
+'9ade457c,Florian Lance,Wed, 20 Jul 2022 18:06:17 +0200,Format fix,'
+ 18 files changed, 129 insertions(+), 131 deletions(-)
+
+'83a76bfc,Florian Lance,Tue, 19 Jul 2022 17:41:49 +0200,K4 scene settings,'
+ 5 files changed, 67 insertions(+), 36 deletions(-)
+
+'cb0eb37d,Florian Lance,Tue, 19 Jul 2022 13:01:11 +0200,Update qt_convertors.hpp,'
+ 1 file changed, 4 insertions(+)
+
+'18e07fbd,Florian Lance,Wed, 13 Jul 2022 17:01:19 +0200,Fix k4device crash,'
+ 4 files changed, 13 insertions(+), 7 deletions(-)
+
+'c57ba771,Florian Lance,Tue, 12 Jul 2022 18:53:42 +0200,Add convertors,'
+ 4 files changed, 37 insertions(+), 20 deletions(-)
+
+'f3a0947c,Florian Lance,Mon, 11 Jul 2022 14:51:14 +0200,Add new k4 types,'
+ 5 files changed, 18 insertions(+), 15 deletions(-)
+
+'bb032550,Florian Lance,Mon, 11 Jul 2022 14:44:27 +0200,Update id_key.hpp,'
+ 1 file changed, 1 insertion(+)
+
+'0b756a7e,Florian Lance,Wed, 6 Jul 2022 17:34:44 +0200,K4Settings,'
+ 5 files changed, 66 insertions(+), 14 deletions(-)
+
+'aec9d225,Florian Lance,Wed, 29 Jun 2022 17:01:42 +0200,Update ex_widgets_types.hpp,'
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+'90cd046e,Florian Lance,Tue, 28 Jun 2022 12:58:55 +0200,Add install dependencies script,'
+ 3 files changed, 144 insertions(+), 37 deletions(-)
+
+'0d2b14c2,Florian Lance,Mon, 27 Jun 2022 17:38:49 +0200,Update .gitignore,'
+ 1 file changed, 4 insertions(+)
+
+'4c62f148,Florian Lance,Mon, 27 Jun 2022 17:29:28 +0200,Remove thirdparty/resources/build from lfs,'
+ 16728 files changed, 3396085 deletions(-)
+
+'12ee0d47,Florian Lance,Tue, 21 Jun 2022 17:22:57 +0200,Update qt_str.hpp,'
+ 1 file changed, 7 insertions(+)
+
+'099e8e72,Florian Lance,Mon, 20 Jun 2022 17:13:43 +0200,Mouse axis and position,'
+ 1 file changed, 23 insertions(+)
+
+'8e0b140f,Florian Lance,Thu, 16 Jun 2022 10:02:20 +0200,Typo,'
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+'c058ced4,Florian Lance,Tue, 7 Jun 2022 13:37:13 +0200,Remove lib,'
+ 360 files changed, 69863 deletions(-)
+
+'8ea0a6b4,Florian Lance,Thu, 2 Jun 2022 10:45:45 +0200,Alias min/max,'
+ 1 file changed, 19 insertions(+), 11 deletions(-)
+
+'70d88d8d,Florian Lance,Wed, 25 May 2022 17:45:32 +0200,Update qt_logger.cpp,'
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+'27a86cb4,Florian Lance,Mon, 23 May 2022 13:41:38 +0200,Widgets types fix,'
+ 2 files changed, 52 insertions(+), 24 deletions(-)
+
+'9a6913ae,Florian Lance,Thu, 19 May 2022 17:19:01 +0200,Fix grabber display mode,'
+ 6 files changed, 379 insertions(+), 379 deletions(-)
+
+'8695b524,Florian Lance,Wed, 18 May 2022 17:59:36 +0200,Update grabber_parameters.ui,'
+ 1 file changed, 42 insertions(+), 27 deletions(-)
+
+'226a68d8,Florian Lance,Wed, 18 May 2022 17:54:48 +0200,Remove old code,'
+ 6 files changed, 628 insertions(+), 762 deletions(-)
+
+'74df1db9,Florian Lance,Wed, 18 May 2022 10:21:18 +0200,Refactor id key,'
+ 8 files changed, 175 insertions(+), 104 deletions(-)
+
+'93cd1101,Florian Lance,Mon, 16 May 2022 17:51:19 +0200,Id key,'
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+'98f78a1d,Florian Lance,Thu, 12 May 2022 15:52:50 +0200,Id Key sets,'
+ 4 files changed, 69 insertions(+), 47 deletions(-)
+
+'8a5bb401,Florian Lance,Wed, 11 May 2022 18:29:46 +0200,Update id_key.hpp,'
+ 1 file changed, 41 insertions(+), 52 deletions(-)
+
+'0f43c5a4,Florian Lance,Wed, 4 May 2022 17:06:49 +0200,Paths,'
+ 4 files changed, 20 insertions(+), 3 deletions(-)
+
+'c1fc97b5,Florian Lance,Tue, 3 May 2022 17:37:52 +0200,Fix node caption,'
+ 54 files changed, 2401 insertions(+), 2498 deletions(-)
+
+'2d38c5ad,Florian Lance,Wed, 27 Apr 2022 17:39:51 +0200,Rework drawers system,'
+ 57 files changed, 5283 insertions(+), 361 deletions(-)
+
+'7d8fc420,Florian Lance,Tue, 26 Apr 2022 17:32:47 +0200,Frame compressor,'
+ 2 files changed, 5 insertions(+), 55 deletions(-)
+
+'b8e265c6,Florian Lance,Mon, 25 Apr 2022 17:55:47 +0200,Fbo drawer,'
+ 4 files changed, 73 insertions(+), 28 deletions(-)
+
+'79542c2b,Florian Lance,Thu, 14 Apr 2022 17:41:37 +0200,K4_networking,'
+ 24 files changed, 554 insertions(+), 482 deletions(-)
+
+'bbc63cb1,Florian Lance,Thu, 14 Apr 2022 13:16:18 +0200,Update argument.cpp,'
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+'a952c9de,Florian Lance,Thu, 14 Apr 2022 11:36:08 +0200,Modify ui types,'
+ 5 files changed, 36 insertions(+), 23 deletions(-)
+
+'c75e3de7,Florian Lance,Wed, 13 Apr 2022 18:17:38 +0200,Add init_from_any_array,'
+ 5 files changed, 26 insertions(+), 1 deletion(-)
+
+'22a40409,Florian Lance,Tue, 12 Apr 2022 17:04:12 +0200,K4 refactor,'
+ 14 files changed, 317 insertions(+), 286 deletions(-)
+
+'c957a86e,Florian Lance,Thu, 7 Apr 2022 17:18:48 +0200,k4 drawers,'
+ 21 files changed, 346 insertions(+), 136 deletions(-)
+
+'95aeb521,Florian Lance,Wed, 6 Apr 2022 17:06:20 +0200,Imgui draw utility,'
+ 19 files changed, 1035 insertions(+), 193 deletions(-)
+
+'73563d81,Florian Lance,Tue, 5 Apr 2022 17:24:18 +0200,K4 network settings,'
+ 3 files changed, 52 insertions(+), 39 deletions(-)
+
+'ef9f6c09,Florian Lance,Mon, 4 Apr 2022 17:20:44 +0200,Add gui subdirectory,'
+ 80 files changed, 440 insertions(+), 364 deletions(-)
+
+'18c48b9d,Florian Lance,Wed, 30 Mar 2022 18:22:33 +0200,Add ex_experiment/ex_element,'
+ 15 files changed, 680 insertions(+), 553 deletions(-)
+
+'38fbd17d,Florian Lance,Mon, 28 Mar 2022 14:53:50 +0200,Ad new label settings,'
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+'fd183c86,Florian Lance,Wed, 23 Mar 2022 08:25:17 +0100,qt-logger debug mode,'
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+'efc21e5c,Florian Lance,Mon, 21 Mar 2022 14:19:46 +0100,Imgui fbo remove old functions,'
+ 2 files changed, 148 deletions(-)
+
+'0cf95bce,Florian Lance,Thu, 17 Mar 2022 17:04:51 +0100,Refactor imgui_fbo,'
+ 4 files changed, 158 insertions(+), 191 deletions(-)
+
+'e5075ec4,Florian Lance,Wed, 16 Mar 2022 18:16:21 +0100,add notepad ex widget type,'
+ 9 files changed, 219 insertions(+), 21 deletions(-)
+
+'dd9364a2,Florian Lance,Wed, 2 Mar 2022 17:43:02 +0100,Fix arg order for generators,'
+ 6 files changed, 20 insertions(+), 8 deletions(-)
+
+'92c754e1,Florian Lance,Tue, 1 Mar 2022 16:59:43 +0100,Slider fix,'
+ 2 files changed, 78 insertions(+), 13 deletions(-)
+
+'086d7221,Florian Lance,Mon, 28 Feb 2022 17:07:29 +0100,Add synch mode,'
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+'55f3cf77,Florian Lance,Wed, 23 Feb 2022 16:06:30 +0100,Update obb3.hpp,'
+ 1 file changed, 84 insertions(+), 63 deletions(-)
+
+'2690b469,Florian Lance,Thu, 17 Feb 2022 17:53:56 +0100,Refactoring kinect,'
+ 63 files changed, 1779 insertions(+), 1619 deletions(-)
+
+'3da229f1,Florian Lance,Tue, 15 Feb 2022 18:13:24 +0100,Fix uncompressor,'
+ 13 files changed, 70 insertions(+), 31 deletions(-)
+
+'376c067c,Florian Lance,Tue, 15 Feb 2022 10:58:06 +0100,Up network,'
+ 2 files changed, 87 insertions(+), 61 deletions(-)
+
+'8c11969f,Florian Lance,Tue, 15 Feb 2022 10:57:49 +0100,Up sender,'
+ 5 files changed, 22 insertions(+), 12 deletions(-)
+
+'4f52823f,Florian Lance,Mon, 14 Feb 2022 17:58:16 +0100,Add utility udp,'
+ 9 files changed, 308 insertions(+), 144 deletions(-)
+
+'59177710,Florian Lance,Thu, 10 Feb 2022 17:41:40 +0100,udp_header,'
+ 11 files changed, 354 insertions(+), 223 deletions(-)
+
+'42c5c61d,Florian Lance,Tue, 8 Feb 2022 20:29:04 +0100,Add timestamp to k4 init packet,'
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+'216835b8,Florian Lance,Tue, 8 Feb 2022 17:05:19 +0100,K4 network,'
+ 9 files changed, 472 insertions(+), 42 deletions(-)
+
+'312a1427,Florian Lance,Fri, 4 Feb 2022 11:01:13 +0100,format / k4filters imgui,'
+ 16 files changed, 465 insertions(+), 137 deletions(-)
+
+'597c7625,Florian Lance,Mon, 31 Jan 2022 10:47:17 +0100,udp,'
+ 32 files changed, 1102 insertions(+), 672 deletions(-)
+
+'85b7d9db,Florian Lance,Mon, 24 Jan 2022 17:17:26 +0100,Imgui sub dir,'
+ 7 files changed, 320 insertions(+), 58 deletions(-)
+
+'9bfe8f6d,Florian Lance,Sun, 23 Jan 2022 16:01:37 +0100,udp/tcp,'
+ 13 files changed, 1746 insertions(+), 110 deletions(-)
+
+'87882a14,Florian Lance,Thu, 13 Jan 2022 17:48:21 +0100,New volumetric video resource system,'
+ 12 files changed, 898 insertions(+), 688 deletions(-)
+
+'e75cdd20,Florian Lance,Wed, 12 Jan 2022 18:04:52 +0100,volumetric resources,'
+ 27 files changed, 3096 insertions(+), 2601 deletions(-)
+
+'6397807d,Florian Lance,Thu, 6 Jan 2022 18:56:17 +0100,simdcomp test,'
+ 4 files changed, 679 insertions(+), 1289 deletions(-)
+
+'e1377293,Florian Lance,Wed, 5 Jan 2022 16:55:03 +0100,Unit test,'
+ 3 files changed, 469 insertions(+), 269 deletions(-)
+
+'53a1a8b2,Florian Lance,Tue, 4 Jan 2022 22:26:39 +0100,simdcomp,'
+ 51 files changed, 112173 insertions(+), 808 deletions(-)
+
+'b907aec9,Florian Lance,Mon, 20 Dec 2021 16:07:20 +0100,Compress,'
+ 7 files changed, 514 insertions(+), 335 deletions(-)
+
+'84c87ac7,Florian Lance,Mon, 20 Dec 2021 09:46:53 +0100,pack voxel,'
+ 4 files changed, 165 insertions(+), 12 deletions(-)
+
+'f6e51e6c,Florian Lance,Thu, 16 Dec 2021 17:38:16 +0100,K4,'
+ 3 files changed, 113 insertions(+), 137 deletions(-)
+
+'0d302204,Florian Lance,Wed, 15 Dec 2021 17:48:31 +0100,kinect4,'
+ 6 files changed, 286 insertions(+), 2 deletions(-)
+
+'57ae562a,Florian Lance,Tue, 14 Dec 2021 18:11:00 +0100,ex Resource,'
+ 9 files changed, 460 insertions(+), 226 deletions(-)
+
+'a73d4d54,Florian Lance,Mon, 13 Dec 2021 17:36:18 +0100,Ex_resource,'
+ 9 files changed, 644 insertions(+), 480 deletions(-)
+
+'bfb77ea6,Florian Lance,Thu, 9 Dec 2021 17:24:45 +0100,Kinect4,'
+ 3 files changed, 139 insertions(+), 59 deletions(-)
+
+'5493effa,Florian Lance,Wed, 8 Dec 2021 18:48:48 +0100,Audio frame,'
+ 4 files changed, 141 insertions(+), 111 deletions(-)
+
+'eadbc356,Florian Lance,Tue, 7 Dec 2021 16:31:10 +0100,Kinect4 sound,'
+ 5 files changed, 1397 insertions(+), 28 deletions(-)
+
+'f1dd3f12,Florian Lance,Mon, 6 Dec 2021 17:41:13 +0100,Audio frame,'
+ 2 files changed, 78 insertions(+), 7 deletions(-)
+
+'ee870a20,Florian Lance,Thu, 2 Dec 2021 17:31:31 +0100,Kinect,'
+ 4 files changed, 82 insertions(+), 4 deletions(-)
+
+'68b1f467,Florian Lance,Wed, 1 Dec 2021 17:41:21 +0100,Update kinect4.cpp,'
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+'a1cc1909,Florian Lance,Wed, 1 Dec 2021 17:30:09 +0100,* cloud io / refactoring directories,'
+ 50 files changed, 1036 insertions(+), 420 deletions(-)
+
+'01e9bc18,Florian Lance,Tue, 30 Nov 2021 18:14:46 +0100,Update kinect1_utility and move 3rdparty,'
+ 1859 files changed, 440499 insertions(+), 313 deletions(-)
+
+'f1dbd37b,Florian Lance,Mon, 29 Nov 2021 17:20:53 +0100,* drawer voxels,'
+ 13 files changed, 287 insertions(+), 306 deletions(-)
+
+'991f00e0,Florian Lance,Fri, 26 Nov 2021 22:53:53 +0100,jpeg lib,'
+ 2 files changed, 1133 insertions(+)
+
+'aa79ec3d,Florian Lance,Thu, 25 Nov 2021 18:55:56 +0100,Kinect4 settings,'
+ 4 files changed, 242 insertions(+), 347 deletions(-)
+
+'c52798b4,Florian Lance,Wed, 24 Nov 2021 17:28:54 +0100,Initializer_list,'
+ 11 files changed, 350 insertions(+), 251 deletions(-)
+
+'b089ae3f,Florian Lance,Tue, 23 Nov 2021 19:07:15 +0100,Kinect audio,'
+ 5 files changed, 315 insertions(+), 8 deletions(-)
+
+'10b1fe11,Florian Lance,Tue, 23 Nov 2021 17:06:59 +0100,*kinect audio,'
+ 12 files changed, 483 insertions(+), 281 deletions(-)
+
+'a38d0c0b,Florian Lance,Mon, 22 Nov 2021 17:28:21 +0100,Update kinect4.cpp,'
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+'40ffd8f7,Florian Lance,Mon, 22 Nov 2021 17:25:04 +0100,kinect4 audio,'
+ 24 files changed, 4988 insertions(+), 238 deletions(-)
+
+'50cf6315,Florian Lance,Sun, 21 Nov 2021 22:33:29 +0100,*shaders pcf,'
+ 18 files changed, 929 insertions(+), 552 deletions(-)
+
+'0c79f24b,Florian Lance,Wed, 17 Nov 2021 17:06:47 +0100,Code editor fix,'
+ 17 files changed, 516 insertions(+), 220 deletions(-)
+
+'b93ad756,Florian Lance,Tue, 16 Nov 2021 17:48:41 +0100,* shaders,'
+ 17 files changed, 667 insertions(+), 545 deletions(-)
+
+'ca517b49,Florian Lance,Mon, 15 Nov 2021 17:06:46 +0100,Up sample,'
+ 4 files changed, 184 insertions(+), 184 deletions(-)
+
+'dd7a338c,Florian Lance,Sun, 14 Nov 2021 23:25:44 +0100,Up shaders,'
+ 27 files changed, 1375 insertions(+), 1401 deletions(-)
+
+'2eff4582,Florian Lance,Thu, 11 Nov 2021 17:28:48 +0100,Events,'
+ 13 files changed, 8015 insertions(+), 284 deletions(-)
+
+'84d18ba8,Florian Lance,Wed, 10 Nov 2021 17:40:20 +0100,Shaders + events,'
+ 11 files changed, 404 insertions(+), 396 deletions(-)
+
+'1754f6bd,Florian Lance,Tue, 9 Nov 2021 23:56:29 +0100,* Shaders,'
+ 39 files changed, 974 insertions(+), 657 deletions(-)
+
+'5cc16b0d,Florian Lance,Mon, 8 Nov 2021 17:39:03 +0100,Add time type,'
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+'69bf6b62,Florian Lance,Sun, 7 Nov 2021 22:45:01 +0100,Shaders,'
+ 14 files changed, 1120 insertions(+), 1044 deletions(-)
+
+'89edbc0b,Florian Lance,Wed, 3 Nov 2021 17:04:17 +0100,Update texture.cpp,'
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+'1410e31a,Florian Lance,Tue, 2 Nov 2021 16:37:24 +0100,K4a frame,'
+ 8 files changed, 419 insertions(+), 250 deletions(-)
+
+'60532583,Florian Lance,Wed, 27 Oct 2021 17:21:05 +0200,Kinect cloud,'
+ 5 files changed, 113 insertions(+), 167 deletions(-)
+
+'e8819451,Florian Lance,Tue, 26 Oct 2021 18:09:47 +0200,Delete uncompressed_color_0.png,'
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+'2a6eb94b,Florian Lance,Tue, 26 Oct 2021 18:09:38 +0200,Kinect4 data,'
+ 8 files changed, 1048 insertions(+), 1016 deletions(-)
+
+'65e24141,Florian Lance,Mon, 25 Oct 2021 17:38:56 +0200,Kinect4,'
+ 4 files changed, 89 insertions(+), 86 deletions(-)
+
+'e19edd14,Florian Lance,Thu, 21 Oct 2021 17:08:58 +0200,k4a,'
+ 18 files changed, 550 insertions(+), 291 deletions(-)
+
+'1331a21f,Florian Lance,Wed, 20 Oct 2021 17:13:24 +0200,Bench multithreading,'
+ 3 files changed, 125 insertions(+), 82 deletions(-)
+
+'dd72a804,Florian Lance,Tue, 19 Oct 2021 18:08:06 +0200,Update ex_component.hpp,'
+ 1 file changed, 39 insertions(+), 39 deletions(-)
+
+'a3376a54,Florian Lance,Tue, 5 Oct 2021 17:03:16 +0200,Refactor nodes,'
+ 38 files changed, 221 insertions(+), 198 deletions(-)
+
+'55cba62b,Florian Lance,Tue, 28 Sep 2021 17:00:23 +0200,Tree view,'
+ 5 files changed, 402 insertions(+), 1 deletion(-)
+
+'a5ab459c,Florian Lance,Mon, 27 Sep 2021 17:41:02 +0200,Bench thread id,'
+ 2 files changed, 20 insertions(+), 8 deletions(-)
+
+'1ee8dc61,Florian Lance,Thu, 23 Sep 2021 17:44:33 +0200,Update node geo,'
+ 9 files changed, 36 insertions(+), 25 deletions(-)
+
+'b8882d41,Florian Lance,Tue, 21 Sep 2021 17:32:04 +0200,Optimize node geometry / add qt logging to key errors,'
+ 8 files changed, 96 insertions(+), 45 deletions(-)
+
+'04ead338,Florian Lance,Thu, 16 Sep 2021 17:35:38 +0200,Refactor ex_widgets,'
+ 50 files changed, 88 insertions(+), 80 deletions(-)
+
+'37210f37,Florian Lance,Wed, 15 Sep 2021 17:21:47 +0200,Remove generatorName,'
+ 27 files changed, 266 insertions(+), 324 deletions(-)
+
+'2c328c5c,Florian Lance,Mon, 13 Sep 2021 17:39:36 +0200,Remove arg key,'
+ 6 files changed, 92 insertions(+), 30 deletions(-)
+
+'3a73fd06,Florian Lance,Fri, 10 Sep 2021 13:07:37 +0200,* Refactor ex_widgets,'
+ 56 files changed, 860 insertions(+), 700 deletions(-)
+
+'a90775de,Florian Lance,Mon, 6 Sep 2021 17:20:47 +0200,Fix curve w,'
+ 7 files changed, 92 insertions(+), 51 deletions(-)
+
+'54a0b4d1,Florian Lance,Tue, 31 Aug 2021 16:57:07 +0200,Add escape for kinect2 pending frame acquisition,'
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+'2d57c881,Florian Lance,Tue, 31 Aug 2021 10:22:49 +0200,Add no_file settings for the logger,'
+ 3 files changed, 19 insertions(+), 12 deletions(-)
+
+'b7f05051,Florian Lance,Mon, 30 Aug 2021 17:20:19 +0200,Update ex_curve_w.cpp,'
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+'6b22211f,Florian Lance,Thu, 26 Aug 2021 09:56:56 +0200,Ghost kinect fix,'
+ 2 files changed, 22 insertions(+), 4 deletions(-)
+
+'6af20a40,Florian Lance,Wed, 25 Aug 2021 18:20:10 +0200,Code editor,'
+ 11 files changed, 644 insertions(+), 20 deletions(-)
+
+'b69cd6e6,Florian Lance,Tue, 24 Aug 2021 17:13:55 +0200,Curve,'
+ 6 files changed, 431 insertions(+), 49 deletions(-)
+
+'798c16f1,Florian Lance,Tue, 20 Jul 2021 16:57:13 +0200,Update qt_ui.hpp,'
+ 1 file changed, 1 insertion(+)
+
+'27011c2b,Florian Lance,Wed, 14 Jul 2021 16:23:31 +0200,Remove useless moc,'
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+'fb3a2acd,Florian Lance,Thu, 8 Jul 2021 17:20:07 +0200,Add ex_widgets,'
+ 261 files changed, 72357 insertions(+)
+
+'6d7b7812,Florian Lance,Wed, 7 Jul 2021 16:39:20 +0200,Update kinect2_network_types.hpp,'
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+'d6542cae,Florian Lance,Wed, 7 Jul 2021 11:12:21 +0200,Update kinect settings IO,'
+ 11 files changed, 151 insertions(+), 143 deletions(-)
+
+'557d23d6,Florian Lance,Tue, 29 Jun 2021 19:30:50 +0200,Update ignore,'
+ 3 files changed, 3 insertions(+), 6 deletions(-)
+
+'7e8cd0b2,Florian Lance,Tue, 29 Jun 2021 19:24:42 +0200,Update tb-projects.pri,'
+ 1 file changed, 25 insertions(+), 30 deletions(-)
+
+'d76949f2,Florian Lance,Tue, 29 Jun 2021 17:06:06 +0200,Rename pri files,'
+ 10 files changed, 23 insertions(+), 23 deletions(-)
+
+'9c7c3b19,Florian Lance,Tue, 29 Jun 2021 15:05:39 +0200,Remove paths.pri,'
+ 9 files changed, 88 insertions(+), 89 deletions(-)
+
+'401729ff,Florian Lance,Tue, 29 Jun 2021 14:37:01 +0200,Refactor debug hierarchy,'
+ 414 files changed, 227 insertions(+), 526 deletions(-)
+
+'c358690b,Florian Lance,Mon, 28 Jun 2021 17:04:26 +0200,Modify hierarchy,'
+ 15336 files changed, 137 insertions(+), 125 deletions(-)
+
+'33952b0f,Florian Lance,Fri, 25 Jun 2021 09:56:22 +0200,Set relative resources path,'
+ 2 files changed, 25 insertions(+), 24 deletions(-)
+
+'d572e88f,Florian Lance,Thu, 24 Jun 2021 09:50:11 +0200,Update .gitignore,'
+ 1 file changed, 1 insertion(+)
+
+'2692b6b1,Florian Lance,Thu, 24 Jun 2021 09:17:18 +0200,Update ignore files,'
+ 2 files changed, 3 insertions(+), 278 deletions(-)
+
+'50007fdd,Florian Lance,Thu, 24 Jun 2021 08:44:01 +0200,Remove logs,'
+ 4 files changed, 1 insertion(+)
+
+'5891f2ae,Florian Lance,Thu, 24 Jun 2021 08:41:08 +0200,Update ignored files and paths,'
+ 177 files changed, 37 insertions(+), 41955 deletions(-)
+
+'dafcaf56,Florian Lance,Thu, 24 Jun 2021 08:33:13 +0200,Remove cpp directory,'
+ 15343 files changed, 3357 deletions(-)
+
+'ea07fc27,Florian Lance,Thu, 24 Jun 2021 08:31:18 +0200,Remove cpp directory,'
+ 169 files changed, 42189 insertions(+)
+
+'f8996c1a,Florian Lance,Wed, 23 Jun 2021 17:55:09 +0200,Update ignore file,'
+ 6 files changed, 15 insertions(+), 6 deletions(-)
+
+'e290d980,Florian Lance,Wed, 23 Jun 2021 15:50:10 +0200,Add DEFINE settings for executing nodes project as an app,'
+ 5 files changed, 26 insertions(+), 6 deletions(-)
+
+'4013df84,Florian Lance,Wed, 23 Jun 2021 15:48:48 +0200,Remove pro user files,'
+ 11 files changed, 28 insertions(+), 2049 deletions(-)
+
+'f3f7771b,Florian Lance,Wed, 23 Jun 2021 15:21:52 +0200,Remove qmake autogenerated files,'
+ 3 files changed, 3499 deletions(-)
+
+'9cf2046d,Florian Lance,Wed, 23 Jun 2021 15:20:50 +0200,* Remove qmake autogenerated files,'
+ 23 files changed, 7 insertions(+), 31899 deletions(-)
+
+'8fb269ce,Florian Lance,Wed, 23 Jun 2021 15:18:56 +0200,Remove unused thirdparty files,'
+ 54 files changed, 22 insertions(+), 49371 deletions(-)
+
+'9574e182,Florian Lance,Wed, 23 Jun 2021 15:16:20 +0200,Create README.md,'
+ 1 file changed, 2 insertions(+)
+
+'2d6c072e,Florian Lance,Wed, 23 Jun 2021 15:16:10 +0200,Delete README.md,'
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+'e68e4d59,Florian Lance,Wed, 23 Jun 2021 15:05:43 +0200,Add ignored directories,'
+ 12 files changed, 15 insertions(+), 42 deletions(-)
+
+'cf5795a9,Florian Lance,Wed, 23 Jun 2021 14:56:50 +0200,Add ignored directories,'
+ 168 files changed, 135 insertions(+), 3190 deletions(-)
+
+'d790a921,Florian Lance,Wed, 23 Jun 2021 14:45:57 +0200,Initial commit,'
+ 15527 files changed, 3178925 insertions(+), 3 deletions(-)
+
+'76411b8c,Florian Lance,Tue, 22 Jun 2021 10:38:53 +0200,Update README.md,'
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+'912e7967,Florian Lance,Tue, 22 Jun 2021 10:00:40 +0200,Initial commit,'
+ 2 files changed, 23 insertions(+)
