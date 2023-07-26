@@ -74,10 +74,9 @@ IF EXIST %THIRDPARTY_DIR% (
 )
 
 echo "Download zip files."
-bitsadmin.exe /transfer "Download build hierarchy" https://github.com/FlorianLance/toolbox/releases/download/Dependencies/_build.zip "%BUILD_ZIP%"
-bitsadmin.exe /transfer "Download resources" https://github.com/FlorianLance/toolbox/releases/download/Dependencies/_resources.zip "%RESOURCES_ZIP%"
-bitsadmin.exe /transfer "Download thirdparty" https://github.com/FlorianLance/toolbox/releases/download/Dependencies/_thirdparty.zip "%THIRDPARTY_ZIP%"
-
+bitsadmin.exe /transfer "Download build hierarchy" https://github.com/FlorianLance/toolset/releases/download/Dependencies/_build.zip "%BUILD_ZIP%"
+bitsadmin.exe /transfer "Download resources" https://github.com/FlorianLance/toolset/releases/download/Dependencies/_resources.zip "%RESOURCES_ZIP%"
+bitsadmin.exe /transfer "Download thirdparty" https://github.com/FlorianLance/toolset/releases/download/Dependencies/_thirdparty.zip "%THIRDPARTY_ZIP%"
 
 IF EXIST %BUILD_ZIP% (
 	echo "%BUILD_ZIP% successfully downloaded"
@@ -138,5 +137,5 @@ IF EXIST %THIRDPARTY_DIR% (
 	RMDIR /S /Q %THIRDPARTY_DIR%
 )
 
-echo "Toolbox dependencies installation finished."
+echo "Toolset dependencies installation finished."
 
