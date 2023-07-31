@@ -28,7 +28,7 @@
 #pragma once
 
 // std
-#include <expected>
+//#include <expected>
 
 // local
 #include "geometry/matrix4.hpp"
@@ -59,8 +59,8 @@ struct K4CameraData{
     // getters
     auto nb_frames() const noexcept -> size_t;
     auto valid_vertices_count(size_t idFrame) const noexcept -> size_t;
-    auto first_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>;
-    auto last_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>;
+    auto first_frame_capture_timestamp() const noexcept -> std::int64_t;//std::expected<std::int64_t, std::string_view>;
+    auto last_frame_capture_timestamp() const noexcept -> std::int64_t;//std::expected<std::int64_t, std::string_view>;
 
     // modifiers
     auto add_compressed_frame(std::shared_ptr<K4CompressedFrame> frame) -> void;
@@ -93,8 +93,8 @@ public:
     auto get_camera_data(size_t idCamera) const noexcept -> const K4CameraData*;
 
     // times
-    auto first_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>;
-    auto last_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>;
+    auto first_frame_capture_timestamp() const noexcept -> std::int64_t;//std::expected<std::int64_t, std::string_view>;
+    auto last_frame_capture_timestamp() const noexcept -> std::int64_t;//std::expected<std::int64_t, std::string_view>;
 //    auto set_video_start_timestamp(std::chrono::nanoseconds videoStartTS) noexcept -> void;
 //    auto set_video_end_timestamp(std::chrono::nanoseconds videoEndTS) noexcept -> void;
     auto duration_ms() const noexcept -> double;
@@ -104,7 +104,7 @@ public:
     auto nb_frames(size_t idCamera) const noexcept -> size_t;
     auto total_nb_frames() const noexcept -> size_t;
     auto min_nb_frames() const noexcept -> size_t;
-    auto closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::expected<size_t, std::string_view>;
+    auto closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t;//std::expected<size_t, std::string_view>;
     // # add
     auto add_compressed_frame(size_t idCamera, std::shared_ptr<K4CompressedFrame> frame) -> void;
     // # get

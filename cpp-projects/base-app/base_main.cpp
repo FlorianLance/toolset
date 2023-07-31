@@ -227,7 +227,6 @@ void kinect2_test(){
 }
 
 
-
 int main(){
 
     using namespace std::chrono;
@@ -239,7 +238,7 @@ int main(){
     auto duration = player.video()->duration_ms();
 
 
-    auto ffTs = duration_cast<milliseconds>(nanoseconds(player.video()->first_frame_capture_timestamp().value()));
+    auto ffTs = duration_cast<milliseconds>(nanoseconds(player.video()->first_frame_capture_timestamp()));//.value()));
     for(size_t idC = 0; idC < player.video()->nb_cameras(); ++idC){
         std::cout << player.video()->get_camera_data(idC)->frames.size() << "\n";
 //        auto ff = duration_cast<milliseconds>(nanoseconds(player.video()->get_camera_data(idC)->first_frame_capture_timestamp().value()));
@@ -255,7 +254,7 @@ int main(){
 
         for(size_t idC = 0; idC < player.video()->nb_cameras(); ++idC){
             auto id = player.video()->closest_frame_id_from_time(idC, time);
-            std::cout << "time " << time << " idC " << idC << " " << id.value() << "\n";
+            std::cout << "time " << time << " idC " << idC << " " << id/**.value()*/ << "\n";
         }
     }
 
@@ -277,13 +276,13 @@ int main(){
     for(size_t ii = 0; ii < 1000; ++ii){
         auto time = (ii / 1000.0)* duration;
         auto id = player.video()->closest_frame_id_from_time(0, time);
-        if(id.has_value()){
-            if(auto frame = player.video()->get_compressed_frame(0, id.value()).lock(); frame != nullptr){
-                std::cout << "time " << time << " id " << id.value() << " " << frame->cloud_vertices_size() <<  "\n";
+        if(id != -1){//.has_value()){
+            if(auto frame = player.video()->get_compressed_frame(0, id/**.value()*/).lock(); frame != nullptr){
+                std::cout << "time " << time << " id " << id/**.value()*/ << " " << frame->cloud_vertices_size() <<  "\n";
             }
 
         }else{
-            std::cout << "ERROR " << id.error() << "\n";
+            std::cout << "ERROR " << id/**.error()*/ << "\n";
         }
     }
 

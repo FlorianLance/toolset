@@ -34,7 +34,6 @@ equals(QT_MAJOR_VERSION, 6){
     CONFIG+=c++20
 }
 
-
 # ARCH
 equals(COMPILER, "gcc"){ # GCC (TODO)
     # FLAGS

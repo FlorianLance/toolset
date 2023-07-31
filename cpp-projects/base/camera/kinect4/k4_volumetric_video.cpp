@@ -67,18 +67,20 @@ auto K4CameraData::get_frame_ptr(size_t idFrame) const -> K4CompressedFrame*{
     return nullptr;
 }
 
-auto K4CameraData::first_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>{
+auto K4CameraData::first_frame_capture_timestamp() const noexcept -> std::int64_t {//std::expected<std::int64_t, std::string_view>{
     if(!frames.empty()){
         return frames.front()->afterCaptureTS;
     }
-    return std::unexpected<std::string_view>("No frames available"sv);
+//    return std::unexpected<std::string_view>("No frames available"sv);
+    return -1;
 }
 
-auto K4CameraData::last_frame_capture_timestamp() const noexcept ->  std::expected<std::int64_t, std::string_view> {
+auto K4CameraData::last_frame_capture_timestamp() const noexcept ->  std::int64_t {//std::expected<std::int64_t, std::string_view> {
     if(!frames.empty()){
         return frames.back()->afterCaptureTS;
     }
-    return std::unexpected<std::string_view>("No frames available"sv);
+//    return std::unexpected<std::string_view>("No frames available"sv);
+    return -1;
 }
 
 auto K4CameraData::valid_vertices_count(size_t idFrame) const noexcept -> size_t{
@@ -176,13 +178,13 @@ auto K4VolumetricVideo::uncompress_frame(size_t idCamera, K4CompressedFrame *cFr
     return false;
 }
 
-auto K4VolumetricVideo::first_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>{
+auto K4VolumetricVideo::first_frame_capture_timestamp() const noexcept -> std::int64_t{//std::expected<std::int64_t, std::string_view>{
     auto start = std::numeric_limits<std::int64_t>::max();
     bool found = false;
     for(const auto &cFrame : m_framesPerCamera){
-        if(auto camStart = cFrame.first_frame_capture_timestamp(); camStart.has_value()){
-            if(start > camStart.value()){
-                start = camStart.value();
+        if(auto camStart = cFrame.first_frame_capture_timestamp(); camStart != -1){//.has_value()){
+            if(start > camStart){//.value()){
+                start = camStart;//.value();
                 found = true;
             }
         }
@@ -190,16 +192,17 @@ auto K4VolumetricVideo::first_frame_capture_timestamp() const noexcept -> std::e
     if(found){
         return start;
     }
-    return std::unexpected<std::string_view>("No frame available from any camera."sv);
+    return -1;
+//    return std::unexpected<std::string_view>("No frame available from any camera."sv);
 }
 
-auto K4VolumetricVideo::last_frame_capture_timestamp() const noexcept -> std::expected<std::int64_t, std::string_view>{
+auto K4VolumetricVideo::last_frame_capture_timestamp() const noexcept -> std::int64_t{//std::expected<std::int64_t, std::string_view>{
     std::int64_t end = -1;
     bool found = false;
      for(const auto &cFrame : m_framesPerCamera){
-        if(auto camEnd = cFrame.last_frame_capture_timestamp(); camEnd.has_value()){
-            if(end < camEnd.value()){
-                end = camEnd.value();
+        if(auto camEnd = cFrame.last_frame_capture_timestamp(); camEnd!=-1){//.has_value()){
+            if(end < camEnd){//.value()){
+                end = camEnd;//.value();
                 found = true;
             }
         }
@@ -207,7 +210,8 @@ auto K4VolumetricVideo::last_frame_capture_timestamp() const noexcept -> std::ex
     if(found){
         return end;
     }
-    return std::unexpected<std::string_view>("No frame available from any camera."sv);
+    return -1;
+//    return std::unexpected<std::string_view>("No frame available from any camera."sv);
 }
 
 //auto K4VolumetricVideo::set_video_start_timestamp(std::chrono::nanoseconds videoStartTS) noexcept -> void{
@@ -222,8 +226,8 @@ auto K4VolumetricVideo::duration_ms() const noexcept -> double {
     using namespace std::chrono;
     auto lfc = last_frame_capture_timestamp();
     auto ffc = first_frame_capture_timestamp();
-    if(lfc.has_value() && ffc.has_value()){
-        return duration_cast<microseconds>(nanoseconds(lfc.value()-ffc.value())).count()*0.001;
+    if(lfc != -1 /**.has_value() */ && ffc != -1 /**.has_value()*/){
+        return duration_cast<microseconds>(nanoseconds(lfc/**.value()*/-ffc/**.value()*/)).count()*0.001;
     }
     return 0.0;
 }
@@ -234,25 +238,28 @@ auto K4VolumetricVideo::get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t
 }
 
 
-auto K4VolumetricVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::expected<size_t, std::string_view>{
+auto K4VolumetricVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t{//std::expected<size_t, std::string_view>{
 
     if(idCamera >= nb_cameras()){
-        return std::unexpected<std::string_view>("Camera id invalid."sv);
+        Logger::error("Camera id invalid."sv);
+        return -1;
+//        return std::unexpected<std::string_view>("Camera id invalid."sv);
     }
 
     if(nb_frames(idCamera) == 0){
-        return std::unexpected<std::string_view>("No frame available."sv);
+        Logger::error("No frame available."sv);
+        return -1;
+//        return std::unexpected<std::string_view>("No frame available."sv);
     }
 
     using namespace std::chrono;
 
-    auto ffTs = nanoseconds(first_frame_capture_timestamp().value());
+    auto ffTs = nanoseconds(first_frame_capture_timestamp());//.value());
     size_t idFrame = 0;
     double prevDiff = std::numeric_limits<double>::max();
 //    if(idCamera == 1)
 //        std::cout << "ffTs " << idCamera << " " << timeMs << " " << ffTs.count() << "\n";
 
-    size_t idF = 0;
     for(const auto& frame : get_camera_data(idCamera)->frames){
 //        std::cout << idCamera << " " << idF << " " << frame->afterCaptureTS - ffTs.count() << "\n";
 //        idF++;
@@ -488,15 +495,16 @@ auto K4VolumetricVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBo
         for(size_t jj = 1; jj < nb_cameras(); ++jj){
 
             size_t idF = 0;
-            if(auto id = closest_frame_id_from_time(jj, c0TimeMs.count()); id.has_value()){
-                idF = id.value();
+            if(auto id = closest_frame_id_from_time(jj, c0TimeMs.count()); id != -1){//.has_value()){
+                idF = id;//.value();
             }else{
-                Logger::error(id.error());
+
+//                Logger::error(id.error());
                 continue;
             }
 
             K4Frame current;
-            std::cout << "uncompress_frame " << c0TimeMs.count() << " " <<  jj << " " << idF << "\n";
+//            std::cout << "uncompress_frame " << c0TimeMs.count() << " " <<  jj << " " << idF << "\n";
             if(!uncompress_frame(jj, idF, current)){
                 continue;
             }

@@ -38,11 +38,11 @@ auto K4Player::display_infos() -> void{
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
         std::cout << "FROM idc " << idC << "\n";
-        auto firstC = video()->get_camera_data(idC)->first_frame_capture_timestamp().value();
+        auto firstC = video()->get_camera_data(idC)->first_frame_capture_timestamp();//.value();
         for(size_t idC2 = 0; idC2 < video()->nb_cameras(); ++idC2){
             auto camD = video()->get_camera_data(idC2);
-            auto diff = nanoseconds(camD->first_frame_capture_timestamp().value() - firstC);
-            std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_capture_timestamp().value() << " " << camD->last_frame_capture_timestamp().value() << "\n";
+            auto diff = nanoseconds(camD->first_frame_capture_timestamp()/**.value()*/ - firstC);
+            std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_capture_timestamp()/**.value()*/ << " " << camD->last_frame_capture_timestamp()/**.value()*/ << "\n";
         }
     }
 
@@ -121,11 +121,12 @@ auto K4Player::update_time() -> void{
             continue;
         }
 
-        if(auto idF = m_videoResource.closest_frame_id_from_time(idC, cTime); idF.has_value()){
-            m_currentCompressedFrames[idC] = m_videoResource.get_compressed_frame(idC, idF.value()).lock();            
+        if(auto idF = m_videoResource.closest_frame_id_from_time(idC, cTime); idF != -1){//.has_value()){
+            m_currentCompressedFrames[idC] = m_videoResource.get_compressed_frame(idC, idF/**.value()*/).lock();
             update_states();
         }else{
-            Logger::error(idF.error());
+//            Logger::error(idF.error());
+            Logger::error("[K4Player::update_time] Invalid id for wanted time.");
         }
     }
 }

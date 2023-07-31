@@ -81,8 +81,8 @@ auto K4Recorder::add_compressed_frame(size_t idCamera, std::shared_ptr<K4Compres
     using namespace std::chrono;
 
     auto ff = video()->first_frame_capture_timestamp();
-    if(ff.has_value()){
-        auto diff = duration_cast<milliseconds>(nanoseconds(frame->afterCaptureTS-ff.value()));
+    if(ff != -1){//.has_value()){
+        auto diff = duration_cast<milliseconds>(nanoseconds(frame->afterCaptureTS-ff/**.value()*/));
         std::cout << idCamera << " " << video()->get_camera_data(idCamera)->nb_frames() << " "  << diff << "\n";
     }
 
@@ -116,9 +116,9 @@ auto K4Recorder::set_time(double timeMs) -> void{
     m_states.currentTime = timeMs;
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
-        if(auto idF = video()->closest_frame_id_from_time(idC, m_states.currentTime); idF.has_value()){
-            m_currentCompressedFrames[idC] = m_videoResource.get_compressed_frame(idC, idF.value()).lock();
-            m_states.currentFrames[idC] = idF.value();
+        if(auto idF = video()->closest_frame_id_from_time(idC, m_states.currentTime); idF != -1){//.has_value()){
+            m_currentCompressedFrames[idC] = m_videoResource.get_compressed_frame(idC, idF/**.value()*/).lock();
+            m_states.currentFrames[idC] = idF;//.value();
         }
     }
 
