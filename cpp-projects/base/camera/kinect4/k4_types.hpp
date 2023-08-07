@@ -153,6 +153,11 @@ namespace tool::camera {
         Only_color_2048x1536,
         Only_color_3840x2160,
         Only_color_4096x3072,
+        //
+        C2048x1536_D640x576,
+        C2048x1536_D1024x1024,
+        C4096x3072_D640x576,
+        C4096x3072_D1024x1024,
         // custom
         Merged,
         SizeEnum
@@ -205,7 +210,14 @@ namespace tool::camera {
         {M::Only_color_2048x1536, IF::BGRA32, CR::R1536P, DM::OFF,            FPS::F30, {0,0},          {0,0},      false, false, false},
         {M::Only_color_3840x2160, IF::BGRA32, CR::R2160P, DM::OFF,            FPS::F30, {0,0},          {0,0},      false, false, false},
         {M::Only_color_4096x3072, IF::BGRA32, CR::R3072P, DM::OFF,            FPS::F15, {0,0},          {0,0},      false, false, false},
+        // other
+        {M::C2048x1536_D640x576,    IF::BGRA32, CR::R1536P, DM::NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},   {640,576},  false, false, true},
+        {M::C2048x1536_D1024x1024,  IF::BGRA32, CR::R1536P, DM::WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f},   {1024,1024},  false, false, true},
+        {M::C4096x3072_D640x576,    IF::BGRA32, CR::R3072P, DM::NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},   {640,576},  false, false, true},
+        {M::C4096x3072_D1024x1024,  IF::BGRA32, CR::R3072P, DM::WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f},   {1024,1024},  false, false, true}
     }};
+
+
 
 //    3840x2160 16:9 MJPEG 0, 5, 15, 30 90°x59°
 //    2560x1440 16:9 MJPEG 0, 5, 15, 30 90°x59°

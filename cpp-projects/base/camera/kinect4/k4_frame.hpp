@@ -43,6 +43,11 @@ struct K4Frame : Frame{
     size_t colorHeight = 0;
     std::vector<geo::Pt4<std::uint8_t>> imageColorData;
 
+    // depth sized color
+    size_t depthSizedColorWidth = 0;
+    size_t depthSizedColorHeight = 0;
+    std::vector<geo::Pt4<std::uint8_t>> depthSizedImageColorData;
+
     // depth image
     size_t depthWidth = 0;
     size_t depthHeight = 0;    

@@ -448,7 +448,7 @@ auto K4VolumetricVideo::uncompressor(size_t idCamera) noexcept -> K4FrameUncompr
     return nullptr;
 }
 
-#include <iostream>
+
 
 auto K4VolumetricVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
 
@@ -647,7 +647,7 @@ auto K4VolumetricVideo::get_audio_samples_all_channels(size_t idCamera, std::vec
     }
 }
 
-
+#include <iostream>
 auto K4VolumetricVideo::read_file(std::ifstream &file) -> bool{
 
     // read mode

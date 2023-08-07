@@ -94,11 +94,11 @@ struct K4Device::Impl{
     std::chrono::nanoseconds colorImageTS = std::chrono::nanoseconds{0};
     std::chrono::nanoseconds depthImageTS = std::chrono::nanoseconds{0};
     std::chrono::nanoseconds infraredImageTS = std::chrono::nanoseconds{0};
-    // # capture
-    std::optional<k4a::image> colorImage      = std::nullopt;
-    std::optional<k4a::image> depthImage      = std::nullopt;
-    std::optional<k4a::image> infraredImage   = std::nullopt;
-    std::optional<k4a::image> pointCloudImage = std::nullopt;
+    // # capture    
+    std::optional<k4a::image> colorImage         = std::nullopt;
+    std::optional<k4a::image> depthImage         = std::nullopt;
+    std::optional<k4a::image> infraredImage      = std::nullopt;
+    std::optional<k4a::image> pointCloudImage    = std::nullopt;
     // # processing
     std::optional<k4a::image> convertedColorImage = std::nullopt;
     std::optional<k4a::image> depthSizedColorImage = std::nullopt;
@@ -175,7 +175,7 @@ struct K4Device::Impl{
 
     // delay buffer
     std::int64_t millisecondsDelay = 0;
-    std::vector<std::tuple<std::chrono::nanoseconds, std::unique_ptr<K4Frame>>> frames;
+    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<K4Frame>>> frames;
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<camera::K4CompressedFrame>>> compressedFrames;
 
     // functions
@@ -197,7 +197,7 @@ struct K4Device::Impl{
     auto filter_infrared_image(const K4Filters &f) -> void;
     auto generate_cloud(const K4DataSettings &d, K4Mode mode) -> void;
     auto compress_frame(const K4Filters &f, const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4CompressedFrame>;
-    auto create_local_frame(const K4DataSettings &d, K4Mode mode) -> void;
+    auto create_local_frame(const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4Frame>;
 
     // profiling
     auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::milliseconds>;
@@ -380,9 +380,12 @@ K4Device::K4Device() : i(std::make_unique<Impl>()){
     i->kinect4 = this;
 
     // init audio manager
-    const int audioInitStatus = k4a::K4AAudioManager::Instance().Initialize();
-    if (audioInitStatus != SoundIoErrorNone){
-        Logger::error("[K4Device] Failed to initialize audio backend: {}\n", soundio_strerror(audioInitStatus));
+    auto audioM = k4a::K4AAudioManager::get_instance();
+    if(!audioM->is_initialized()){
+        const int audioInitStatus = audioM->initialize();
+        if (audioInitStatus != SoundIoErrorNone){
+            Logger::error("[K4Device] Failed to initialize audio backend: {}\n", soundio_strerror(audioInitStatus));
+        }
     }
 
     refresh_devices_list();
@@ -411,17 +414,19 @@ auto K4Device::refresh_devices_list() -> void{
     }
 
 
-    k4a::K4AAudioManager::Instance().RefreshDevices();
-    size_t nbDevices = k4a::K4AAudioManager::Instance().get_devices_count();
+    auto audioM = k4a::K4AAudioManager::get_instance();
+    audioM->refresh_devices();
+
+    size_t nbDevices = audioM->get_devices_count();
     Logger::message(std::format("[K4Device] Audio devices count: {}\n", nbDevices));
 
     for(size_t ii = 0; ii < nbDevices; ++ii){
-        std::string deviceName = k4a::K4AAudioManager::Instance().get_device_name(ii);
+        std::string deviceName = audioM->get_device_name(ii);
         Logger::message(std::format(" - {}\n", deviceName));
         if (deviceName.find("Azure Kinect Microphone Array") != std::string::npos) {
             Logger::message(std::format("Found Azure kinect microphones array.\n"));
 
-            i->microphone = k4a::K4AAudioManager::Instance().get_microphone_for_device(deviceName);
+            i->microphone = audioM->get_microphone_for_device(deviceName);
             if(i->microphone == nullptr){
                 Logger::error(std::format("[K4Device] Cannot retrieve microphone.\n"));
                 i->audioListener = nullptr;
@@ -521,6 +526,14 @@ auto K4Device::is_opened() const noexcept -> bool{
 
 auto K4Device::cameras_started() const noexcept -> bool{
     return i->camerasStarted;
+}
+
+auto K4Device::is_sync_in_connected() const noexcept -> bool{
+    return i->device.is_sync_in_connected();
+}
+
+auto K4Device::is_sync_out_connected() const noexcept -> bool{
+    return i->device.is_sync_out_connected();
 }
 
 auto K4Device::get_nb_capture_per_second() const noexcept -> float {
@@ -780,7 +793,7 @@ auto K4Device::start_cameras(const K4ConfigSettings &configS) -> bool{
 
         if(depth_mode(configS.mode) != K4DepthMode::OFF){
             Logger::message("[K4Device] start body tracker\n");
-            i->tracker = k4abt::tracker::create(i->calibration, i->k4aBtConfig);
+//            i->tracker = k4abt::tracker::create(i->calibration, i->k4aBtConfig);
         }
 
     }  catch (k4a::error error) {
@@ -823,6 +836,8 @@ auto K4Device::start_cameras(const K4ConfigSettings &configS) -> bool{
 
     return true;
 }
+
+
 
 auto K4Device::stop_cameras() -> void{
 
@@ -1029,13 +1044,13 @@ auto K4Device::Impl::read_frames(K4Mode mode) -> void{
 
                 // test
                 compressedFrame->afterCaptureTS = localTimestamps["after_compressing"sv].value().count() - compressedFrame->afterCaptureTS;
-                using namespace std::chrono;
-//                std::cout << duration_cast<milliseconds>(nanoseconds(compressedFrame->afterCaptureTS)) << " ";
+
 
                 // store frame
                 compressedFrames.push_back(std::make_tuple(localTimestamps["after_capture"sv].value(), std::move(compressedFrame)));
 
                 // check delay
+                using namespace std::chrono;
                 bool foundFrame = false;
                 size_t idFrame = 0;
                 for(size_t ii = 0; ii < compressedFrames.size(); ++ii){
@@ -1058,8 +1073,34 @@ auto K4Device::Impl::read_frames(K4Mode mode) -> void{
         }
 
         if(d.generateRGBLocalFrame || d.generateDepthLocalFrame || d.generateInfraLocalFrame || d.generateCloudLocal){
-            create_local_frame(d, mode);
-            localTimestamps["after_local_frame_sending"sv] = Time::nanoseconds_since_epoch();
+
+            auto dFrame = create_local_frame(d, mode);
+
+            localTimestamps["after_local_frame_creation"sv] = Time::nanoseconds_since_epoch();
+
+            // store frame
+            frames.push_back(std::make_tuple(localTimestamps["after_capture"sv].value(), std::move(dFrame)));
+
+            // check delay
+            using namespace std::chrono;
+            bool foundFrame = false;
+            size_t idFrame = 0;
+            for(size_t ii = 0; ii < frames.size(); ++ii){
+                auto diff = duration_cast<milliseconds>(localTimestamps["after_capture"sv].value() - std::get<0>(frames[ii]));
+                if(diff.count() >= millisecondsDelay){
+                    foundFrame = true;
+                    idFrame = ii;
+                }else{
+                    break;
+                }
+            }
+
+            // send frame
+            if(foundFrame){
+                kinect4->new_frame_signal(std::move(std::get<1>(frames[idFrame])));
+                tool::erase_range(frames, 0, idFrame + 1);
+            }
+
         }
 
         idCapture++;
@@ -1077,7 +1118,7 @@ auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void
 
     // retrieve buffers
     auto depthBuffer = reinterpret_cast<int16_t*>(depthImage->get_buffer());
-    ColorRGBA8 *colorBuffer = colorImage.has_value() ? reinterpret_cast<ColorRGBA8*>(colorImage.value().get_buffer()) : nullptr;
+    ColorRGBA8 *colorBuffer = depthSizedColorImage.has_value() ? reinterpret_cast<ColorRGBA8*>(depthSizedColorImage.value().get_buffer()) : nullptr;
     uint16_t *infraredBuffer = infraredImage.has_value() ? reinterpret_cast<uint16_t*>(infraredImage.value().get_buffer()) : nullptr;
 
     static_cast<void>(infraredBuffer);
@@ -1169,7 +1210,7 @@ auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void
 //        }
 
         // color filtering
-        if(colorImage.has_value() && f.filterDepthWithColor){
+        if(depthSizedColorImage.has_value() && f.filterDepthWithColor){
 
             auto hsv = Convert::to_hsv(colorBuffer[id]);
             if((std::abs(hsv.h()- hsvDiffColor.h()) > f.maxDiffColor.x()) ||
@@ -1581,7 +1622,7 @@ auto K4Device::Impl::erode(uint8_t nbLoops, Connectivity connectivity) -> void{
 
 auto K4Device::Impl::filter_color_image(const K4Filters &f) -> void{
 
-    if(!colorImage.has_value()){
+    if(!depthSizedColorImage.has_value()){
         return;
     }
 
@@ -1592,7 +1633,7 @@ auto K4Device::Impl::filter_color_image(const K4Filters &f) -> void{
     Bench::start("[K4Device] Filter color");
 
     // retrieve buffers
-    geo::Pt4<uint8_t>* colorBuffer = reinterpret_cast<geo::Pt4<uint8_t>*>(colorImage->get_buffer());
+    geo::Pt4<uint8_t>* colorBuffer = reinterpret_cast<geo::Pt4<uint8_t>*>(depthSizedColorImage->get_buffer());
     int16_t*  depthBuffer    = depthImage.has_value() ? reinterpret_cast<int16_t*>(depthImage.value().get_buffer()) : nullptr;
     uint16_t* infraredBuffer = infraredImage.has_value() ? reinterpret_cast<uint16_t*>(infraredImage.value().get_buffer()) : nullptr;
 
@@ -1619,7 +1660,7 @@ auto K4Device::Impl::filter_infrared_image(const K4Filters &f) -> void{
         return;
     }
 
-    if(!colorImage.has_value() && !depthImage.has_value()){
+    if(!depthSizedColorImage.has_value() && !depthImage.has_value()){
         return;
     }
 
@@ -1627,7 +1668,7 @@ auto K4Device::Impl::filter_infrared_image(const K4Filters &f) -> void{
 
     // retrieve buffers
     uint16_t* infraredBuffer = reinterpret_cast<uint16_t*>(infraredImage->get_buffer());
-    geo::Pt4<uint8_t>* colorBuffer = colorImage.has_value() ? reinterpret_cast<geo::Pt4<uint8_t>*>(colorImage.value().get_buffer()) : nullptr;
+    geo::Pt4<uint8_t>* colorBuffer = depthSizedColorImage.has_value() ? reinterpret_cast<geo::Pt4<uint8_t>*>(depthSizedColorImage.value().get_buffer()) : nullptr;
     int16_t*  depthBuffer         = depthImage.has_value() ? reinterpret_cast<int16_t*>(depthImage.value().get_buffer()) : nullptr;
 
     static_cast<void>(colorBuffer);
@@ -1658,9 +1699,9 @@ auto K4Device::Impl::compress_frame(const K4Filters &f, const K4DataSettings &d,
 
     frameCompressor.set_settings(d);
     auto compressedFrame = frameCompressor.compress(
-                mode,
-                colorImage, f.jpegCompressionRate,
-                depthImage, validDepthValues,
+        mode,
+        depthSizedColorImage.has_value() ? depthSizedColorImage : colorImage, f.jpegCompressionRate,
+        depthImage, validDepthValues,
         infraredImage,
         pointCloudImage,
         calibration,
@@ -1669,22 +1710,8 @@ auto K4Device::Impl::compress_frame(const K4Filters &f, const K4DataSettings &d,
     );
 
     if(compressedFrame != nullptr){
-
         compressedFrame->idCapture      = static_cast<std::int32_t>(idCapture);
-
-//        if(depthImageTS.count() != 0){
-//            std::cout << "d-";
-//            compressedFrame->afterCaptureTS = (depthImageTS + Time::offsetNano).count();
-//        }else if(infraredImageTS.count() != 0){
-//            std::cout << "c-";
-//            compressedFrame->afterCaptureTS = (infraredImageTS + Time::offsetNano).count();
-//        }else if(colorImageTS.count() != 0){
-//            std::cout << "b-";
-//            compressedFrame->afterCaptureTS = (colorImageTS + Time::offsetNano).count();
-//        }else{
-//            std::cout << "a-";
-            compressedFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
-//        }
+        compressedFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
     }
 
     tool::Bench::stop();
@@ -1692,23 +1719,14 @@ auto K4Device::Impl::compress_frame(const K4Filters &f, const K4DataSettings &d,
     return compressedFrame;
 }
 
-auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) -> void{
+auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4Frame>{
 
     // write frame
     tool::Bench::start("[K4Device::create_local_frame] Write display data frame");
 
     auto dFrame = std::make_unique<K4Frame>();
     dFrame->idCapture      = static_cast<std::int32_t>(idCapture);
-
-//    if(depthImageTS.count() != 0){
-//        dFrame->afterCaptureTS = depthImageTS.count();
-//    }else if(infraredImageTS.count() != 0){
-//        dFrame->afterCaptureTS = infraredImageTS.count();
-//    }else if(colorImageTS.count() != 0){
-//        dFrame->afterCaptureTS = colorImageTS.count();
-//    }else{
-        dFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
-//    }
+    dFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
 
     dFrame->mode = mode;
 
@@ -1726,27 +1744,28 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
 
         tool::Bench::start("[K4Device::create_local_frame] color");
 
-        size_t width, height;
-        if(depthImage.has_value()){
-            width  = depthImage->get_width_pixels();
-            height = depthImage->get_height_pixels();
-        }else{
-            width  = colorImage->get_width_pixels();
-            height = colorImage->get_height_pixels();
+        if(depthSizedColorImage.has_value()){
+            dFrame->depthSizedColorWidth  = depthSizedColorImage->get_width_pixels();
+            dFrame->depthSizedColorHeight = depthSizedColorImage->get_height_pixels();
+            dFrame->depthSizedImageColorData.resize(dFrame->depthSizedColorWidth*dFrame->depthSizedColorHeight);
+
+            auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(depthSizedColorImage->get_buffer());
+            for_each(std::execution::par_unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
+                dFrame->depthSizedImageColorData[id] = {
+                    colorBuffer[id].z(),
+                    colorBuffer[id].y(),
+                    colorBuffer[id].x(),
+                    255
+                };
+            });
         }
-        dFrame->colorWidth  = width;
-        dFrame->colorHeight = height;
-        dFrame->imageColorData.resize(width*height);
+
+        dFrame->colorWidth  = colorImage->get_width_pixels();
+        dFrame->colorHeight = colorImage->get_height_pixels();
+        dFrame->imageColorData.resize(dFrame->colorWidth*dFrame->colorHeight);
 
         auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(colorImage->get_buffer());
-        std::vector<size_t> *ids;
-        if(depthImage.has_value()){
-            ids = &indicesDepths1D;
-        }else{
-            ids = &indicesColors1D;
-        }
-
-        for_each(std::execution::par_unseq, std::begin(*ids), std::end(*ids), [&](size_t id){
+        for_each(std::execution::par_unseq, std::begin(indicesColors1D), std::end(indicesColors1D), [&](size_t id){
             dFrame->imageColorData[id] = {
                 colorBuffer[id].z(),
                 colorBuffer[id].y(),
@@ -1824,7 +1843,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
     }
 
     // cloud
-    if(d.generateCloudLocal && pointCloudImage.has_value() && colorImage.has_value() && depthImage.has_value()){
+    if(d.generateCloudLocal && pointCloudImage.has_value() && depthSizedColorImage.has_value() && depthImage.has_value()){
 
         tool::Bench::start("[K4Device::create_local_frame] cloud");
 
@@ -1833,7 +1852,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
         dFrame->cloud.normals.resize(validDepthValues);
 
         auto cloudBuffer = reinterpret_cast<geo::Pt3<int16_t>*>(pointCloudImage->get_buffer());
-        auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(colorImage->get_buffer());
+        auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(depthSizedColorImage->get_buffer());
         auto depthBuffer = reinterpret_cast<const uint16_t*>(depthImage->get_buffer());
 
         for_each(std::execution::par_unseq, std::begin(indexDepthVertexCorrrespondance), std::end(indexDepthVertexCorrrespondance), [&](auto idC){
@@ -1930,28 +1949,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
         std::copy(bodies.begin(), bodies.begin() + bodiesCount, dFrame->bodies.begin());
     }
 
-    // store frame
-    frames.push_back(std::make_tuple(localTimestamps["after_capture"sv].value(), std::move(dFrame)));
-
-    // check delay
-    auto checkDelayTS = Time::nanoseconds_since_epoch();
-    bool foundFrame = false;
-    size_t idFrame = 0;
-    for(size_t ii = 0; ii < frames.size(); ++ii){
-        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(checkDelayTS - std::get<0>(frames[ii]));
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() > millisecondsDelay){
-            foundFrame = true;
-            idFrame = ii;
-        }else{
-            break;
-        }
-    }
-
-    // send frame
-    if(foundFrame){
-        kinect4->new_frame_signal(std::shared_ptr<K4Frame>(std::move(std::get<1>(frames[idFrame]))));
-        tool::erase_range(frames, 0, idFrame + 1);
-    }
+    return dFrame;
 }
 
 
@@ -2310,8 +2308,6 @@ auto K4Device::Impl::resize_color_to_fit_depth() -> void{
             depthImage.value(),
             colorImage.value(),
             &depthSizedColorImage.value());
-
-        colorImage = depthSizedColorImage;
         Bench::stop();
     }
 }

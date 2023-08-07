@@ -44,11 +44,16 @@ auto K4CloudDrawer::init_from_frame(std::shared_ptr<camera::K4Frame> frame) -> b
         return false;
     }
 
-    if(!frame->imageColorData.empty()){
+    if(!frame->depthSizedImageColorData.empty()){
+        colorT.init_or_update_8ui(
+            static_cast<GLsizei>(frame->depthSizedColorWidth),
+            static_cast<GLsizei>(frame->depthSizedColorHeight), 4, reinterpret_cast<std::uint8_t*>(frame->depthSizedImageColorData.data()));
+    } else if(!frame->imageColorData.empty()){
         colorT.init_or_update_8ui(
             static_cast<GLsizei>(frame->colorWidth),
             static_cast<GLsizei>(frame->colorHeight), 4, reinterpret_cast<std::uint8_t*>(frame->imageColorData.data()));
     }
+
     if(!frame->imageDepthData.empty()){
         depthT.init_or_update_8ui(
             static_cast<GLsizei>(frame->depthWidth),

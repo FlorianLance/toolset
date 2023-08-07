@@ -39,6 +39,7 @@ TOOLBOX_CPP_PROJECTS +=\
     GUARDIAN:guardian \
     K4_SCANER_GRABBER:k4-scaner-grabber \
     K4_SCANER_MANAGER:k4-scaner-manager \
+    K4_MONITORING:k4-monitoring \
 
 # define functions
 defineTest(generate_variables) {

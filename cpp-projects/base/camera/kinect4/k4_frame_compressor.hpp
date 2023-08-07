@@ -41,7 +41,6 @@ struct K4FrameCompressor{
     K4FrameCompressor();
     ~K4FrameCompressor();
 
-
     auto set_settings(const K4DataSettings &ds) -> void;
 
     auto compress(

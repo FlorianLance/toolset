@@ -7,7 +7,7 @@
 
 // System headers
 //
-#include <regex>
+//#include <regex>
 
 // Library headers
 //
@@ -19,32 +19,39 @@
 
 using namespace k4a;
 
-K4AAudioManager &K4AAudioManager::Instance(){
-    static K4AAudioManager instance;
-    return instance;
+struct Global{
+    static inline std::unique_ptr<K4AAudioManager> instance = nullptr;
+};
+auto K4AAudioManager::get_instance() -> K4AAudioManager*{
+    if(Global::instance == nullptr){
+        Global::instance = std::make_unique<K4AAudioManager>();
+    }
+    return Global::instance.get();
 }
 
-int K4AAudioManager::Initialize(SoundIoBackend backend){
-    return InitializeImpl([backend](SoundIo *soundIo) { return soundio_connect_backend(soundIo, backend); });
+auto K4AAudioManager::initialize(SoundIoBackend backend) -> int{
+    return initialize_impl([backend](SoundIo *soundIo) {
+        return soundio_connect_backend(soundIo, backend);
+    });
 }
 
-int K4AAudioManager::Initialize(){
-    return InitializeImpl(soundio_connect);
+auto K4AAudioManager::initialize() -> int{
+    return initialize_impl(soundio_connect);
 }
 
-int K4AAudioManager::InitializeImpl(const std::function<int(SoundIo *)> &initFn){
+auto K4AAudioManager::initialize_impl(const std::function<int(SoundIo *)> &initFn) -> int{
 
     m_io.reset(soundio_create());
-    const int status = initFn(m_io.get());
+    m_initStatus = initFn(m_io.get());
 
-    if (status != SoundIoErrorNone){
-        return status;
+    if (m_initStatus != SoundIoErrorNone){
+        return m_initStatus;
     }
 
-    return RefreshDevices();
+    return refresh_devices();
 }
 
-int K4AAudioManager::RefreshDevices(){
+auto K4AAudioManager::refresh_devices() -> int{
 
     if (!m_io){
         return SoundIoErrorInvalid;
@@ -74,7 +81,7 @@ int K4AAudioManager::RefreshDevices(){
     return SoundIoErrorNone;
 }
 
-std::shared_ptr<K4AMicrophone> K4AAudioManager::get_microphone_for_device(const std::string &deviceName){
+auto K4AAudioManager::get_microphone_for_device(const std::string &deviceName) -> std::shared_ptr<K4AMicrophone>{
     const auto soundIoDevice = m_inputDevices.find(deviceName);
     if (soundIoDevice == m_inputDevices.end()){
         return nullptr;

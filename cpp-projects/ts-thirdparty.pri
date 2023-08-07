@@ -40,7 +40,8 @@ LIBPNG_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/libpng"
 LIBSOUNDIO_DIR                       = $$TOOLBOX_CPP_THIRDPARTY_DIR"/libsoundio"
 LIBUSB_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/libusb"
 OPEN3D_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/Open3D-0.13"
-OPENCV_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/opencv-3.4.7"
+#OPENCV_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/opencv-3.4.7"
+OPENCV_DIR                           = $$TOOLBOX_CPP_THIRDPARTY_DIR"/opencv"
 QWT_DIR                              = $$TOOLBOX_CPP_THIRDPARTY_DIR"/qwt-6.2.0"
 SFML_DIR                             = $$TOOLBOX_CPP_THIRDPARTY_DIR"/SFML"
 TURBOPFOR_DIR                        = $$TOOLBOX_CPP_THIRDPARTY_DIR"/TurboPFor-Integer-Compression"
@@ -71,8 +72,9 @@ LIBSOUNDIO_INCLUDES = \
     $$LIBSOUNDIO_DIR"/includes" \
 
 ############################ OPENCV
-OPENCV_INCLUDES = \
-    $$OPENCV_DIR \
+OPENCV_INCLUDES = \    
+    $$OPENCV_DIR"/include" \
+
 
 ############################ BOOST
 BOOST_INCLUDES =\
@@ -183,14 +185,14 @@ WINDOWS_LIBS = \
     equals(CFG, "release"){
 
 ############################# TURBOPFOR
-    TURBOPFOR_LIBS =\
-        -L$$TURBOPFOR_DIR"/lib" \
-        -llibic \
+        TURBOPFOR_LIBS =\
+            -L$$TURBOPFOR_DIR"/lib" \
+            -llibic \
 
 ############################ OPENCV
         OPENCV_LIBS = \
-            -L$$OPENCV_DIR"/lib" \
-            -lopencv_world347 \
+            -L$$OPENCV_DIR"/x64/vc16/lib" \
+            -lopencv_world480 \
 
 ############################ BOOST
         BOOST_LIBS =\

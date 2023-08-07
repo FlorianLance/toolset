@@ -818,6 +818,8 @@ auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, K4Frame &frame) 
     frame.depthHeight = 0;
     frame.infraWidth  = 0;
     frame.infraHeight = 0;
+    frame.depthSizedColorWidth  = 0;
+    frame.depthSizedColorHeight = 0;
 
     // color
     if(!cFrame->encodedColorData.empty()){

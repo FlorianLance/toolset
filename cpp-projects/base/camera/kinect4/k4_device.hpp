@@ -56,6 +56,8 @@ public:
     auto device_id() const -> std::uint32_t;
     auto is_opened() const noexcept -> bool;
     auto cameras_started() const noexcept -> bool;
+    auto is_sync_in_connected() const noexcept -> bool;
+    auto is_sync_out_connected() const noexcept -> bool;
     auto get_nb_capture_per_second() const noexcept -> float;
     auto get_capture_duration_ms() noexcept -> std::int64_t;
     auto get_processing_duration_ms() noexcept -> std::int64_t;
