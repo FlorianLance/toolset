@@ -102,7 +102,7 @@ bool DrawSampleWindow::init_shaders(){
     }
 
     Managers::shaders->add_shader("colored-cloud", std::move(gl::ColoredCloudShader()));
-    //    shadersPaths = currentPath / ".." / ".." / ".." / "cpp" / "toolbox" / "resources" / "shaders";
+    //    shadersPaths = currentPath / ".." / ".." / ".." / "cpp" / "toolset" / "resources" / "shaders";
     //    shaderInit &= colorMeshShader.init();
     //    shaderInit &= texturedMeshShader.init();
     //    shaderInit &= texturedColorMeshShader.init();

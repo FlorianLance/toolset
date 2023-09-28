@@ -141,4 +141,4 @@ FORMS += \
     ui/ManagerW.ui \
 
 RESOURCES += \
-    $$TOOLBOX_CPP_RESOURCES_DIR"/resources.qrc" \
+    $$TOOLSET_CPP_RESOURCES_DIR"/resources.qrc" \

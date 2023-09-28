@@ -25,7 +25,7 @@
 # ********************************************************************************/*/
 
 # projects list
-TOOLBOX_CPP_PROJECTS +=\
+TOOLSET_CPP_PROJECTS +=\
     BASE:base:based \
     OPENGL_UTILITY:opengl-utility:opengl-utilityd \
     3D_ENGINE:3d-engine:3d-engined \
@@ -82,11 +82,11 @@ defineTest(generate_variables) {
 }
 
 # sub dir
-TOOLBOX_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
-TOOLBOX_CPP_THIRDPARTY_DIR  = $$TOOLBOX_CPP_PROJECTS_DIR"/_thirdparty"
-TOOLBOX_CPP_RESOURCES_DIR   = $$TOOLBOX_CPP_PROJECTS_DIR"/_resources"
+TOOLSET_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
+TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
+TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
 
 # generate projects variables
-for(project_dir, TOOLBOX_CPP_PROJECTS):{
-    generate_variables($$TOOLBOX_CPP_PROJECTS_DIR, $$section(project_dir, :, 0, 0), $$section(project_dir, :, 1, 1), $$section(project_dir, :, 2, 2))
+for(project_dir, TOOLSET_CPP_PROJECTS):{
+    generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$section(project_dir, :, 0, 0), $$section(project_dir, :, 1, 1), $$section(project_dir, :, 2, 2))
 }

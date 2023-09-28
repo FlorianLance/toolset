@@ -194,7 +194,7 @@ void display_lines(){
 
     int count = 0;
     qDebug() << "Lines in full projects "<< count;
-    QString baseDir = "E:/DEV/EPFL/exvr/cpp/toolbox/";
+    QString baseDir = "E:/DEV/EPFL/exvr/cpp/toolset/";
 
     std::vector<QString> paths;
     paths.emplace_back(baseDir + "base");

@@ -193,7 +193,7 @@ SOURCES += \
     gui/ex_widgets/ex_vector3d_w.cpp \
 
 RESOURCES += \
-    $$TOOLBOX_CPP_RESOURCES_DIR"/resources.qrc" \
+    $$TOOLSET_CPP_RESOURCES_DIR"/resources.qrc" \
 
 FORMS += \
     gui/forms/grabber_parameters.ui \

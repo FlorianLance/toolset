@@ -104,8 +104,31 @@ namespace tool::camera {
         R1440P  = K4A_COLOR_RESOLUTION_1440P,   // 2560 * 1440 16:9
         R1536P  = K4A_COLOR_RESOLUTION_1536P,   // 2048 * 1536 4:3
         R2160P  = K4A_COLOR_RESOLUTION_2160P,   // 3840 * 2160 16:9
-        R3072P  = K4A_COLOR_RESOLUTION_3072P    // 4096 * 3072 4:3
+        R3072P  = K4A_COLOR_RESOLUTION_3072P,   // 4096 * 3072 4:3
+        SizeEnum
     };
+
+    using TColRes = std::tuple<
+        K4ColorResolution, int, int>;
+    static constexpr TupleArray<K4ColorResolution::SizeEnum, TColRes> k4ColRes = {{
+        // cloud
+        TColRes
+        {K4ColorResolution::OFF,    0,    0},
+        {K4ColorResolution::R720P,  1280, 720},
+        {K4ColorResolution::R1080P, 1920, 1080},
+        {K4ColorResolution::R1440P, 2560, 1440},
+        {K4ColorResolution::R1536P, 2048, 1536},
+        {K4ColorResolution::R2160P, 3840, 2160},
+        {K4ColorResolution::R3072P, 4096, 3072}
+    }};
+
+    [[maybe_unused]] static constexpr auto color_width(K4ColorResolution r) -> int{
+        return k4ColRes.at<0,1>(r);
+    }
+
+    [[maybe_unused]] static constexpr auto color_height(K4ColorResolution r) -> int{
+        return k4ColRes.at<0,2>(r);
+    }
 
     enum class K4DepthMode : std::int8_t {
         OFF            = K4A_DEPTH_MODE_OFF ,              // Depth sensor will be turned off with this setting.
@@ -121,6 +144,22 @@ namespace tool::camera {
         F15 = K4A_FRAMES_PER_SECOND_15,  // 15 FPS
         F30 = K4A_FRAMES_PER_SECOND_30,  // 30 FPS
     };
+
+    using TFramerate = std::tuple<
+        K4Framerate, int>;
+    static constexpr TupleArray<K4ColorResolution::SizeEnum, TFramerate> k4Framerates = {{
+        // cloud
+        TFramerate
+        {K4Framerate::F5,  5},
+        {K4Framerate::F15, 15},
+        {K4Framerate::F30, 30},
+
+    }};
+
+    [[maybe_unused]] static constexpr auto framerate_value(K4Framerate f) -> int{
+        return k4Framerates.at<0,1>(f);
+    }
+
 
     enum class K4SynchronisationMode : std::int8_t{
         Standalone  = K4A_WIRED_SYNC_MODE_STANDALONE, // Neither 'Sync In' or 'Sync Out' connections are used.
