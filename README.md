@@ -18,3 +18,7 @@ List of applications:
   * Azure Kinect:
      * [k4-scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/k4-scaner-grabber)
      * [k4-scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/k4-scaner-manager)
+   
+
+![k4-scaner-grabber](https://github.com/FlorianLance/toolset/assets/1221777/4da392e9-0d2b-49e4-bb06-5e0554de6600)
+
