@@ -1081,7 +1081,7 @@ auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, Pt3f *vertices, 
 }
 
 
-auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, K4VertexMeshData *vertices) -> bool{
+auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, K4VertexMeshData *vertices) -> int{
 
 
     // cloud
@@ -1091,29 +1091,29 @@ auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, K4VertexMeshData
 
             // decode vertices
             if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, i->decodedVerticesData)){
-                return false;
+                return -2;
             }
 
             // decode processed colors
             if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, i->decodedColorData)){
-                return false;
+                return -3;
             }
 
             // convert
             convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, vertices, i->decodedColorData, i->decodedVerticesData);
 
-            return true;
+            return 1;
 
         }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, i->decodedColorData)){
-                return false;
+                return -4;
             }
 
             // decode depth
             if(!uncompress_lossless_16_bits_128padded_data(cFrame->depthWidth*cFrame->depthHeight, cFrame->encodedDepthData, i->decodedDepthData)){
-                return false;
+                return -5;
             }
 
             // generate cloud
@@ -1122,10 +1122,10 @@ auto K4FrameUncompressor::uncompress(K4CompressedFrame *cFrame, K4VertexMeshData
             // convert
             convert_to_cloud(vertices, i->decodedColorData, i->decodedDepthData, i->cloud_image_data());
 
-            return true;            
+            return 1;
         }
     }
-    return false;
+    return -1; // empty cloud
 }
 
 

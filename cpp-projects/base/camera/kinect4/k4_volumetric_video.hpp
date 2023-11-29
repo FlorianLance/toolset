@@ -118,6 +118,7 @@ public:
     auto remove_compressed_frames_until(size_t idCamera, size_t idFrame) -> void;
     auto remove_compressed_frames_after(size_t idCamera, size_t idFrame) -> void;
     auto keep_only_one_camera(size_t idCamera) -> void;
+    auto keep_only_cameras_from_id(const std::vector<size_t> &ids) -> void;
     // # clean
     auto clean_all_cameras_compressed_frames() noexcept -> void;
     auto clean_camera_compressed_frames(size_t idCamera) noexcept -> void;

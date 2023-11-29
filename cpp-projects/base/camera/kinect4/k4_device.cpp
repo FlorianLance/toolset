@@ -516,7 +516,7 @@ auto K4Device::nb_devices() const noexcept -> uint32_t{
     return i->deviceCount;
 }
 
-auto K4Device::device_name() const -> std::string{
+auto K4Device::device_name() const noexcept-> std::string{
     return i->serialNumber;
 }
 
@@ -631,7 +631,7 @@ auto K4Device::clean() -> void{
     }
 }
 
-auto K4Device::device_id() const -> std::uint32_t{
+auto K4Device::device_id() const noexcept -> std::uint32_t{
     return i->config.idDevice;
 }
 

@@ -38,6 +38,7 @@
 
 namespace tool::camera {
 
+
 class K4Device {
 
 public:
@@ -52,8 +53,8 @@ public:
 
     // getters
     auto nb_devices() const noexcept -> std::uint32_t;
-    auto device_name() const -> std::string;
-    auto device_id() const -> std::uint32_t;
+    auto device_name() const noexcept-> std::string;
+    auto device_id() const noexcept -> std::uint32_t;
     auto is_opened() const noexcept -> bool;
     auto cameras_started() const noexcept -> bool;
     auto is_sync_in_connected() const noexcept -> bool;

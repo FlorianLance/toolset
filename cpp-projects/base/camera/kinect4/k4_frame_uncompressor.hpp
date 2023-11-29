@@ -85,7 +85,7 @@ struct K4FrameUncompressor{
     auto uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
     auto uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
     auto uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
-    auto uncompress(K4CompressedFrame *cFrame, K4VertexMeshData *vertices) -> bool;
+    auto uncompress(K4CompressedFrame *cFrame, K4VertexMeshData *vertices) -> int;
 
 
 

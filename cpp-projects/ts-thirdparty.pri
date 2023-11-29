@@ -46,6 +46,7 @@ QWT_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/qwt-6.2.0"
 SFML_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/SFML"
 TURBOPFOR_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/TurboPFor-Integer-Compression"
 FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
+ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 
 ########################################################## INCLUDES
 
@@ -112,6 +113,9 @@ LIBPNG_INCLUDES = \
 FFMEPG_INCLUDES = \
     $$FFMEPG_DIR"/include" \
 
+
+ORBBEC_INCLUDES = \
+    $$ORBBEC_DIR"/include" \
 
 equals(COMPILER, "vs"){
 
@@ -186,6 +190,11 @@ WINDOWS_LIBS = \
             -lk4arecord \
             -lk4abt \
 
+        ORBBEC_K4A_LIBS =\
+            -L$$ORBBEC_K4A_DIR"/lib" \
+            -lk4a \
+            -lk4arecord \
+
         GLM_LIBS = \
             -L$$GLM_DIR"/lib/Release" \
             -lglm_static \
@@ -252,6 +261,11 @@ WINDOWS_LIBS = \
             -lavutil \
             -lswresample \
             -lswscale \
+            -lpostproc \
+
+        ORBBEC_LIBS =\
+            -L$$ORBBEC_DIR"/lib" \
+            -OrbbecSDK \
     }
 }
 

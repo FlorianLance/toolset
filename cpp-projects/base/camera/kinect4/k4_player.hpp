@@ -66,6 +66,7 @@ public:
     auto remove_after_current_frame() -> void;
     auto merge() -> void;
     auto merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;  
+    auto remove_empty_cameras() -> void;
 
     // settings
     auto update_settings(const K4PlayerSettings &playerS) noexcept -> void;

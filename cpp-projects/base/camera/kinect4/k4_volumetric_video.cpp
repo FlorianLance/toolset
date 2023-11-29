@@ -342,6 +342,19 @@ auto K4VolumetricVideo::keep_only_one_camera(size_t idCamera) -> void{
     m_framesPerCamera = {std::move(cameraFrames)};
 }
 
+auto K4VolumetricVideo::keep_only_cameras_from_id(const std::vector<size_t> &ids) -> void{
+
+    std::vector<std::unique_ptr<K4FrameUncompressor>> uncompressors;
+    std::vector<K4CameraData> framesPerCamera;
+
+    for(const auto &id : ids){
+        uncompressors.push_back(std::move(m_uncompressors[id]));
+        framesPerCamera.push_back(std::move(m_framesPerCamera[id]));
+    }
+    std::swap(m_uncompressors, uncompressors);
+    std::swap(m_framesPerCamera, framesPerCamera);
+}
+
 auto K4VolumetricVideo::clean_all_cameras_compressed_frames() noexcept -> void{
     for(auto &frames : m_framesPerCamera){
         frames.clean();
@@ -654,7 +667,7 @@ auto K4VolumetricVideo::read_file(std::ifstream &file) -> bool{
     std::int8_t videoType;
     read(videoType, file);
 
-    std::cout << "VIDEO TYPE" << (int)videoType << "\n";
+//    std::cout << "VIDEO TYPE" << (int)videoType << "\n";
     if(videoType == 0){
         read_legacy_full_video_file(file);
         return true;
@@ -670,32 +683,67 @@ auto K4VolumetricVideo::read_file(std::ifstream &file) -> bool{
     std::int8_t nbCameras;
     read(nbCameras, file);    
     initialize(nbCameras);
+    std::cout << "nbCameras : " << nbCameras << "\n";
 
     // read infos per camera
     std::int32_t nbFrames;
-    for(auto &cameraData : m_framesPerCamera){
+    size_t currentC = 0;
+    for(size_t idC = 0; idC < m_framesPerCamera.size(); ++idC){
 
         // read nb frames
         read(nbFrames, file);
 
-        // create frames
-        cameraData.frames.reserve(nbFrames);
-        for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-            cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
-        }
+        if(nbFrames > 0){
+            auto &cameraData = m_framesPerCamera[currentC];
 
-        // calibration matrix        
-        read_array(cameraData.transform.array.data(), file, 16);
+            cameraData.frames.reserve(nbFrames);
+
+            for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
+                cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
+            }
+
+            // calibration matrix
+            read_array(cameraData.transform.array.data(), file, 16);
+
+            ++currentC;
+        }else{
+            geo::Mat4d transform;
+            read_array(transform.array.data(), file, 16);
+        }
     }
+    m_framesPerCamera.resize(currentC);
+
+//    for(auto &cameraData : m_framesPerCamera){
+
+//        // read nb frames
+//        read(nbFrames, file);
+//        std::cout << "nbFrames : " << nbFrames << "\n";
+
+//        // create frames
+//        cameraData.frames.reserve(nbFrames);
+//        for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
+//            cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
+//        }
+
+//        // calibration matrix
+//        read_array(cameraData.transform.array.data(), file, 16);
+
+//        std::cout << "calibration : " << cameraData.transform << "\n";
+//    }
 
     // read frames
     for(auto &cameraData : m_framesPerCamera){
         for(auto &frame : cameraData.frames){
             double timeMsNotUsed;
             read(timeMsNotUsed, file); // read time ms
+//            std::cout << "timeMsNotUsed " << timeMsNotUsed << "\n";
             frame->init_from_file_stream(file);
         }
     }
+
+    // remove empty cameras
+
+
 
     return true;
 }

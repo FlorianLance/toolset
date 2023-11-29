@@ -70,6 +70,7 @@ INCLUDEPATH += \
     $$EIGEN_INCLUDES \
     $$OPEN3D_INCLUDES \
     $$TURBOPFOR_INCLUDES \
+    $$ORBBEC_INCLUDES \
 
 ####################################### LIBRAIRIES
 LIBS += \
@@ -87,11 +88,15 @@ LIBS += \
     $$OPEN3D_LIBS \
     $$TURBOPFOR_LIBS \
     $$WINDOWS_LIBS \
+    $$ORBBEC_LIBS \
 
 ####################################### PROJECT FILES
 
 HEADERS += \
     # exvr    
+    camera/dc_camera_device.hpp \
+    camera/dc_color_settings.hpp \
+    camera/dc_types.hpp \
     camera/kinect4/k4_actions_settings.hpp \
     camera/kinect4/k4_calibrator.hpp \
     camera/kinect4/k4_calibrator_settings.hpp \
@@ -111,6 +116,7 @@ HEADERS += \
     camera/kinect4/k4_volumetric_video.hpp \
     camera/kinect4/k4_player.hpp \
     camera/kinect4/k4a/k4a_body_tracking_helpers.hpp \
+    camera/orbbec/orbbec_device.hpp \
     exvr/ex_element.hpp \
     exvr/ex_experiment.hpp \
     exvr/ex_resource.hpp \
@@ -303,6 +309,7 @@ SOURCES += \
 #    # main
 #    base_main.cpp \
     # exvr    
+    camera/dc_color_settings.cpp \
     camera/kinect4/k4_actions_settings.cpp \
     camera/kinect4/k4_calibrator.cpp \
     camera/kinect4/k4_color_settings.cpp \
@@ -318,6 +325,7 @@ SOURCES += \
     camera/kinect4/k4_player.cpp \
     camera/kinect4/k4_recorder.cpp \
     camera/kinect4/k4_volumetric_video.cpp \
+    camera/orbbec/orbbec_device.cpp \
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \
     exvr/ex_experiment.cpp \

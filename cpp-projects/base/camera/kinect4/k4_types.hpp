@@ -37,7 +37,8 @@
 #include "geometry/point2.hpp"
 #include "geometry/point4.hpp"
 #include "geometry/quaternion.hpp"
-#include "utility/tuple_array.hpp"
+
+#include "camera/dc_types.hpp"
 
 namespace tool::camera {
 
@@ -81,54 +82,54 @@ namespace tool::camera {
         // Default: 2
     };
 
-    enum class K4ImageFormat : std::int8_t {
-        MJPEG    = K4A_IMAGE_FORMAT_COLOR_MJPG,   // The buffer for each image is encoded as a JPEG and can be decoded by a JPEG decoder.
-        NV12     = K4A_IMAGE_FORMAT_COLOR_NV12,   // NV12 images separate the luminance and chroma data such that all the luminance is at the
-        // beginning of the buffer, and the chroma lines follow immediately after.
-        YUY2     = K4A_IMAGE_FORMAT_COLOR_YUY2,   // YUY2 stores chroma and luminance data in interleaved pixels.
-        BGRA32   = K4A_IMAGE_FORMAT_COLOR_BGRA32, // Each pixel of BGRA32 data is four bytes. The first three bytes represent Blue, Green,
-        // and Red data. The fourth byte is the alpha channel and is unused in the Azure Kinect APIs.
-        IR16     = K4A_IMAGE_FORMAT_IR16,         // Each pixel of IR16 data is two bytes of little endian unsigned depth data.
-        // The value of the data represents brightness.
-        DEPTH16  = K4A_IMAGE_FORMAT_DEPTH16,      // Each pixel of DEPTH16 data is two bytes of little endian unsigned depth data.
-        // The unit of the data is in millimeters from the origin of the camera.
-        CUSTOM   = K4A_IMAGE_FORMAT_CUSTOM,       // Used in conjunction with user created images or images packing non-standard data.
-        CUSTOM8  = K4A_IMAGE_FORMAT_CUSTOM8,      // Each pixel of CUSTOM8 is a single channel one byte of unsigned data.
-        CUSTOM16 = K4A_IMAGE_FORMAT_CUSTOM16      // Each pixel of CUSTOM16 is a single channel two bytes of little endian unsigned data.
-    };
+//    enum class K4ImageFormat : std::int8_t {
+//        MJPEG    = K4A_IMAGE_FORMAT_COLOR_MJPG,   // The buffer for each image is encoded as a JPEG and can be decoded by a JPEG decoder.
+//        NV12     = K4A_IMAGE_FORMAT_COLOR_NV12,   // NV12 images separate the luminance and chroma data such that all the luminance is at the
+//        // beginning of the buffer, and the chroma lines follow immediately after.
+//        YUY2     = K4A_IMAGE_FORMAT_COLOR_YUY2,   // YUY2 stores chroma and luminance data in interleaved pixels.
+//        BGRA32   = K4A_IMAGE_FORMAT_COLOR_BGRA32, // Each pixel of BGRA32 data is four bytes. The first three bytes represent Blue, Green,
+//        // and Red data. The fourth byte is the alpha channel and is unused in the Azure Kinect APIs.
+//        IR16     = K4A_IMAGE_FORMAT_IR16,         // Each pixel of IR16 data is two bytes of little endian unsigned depth data.
+//        // The value of the data represents brightness.
+//        DEPTH16  = K4A_IMAGE_FORMAT_DEPTH16,      // Each pixel of DEPTH16 data is two bytes of little endian unsigned depth data.
+//        // The unit of the data is in millimeters from the origin of the camera.
+//        CUSTOM   = K4A_IMAGE_FORMAT_CUSTOM,       // Used in conjunction with user created images or images packing non-standard data.
+//        CUSTOM8  = K4A_IMAGE_FORMAT_CUSTOM8,      // Each pixel of CUSTOM8 is a single channel one byte of unsigned data.
+//        CUSTOM16 = K4A_IMAGE_FORMAT_CUSTOM16      // Each pixel of CUSTOM16 is a single channel two bytes of little endian unsigned data.
+//    };
 
-    enum class K4ColorResolution : std::int8_t {
-        OFF     = K4A_COLOR_RESOLUTION_OFF,     // Color camera will be turned off with this setting
-        R720P   = K4A_COLOR_RESOLUTION_720P,    // 1280 * 720  16:9
-        R1080P  = K4A_COLOR_RESOLUTION_1080P,   // 1920 * 1080 16:9
-        R1440P  = K4A_COLOR_RESOLUTION_1440P,   // 2560 * 1440 16:9
-        R1536P  = K4A_COLOR_RESOLUTION_1536P,   // 2048 * 1536 4:3
-        R2160P  = K4A_COLOR_RESOLUTION_2160P,   // 3840 * 2160 16:9
-        R3072P  = K4A_COLOR_RESOLUTION_3072P,   // 4096 * 3072 4:3
-        SizeEnum
-    };
+//    enum class K4ColorResolution : std::int8_t {
+//        OFF     = K4A_COLOR_RESOLUTION_OFF,     // Color camera will be turned off with this setting
+//        R720P   = K4A_COLOR_RESOLUTION_720P,    // 1280 * 720  16:9
+//        R1080P  = K4A_COLOR_RESOLUTION_1080P,   // 1920 * 1080 16:9
+//        R1440P  = K4A_COLOR_RESOLUTION_1440P,   // 2560 * 1440 16:9
+//        R1536P  = K4A_COLOR_RESOLUTION_1536P,   // 2048 * 1536 4:3
+//        R2160P  = K4A_COLOR_RESOLUTION_2160P,   // 3840 * 2160 16:9
+//        R3072P  = K4A_COLOR_RESOLUTION_3072P,   // 4096 * 3072 4:3
+//        SizeEnum
+//    };
 
-    using TColRes = std::tuple<
-        K4ColorResolution, int, int>;
-    static constexpr TupleArray<K4ColorResolution::SizeEnum, TColRes> k4ColRes = {{
-        // cloud
-        TColRes
-        {K4ColorResolution::OFF,    0,    0},
-        {K4ColorResolution::R720P,  1280, 720},
-        {K4ColorResolution::R1080P, 1920, 1080},
-        {K4ColorResolution::R1440P, 2560, 1440},
-        {K4ColorResolution::R1536P, 2048, 1536},
-        {K4ColorResolution::R2160P, 3840, 2160},
-        {K4ColorResolution::R3072P, 4096, 3072}
-    }};
+//    using TColRes = std::tuple<
+//        K4ColorResolution, int, int>;
+//    static constexpr TupleArray<K4ColorResolution::SizeEnum, TColRes> k4ColRes = {{
+//        // cloud
+//        TColRes
+//        {K4ColorResolution::OFF,    0,    0},
+//        {K4ColorResolution::R720P,  1280, 720},
+//        {K4ColorResolution::R1080P, 1920, 1080},
+//        {K4ColorResolution::R1440P, 2560, 1440},
+//        {K4ColorResolution::R1536P, 2048, 1536},
+//        {K4ColorResolution::R2160P, 3840, 2160},
+//        {K4ColorResolution::R3072P, 4096, 3072}
+//    }};
 
-    [[maybe_unused]] static constexpr auto color_width(K4ColorResolution r) -> int{
-        return k4ColRes.at<0,1>(r);
-    }
+//    [[maybe_unused]] static constexpr auto color_width(K4ColorResolution r) -> int{
+//        return k4ColRes.at<0,1>(r);
+//    }
 
-    [[maybe_unused]] static constexpr auto color_height(K4ColorResolution r) -> int{
-        return k4ColRes.at<0,2>(r);
-    }
+//    [[maybe_unused]] static constexpr auto color_height(K4ColorResolution r) -> int{
+//        return k4ColRes.at<0,2>(r);
+//    }
 
     enum class K4DepthMode : std::int8_t {
         OFF            = K4A_DEPTH_MODE_OFF ,              // Depth sensor will be turned off with this setting.
@@ -139,26 +140,26 @@ namespace tool::camera {
         PASSIVE_IR     = K4A_DEPTH_MODE_PASSIVE_IR,        // Passive IR only, captured at 1024x1024.
     };
 
-    enum class K4Framerate : std::int8_t{
-        F5  = K4A_FRAMES_PER_SECOND_5,   // 5 FPS
-        F15 = K4A_FRAMES_PER_SECOND_15,  // 15 FPS
-        F30 = K4A_FRAMES_PER_SECOND_30,  // 30 FPS
-    };
+//    enum class K4Framerate : std::int8_t{
+//        F5  = K4A_FRAMES_PER_SECOND_5,   // 5 FPS
+//        F15 = K4A_FRAMES_PER_SECOND_15,  // 15 FPS
+//        F30 = K4A_FRAMES_PER_SECOND_30,  // 30 FPS
+//        SizeEnum
+//    };
 
-    using TFramerate = std::tuple<
-        K4Framerate, int>;
-    static constexpr TupleArray<K4ColorResolution::SizeEnum, TFramerate> k4Framerates = {{
-        // cloud
-        TFramerate
-        {K4Framerate::F5,  5},
-        {K4Framerate::F15, 15},
-        {K4Framerate::F30, 30},
+//    using TFramerate = std::tuple<
+//        K4Framerate, int>;
+//    static constexpr TupleArray<K4Framerate::SizeEnum, TFramerate> k4Framerates = {{
+//        // cloud
+//        TFramerate
+//        {K4Framerate::F5,  5},
+//        {K4Framerate::F15, 15},
+//        {K4Framerate::F30, 30},
+//    }};
 
-    }};
-
-    [[maybe_unused]] static constexpr auto framerate_value(K4Framerate f) -> int{
-        return k4Framerates.at<0,1>(f);
-    }
+//    [[maybe_unused]] static constexpr auto framerate_value(K4Framerate f) -> int{
+//        return k4Framerates.at<0,1>(f);
+//    }
 
 
     enum class K4SynchronisationMode : std::int8_t{
@@ -318,26 +319,8 @@ namespace tool::camera {
     };
 
 
-    enum class SettingsType : std::int32_t{
-        Network, Filters, Color, Device, Model,Delay,
-        SizeEnum
-    };
 
-    using TSettings = std::tuple< SettingsType, std::string_view>;
-    static constexpr TupleArray<SettingsType::SizeEnum, TSettings> settings = {{
-        // cloud
-        TSettings
-        {SettingsType::Network, "network settings"},
-        {SettingsType::Filters, "filters settings"},
-        {SettingsType::Color,   "color settings"},
-        {SettingsType::Device,  "device settings"},
-        {SettingsType::Model,   "calibration"},
-        {SettingsType::Delay,   "delay"},
-    }};
 
-    [[maybe_unused]] static constexpr auto settings_name(SettingsType s) -> std::string_view{
-        return settings.at<0,1>(s);
-    }
 
 
     struct K4VertexMeshData{

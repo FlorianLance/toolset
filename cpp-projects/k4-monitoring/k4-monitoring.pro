@@ -115,70 +115,72 @@ LIBS +=  \
     $$WINDOWS_LIBS \
     $$FFMEPG_LIBS \
 
+
+
 ####################################### PROJECT FILES
 
 HEADERS += \
-    avcpp/audioresampler.h \
-    avcpp/av.h \
-    avcpp/averror.h \
-    avcpp/avlog.h \
-    avcpp/avtime.h \
-    avcpp/avutils.h \
-    avcpp/channellayout.h \
-    avcpp/codec.h \
-    avcpp/codeccontext.h \
-    avcpp/dictionary.h \
-    avcpp/ffmpeg.h \
-    avcpp/filters/buffersink.h \
-    avcpp/filters/buffersrc.h \
-    avcpp/filters/filter.h \
-    avcpp/filters/filtercontext.h \
-    avcpp/filters/filtergraph.h \
-    avcpp/filters/filterpad.h \
-    avcpp/format.h \
-    avcpp/formatcontext.h \
-    avcpp/frame.h \
-    avcpp/linkedlistutils.h \
-    avcpp/packet.h \
-    avcpp/pixelformat.h \
-    avcpp/rational.h \
-    avcpp/rect.h \
-    avcpp/sampleformat.h \
-    avcpp/stream.h \
-    avcpp/timestamp.h \
-    avcpp/videorescaler.h \
-    vwutils.h \
+#    avcpp/audioresampler.h \
+#    avcpp/av.h \
+#    avcpp/averror.h \
+#    avcpp/avlog.h \
+#    avcpp/avtime.h \
+#    avcpp/avutils.h \
+#    avcpp/channellayout.h \
+#    avcpp/codec.h \
+#    avcpp/codeccontext.h \
+#    avcpp/dictionary.h \
+#    avcpp/ffmpeg.h \
+#    avcpp/filters/buffersink.h \
+#    avcpp/filters/buffersrc.h \
+#    avcpp/filters/filter.h \
+#    avcpp/filters/filtercontext.h \
+#    avcpp/filters/filtergraph.h \
+#    avcpp/filters/filterpad.h \
+#    avcpp/format.h \
+#    avcpp/formatcontext.h \
+#    avcpp/frame.h \
+#    avcpp/linkedlistutils.h \
+#    avcpp/packet.h \
+#    avcpp/pixelformat.h \
+#    avcpp/rational.h \
+#    avcpp/rect.h \
+#    avcpp/sampleformat.h \
+#    avcpp/stream.h \
+#    avcpp/timestamp.h \
+#    avcpp/videorescaler.h \
+#    vwutils.h \
 
 
 SOURCES += \
-    avcpp/audioresampler.cpp \
-    avcpp/averror.cpp \
-    avcpp/avtime.cpp \
-    avcpp/avutils.cpp \
-    avcpp/channellayout.cpp \
-    avcpp/codec.cpp \
-    avcpp/codeccontext.cpp \
-    avcpp/dictionary.cpp \
-    avcpp/filters/buffersink.cpp \
-    avcpp/filters/buffersrc.cpp \
-    avcpp/filters/filter.cpp \
-    avcpp/filters/filtercontext.cpp \
-    avcpp/filters/filtergraph.cpp \
-    avcpp/filters/filterpad.cpp \
-    avcpp/format.cpp \
-    avcpp/formatcontext.cpp \
-    avcpp/frame.cpp \
-    avcpp/packet.cpp \
-    avcpp/pixelformat.cpp \
-    avcpp/rational.cpp \
-    avcpp/rect.cpp \
-    avcpp/sampleformat.cpp \
-    avcpp/stream.cpp \
-    avcpp/timestamp.cpp \
-    avcpp/videorescaler.cpp \
+#    avcpp/audioresampler.cpp \
+#    avcpp/averror.cpp \
+#    avcpp/avtime.cpp \
+#    avcpp/avutils.cpp \
+#    avcpp/channellayout.cpp \
+#    avcpp/codec.cpp \
+#    avcpp/codeccontext.cpp \
+#    avcpp/dictionary.cpp \
+#    avcpp/filters/buffersink.cpp \
+#    avcpp/filters/buffersrc.cpp \
+#    avcpp/filters/filter.cpp \
+#    avcpp/filters/filtercontext.cpp \
+#    avcpp/filters/filtergraph.cpp \
+#    avcpp/filters/filterpad.cpp \
+#    avcpp/format.cpp \
+#    avcpp/formatcontext.cpp \
+#    avcpp/frame.cpp \
+#    avcpp/packet.cpp \
+#    avcpp/pixelformat.cpp \
+#    avcpp/rational.cpp \
+#    avcpp/rect.cpp \
+#    avcpp/sampleformat.cpp \
+#    avcpp/stream.cpp \
+#    avcpp/timestamp.cpp \
+#    avcpp/videorescaler.cpp \
     k4m_main.cpp \
-    vwutils.cpp \
+#    vwutils.cpp \
 
 
-DISTFILES += \
-    avcpp/libavcpp.pc.in
+#DISTFILES += \
+#    avcpp/libavcpp.pc.in

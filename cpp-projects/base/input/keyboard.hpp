@@ -328,27 +328,27 @@ public:
         TButton{Button::Menu                            ,"Menu"sv             ,319}
     }};
 
-    static constexpr Name get_name(Button button) {
+    static constexpr auto get_name(Button button) -> Name{
         return buttons.at<0,1>(button);
     }
 
-    static constexpr Code get_code(Button button) {
+    static constexpr auto get_code(Button button) -> Code{
         return buttons.at<0,2>(button);
     }
 
-    static constexpr std::optional<Name> get_name(Code code) {
+    static constexpr auto get_name(Code code) -> std::optional<Name>{
         return buttons.optional_at<2,1>(code);
     }
 
-    static constexpr std::optional<Code> get_code(Name name) {
+    static constexpr auto get_code(Name name) -> std::optional<Code> {
         return buttons.optional_at<1,2>(name);
     }
 
-    static constexpr std::optional<Button> get_button(Code code) {
+    static constexpr auto get_button(Code code) -> std::optional<Button>{
         return buttons.optional_at<2,0>(code);
     }
 
-    static constexpr std::optional<Button> get_button(Name name) {
+    static constexpr auto get_button(Name name) -> std::optional<Button>{
         return buttons.optional_at<1,0>(name);
     }
 };

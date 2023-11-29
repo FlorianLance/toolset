@@ -150,8 +150,9 @@ auto K4Player::remove_after_current_frame() -> void{
 }
 
 auto K4Player::merge() -> void{
-//    Logger::error("Not implemented.\n");
-    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
+    Logger::error("MERGE.\n");
+    remove_empty_cameras();
+//    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
 }
 
 auto K4Player::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
@@ -170,6 +171,56 @@ auto K4Player::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::ge
 
     std::vector<K4Model> models(1);
     models.front().transformation = m_videoResource.get_transform(0).conv<float>();
+    initialize_signal(std::move(models));
+}
+
+auto K4Player::remove_empty_cameras() -> void{
+
+    for(size_t ii = 0; ii < m_videoResource.nb_cameras(); ++ii){
+        Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, m_videoResource.nb_frames(ii)));
+
+
+        for(size_t jj = 0; jj < m_videoResource.nb_frames(ii); ++jj){
+            auto nbV = m_videoResource.get_camera_data(ii)->valid_vertices_count(ii);
+            Logger::message(std::format(" {}",nbV));
+        }
+    }
+
+    size_t idC = 0;
+    for(const auto &ccf : m_currentCompressedFrames){
+        if(ccf != nullptr){
+            Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
+        }
+        idC++;
+    }
+
+    return;
+
+    std::vector<size_t> idCamerasToKeep;
+    for(size_t ii = 0; ii < m_videoResource.nb_cameras(); ++ii){
+        if(m_videoResource.nb_frames(ii) > 0){
+            Logger::message(std::format("keep camera {}",ii));
+            idCamerasToKeep.push_back(ii);
+        }
+    }   
+    m_videoResource.keep_only_cameras_from_id(idCamerasToKeep);
+
+    m_currentCompressedFrames.resize(idCamerasToKeep.size());
+    for(auto &ccf : m_currentCompressedFrames){
+        ccf = nullptr;
+    }
+    m_currentFrames.resize(idCamerasToKeep.size());
+    for(auto &cf : m_currentFrames){
+        cf = nullptr;
+    }
+    update_states();
+
+    std::vector<K4Model> models;
+    for(size_t ii = 0; ii < m_videoResource.nb_cameras(); ++ii){
+        K4Model model;
+        model.transformation = m_videoResource.get_transform(ii).conv<float>();
+        models.push_back(model);
+    }
     initialize_signal(std::move(models));
 }
 
@@ -272,7 +323,7 @@ auto K4Player::save_to_file(std::string_view path) -> bool{ return m_videoResour
 auto K4Player::merge_before(K4VolumetricVideo &other) -> void{
 
     if(other.nb_cameras() != m_videoResource.nb_cameras()){
-        Logger::error("Incompatible number of camreras.\n");
+        Logger::error("Incompatible number of cameras.\n");
         return;
     }
 
@@ -289,6 +340,15 @@ auto K4Player::merge_before(K4VolumetricVideo &other) -> void{
 
 auto K4Player::save_cloud_to_file(std::string_view path) -> bool{
     Logger::error("Not implemented.\n");
+
+    size_t idC = 0;
+    for(const auto &ccf : m_currentCompressedFrames){
+        if(ccf != nullptr){
+            Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
+        }
+        idC++;
+    }
+
     return true;
 }
 
