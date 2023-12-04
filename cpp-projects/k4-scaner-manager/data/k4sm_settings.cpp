@@ -236,27 +236,27 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
         switch(type){
         case SType::Device:
             for(auto grabber : tGrabbers){
-                grabber->device = camera::K4DeviceSettings();
+                grabber->device = camera::DCDeviceSettings();
             }
             break;
         case SType::Filters:
             for(auto grabber : tGrabbers){
-                grabber->filters = camera::K4Filters();
+                grabber->filters = camera::DCFilters();
             }
             break;
         case SType::CalibrationFilters:
             for(auto grabber : tGrabbers){
-                grabber->calibrationFilters = camera::K4Filters::default_init_for_calibration();
+                grabber->calibrationFilters = camera::DCFilters::default_init_for_calibration();
             }
             break;
         case SType::Color:
             for(auto grabber : tGrabbers){
-                grabber->color = camera::K4ColorSettings();
+                grabber->color = camera::DCColorSettings();
             }
             break;
         case SType::Model:
             for(auto grabber : tGrabbers){
-                grabber->model = camera::K4Model();
+                grabber->model = camera::DCModel();
             }
             break;
         }
@@ -319,7 +319,7 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
                     if(file == SFile::Default){
-                        grabber->model = camera::K4Model();
+                        grabber->model = camera::DCModel();
                     }else{
                         grabber->model.init_from_file(K4SMPaths::grabbersModel[grabber->id].string());
                     }
@@ -409,19 +409,19 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
     }
 }
 
-auto K4SMSettings::update_model(size_t id, const camera::K4Model &model) -> void {
+auto K4SMSettings::update_model(size_t id, const camera::DCModel &model) -> void {
     grabbersSet[id].model = model;
 }
 
-auto K4SMSettings::update_recorder_states(camera::K4RecorderStates recorderStates) -> void{
+auto K4SMSettings::update_recorder_states(camera::DCRecorderStates recorderStates) -> void{
     globalSta.recorder = recorderStates;
 }
 
-auto K4SMSettings::update_player_states(camera::K4PlayerStates playerStates) -> void{
+auto K4SMSettings::update_player_states(camera::DCPlayerStates playerStates) -> void{
     globalSta.player = playerStates;
 }
 
-auto K4SMSettings::update_calibrator_states(camera::K4CalibratorStates calibratorStates) -> void{
+auto K4SMSettings::update_calibrator_states(camera::DCCalibratorStates calibratorStates) -> void{
     globalSta.calibrator = calibratorStates;
 }
 

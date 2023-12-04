@@ -27,68 +27,55 @@
 #pragma once
 
 // local
-#include "thirdparty/sigslot/signal.hpp"
-#include "k4_frame.hpp"
-#include "k4_compressed_frame.hpp"
-#include "k4_color_settings.hpp"
-#include "k4_filters.hpp"
-#include "k4_data_settings.hpp"
-#include "k4_config_settings.hpp"
-#include "k4_delay.hpp"
+#include "camera/dc_device.hpp"
 
 namespace tool::camera {
 
-
-class K4Device {
+class K4Device : public DCDevice{
 
 public:
 
     K4Device();
     ~K4Device();
 
-    auto open(std::uint32_t deviceId) -> bool;
-    auto refresh_devices_list() -> void;
-    auto close() -> void;
-    auto clean() -> void;
+    auto open(std::uint32_t deviceId) -> bool override;
+    auto refresh_devices_list() -> void override;
+    auto close() -> void override;
+    auto clean() -> void override;
 
     // getters
-    auto nb_devices() const noexcept -> std::uint32_t;
-    auto device_name() const noexcept-> std::string;
-    auto device_id() const noexcept -> std::uint32_t;
-    auto is_opened() const noexcept -> bool;
-    auto cameras_started() const noexcept -> bool;
-    auto is_sync_in_connected() const noexcept -> bool;
-    auto is_sync_out_connected() const noexcept -> bool;
-    auto get_nb_capture_per_second() const noexcept -> float;
-    auto get_capture_duration_ms() noexcept -> std::int64_t;
-    auto get_processing_duration_ms() noexcept -> std::int64_t;
-    auto get_compressing_duration_ms() noexcept -> std::int64_t;
-    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t;
+    auto nb_devices() const noexcept -> std::uint32_t override;
+    auto device_name() const noexcept-> std::string override;
+    auto device_id() const noexcept -> std::uint32_t override;
+    auto is_opened() const noexcept -> bool override;
+    auto cameras_started() const noexcept -> bool override;
+    auto is_sync_in_connected() const noexcept -> bool override;
+    auto is_sync_out_connected() const noexcept -> bool override;
+    auto get_nb_capture_per_second() const noexcept -> float override;
+    auto get_capture_duration_ms() noexcept -> std::int64_t override;
+    auto get_processing_duration_ms() noexcept -> std::int64_t override;
+    auto get_compressing_duration_ms() noexcept -> std::int64_t override;
+    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t override;
+    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t override;
 
     // # config
-    auto mode() const noexcept -> K4Mode;
-    auto is_LED_disabled() const noexcept -> bool;
-    auto synch_mode() const noexcept -> K4SynchronisationMode;
-    auto subordinate_delay_usec() const noexcept -> int;
-    auto color_and_depth_synchronized() const noexcept -> bool;
-    auto delay_between_color_and_depth_usec() const noexcept -> int;
+    auto mode() const noexcept -> DCMode override;
+    auto is_LED_disabled() const noexcept -> bool override;
+    auto synch_mode() const noexcept -> DCSynchronisationMode override;
+    auto subordinate_delay_usec() const noexcept -> int override;
+    auto color_and_depth_synchronized() const noexcept -> bool override;
+    auto delay_between_color_and_depth_usec() const noexcept -> int override;
 
     // cameras
-    auto start_cameras(const K4ConfigSettings &configS) -> bool;
-    auto stop_cameras() -> void;
+    auto start_cameras(const DCConfigSettings &configS) -> bool override;
+    auto stop_cameras() -> void override;
 
     // settings
-    auto set_data_settings(const K4DataSettings &dataS) -> void;
-    auto set_filters(const K4Filters &filters) -> void;
-    auto set_color_settings(const K4ColorSettings &colorS) -> void;
-    auto send_data_state(bool state) -> void;
-    auto set_delay(K4Delay delay) -> void;
-
-    // signals
-    sigslot::signal<std::shared_ptr<K4Frame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<K4CompressedFrame>> new_compressed_frame_signal;
-    sigslot::signal<K4ImuSample> new_imu_sample_signal;
+    auto set_color_settings(const DCColorSettings &colorS) -> void override;
+    auto set_data_settings(const DCDataSettings &dataS) -> void override;
+    auto set_filters(const DCFilters &filters) -> void override;
+    auto send_data_state(bool state) -> void override;
+    auto set_delay(DCDelaySettings delay) -> void override;
 
 private:
 

@@ -28,7 +28,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 
 // local
-#include "camera/kinect4/k4_model.hpp"
+#include "camera/dc_model.hpp"
 #include "imgui_k4_cloud_drawer.hpp"
 #include "imgui_fbo_ui_drawer.hpp"
 
@@ -44,7 +44,7 @@ struct K4CloudsSceneDrawer{
         return fboD.is_camera_updated() || fboD.is_screen_updated() || m_redrawClouds;
     }
 
-    auto update_from_frame(size_t idCloud, std::shared_ptr<camera::K4Frame> frame) -> bool;
+    auto update_from_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> bool;
     auto update_from_colored_cloud_data(size_t idCloud, const geo::ColoredCloudData &cloud) -> bool;
 
     auto draw_clouds_to_fbo() -> void;
@@ -65,9 +65,9 @@ struct K4CloudsSceneDrawer{
     auto draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor=true, bool drawDepth=true, bool drawInfra=true, bool drawCloud=true, std::optional<geo::Pt2<int>> sizeW = std::nullopt) -> void;
 
     // settings
-    auto update_cloud_display_settings(size_t idCloud, const camera::K4CloudDisplaySettings &cloudDisplay) -> void;
-    auto update_scene_display_settings(const camera::K4SceneDisplaySettings &sdS) -> void;
-    auto update_model(size_t idCloud, const camera::K4Model &model)  -> void;
+    auto update_cloud_display_settings(size_t idCloud, const camera::DCCloudDisplaySettings &cloudDisplay) -> void;
+    auto update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void;
+    auto update_model(size_t idCloud, const camera::DCModel &model)  -> void;
 
     // signals
     sigslot::signal<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_signal;
@@ -79,7 +79,7 @@ struct K4CloudsSceneDrawer{
     std::unique_ptr<gl::GridDrawer> gridD = nullptr;    
     ImguiFboUiDrawer fboD;
     // settings
-    camera::K4SceneDisplaySettings display;
+    camera::DCSceneDisplaySettings display;
 
     // test
     std::unique_ptr<gl::GridDrawer> plane1D = nullptr;

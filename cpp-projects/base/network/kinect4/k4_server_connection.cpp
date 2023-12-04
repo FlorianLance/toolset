@@ -27,6 +27,9 @@
 
 #include "k4_server_connection.hpp"
 
+// std
+#include <format>
+
 // local
 #include "utility/logger.hpp"
 

@@ -49,17 +49,17 @@ auto K4ClientConnection::init_connections() -> void{
         std::lock_guard l(m_readerL);
         m_updateDeviceSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<K4UdpColorSettings> message){
+    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<DCUdpColorSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateColorSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_filters_signal.connect([&](Header h, std::shared_ptr<K4Filters> message){
+    m_udpReaderG.update_filters_signal.connect([&](Header h, std::shared_ptr<DCFilters> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateFiltersMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_delay_signal.connect([&](Header h, K4UdpDelay message){
+    m_udpReaderG.update_delay_signal.connect([&](Header h, DCUdpDelay message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDelayMessage  = {std::move(h), message};
@@ -234,7 +234,7 @@ auto K4ClientConnection::disconnect_sender() -> void{
     messagesToSend.clean();
 }
 
-auto K4ClientConnection::send_frame(std::shared_ptr<camera::K4CompressedFrame> frame) -> void{
+auto K4ClientConnection::send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void{
     messagesToSend.push_back(frame);
 }
 
@@ -249,10 +249,11 @@ auto K4ClientConnection::last_frame_id_sent() const -> size_t{
 auto K4ClientConnection::dummy_device_trigger() -> void {
 
     Header header;
-    K4DeviceSettings settings;
-    settings.actionsS.openCamera = true;
+    DCDeviceSettings settings;
+    settings.actionsS.openCamera  = true;
     settings.actionsS.startDevice = true;
-    settings.configS.synchMode = K4SynchronisationMode::Standalone;
+    settings.configS.typeDevice   = DCType::Kinect4;
+    settings.configS.synchMode    = DCSynchronisationMode::K4_Standalone;
 
     std::lock_guard l(m_readerL);
     m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<K4UdpDeviceSettings>(settings)};
@@ -275,7 +276,7 @@ auto K4ClientConnection::send_messages_loop() -> void{
             m_udpSenderG.send_feedback_message(*feedback);
         }
 
-        if(auto frame = std::get_if<std::shared_ptr<camera::K4CompressedFrame>>(&message.value()); frame != nullptr){
+        if(auto frame = std::get_if<std::shared_ptr<camera::DCCompressedFrame>>(&message.value()); frame != nullptr){
 
             auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 

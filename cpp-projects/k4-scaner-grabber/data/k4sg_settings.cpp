@@ -159,7 +159,7 @@ auto K4SGSettings::init_network_sending_settings(std::shared_ptr<network::K4Netw
     triggers_init_network_sending_settings();
 }
 
-auto K4SGSettings::update_filters(std::shared_ptr<camera::K4Filters> filtersS) -> void {
+auto K4SGSettings::update_filters(std::shared_ptr<camera::DCFilters> filtersS) -> void {
     filters = *filtersS;
     triggers_filters_settings();
 }
@@ -169,12 +169,12 @@ auto K4SGSettings::update_device_settings(std::shared_ptr<network::K4UdpDeviceSe
     triggers_device_settings();
 }
 
-auto K4SGSettings::update_color_settings(std::shared_ptr<network::K4UdpColorSettings> colorS) -> void{
+auto K4SGSettings::update_color_settings(std::shared_ptr<network::DCUdpColorSettings> colorS) -> void{
     color = std::move(colorS->data);
     triggers_color_settings();
 }
 
-auto K4SGSettings::update_delay(network::K4UdpDelay delayS) -> void{
+auto K4SGSettings::update_delay(network::DCUdpDelay delayS) -> void{
     delay = std::move(delayS.data);
     triggers_delay_settings();
 }
@@ -211,7 +211,7 @@ auto K4SGSettings::update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<in
     triggers_filters_settings();
 }
 
-auto K4SGSettings::update_imu_sample(camera::K4ImuSample imuSample) -> void{
+auto K4SGSettings::update_imu_sample(camera::DCImuSample imuSample) -> void{
     this->imuSample = imuSample;
 }
 
@@ -249,7 +249,7 @@ void K4SGSettings::disconnect(){
 
 auto K4SGSettings::reset_device_settings() -> void{
     Logger::message("reset_device_settings\n");
-    device = camera::K4DeviceSettings::default_init_for_grabber();
+    device = camera::DCDeviceSettings::default_init_for_grabber(camera::DCType::Kinect4);
     triggers_device_settings();
 }
 
@@ -278,7 +278,7 @@ auto K4SGSettings::load_current_hostname_device_settings_file() -> bool{
 }
 
 auto K4SGSettings::reset_filters() -> void{
-    filters = camera::K4Filters();
+    filters = camera::DCFilters();
     triggers_device_settings();
 }
 
@@ -307,7 +307,7 @@ auto K4SGSettings::load_current_hostname_filters_file() -> bool{
 }
 
 auto K4SGSettings::reset_color_settings() -> void{
-    color = camera::K4ColorSettings();
+    color = camera::DCColorSettings();
     triggers_color_settings();
 }
 
@@ -336,7 +336,7 @@ auto K4SGSettings::load_current_hostname_color_settings_file() -> bool{
 }
 
 auto K4SGSettings::reset_model() -> void{
-    model = camera::K4Model();
+    model = camera::DCModel();
     triggers_model();
 }
 

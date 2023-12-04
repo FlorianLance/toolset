@@ -39,7 +39,7 @@
 using namespace tool::graphics;
 
 
-auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::K4Mode mode, camera::K4Filters &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFilters &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return {false, false};
@@ -125,15 +125,15 @@ auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::K
         int mode = static_cast<int>(filters.p1FMode);
         if(ImGui::RadioButton("No filtering###mode_none_plane1", &mode,0)){
             update = true;
-            filters.p1FMode = camera::K4Filters::PlaneFilteringMode::None;
+            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::None;
         }
         if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
             update = true;
-            filters.p1FMode = camera::K4Filters::PlaneFilteringMode::Above;
+            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::Above;
         }
         if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
             update = true;
-            filters.p1FMode = camera::K4Filters::PlaneFilteringMode::Below;
+            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::Below;
         }
 
         ImGui::Text("Rotation (euler angles):");
@@ -337,7 +337,7 @@ auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::K
     return {true, update};
 }
 
-auto K4UIDrawer::draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::K4SceneDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto K4UIDrawer::draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGui::BeginTabItem(tabItemName.c_str())){
         return false;
@@ -364,7 +364,7 @@ auto K4UIDrawer::draw_scene_display_setings_tab_item(const std::string &tabItemN
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto K4UIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::K4CloudDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto K4UIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -420,7 +420,7 @@ auto K4UIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemN
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto K4UIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camera::K4Model &model, bool &autoUpdate) -> bool{
+auto K4UIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camera::DCModel &model, bool &autoUpdate) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -519,8 +519,8 @@ auto K4UIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camer
 
 auto K4UIDrawer::draw_recording_tab_item(
     const std::string &tabItemName,
-    camera::K4RecorderStates &rStates,
-    camera::K4RecorderSettings &rSettings,
+    camera::DCRecorderStates &rStates,
+    camera::DCRecorderSettings &rSettings,
     bool &autoUpdate) -> bool{
 
 
@@ -615,8 +615,8 @@ auto K4UIDrawer::draw_recording_tab_item(
 
 auto K4UIDrawer::draw_player_tab_item(
     const std::string &tabItemName,
-    camera::K4PlayerStates &pStates,
-    camera::K4PlayerSettings &pSettings,
+    camera::DCPlayerStates &pStates,
+    camera::DCPlayerSettings &pSettings,
     bool &autoUpdate) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
@@ -724,9 +724,9 @@ auto K4UIDrawer::draw_player_tab_item(
 auto K4UIDrawer::draw_calibrator_tab_item(
     const std::string &tabItemName,
     bool useNormalFilteringSettings,
-    camera::K4CalibratorStates &cStates,
-    K4CalibratorDrawerSettings &cdSettings,
-    camera::K4CalibratorSettings &cSettings,
+    camera::DCCalibratorStates &cStates,
+    DCCalibratorDrawerSettings &cdSettings,
+    camera::DCCalibratorSettings &cSettings,
     bool &autoUpdate) -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
@@ -987,7 +987,7 @@ auto K4UIDrawer::draw_calibrator_tab_item(
 auto K4UIDrawer::draw_device_settings_tab_item(
         const std::string &tabItemName,
         const std::vector<std::string> &devicesName,
-        camera::K4DeviceSettings &device,
+        camera::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate) -> bool{
 
@@ -1015,7 +1015,7 @@ auto K4UIDrawer::draw_device_settings_tab_item(
     return  (update && autoUpdate) || manualUpdate;
 }
 
-auto K4UIDrawer::draw_config(const std::vector<std::string> &devicesName, camera::K4ConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
+auto K4UIDrawer::draw_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("CONFIG");
@@ -1056,21 +1056,21 @@ auto K4UIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
         if(guiCurrentModeSelection > 0){
             --guiCurrentModeSelection;
             updateP       = true;
-            config.mode  = static_cast<camera::K4Mode>(guiCurrentModeSelection);
+            config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
         }
     }
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
     if(ImGui::Combo("###settings_mode_combo", &guiCurrentModeSelection, modeItems, IM_ARRAYSIZE(modeItems))){
         updateP       = true;
-        config.mode  = static_cast<camera::K4Mode>(guiCurrentModeSelection);
+        config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
     }
     ImGui::SameLine();
     if(ImGui::Button(">###settings_mode_right")){
         if(guiCurrentModeSelection < IM_ARRAYSIZE(modeItems)-1){
             ++guiCurrentModeSelection;
             updateP       = true;
-            config.mode  = static_cast<camera::K4Mode>(guiCurrentModeSelection);
+            config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
         }
     }
 
@@ -1083,7 +1083,7 @@ auto K4UIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
     int guiCurrentSynchModeSelection = static_cast<int>(config.synchMode);
     if(ImGui::Combo("###settings_synch_mode_combo", &guiCurrentSynchModeSelection, synchItems, IM_ARRAYSIZE(synchItems))){
         updateP          = true;
-        config.synchMode = static_cast<camera::K4SynchronisationMode>(guiCurrentSynchModeSelection);
+        config.synchMode = static_cast<camera::DCSynchronisationMode>(guiCurrentSynchModeSelection);
     }
     ImGui::Unindent();
 
@@ -1116,7 +1116,7 @@ auto K4UIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
     ImGui::Spacing();
 }
 
-auto K4UIDrawer::draw_data_settings(camera::K4DataSettings &data, bool &updateP) -> void{
+auto K4UIDrawer::draw_data_settings(camera::DCDataSettings &data, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("DATA");
@@ -1185,7 +1185,7 @@ auto K4UIDrawer::draw_data_settings(camera::K4DataSettings &data, bool &updateP)
     }
 }
 
-auto K4UIDrawer::draw_actions_settings(camera::K4ActionsSettings &actions, bool &updateP) -> void{
+auto K4UIDrawer::draw_actions_settings(camera::DCActionsSettings &actions, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("ACTIONS TO DO");
@@ -1204,7 +1204,7 @@ auto K4UIDrawer::draw_actions_settings(camera::K4ActionsSettings &actions, bool 
 }
 
 
-auto K4UIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, camera::K4ColorSettings &colors, bool &autoUpdate) -> bool{
+auto K4UIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -1298,16 +1298,16 @@ auto K4UIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, c
     ImGui::Spacing();
 
     if(ImGui::Button("D###default_Powerline frequency")){
-        colors.powerlineFrequency = camera::K4PowerlineFrequency::F60;
+        colors.powerlineFrequency = camera::PowerlineFrequency::F60;
         update = true;
     }
     ImGui::SameLine();
 
-    guiSel = colors.powerlineFrequency == camera::K4PowerlineFrequency::F50 ? 0 : 1;        
+    guiSel = colors.powerlineFrequency == camera::PowerlineFrequency::F50 ? 0 : 1;        
     ImGui::SetNextItemWidth(100.f);
     if(ImGui::Combo("###settings_mode_combo", &guiSel, powerlineFrequencyItems, IM_ARRAYSIZE(powerlineFrequencyItems))){
         update       = true;
-        colors.powerlineFrequency = guiSel == 0 ? camera::K4PowerlineFrequency::F50 : camera::K4PowerlineFrequency::F60;
+        colors.powerlineFrequency = guiSel == 0 ? camera::PowerlineFrequency::F50 : camera::PowerlineFrequency::F60;
     }
     ImGui::SameLine();
     ImGui::Text("Powerline frequency:");

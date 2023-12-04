@@ -1,13 +1,15 @@
 
 #include "imgui_k4_player_drawer.hpp"
 
+// std
+#include <format>
+
 // local
 #include "imgui_ui_drawer.hpp"
 
-
 using namespace tool::graphics;
 
-auto K4PlayerDrawer::initialize(const std::vector<camera::K4Model> &models) -> void {
+auto K4PlayerDrawer::initialize(const std::vector<camera::DCModel> &models) -> void {
 
     K4CloudsSceneDrawer::initialize(models.size());
     for(size_t ii = 0; ii < models.size(); ++ii){
@@ -19,7 +21,7 @@ auto K4PlayerDrawer::initialize(const std::vector<camera::K4Model> &models) -> v
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);        
 }
 
-auto K4PlayerDrawer::set_frame(size_t idC, std::shared_ptr<camera::K4Frame> frame) -> void{
+auto K4PlayerDrawer::set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void{
 
     if(idC >= m_currentFrames.size()){
         return;

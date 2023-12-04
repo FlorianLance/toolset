@@ -37,12 +37,12 @@
 #include "network/udp_sender.hpp"
 #include "network/kinect4/k4_network.hpp"
 // # camera
-#include "camera/kinect4/k4_data.hpp"
+#include "camera/dc_packed_data.hpp"
 // # utility
 #include "utility/thread.hpp"
 
 // local
-#include "k4_udp_sender.hpp"
+#include "dc_udp_sender.hpp"
 #include "k4_udp_reader.hpp"
 
 namespace tool::network {
@@ -76,8 +76,8 @@ public:
     SSS<network::K4Feedback> grabber_feedback_signal;
     SSS<std::shared_ptr<camera::K4CompressedFrame>> grabber_compressed_frame_signal;
 
-    K4ServerUdpSender udpSender;
-    K4ServerUdpReader udpReader;
+    DCServerUdpSender udpSender;
+    DCServerUdpReader udpReader;
 
 private:
 

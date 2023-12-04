@@ -31,9 +31,9 @@
 
 // local
 #include "network/udp_header.hpp"
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_color_settings.hpp"
-#include "camera/kinect4/k4_delay.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
 
 namespace tool::network {
 
@@ -130,7 +130,7 @@ struct K4Feedback{
 };
 
 using K4UdpFeedback                 = UdpMonoPacketMessage<K4Feedback>;
-using K4UdpColorSettings            = UdpMonoPacketMessage<camera::K4ColorSettings>;
-using K4UdpDeviceSettings           = UdpMonoPacketMessage<camera::K4DeviceSettings>;
-using K4UdpDelay                    = UdpMonoPacketMessage<camera::K4Delay>;
+using DCUdpColorSettings            = UdpMonoPacketMessage<camera::DCColorSettings>;
+using K4UdpDeviceSettings           = UdpMonoPacketMessage<camera::DCDeviceSettings>;
+using DCUdpDelay                    = UdpMonoPacketMessage<camera::DCDelaySettings>;
 }

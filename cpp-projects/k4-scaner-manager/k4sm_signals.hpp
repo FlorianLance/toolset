@@ -33,7 +33,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "network/kinect4/k4_network.hpp"
 #include "camera/kinect4/k4_compressed_frame.hpp"
-#include "camera/kinect4/k4_frame.hpp"
+#include "camera/dc_frame.hpp"
 
 // local
 #include "data/k4sm_misc.hpp"
@@ -55,8 +55,8 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
     // network
-    SSS<size_t, std::shared_ptr<camera::K4CompressedFrame>> new_compressed_frame_signal;
-    SSS<size_t, std::shared_ptr<camera::K4Frame>> new_frame_signal;
+    SSS<size_t, std::shared_ptr<camera::DCCompressedFrame>> new_compressed_frame_signal;
+    SSS<size_t, std::shared_ptr<camera::DCFrame>> new_frame_signal;
 
     // recording
     SSS<> start_recorder_signal;
@@ -64,7 +64,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const camera::K4RecorderSettings&> update_recorder_settings_signal;
+    SSS<const camera::DCRecorderSettings&> update_recorder_settings_signal;
 
     // player
     SSS<> start_player_signal;
@@ -80,34 +80,34 @@ public:
     SSS<std::string> load_video_player_signal;
 
     // calibration
-    SSS<const camera::K4CalibratorSettings &> update_calibration_settings_signal;
-    SSS<const graphics::K4CalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
+    SSS<const camera::DCCalibratorSettings &> update_calibration_settings_signal;
+    SSS<const graphics::DCCalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
     SSS<> reset_calibration_registering_signal;
     SSS<> start_calibration_registering_signal;
     SSS<> stop_calibration_registering_signal;
     SSS<> recompute_registering_processing_signal;
     SSS<> ask_calibration_signal;
-    SSS<std::vector<camera::K4Model>> calibrate_signal;
+    SSS<std::vector<camera::DCModel>> calibrate_signal;
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
 
     // filters
     SSS<bool> update_filtering_mode_signal;
-    SSS<size_t, const camera::K4Filters&> update_filters_settings_signal;
-    SSS<size_t, const camera::K4Filters&> update_calibration_filters_settings_signal;
+    SSS<size_t, const camera::DCFilters&> update_filters_settings_signal;
+    SSS<size_t, const camera::DCFilters&> update_calibration_filters_settings_signal;
 
 
     SSS<size_t> init_connection_signal;
     SSS<size_t, network::K4Command> command_signal;
 
     // settings
-    SSS<size_t, const camera::K4DeviceSettings &> update_device_settings_signal;
-    SSS<size_t, const camera::K4ColorSettings &> update_color_settings_signal;    
-    SSS<size_t, const camera::K4CloudDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<size_t, const camera::K4Model&> update_model_settings_signal;
-    SSS<const camera::K4SceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<const camera::K4PlayerSettings&> update_player_settings_signal;
-    SSS<size_t, camera::K4Delay> update_delay_signal;
+    SSS<size_t, const camera::DCDeviceSettings &> update_device_settings_signal;
+    SSS<size_t, const camera::DCColorSettings &> update_color_settings_signal;
+    SSS<size_t, const camera::DCCloudDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<size_t, const camera::DCModel&> update_model_settings_signal;
+    SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
+    SSS<const camera::DCPlayerSettings&> update_player_settings_signal;
+    SSS<size_t, camera::DCDelaySettings> update_delay_signal;
 
 
     // i/o

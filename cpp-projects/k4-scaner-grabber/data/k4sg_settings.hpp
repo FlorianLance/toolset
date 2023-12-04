@@ -31,13 +31,13 @@
 #include <filesystem>
 
 // base
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_display_settings.hpp"
+#include "camera/settings/dc_recorder_settings.hpp"
+#include "camera/dc_model.hpp"
+#include "camera/dc_filters.hpp"
 #include "network/kinect4/k4_network.hpp"
 #include "network/kinect4/k4_client_network_settings.hpp"
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_filters.hpp"
-#include "camera/kinect4/k4_display_settings.hpp"
-#include "camera/kinect4/k4_model.hpp"
-#include "camera/kinect4/k4_recorder_settings.hpp"
 
 // local
 #include "k4sg_ui_settings.hpp"
@@ -50,13 +50,13 @@ struct K4SGSettings{
 
     // settings
     auto init_network_sending_settings(std::shared_ptr<network::K4NetworkSendingSettings> networkSendingS) -> void;
-    auto update_filters(std::shared_ptr<camera::K4Filters> filtersS) -> void;
+    auto update_filters(std::shared_ptr<camera::DCFilters> filtersS) -> void;
     auto update_device_settings(std::shared_ptr<network::K4UdpDeviceSettings> deviceS) -> void;
-    auto update_color_settings(std::shared_ptr<network::K4UdpColorSettings> colorS) -> void;
-    auto update_delay(network::K4UdpDelay delayS) -> void;
+    auto update_color_settings(std::shared_ptr<network::DCUdpColorSettings> colorS) -> void;
+    auto update_delay(network::DCUdpDelay delayS) -> void;
     auto update_device_name(int id, const std::string &name) -> void;
     auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
-    auto update_imu_sample(camera::K4ImuSample imuSample) -> void;
+    auto update_imu_sample(camera::DCImuSample imuSample) -> void;
 
     // triggers
     auto triggers_init_network_sending_settings() -> void;
@@ -105,25 +105,25 @@ struct K4SGSettings{
     // # network
     network::K4ClientNetworkSettings network;    
     // # camera
-    camera::K4DeviceSettings device = camera::K4DeviceSettings::default_init_for_grabber();    
-    camera::K4Filters filters;    
-    camera::K4ColorSettings color;
+    camera::DCDeviceSettings device = camera::DCDeviceSettings::default_init_for_grabber(camera::DCType::Kinect4);
+    camera::DCFilters filters;
+    camera::DCColorSettings color;
     // # scene
-    camera::K4SceneDisplaySettings sceneDisplay = camera::K4SceneDisplaySettings::default_init_for_grabber();
-    camera::K4CloudDisplaySettings cloudDisplay = camera::K4CloudDisplaySettings::default_init_for_grabber();
+    camera::DCSceneDisplaySettings sceneDisplay = camera::DCSceneDisplaySettings::default_init_for_grabber();
+    camera::DCCloudDisplaySettings cloudDisplay = camera::DCCloudDisplaySettings::default_init_for_grabber();
     // # model
-    camera::K4Model model;   
+    camera::DCModel model;   
     // # delay
-    camera::K4Delay delay;
+    camera::DCDelaySettings delay;
     // # recording
-    camera::K4RecorderSettings recSettings;
-    camera::K4RecorderStates recStates;
+    camera::DCRecorderSettings recSettings;
+    camera::DCRecorderStates recStates;
     // # ui
     ui::K4SGUiSettings ui;
 
     // data to be displayed in ui
     // # imu
-    std::optional<camera::K4ImuSample> imuSample;
+    std::optional<camera::DCImuSample> imuSample;
 
     // files settings paths
     std::string netWorkFilePath;

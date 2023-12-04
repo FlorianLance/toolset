@@ -61,8 +61,8 @@ private:
     auto init_from_text(const std::string &text) -> void override;
     auto convert_to_text() const -> std::string override;
 
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(camera::SettingsType::Network);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<camera::SettingsType>(type()));}
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(camera::DCSettingsType::Network);};
+    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<camera::DCSettingsType>(type()));}
 
     // local
     bool m_connectedToManager = false;

@@ -39,7 +39,7 @@ auto K4CalibratorDrawer::initialize(size_t nbGrabbers) -> void{
     }
 }
 
-auto K4CalibratorDrawer::set_data(int sourceId, int modelId, std::vector<camera::K4CalibratorGrabberData>* grabbersData) -> void{
+auto K4CalibratorDrawer::set_data(int sourceId, int modelId, std::vector<camera::DCCalibratorGrabberData>* grabbersData) -> void{
 
     auto allSelection = modelId == grabbersData->size();
     for(size_t ii = 0; ii < grabbersData->size(); ++ii){
@@ -73,7 +73,7 @@ auto K4CalibratorDrawer::draw() -> void{
     draw_all_clouds_drawers_in_one_tab(false, false, false, true, "Calibration clouds");
 }
 
-auto K4CalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::K4Model &model) -> void{
+auto K4CalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::DCModel &model) -> void{
 
     auto tr = model.compute_full_transformation();
     cloudsD[idGrabber].model                      = tr;
@@ -81,7 +81,7 @@ auto K4CalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::K4
     m_redrawClouds = true;
 }
 
-auto K4CalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const camera::K4CloudDisplaySettings &cloudDisplay) -> void{
+auto K4CalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const camera::DCCloudDisplaySettings &cloudDisplay) -> void{
 
     auto &cdC = cloudsD[idGrabber].display;
     cdC.forceCloudColor = true;
@@ -99,7 +99,7 @@ auto K4CalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const ca
     m_redrawClouds = true;
 }
 
-auto K4CalibratorDrawer::update_settings(const K4CalibratorDrawerSettings &settings) -> void{
+auto K4CalibratorDrawer::update_settings(const DCCalibratorDrawerSettings &settings) -> void{
     m_settings = settings;
     m_redrawClouds = true;
 }

@@ -27,9 +27,11 @@
 
 #include "imgui_k4_recorder_drawer.hpp"
 
+// std
+#include <format>
+
 // local
 #include "imgui_ui_drawer.hpp"
-
 
 using namespace tool::graphics;
 
@@ -39,7 +41,7 @@ auto K4RecorderDrawer::initialize(size_t nbGrabbers) -> void {
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);
 }
 
-auto K4RecorderDrawer::set_frame(size_t idC, std::shared_ptr<camera::K4Frame> frame) -> void{
+auto K4RecorderDrawer::set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void{
 
     if(idC >= m_currentFrames.size()){
         return;

@@ -40,10 +40,10 @@ struct K4ServerNetwork{
 
     auto init_connection(size_t idG) -> void;
     auto send_command(size_t idG, K4Command command) -> void;
-    auto send_device_settings(size_t idG, const camera::K4DeviceSettings &deviceS) -> void;
-    auto send_color_settings(size_t idG, const camera::K4ColorSettings &colorS) -> void;
-    auto send_filters(size_t idG, const camera::K4Filters &filters) -> void;
-    auto send_delay(size_t idG, camera::K4Delay delay) -> void;
+    auto send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
+    auto send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
+    auto send_filters(size_t idG, const camera::DCFilters &filters) -> void;
+    auto send_delay(size_t idG, camera::DCDelaySettings delay) -> void;
 
     auto connections_nb() const noexcept -> size_t {return connections.size();}
     auto get_connection(size_t idG) const -> K4ServerConnection*{return connections[idG].get();}

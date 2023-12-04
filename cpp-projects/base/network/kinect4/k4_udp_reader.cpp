@@ -29,12 +29,11 @@
 
 // local
 #include "utility/time.hpp"
-#include "utility/logger.hpp"
 
 using namespace tool::camera;
 using namespace tool::network;
 
-auto K4ClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
+auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
     auto packetData = reinterpret_cast<std::int8_t*>(packet->data());
 
@@ -57,14 +56,14 @@ auto K4ClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
             break;
         }
         if(filtersMessage.all_received(header)){
-            update_filters_signal(std::move(header), std::make_shared<camera::K4Filters>(m_data.data()));
+            update_filters_signal(std::move(header), std::make_shared<camera::DCFilters>(m_data.data()));
         }
     }break;
     case MessageType::update_color_settings:{
-        update_color_settings_signal(std::move(header), std::make_shared<K4UdpColorSettings>(packetData));
+        update_color_settings_signal(std::move(header), std::make_shared<DCUdpColorSettings>(packetData));
     }break;
     case MessageType::delay:{
-        update_delay_signal(std::move(header), K4UdpDelay(packetData));
+        update_delay_signal(std::move(header), DCUdpDelay(packetData));
     }break;
     case MessageType::command:{
         command_signal(header, UdpMonoPacketData::generate_data_from_packet_raw<K4Command>(packetData));
@@ -74,9 +73,8 @@ auto K4ClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     }
 }
 
-#include <iostream>
 
-auto K4ServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
+auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
     using namespace std::chrono;
 

@@ -64,12 +64,12 @@ private:
     // # settings
     auto draw_device_tab_item(K4SMSettings &settings) -> void;
     auto draw_filters_tab_item(K4SMSettings &settings) -> void;
-    auto draw_display_tab_item(camera::K4SceneDisplaySettings &sceneDisplay, std::vector<K4GrabberSettings> &grabbers) -> void;
+    auto draw_display_tab_item(camera::DCSceneDisplaySettings &sceneDisplay, std::vector<K4GrabberSettings> &grabbers) -> void;
     auto draw_calibration_tab_item( std::vector<K4GrabberSettings> &grabbers) -> void;
     auto draw_color_tab_item(std::vector<K4GrabberSettings> &grabbers) -> void;
-    auto draw_recorder_tab_item(camera::K4RecorderStates &rStates, camera::K4RecorderSettings &rSettings) -> void;
-    auto draw_player_tab_item(camera::K4PlayerStates &pStates, camera::K4PlayerSettings &pSettings) -> void;
-    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::K4CalibratorStates &cStates, K4CalibratorDrawerSettings &cdSettings, camera::K4CalibratorSettings &cSettings) -> void;
+    auto draw_recorder_tab_item(camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings) -> void;
+    auto draw_player_tab_item(camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings) -> void;
+    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings) -> void;
 
     // ui
     bool autoUpdate = true;

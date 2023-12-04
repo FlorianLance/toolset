@@ -150,7 +150,7 @@ auto K4SMLeftPanelChildDrawer::draw_settings_tab_item(K4SMSettings &settings) ->
 }
 
 
-auto K4SMLeftPanelChildDrawer::draw_recorder_tab_item(camera::K4RecorderStates &rStates, camera::K4RecorderSettings &rSettings) -> void {
+auto K4SMLeftPanelChildDrawer::draw_recorder_tab_item(camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings) -> void {
 
     if(K4UIDrawer::draw_recording_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings, autoUpdate)){
         K4SMSignals::get()->update_recorder_settings_signal(rSettings);
@@ -179,7 +179,7 @@ auto K4SMLeftPanelChildDrawer::draw_recorder_tab_item(camera::K4RecorderStates &
     rStates.reset_actions();
 }
 
-auto K4SMLeftPanelChildDrawer::draw_player_tab_item(camera::K4PlayerStates &pStates, camera::K4PlayerSettings &pSettings) -> void{
+auto K4SMLeftPanelChildDrawer::draw_player_tab_item(camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings) -> void{
 
     if(K4UIDrawer::draw_player_tab_item("Player###settings_player_tabitem", pStates, pSettings, autoUpdate)){
         K4SMSignals::get()->update_player_settings_signal(pSettings);
@@ -233,7 +233,7 @@ auto K4SMLeftPanelChildDrawer::draw_player_tab_item(camera::K4PlayerStates &pSta
     pStates.reset_actions();
 }
 
-auto K4SMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::K4CalibratorStates &cStates, K4CalibratorDrawerSettings &cdSettings, camera::K4CalibratorSettings &cSettings) -> void{
+auto K4SMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings) -> void{
 
     if(K4UIDrawer::draw_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings, autoUpdate)){
         K4SMSignals::get()->update_calibration_settings_signal(cSettings);        
@@ -603,7 +603,7 @@ auto K4SMLeftPanelChildDrawer::draw_filters_tab_item(K4SMSettings &settings) -> 
 
     if(ImGui::Button(fmt("Copy{}_copy_filters", base).c_str())){
 
-        K4Filters *fromFilters = nullptr;
+        DCFilters *fromFilters = nullptr;
         if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersSet.size())){
             int idGrabber = guiCurrentFromFiltersSelection;
             fromFilters = &settings.grabbersSet[idGrabber].filters;
@@ -648,7 +648,7 @@ auto K4SMLeftPanelChildDrawer::draw_filters_tab_item(K4SMSettings &settings) -> 
     ImGui::EndTabItem();
 }
 
-auto K4SMLeftPanelChildDrawer::draw_display_tab_item(camera::K4SceneDisplaySettings &sceneDisplay, std::vector<K4GrabberSettings> &grabbers) -> void {
+auto K4SMLeftPanelChildDrawer::draw_display_tab_item(camera::DCSceneDisplaySettings &sceneDisplay, std::vector<K4GrabberSettings> &grabbers) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Display###display_settings_tabitem")){
         return;
@@ -814,7 +814,7 @@ void K4SMLeftPanelChildDrawer::draw_color_tab_item(std::vector<K4GrabberSettings
     ImGuiUiDrawer::title2("COPY");
 
     if(ImGui::Button(fmt("Copy{}_copy_colors", base).c_str())){
-        K4ColorSettings *fromColor = &grabbers[guiCurrentFromColorsSelection].color;
+        DCColorSettings *fromColor = &grabbers[guiCurrentFromColorsSelection].color;
         if(guiCurrentTargetColorsSelection == 0){ // all
             for(size_t ii = 0; ii < grabbers.size(); ++ii){
                 K4SMSignals::get()->update_color_settings_signal(ii, *fromColor);

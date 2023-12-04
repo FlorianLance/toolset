@@ -106,7 +106,7 @@ auto K4ServerNetwork::send_command(size_t idG, K4Command command) -> void {
     }
 }
 
-auto K4ServerNetwork::send_device_settings(size_t idG, const camera::K4DeviceSettings &deviceS) -> void {
+auto K4ServerNetwork::send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_device_settings_message(deviceS);
     }else{
@@ -114,7 +114,7 @@ auto K4ServerNetwork::send_device_settings(size_t idG, const camera::K4DeviceSet
     }
 }
 
-auto K4ServerNetwork::send_color_settings(size_t idG, const camera::K4ColorSettings &colorS) -> void {
+auto K4ServerNetwork::send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_color_settings_message(colorS);
     }else{
@@ -122,7 +122,7 @@ auto K4ServerNetwork::send_color_settings(size_t idG, const camera::K4ColorSetti
     }
 }
 
-auto K4ServerNetwork::send_filters(size_t idG, const camera::K4Filters &filters) -> void {
+auto K4ServerNetwork::send_filters(size_t idG, const camera::DCFilters &filters) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_filters_settings_message(filters);
     }else{
@@ -130,7 +130,7 @@ auto K4ServerNetwork::send_filters(size_t idG, const camera::K4Filters &filters)
     }
 }
 
-auto K4ServerNetwork::send_delay(size_t idG, camera::K4Delay delay) -> void{
+auto K4ServerNetwork::send_delay(size_t idG, camera::DCDelaySettings delay) -> void{
     if(idG < connections.size()){
         connections[idG]->udpSender.send_delay_settings_message(delay);
     }else{

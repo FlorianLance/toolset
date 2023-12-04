@@ -35,13 +35,13 @@ namespace tool::graphics {
 
 struct K4PlayerDrawer : public K4CloudsSceneDrawer{
 
-    auto initialize(const std::vector<camera::K4Model> &models) -> void;
-    auto set_frame(size_t idC, std::shared_ptr<camera::K4Frame> frame) -> void;
+    auto initialize(const std::vector<camera::DCModel> &models) -> void;
+    auto set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void;
     auto draw() -> void;
 
 private:
 
-    std::vector<std::shared_ptr<camera::K4Frame>> m_currentFrames;
+    std::vector<std::shared_ptr<camera::DCFrame>> m_currentFrames;
     bool m_redrawClouds = false;
     bool m_allTabOpened = false;
 };

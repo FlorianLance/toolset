@@ -26,6 +26,9 @@
 
 #include "imgui_k4_direct_drawer.hpp"
 
+// std
+#include <format>
+
 // local
 #include "imgui_ui_drawer.hpp"
 
@@ -35,7 +38,7 @@ auto K4DirectDrawer::initialize(size_t nbGrabbers) -> void{
     K4CloudsSceneDrawer::initialize(nbGrabbers);
 }
 
-auto K4DirectDrawer::set_frame(size_t idGrabber, std::shared_ptr<camera::K4Frame> frame) -> void{
+auto K4DirectDrawer::set_frame(size_t idGrabber, std::shared_ptr<camera::DCFrame> frame) -> void{
     if(update_from_frame(idGrabber, frame)){
         m_redrawClouds = true;
     }

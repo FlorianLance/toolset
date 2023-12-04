@@ -182,7 +182,7 @@ auto K4SGLeftPanelChildDrawer::draw_infos_tab_item(K4SGSettings &settings) -> vo
 
 auto K4SGLeftPanelChildDrawer::draw_device_tab_item(
     const std::vector<std::string> &devicesNames,
-    camera::K4DeviceSettings &device) -> void {
+    camera::DCDeviceSettings &device) -> void {
 
     auto signals = K4SGSignals::get();
 
@@ -205,8 +205,8 @@ auto K4SGLeftPanelChildDrawer::draw_device_tab_item(
 
 auto K4SGLeftPanelChildDrawer::draw_filters_tab_item(
     ui::K4SGUiSettings &ui,
-    const camera::K4ConfigSettings &config,
-    camera::K4Filters &filters) -> void {
+    const camera::DCConfigSettings &config,
+    camera::DCFilters &filters) -> void {
 
     auto ret = K4UIDrawer::draw_filters_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
     ui.settingsFiltersSubPanelDisplayed  = std::get<0>(ret);
@@ -215,7 +215,7 @@ auto K4SGLeftPanelChildDrawer::draw_filters_tab_item(
     }
 }
 
-void K4SGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::K4ColorSettings &colors){
+auto K4SGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::DCColorSettings &colors) -> void{
 
     if(K4UIDrawer::draw_colors_settings_tab_item("Colors###colors_tabitem", colors, m_autoUpdate)){
         K4SGSignals::get()->update_color_settings_signal(colors);
@@ -223,8 +223,8 @@ void K4SGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::K4ColorSett
 }
 
 auto K4SGLeftPanelChildDrawer::draw_display_tab_item(
-    camera::K4SceneDisplaySettings &sceneDisplay,
-    camera::K4CloudDisplaySettings &cloudDisplay) -> void {
+    camera::DCSceneDisplaySettings &sceneDisplay,
+    camera::DCCloudDisplaySettings &cloudDisplay) -> void {
 
     if (!ImGui::BeginTabItem("Display###display_settings_tabitem")){
         return;
@@ -276,7 +276,7 @@ auto K4SGLeftPanelChildDrawer::draw_ui_tab_item(ui::K4SGUiSettings &ui) -> void 
     ImGui::EndTabItem();
 }
 
-auto K4SGLeftPanelChildDrawer::draw_recording_tab_item(camera::K4RecorderStates &recStates, camera::K4RecorderSettings &recSetings) -> void {
+auto K4SGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void {
     if(K4UIDrawer::draw_recording_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
         K4SGSignals::get()->update_recorder_settings_signal(recSetings);
     }
@@ -302,7 +302,7 @@ auto K4SGLeftPanelChildDrawer::draw_recording_tab_item(camera::K4RecorderStates 
     }
 }
 
-auto K4SGLeftPanelChildDrawer::draw_model_tab_item(camera::K4Model &model) -> void {
+auto K4SGLeftPanelChildDrawer::draw_model_tab_item(camera::DCModel &model) -> void {
 
     if(K4UIDrawer::draw_calibration_tab_item("Model###model_tabitem", model, m_autoUpdate)){
         K4SGSignals::get()->update_model_signal(0, model);

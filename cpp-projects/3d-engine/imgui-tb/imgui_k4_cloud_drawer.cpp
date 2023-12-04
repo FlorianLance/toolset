@@ -38,7 +38,7 @@ auto K4CloudDrawer::reset() -> void{
     cpD.clean();
 }
 
-auto K4CloudDrawer::init_from_frame(std::shared_ptr<camera::K4Frame> frame) -> bool {
+auto K4CloudDrawer::init_from_frame(std::shared_ptr<camera::DCFrame> frame) -> bool {
 
     if(lastFrameId == frame->idCapture){
         return false;

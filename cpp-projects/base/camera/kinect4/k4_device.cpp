@@ -32,21 +32,15 @@
 #include <execution>
 #include <iostream>
 
-// kinect4
-#include <k4a/k4a.hpp>
-#include <kabt/k4abt.hpp>
-
 // libyuv
 #include "thirdparty/libyuv/libyuv.h"
-// nanobenchmark
-//#include "thirdparty/nanobench/nanobench.h"
 
 // local
 // # kinect4
 #include "k4a/k4astaticimageproperties.h"
 #include "k4a/k4amicrophonelistener.h"
 #include "k4a/k4aaudiomanager.h"
-//#include "k4a/k4aaudiochanneldatagraph.h"
+#include "kabt/k4abt.hpp"
 // # utility
 #include "utility/time.hpp"
 #include "utility/logger.hpp"
@@ -59,8 +53,10 @@
 // # graphics
 #include "graphics/color.hpp"
 // # camera
-#include "k4_frame_compressor.hpp"
-#include "k4_frame_uncompressor.hpp"
+#include "k4_types.hpp"
+#include "camera/dc_frame_compressor.hpp"
+#include "camera/dc_frame_uncompressor.hpp"
+#include "k4_compressed_frame.hpp"
 
 using namespace tool;
 using namespace tool::geo;
@@ -86,7 +82,7 @@ struct K4Device::Impl{
     k4a_device_configuration_t k4aConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
     k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
 
-    K4ConfigSettings config;
+    DCConfigSettings config;
     std::unique_ptr<k4a::capture> capture = nullptr;
 
     // images
@@ -110,7 +106,7 @@ struct K4Device::Impl{
     std::vector<k4a::K4AMicrophoneFrame> audioFrames;
 
     // imu
-    K4ImuSample imuSample;
+    DCImuSample imuSample;
 
     // bodies
     std::chrono::nanoseconds bodiesTS = std::chrono::nanoseconds{0};
@@ -118,8 +114,8 @@ struct K4Device::Impl{
     std::vector<K4Body> bodies;
 
     // parameters
-    K4DataSettings data;
-    K4Filters filters;
+    DCDataSettings data;
+    DCFilters filters;
 
     // infos
     size_t idCapture    = 0;
@@ -129,9 +125,9 @@ struct K4Device::Impl{
     size_t depthWidth   = 0;
     size_t depthHeight  = 0;
     size_t depthSize    = 0;
-    K4ColorResolution colorResolution;
-    K4ImageFormat imageFormat;
-    K4DepthMode depthMode;
+    DCColorResolution colorResolution;
+    DCImageFormat imageFormat;
+    DCDepthMode depthMode;
 
     // profiling
     s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> timestamps;
@@ -166,8 +162,8 @@ struct K4Device::Impl{
     std::vector<std::int16_t> depthFiltering;
 
     // compression
-    K4FrameCompressor frameCompressor;
-    K4FrameUncompressor frameUncompressor;
+    DCFrameCompressor frameCompressor;
+    DCFrameUncompressor frameUncompressor;
 
     // thread/lockers
     std::mutex parametersM; /**< mutex for reading parameters at beginning of a new frame in thread function */
@@ -175,50 +171,50 @@ struct K4Device::Impl{
 
     // delay buffer
     std::int64_t millisecondsDelay = 0;
-    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<K4Frame>>> frames;
+    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<DCFrame>>> frames;
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<camera::K4CompressedFrame>>> compressedFrames;
 
     // functions
-    auto read_frames(K4Mode mode) -> void;
+    auto read_frames(DCMode mode) -> void;
     // # init data
-    auto init_data(K4Mode mode) -> void;
+    auto init_data(DCMode mode) -> void;
     // # read data
     auto read_from_microphones() -> void;
     auto read_from_imu() -> void;
     // # get images
     auto get_color_image() -> bool;
     auto get_depth_image() -> bool;
-    auto get_infra_image(K4Mode mode) -> bool;
+    auto get_infra_image(DCMode mode) -> bool;
     // # processing
-    auto convert_color_image(const K4Filters &f) -> void;
+    auto convert_color_image(const DCFilters &f) -> void;
     auto resize_color_to_fit_depth() -> void;
-    auto filter_depth_image(const K4Filters &f, K4Mode mode) -> void;
-    auto filter_color_image(const K4Filters &f) -> void;
-    auto filter_infrared_image(const K4Filters &f) -> void;
-    auto generate_cloud(const K4DataSettings &d, K4Mode mode) -> void;
-    auto compress_frame(const K4Filters &f, const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4CompressedFrame>;
-    auto create_local_frame(const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4Frame>;
+    auto filter_depth_image(const DCFilters &f, DCMode mode) -> void;
+    auto filter_color_image(const DCFilters &f) -> void;
+    auto filter_infrared_image(const DCFilters &f) -> void;
+    auto generate_cloud(const DCDataSettings &d, DCMode mode) -> void;
+    auto compress_frame(const DCFilters &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<K4CompressedFrame>;
+    auto create_local_frame(const DCDataSettings &d, DCMode mode) -> std::unique_ptr<DCFrame>;
 
     // profiling
     auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::milliseconds>;
     auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::microseconds>;
 
 
-    static auto generate_config(bool synchInConnected, bool synchOutConnected, const K4ConfigSettings &config) -> k4a_device_configuration_t;
+    static auto generate_config(bool synchInConnected, bool synchOutConnected, const DCConfigSettings &config) -> k4a_device_configuration_t;
     static auto generate_config(
         bool synchInConnected,
         bool synchOutConnected,
-        K4ImageFormat colFormat,
-        K4ColorResolution colResolution,
-        K4DepthMode depthMode = K4DepthMode::NFOV_UNBINNED,
-        K4Framerate fps = K4Framerate::F30,
+        DCImageFormat colFormat,
+        DCColorResolution colResolution,
+        DCDepthMode depthMode = DCDepthMode::K4_NFOV_UNBINNED,
+        DCFramerate fps = DCFramerate::F30,
         bool synchronizeColorAndDepth = true,
         int delayBetweenColorAndDepthUsec = 0,
-        K4SynchronisationMode synchMode = K4SynchronisationMode::Standalone,
+        DCSynchronisationMode synchMode = DCSynchronisationMode::K4_Standalone,
         int subordinateDelayUsec = 0,
         bool disableLED = false) -> k4a_device_configuration_t;
 
-    static auto generate_bt_config(const K4ConfigSettings &config) -> k4abt_tracker_configuration_t;
+    static auto generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t;
 
 private:
 
@@ -260,17 +256,17 @@ auto K4Device::Impl::get_duration_between_micro_s(std::string_view from, std::st
     return std::nullopt;
 }
 
-auto K4Device::Impl::generate_config(bool synchInConnected, bool synchOutConnected,const K4ConfigSettings &config) -> k4a_device_configuration_t{
+auto K4Device::Impl::generate_config(bool synchInConnected, bool synchOutConnected,const DCConfigSettings &config) -> k4a_device_configuration_t{
 
     k4a_device_configuration_t ka4Config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
-    ka4Config.color_format               = static_cast<k4a_image_format_t>(image_format(config.mode));
+    ka4Config.color_format               = static_cast<k4a_image_format_t>(get_k4_image_format(image_format(config.mode)));
     ka4Config.color_resolution           = static_cast<k4a_color_resolution_t>(color_resolution(config.mode));
     ka4Config.depth_mode                 = static_cast<k4a_depth_mode_t>(depth_mode(config.mode));
     ka4Config.camera_fps                 = static_cast<k4a_fps_t>(framerate(config.mode));
 
     ka4Config.synchronized_images_only = false;
 
-    if(depth_mode(config.mode) == K4DepthMode::OFF){
+    if(depth_mode(config.mode) == DCDepthMode::K4_OFF){
         ka4Config.synchronized_images_only = false;
     }else{
         ka4Config.synchronized_images_only = config.synchronizeColorAndDepth;
@@ -281,22 +277,22 @@ auto K4Device::Impl::generate_config(bool synchInConnected, bool synchOutConnect
     ka4Config.subordinate_delay_off_master_usec = config.subordinateDelayUsec;
 
     // check modes
-    if(config.synchMode == K4SynchronisationMode::Subordinate){
+    if(config.synchMode == DCSynchronisationMode::K4_Subordinate){
         if(!synchInConnected){
-            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(K4SynchronisationMode::Standalone);
+            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::K4_Standalone);
             Logger::warning("No input synchronisation cable found, switch from [Subordinate] to [Standalone] mode and set subordinate delay to [0].\n");
         }
-    }else if(config.synchMode == K4SynchronisationMode::Master){
+    }else if(config.synchMode == DCSynchronisationMode::K4_Master){
         if(!synchOutConnected){
-            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(K4SynchronisationMode::Standalone);
+            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::K4_Standalone);
             Logger::warning("No output synchronisation cable found, switch from [Master] to [Standalone] mode.\n");
         }
     }
 
-    if(config.synchMode == K4SynchronisationMode::Master && config.subordinateDelayUsec != 0){
+    if(config.synchMode == DCSynchronisationMode::K4_Master && config.subordinateDelayUsec != 0){
         Logger::warning("Subordinate delay != 0 for mode [Master], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
-    }else if (config.synchMode == K4SynchronisationMode::Standalone && config.subordinateDelayUsec != 0){
+    }else if (config.synchMode == DCSynchronisationMode::K4_Standalone && config.subordinateDelayUsec != 0){
         Logger::warning("Subordinate delay != 0 for mode [Standalone], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
     }
@@ -307,23 +303,23 @@ auto K4Device::Impl::generate_config(bool synchInConnected, bool synchOutConnect
 auto K4Device::Impl::generate_config(
     bool synchInConnected,
     bool synchOutConnected,
-    K4ImageFormat colFormat,
-    K4ColorResolution colResolution,
-    K4DepthMode depthMode,
-    K4Framerate fps,
+    DCImageFormat colFormat,
+    DCColorResolution colResolution,
+    DCDepthMode depthMode,
+    DCFramerate fps,
     bool synchronizeColorAndDepth,
     int delayBetweenColorAndDepthUsec,
-    K4SynchronisationMode synchMode,
+    DCSynchronisationMode synchMode,
     int subordinateDelayUsec,
     bool disableLED) -> k4a_device_configuration_t{
 
     k4a_device_configuration_t config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
-    config.color_format                      = static_cast<k4a_image_format_t>(colFormat);
+    config.color_format                      = static_cast<k4a_image_format_t>(get_k4_image_format(colFormat));
     config.color_resolution                  = static_cast<k4a_color_resolution_t>(colResolution);
     config.depth_mode                        = static_cast<k4a_depth_mode_t>(depthMode);
     config.camera_fps                        = static_cast<k4a_fps_t>(fps);
 
-    if(depthMode == K4DepthMode::OFF){
+    if(depthMode == DCDepthMode::K4_OFF){
         config.synchronized_images_only = false;
     }else{
         config.synchronized_images_only = synchronizeColorAndDepth;
@@ -332,22 +328,22 @@ auto K4Device::Impl::generate_config(
     config.disable_streaming_indicator       = disableLED;
 
     // check modes
-    if(synchMode == K4SynchronisationMode::Subordinate){
+    if(synchMode == DCSynchronisationMode::K4_Subordinate){
         if(!synchInConnected){
-            synchMode = K4SynchronisationMode::Standalone;
+            synchMode = DCSynchronisationMode::K4_Standalone;
             Logger::warning("No input synchronisation cable found, switch from [Subordinate] to [Standalone] mode and set subordinate delay to [0].\n");
         }
-    }else if(synchMode == K4SynchronisationMode::Master){
+    }else if(synchMode == DCSynchronisationMode::K4_Master){
         if(!synchOutConnected){
-            synchMode = K4SynchronisationMode::Standalone;
+            synchMode = DCSynchronisationMode::K4_Standalone;
             Logger::warning("No output synchronisation cable found, switch from [Master] to [Standalone] mode.\n");
         }
     }
 
-    if(synchMode == K4SynchronisationMode::Master && subordinateDelayUsec != 0){
+    if(synchMode == DCSynchronisationMode::K4_Master && subordinateDelayUsec != 0){
         Logger::warning("Subordinate delay != 0 for mode [Master], subordinate delay is now set to [0].\n");
         subordinateDelayUsec = 0;
-    }else if (synchMode == K4SynchronisationMode::Standalone && subordinateDelayUsec != 0){
+    }else if (synchMode == DCSynchronisationMode::K4_Standalone && subordinateDelayUsec != 0){
         Logger::warning("Subordinate delay != 0 for mode [Standalone], subordinate delay is now set to [0].\n");
         subordinateDelayUsec = 0;
     }
@@ -362,7 +358,7 @@ auto K4Device::Impl::generate_config(
     return config;
 }
 
-auto K4Device::Impl::generate_bt_config(const K4ConfigSettings &config) -> k4abt_tracker_configuration_t{
+auto K4Device::Impl::generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t{
 
     k4abt_tracker_configuration_t ka4BtConfig;
     ka4BtConfig.gpu_device_id       = config.btGPUId;
@@ -540,7 +536,7 @@ auto K4Device::get_nb_capture_per_second() const noexcept -> float {
     return i->nbCapturePerSecond;
 }
 
-auto K4Device::mode() const noexcept -> K4Mode{
+auto K4Device::mode() const noexcept -> DCMode{
     return i->config.mode;
 }
 
@@ -585,7 +581,7 @@ auto K4Device::is_LED_disabled() const noexcept -> bool{
     return i->config.disableLED;
 }
 
-auto K4Device::synch_mode() const noexcept -> K4SynchronisationMode{
+auto K4Device::synch_mode() const noexcept -> DCSynchronisationMode{
     return i->config.synchMode;
 }
 
@@ -636,20 +632,20 @@ auto K4Device::device_id() const noexcept -> std::uint32_t{
 }
 
 
-auto K4Device::set_data_settings(const K4DataSettings &dataS) -> void {
+auto K4Device::set_data_settings(const DCDataSettings &dataS) -> void {
     i->parametersM.lock();
     i->data = dataS;
 //    i->tracker.set_temporal_smoothing(dataS.btTemporalSmoothing);
     i->parametersM.unlock();
 }
 
-auto K4Device::set_filters(const K4Filters &filters) -> void{
+auto K4Device::set_filters(const DCFilters &filters) -> void{
     i->parametersM.lock();
     i->filters = filters;
     i->parametersM.unlock();
 }
 
-void K4Device::set_color_settings(const K4ColorSettings &colorS) {
+void K4Device::set_color_settings(const DCColorSettings &colorS) {
 
     k4a_color_control_mode_t mode;
     std::int32_t currentValue, newValue;
@@ -667,7 +663,7 @@ void K4Device::set_color_settings(const K4ColorSettings &colorS) {
             case K4ExposureTimesMicroS::t8330: newValue = 8330; break;
             case K4ExposureTimesMicroS::t16670: newValue = 16670; break;
             case K4ExposureTimesMicroS::t33330:
-            if(colorS.powerlineFrequency == K4PowerlineFrequency::F60){
+            if(colorS.powerlineFrequency == PowerlineFrequency::F60){
                 newValue = 33330;
             }else{
                 newValue = 30000;
@@ -752,11 +748,11 @@ auto K4Device::send_data_state(bool state) -> void {
     i->sendData = state;
 }
 
-auto K4Device::set_delay(K4Delay delay) -> void{
+auto K4Device::set_delay(DCDelaySettings delay) -> void{
     i->millisecondsDelay = delay.delayMs;
 }
 
-auto K4Device::start_cameras(const K4ConfigSettings &configS) -> bool{
+auto K4Device::start_cameras(const DCConfigSettings &configS) -> bool{
 
     if(cameras_started() || !is_opened()){
         return false;
@@ -791,7 +787,7 @@ auto K4Device::start_cameras(const K4ConfigSettings &configS) -> bool{
         Logger::message("[K4Device] start imu\n");
         i->device.start_imu();
 
-        if(depth_mode(configS.mode) != K4DepthMode::OFF){
+        if(depth_mode(configS.mode) != DCDepthMode::K4_OFF){
             Logger::message("[K4Device] start body tracker\n");
 //            i->tracker = k4abt::tracker::create(i->calibration, i->k4aBtConfig);
         }
@@ -852,7 +848,7 @@ auto K4Device::stop_cameras() -> void{
     }
 
     if(i->camerasStarted){
-        if(depth_mode(i->config.mode) != K4DepthMode::OFF){
+        if(depth_mode(i->config.mode) != DCDepthMode::K4_OFF){
             Logger::message("[K4Device] Shutdown body tracker\n");
             i->tracker.shutdown();
         }
@@ -866,7 +862,7 @@ auto K4Device::stop_cameras() -> void{
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-auto K4Device::Impl::read_frames(K4Mode mode) -> void{
+auto K4Device::Impl::read_frames(DCMode mode) -> void{
 
     // check device
     if(!device.is_valid() || readFramesFromCameras){
@@ -883,13 +879,13 @@ auto K4Device::Impl::read_frames(K4Mode mode) -> void{
     auto fps = framerate(mode);
     int32_t timeoutMs = 0;
     switch (fps) {
-    case K4Framerate::F30:
+    case DCFramerate::F30:
         timeoutMs = 40;
         break;
-    case K4Framerate::F15:
+    case DCFramerate::F15:
         timeoutMs = 70;
         break;
-    case K4Framerate::F5:
+    case DCFramerate::F5:
         timeoutMs = 250;
         break;
     }
@@ -945,7 +941,7 @@ auto K4Device::Impl::read_frames(K4Mode mode) -> void{
                 continue;
             }
 
-            if(d.captureBodies && (depth_mode(config.mode) != K4DepthMode::OFF)){
+            if(d.captureBodies && (depth_mode(config.mode) != DCDepthMode::K4_OFF)){
                 if(tracker.enqueue_capture(*capture.get(), std::chrono::milliseconds(1))){
 
                     if(k4abt::frame bodyFrame = tracker.pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
@@ -1108,7 +1104,7 @@ auto K4Device::Impl::read_frames(K4Mode mode) -> void{
 }
 
 
-auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void{
+auto K4Device::Impl::filter_depth_image(const DCFilters &f, DCMode mode) -> void{
 
     if(!depthImage.has_value()){
         return;
@@ -1168,7 +1164,7 @@ auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void
         const auto &currentDepth = depthBuffer[id];
 
         // check validity
-        if(currentDepth == k4_invalid_depth_value){
+        if(currentDepth == dc_invalid_depth_value){
             depthMask[id] = 0;
             return;
         }        
@@ -1182,16 +1178,16 @@ auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void
         }
 
         // plane filtering
-        if(f.p1FMode != K4Filters::PlaneFilteringMode::None){
+        if(f.p1FMode != DCFilters::PlaneFilteringMode::None){
             geo::Pt3<float> pt{0.001f * ii,0.001f * jj, 0.001f * currentDepth};
 
             if(dot(pt - f.p1Pos, pl1Dir) < 0){
-                if(f.p1FMode == K4Filters::PlaneFilteringMode::Above){
+                if(f.p1FMode == DCFilters::PlaneFilteringMode::Above){
                     depthMask[id] = 0;
                     return;
                 }
             }else{
-                if(f.p1FMode == K4Filters::PlaneFilteringMode::Below){
+                if(f.p1FMode == DCFilters::PlaneFilteringMode::Below){
                     depthMask[id] = 0;
                     return;
                 }
@@ -1346,7 +1342,7 @@ auto K4Device::Impl::filter_depth_image(const K4Filters &f, K4Mode mode) -> void
     validDepthValues = 0;
     for_each(std::execution::unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
         if(depthMask[id] == 0){
-            depthBuffer[id] = k4_invalid_depth_value;
+            depthBuffer[id] = dc_invalid_depth_value;
 //            colorBuffer[id].rgba() = {255,0,0,255};
             indexDepthVertexCorrrespondance[id] = {id, -1};
         }else{
@@ -1620,7 +1616,7 @@ auto K4Device::Impl::erode(uint8_t nbLoops, Connectivity connectivity) -> void{
     }
 }
 
-auto K4Device::Impl::filter_color_image(const K4Filters &f) -> void{
+auto K4Device::Impl::filter_color_image(const DCFilters &f) -> void{
 
     if(!depthSizedColorImage.has_value()){
         return;
@@ -1641,8 +1637,8 @@ auto K4Device::Impl::filter_color_image(const K4Filters &f) -> void{
 
     for_each(std::execution::par_unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
         if(f.invalidateColorFromDepth){
-            if(depthBuffer[id] == k4_invalid_depth_value){
-                colorBuffer[id] = k4_invalid_color_value;
+            if(depthBuffer[id] == dc_invalid_depth_value){
+                colorBuffer[id] = dc_invalid_color_value;
             }else{
                 if(f.keepOnlyBiggestCluster){
                     colorBuffer[meanBiggestZoneId] = {255,0,0,255};
@@ -1654,7 +1650,7 @@ auto K4Device::Impl::filter_color_image(const K4Filters &f) -> void{
     Bench::stop();
 }
 
-auto K4Device::Impl::filter_infrared_image(const K4Filters &f) -> void{
+auto K4Device::Impl::filter_infrared_image(const DCFilters &f) -> void{
 
     if(!infraredImage.has_value()){
         return;
@@ -1675,8 +1671,8 @@ auto K4Device::Impl::filter_infrared_image(const K4Filters &f) -> void{
 
     for_each(std::execution::par_unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
         if(f.invalidateInfraFromDepth){
-            if(depthBuffer[id] == k4_invalid_depth_value){
-                infraredBuffer[id] = k4_invalid_infra_value;
+            if(depthBuffer[id] == dc_invalid_depth_value){
+                infraredBuffer[id] = dc_invalid_infra_value;
             }
         }
     });
@@ -1684,7 +1680,7 @@ auto K4Device::Impl::filter_infrared_image(const K4Filters &f) -> void{
     Bench::stop();
 }
 
-auto K4Device::Impl::generate_cloud(const K4DataSettings &d, K4Mode mode) -> void{
+auto K4Device::Impl::generate_cloud(const DCDataSettings &d, DCMode mode) -> void{
 
     if(has_cloud(mode) && pointCloudImage.has_value() && (d.sendCloud || d.generateCloudLocal)){
         Bench::start("[K4Device] Transformation depth_image_to_point_cloud");
@@ -1693,38 +1689,84 @@ auto K4Device::Impl::generate_cloud(const K4DataSettings &d, K4Mode mode) -> voi
     }
 }
 
-auto K4Device::Impl::compress_frame(const K4Filters &f, const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4CompressedFrame>{
+auto K4Device::Impl::compress_frame(const DCFilters &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<K4CompressedFrame>{
 
     tool::Bench::start("[K4Device::compress_frame] Generate compressed frame");
 
-    frameCompressor.set_settings(d);
-    auto compressedFrame = frameCompressor.compress(
-        mode,
-        depthSizedColorImage.has_value() ? depthSizedColorImage : colorImage, f.jpegCompressionRate,
-        depthImage, validDepthValues,
-        infraredImage,
-        pointCloudImage,
-        calibration,
-        d.captureAudio ? reinterpret_cast<float*>(audioFrames.data()) : nullptr, lastFrameCount,
-        d.captureIMU   ? &imuSample : nullptr
-    );
+    auto cFrame                = std::make_unique<K4CompressedFrame>();
+    cFrame->mode               = mode;
+    cFrame->idCapture          = static_cast<std::int32_t>(idCapture);
+    cFrame->afterCaptureTS     = localTimestamps["after_capture"sv]->count();
+    cFrame->validVerticesCount = validDepthValues;
+    cFrame->calibration        = calibration;
 
-    if(compressedFrame != nullptr){
-        compressedFrame->idCapture      = static_cast<std::int32_t>(idCapture);
-        compressedFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
+    // compressed color
+    if(colorImage.has_value() && d.sendColor){
+        frameCompressor.add_color(
+            colorImage->get_width_pixels(),
+            colorImage->get_height_pixels(),
+            4,
+            colorImage.value().get_buffer(),
+            f.jpegCompressionRate,
+            cFrame.get()
+        );
+    }
+    // compressed depth
+    if(depthImage.has_value() && d.sendDepth){
+        frameCompressor.add_depth(
+            depthImage->get_width_pixels(),
+            depthImage->get_height_pixels(),
+            reinterpret_cast<std::uint16_t*>(depthImage.value().get_buffer()),
+            cFrame.get()
+        );
+    }
+    // compressed infrared
+    if(infraredImage.has_value() && d.sendInfra){
+        frameCompressor.add_depth(
+            infraredImage->get_width_pixels(),
+            infraredImage->get_height_pixels(),
+            reinterpret_cast<std::uint16_t*>(infraredImage.value().get_buffer()),
+            cFrame.get()
+        );
+    }
+
+    // compressed cloud
+    if(colorImage.has_value() && depthImage.has_value() && pointCloudImage.has_value() && d.sendCloud){
+        frameCompressor.add_cloud(
+            colorImage->get_width_pixels(), colorImage->get_height_pixels(), colorImage.value().get_buffer(),
+            depthImage->get_width_pixels()*depthImage->get_height_pixels(), reinterpret_cast<std::uint16_t*>(depthImage.value().get_buffer()),
+            f.jpegCompressionRate, cFrame.get()
+        );
+    }
+    // uncompressed audio
+    float *audioData = d.sendAudio ? reinterpret_cast<float*>(audioFrames.data()) : nullptr;
+    size_t audioSize = lastFrameCount;
+    if(audioData != nullptr && audioSize > 0){
+        cFrame->audioFrames.resize(audioSize);
+        std::copy(audioData, audioData + 7*audioSize, reinterpret_cast<float*>(cFrame->audioFrames.data()));
+    }
+
+    // uncompressed imu
+    if(d.sendIMU){
+        cFrame->imuSample = imuSample;
+    }
+
+    // uncompressed bodies
+    if(d.sendBodies){
+        // ...
     }
 
     tool::Bench::stop();
 
-    return compressedFrame;
+    return cFrame;
 }
 
-auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) -> std::unique_ptr<K4Frame>{
+auto K4Device::Impl::create_local_frame(const DCDataSettings &d, DCMode mode) -> std::unique_ptr<DCFrame>{
 
     // write frame
     tool::Bench::start("[K4Device::create_local_frame] Write display data frame");
 
-    auto dFrame = std::make_unique<K4Frame>();
+    auto dFrame = std::make_unique<DCFrame>();
     dFrame->idCapture      = static_cast<std::int32_t>(idCapture);
     dFrame->afterCaptureTS = localTimestamps["after_capture"sv]->count();
 
@@ -1792,7 +1834,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
 
         for_each(std::execution::par_unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
 
-            if(depthBuffer[id] == k4_invalid_depth_value){
+            if(depthBuffer[id] == dc_invalid_depth_value){
                 dFrame->imageDepthData[id] = geo::Pt3<std::uint8_t>{};
                 return;
             }
@@ -1858,7 +1900,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
         for_each(std::execution::par_unseq, std::begin(indexDepthVertexCorrrespondance), std::end(indexDepthVertexCorrrespondance), [&](auto idC){
 
             auto idD = std::get<0>(idC);
-            if(depthBuffer[idD] == k4_invalid_depth_value){
+            if(depthBuffer[idD] == dc_invalid_depth_value){
                 return;
             }
 
@@ -1953,7 +1995,7 @@ auto K4Device::Impl::create_local_frame(const K4DataSettings &d, K4Mode mode) ->
 }
 
 
-auto K4Device::Impl::init_data(K4Mode mode) -> void{
+auto K4Device::Impl::init_data(DCMode mode) -> void{
 
     // init capture
     capture = std::make_unique<k4a::capture>();
@@ -1987,7 +2029,7 @@ auto K4Device::Impl::init_data(K4Mode mode) -> void{
     imageFormat          = image_format(mode);
     depthMode            = depth_mode(mode);
 
-    if(colorResolution != K4ColorResolution::OFF){
+    if(colorResolution != DCColorResolution::OFF){
 
         // retrieve colors dimensions
         const auto colorDims     = k4a::GetColorDimensions(static_cast<k4a_color_resolution_t>(colorResolution));
@@ -1995,7 +2037,7 @@ auto K4Device::Impl::init_data(K4Mode mode) -> void{
         colorHeight = std::get<1>(colorDims);
         colorSize   = colorWidth*colorHeight;
 
-        if(imageFormat == K4ImageFormat::YUY2 || imageFormat == K4ImageFormat::NV12 || imageFormat == K4ImageFormat::MJPEG){
+        if(imageFormat == DCImageFormat::YUY2 || imageFormat == DCImageFormat::NV12 || imageFormat == DCImageFormat::MJPG){
             convertedColorImage = k4a::image::create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
                 static_cast<int>(colorWidth),
                 static_cast<int>(colorHeight),
@@ -2009,7 +2051,7 @@ auto K4Device::Impl::init_data(K4Mode mode) -> void{
     }
 
 
-    if(depthMode != K4DepthMode::OFF){
+    if(depthMode != DCDepthMode::K4_OFF){
 
         // retrieve depth dimensions
         auto depthRes = depth_resolution(mode);
@@ -2018,7 +2060,7 @@ auto K4Device::Impl::init_data(K4Mode mode) -> void{
         depthSize   = depthWidth*depthHeight;
 
         // init resized color image
-        if(colorResolution != K4ColorResolution::OFF){
+        if(colorResolution != DCColorResolution::OFF){
             depthSizedColorImage = k4a::image::create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
                 static_cast<int>(depthWidth),
                 static_cast<int>(depthHeight),
@@ -2169,7 +2211,7 @@ auto K4Device::Impl::read_from_imu() -> void{
 }
 
 auto K4Device::Impl::get_color_image() -> bool{
-    if(colorResolution != K4ColorResolution::OFF){
+    if(colorResolution != DCColorResolution::OFF){
 
         Bench::start("[K4Device] Capture get_color_image");
         colorImage = capture->get_color_image();
@@ -2187,7 +2229,7 @@ auto K4Device::Impl::get_color_image() -> bool{
 
 auto K4Device::Impl::get_depth_image() -> bool{
 
-    if(depthMode != K4DepthMode::OFF){
+    if(depthMode != DCDepthMode::K4_OFF){
 
         Bench::start("[K4Device] Capture get_depth_image");
         depthImage = capture->get_depth_image();        
@@ -2204,7 +2246,7 @@ auto K4Device::Impl::get_depth_image() -> bool{
     return true;
 }
 
-auto K4Device::Impl::get_infra_image(K4Mode mode) -> bool{
+auto K4Device::Impl::get_infra_image(DCMode mode) -> bool{
 
     if(has_infrared(mode)){
 
@@ -2224,13 +2266,13 @@ auto K4Device::Impl::get_infra_image(K4Mode mode) -> bool{
 }
 
 
-auto K4Device::Impl::convert_color_image(const K4Filters &f) -> void{
+auto K4Device::Impl::convert_color_image(const DCFilters &f) -> void{
 
-    if(colorResolution == K4ColorResolution::OFF){
+    if(colorResolution == DCColorResolution::OFF){
         return;
     }
 
-    if(imageFormat == K4ImageFormat::NV12){
+    if(imageFormat == DCImageFormat::NV12){
 
         // libyuv refers to pixel order in system-endian order but OpenGL refers to
         // pixel order in big-endian order, which is why we create the OpenGL texture
@@ -2260,7 +2302,7 @@ auto K4Device::Impl::convert_color_image(const K4Filters &f) -> void{
 
         colorImage = convertedColorImage;
 
-    } else if(imageFormat == K4ImageFormat::YUY2 ){ // //YUY2 is a 4:2:2 format, so there are 4 bytes per 'chunk' of data, and each 'chunk' represents 2 pixels.
+    } else if(imageFormat == DCImageFormat::YUY2 ){ // //YUY2 is a 4:2:2 format, so there are 4 bytes per 'chunk' of data, and each 'chunk' represents 2 pixels.
 
         Bench::start("[K4Device] YUY2 convert");
         const int stride = colorImage->get_width_pixels() * 4 / 2;
@@ -2281,12 +2323,12 @@ auto K4Device::Impl::convert_color_image(const K4Filters &f) -> void{
 
         colorImage = convertedColorImage;
 
-    }else if(imageFormat == K4ImageFormat::MJPEG){
+    }else if(imageFormat == DCImageFormat::MJPG){
 
-        frameUncompressor.uncompress_jpeg_8_bits_data(
+        frameUncompressor.uncompress_jpeg_data(
             colorImage->get_width_pixels(),
             colorImage->get_height_pixels(),
-            K4FrameUncompressor::ColorFormat::BGRA,
+            DCFrameUncompressor::ColorFormat::BGRA,
             colorImage->get_size(),
             colorImage->get_buffer(),
             convertedColorImage->get_buffer()
@@ -2294,7 +2336,7 @@ auto K4Device::Impl::convert_color_image(const K4Filters &f) -> void{
 
         colorImage = convertedColorImage;
 
-    }else if(imageFormat == K4ImageFormat::BGRA32){
+    }else if(imageFormat == DCImageFormat::BGRA){
         // nothing to do        
     }
 }

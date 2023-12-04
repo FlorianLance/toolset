@@ -54,25 +54,25 @@ private:
 
     auto draw_device_tab_item(
         const std::vector<std::string> &devicesNames,
-        camera::K4DeviceSettings &device) -> void;
+        camera::DCDeviceSettings &device) -> void;
 
     auto draw_filters_tab_item(
         ui::K4SGUiSettings &ui,
-        const camera::K4ConfigSettings &config,
-        camera::K4Filters &filters) -> void;
+        const camera::DCConfigSettings &config,
+        camera::DCFilters &filters) -> void;
 
     auto draw_colors_settings_tab_item(
-        camera::K4ColorSettings &colors) -> void;
+        camera::DCColorSettings &colors) -> void;
 
     auto draw_display_tab_item(
-        camera::K4SceneDisplaySettings &sceneDisplay,
-        camera::K4CloudDisplaySettings &cloudDisplay) -> void;
+        camera::DCSceneDisplaySettings &sceneDisplay,
+        camera::DCCloudDisplaySettings &cloudDisplay) -> void;
 
     auto draw_ui_tab_item(ui::K4SGUiSettings &ui)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
-    auto draw_recording_tab_item(camera::K4RecorderStates &recStates, camera::K4RecorderSettings &recSetings) -> void;
-    auto draw_model_tab_item(camera::K4Model &model)-> void;
+    auto draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void;
+    auto draw_model_tab_item(camera::DCModel &model)-> void;
 
     ImguiLogs m_logs;
     bool m_autoUpdate = true;

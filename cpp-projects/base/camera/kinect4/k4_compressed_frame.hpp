@@ -26,110 +26,46 @@
 
 #pragma once
 
+// kinect4
+#include <k4a/k4atypes.h>
+
 // local
-#include "camera/frame.hpp"
-#include "k4_types.hpp"
+#include "camera/dc_compressed_frame.hpp"
 
 namespace tool::camera{
 
 
-struct K4CompressedFrame : Frame{
+struct K4CompressedFrame : public DCCompressedFrame{
 
-    K4Mode mode;
-
-    // color
-    size_t colorWidth = 0;
-    size_t colorHeight = 0;
-    std::vector<std::uint8_t> encodedColorData;
-
-    // depth
-    size_t depthWidth = 0;
-    size_t depthHeight = 0;
-    std::vector<std::uint8_t> encodedDepthData;
-
-    // infrared
-    size_t infraWidth = 0;
-    size_t infraHeight = 0;
-    std::vector<std::uint8_t> encodedInfraData;
-
-    // cloud
-    // # vertices
-    size_t validVerticesCount = 0;
-    std::vector<std::uint8_t> encodedCloudVerticesData;
-    // # colors
-    size_t cloudColorWidth = 0;
-    size_t cloudColorHeight = 0;
-    std::vector<std::uint8_t> encodedCloudColorData;
     // # calibration
     std::optional<k4a_calibration_t> calibration = std::nullopt;
 
-    // imu
-    std::optional<K4ImuSample> imuSample = std::nullopt;
+    // # bodies
+    // ...
 
-    // audio
-    std::vector<std::array<float, 7>> audioFrames;
-
-    // sizes
-    auto infos_size() const noexcept{
-        return
-            sizeof(std::int32_t) + // id capture
-            sizeof(std::int64_t) + // after capture TS
-            sizeof(K4Mode);
-    }
-
-    auto color_size()  const noexcept -> size_t{
-        return encodedColorData.size() +
-            sizeof(size_t) * 3; // colorWidth, colorHeight, encoded size
-    }
-    auto depth_size()  const noexcept -> size_t{
-        return encodedDepthData.size() +
-            sizeof(size_t) * 3; // depthWidth, depthHeight, encoded size
-    }
-    auto infra_size()  const noexcept -> size_t{
-        return encodedInfraData.size() +
-            sizeof(size_t) * 3; // infraWidth, infraHeight, encoded size
-    }
-
-    auto cloud_vertices_size() const noexcept -> size_t{
-        return encodedCloudVerticesData.size() +
-            sizeof(size_t)*2; // validVerticesCount, encoded size
-    }    
-    auto cloud_color_size()  const noexcept -> size_t{
-        return encodedCloudColorData.size() +
-            sizeof(size_t) * 3; // cloudColorWidth, cloudColorHeight, encoded size
-    }
     auto calibration_size() const noexcept -> size_t{
         return (calibration.has_value() ? sizeof(k4a_calibration_t) : 0) +
             sizeof(bool); // has calibration
     }
 
-    auto imu_sample_size() const noexcept -> size_t{
-        return (imuSample.has_value() ? sizeof(K4ImuSample) : 0) +
-            sizeof(bool); // has IMU
-    }
-    auto audio_size() const noexcept      -> size_t{
-        return audioFrames.size()*7*sizeof(float) +
-            sizeof(size_t); // nb audio frames
-    }
     auto bodies_size() const noexcept -> size_t{
         return sizeof(bool); // has body // TODO
     }
 
-    auto total_data_size() const -> size_t{
+    auto total_data_size() const  -> size_t override{
         return
-            infos_size() +
-            color_size() + cloud_color_size() + depth_size() + infra_size() + cloud_vertices_size() +
-            calibration_size() + imu_sample_size() + audio_size() + bodies_size();
+            DCCompressedFrame::total_data_size() +
+            calibration_size() + bodies_size();
     }
 
     // file stream
-    auto init_from_file_stream(std::ifstream &file) -> void;
-    auto write_to_file_stream(std::ofstream &file) -> void;
+    auto init_from_file_stream(std::ifstream &file) -> void override;
+    auto write_to_file_stream(std::ofstream &file) -> void override;
     // # legacy
     auto init_legacy_cloud_frame_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_file_stream(std::ifstream &file) -> void;
     // data
-    auto init_from_data(std::int8_t *data) -> void;
-    auto convert_to_data(std::vector<std::int8_t> &data) -> size_t;
+    auto init_from_data(std::int8_t *data) -> void override;
+    auto convert_to_data(std::vector<std::int8_t> &data) -> size_t override;
 };
 }

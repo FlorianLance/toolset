@@ -96,10 +96,10 @@ auto K4SMController::set_connections() -> void{
     using PlayerD = graphics::K4PlayerDrawer;
     using CalibD  = graphics::K4CalibratorDrawer;
     // # model
-    using Rec     = camera::K4Recorder;
-    using Player  = camera::K4Player;
-    using Calib   = camera::K4Calibrator;
-    using ServerD = camera::K4ServerData;
+    using Rec     = camera::DCRecorder;
+    using Player  = camera::DCPlayer;
+    using Calib   = camera::DCCalibrator;
+    using ServerD = camera::DCServerData;
     using ServerC = network::K4ServerConnection;
     using ServerN = network::K4ServerNetwork;
     using Settings= K4SMSettings;

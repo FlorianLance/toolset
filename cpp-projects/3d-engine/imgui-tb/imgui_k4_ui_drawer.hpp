@@ -27,14 +27,14 @@
 #pragma once
 
 // base
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_filters.hpp"
-#include "camera/kinect4/k4_display_settings.hpp"
-#include "camera/kinect4/k4_recorder_settings.hpp"
-#include "camera/kinect4/k4_player_settings.hpp"
-#include "camera/kinect4/k4_calibrator_settings.hpp"
-#include "camera/kinect4/k4_color_settings.hpp"
-#include "camera/kinect4/k4_model.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_calibrator_settings.hpp"
+#include "camera/settings/dc_display_settings.hpp"
+#include "camera/settings/dc_recorder_settings.hpp"
+#include "camera/settings/dc_player_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/dc_model.hpp"
+#include "camera/dc_filters.hpp"
 
 // opengl
 #include "opengl/draw/drawer.hpp"
@@ -76,25 +76,25 @@ class K4UIDrawer{
 
 public:
 
-    static auto draw_config(const std::vector<std::string> &devicesName, camera::K4ConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
-    static auto draw_data_settings(camera::K4DataSettings &data, bool &updateP) -> void;
-    static auto draw_actions_settings(camera::K4ActionsSettings &actions,  bool &updateP) -> void;
+    static auto draw_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
+    static auto draw_data_settings(camera::DCDataSettings &data, bool &updateP) -> void;
+    static auto draw_actions_settings(camera::DCActionsSettings &actions,  bool &updateP) -> void;
     static auto draw_device_settings_tab_item(
         const std::string &tabItemName,
         const std::vector<std::string> &devicesName,
-        camera::K4DeviceSettings &device,
+        camera::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate
     ) -> bool;
 
-    static auto draw_colors_settings_tab_item(const std::string &tabItemName, camera::K4ColorSettings &colors, bool &autoUpdate) -> bool;
-    static auto draw_filters_tab_item(const std::string &tabItemName, camera::K4Mode mode, camera::K4Filters &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
-    static auto draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::K4SceneDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::K4CloudDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_calibration_tab_item(const std::string &tabItemName, camera::K4Model &model, bool &autoUpdate) -> bool;
-    static auto draw_recording_tab_item(const std::string &tabItemName, camera::K4RecorderStates &rStates, camera::K4RecorderSettings &rSettings, bool &autoUpdate) -> bool;
-    static auto draw_player_tab_item(const std::string &tabItemName, camera::K4PlayerStates &pStates, camera::K4PlayerSettings &pSettings, bool &autoUpdate) -> bool;
-    static auto draw_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::K4CalibratorStates &cStates, K4CalibratorDrawerSettings &cdSettings, camera::K4CalibratorSettings &cSettings, bool &autoUpdate) -> bool;
+    static auto draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
+    static auto draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFilters &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
+    static auto draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_calibration_tab_item(const std::string &tabItemName, camera::DCModel &model, bool &autoUpdate) -> bool;
+    static auto draw_recording_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
+    static auto draw_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
+    static auto draw_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};
     static inline ImGuiDragS  modelTrDs  = {45.f, true, true, false, true, true};

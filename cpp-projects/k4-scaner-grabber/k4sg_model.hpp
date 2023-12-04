@@ -28,8 +28,8 @@
 
 // base
 #include "network/kinect4/k4_client_connection.hpp"
-#include "camera/kinect4/k4_device_manager.hpp"
-#include "camera/kinect4/k4_recorder.hpp"
+#include "camera/dc_device_manager.hpp"
+#include "camera/dc_recorder.hpp"
 
 // local
 #include "data/k4sg_settings.hpp"
@@ -44,8 +44,8 @@ struct K4SGModel{
 
     K4SGSettings settings;
     network::K4ClientConnection connection;
-    camera::K4DeviceManager device;
-    camera::K4Recorder recorder;
+    camera::DCDeviceManager device;
+    camera::DCRecorder recorder;
 
 
 };

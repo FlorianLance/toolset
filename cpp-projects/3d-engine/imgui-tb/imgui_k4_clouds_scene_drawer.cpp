@@ -26,6 +26,9 @@
 
 #include "imgui_k4_clouds_scene_drawer.hpp"
 
+// std
+#include <format>
+
 // base
 #include "thirdparty/BinPack2D/binpack2d.hpp"
 #include "utility/logger.hpp"
@@ -56,7 +59,7 @@ auto K4CloudsSceneDrawer::reset() -> void{
     }
 }
 
-auto K4CloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<camera::K4Frame> frame) -> bool {
+auto K4CloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> bool {
     if(idCloud < cloudsD.size()){
         return cloudsD[idCloud].init_from_frame(std::move(frame));
     }
@@ -429,7 +432,7 @@ auto K4CloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
     }
 }
 
-auto K4CloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const camera::K4CloudDisplaySettings &cloudDisplay) -> void{
+auto K4CloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const camera::DCCloudDisplaySettings &cloudDisplay) -> void{
     if(idCloud < cloudsD.size()){
         cloudsD[idCloud].display = cloudDisplay;
         m_redrawClouds = true;
@@ -438,12 +441,12 @@ auto K4CloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const ca
     }
 }
 
-auto K4CloudsSceneDrawer::update_scene_display_settings(const camera::K4SceneDisplaySettings &sdS) -> void{
+auto K4CloudsSceneDrawer::update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void{
     display        = sdS;
     m_redrawClouds = true;
 }
 
-auto K4CloudsSceneDrawer::update_model(size_t idCloud, const camera::K4Model &model) -> void{
+auto K4CloudsSceneDrawer::update_model(size_t idCloud, const camera::DCModel &model) -> void{
     cloudsD[idCloud].model = model.compute_full_transformation();
     m_redrawClouds = true;
 }

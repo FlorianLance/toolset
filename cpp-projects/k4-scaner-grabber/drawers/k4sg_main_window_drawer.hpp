@@ -28,7 +28,7 @@
 
 // base
 #include "network/kinect4/k4_client_connection.hpp"
-#include "camera/kinect4/k4_device_manager.hpp"
+#include "camera/dc_device_manager.hpp"
 
 // 3d-engine
 #include "imgui-tb/imgui_k4_device_drawer.hpp"

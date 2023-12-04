@@ -32,7 +32,7 @@
 #include "network/udp_reader.hpp"
 #include "k4_network.hpp"
 #include "camera/kinect4/k4_compressed_frame.hpp"
-#include "camera/kinect4/k4_filters.hpp"
+#include "camera/dc_filters.hpp"
 
 namespace tool::network {
 
@@ -40,15 +40,15 @@ template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
 
 
-class K4ClientUdpReader : public UdpReader{
+class DCClientUdpReader : public UdpReader{
 public:
 
     // signals
     SSS<Header, std::shared_ptr<K4NetworkSendingSettings>> init_network_infos_signal;
     SSS<Header, std::shared_ptr<K4UdpDeviceSettings>> update_device_settings_signal;
-    SSS<Header, std::shared_ptr<K4UdpColorSettings>> update_color_settings_signal;
-    SSS<Header, std::shared_ptr<camera::K4Filters>> update_filters_signal;
-    SSS<Header, K4UdpDelay> update_delay_signal;
+    SSS<Header, std::shared_ptr<DCUdpColorSettings>> update_color_settings_signal;
+    SSS<Header, std::shared_ptr<camera::DCFilters>> update_filters_signal;
+    SSS<Header, DCUdpDelay> update_delay_signal;
     SSS<Header, K4Command> command_signal;
 
 protected:
@@ -72,7 +72,7 @@ struct Synchro{
     static constexpr size_t nbMaxValues = 1000;
 };
 
-class K4ServerUdpReader : public UdpReader{
+class DCServerUdpReader : public UdpReader{
 public:
 
     // signals

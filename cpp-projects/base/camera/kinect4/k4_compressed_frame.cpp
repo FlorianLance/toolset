@@ -31,6 +31,8 @@
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
 
+#include "camera/kinect4/k4_types.hpp"
+
 #include <iostream>
 
 using namespace tool::camera;
@@ -47,17 +49,13 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     // init
     // # infos
     read(idCapture, file);
-//    std::cout << "idCapture " << idCapture << "\n";
     read(afterCaptureTS, file);
-//    std::cout << "afterCaptureTS " << afterCaptureTS << "\n";
     read(mode, file);
-//    std::cout << "mode " << (int)mode << "\n";
 
     // # color
     read(colorWidth, file);
     read(colorHeight, file);
     read(encColorDataSize, file);
-//    std::cout << "colorWidth " << colorWidth << " colorHeight " << colorHeight << " encColorDataSize " << encColorDataSize << "\n";
     if(encColorDataSize > 0){
         encodedColorData.resize(encColorDataSize);
         read_array(encodedColorData.data(), file, encColorDataSize);
@@ -66,7 +64,6 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     read(depthWidth, file);
     read(depthHeight, file);
     read(encDepthDataSize, file);
-//    std::cout << "depthWidth " << depthWidth << " depthHeight " << depthHeight << " encDepthDataSize " << encDepthDataSize << "\n";
     if(encDepthDataSize > 0){
         encodedDepthData.resize(encDepthDataSize);
         read_array(encodedDepthData.data(), file, encDepthDataSize);
@@ -75,7 +72,6 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     read(infraWidth, file);
     read(infraHeight, file);
     read(encInfraDataSize, file);
-//    std::cout << "infraWidth " << infraWidth << " infraHeight " << infraHeight << " encInfraDataSize " << encInfraDataSize << "\n";
     if(encInfraDataSize > 0){
         encodedInfraData.resize(encInfraDataSize);
         read_array(encodedInfraData.data(), file, encInfraDataSize);
@@ -85,7 +81,6 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     // ## vertex
     read(validVerticesCount, file);
     read(encCloudVertexDataSize, file);
-//    std::cout << "validVerticesCount " << validVerticesCount << " encCloudVertexDataSize " <<encCloudVertexDataSize << "\n";
     if(encCloudVertexDataSize > 0){
         encodedCloudVerticesData.resize(encCloudVertexDataSize);
         read_array(encodedCloudVerticesData.data(), file, encCloudVertexDataSize);
@@ -94,7 +89,6 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     read(cloudColorWidth, file);
     read(cloudColorHeight, file);
     read(encCloudColorDataSize, file);
-//    std::cout << "cloudColorWidth " << cloudColorWidth << " cloudColorHeight " << cloudColorHeight << " encCloudColorDataSize " << encCloudColorDataSize << "\n";
     if(encCloudColorDataSize > 0){
         encodedCloudColorData.resize(encCloudColorDataSize);
         read_array(encodedCloudColorData.data(), file, encCloudColorDataSize);
@@ -112,7 +106,7 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     bool hasIMU = false;
     read(hasIMU, file);
     if(hasIMU){
-        K4ImuSample rImuSample;
+        DCImuSample rImuSample;
         read(rImuSample, file);
         imuSample = rImuSample;
     }
@@ -124,17 +118,12 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
         read_array(audioFrames.data()->data(), file, nbAudioFrames*7);
     }
 
-//    std::cout << "hasCalibration " << hasCalibration << " hasIMU " << hasIMU << " nbAudioFrames " << nbAudioFrames << "\n";
-
     // # bodies
     bool hasBodies = false;
     read(hasBodies, file);
     if(hasBodies){
         // TODO
     }
-
-    // extra
-
 }
 
 auto K4CompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
@@ -216,7 +205,7 @@ auto K4CompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     // TODO
 }
 
-#include <iostream>
+
 auto K4CompressedFrame::init_legacy_cloud_frame_file_stream(std::ifstream &file) -> void{
 
     // # read info
@@ -259,7 +248,7 @@ auto K4CompressedFrame::init_legacy_cloud_frame_file_stream(std::ifstream &file)
         read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
     }
     // # read imu
-    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (K4ImuSample));
+    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 
 }
 
@@ -319,7 +308,7 @@ auto K4CompressedFrame::init_legacy_full_frame_file_stream(std::ifstream &file) 
         read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
     }
     // # read imu
-    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (K4ImuSample));
+    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 }
 
 auto K4CompressedFrame::init_from_data(int8_t *data) -> void{
@@ -394,7 +383,7 @@ auto K4CompressedFrame::init_from_data(int8_t *data) -> void{
     bool hasIMU = false;
     read(hasIMU, data, offset);
     if(hasIMU){
-        K4ImuSample rImuSample;
+        DCImuSample rImuSample;
         read(rImuSample, data, offset);
         imuSample = rImuSample;
     }

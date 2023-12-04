@@ -37,6 +37,8 @@ using namespace std::literals::string_view_literals;
 
 struct BaseSettings{
 
+    virtual ~BaseSettings(){}
+
 protected:
     virtual auto init_from_binary_file(const std::string &filePath) -> bool;
     virtual auto init_from_text_file(const std::string &filePath) -> bool;

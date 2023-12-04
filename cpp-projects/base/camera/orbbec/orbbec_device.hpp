@@ -31,19 +31,19 @@
 #include <string>
 
 // local
-#include "camera/dc_camera_device.hpp"
+#include "camera/dc_device.hpp"
 #include "files/binary_settings.hpp"
 
 namespace tool::camera {
 
-struct OrbbecDeviceConfigSettings{// : files::SubBinarySettings{
+//struct OrbbecDeviceConfigSettings{// : files::SubBinarySettings{
 
-    std::uint32_t deviceId = 0;
+//    std::uint32_t deviceId = 0;
 
-//    auto init_from_data(std::int8_t *data) -> void override;
-//    auto convert_to_data(std::int8_t *data) const -> void override;
-//    auto total_data_size() const noexcept-> size_t override;
-};
+////    auto init_from_data(std::int8_t *data) -> void override;
+////    auto convert_to_data(std::int8_t *data) const -> void override;
+////    auto total_data_size() const noexcept-> size_t override;
+//};
 
 class OrbbecDevice : public DCDevice{
 public:
@@ -65,14 +65,15 @@ public:
     // ...
 
     // # config
-    auto start_cameras(const OrbbecDeviceConfigSettings &configS) -> bool;
+    auto start_cameras(const DCConfigSettings &configS) -> bool override;
     // ...
 
     // cameras
     // ...
 
     // settings
-    // ...
+    auto set_color_settings(const DCColorSettings &colorS) -> void override;
+
 
 private:
 

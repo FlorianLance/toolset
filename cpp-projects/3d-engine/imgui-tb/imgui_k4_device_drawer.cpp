@@ -26,6 +26,9 @@
 
 #include "imgui_k4_device_drawer.hpp"
 
+// std
+#include <format>
+
 // base
 #include "files/cloud_io.hpp"
 #include "utility/string.hpp"
@@ -62,7 +65,7 @@ auto K4DeviceDrawer::draw(bool focusWindow) -> void{
     draw_cloud_drawer_tab(0, focusWindow, "device"sv);
 }
 
-auto K4DeviceDrawer::update_frame(std::shared_ptr<camera::K4Frame> frame) -> void{
+auto K4DeviceDrawer::update_frame(std::shared_ptr<camera::DCFrame> frame) -> void{
     locker.lock();
     lastFrame = frame;
     locker.unlock();
@@ -71,7 +74,7 @@ auto K4DeviceDrawer::update_frame(std::shared_ptr<camera::K4Frame> frame) -> voi
 auto K4DeviceDrawer::save_cloud(const std::string &path) -> void{
     Logger::message("K4DeviceDrawer::save_cloud\n");
 
-    std::shared_ptr<camera::K4Frame> frame = nullptr;
+    std::shared_ptr<camera::DCFrame> frame = nullptr;
     locker.lock();
     frame = lastFrame;
     locker.unlock();

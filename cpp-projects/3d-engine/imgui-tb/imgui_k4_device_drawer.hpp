@@ -27,8 +27,8 @@
 #pragma once
 
 // base
-#include "camera/kinect4/k4_frame.hpp"
-#include "camera/kinect4/k4_filters.hpp"
+#include "camera/dc_frame.hpp"
+#include "camera/dc_filters.hpp"
 
 // 3d-engine
 #include "imgui_k4_clouds_scene_drawer.hpp"
@@ -41,7 +41,7 @@ struct K4DeviceDrawer : public K4CloudsSceneDrawer{
     auto update() -> void;
     auto draw(bool focusWindow) -> void;
 
-    auto update_filters(const camera::K4Filters &filters) -> void{
+    auto update_filters(const camera::DCFilters &filters) -> void{
 //        if(!plane1D){
 //            plane1D = std::make_unique<gl::GridDrawer>();
 //        }
@@ -49,14 +49,14 @@ struct K4DeviceDrawer : public K4CloudsSceneDrawer{
 //         = geo::transform(geo::Pt3f{1.f,1.f,1.f}, filters.p1Rot, filters.p1Pos);
     }
 
-    auto update_frame(std::shared_ptr<camera::K4Frame> frame) -> void;
+    auto update_frame(std::shared_ptr<camera::DCFrame> frame) -> void;
 
     auto save_cloud(const std::string &path) -> void;
 
 private:
     std::mutex locker;
     bool redrawClouds = false;
-    std::shared_ptr<camera::K4Frame> lastFrame = nullptr;
+    std::shared_ptr<camera::DCFrame> lastFrame = nullptr;
     std::int32_t previousFrameId = 0;
 };
 }

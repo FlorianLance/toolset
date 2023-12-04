@@ -31,12 +31,12 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_display_settings.hpp"
+#include "camera/settings/dc_recorder_settings.hpp"
+#include "camera/dc_model.hpp"
+#include "camera/dc_filters.hpp"
 #include "network/kinect4/k4_client_network_settings.hpp"
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_filters.hpp"
-#include "camera/kinect4/k4_display_settings.hpp"
-#include "camera/kinect4/k4_model.hpp"
-#include "camera/kinect4/k4_recorder_settings.hpp"
 
 // local
 #include "data/k4sg_ui_settings.hpp"
@@ -58,14 +58,14 @@ public:
 
     // config
     SSS<network::K4ClientNetworkSettings*> init_network_sending_settings_signal;
-    SSS<size_t,const camera::K4CloudDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<const camera::K4SceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<const camera::K4Filters&> update_filters_signal;
-    SSS<const camera::K4ColorSettings&> update_color_settings_signal;
-    SSS<const camera::K4DeviceSettings&> update_device_settings_signal;
-    SSS<camera::K4Delay> update_delay_signal;
+    SSS<size_t,const camera::DCCloudDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
+    SSS<const camera::DCFilters&> update_filters_signal;
+    SSS<const camera::DCColorSettings&> update_color_settings_signal;
+    SSS<const camera::DCDeviceSettings&> update_device_settings_signal;
+    SSS<camera::DCDelaySettings> update_delay_signal;
     SSS<> update_device_list_signal;
-    SSS<size_t, const camera::K4Model&> update_model_signal;
+    SSS<size_t, const camera::DCModel&> update_model_signal;
     SSS<ui::K4SGUiSettings*> update_ui_settings_signal;
 
     // recording
@@ -74,7 +74,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<camera::K4RecorderSettings> update_recorder_settings_signal;
+    SSS<camera::DCRecorderSettings> update_recorder_settings_signal;
 
 
     // i/o

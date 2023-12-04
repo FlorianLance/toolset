@@ -29,10 +29,9 @@
 #pragma once
 
 // base
-#include "camera/kinect4/k4_frame.hpp"
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_display_settings.hpp"
-
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_display_settings.hpp"
+#include "camera/dc_frame.hpp"
 
 // opengl
 #include "opengl/gl_texture.hpp"
@@ -47,7 +46,7 @@ struct K4CloudDrawer{
 
     // info
     std::int32_t lastFrameId = -1;
-    std::shared_ptr<camera::K4Frame> lastFrame = nullptr;
+    std::shared_ptr<camera::DCFrame> lastFrame = nullptr;
 
     // drawers
     gl::CloudPointsDrawer cpD;
@@ -58,11 +57,11 @@ struct K4CloudDrawer{
 
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
-    camera::K4CloudDisplaySettings display;
+    camera::DCCloudDisplaySettings display;
 
     // joints sub models
     size_t nbBodies = 0;
-    std::vector<std::array<std::tuple<bool,geo::Mat4f>, camera::k4JointsCount>> jointsModels;
+    std::vector<std::array<std::tuple<bool,geo::Mat4f>, camera::dcJointsCount>> jointsModels;
 
     // textures
     gl::Texture2D colorT;
@@ -73,7 +72,7 @@ struct K4CloudDrawer{
     auto initialize() -> void;
     auto reset() -> void;
     // # from frame
-    auto init_from_frame(std::shared_ptr<camera::K4Frame> frame) -> bool;
+    auto init_from_frame(std::shared_ptr<camera::DCFrame> frame) -> bool;
     // # from data
     auto init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool;
 };

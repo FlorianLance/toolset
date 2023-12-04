@@ -28,10 +28,10 @@
 
 // base
 #include "network/kinect4/k4_server_network.hpp"
-#include "camera/kinect4//k4_server_data.hpp"
-#include "camera/kinect4/k4_recorder.hpp"
-#include "camera/kinect4/k4_player.hpp"
-#include "camera/kinect4/k4_calibrator.hpp"
+#include "camera/dc_server_data.hpp"
+#include "camera/dc_recorder.hpp"
+#include "camera/dc_player.hpp"
+#include "camera/dc_calibrator.hpp"
 
 // local
 #include "data/k4sm_settings.hpp"
@@ -57,16 +57,16 @@ struct K4SMModel{
 
     // # filtering
     auto update_filtering_mode(bool useNormalMode) -> void;
-    auto update_filters(size_t id, const camera::K4Filters& filters) -> void;
-    auto update_calibration_filters(size_t id, const camera::K4Filters& filters) -> void;
+    auto update_filters(size_t id, const camera::DCFilters& filters) -> void;
+    auto update_calibration_filters(size_t id, const camera::DCFilters& filters) -> void;
 
 
     K4SMSettings settings;
     network::K4ServerNetwork network;
-    camera::K4ServerData sData;
-    camera::K4Recorder recorder;    
-    camera::K4Player player;
-    camera::K4Calibrator calibration;
+    camera::DCServerData sData;
+    camera::DCRecorder recorder;
+    camera::DCPlayer player;
+    camera::DCCalibrator calibration;
 
 private:
 

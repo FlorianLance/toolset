@@ -28,15 +28,15 @@
 
 // base
 #include "network/kinect4/k4_server_network_settings.hpp"
-#include "camera/kinect4/k4_display_settings.hpp"
-#include "camera/kinect4/k4_color_settings.hpp"
-#include "camera/kinect4/k4_device_settings.hpp"
-#include "camera/kinect4/k4_filters.hpp"
-#include "camera/kinect4/k4_model.hpp"
-#include "camera/kinect4/k4_delay.hpp"
-#include "camera/kinect4/k4_recorder_settings.hpp"
-#include "camera/kinect4/k4_calibrator_settings.hpp"
-#include "camera/kinect4/k4_player_settings.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_calibrator_settings.hpp"
+#include "camera/settings/dc_player_settings.hpp"
+#include "camera/settings/dc_display_settings.hpp"
+#include "camera/settings/dc_recorder_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
+#include "camera/dc_model.hpp"
+#include "camera/dc_filters.hpp"
 
 // 3d-engine
 #include "imgui-tb/imgui_ui_drawer.hpp"
@@ -66,31 +66,31 @@ struct K4GrabberSettings{
     size_t id = 0;
     K4GrabberNetworkSettings network;
 
-    camera::K4Filters filters;
+    camera::DCFilters filters;
     std::string filtersFilePath;
-    camera::K4Filters calibrationFilters = camera::K4Filters::default_init_for_calibration();
+    camera::DCFilters calibrationFilters = camera::DCFilters::default_init_for_calibration();
     std::string calibrationFiltersFilePath;
-    camera::K4DeviceSettings device;
+    camera::DCDeviceSettings device;
     std::string deviceFilePath;
-    camera::K4ColorSettings color;
+    camera::DCColorSettings color;
     std::string colorFilePath;
-    camera::K4Model model;
+    camera::DCModel model;
     std::string modelFilePath;
-    camera::K4Delay delay;
+    camera::DCDelaySettings delay;
 
-    camera::K4CloudDisplaySettings cloudDisplay;    
+    camera::DCCloudDisplaySettings cloudDisplay;    
 
     std::int64_t synchroAverageDiff = 0;
 };
 
 struct K4SMGlobalStates{
-    camera::K4RecorderStates recorder;
-    camera::K4PlayerStates player;
-    camera::K4CalibratorStates calibrator;
+    camera::DCRecorderStates recorder;
+    camera::DCPlayerStates player;
+    camera::DCCalibratorStates calibrator;
 };
 
 struct K4SMGlobalDrawerSettings{    
-    graphics::K4CalibratorDrawerSettings calibrator;
+    graphics::DCCalibratorDrawerSettings calibrator;
 };
 
 
@@ -101,11 +101,11 @@ struct K4SMGlobalSettings{
     K4ServerNetworkSettings network;
     std::string networkFilePath;
     ui::K4SMUiSettings ui;
-    camera::K4SceneDisplaySettings sceneDisplay;
+    camera::DCSceneDisplaySettings sceneDisplay;
 
-    camera::K4RecorderSettings recorder;
-    camera::K4PlayerSettings player;
-    camera::K4CalibratorSettings calibrator;
+    camera::DCRecorderSettings recorder;
+    camera::DCPlayerSettings player;
+    camera::DCCalibratorSettings calibrator;
 };
 
 struct K4SMSettings{
@@ -117,12 +117,12 @@ struct K4SMSettings{
 
     // settings
     auto process_settings_action(SAction action, STarget target, SType type, SFile file, size_t id) -> void;
-    auto update_model(size_t id, const camera::K4Model &model) -> void;
+    auto update_model(size_t id, const camera::DCModel &model) -> void;
 
     // states
-    auto update_recorder_states(camera::K4RecorderStates recorderStates) -> void;
-    auto update_player_states(camera::K4PlayerStates playerStates) -> void;
-    auto update_calibrator_states(camera::K4CalibratorStates calibratorStates) -> void;
+    auto update_recorder_states(camera::DCRecorderStates recorderStates) -> void;
+    auto update_player_states(camera::DCPlayerStates playerStates) -> void;
+    auto update_calibrator_states(camera::DCCalibratorStates calibratorStates) -> void;
 
 
     // trigger

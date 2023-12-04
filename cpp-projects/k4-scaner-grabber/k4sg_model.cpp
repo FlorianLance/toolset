@@ -47,7 +47,7 @@ auto K4SGModel::initialize() -> bool{
 
     // device
     Logger::message("Init device reader\n");
-    device.initialize();
+    device.initialize(camera::DCType::Kinect4);
     device.update_delay(settings.delay);
 
     return true;

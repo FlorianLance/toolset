@@ -35,7 +35,7 @@ namespace tool::graphics {
 struct K4DirectDrawer : public K4CloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto set_frame(size_t idGrabber, std::shared_ptr<camera::K4Frame> frame) -> void;
+    auto set_frame(size_t idGrabber, std::shared_ptr<camera::DCFrame> frame) -> void;
 
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;

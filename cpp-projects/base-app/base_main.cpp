@@ -40,13 +40,14 @@
 #include "utility/io_file.hpp"
 #include "camera/kinect2/k2_device.hpp"
 #include "camera/kinect4/k4_device.hpp"
-#include "camera/kinect4/k4_device_manager.hpp"
+#include "camera/kinect4/k4_compressed_frame.hpp"
+#include "camera/dc_device_manager.hpp"
 
 #include "data/integers_encoder.hpp"
 #include "graphics/texture.hpp"
 #include "files/cloud_io.hpp"
-#include "camera/kinect4/k4_player.hpp"
-#include "camera/kinect4/k4_frame_compressor.hpp"
+#include "camera/dc_player.hpp"
+#include "camera/dc_frame_compressor.hpp"
 #include "geometry/voxel_grid.hpp"
 
 #include "exvr/ex_experiment.hpp"
@@ -60,12 +61,12 @@ void test_k4device(){
     tool::camera::K4Device device;
     std::puts("### Open device.\n");
     if(device.open(0)){
-        tool::camera::K4ConfigSettings config;
+        tool::camera::DCConfigSettings config;
         config.idDevice = 0;
-        config.mode = tool::camera::K4Mode::Cloud_640x576_NV12;
+        config.mode = tool::camera::DCMode::Cloud_640x576_NV12;
         config.synchronizeColorAndDepth = true;
         config.delayBetweenColorAndDepthUsec = 0;
-        config.synchMode = tool::camera::K4SynchronisationMode::Standalone;
+        config.synchMode = tool::camera::DCSynchronisationMode::K4_Standalone;
         config.subordinateDelayUsec = 0;
         config.disableLED = false;
 
@@ -155,17 +156,17 @@ void test_raw_k4device(){
 
 auto test_compress_frame() -> void{
 
-    K4DeviceManager m;
+    DCDeviceManager m;
 
-    m.initialize();
+    m.initialize(DCType::Kinect4);
     m.update_device_list();
 
-    K4DeviceSettings ds;
+    DCDeviceSettings ds;
     ds.actionsS.openCamera  = true;
     ds.actionsS.startDevice = true;
 
     ds.configS.idDevice = 2;
-    ds.configS.mode = K4Mode::Cloud_640x576_NV12;
+    ds.configS.mode = DCMode::Cloud_640x576_NV12;
     ds.configS.subordinateDelayUsec = 0;
 
     ds.dataS.sendCloud = true;
@@ -173,10 +174,10 @@ auto test_compress_frame() -> void{
 
     m.update_settings(ds);
 
-    K4FrameUncompressor uc;
+    DCFrameUncompressor uc;
 
 
-    m.new_compressed_frame_signal.connect([&](std::shared_ptr<K4CompressedFrame> cFrame){
+    m.new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> cFrame){
         std::cout << "cframe " << cFrame->idCapture << "\n";
 
         std::vector<std::int8_t> bufferToSend;
@@ -186,7 +187,7 @@ auto test_compress_frame() -> void{
         auto cFrame2 = std::make_shared<K4CompressedFrame>();
         cFrame2->init_from_data(bufferToSend.data());
 
-        K4Frame frame;
+        DCFrame frame;
         uc.uncompress(cFrame2.get(), frame);
 
         std::cout << "frame " << frame.idCapture << "\n" << std::flush;
@@ -229,9 +230,12 @@ void kinect2_test(){
 
 int main(){
 
+    test_k4device();
+    return 0;
+
     using namespace std::chrono;
 
-    K4Player player;
+    DCPlayer player;
     player.load_from_file("D:/kvidtest.kvid");
 
 

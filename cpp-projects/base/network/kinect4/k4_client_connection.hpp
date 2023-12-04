@@ -33,7 +33,7 @@
 // local
 #include "utility/thread.hpp"
 #include "k4_udp_reader.hpp"
-#include "k4_udp_sender.hpp"
+#include "dc_udp_sender.hpp"
 #include "k4_client_network_settings.hpp"
 
 
@@ -106,7 +106,7 @@ public:
     auto update() -> void;
     auto clean() -> void;
 
-    auto send_frame(std::shared_ptr<camera::K4CompressedFrame> frame) -> void;
+    auto send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void;
     auto send_feedback(K4Feedback feedback) -> void;
 
     auto last_frame_id_sent() const -> size_t;
@@ -116,9 +116,9 @@ public:
     // signals
     static inline SSS<std::shared_ptr<network::K4NetworkSendingSettings>> receive_init_network_sending_settings_signal;
     static inline SSS<std::shared_ptr<network::K4UdpDeviceSettings>> receive_device_settings_signal;
-    static inline SSS<std::shared_ptr<network::K4UdpColorSettings>>receive_color_settings_signal;    
-    static inline SSS<std::shared_ptr<camera::K4Filters>> receive_filters_signal;    
-    static inline SSS<network::K4UdpDelay> receive_delay_signal;
+    static inline SSS<std::shared_ptr<network::DCUdpColorSettings>>receive_color_settings_signal;    
+    static inline SSS<std::shared_ptr<camera::DCFilters>> receive_filters_signal;    
+    static inline SSS<network::DCUdpDelay> receive_delay_signal;
 
     static inline SSS<> shutdown_signal;
     static inline SSS<> quit_signal;
@@ -133,13 +133,13 @@ private:
     std::unique_ptr<std::thread> sendMessagesT = nullptr;
     std::atomic_bool sendMessages = false;
 
-    Queue<std::variant<std::shared_ptr<camera::K4CompressedFrame>, K4Feedback>> messagesToSend;
+    Queue<std::variant<std::shared_ptr<camera::DCCompressedFrame>, K4Feedback>> messagesToSend;
     auto send_messages_loop() -> void;
 
     // reader
-    K4ClientUdpReader m_udpReaderG;
+    DCClientUdpReader m_udpReaderG;
     // sender
-    K4ClientUdpSender m_udpSenderG;
+    DCClientUdpSender m_udpSenderG;
 
     // lockers
     SpinLock m_readerL;
@@ -147,10 +147,10 @@ private:
     // messages
     std::pair<Header, std::shared_ptr<K4NetworkSendingSettings>> m_initNetworkInfosMessage      = std::make_pair<Header, std::shared_ptr<K4NetworkSendingSettings>>({},nullptr);
     std::pair<Header, std::shared_ptr<K4UdpDeviceSettings>> m_updateDeviceSettingsMessage       = std::make_pair<Header, std::shared_ptr<K4UdpDeviceSettings>>({},nullptr);
-    std::pair<Header, std::shared_ptr<K4UdpColorSettings>> m_updateColorSettingsMessage         = std::make_pair<Header, std::shared_ptr<K4UdpColorSettings>>({},nullptr);
+    std::pair<Header, std::shared_ptr<DCUdpColorSettings>> m_updateColorSettingsMessage         = std::make_pair<Header, std::shared_ptr<DCUdpColorSettings>>({},nullptr);
     std::pair<Header, std::optional<K4Command>> m_commandMessage                                = std::make_pair<Header, std::optional<K4Command>>({},std::nullopt);
-    std::pair<Header, std::shared_ptr<camera::K4Filters>> m_updateFiltersMessage                = std::make_pair<Header, std::shared_ptr<camera::K4Filters>>({},nullptr);    
-    std::pair<Header, std::optional<K4UdpDelay>> m_updateDelayMessage                           = std::make_pair<Header, std::optional<K4UdpDelay>>({},std::nullopt);
+    std::pair<Header, std::shared_ptr<camera::DCFilters>> m_updateFiltersMessage                = std::make_pair<Header, std::shared_ptr<camera::DCFilters>>({},nullptr);    
+    std::pair<Header, std::optional<DCUdpDelay>> m_updateDelayMessage                           = std::make_pair<Header, std::optional<DCUdpDelay>>({},std::nullopt);
 
 //    std::int64_t m_diffTimestampFromManager = 0;
     std::atomic<size_t> m_lastFrameIdSent = 0;

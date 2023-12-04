@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "camera/kinect4/k4_calibrator_settings.hpp"
+#include "camera/settings/dc_calibrator_settings.hpp"
 
 // local
 #include "imgui_k4_clouds_scene_drawer.hpp"
@@ -37,16 +37,16 @@ namespace tool::graphics {
 struct K4CalibratorDrawer : public K4CloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto set_data(int sourceId, int modelId,  std::vector<camera::K4CalibratorGrabberData>* grabbersData) -> void;
+    auto set_data(int sourceId, int modelId,  std::vector<camera::DCCalibratorGrabberData>* grabbersData) -> void;
     auto draw() -> void;
 
-    auto update_grabber_model(size_t idGrabber, const camera::K4Model &model) -> void;
-    auto update_grabber_cloud_display(size_t idGrabber, const camera::K4CloudDisplaySettings &cloudDisplay) -> void;
-    auto update_settings(const K4CalibratorDrawerSettings &settings) -> void;
+    auto update_grabber_model(size_t idGrabber, const camera::DCModel &model) -> void;
+    auto update_grabber_cloud_display(size_t idGrabber, const camera::DCCloudDisplaySettings &cloudDisplay) -> void;
+    auto update_settings(const DCCalibratorDrawerSettings &settings) -> void;
 
 private:
 
     bool m_redrawClouds = false;
-    K4CalibratorDrawerSettings m_settings;
+    DCCalibratorDrawerSettings m_settings;
 };
 }
