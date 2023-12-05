@@ -154,27 +154,27 @@ auto K4SGSettings::initialize() -> bool{
     return true;
 }
 
-auto K4SGSettings::init_network_sending_settings(std::shared_ptr<network::K4NetworkSendingSettings> networkSendingS) -> void{
+auto K4SGSettings::init_network_sending_settings(std::shared_ptr<network::UdpNetworkSendingSettings> networkSendingS) -> void{
     network.init_sending_settings(*networkSendingS);
     triggers_init_network_sending_settings();
 }
 
-auto K4SGSettings::update_filters(std::shared_ptr<camera::DCFilters> filtersS) -> void {
+auto K4SGSettings::update_filters(std::shared_ptr<camera::DCFiltersSettings> filtersS) -> void {
     filters = *filtersS;
     triggers_filters_settings();
 }
 
-auto K4SGSettings::update_device_settings(std::shared_ptr<network::K4UdpDeviceSettings> deviceS) -> void {
+auto K4SGSettings::update_device_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCDeviceSettings>> deviceS) -> void {
     device = std::move(deviceS->data);
     triggers_device_settings();
 }
 
-auto K4SGSettings::update_color_settings(std::shared_ptr<network::DCUdpColorSettings> colorS) -> void{
+auto K4SGSettings::update_color_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCColorSettings>> colorS) -> void{
     color = std::move(colorS->data);
     triggers_color_settings();
 }
 
-auto K4SGSettings::update_delay(network::DCUdpDelay delayS) -> void{
+auto K4SGSettings::update_delay(network::UdpMonoPacketMessage<camera::DCDelaySettings> delayS) -> void{
     delay = std::move(delayS.data);
     triggers_delay_settings();
 }
@@ -278,7 +278,7 @@ auto K4SGSettings::load_current_hostname_device_settings_file() -> bool{
 }
 
 auto K4SGSettings::reset_filters() -> void{
-    filters = camera::DCFilters();
+    filters = camera::DCFiltersSettings();
     triggers_device_settings();
 }
 
@@ -336,7 +336,7 @@ auto K4SGSettings::load_current_hostname_color_settings_file() -> bool{
 }
 
 auto K4SGSettings::reset_model() -> void{
-    model = camera::DCModel();
+    model = camera::DCModelSettings();
     triggers_model();
 }
 

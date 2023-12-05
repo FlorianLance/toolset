@@ -354,7 +354,7 @@ auto K4SMLeftPanelChildDrawer::draw_all_commands_tab_item(std::vector<K4GrabberS
     ImGui::SameLine();
     if(ImGui::Button("Disconnect all###settings_disconnect_all_button")){
         for(const auto &grabberS : grabbersS){
-            K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Disconnect);
+            K4SMSignals::get()->command_signal(grabberS.id, network::Command::Disconnect);
         }
     }
     ImGui::Unindent();
@@ -363,7 +363,7 @@ auto K4SMLeftPanelChildDrawer::draw_all_commands_tab_item(std::vector<K4GrabberS
     ImGui::Indent();
     if(ImGui::Button("Quit all###settings_quit_all_button")){
         for(const auto &grabberS : grabbersS){
-            K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Quit);
+            K4SMSignals::get()->command_signal(grabberS.id, network::Command::Quit);
         }
     }
     ImGui::Unindent();
@@ -373,13 +373,13 @@ auto K4SMLeftPanelChildDrawer::draw_all_commands_tab_item(std::vector<K4GrabberS
 
     if(ImGui::Button("Shutdown all###settings_shutdown_all_button")){
         for(const auto &grabberS : grabbersS){
-            K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Shutdown);
+            K4SMSignals::get()->command_signal(grabberS.id, network::Command::Shutdown);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart all###settings_restart_all_button")){
         for(const auto &grabberS : grabbersS){
-            K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Restart);
+            K4SMSignals::get()->command_signal(grabberS.id, network::Command::Restart);
         }
     }
     ImGui::Unindent();
@@ -420,14 +420,14 @@ auto K4SMLeftPanelChildDrawer::draw_individual_commands_tab_item(K4GrabberSettin
     }
     ImGui::SameLine();
     if(ImGui::Button("Disconnect###settings_disconnect_button")){
-        K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Disconnect);
+        K4SMSignals::get()->command_signal(grabberS.id, network::Command::Disconnect);
     }
     ImGui::Unindent();
 
     ImGui::Text("Program:");
     ImGui::Indent();
     if(ImGui::Button("Quit###settings_quit_button")){
-         K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Quit);
+         K4SMSignals::get()->command_signal(grabberS.id, network::Command::Quit);
     }
     ImGui::Unindent();
 
@@ -435,11 +435,11 @@ auto K4SMLeftPanelChildDrawer::draw_individual_commands_tab_item(K4GrabberSettin
     ImGui::Indent();
 
     if(ImGui::Button("Shutdown###settings_shutdown_button")){
-        K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Shutdown);
+        K4SMSignals::get()->command_signal(grabberS.id, network::Command::Shutdown);
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart###settings_restart_button")){
-        K4SMSignals::get()->command_signal(grabberS.id, network::K4Command::Restart);
+        K4SMSignals::get()->command_signal(grabberS.id, network::Command::Restart);
     }
 
     ImGui::Unindent();
@@ -603,7 +603,7 @@ auto K4SMLeftPanelChildDrawer::draw_filters_tab_item(K4SMSettings &settings) -> 
 
     if(ImGui::Button(fmt("Copy{}_copy_filters", base).c_str())){
 
-        DCFilters *fromFilters = nullptr;
+        DCFiltersSettings *fromFilters = nullptr;
         if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersSet.size())){
             int idGrabber = guiCurrentFromFiltersSelection;
             fromFilters = &settings.grabbersSet[idGrabber].filters;

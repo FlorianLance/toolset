@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -28,35 +27,22 @@
 #pragma once
 
 // local
-#include "camera/dc_filters.hpp"
-#include "camera/dc_compressed_frame.hpp"
-#include "network/udp_sender.hpp"
-#include "k4_network.hpp"
+#include "files/text_settings.hpp"
+#include "network/network_types.hpp"
 
-namespace tool::network {
+namespace tool {
 
-class DCClientUdpSender : public UdpSender{
-public:
+struct UdpServerNetworkSettings : files::TextSettings{
 
-    auto send_synchronisation_message() -> bool;
-    auto send_feedback_message(K4Feedback feedback) -> bool;
-    auto send_compressed_frame_message(std::shared_ptr<camera::DCCompressedFrame> frame) -> bool;
+    auto initialize() -> bool;
+
+    std::vector<network::Interface> interfaces = {};
+    std::vector<network::ReadSendNetworkInfos> clientsInfo;
 
 private:
-    size_t idLastFrameMutliPacketsMessageSent = 0;
-};
 
-class DCServerUdpSender : public UdpSender{
-public:
-
-    auto send_init_message(const K4NetworkSendingSettings &network) -> Header;
-    auto send_update_device_settings_message(const camera::DCDeviceSettings &device) -> Header;
-    auto send_update_color_settings_message(const camera::DCColorSettings &color) -> Header;
-    auto send_delay_settings_message(camera::DCDelaySettings delay) -> Header;
-    auto send_command_message(network::K4Command command) -> Header;
-    auto send_update_filters_settings_message(const camera::DCFilters &filters) -> bool;
-
-private:
-    size_t idLastMasksFiltersMessageSent = 0;
+    auto init_from_text(const std::string &text) -> void override;
+    auto convert_to_text() const -> std::string override;
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Network);};
 };
 }

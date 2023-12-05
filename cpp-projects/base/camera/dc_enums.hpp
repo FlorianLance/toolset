@@ -47,26 +47,6 @@ enum class DCType : std::int8_t{
     OR = Orbbec
 };
 
-// File settings types
-enum class DCSettingsType : std::int32_t{
-    Network, Filters, Color, Device, Model, Delay,
-    SizeEnum
-};
-using TDCSettings = std::tuple< DCSettingsType, std::string_view>;
-static constexpr TupleArray<DCSettingsType::SizeEnum, TDCSettings> dcSettings = {{
-    TDCSettings
-    {DCSettingsType::Network, "network settings"sv},
-    {DCSettingsType::Filters, "filters settings"sv},
-    {DCSettingsType::Color,   "color settings"sv},
-    {DCSettingsType::Device,  "device settings"sv},
-    {DCSettingsType::Model,   "calibration"sv},
-    {DCSettingsType::Delay,   "delay"sv},
-}};
-
-[[maybe_unused]] static constexpr auto settings_name(DCSettingsType s) -> std::string_view{
-    return dcSettings.at<0,1>(s);
-}
-
 // Camera parameters
 // # powerline frequency
 enum class PowerlineFrequency : std::int8_t{

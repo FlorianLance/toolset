@@ -40,7 +40,7 @@ struct K4CalibratorDrawer : public K4CloudsSceneDrawer{
     auto set_data(int sourceId, int modelId,  std::vector<camera::DCCalibratorGrabberData>* grabbersData) -> void;
     auto draw() -> void;
 
-    auto update_grabber_model(size_t idGrabber, const camera::DCModel &model) -> void;
+    auto update_grabber_model(size_t idGrabber, const camera::DCModelSettings &model) -> void;
     auto update_grabber_cloud_display(size_t idGrabber, const camera::DCCloudDisplaySettings &cloudDisplay) -> void;
     auto update_settings(const DCCalibratorDrawerSettings &settings) -> void;
 

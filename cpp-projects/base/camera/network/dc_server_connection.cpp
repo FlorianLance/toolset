@@ -25,7 +25,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_server_connection.hpp"
+#include "dc_server_connection.hpp"
 
 // std
 #include <format>
@@ -37,25 +37,25 @@ using namespace std::chrono;
 using namespace tool::network;
 using namespace tool::camera;
 
-K4ServerConnection::~K4ServerConnection(){
+DCServerConnection::~DCServerConnection(){
     clean();
 }
 
-auto K4ServerConnection::initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool {
+auto DCServerConnection::initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool {
 
     m_id    = id;
     m_infos = infos;    
 
     // init reader
     if(!udpReader.init_socket(m_infos.readingAdress, m_infos.readingPort)){
-        Logger::error("K4ServerConnection: Cannot init udp reader.\n");
+        Logger::error("DCServerConnection: Cannot init udp reader.\n");
         return false;
     }
     udpReader.start_reading();
 
     // init sender
     if(!udpSender.init_socket(m_infos.sendingAdress, std::to_string(m_infos.sendingPort))){
-        Logger::error("K4ServerConnection: Cannot init udp sender.\n");
+        Logger::error("DCServerConnection: Cannot init udp sender.\n");
         return false;
     }
 
@@ -67,16 +67,16 @@ auto K4ServerConnection::initialize(size_t id, const ReadSendNetworkInfos &infos
             grabber_synchro_signal(timestamp);
         }
     });
-    udpReader.feedback_signal.connect(&K4ServerConnection::receive_feedback, this);
-    udpReader.compressed_frame_signal.connect(&K4ServerConnection::receive_compressed_frame, this);
+    udpReader.feedback_signal.connect(&DCServerConnection::receive_feedback, this);
+    udpReader.compressed_frame_signal.connect(&DCServerConnection::receive_compressed_frame, this);
 
     return true;
 }
 
-auto K4ServerConnection::clean() -> void {
+auto DCServerConnection::clean() -> void {
 
-    udpReader.feedback_signal.disconnect(&K4ServerConnection::receive_feedback, this);
-    udpReader.compressed_frame_signal.disconnect(&K4ServerConnection::receive_compressed_frame, this);
+    udpReader.feedback_signal.disconnect(&DCServerConnection::receive_feedback, this);
+    udpReader.compressed_frame_signal.disconnect(&DCServerConnection::receive_compressed_frame, this);
     m_grabberConnectedToServer = false;
 
     // manager size
@@ -87,37 +87,37 @@ auto K4ServerConnection::clean() -> void {
     udpSender.clean_socket();
 }
 
-auto K4ServerConnection::init_connection_with_grabber() -> void {
+auto DCServerConnection::init_connection_with_grabber() -> void {
 
-    Logger::message(std::format("K4ServerConnection: infos read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
+    Logger::message(std::format("DCServerConnection: infos read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
         m_infos.idReadingInterface, m_infos.readingAdress, m_infos.readingPort, m_infos.sendingAdress, m_infos.sendingPort));
 
     m_initTs = udpSender.send_init_message(
-        K4NetworkSendingSettings(m_infos.readingAdress, m_infos.readingPort, maxSizeUpdMessage)
+        UdpNetworkSendingSettings(m_infos.readingAdress, m_infos.readingPort, maxSizeUpdMessage)
     ).currentPacketTime;
 }
 
-auto K4ServerConnection::disconnect_grabber() -> void {
-    udpSender.send_command_message(K4Command::Disconnect);
+auto DCServerConnection::disconnect_grabber() -> void {
+    udpSender.send_command_message(Command::Disconnect);
 }
 
-auto K4ServerConnection::quit_grabber() -> void {
-    udpSender.send_command_message(K4Command::Quit);
+auto DCServerConnection::quit_grabber() -> void {
+    udpSender.send_command_message(Command::Quit);
 }
 
-auto K4ServerConnection::shutdown_grabber_computer() -> void {
-    udpSender.send_command_message(K4Command::Shutdown);
+auto DCServerConnection::shutdown_grabber_computer() -> void {
+    udpSender.send_command_message(Command::Shutdown);
 }
 
-auto K4ServerConnection::restart_grabber_computer() -> void {
-    udpSender.send_command_message(K4Command::Restart);
+auto DCServerConnection::restart_grabber_computer() -> void {
+    udpSender.send_command_message(Command::Restart);
 }
 
-auto K4ServerConnection::update_device_list() -> void {
-    udpSender.send_command_message(K4Command::UpdateDeviceList);
+auto DCServerConnection::update_device_list() -> void {
+    udpSender.send_command_message(Command::UpdateDeviceList);
 }
 
-auto K4ServerConnection::receive_feedback(Header h, K4UdpFeedback message) -> void {
+auto DCServerConnection::receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void {
 
     // from reader thread:
     m_totalReceivedBytes += h.totalSizeBytes;
@@ -152,7 +152,7 @@ auto K4ServerConnection::receive_feedback(Header h, K4UdpFeedback message) -> vo
     }
 }
 
-auto K4ServerConnection::receive_compressed_frame(Header h, std::shared_ptr<camera::K4CompressedFrame> compressedFrame) -> void {
+auto DCServerConnection::receive_compressed_frame(Header h, std::shared_ptr<camera::DCCompressedFrame> compressedFrame) -> void {
 
     // from reader thread:
     m_totalReceivedBytes += h.totalSizeBytes;

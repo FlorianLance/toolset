@@ -59,7 +59,7 @@ auto K4SMModel::trigger_settings() -> void{
     settings.trigger_all_cloud_display();
 }
 
-auto K4SMModel::add_feedback(size_t id, network::K4Feedback feedback) -> void{
+auto K4SMModel::add_feedback(size_t id, network::Feedback feedback) -> void{
     readMessagesL.lock();
     messages.emplace_back(id, feedback);
     readMessagesL.unlock();
@@ -70,7 +70,7 @@ auto K4SMModel::update_synchro(size_t id, int64_t averageDiffNs) -> void{
 }
 
 auto K4SMModel::ask_calibration() -> void{
-    std::vector<camera::DCModel> models;
+    std::vector<camera::DCModelSettings> models;
     for(const auto &grabberS : settings.grabbersSet){
         models.push_back(grabberS.model);
     }
@@ -90,14 +90,14 @@ auto K4SMModel::update_filtering_mode(bool useNormalMode) -> void{
     }
 }
 
-auto K4SMModel::update_filters(size_t id, const camera::DCFilters &filters) -> void {
+auto K4SMModel::update_filters(size_t id, const camera::DCFiltersSettings &filters) -> void {
     settings.grabbersSet[id].filters = filters;
     if(settings.globalSet.useNormalFilteringSettings){
         network.send_filters(id, settings.grabbersSet[id].filters);
     }
 }
 
-auto K4SMModel::update_calibration_filters(size_t id, const camera::DCFilters &filters) -> void{
+auto K4SMModel::update_calibration_filters(size_t id, const camera::DCFiltersSettings &filters) -> void{
     settings.grabbersSet[id].calibrationFilters = filters;
     if(!settings.globalSet.useNormalFilteringSettings){
         network.send_filters(id, settings.grabbersSet[id].calibrationFilters);

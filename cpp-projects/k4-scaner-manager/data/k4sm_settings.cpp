@@ -241,12 +241,12 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
             break;
         case SType::Filters:
             for(auto grabber : tGrabbers){
-                grabber->filters = camera::DCFilters();
+                grabber->filters = camera::DCFiltersSettings();
             }
             break;
         case SType::CalibrationFilters:
             for(auto grabber : tGrabbers){
-                grabber->calibrationFilters = camera::DCFilters::default_init_for_calibration();
+                grabber->calibrationFilters = camera::DCFiltersSettings::default_init_for_calibration();
             }
             break;
         case SType::Color:
@@ -256,7 +256,7 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
             break;
         case SType::Model:
             for(auto grabber : tGrabbers){
-                grabber->model = camera::DCModel();
+                grabber->model = camera::DCModelSettings();
             }
             break;
         }
@@ -319,7 +319,7 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
                     if(file == SFile::Default){
-                        grabber->model = camera::DCModel();
+                        grabber->model = camera::DCModelSettings();
                     }else{
                         grabber->model.init_from_file(K4SMPaths::grabbersModel[grabber->id].string());
                     }
@@ -409,7 +409,7 @@ auto K4SMSettings::process_settings_action(SAction action, STarget target, SType
     }
 }
 
-auto K4SMSettings::update_model(size_t id, const camera::DCModel &model) -> void {
+auto K4SMSettings::update_model(size_t id, const camera::DCModelSettings &model) -> void {
     grabbersSet[id].model = model;
 }
 

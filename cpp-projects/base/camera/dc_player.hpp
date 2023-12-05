@@ -29,8 +29,8 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 #include "settings/dc_player_settings.hpp"
+#include "settings/dc_model_settings.hpp"
 #include "dc_volumetric_video.hpp"
-#include "dc_model.hpp"
 
 namespace tool::camera {
 
@@ -80,7 +80,7 @@ public:
     auto save_cloud_to_file(std::string_view path) -> bool;
 
     // signals
-    sigslot::signal<std::vector<DCModel>> initialize_signal;
+    sigslot::signal<std::vector<DCModelSettings>> initialize_signal;
     sigslot::signal<DCPlayerStates> states_updated_signal;
     sigslot::signal<size_t, std::shared_ptr<DCFrame>> new_frame_signal;
 

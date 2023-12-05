@@ -36,8 +36,7 @@ struct DCDelaySettings : files::BinarySettings{
     auto init_from_data(std::int8_t *data) -> void override;
     auto convert_to_data(std::int8_t *data) const -> void override;
     auto total_data_size() const noexcept -> size_t override{return sizeof(delayMs);}
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(DCSettingsType::Delay);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<DCSettingsType>(type()));}
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Delay);};
 };
 
 }

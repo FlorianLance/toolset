@@ -56,8 +56,7 @@ namespace tool::camera {
                 dataS.total_data_size() +
                 actionsS.total_data_size();
         }
-        auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(DCSettingsType::Device);};
-        auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<DCSettingsType>(type()));}
+        auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Device);};
 
         static auto save_array_to_file(const std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;
         static auto init_array_from_file(std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;

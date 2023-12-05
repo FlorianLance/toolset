@@ -73,7 +73,7 @@ public:
     // settings
     auto set_color_settings(const DCColorSettings &colorS) -> void override;
     auto set_data_settings(const DCDataSettings &dataS) -> void override;
-    auto set_filters(const DCFilters &filters) -> void override;
+    auto set_filters(const DCFiltersSettings &filters) -> void override;
     auto send_data_state(bool state) -> void override;
     auto set_delay(DCDelaySettings delay) -> void override;
 

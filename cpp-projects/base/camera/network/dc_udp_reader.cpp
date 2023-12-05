@@ -25,10 +25,11 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_udp_reader.hpp"
+#include "dc_udp_reader.hpp"
 
 // local
 #include "utility/time.hpp"
+#include "camera/kinect4/k4_compressed_frame.hpp"
 
 using namespace tool::camera;
 using namespace tool::network;
@@ -46,27 +47,27 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 //        header.totalSizeBytes, header.dataOffset, header.idMessage));
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::init_network_infos:{
-        init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<K4NetworkSendingSettings>(packetData));
+        init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<UdpNetworkSendingSettings>(packetData));
     }break;
     case MessageType::update_device_settings:{
-        update_device_settings_signal(std::move(header), std::make_shared<K4UdpDeviceSettings>(packetData));
+        update_device_settings_signal(std::move(header), std::make_shared<UdpMonoPacketMessage<DCDeviceSettings>>(packetData));
     }break;
     case MessageType::update_filters:{
         if(!filtersMessage.copy_packet_to_data(header, nbBytes, packetData, m_data)){
             break;
         }
         if(filtersMessage.all_received(header)){
-            update_filters_signal(std::move(header), std::make_shared<camera::DCFilters>(m_data.data()));
+            update_filters_signal(std::move(header), std::make_shared<camera::DCFiltersSettings>(m_data.data()));
         }
     }break;
-    case MessageType::update_color_settings:{
-        update_color_settings_signal(std::move(header), std::make_shared<DCUdpColorSettings>(packetData));
+    case MessageType::update_color_settings:{        
+        update_color_settings_signal(std::move(header), std::make_shared<UdpMonoPacketMessage<DCColorSettings>>(packetData));
     }break;
     case MessageType::delay:{
-        update_delay_signal(std::move(header), DCUdpDelay(packetData));
+        update_delay_signal(std::move(header), UdpMonoPacketMessage<DCDelaySettings>(packetData));
     }break;
     case MessageType::command:{
-        command_signal(header, UdpMonoPacketData::generate_data_from_packet_raw<K4Command>(packetData));
+        command_signal(header, UdpMonoPacketData::generate_data_from_packet_raw<Command>(packetData));
     }break;
     default:
         break;
@@ -101,7 +102,7 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 
     }break;
     case MessageType::feedback:{
-        feedback_signal(std::move(header), K4UdpFeedback(packetData));
+        feedback_signal(std::move(header), UdpMonoPacketMessage<Feedback>(packetData));
     }break;
     case MessageType::compressed_frame_data:{       
 

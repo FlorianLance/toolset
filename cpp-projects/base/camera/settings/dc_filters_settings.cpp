@@ -24,20 +24,20 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_filters.hpp"
+#include "dc_filters_settings.hpp"
 
 // local
 #include "utility/io_data.hpp"
 
 using namespace tool::camera;
 
-auto DCFilters::default_init_for_calibration() -> DCFilters{
-    DCFilters filters;
+auto DCFiltersSettings::default_init_for_calibration() -> DCFiltersSettings{
+    DCFiltersSettings filters;
     // TODO
     return filters;
 }
 
-auto DCFilters::init_from_data(std::int8_t *data) -> void{
+auto DCFiltersSettings::init_from_data(std::int8_t *data) -> void{
 
     size_t offset = 0;
     read(minWidth, data, offset, m_inputFileSize);
@@ -71,7 +71,7 @@ auto DCFilters::init_from_data(std::int8_t *data) -> void{
     read(p2Rot, data, offset, m_inputFileSize);
 }
 
-auto DCFilters::convert_to_data(std::int8_t *data) const -> void{
+auto DCFiltersSettings::convert_to_data(std::int8_t *data) const -> void{
 
     size_t offset = 0;
     write(minWidth, data, offset);

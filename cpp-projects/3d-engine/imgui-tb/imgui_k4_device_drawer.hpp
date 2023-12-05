@@ -28,7 +28,7 @@
 
 // base
 #include "camera/dc_frame.hpp"
-#include "camera/dc_filters.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
 
 // 3d-engine
 #include "imgui_k4_clouds_scene_drawer.hpp"
@@ -41,7 +41,7 @@ struct K4DeviceDrawer : public K4CloudsSceneDrawer{
     auto update() -> void;
     auto draw(bool focusWindow) -> void;
 
-    auto update_filters(const camera::DCFilters &filters) -> void{
+    auto update_filters(const camera::DCFiltersSettings &filters) -> void{
 //        if(!plane1D){
 //            plane1D = std::make_unique<gl::GridDrawer>();
 //        }

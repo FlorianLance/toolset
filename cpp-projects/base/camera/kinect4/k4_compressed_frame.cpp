@@ -46,20 +46,10 @@ auto K4CompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     size_t encCloudColorDataSize = 0;
     size_t nbAudioFrames    = 0;
 
-    // init
-    // # infos
-    read(idCapture, file);
-    read(afterCaptureTS, file);
-    read(mode, file);
+    read_infos_from_file_stream(file);
+    read_color_from_file_stream(file);
 
-    // # color
-    read(colorWidth, file);
-    read(colorHeight, file);
-    read(encColorDataSize, file);
-    if(encColorDataSize > 0){
-        encodedColorData.resize(encColorDataSize);
-        read_array(encodedColorData.data(), file, encColorDataSize);
-    }
+
     // # depth
     read(depthWidth, file);
     read(depthHeight, file);

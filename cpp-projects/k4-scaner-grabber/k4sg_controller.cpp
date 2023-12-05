@@ -91,7 +91,7 @@ auto K4SGController::set_connections() -> void{
 
     // aliases
     using Sett  = K4SGSettings;
-    using CCo   = network::K4ClientConnection;
+    using CCo   = network::DCClientConnection;
     using Rec   = camera::DCRecorder;
     using RecD  = graphics::K4RecorderDrawer;
     using DevD  = graphics::K4DeviceDrawer;

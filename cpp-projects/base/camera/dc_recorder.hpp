@@ -29,7 +29,7 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 #include "settings/dc_recorder_settings.hpp"
-#include "dc_model.hpp"
+#include "settings/dc_model_settings.hpp"
 #include "dc_volumetric_video.hpp"
 
 namespace tool::camera {
@@ -61,7 +61,7 @@ public:
 
     // settings
     auto update_settings(DCRecorderSettings recordingsS) noexcept -> void;
-    auto update_model(size_t id, const camera::DCModel &model) -> void;
+    auto update_model(size_t id, const camera::DCModelSettings &model) -> void;
 
     // i/o
     auto save_to_file(std::string_view path) -> bool;

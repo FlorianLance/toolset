@@ -1,6 +1,5 @@
 
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -26,45 +25,33 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "network_utility.hpp"
-
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ip/host_name.hpp>
+#pragma once
 
 // local
-#include "utility/logger.hpp"
+#include "dc_server_connection.hpp"
 
-using namespace boost::asio;
-using namespace tool::network;
+namespace tool::network {
 
-std::vector<Interface> Interface::list_local_interfaces(Protocol protocol){
+struct DCServerNetwork{
 
-    using namespace boost::asio;
-    using namespace boost::asio::ip;
+    ~DCServerNetwork();
+    auto initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool;
+    auto clean() -> void;
 
-    io_service ioService;
-    udp::resolver resolver(ioService);
-    udp::resolver::query query(host_name(),"");
+    auto init_connection(size_t idG) -> void;
+    auto send_command(size_t idG, Command command) -> void;
+    auto send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
+    auto send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
+    auto send_filters(size_t idG, const camera::DCFiltersSettings &filters) -> void;
+    auto send_delay(size_t idG, camera::DCDelaySettings delay) -> void;
 
-    std::vector<Interface> interfaces;
-    try{
-        udp::resolver::iterator it = resolver.resolve(query);
+    auto connections_nb() const noexcept -> size_t {return connections.size();}
+    auto get_connection(size_t idG) const -> DCServerConnection*{return connections[idG].get();}
 
-        while(it!=udp::resolver::iterator()){
-            address addr =(it++)->endpoint().address();
-            if((addr.is_v6() ? Protocol::ipv6 : (addr.is_v4() ? Protocol::ipv4 : Protocol::unknow)) == protocol){
-                interfaces.emplace_back(Interface{protocol,addr.to_string()});
-            }
-        }
-    }catch (const boost::system::system_error &error){
-        Logger::error(std::format("list_local_interfaces: Cannot list interfaces, error message: {}\n", error.what()));
-    }
+    auto do_not_use_global_signals() ->void;
 
-    ioService.stop();
-    return interfaces;
-}
+private:
+    std::vector<std::unique_ptr<DCServerConnection>> connections;
+};
 
-std::string Host::get_name(){
-    return boost::asio::ip::host_name();
 }

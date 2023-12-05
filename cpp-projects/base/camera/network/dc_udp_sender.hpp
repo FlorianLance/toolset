@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -27,25 +28,38 @@
 #pragma once
 
 // local
-#include "network/network_utility.hpp"
-#include "files/text_settings.hpp"
-#include "camera/kinect4/k4_types.hpp"
+#include "network/udp_sender.hpp"
+#include "network/network_types.hpp"
+#include "camera/dc_compressed_frame.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
 
-namespace tool {
+namespace tool::network {
 
-struct K4ServerNetworkSettings : files::TextSettings{
+class DCClientUdpSender : public UdpSender{
+public:
 
-    auto initialize() -> bool;
-
-    std::vector<network::Interface> interfaces = {};
-    std::vector<network::ReadSendNetworkInfos> clientsInfo;
+    auto send_synchronisation_message() -> bool;
+    auto send_feedback_message(Feedback feedback) -> bool;
+    auto send_compressed_frame_message(std::shared_ptr<camera::DCCompressedFrame> frame) -> bool;
 
 private:
+    size_t idLastFrameMutliPacketsMessageSent = 0;
+};
 
-    auto init_from_text(const std::string &text) -> void override;
-    auto convert_to_text() const -> std::string override;
+class DCServerUdpSender : public UdpSender{
+public:
 
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(camera::DCSettingsType::Network);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<camera::DCSettingsType>(type()));}
+    auto send_init_message(const UdpNetworkSendingSettings &network) -> Header;
+    auto send_update_device_settings_message(const camera::DCDeviceSettings &device) -> Header;
+    auto send_update_color_settings_message(const camera::DCColorSettings &color) -> Header;
+    auto send_delay_settings_message(camera::DCDelaySettings delay) -> Header;
+    auto send_command_message(network::Command command) -> Header;
+    auto send_update_filters_settings_message(const camera::DCFiltersSettings &filters) -> bool;
+
+private:
+    size_t idLastMasksFiltersMessageSent = 0;
 };
 }

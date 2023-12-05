@@ -42,7 +42,7 @@
 
 // base
 #include "camera/kinect2/k2_network.hpp"
-#include "network/network_utility.hpp"
+#include "network/network_enums.hpp"
 #include "utility/types.hpp"
 
 // qt-utility

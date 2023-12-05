@@ -32,9 +32,9 @@
 
 // local
 #include "utility/thread.hpp"
-#include "k4_udp_reader.hpp"
+#include "dc_udp_reader.hpp"
 #include "dc_udp_sender.hpp"
-#include "k4_client_network_settings.hpp"
+#include "network/udp_client_network_settings.hpp"
 
 
 template<class T>
@@ -43,19 +43,17 @@ class Queue{
 //    std::condition_variable consumer_, producer_;
     std::mutex mutex_;
     using unique_lock = std::unique_lock<std::mutex>;
-
     std::queue<T> queue_;
 
 public:
     template<class U>
-    void push_back(U&& item) {
+    auto push_back(U&& item) -> void {
 
         std::unique_lock lock(mutex_);
 //        while(MaxQueueSize == queue_.size()){
 //            pop_front();
 ////            producer_.wait(lock);
 //        }
-
         queue_.push(std::forward<U>(item));
         if(queue_.size() > 20){
             queue_.pop();
@@ -63,7 +61,7 @@ public:
 //        consumer_.notify_one();
     }
 
-    std::optional<T> pop_front() {
+    auto pop_front() -> std::optional<T> {
         std::unique_lock lock(mutex_);
 //        if(!mutex_.try_lock()){
 //            return std::nullopt;
@@ -83,7 +81,7 @@ public:
         return item;
     }
 
-    void clean(){
+    auto clean() -> void{
         std::unique_lock lock(mutex_);
         queue_ = {};
     }
@@ -95,30 +93,30 @@ template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
 
 
-class K4ClientConnection{
+class DCClientConnection{
 public:
 
     auto init_connections() -> void;
-    auto start_reading(network::K4ClientNetworkSettings *networkS) -> bool;
-    auto init_sender(network::K4ClientNetworkSettings *networkS) -> bool;
+    auto start_reading(network::UdpClientNetworkSettings *networkS) -> bool;
+    auto init_sender(network::UdpClientNetworkSettings *networkS) -> bool;
     auto ping_server() -> void;
     auto disconnect_sender() -> void;
     auto update() -> void;
     auto clean() -> void;
 
     auto send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void;
-    auto send_feedback(K4Feedback feedback) -> void;
+    auto send_feedback(Feedback feedback) -> void;
 
     auto last_frame_id_sent() const -> size_t;
     auto last_frame_sent_timestamp_nanosecond() const -> std::chrono::nanoseconds {return m_lastFrameSentTS;}
     auto last_frame_sending_duration_micros_s() const -> std::int64_t{return lastFrameSendingDurationMicrosS;}
 
     // signals
-    static inline SSS<std::shared_ptr<network::K4NetworkSendingSettings>> receive_init_network_sending_settings_signal;
-    static inline SSS<std::shared_ptr<network::K4UdpDeviceSettings>> receive_device_settings_signal;
-    static inline SSS<std::shared_ptr<network::DCUdpColorSettings>>receive_color_settings_signal;    
-    static inline SSS<std::shared_ptr<camera::DCFilters>> receive_filters_signal;    
-    static inline SSS<network::DCUdpDelay> receive_delay_signal;
+    static inline SSS<std::shared_ptr<network::UdpNetworkSendingSettings>> receive_init_network_sending_settings_signal;
+    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> receive_device_settings_signal;
+    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> receive_color_settings_signal;
+    static inline SSS<std::shared_ptr<camera::DCFiltersSettings>> receive_filters_signal;    
+    static inline SSS<UdpMonoPacketMessage<camera::DCDelaySettings>> receive_delay_signal;
 
     static inline SSS<> shutdown_signal;
     static inline SSS<> quit_signal;
@@ -133,7 +131,7 @@ private:
     std::unique_ptr<std::thread> sendMessagesT = nullptr;
     std::atomic_bool sendMessages = false;
 
-    Queue<std::variant<std::shared_ptr<camera::DCCompressedFrame>, K4Feedback>> messagesToSend;
+    Queue<std::variant<std::shared_ptr<camera::DCCompressedFrame>, Feedback>> messagesToSend;
     auto send_messages_loop() -> void;
 
     // reader
@@ -145,12 +143,18 @@ private:
     SpinLock m_readerL;
 
     // messages
-    std::pair<Header, std::shared_ptr<K4NetworkSendingSettings>> m_initNetworkInfosMessage      = std::make_pair<Header, std::shared_ptr<K4NetworkSendingSettings>>({},nullptr);
-    std::pair<Header, std::shared_ptr<K4UdpDeviceSettings>> m_updateDeviceSettingsMessage       = std::make_pair<Header, std::shared_ptr<K4UdpDeviceSettings>>({},nullptr);
-    std::pair<Header, std::shared_ptr<DCUdpColorSettings>> m_updateColorSettingsMessage         = std::make_pair<Header, std::shared_ptr<DCUdpColorSettings>>({},nullptr);
-    std::pair<Header, std::optional<K4Command>> m_commandMessage                                = std::make_pair<Header, std::optional<K4Command>>({},std::nullopt);
-    std::pair<Header, std::shared_ptr<camera::DCFilters>> m_updateFiltersMessage                = std::make_pair<Header, std::shared_ptr<camera::DCFilters>>({},nullptr);    
-    std::pair<Header, std::optional<DCUdpDelay>> m_updateDelayMessage                           = std::make_pair<Header, std::optional<DCUdpDelay>>({},std::nullopt);
+    std::pair<Header, std::shared_ptr<UdpNetworkSendingSettings>> m_initNetworkInfosMessage =
+        std::make_pair<Header, std::shared_ptr<UdpNetworkSendingSettings>>({},nullptr);
+    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> m_updateDeviceSettingsMessage =
+        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>>({},nullptr);
+    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> m_updateColorSettingsMessage =
+        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>>({},nullptr);
+    std::pair<Header, std::optional<Command>> m_commandMessage =
+        std::make_pair<Header, std::optional<Command>>({},std::nullopt);
+    std::pair<Header, std::shared_ptr<camera::DCFiltersSettings>> m_updateFiltersMessage =
+        std::make_pair<Header, std::shared_ptr<camera::DCFiltersSettings>>({},nullptr);
+    std::pair<Header, std::optional<UdpMonoPacketMessage<camera::DCDelaySettings>>> m_updateDelayMessage =
+        std::make_pair<Header, std::optional<UdpMonoPacketMessage<camera::DCDelaySettings>>>({},std::nullopt);
 
 //    std::int64_t m_diffTimestampFromManager = 0;
     std::atomic<size_t> m_lastFrameIdSent = 0;

@@ -1,5 +1,6 @@
 
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -25,37 +26,54 @@
 **                                                                            **
 ********************************************************************************/
 
+#include "network_types.hpp"
 
-#pragma once
+// boost
+#include <boost/asio.hpp>
+#include <boost/asio/ip/host_name.hpp>
 
-// std
-#include <string>
-#include <vector>
+// local
+#include "utility/logger.hpp"
 
-namespace tool::network{
+using namespace boost::asio;
+using namespace tool::network;
 
-enum class Protocol : std::uint8_t{
-    ipv4, ipv6, unknow
-};
-
-
-struct Host{
-    [[maybe_unused]] static std::string get_name();
-};
-
-struct Interface{
-    Protocol protocol;
-    std::string ipAddress;
-    static std::vector<Interface> list_local_interfaces(Protocol protocol);
-};
-
-struct ReadSendNetworkInfos{
-    size_t idReadingInterface = 0;
-    std::string readingAdress;
-    int readingPort;
-    std::string sendingAdress;
-    int sendingPort;
-};
+auto Host::get_name() -> std::string{
+    return boost::asio::ip::host_name();
+}
 
 
+auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interface>{
+
+    using namespace boost::asio;
+    using namespace boost::asio::ip;
+
+    io_service ioService;
+    udp::resolver resolver(ioService);
+    udp::resolver::query query(host_name(),"");
+
+    std::vector<Interface> interfaces;
+    try{
+        udp::resolver::iterator it = resolver.resolve(query);
+
+        while(it!=udp::resolver::iterator()){
+            address addr =(it++)->endpoint().address();
+            if((addr.is_v6() ? Protocol::ipv6 : (addr.is_v4() ? Protocol::ipv4 : Protocol::unknow)) == protocol){
+                interfaces.emplace_back(Interface{protocol,addr.to_string()});
+            }
+        }
+    }catch (const boost::system::system_error &error){
+        Logger::error(std::format("list_local_interfaces: Cannot list interfaces, error message: {}\n", error.what()));
+    }
+
+    ioService.stop();
+    return interfaces;
+}
+
+
+UdpNetworkSendingSettings::UdpNetworkSendingSettings(std::string ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket) : port(port), maxSizeUdpPacket(maxSizeUdpPacket) {
+    std::fill(ipAdress.begin(), ipAdress.end(), ' ');
+    if(ipAdressStr.size() <= 45){
+        std::copy(std::begin(ipAdressStr), std::end(ipAdressStr), ipAdress.begin());
+    }
 }

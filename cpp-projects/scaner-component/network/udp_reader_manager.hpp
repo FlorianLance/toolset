@@ -11,8 +11,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "network/network_utility.hpp"
-
+#include "network/network_types.hpp"
 
 namespace tool::network{
 
@@ -26,8 +25,8 @@ public:
     UdpReaderManager(const std::vector<Interface> &interfaces);
     ~UdpReaderManager();
 
-    bool enable_reading();
-    void disable_reading();
+    auto enable_reading() -> bool;
+    auto disable_reading() -> void;
 
 // signals
     sigslot::signal<std::string > message_signal;

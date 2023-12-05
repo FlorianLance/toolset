@@ -28,10 +28,9 @@
 #include "thirdparty/sigslot/signal.hpp"
 
 // local
-#include "camera/dc_model.hpp"
+#include "camera/settings/dc_model_settings.hpp"
 #include "imgui_k4_cloud_drawer.hpp"
 #include "imgui_fbo_ui_drawer.hpp"
-
 
 namespace tool::graphics {
 
@@ -67,7 +66,7 @@ struct K4CloudsSceneDrawer{
     // settings
     auto update_cloud_display_settings(size_t idCloud, const camera::DCCloudDisplaySettings &cloudDisplay) -> void;
     auto update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void;
-    auto update_model(size_t idCloud, const camera::DCModel &model)  -> void;
+    auto update_model(size_t idCloud, const camera::DCModelSettings &model)  -> void;
 
     // signals
     sigslot::signal<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_signal;

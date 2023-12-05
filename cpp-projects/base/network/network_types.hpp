@@ -25,33 +25,48 @@
 **                                                                            **
 ********************************************************************************/
 
+
 #pragma once
 
+// std
+#include <string>
+#include <vector>
+#include <array>
+
 // local
-#include "k4_server_connection.hpp"
+#include "network_enums.hpp"
 
-namespace tool::network {
+namespace tool::network{
 
-struct K4ServerNetwork{
+struct Host{
+    [[maybe_unused]] static auto get_name() -> std::string;
+};
 
-    ~K4ServerNetwork();
-    auto initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool;
-    auto clean() -> void;
+struct Interface{
+    Protocol protocol;
+    std::string ipAddress;
+    static auto list_local_interfaces(Protocol protocol) -> std::vector<Interface>;
+};
 
-    auto init_connection(size_t idG) -> void;
-    auto send_command(size_t idG, K4Command command) -> void;
-    auto send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
-    auto send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
-    auto send_filters(size_t idG, const camera::DCFilters &filters) -> void;
-    auto send_delay(size_t idG, camera::DCDelaySettings delay) -> void;
+struct ReadSendNetworkInfos{
+    size_t idReadingInterface = 0;
+    std::string readingAdress;
+    int readingPort;
+    std::string sendingAdress;
+    int sendingPort;
+};
 
-    auto connections_nb() const noexcept -> size_t {return connections.size();}
-    auto get_connection(size_t idG) const -> K4ServerConnection*{return connections[idG].get();}
+struct UdpNetworkSendingSettings{
+    UdpNetworkSendingSettings() = default;
+    UdpNetworkSendingSettings(std::string ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket);
+    std::array<char, 45> ipAdress;
+    std::uint16_t port;
+    std::uint16_t maxSizeUdpPacket;
+};
 
-    auto do_not_use_global_signals() ->void;
-
-private:
-    std::vector<std::unique_ptr<K4ServerConnection>> connections;
+struct Feedback{
+    MessageType receivedMessageType;
+    FeedbackType feedback;
 };
 
 }

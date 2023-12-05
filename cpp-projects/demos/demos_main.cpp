@@ -67,7 +67,7 @@ auto display(const tool::geo::Vertices3D &vertices) -> void{
 }
 
 
-int main(int argc, char *argv[]){
+int main(int, char *argv[]){
 
     tool::Paths::initialize(argv);
 

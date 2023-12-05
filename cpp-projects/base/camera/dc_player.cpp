@@ -44,9 +44,9 @@ auto DCPlayer::set_video(const DCVolumetricVideo &video) -> void{
     std::fill(std::begin(i->currentFrames), std::end(i->currentFrames), nullptr);
     update_states();
 
-    std::vector<DCModel> models;
+    std::vector<DCModelSettings> models;
     for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        DCModel model;
+        DCModelSettings model;
         model.transformation = i->videoResource.get_transform(ii).conv<float>();
         models.push_back(model);
     }
@@ -191,7 +191,7 @@ auto DCPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::ge
     i->currentFrames = {nullptr};
     update_states();
 
-    std::vector<DCModel> models(1);
+    std::vector<DCModelSettings> models(1);
     models.front().transformation = i->videoResource.get_transform(0).conv<float>();
     initialize_signal(std::move(models));
 }
@@ -237,9 +237,9 @@ auto DCPlayer::remove_empty_cameras() -> void{
     }
     update_states();
 
-    std::vector<DCModel> models;
+    std::vector<DCModelSettings> models;
     for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        DCModel model;
+        DCModelSettings model;
         model.transformation = i->videoResource.get_transform(ii).conv<float>();
         models.push_back(model);
     }
@@ -328,9 +328,9 @@ auto DCPlayer::load_from_file(std::string_view path) -> bool{
 
         update_states();
 
-        std::vector<DCModel> models;
+        std::vector<DCModelSettings> models;
         for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-            DCModel model;
+            DCModelSettings model;
             model.transformation = i->videoResource.get_transform(ii).conv<float>();
             models.push_back(model);
         }

@@ -9,7 +9,7 @@
 
 using namespace tool::graphics;
 
-auto K4PlayerDrawer::initialize(const std::vector<camera::DCModel> &models) -> void {
+auto K4PlayerDrawer::initialize(const std::vector<camera::DCModelSettings> &models) -> void {
 
     K4CloudsSceneDrawer::initialize(models.size());
     for(size_t ii = 0; ii < models.size(); ++ii){

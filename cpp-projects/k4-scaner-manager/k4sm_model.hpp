@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "network/kinect4/k4_server_network.hpp"
+#include "camera/network/dc_server_network.hpp"
 #include "camera/dc_server_data.hpp"
 #include "camera/dc_recorder.hpp"
 #include "camera/dc_player.hpp"
@@ -49,7 +49,7 @@ struct K4SMModel{
 
 
     // network
-    auto add_feedback(size_t id, network::K4Feedback feedback) -> void;
+    auto add_feedback(size_t id, network::Feedback feedback) -> void;
     auto update_synchro(size_t id, std::int64_t averageDiffNs) -> void;
 
     // action
@@ -57,12 +57,12 @@ struct K4SMModel{
 
     // # filtering
     auto update_filtering_mode(bool useNormalMode) -> void;
-    auto update_filters(size_t id, const camera::DCFilters& filters) -> void;
-    auto update_calibration_filters(size_t id, const camera::DCFilters& filters) -> void;
+    auto update_filters(size_t id, const camera::DCFiltersSettings& filters) -> void;
+    auto update_calibration_filters(size_t id, const camera::DCFiltersSettings& filters) -> void;
 
 
     K4SMSettings settings;
-    network::K4ServerNetwork network;
+    network::DCServerNetwork network;
     camera::DCServerData sData;
     camera::DCRecorder recorder;
     camera::DCPlayer player;
@@ -73,8 +73,8 @@ private:
     auto read_feedbacks() -> void;
 
     std::mutex readMessagesL;
-    std::deque<std::pair<size_t, network::K4Feedback>> messages;
-    std::vector<std::pair<size_t, network::K4Feedback>> messagesR;
+    std::deque<std::pair<size_t, network::Feedback>> messages;
+    std::vector<std::pair<size_t, network::Feedback>> messagesR;
 
 };
 }

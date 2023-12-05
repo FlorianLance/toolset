@@ -31,7 +31,7 @@
 #include "settings/dc_device_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_color_settings.hpp"
-#include "dc_filters.hpp"
+#include "settings/dc_filters_settings.hpp"
 #include "dc_frame.hpp"
 #include "dc_compressed_frame.hpp"
 
@@ -52,7 +52,7 @@ public:
     auto update_delay(DCDelaySettings delayMs) -> void;
     auto update_device_list() -> void;
     auto update_settings(const DCDeviceSettings &settings) -> void;
-    auto update_filters(const DCFilters &filters) -> void;
+    auto update_filters(const DCFiltersSettings &filters) -> void;
     auto update_color_settings(const DCColorSettings &colorS) -> void;
 
     auto get_capture_duration_ms() -> std::int64_t;

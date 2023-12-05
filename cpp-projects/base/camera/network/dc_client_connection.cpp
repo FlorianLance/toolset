@@ -25,7 +25,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_client_connection.hpp"
+#include "dc_client_connection.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -36,36 +36,36 @@ using namespace tool::network;
 using namespace tool::camera;
 using namespace std::chrono;
 
-auto K4ClientConnection::init_connections() -> void{
+auto DCClientConnection::init_connections() -> void{
 
     // connections
-    m_udpReaderG.init_network_infos_signal.connect([&](Header h, std::shared_ptr<K4NetworkSendingSettings> message){
+    m_udpReaderG.init_network_infos_signal.connect([&](Header h, std::shared_ptr<UdpNetworkSendingSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_initNetworkInfosMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<K4UdpDeviceSettings> message){
+    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDeviceSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<DCUdpColorSettings> message){
+    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateColorSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_filters_signal.connect([&](Header h, std::shared_ptr<DCFilters> message){
+    m_udpReaderG.update_filters_signal.connect([&](Header h, std::shared_ptr<DCFiltersSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateFiltersMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_delay_signal.connect([&](Header h, DCUdpDelay message){
+    m_udpReaderG.update_delay_signal.connect([&](Header h, UdpMonoPacketMessage<camera::DCDelaySettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDelayMessage  = {std::move(h), message};
     });
 
-    m_udpReaderG.command_signal.connect([&](Header h, K4Command message){
+    m_udpReaderG.command_signal.connect([&](Header h, Command message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_commandMessage  = {std::move(h), message};
@@ -75,7 +75,7 @@ auto K4ClientConnection::init_connections() -> void{
     });
 }
 
-auto K4ClientConnection::start_reading(K4ClientNetworkSettings *networkS) -> bool{
+auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bool{
 
     // stop reading
     if(m_udpReaderG.is_reading()){
@@ -94,7 +94,7 @@ auto K4ClientConnection::start_reading(K4ClientNetworkSettings *networkS) -> boo
     return true;
 }
 
-auto K4ClientConnection::init_sender(K4ClientNetworkSettings *networkS) -> bool{
+auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> bool{
 
     if(m_udpSenderG.init_socket(networkS->udpSendingAdress, std::to_string(networkS->udpSendingPort))){
 
@@ -106,24 +106,24 @@ auto K4ClientConnection::init_sender(K4ClientNetworkSettings *networkS) -> bool{
             }
             sendMessagesT = nullptr;
         }
-        sendMessagesT = std::make_unique<std::thread>(&K4ClientConnection::send_messages_loop, this);
-        messagesToSend.push_back(K4Feedback{MessageType::init_network_infos, FeedbackType::message_received});
+        sendMessagesT = std::make_unique<std::thread>(&DCClientConnection::send_messages_loop, this);
+        messagesToSend.push_back(Feedback{MessageType::init_network_infos, FeedbackType::message_received});
 
         return true;
     }
 
 
-    Logger::error(fmt("Cannot init sender with address [{]] and port [{}]\n", networkS->udpSendingAdress,std::to_string(networkS->udpSendingPort)));
+    Logger::error(fmt("[DCClientConnection::init_sender] Cannot init sender with address [{]] and port [{}]\n", networkS->udpSendingAdress,std::to_string(networkS->udpSendingPort)));
     return false;
 }
 
-auto K4ClientConnection::ping_server() -> void{    
+auto DCClientConnection::ping_server() -> void{    
     if(m_udpSenderG.is_opened()){
-        messagesToSend.push_back(K4Feedback{MessageType::init_network_infos, FeedbackType::message_received});
+        messagesToSend.push_back(Feedback{MessageType::init_network_infos, FeedbackType::message_received});
     }
 }
 
-auto K4ClientConnection::clean() -> void{
+auto DCClientConnection::clean() -> void{
 
     // stop sending
     disconnect_sender();
@@ -135,7 +135,7 @@ auto K4ClientConnection::clean() -> void{
     m_udpReaderG.clean_socket();
 }
 
-auto K4ClientConnection::update() -> void{
+auto DCClientConnection::update() -> void{
 
     if(!m_readerL.try_lock()){
         return;
@@ -189,25 +189,25 @@ auto K4ClientConnection::update() -> void{
     if(commandMessageM.second.has_value()){
 
         switch(commandMessageM.second.value()){
-            case K4Command::Shutdown:
+            case Command::Shutdown:
                 send_feedback({MessageType::command, FeedbackType::shutdown});
                 shutdown_signal();
                 break;
-            case K4Command::Restart:
+            case Command::Restart:
                 send_feedback({MessageType::command, FeedbackType::restart});
                 restart_signal();
                 break;
-            case K4Command::Disconnect:
+            case Command::Disconnect:
                 send_feedback({MessageType::command, FeedbackType::disconnect});
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 disconnect_sender();
                 disconnect_signal();
                 break;
-            case K4Command::Quit:
+            case Command::Quit:
                 send_feedback({MessageType::command, FeedbackType::quit});
                 quit_signal();
                 break;
-            case K4Command::UpdateDeviceList:
+            case Command::UpdateDeviceList:
                 send_feedback({MessageType::command, FeedbackType::update_device_list});
                 update_device_list_signal();
                 break;
@@ -215,7 +215,7 @@ auto K4ClientConnection::update() -> void{
     }
 }
 
-auto K4ClientConnection::disconnect_sender() -> void{
+auto DCClientConnection::disconnect_sender() -> void{
 
 
     // quit thread
@@ -234,19 +234,19 @@ auto K4ClientConnection::disconnect_sender() -> void{
     messagesToSend.clean();
 }
 
-auto K4ClientConnection::send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void{
+auto DCClientConnection::send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void{
     messagesToSend.push_back(frame);
 }
 
-auto K4ClientConnection::send_feedback(K4Feedback feedback) -> void{
+auto DCClientConnection::send_feedback(Feedback feedback) -> void{
     messagesToSend.push_back(feedback);
 }
 
-auto K4ClientConnection::last_frame_id_sent() const -> size_t{
+auto DCClientConnection::last_frame_id_sent() const -> size_t{
     return m_lastFrameIdSent;
 }
 
-auto K4ClientConnection::dummy_device_trigger() -> void {
+auto DCClientConnection::dummy_device_trigger() -> void {
 
     Header header;
     DCDeviceSettings settings;
@@ -256,10 +256,10 @@ auto K4ClientConnection::dummy_device_trigger() -> void {
     settings.configS.synchMode    = DCSynchronisationMode::K4_Standalone;
 
     std::lock_guard l(m_readerL);
-    m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<K4UdpDeviceSettings>(settings)};
+    m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<UdpMonoPacketMessage<camera::DCDeviceSettings>>(settings)};
 }
 
-auto K4ClientConnection::send_messages_loop() -> void{
+auto DCClientConnection::send_messages_loop() -> void{
 
     sendMessages = true;
 
@@ -272,7 +272,7 @@ auto K4ClientConnection::send_messages_loop() -> void{
             continue;
         }
 
-        if(auto feedback = std::get_if<K4Feedback>(&message.value()); feedback != nullptr){
+        if(auto feedback = std::get_if<Feedback>(&message.value()); feedback != nullptr){
             m_udpSenderG.send_feedback_message(*feedback);
         }
 

@@ -59,7 +59,7 @@ private:
     auto draw_filters_tab_item(
         ui::K4SGUiSettings &ui,
         const camera::DCConfigSettings &config,
-        camera::DCFilters &filters) -> void;
+        camera::DCFiltersSettings &filters) -> void;
 
     auto draw_colors_settings_tab_item(
         camera::DCColorSettings &colors) -> void;
@@ -72,7 +72,7 @@ private:
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void;
-    auto draw_model_tab_item(camera::DCModel &model)-> void;
+    auto draw_model_tab_item(camera::DCModelSettings &model)-> void;
 
     ImguiLogs m_logs;
     bool m_autoUpdate = true;

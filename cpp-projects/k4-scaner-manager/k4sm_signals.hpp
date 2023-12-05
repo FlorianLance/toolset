@@ -31,9 +31,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "network/kinect4/k4_network.hpp"
-#include "camera/kinect4/k4_compressed_frame.hpp"
-#include "camera/dc_frame.hpp"
+#include "camera/dc_compressed_frame.hpp"
 
 // local
 #include "data/k4sm_misc.hpp"
@@ -87,24 +85,24 @@ public:
     SSS<> stop_calibration_registering_signal;
     SSS<> recompute_registering_processing_signal;
     SSS<> ask_calibration_signal;
-    SSS<std::vector<camera::DCModel>> calibrate_signal;
+    SSS<std::vector<camera::DCModelSettings>> calibrate_signal;
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
 
     // filters
     SSS<bool> update_filtering_mode_signal;
-    SSS<size_t, const camera::DCFilters&> update_filters_settings_signal;
-    SSS<size_t, const camera::DCFilters&> update_calibration_filters_settings_signal;
+    SSS<size_t, const camera::DCFiltersSettings&> update_filters_settings_signal;
+    SSS<size_t, const camera::DCFiltersSettings&> update_calibration_filters_settings_signal;
 
 
     SSS<size_t> init_connection_signal;
-    SSS<size_t, network::K4Command> command_signal;
+    SSS<size_t, network::Command> command_signal;
 
     // settings
     SSS<size_t, const camera::DCDeviceSettings &> update_device_settings_signal;
     SSS<size_t, const camera::DCColorSettings &> update_color_settings_signal;
     SSS<size_t, const camera::DCCloudDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<size_t, const camera::DCModel&> update_model_settings_signal;
+    SSS<size_t, const camera::DCModelSettings&> update_model_settings_signal;
     SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<const camera::DCPlayerSettings&> update_player_settings_signal;
     SSS<size_t, camera::DCDelaySettings> update_delay_signal;

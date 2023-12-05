@@ -73,7 +73,7 @@ auto K4CalibratorDrawer::draw() -> void{
     draw_all_clouds_drawers_in_one_tab(false, false, false, true, "Calibration clouds");
 }
 
-auto K4CalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::DCModel &model) -> void{
+auto K4CalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::DCModelSettings &model) -> void{
 
     auto tr = model.compute_full_transformation();
     cloudsD[idGrabber].model                      = tr;

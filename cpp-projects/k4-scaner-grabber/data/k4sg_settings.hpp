@@ -34,10 +34,13 @@
 #include "camera/settings/dc_device_settings.hpp"
 #include "camera/settings/dc_display_settings.hpp"
 #include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/dc_model.hpp"
-#include "camera/dc_filters.hpp"
-#include "network/kinect4/k4_network.hpp"
-#include "network/kinect4/k4_client_network_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
+#include "camera/settings/dc_model_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
+#include "camera/dc_types.hpp"
+#include "network/udp_client_network_settings.hpp"
+#include "network/udp_header.hpp"
 
 // local
 #include "k4sg_ui_settings.hpp"
@@ -49,11 +52,11 @@ struct K4SGSettings{
     auto initialize() -> bool;
 
     // settings
-    auto init_network_sending_settings(std::shared_ptr<network::K4NetworkSendingSettings> networkSendingS) -> void;
-    auto update_filters(std::shared_ptr<camera::DCFilters> filtersS) -> void;
-    auto update_device_settings(std::shared_ptr<network::K4UdpDeviceSettings> deviceS) -> void;
-    auto update_color_settings(std::shared_ptr<network::DCUdpColorSettings> colorS) -> void;
-    auto update_delay(network::DCUdpDelay delayS) -> void;
+    auto init_network_sending_settings(std::shared_ptr<network::UdpNetworkSendingSettings> networkSendingS) -> void;
+    auto update_filters(std::shared_ptr<camera::DCFiltersSettings> filtersS) -> void;
+    auto update_device_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCDeviceSettings>> deviceS) -> void;
+    auto update_color_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCColorSettings>> colorS) -> void;
+    auto update_delay(network::UdpMonoPacketMessage<camera::DCDelaySettings> delayS) -> void;
     auto update_device_name(int id, const std::string &name) -> void;
     auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
     auto update_imu_sample(camera::DCImuSample imuSample) -> void;
@@ -103,16 +106,16 @@ struct K4SGSettings{
 
     // settings    
     // # network
-    network::K4ClientNetworkSettings network;    
+    network::UdpClientNetworkSettings network;    
     // # camera
     camera::DCDeviceSettings device = camera::DCDeviceSettings::default_init_for_grabber(camera::DCType::Kinect4);
-    camera::DCFilters filters;
+    camera::DCFiltersSettings filters;
     camera::DCColorSettings color;
     // # scene
     camera::DCSceneDisplaySettings sceneDisplay = camera::DCSceneDisplaySettings::default_init_for_grabber();
     camera::DCCloudDisplaySettings cloudDisplay = camera::DCCloudDisplaySettings::default_init_for_grabber();
     // # model
-    camera::DCModel model;   
+    camera::DCModelSettings model;   
     // # delay
     camera::DCDelaySettings delay;
     // # recording

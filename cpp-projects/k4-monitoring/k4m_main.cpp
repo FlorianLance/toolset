@@ -5,12 +5,16 @@
 #include <format>
 #include <fstream>
 
-//// opencv
+// opencv
 #include <opencv2/core.hpp> // Basic OpenCV structures (cv::Mat)
 #include <opencv2/videoio.hpp> // Video write
-//// base
+
+// thirdparty
+#include "thirdparty/k4a/k4aaudiomanager.h"
+
+// base
 #include "camera/kinect4/k4_device.hpp"
-#include "camera/kinect4/k4a/k4aaudiomanager.h"
+
 
 
 //#include <QVideoFrame>

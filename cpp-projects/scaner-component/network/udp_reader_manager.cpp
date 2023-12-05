@@ -77,7 +77,7 @@ UdpReaderManager::UdpReaderManager(const std::vector<Interface> &interfaces) : m
 UdpReaderManager::~UdpReaderManager(){
 }
 
-bool UdpReaderManager::enable_reading(){
+auto UdpReaderManager::enable_reading() -> bool{
 
     for(auto &reader : m_p->readers) {
         if(!reader->enable_reading(8888)){
@@ -88,7 +88,7 @@ bool UdpReaderManager::enable_reading(){
     return true;
 }
 
-void UdpReaderManager::disable_reading(){
+auto UdpReaderManager::disable_reading() -> void{
 
     for(auto &reader : m_p->readers) {
         reader->disable_reading();

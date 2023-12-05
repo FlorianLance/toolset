@@ -38,7 +38,7 @@
 #include "settings/dc_data_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_config_settings.hpp"
-#include "dc_filters.hpp"
+#include "settings/dc_filters_settings.hpp"
 #include "dc_compressed_frame.hpp"
 
 namespace tool::camera {
@@ -83,7 +83,7 @@ public:
     // settings
     virtual auto set_color_settings(const DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
     virtual auto set_data_settings(const DCDataSettings &dataS) -> void{static_cast<void>(dataS);} // TODO: ORBBEC IMPL
-    virtual auto set_filters(const DCFilters &filters) -> void{static_cast<void>(filters);} // TODO: ORBBEC IMPL
+    virtual auto set_filters(const DCFiltersSettings &filters) -> void{static_cast<void>(filters);} // TODO: ORBBEC IMPL
     virtual auto send_data_state(bool state) -> void{static_cast<void>(state);} // TODO: ORBBEC IMPL
     virtual auto set_delay(DCDelaySettings delay) -> void{static_cast<void>(delay);} // TODO: ORBBEC IMPL
 

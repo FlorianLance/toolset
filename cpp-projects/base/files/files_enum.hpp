@@ -1,7 +1,6 @@
 
-
 /*******************************************************************************
-** Toolset-k4-scaner-grabber                                                  **
+** Toolset-base                                                               **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -25,65 +24,34 @@
 **                                                                            **
 ********************************************************************************/
 
-
-#include "k4_client_network_settings.hpp"
-
-// std
-#include <fstream>
+#pragma once
 
 // local
-#include "utility/logger.hpp"
-#include "utility/string.hpp"
-#include "utility/format.hpp"
+#include "utility/tuple_array.hpp"
 
-using namespace tool;
-using namespace tool::network;
+namespace tool::files {
 
+using namespace std::literals::string_view_literals;
 
-auto K4ClientNetworkSettings::initialize() -> bool{
+enum class FileSettingsType : std::int32_t{
+    Network, Filters, Color, Device, Model, Delay, Undefined,
+    SizeEnum
+};
+using TDCSettings = std::tuple<
+    FileSettingsType,               std::string_view>;
+static constexpr TupleArray<FileSettingsType::SizeEnum, TDCSettings> filesSettings = {{
+    TDCSettings
+    {FileSettingsType::Network,     "network settings"sv},
+    {FileSettingsType::Filters,     "filters settings"sv},
+    {FileSettingsType::Color,       "color settings"sv},
+    {FileSettingsType::Device,      "device settings"sv},
+    {FileSettingsType::Model,       "calibration"sv},
+    {FileSettingsType::Delay,       "delay"sv},
+    {FileSettingsType::Undefined,   "undefined"sv},
+}};
 
-    interfaces = Interface::list_local_interfaces(Protocol::ipv4);
-    if(interfaces.size() == 0){
-        return false;
-    }
-
-    return true;
+[[maybe_unused]] static constexpr auto settings_name(FileSettingsType s) -> std::string_view{
+    return filesSettings.at<0,1>(s);
 }
 
-auto K4ClientNetworkSettings::init_sending_settings(const K4NetworkSendingSettings &sendingSettings) -> void {
-    udpSendingAdress = std::string(sendingSettings.ipAdress.begin(), sendingSettings.ipAdress.end());
-    String::remove_after_right(udpSendingAdress, ' ');
-    udpSendingPort  = sendingSettings.port;
-    m_connectedToManager = true;
 }
-
-auto K4ClientNetworkSettings::init_from_text(const std::string &text) -> void{
-
-    auto lines = String::split(text, '\n');
-
-    // udp_id_reading_interface
-    auto split = String::split(lines[0], ' ');
-    if(split.size() > 1){
-        udpReadingInterfaceId = std::stoi(split[1]);
-    }else{
-        Logger::error("K4ClientNetworkSettings::init_from_file: Invalid file format.\n");
-        return;
-    }
-
-    // udp_reading_port
-    split = String::split(lines[1], ' ');
-    if(split.size() > 1){
-        udpReadingPort = std::stoi(split[1]);
-    }else{
-        Logger::error("K4ClientNetworkSettings::init_from_file: Invalid file format.\n");
-        return;
-    }
-
-    udpReadingInterface = interfaces[udpReadingInterfaceId];
-}
-
-auto K4ClientNetworkSettings::convert_to_text() const -> std::string{
-    return std::format("udp_id_reading_interface {}\nudp_reading_port {}\n", udpReadingInterfaceId, udpReadingPort);
-}
-
-

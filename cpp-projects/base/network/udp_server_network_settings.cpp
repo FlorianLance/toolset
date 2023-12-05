@@ -25,7 +25,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_server_network_settings.hpp"
+#include "udp_server_network_settings.hpp"
 
 // std
 #include <format>
@@ -43,7 +43,7 @@ using namespace tool::network;
 
 namespace fs = std::filesystem;
 
-auto K4ServerNetworkSettings::initialize() -> bool{
+auto UdpServerNetworkSettings::initialize() -> bool{
 
     // retrieve interfaces
     interfaces = Interface::list_local_interfaces(Protocol::ipv4);
@@ -55,7 +55,7 @@ auto K4ServerNetworkSettings::initialize() -> bool{
     return true;
 }
 
-auto K4ServerNetworkSettings::init_from_text(const std::string &text) -> void{
+auto UdpServerNetworkSettings::init_from_text(const std::string &text) -> void{
 
     clientsInfo.clear();
 
@@ -89,7 +89,7 @@ auto K4ServerNetworkSettings::init_from_text(const std::string &text) -> void{
     }
 }
 
-auto K4ServerNetworkSettings::convert_to_text() const -> std::string{
+auto UdpServerNetworkSettings::convert_to_text() const -> std::string{
     std::vector<std::string> lines;
     for(const auto &grabber : clientsInfo){
         lines.push_back(fmt("{} {} {} {}\n",

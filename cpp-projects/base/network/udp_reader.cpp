@@ -82,7 +82,7 @@ UdpReader::~UdpReader(){
     }
 }
 
-bool UdpReader::init_socket(std::string readingAdress, int port){
+auto UdpReader::init_socket(std::string readingAdress, int port) -> bool{
 
     if(is_reading()){
         Logger::error(fmt("UdpReader: Cannot init socket while reading thread is still active.\n"));
@@ -118,7 +118,7 @@ bool UdpReader::init_socket(std::string readingAdress, int port){
     return true;
 }
 
-void UdpReader::clean_socket(){
+auto UdpReader::clean_socket() -> void{
 
     if(i->socket){
         try {
@@ -137,7 +137,7 @@ void UdpReader::clean_socket(){
     }
 }
 
-void UdpReader::start_reading(){
+auto UdpReader::start_reading() -> void{
 
     if(is_reading()){
         Logger::error("UdpReader::start_reading: Reading already started.\n");
@@ -157,7 +157,7 @@ void UdpReader::start_reading(){
     }
 }
 
-void UdpReader::stop_reading(){
+auto UdpReader::stop_reading() -> void{
 
     if(!is_reading()){
         Logger::error("UdpReader::stop_reading: Reading not started.\n");
@@ -173,15 +173,20 @@ void UdpReader::stop_reading(){
     }
 }
 
-void UdpReader::process_packet(std::vector<char> *packet, size_t nbBytes){
+auto UdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
     static_cast<void>(packet);
     static_cast<void>(nbBytes);
 }
 
-bool UdpReader::is_reading() const noexcept{return i->isReading;}
-bool UdpReader::is_connected() const noexcept{return i->connectionValid;}
+auto UdpReader::is_reading() const noexcept -> bool {
+    return i->isReading;
+}
 
-void UdpReader::read_data(){
+auto UdpReader::is_connected() const noexcept -> bool{
+    return i->connectionValid;
+}
+
+auto UdpReader::read_data() -> void{
 
     i->isReading = true;
 

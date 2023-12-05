@@ -1,7 +1,7 @@
 
 
 /*******************************************************************************
-** Toolset-base                                                               **
+** Toolset-k4-scaner-grabber                                                  **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -25,70 +25,64 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+
+#include "udp_client_network_settings.hpp"
+
+// std
+#include <fstream>
 
 // local
-#include "thirdparty/sigslot/signal.hpp"
-#include "network/udp_reader.hpp"
-#include "k4_network.hpp"
-#include "camera/kinect4/k4_compressed_frame.hpp"
-#include "camera/dc_filters.hpp"
+#include "utility/logger.hpp"
+#include "utility/string.hpp"
 
-namespace tool::network {
-
-template<typename ...arg>
-using SSS = sigslot::signal<arg...>;
+using namespace tool;
+using namespace tool::network;
 
 
-class DCClientUdpReader : public UdpReader{
-public:
+auto UdpClientNetworkSettings::initialize() -> bool{
 
-    // signals
-    SSS<Header, std::shared_ptr<K4NetworkSendingSettings>> init_network_infos_signal;
-    SSS<Header, std::shared_ptr<K4UdpDeviceSettings>> update_device_settings_signal;
-    SSS<Header, std::shared_ptr<DCUdpColorSettings>> update_color_settings_signal;
-    SSS<Header, std::shared_ptr<camera::DCFilters>> update_filters_signal;
-    SSS<Header, DCUdpDelay> update_delay_signal;
-    SSS<Header, K4Command> command_signal;
-
-protected:
-
-    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
-
-private:
-    UdpMultiPacketsMessage filtersMessage;
-};
-
-struct Synchro{
-
-    Synchro(){
-        diffNs.resize(nbMaxValues);
-        std::fill(std::begin(diffNs), std::end(diffNs), std::chrono::nanoseconds(0));
+    interfaces = Interface::list_local_interfaces(Protocol::ipv4);
+    if(interfaces.size() == 0){
+        return false;
     }
 
-    size_t currentId = 0;
-    std::vector<std::chrono::nanoseconds> diffNs;
-    std::int64_t averageDiffNs = 0;
-    static constexpr size_t nbMaxValues = 1000;
-};
-
-class DCServerUdpReader : public UdpReader{
-public:
-
-    // signals
-    SSS<std::int64_t> synchro_signal;
-    SSS<Header, K4UdpFeedback> feedback_signal;
-    SSS<Header, std::shared_ptr<camera::K4CompressedFrame>> compressed_frame_signal;
-
-protected:
-
-    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
-
-private:
-
-    UdpMultiPacketsMessage compressedFrameMessage;
-    Synchro synchro;
-};
-
-
+    return true;
 }
+
+auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void {
+    udpSendingAdress = std::string(sendingSettings.ipAdress.begin(), sendingSettings.ipAdress.end());
+    String::remove_after_right(udpSendingAdress, ' ');
+    udpSendingPort  = sendingSettings.port;
+    m_connectedToManager = true;
+}
+
+auto UdpClientNetworkSettings::init_from_text(const std::string &text) -> void{
+
+    auto lines = String::split(text, '\n');
+
+    // udp_id_reading_interface
+    auto split = String::split(lines[0], ' ');
+    if(split.size() > 1){
+        udpReadingInterfaceId = std::stoi(split[1]);
+    }else{
+        Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
+        return;
+    }
+
+    // udp_reading_port
+    split = String::split(lines[1], ' ');
+    if(split.size() > 1){
+        udpReadingPort = std::stoi(split[1]);
+    }else{
+        Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
+        return;
+    }
+
+    udpReadingInterface = interfaces[udpReadingInterfaceId];
+}
+
+auto UdpClientNetworkSettings::convert_to_text() const -> std::string{
+    return std::format("udp_id_reading_interface {}\nudp_reading_port {}\n", udpReadingInterfaceId, udpReadingPort);
+}
+
+

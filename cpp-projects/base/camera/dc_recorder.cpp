@@ -198,7 +198,7 @@ auto DCRecorder::update_settings(DCRecorderSettings recordingsS) noexcept -> voi
     i->settings = recordingsS;
 }
 
-auto DCRecorder::update_model(size_t id, const DCModel &model) -> void{
+auto DCRecorder::update_model(size_t id, const DCModelSettings &model) -> void{
     auto tr = model.compute_full_transformation();
     video()->set_transform(id, tr.conv<double>());
 }

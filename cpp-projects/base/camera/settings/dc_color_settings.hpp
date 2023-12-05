@@ -60,7 +60,6 @@ struct DCColorSettings : files::BinaryFileSettings{
             sizeof(std::int8_t)*2+
             sizeof(bool)*3;
     }
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(DCSettingsType::Color);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<DCSettingsType>(type()));}
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Color);};
 };
 }

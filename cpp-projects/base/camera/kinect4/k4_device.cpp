@@ -37,10 +37,11 @@
 
 // local
 // # kinect4
-#include "k4a/k4astaticimageproperties.h"
-#include "k4a/k4amicrophonelistener.h"
-#include "k4a/k4aaudiomanager.h"
-#include "kabt/k4abt.hpp"
+#include "thirdparty/k4a/k4astaticimageproperties.h"
+#include "thirdparty/k4a/k4amicrophonelistener.h"
+#include "thirdparty/k4a/k4aaudiomanager.h"
+// kabt
+#include <kabt/k4abt.hpp>
 // # utility
 #include "utility/time.hpp"
 #include "utility/logger.hpp"
@@ -115,7 +116,7 @@ struct K4Device::Impl{
 
     // parameters
     DCDataSettings data;
-    DCFilters filters;
+    DCFiltersSettings filters;
 
     // infos
     size_t idCapture    = 0;
@@ -172,7 +173,7 @@ struct K4Device::Impl{
     // delay buffer
     std::int64_t millisecondsDelay = 0;
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<DCFrame>>> frames;
-    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<camera::K4CompressedFrame>>> compressedFrames;
+    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<camera::DCCompressedFrame>>> compressedFrames;
 
     // functions
     auto read_frames(DCMode mode) -> void;
@@ -186,13 +187,13 @@ struct K4Device::Impl{
     auto get_depth_image() -> bool;
     auto get_infra_image(DCMode mode) -> bool;
     // # processing
-    auto convert_color_image(const DCFilters &f) -> void;
+    auto convert_color_image(const DCFiltersSettings &f) -> void;
     auto resize_color_to_fit_depth() -> void;
-    auto filter_depth_image(const DCFilters &f, DCMode mode) -> void;
-    auto filter_color_image(const DCFilters &f) -> void;
-    auto filter_infrared_image(const DCFilters &f) -> void;
+    auto filter_depth_image(const DCFiltersSettings &f, DCMode mode) -> void;
+    auto filter_color_image(const DCFiltersSettings &f) -> void;
+    auto filter_infrared_image(const DCFiltersSettings &f) -> void;
     auto generate_cloud(const DCDataSettings &d, DCMode mode) -> void;
-    auto compress_frame(const DCFilters &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<K4CompressedFrame>;
+    auto compress_frame(const DCFiltersSettings &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<DCCompressedFrame>;
     auto create_local_frame(const DCDataSettings &d, DCMode mode) -> std::unique_ptr<DCFrame>;
 
     // profiling
@@ -639,7 +640,7 @@ auto K4Device::set_data_settings(const DCDataSettings &dataS) -> void {
     i->parametersM.unlock();
 }
 
-auto K4Device::set_filters(const DCFilters &filters) -> void{
+auto K4Device::set_filters(const DCFiltersSettings &filters) -> void{
     i->parametersM.lock();
     i->filters = filters;
     i->parametersM.unlock();
@@ -1104,7 +1105,7 @@ auto K4Device::Impl::read_frames(DCMode mode) -> void{
 }
 
 
-auto K4Device::Impl::filter_depth_image(const DCFilters &f, DCMode mode) -> void{
+auto K4Device::Impl::filter_depth_image(const DCFiltersSettings &f, DCMode mode) -> void{
 
     if(!depthImage.has_value()){
         return;
@@ -1178,16 +1179,16 @@ auto K4Device::Impl::filter_depth_image(const DCFilters &f, DCMode mode) -> void
         }
 
         // plane filtering
-        if(f.p1FMode != DCFilters::PlaneFilteringMode::None){
+        if(f.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
             geo::Pt3<float> pt{0.001f * ii,0.001f * jj, 0.001f * currentDepth};
 
             if(dot(pt - f.p1Pos, pl1Dir) < 0){
-                if(f.p1FMode == DCFilters::PlaneFilteringMode::Above){
+                if(f.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
                     depthMask[id] = 0;
                     return;
                 }
             }else{
-                if(f.p1FMode == DCFilters::PlaneFilteringMode::Below){
+                if(f.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
                     depthMask[id] = 0;
                     return;
                 }
@@ -1616,7 +1617,7 @@ auto K4Device::Impl::erode(uint8_t nbLoops, Connectivity connectivity) -> void{
     }
 }
 
-auto K4Device::Impl::filter_color_image(const DCFilters &f) -> void{
+auto K4Device::Impl::filter_color_image(const DCFiltersSettings &f) -> void{
 
     if(!depthSizedColorImage.has_value()){
         return;
@@ -1650,7 +1651,7 @@ auto K4Device::Impl::filter_color_image(const DCFilters &f) -> void{
     Bench::stop();
 }
 
-auto K4Device::Impl::filter_infrared_image(const DCFilters &f) -> void{
+auto K4Device::Impl::filter_infrared_image(const DCFiltersSettings &f) -> void{
 
     if(!infraredImage.has_value()){
         return;
@@ -1689,7 +1690,7 @@ auto K4Device::Impl::generate_cloud(const DCDataSettings &d, DCMode mode) -> voi
     }
 }
 
-auto K4Device::Impl::compress_frame(const DCFilters &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<K4CompressedFrame>{
+auto K4Device::Impl::compress_frame(const DCFiltersSettings &f, const DCDataSettings &d, DCMode mode) -> std::unique_ptr<DCCompressedFrame>{
 
     tool::Bench::start("[K4Device::compress_frame] Generate compressed frame");
 
@@ -2266,7 +2267,7 @@ auto K4Device::Impl::get_infra_image(DCMode mode) -> bool{
 }
 
 
-auto K4Device::Impl::convert_color_image(const DCFilters &f) -> void{
+auto K4Device::Impl::convert_color_image(const DCFiltersSettings &f) -> void{
 
     if(colorResolution == DCColorResolution::OFF){
         return;

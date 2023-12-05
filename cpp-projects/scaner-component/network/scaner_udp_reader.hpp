@@ -8,7 +8,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "network/network_utility.hpp"
+#include "network/network_types.hpp"
 
 
 namespace tool::network{

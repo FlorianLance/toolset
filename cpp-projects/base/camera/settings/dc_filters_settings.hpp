@@ -30,11 +30,11 @@
 #include "files/binary_settings.hpp"
 #include "graphics/color.hpp"
 #include "utility/bit_mask.hpp"
-#include "dc_enums.hpp"
+#include "camera/dc_enums.hpp"
 
 namespace tool::camera {
 
-struct DCFilters : files::BinaryFileSettings{
+struct DCFiltersSettings : files::BinaryFileSettings{
 
     // # width / height
     unsigned int minWidth  = 0;
@@ -96,9 +96,9 @@ struct DCFilters : files::BinaryFileSettings{
     // local
     int idPencil = 0;
 
-    DCFilters() = default;
-    DCFilters(std::int8_t *data){DCFilters::init_from_data(data);}
-    static auto default_init_for_calibration() -> DCFilters;
+    DCFiltersSettings() = default;
+    DCFiltersSettings(std::int8_t *data){DCFiltersSettings::init_from_data(data);}
+    static auto default_init_for_calibration() -> DCFiltersSettings;
 
     // i/o
     auto init_from_data(std::int8_t *data) -> void override;
@@ -117,8 +117,7 @@ struct DCFilters : files::BinaryFileSettings{
             sizeof(std::int8_t) * 2
         ;
     }
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(DCSettingsType::Filters);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<DCSettingsType>(type()));}
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Filters);};
 };
 
 }

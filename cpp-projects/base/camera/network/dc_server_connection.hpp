@@ -26,29 +26,60 @@
 
 #pragma once
 
+// std
+#include <optional>
+#include <deque>
+
 // local
-#include "camera/dc_enums.hpp"
-#include "geometry/matrix4.hpp"
-#include "files/text_settings.hpp"
+#include "dc_udp_sender.hpp"
+#include "dc_udp_reader.hpp"
 
-namespace tool::camera {
-struct DCModel : files::TextSettings{
+namespace tool::network {
 
-    geo::Mat4f transformation = geo::Mat4f::identity();
+template<typename ...arg>
+using SSS = sigslot::signal<arg...>;
 
-    // local
-    geo::Vec3f rotation = {};
-    geo::Vec3f translation = {};
-    geo::Vec3f scaling = {1.f,1.f,1.f};
+class DCServerConnection{
+public:
 
-    auto compute_full_transformation() const -> geo::Mat4f{
-        return geo::transform(scaling, rotation, translation) * transformation;
-    }
+    ~DCServerConnection();
+    auto initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool;
+    auto clean() -> void;
 
-    // i/o
-    auto init_from_text(const std::string &text) -> void override;
-    auto convert_to_text() const -> std::string override;
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(DCSettingsType::Model);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<DCSettingsType>(type()));}
+    auto init_connection_with_grabber() -> void;
+    auto disconnect_grabber() -> void;
+    auto quit_grabber() -> void;
+    auto shutdown_grabber_computer() -> void;
+    auto restart_grabber_computer() -> void;
+    auto update_device_list() -> void;
+    inline auto grabber_connected_to_server() const noexcept -> bool{return m_grabberConnectedToServer;}
+    inline auto do_not_use_global_signals() -> void{m_useGlobalsSignals = false;}
+
+    // signals
+    // # global
+    static inline SSS<size_t, std::int64_t> synchro_signal;
+    static inline SSS<size_t, network::Feedback> feedback_signal;
+    static inline SSS<size_t, std::shared_ptr<camera::DCCompressedFrame>> compressed_frame_signal;
+    // # local
+    SSS<std::int64_t> grabber_synchro_signal;
+    SSS<network::Feedback> grabber_feedback_signal;
+    SSS<std::shared_ptr<camera::DCCompressedFrame>> grabber_compressed_frame_signal;
+
+    DCServerUdpSender udpSender;
+    DCServerUdpReader udpReader;
+
+private:
+
+    auto receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void;
+    auto receive_compressed_frame(Header h, std::shared_ptr<camera::DCCompressedFrame> compressedFrame) -> void;
+
+    std::int64_t m_initTs;
+    std::atomic<size_t> m_totalReceivedBytes = 0;
+    std::atomic_bool m_grabberConnectedToServer = false;
+    std::atomic_bool m_useGlobalsSignals = true;
+    size_t m_id = 0;
+    ReadSendNetworkInfos m_infos;
+
+    static constexpr std::uint16_t maxSizeUpdMessage = 9000;
 };
 }

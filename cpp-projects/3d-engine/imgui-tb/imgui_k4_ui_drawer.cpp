@@ -39,7 +39,9 @@
 using namespace tool::graphics;
 
 
-auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFilters &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+
+    static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return {false, false};
@@ -125,15 +127,15 @@ auto K4UIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::D
         int mode = static_cast<int>(filters.p1FMode);
         if(ImGui::RadioButton("No filtering###mode_none_plane1", &mode,0)){
             update = true;
-            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::None;
+            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::None;
         }
         if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
             update = true;
-            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::Above;
+            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Above;
         }
         if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
             update = true;
-            filters.p1FMode = camera::DCFilters::PlaneFilteringMode::Below;
+            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Below;
         }
 
         ImGui::Text("Rotation (euler angles):");
@@ -420,7 +422,9 @@ auto K4UIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemN
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto K4UIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camera::DCModel &model, bool &autoUpdate) -> bool{
+auto K4UIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool{
+
+    static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -1205,6 +1209,8 @@ auto K4UIDrawer::draw_actions_settings(camera::DCActionsSettings &actions, bool 
 
 
 auto K4UIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
+
+    static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;

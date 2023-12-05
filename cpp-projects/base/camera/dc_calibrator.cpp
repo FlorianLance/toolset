@@ -38,7 +38,7 @@
 #include "utility/time.hpp"
 #include "utility/logger.hpp"
 #include "utility/string_geo.hpp"
-#include "camera/dc_model.hpp"
+#include "camera/settings/dc_model_settings.hpp"
 
 using namespace tool::camera;
 using namespace tool::geo;
@@ -57,8 +57,8 @@ auto from_eigen_mat(const Eigen::Matrix4d_u &eMat) -> Mat4f {
 struct DCCalibrator::Impl{
 
     auto process_cloud(const geo::ColoredCloudData &cloud) -> geo::ColoredCloudData;
-    auto set_model_cloud(size_t idModel, const DCModel &modelTr) -> bool;
-    auto set_source_cloud(size_t idSource, const DCModel &sourceTr) -> bool;
+    auto set_model_cloud(size_t idModel, const DCModelSettings &modelTr) -> bool;
+    auto set_source_cloud(size_t idSource, const DCModelSettings &sourceTr) -> bool;
     auto do_RANSAC(unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult;
     auto do_ICP() const -> open3d::pipelines::registration::RegistrationResult;
 
@@ -99,7 +99,7 @@ private:
     std::shared_ptr<open3d::pipelines::registration::Feature> m_sourceFpfh = nullptr;
 };
 
-auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModel &modelTr) -> bool{
+auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModelSettings &modelTr) -> bool{
 
     // retrieve model cloud
     modelCloud = settings.useProcessed ?
@@ -120,7 +120,7 @@ auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModel &modelTr)
     return true;
 }
 
-auto DCCalibrator::Impl::set_source_cloud(size_t idSource, const DCModel &sourceTr) -> bool{
+auto DCCalibrator::Impl::set_source_cloud(size_t idSource, const DCModelSettings &sourceTr) -> bool{
 
     // retrieve source cloud
     sourceCloud = settings.useProcessed ?
@@ -357,7 +357,7 @@ auto DCCalibrator::process_all_frames() -> void{
     send_data_updated_signal();
 }
 
-auto DCCalibrator::calibrate(const std::vector<DCModel> &models) -> bool{
+auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool{
 
     size_t idModel = m_p->settings.modelSelectionId;
     if(m_states.nbFramesRegistered[idModel] == 0){
@@ -445,7 +445,7 @@ auto DCCalibrator::calibrate(const std::vector<DCModel> &models) -> bool{
         Logger::message(std::format("Best [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", std::get<0>(bestResult).fitness_, std::get<0>(bestResult).inlier_rmse_, std::get<1>(bestResult), tool::to_string(from_eigen_mat(std::get<0>(bestResult).transformation_))));
 
         // update models with new calibration
-        DCModel newM;
+        DCModelSettings newM;
         newM.transformation = models[idSource].compute_full_transformation() * from_eigen_mat(std::get<0>(bestResult).transformation_);
 
         // send calibration

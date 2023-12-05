@@ -35,7 +35,7 @@
 #include "gui/widgets/grabber_parameters_widget.hpp"
 
 // base
-#include "network/network_utility.hpp"
+#include "network/network_enums.hpp"
 #include "camera/kinect2/k2_config_files.hpp"
 
 // local

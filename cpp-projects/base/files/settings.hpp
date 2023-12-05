@@ -31,6 +31,9 @@
 #include <string>
 #include <optional>
 
+// local
+#include "files_enum.hpp"
+
 namespace tool::files {
 
 using namespace std::literals::string_view_literals;
@@ -53,8 +56,8 @@ protected:
     virtual auto convert_to_data(std::int8_t *data) const -> void = 0;
     virtual auto total_data_size() const noexcept-> size_t = 0;
 
-    virtual auto type() const noexcept -> std::int32_t {return 0;};
-    virtual auto file_description() const noexcept -> std::string_view {return "default"sv;}
+    virtual auto type() const noexcept -> std::int32_t {return static_cast<std::int32_t>(FileSettingsType::Undefined);};
+    virtual auto file_description() const noexcept -> std::string_view {return settings_name(static_cast<tool::files::FileSettingsType>(type()));}
 
     static auto save_to_text_file(const std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;
     static auto init_from_text_file(std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;

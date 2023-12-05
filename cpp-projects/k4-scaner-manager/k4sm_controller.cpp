@@ -100,8 +100,8 @@ auto K4SMController::set_connections() -> void{
     using Player  = camera::DCPlayer;
     using Calib   = camera::DCCalibrator;
     using ServerD = camera::DCServerData;
-    using ServerC = network::K4ServerConnection;
-    using ServerN = network::K4ServerNetwork;
+    using ServerC = network::DCServerConnection;
+    using ServerN = network::DCServerNetwork;
     using Settings= K4SMSettings;
 
     // pointers

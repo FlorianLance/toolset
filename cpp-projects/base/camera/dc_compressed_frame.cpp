@@ -1,8 +1,8 @@
 
-#pragma once
+
 
 /*******************************************************************************
-** Toolset-k4-scaner-grabber                                                  **
+** Toolset-base                                                               **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,35 +26,25 @@
 **                                                                            **
 ********************************************************************************/
 
-// base
-#include "camera/network/dc_client_connection.hpp"
-#include "camera/dc_device_manager.hpp"
-
-// 3d-engine
-#include "imgui-tb/imgui_k4_device_drawer.hpp"
-#include "imgui-tb/imgui_k4_recorder_drawer.hpp"
-
+#include "dc_compressed_frame.hpp"
 
 // local
-#include "k4sg_model.hpp"
-#include "k4sg_left_panel_child_drawer.hpp"
-#include "k4sg_main_menu_bar_drawer.hpp"
+#include "utility/io_data.hpp"
+#include "utility/io_fstream.hpp"
 
-namespace tool::graphics {
+auto tool::camera::DCCompressedFrame::read_infos_from_file_stream(std::ifstream &file) -> void{
+    read(idCapture, file);
+    read(afterCaptureTS, file);
+    read(mode, file);
+}
 
-class K4SGMainWindowDrawer{
-
-public:
-
-    auto initialize() -> bool;
-    auto draw(geo::Pt2f size, K4SGModel &model) -> void;
-
-    // drawers
-    K4SGLeftPanelChildDrawer leftPanelD;
-    K4DeviceDrawer deviceD;
-    K4RecorderDrawer recorderD;
-
-    K4SGMainMenuBarDrawer menuD;
-
-};
+auto tool::camera::DCCompressedFrame::read_color_from_file_stream(std::ifstream &file) -> void{
+    size_t encColorDataSize = 0;
+    read(colorWidth, file);
+    read(colorHeight, file);
+    read(encColorDataSize, file);
+    if(encColorDataSize > 0){
+        encodedColorData.resize(encColorDataSize);
+        read_array(encodedColorData.data(), file, encColorDataSize);
+    }
 }

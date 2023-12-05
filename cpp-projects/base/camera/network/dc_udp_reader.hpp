@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -26,71 +27,72 @@
 
 #pragma once
 
-// std
-#include <optional>
-#include <deque>
-
 // local
-// # network
-#include "network/network_utility.hpp"
+#include "thirdparty/sigslot/signal.hpp"
 #include "network/udp_reader.hpp"
-#include "network/udp_sender.hpp"
-#include "network/kinect4/k4_network.hpp"
-// # camera
-#include "camera/dc_packed_data.hpp"
-// # utility
-#include "utility/thread.hpp"
+#include "network/udp_header.hpp"
+#include "network/network_types.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
+#include "camera/dc_compressed_frame.hpp"
 
-// local
-#include "dc_udp_sender.hpp"
-#include "k4_udp_reader.hpp"
 
 namespace tool::network {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
 
-class K4ServerConnection{
+class DCClientUdpReader : public UdpReader{
 public:
 
-    ~K4ServerConnection();
-    auto initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool;
-    auto clean() -> void;
+    // signals
+    SSS<Header, std::shared_ptr<UdpNetworkSendingSettings>> init_network_infos_signal;
+    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> update_device_settings_signal;
+    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> update_color_settings_signal;
+    SSS<Header, std::shared_ptr<camera::DCFiltersSettings>> update_filters_signal;
+    SSS<Header, UdpMonoPacketMessage<camera::DCDelaySettings>> update_delay_signal;
+    SSS<Header, Command> command_signal;
 
-    auto init_connection_with_grabber() -> void;
-    auto disconnect_grabber() -> void;
-    auto quit_grabber() -> void;
-    auto shutdown_grabber_computer() -> void;
-    auto restart_grabber_computer() -> void;
-    auto update_device_list() -> void;
-    inline auto grabber_connected_to_server() const noexcept -> bool{return m_grabberConnectedToServer;}
-    inline auto do_not_use_global_signals() -> void{m_useGlobalsSignals = false;}
+protected:
+
+    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
+
+private:
+    UdpMultiPacketsMessage filtersMessage;
+};
+
+struct Synchro{
+
+    Synchro(){
+        diffNs.resize(nbMaxValues);
+        std::fill(std::begin(diffNs), std::end(diffNs), std::chrono::nanoseconds(0));
+    }
+
+    size_t currentId = 0;
+    std::vector<std::chrono::nanoseconds> diffNs;
+    std::int64_t averageDiffNs = 0;
+    static constexpr size_t nbMaxValues = 1000;
+};
+
+class DCServerUdpReader : public UdpReader{
+public:
 
     // signals
-    // # global
-    static inline SSS<size_t, std::int64_t> synchro_signal;
-    static inline SSS<size_t, network::K4Feedback> feedback_signal;
-    static inline SSS<size_t, std::shared_ptr<camera::K4CompressedFrame>> compressed_frame_signal;
-    // # local
-    SSS<std::int64_t> grabber_synchro_signal;
-    SSS<network::K4Feedback> grabber_feedback_signal;
-    SSS<std::shared_ptr<camera::K4CompressedFrame>> grabber_compressed_frame_signal;
+    SSS<std::int64_t> synchro_signal;
+    SSS<Header, UdpMonoPacketMessage<Feedback>> feedback_signal;
+    SSS<Header, std::shared_ptr<camera::DCCompressedFrame>> compressed_frame_signal;
 
-    DCServerUdpSender udpSender;
-    DCServerUdpReader udpReader;
+protected:
+
+    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
 
 private:
 
-    auto receive_feedback(Header h, K4UdpFeedback message) -> void;
-    auto receive_compressed_frame(Header h, std::shared_ptr<camera::K4CompressedFrame> compressedFrame) -> void;
-
-    std::int64_t m_initTs;
-    std::atomic<size_t> m_totalReceivedBytes = 0;
-    std::atomic_bool m_grabberConnectedToServer = false;
-    std::atomic_bool m_useGlobalsSignals = true;
-    size_t m_id = 0;
-    ReadSendNetworkInfos m_infos;
-
-    static constexpr std::uint16_t maxSizeUpdMessage = 9000;
+    UdpMultiPacketsMessage compressedFrameMessage;
+    Synchro synchro;
 };
+
+
 }

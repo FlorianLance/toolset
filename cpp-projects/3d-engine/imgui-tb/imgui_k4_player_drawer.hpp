@@ -35,7 +35,7 @@ namespace tool::graphics {
 
 struct K4PlayerDrawer : public K4CloudsSceneDrawer{
 
-    auto initialize(const std::vector<camera::DCModel> &models) -> void;
+    auto initialize(const std::vector<camera::DCModelSettings> &models) -> void;
     auto set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void;
     auto draw() -> void;
 

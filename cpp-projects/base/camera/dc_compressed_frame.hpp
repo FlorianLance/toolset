@@ -33,6 +33,10 @@ namespace tool::camera{
 
 struct DCCompressedFrame : Frame{
 
+    static auto generate_compressed_frame(DCMode mode) -> std::unique_ptr<DCCompressedFrame>{
+        return nullptr;
+    }
+
     DCMode mode;
 
     // color
@@ -117,5 +121,9 @@ struct DCCompressedFrame : Frame{
     // data
     virtual auto init_from_data(std::int8_t *data) -> void{static_cast<void>(data);}
     virtual auto convert_to_data(std::vector<std::int8_t> &data) -> size_t{static_cast<void>(data);return 0;}
+protected:
+
+    auto read_infos_from_file_stream(std::ifstream &file) -> void;
+    auto read_color_from_file_stream(std::ifstream &file) -> void;
 };
 }

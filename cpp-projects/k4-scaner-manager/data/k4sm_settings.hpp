@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "network/kinect4/k4_server_network_settings.hpp"
+#include "network/udp_server_network_settings.hpp"
 #include "camera/settings/dc_device_settings.hpp"
 #include "camera/settings/dc_calibrator_settings.hpp"
 #include "camera/settings/dc_player_settings.hpp"
@@ -35,8 +35,8 @@
 #include "camera/settings/dc_recorder_settings.hpp"
 #include "camera/settings/dc_color_settings.hpp"
 #include "camera/settings/dc_delay_settings.hpp"
-#include "camera/dc_model.hpp"
-#include "camera/dc_filters.hpp"
+#include "camera/settings/dc_model_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
 
 // 3d-engine
 #include "imgui-tb/imgui_ui_drawer.hpp"
@@ -66,15 +66,15 @@ struct K4GrabberSettings{
     size_t id = 0;
     K4GrabberNetworkSettings network;
 
-    camera::DCFilters filters;
+    camera::DCFiltersSettings filters;
     std::string filtersFilePath;
-    camera::DCFilters calibrationFilters = camera::DCFilters::default_init_for_calibration();
+    camera::DCFiltersSettings calibrationFilters = camera::DCFiltersSettings::default_init_for_calibration();
     std::string calibrationFiltersFilePath;
     camera::DCDeviceSettings device;
     std::string deviceFilePath;
     camera::DCColorSettings color;
     std::string colorFilePath;
-    camera::DCModel model;
+    camera::DCModelSettings model;
     std::string modelFilePath;
     camera::DCDelaySettings delay;
 
@@ -98,7 +98,7 @@ struct K4SMGlobalSettings{
 
     bool useNormalFilteringSettings = true;
 
-    K4ServerNetworkSettings network;
+    UdpServerNetworkSettings network;
     std::string networkFilePath;
     ui::K4SMUiSettings ui;
     camera::DCSceneDisplaySettings sceneDisplay;
@@ -117,7 +117,7 @@ struct K4SMSettings{
 
     // settings
     auto process_settings_action(SAction action, STarget target, SType type, SFile file, size_t id) -> void;
-    auto update_model(size_t id, const camera::DCModel &model) -> void;
+    auto update_model(size_t id, const camera::DCModelSettings &model) -> void;
 
     // states
     auto update_recorder_states(camera::DCRecorderStates recorderStates) -> void;

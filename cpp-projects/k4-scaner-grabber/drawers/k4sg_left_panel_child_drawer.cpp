@@ -206,7 +206,7 @@ auto K4SGLeftPanelChildDrawer::draw_device_tab_item(
 auto K4SGLeftPanelChildDrawer::draw_filters_tab_item(
     ui::K4SGUiSettings &ui,
     const camera::DCConfigSettings &config,
-    camera::DCFilters &filters) -> void {
+    camera::DCFiltersSettings &filters) -> void {
 
     auto ret = K4UIDrawer::draw_filters_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
     ui.settingsFiltersSubPanelDisplayed  = std::get<0>(ret);
@@ -302,7 +302,7 @@ auto K4SGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates 
     }
 }
 
-auto K4SGLeftPanelChildDrawer::draw_model_tab_item(camera::DCModel &model) -> void {
+auto K4SGLeftPanelChildDrawer::draw_model_tab_item(camera::DCModelSettings &model) -> void {
 
     if(K4UIDrawer::draw_calibration_tab_item("Model###model_tabitem", model, m_autoUpdate)){
         K4SGSignals::get()->update_model_signal(0, model);

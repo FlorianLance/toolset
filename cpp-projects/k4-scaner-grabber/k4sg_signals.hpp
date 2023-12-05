@@ -34,9 +34,11 @@
 #include "camera/settings/dc_device_settings.hpp"
 #include "camera/settings/dc_display_settings.hpp"
 #include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/dc_model.hpp"
-#include "camera/dc_filters.hpp"
-#include "network/kinect4/k4_client_network_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_model_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
+#include "network/udp_client_network_settings.hpp"
 
 // local
 #include "data/k4sg_ui_settings.hpp"
@@ -57,15 +59,15 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
     // config
-    SSS<network::K4ClientNetworkSettings*> init_network_sending_settings_signal;
+    SSS<network::UdpClientNetworkSettings*> init_network_sending_settings_signal;
     SSS<size_t,const camera::DCCloudDisplaySettings&> update_cloud_display_settings_signal;
     SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<const camera::DCFilters&> update_filters_signal;
+    SSS<const camera::DCFiltersSettings&> update_filters_signal;
     SSS<const camera::DCColorSettings&> update_color_settings_signal;
     SSS<const camera::DCDeviceSettings&> update_device_settings_signal;
     SSS<camera::DCDelaySettings> update_delay_signal;
     SSS<> update_device_list_signal;
-    SSS<size_t, const camera::DCModel&> update_model_signal;
+    SSS<size_t, const camera::DCModelSettings&> update_model_signal;
     SSS<ui::K4SGUiSettings*> update_ui_settings_signal;
 
     // recording

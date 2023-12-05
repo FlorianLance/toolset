@@ -40,15 +40,15 @@ public:
     ~UdpReader();
 
     // slots
-    bool init_socket(std::string readingAdress, int readingPort);
-    void clean_socket();
+    auto init_socket(std::string readingAdress, int readingPort) -> bool;
+    auto clean_socket() -> void;
 
     // reading thread
-    void start_reading();
-    void stop_reading();
+    auto start_reading() -> void;
+    auto stop_reading() -> void;
 
-    bool is_reading() const noexcept;
-    bool is_connected() const noexcept;
+    auto is_reading() const noexcept -> bool;
+    auto is_connected() const noexcept -> bool;
 
     // signals
     sigslot::signal<bool> connection_state_signal;
@@ -56,13 +56,13 @@ public:
 
 protected:
 
-    virtual void process_packet(std::vector<char> *packet, size_t nbBytes);
+    virtual auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void;
 
     std::vector<std::int8_t> m_data;
 
 private :
 
-    void read_data();
+    auto read_data() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

@@ -73,7 +73,7 @@ auto DCDeviceManager::update_delay(DCDelaySettings delayMs) -> void{
     i->device->set_delay(delayMs);
 }
 
-auto DCDeviceManager::update_filters(const DCFilters &filters) -> void {
+auto DCDeviceManager::update_filters(const DCFiltersSettings &filters) -> void {
     i->device->set_filters(filters);
 }
 

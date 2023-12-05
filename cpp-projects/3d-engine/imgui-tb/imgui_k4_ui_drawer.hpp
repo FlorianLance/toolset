@@ -33,8 +33,8 @@
 #include "camera/settings/dc_recorder_settings.hpp"
 #include "camera/settings/dc_player_settings.hpp"
 #include "camera/settings/dc_color_settings.hpp"
-#include "camera/dc_model.hpp"
-#include "camera/dc_filters.hpp"
+#include "camera/settings/dc_model_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
 
 // opengl
 #include "opengl/draw/drawer.hpp"
@@ -88,10 +88,10 @@ public:
     ) -> bool;
 
     static auto draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
-    static auto draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFilters &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
+    static auto draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
     static auto draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
     static auto draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_calibration_tab_item(const std::string &tabItemName, camera::DCModel &model, bool &autoUpdate) -> bool;
+    static auto draw_calibration_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool;
     static auto draw_recording_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
     static auto draw_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
     static auto draw_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;

@@ -24,7 +24,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_model.hpp"
+#include "dc_model_settings.hpp"
 
 // std
 #include <format>
@@ -34,7 +34,7 @@
 
 using namespace tool::camera;
 
-auto DCModel::init_from_text(const std::string &text) -> void  {
+auto DCModelSettings::init_from_text(const std::string &text) -> void  {
     size_t id = 0;
     for(const auto &line : String::split(text, '\n')){
         if(line.length() == 0){
@@ -49,7 +49,7 @@ auto DCModel::init_from_text(const std::string &text) -> void  {
     }
 }
 
-auto DCModel::convert_to_text() const -> std::string {
+auto DCModelSettings::convert_to_text() const -> std::string {
     const auto &t = transformation;
     return std::format("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n",
         t.at(0),t.at(1),t.at(2),t.at(3),

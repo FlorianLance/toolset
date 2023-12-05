@@ -29,7 +29,7 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 #include "camera/settings/dc_calibrator_settings.hpp"
-#include "camera/dc_model.hpp"
+#include "camera/settings/dc_model_settings.hpp"
 
 namespace tool::camera {
 
@@ -58,7 +58,7 @@ public:
     auto process_all_frames() -> void;
 
     // calibrate
-    auto calibrate(const std::vector<DCModel> &models) -> bool;
+    auto calibrate(const std::vector<DCModelSettings> &models) -> bool;
     auto validate_calibration() -> void;
 
     // settings
@@ -67,8 +67,8 @@ public:
     // signals
     auto send_data_updated_signal() -> void;
     sigslot::signal<DCCalibratorStates> states_updated_signal;
-    sigslot::signal<size_t, DCModel> new_calibration_signal;
-    sigslot::signal<size_t, DCModel> validated_calibration_signal;
+    sigslot::signal<size_t, DCModelSettings> new_calibration_signal;
+    sigslot::signal<size_t, DCModelSettings> validated_calibration_signal;
     sigslot::signal<int, int, std::vector<DCCalibratorGrabberData>*> data_updated_signal;
 
 private :
@@ -77,7 +77,7 @@ private :
     auto add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;
 
     DCCalibratorStates m_states;
-    std::vector<std::optional<DCModel>> m_calibrations;
+    std::vector<std::optional<DCModelSettings>> m_calibrations;
 
     struct Impl;
     std::unique_ptr<Impl> m_p;

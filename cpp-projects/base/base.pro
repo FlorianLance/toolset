@@ -93,27 +93,11 @@ LIBS += \
 ####################################### PROJECT FILES
 
 HEADERS += \
-    # exvr    
-    camera/dc_camera_data.hpp \
-    camera/dc_compressed_frame.hpp \
-    camera/settings/dc_device_settings.hpp \
-    camera/dc_frame_compressor.hpp \
-    camera/dc_frame_uncompressor.hpp \
-    camera/dc_grabber_data_processing.hpp \
-    camera/dc_device_manager.hpp \
-    camera/dc_server_data.hpp \
-    camera/dc_volumetric_video.hpp \
-    camera/dc_recorder.hpp \
-    camera/dc_player.hpp \
-    camera/orbbec/orbbec_compressed_frame.hpp \
-    exvr/ex_element.hpp \
-    exvr/ex_experiment.hpp \
-    exvr/ex_resource.hpp \
-    exvr/ex_component.hpp \
     # files
     files/binary_settings.hpp \
     files/cloud_io.hpp \
     files/assimp_loader.hpp \
+    files/files_enum.hpp \
     files/settings.hpp \
     files/text_settings.hpp \
     # geometry 
@@ -163,31 +147,73 @@ HEADERS += \
     # input
     input/joypad.hpp \
     input/mouse.hpp \
-    input/keyboard.hpp \
+    input/keyboard.hpp \    
     # network
-    network/kinect4/dc_udp_sender.hpp \
-    network/kinect4/k4_client_connection.hpp \
-    network/kinect4/k4_client_network_settings.hpp \
-    network/kinect4/k4_server_connection.hpp \
-    network/kinect4/k4_server_network.hpp \
-    network/kinect4/k4_server_network_settings.hpp \
-    network/kinect4/k4_udp_reader.hpp \
-    network/network_utility.hpp \
+    network/udp_server_network_settings.hpp \
+    network/udp_client_network_settings.hpp \
+    network/network_enums.hpp \
+    network/network_types.hpp \
     network/tcp_reader.hpp \
     network/tcp_sender.hpp \
     network/tcp_server.hpp \
     network/udp_header.hpp \
     network/udp_reader.hpp \
     network/udp_sender.hpp \
+    # camera
+    camera/dc_camera_data.hpp \
+    camera/dc_compressed_frame.hpp \
+    camera/dc_frame_compressor.hpp \
+    camera/dc_frame_uncompressor.hpp \
+    camera/dc_grabber_data_processing.hpp \
+    camera/dc_device_manager.hpp \
+    camera/dc_server_data.hpp \
+    camera/dc_volumetric_video.hpp \
+    camera/dc_recorder.hpp \
+    camera/dc_player.hpp \
+    camera/dc_device.hpp \
+    camera/dc_enums.hpp \
+    camera/dc_frame.hpp \
+    camera/dc_packed_data.hpp \
+    camera/dc_types.hpp \
+    camera/dc_player_settings.hpp \
+    camera/dc_calibrator.hpp \
+    ## settings
+    camera/settings/dc_device_settings.hpp \
+    camera/settings/dc_data_settings.hpp \
+    camera/settings/dc_recorder_settings.hpp \
+    camera/settings/dc_color_settings.hpp \
+    camera/settings/dc_delay_settings.hpp \
+    camera/settings/dc_actions_settings.hpp \
+    camera/settings/dc_display_settings.hpp \
+    camera/settings/dc_calibrator_settings.hpp \
+    camera/settings/dc_config_settings.hpp \
+    camera/settings/dc_filters_settings.hpp \
+    camera/settings/dc_model_settings.hpp \
+    ## network
+    camera/network/dc_client_connection.hpp \
+    camera/network/dc_server_connection.hpp \
+    camera/network/dc_server_network.hpp \
+    camera/network/dc_udp_reader.hpp \
+    camera/network/dc_udp_sender.hpp \
+    ## orbbec
+    camera/orbbec/orbbec_compressed_frame.hpp \
+    camera/orbbec/orbbec_device.hpp \
+    ## kinect2
+    camera/kinect2/k2_config_files.hpp \
+    camera/kinect2/k2_device.hpp \
+    camera/kinect2/k2_manager.hpp \
+    camera/kinect2/k2_network.hpp \
+    camera/kinect2/k2_types.hpp \
     ## kinect4
-    network/kinect4/k4_network.hpp \
+    camera/kinect4/k4_compressed_frame.hpp \
+    camera/kinect4/k4_device.hpp \
+    camera/kinect4/k4_types.hpp \
+    # exvr
+    exvr/ex_element.hpp \
+    exvr/ex_experiment.hpp \
+    exvr/ex_resource.hpp \
+    exvr/ex_component.hpp \
     # utility    
-    thirdparty/rectpack2D/best_bin_finder.h \
-    thirdparty/rectpack2D/empty_space_allocators.h \
-    thirdparty/rectpack2D/empty_spaces.h \
-    thirdparty/rectpack2D/finders_interface.h \
-    thirdparty/rectpack2D/insert_and_split.h \
-    thirdparty/rectpack2D/rect_structs.h \
     utility/algorithm.hpp \
     utility/array.hpp \
     utility/benchmark.hpp \
@@ -220,50 +246,19 @@ HEADERS += \
     utility/io_file.hpp \
     # algorithms
     algorithms/marching_cube.hpp \
-    # camera
-    camera/settings/dc_color_settings.hpp \
-    camera/settings/dc_delay_settings.hpp \
-    camera/dc_device.hpp \
-    camera/dc_enums.hpp \
-    camera/dc_frame.hpp \
-    camera/dc_packed_data.hpp \
-    camera/dc_types.hpp \
-    camera/settings/dc_data_settings.hpp \
-    camera/settings/dc_recorder_settings.hpp \
-    camera/dc_filters.hpp \
-    camera/dc_player_settings.hpp \
-    camera/dc_model.hpp \
-    camera/settings/dc_actions_settings.hpp \
-    camera/settings/dc_display_settings.hpp \
-    camera/settings/dc_calibrator_settings.hpp \
-    camera/dc_calibrator.hpp \
-    camera/settings/dc_config_settings.hpp \
-    camera/kinect4/k4_compressed_frame.hpp \
-    camera/kinect4/k4a/k4a_body_tracking_helpers.hpp \
-    camera/orbbec/orbbec_device.hpp \
-    ## kinect2
-    camera/kinect2/k2_config_files.hpp \
-    camera/kinect2/k2_device.hpp \
-    camera/kinect2/k2_manager.hpp \
-    camera/kinect2/k2_network.hpp \
-    camera/kinect2/k2_types.hpp \
-    ## kinect4
-    camera/kinect4/k4_device.hpp \
-    camera/kinect4/k4_types.hpp \
-    camera/kinect4/k4a/k4aaudiochanneldatagraph.h \
-    camera/kinect4/k4a/k4aaudiomanager.h \
-    camera/kinect4/k4a/k4aaudiowindow.h \
-    camera/kinect4/k4a/k4adevicecorrelator.h \
-    camera/kinect4/k4a/k4amicrophone.h \
-    camera/kinect4/k4a/k4amicrophonelistener.h \
-    camera/kinect4/k4a/k4asoundio_util.h \
-    camera/kinect4/k4a/k4astaticimageproperties.h \
     # data
     data/FastDifferentialCoding/fastdelta.h \
     data/integers_encoder.hpp \
     # tests
     tests/marching_cube_test.hpp \
     # thirdparty
+    ## rectpack2D
+    thirdparty/rectpack2D/best_bin_finder.h \
+    thirdparty/rectpack2D/empty_space_allocators.h \
+    thirdparty/rectpack2D/empty_spaces.h \
+    thirdparty/rectpack2D/finders_interface.h \
+    thirdparty/rectpack2D/insert_and_split.h \
+    thirdparty/rectpack2D/rect_structs.h \
     ## stb
     thirdparty/stb/stb_image.h \
     thirdparty/stb/stb_image_resize.h \
@@ -293,6 +288,16 @@ HEADERS += \
     thirdparty/libyuv/libyuv/scale_uv.h \
     thirdparty/libyuv/libyuv/version.h \
     thirdparty/libyuv/libyuv/video_common.h \
+    ## k4a
+    thirdparty/k4a/k4a_body_tracking_helpers.hpp \
+    thirdparty/k4a/k4aaudiochanneldatagraph.h \
+    thirdparty/k4a/k4aaudiomanager.h \
+    thirdparty/k4a/k4aaudiowindow.h \
+    thirdparty/k4a/k4adevicecorrelator.h \
+    thirdparty/k4a/k4amicrophone.h \
+    thirdparty/k4a/k4amicrophonelistener.h \
+    thirdparty/k4a/k4asoundio_util.h \
+    thirdparty/k4a/k4astaticimageproperties.h \
     ## nanobench
     thirdparty/nanobench/nanobench.h \
     ## binpack2D
@@ -308,11 +313,41 @@ HEADERS += \
 
 
 SOURCES += \
-#    # main
-#    base_main.cpp \
-    # exvr    
+    # files
+    camera/dc_compressed_frame.cpp \
+    files/assimp_loader.cpp \
+    files/cloud_io.cpp \
+    files/settings.cpp \
+    # graphics     
+    graphics/color.cpp \
+    graphics/model.cpp \
+    graphics/texture.cpp \
+    # geometry
+    geometry/cloud.cpp \
+    geometry/mesh.cpp \
+    geometry/vertices.cpp \
+    geometry/voxel_grid.cpp \
+    # network
+    network/udp_server_network_settings.cpp \
+    network/udp_client_network_settings.cpp \
+    network/network_types.cpp \
+    # utility    
+    utility/benchmark.cpp \
+    utility/cmd_args.cpp \
+    utility/decimal.cpp \
+    utility/io_file.cpp \
+    utility/logger.cpp \
+    utility/paths.cpp \
+    utility/string.cpp \
+    # network
+    network/tcp_reader.cpp \
+    network/tcp_sender.cpp \
+    network/tcp_server.cpp \
+    network/udp_header.cpp \
+    network/udp_reader.cpp \
+    network/udp_sender.cpp \
+    # camera
     camera/dc_camera_data.cpp \
-    camera/settings/dc_device_settings.cpp \
     camera/dc_frame_compressor.cpp \
     camera/dc_frame_uncompressor.cpp \
     camera/dc_grabber_data_processing.cpp \
@@ -321,75 +356,40 @@ SOURCES += \
     camera/dc_volumetric_video.cpp \
     camera/dc_recorder.cpp \
     camera/dc_player.cpp \
-    exvr/ex_component.cpp \
-    exvr/ex_element.cpp \
-    exvr/ex_experiment.cpp \
-    exvr/ex_resource.cpp \
-    # files
-    files/assimp_loader.cpp \
-    files/cloud_io.cpp \
-    files/settings.cpp \
-    # graphics     
-    geometry/mesh.cpp \
-    geometry/vertices.cpp \
-    geometry/voxel_grid.cpp \
-    graphics/color.cpp \
-    graphics/model.cpp \
-    graphics/texture.cpp \
-    # geometry
-    geometry/cloud.cpp \
-    # utility    
-    network/kinect4/dc_udp_sender.cpp \
-    utility/benchmark.cpp \
-    utility/cmd_args.cpp \
-    utility/decimal.cpp \
-    utility/io_file.cpp \
-    utility/logger.cpp \
-    utility/paths.cpp \
-    utility/string.cpp \
-    # camera
-    camera/settings/dc_delay_settings.cpp \
-    camera/settings/dc_data_settings.cpp \
-    camera/dc_filters.cpp \
     camera/dc_frame.cpp \
-    camera/dc_model.cpp \
-    camera/settings/dc_actions_settings.cpp \
-    camera/settings/dc_display_settings.cpp \
     camera/dc_packed_data.cpp \
     camera/dc_calibrator.cpp \
+    ## network
+    camera/network/dc_client_connection.cpp \
+    camera/network/dc_server_connection.cpp \
+    camera/network/dc_server_network.cpp \
+    camera/network/dc_udp_reader.cpp \
+    camera/network/dc_udp_sender.cpp \
+    ## settings
+    camera/settings/dc_filters_settings.cpp \
+    camera/settings/dc_model_settings.cpp \
     camera/settings/dc_config_settings.cpp \
     camera/settings/dc_color_settings.cpp \
-    camera/kinect4/k4_compressed_frame.cpp \
-    camera/orbbec/orbbec_device.cpp \
+    camera/settings/dc_actions_settings.cpp \
+    camera/settings/dc_display_settings.cpp \
+    camera/settings/dc_delay_settings.cpp \
+    camera/settings/dc_data_settings.cpp \
+    camera/settings/dc_device_settings.cpp \
     ## kinect2
     camera/kinect2/k2_config_files.cpp \
     camera/kinect2/k2_device.cpp \
     camera/kinect2/k2_manager.cpp \
     camera/kinect2/k2_types.cpp \
     ## kinect4
-    camera/kinect4/k4a/k4aaudiochanneldatagraph.cpp \
-    camera/kinect4/k4a/k4aaudiomanager.cpp \
-    camera/kinect4/k4a/k4aaudiowindow.cpp \
-    camera/kinect4/k4a/platform/windows/k4adevicecorrelator.cpp \
-    camera/kinect4/k4a/k4amicrophone.cpp \
-    camera/kinect4/k4a/k4amicrophonelistener.cpp \
+    camera/kinect4/k4_compressed_frame.cpp \
     camera/kinect4/k4_device.cpp \
-    # network
-    network/network_utility.cpp \
-    network/tcp_reader.cpp \
-    network/tcp_sender.cpp \
-    network/tcp_server.cpp \
-    network/udp_header.cpp \
-    network/udp_reader.cpp \
-    network/udp_sender.cpp \
-    network/kinect4/k4_client_connection.cpp \
-    network/kinect4/k4_client_network_settings.cpp \
-    network/kinect4/k4_server_connection.cpp \
-    network/kinect4/k4_server_network.cpp \
-    network/kinect4/k4_server_network_settings.cpp \
-    network/kinect4/k4_udp_reader.cpp \
-    ## kinect4
-    network/kinect4/k4_network.cpp \
+    ## orbbec
+    camera/orbbec/orbbec_device.cpp \
+    # exvr
+    exvr/ex_component.cpp \
+    exvr/ex_element.cpp \
+    exvr/ex_experiment.cpp \
+    exvr/ex_resource.cpp \
     # data
     data/FastDifferentialCoding/fastdelta.c \
     data/integers_encoder.cpp \
@@ -400,6 +400,13 @@ SOURCES += \
     thirdparty/stb/stb_image.cpp \
     thirdparty/stb/stb_image_resize.cpp \
     thirdparty/stb/stb_image_write.cpp \
+    ## k4a
+    thirdparty/k4a/k4aaudiochanneldatagraph.cpp \
+    thirdparty/k4a/k4aaudiomanager.cpp \
+    thirdparty/k4a/k4aaudiowindow.cpp \
+    thirdparty/k4a/platform/windows/k4adevicecorrelator.cpp \
+    thirdparty/k4a/k4amicrophone.cpp \
+    thirdparty/k4a/k4amicrophonelistener.cpp \
     ## libyuv
     thirdparty/libyuv/compare.cc \
     thirdparty/libyuv/compare_common.cc \

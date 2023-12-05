@@ -27,7 +27,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_server_network.hpp"
+#include "dc_server_network.hpp"
 
 // local
 #include "utility/logger.hpp"
@@ -37,11 +37,11 @@ using namespace tool::network;
 using namespace tool::camera;
 using namespace std::literals::string_view_literals;
 
-K4ServerNetwork::~K4ServerNetwork(){
+DCServerNetwork::~DCServerNetwork(){
     clean();
 }
 
-auto K4ServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool{
+auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool{
 
     if(connections.size() != 0){
         clean();
@@ -49,7 +49,7 @@ auto K4ServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos
 
     size_t id = 0;
     for(const auto &info : infos){
-        auto connection = std::make_unique<K4ServerConnection>();
+        auto connection = std::make_unique<DCServerConnection>();
         if(!connection->initialize(id, info)){
             return false;
         }
@@ -60,14 +60,14 @@ auto K4ServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos
     return true;
 }
 
-auto K4ServerNetwork::clean() -> void{
+auto DCServerNetwork::clean() -> void{
     for(auto &connection : connections){
         connection->clean();
     }
     connections.clear();
 }
 
-auto K4ServerNetwork::init_connection(size_t idG) -> void{
+auto DCServerNetwork::init_connection(size_t idG) -> void{
     if(idG < connections.size()){
         connections[idG]->init_connection_with_grabber();
     }else{
@@ -75,7 +75,7 @@ auto K4ServerNetwork::init_connection(size_t idG) -> void{
     }
 }
 
-auto K4ServerNetwork::send_command(size_t idG, K4Command command) -> void {
+auto DCServerNetwork::send_command(size_t idG, Command command) -> void {
 
     if(idG < connections.size()){
 
@@ -85,19 +85,19 @@ auto K4ServerNetwork::send_command(size_t idG, K4Command command) -> void {
         }
 
         switch(command){
-        case K4Command::Disconnect:
+        case Command::Disconnect:
             connections[idG]->disconnect_grabber();
             break;
-        case K4Command::Quit:
+        case Command::Quit:
             connections[idG]->quit_grabber();
             break;
-        case K4Command::Shutdown:
+        case Command::Shutdown:
             connections[idG]->shutdown_grabber_computer();
             break;
-        case K4Command::Restart:
+        case Command::Restart:
             connections[idG]->restart_grabber_computer();
             break;
-        case K4Command::UpdateDeviceList:
+        case Command::UpdateDeviceList:
             connections[idG]->update_device_list();
             break;
         }
@@ -106,7 +106,7 @@ auto K4ServerNetwork::send_command(size_t idG, K4Command command) -> void {
     }
 }
 
-auto K4ServerNetwork::send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
+auto DCServerNetwork::send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_device_settings_message(deviceS);
     }else{
@@ -114,7 +114,7 @@ auto K4ServerNetwork::send_device_settings(size_t idG, const camera::DCDeviceSet
     }
 }
 
-auto K4ServerNetwork::send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
+auto DCServerNetwork::send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_color_settings_message(colorS);
     }else{
@@ -122,7 +122,7 @@ auto K4ServerNetwork::send_color_settings(size_t idG, const camera::DCColorSetti
     }
 }
 
-auto K4ServerNetwork::send_filters(size_t idG, const camera::DCFilters &filters) -> void {
+auto DCServerNetwork::send_filters(size_t idG, const camera::DCFiltersSettings &filters) -> void {
     if(idG < connections.size()){
         connections[idG]->udpSender.send_update_filters_settings_message(filters);
     }else{
@@ -130,7 +130,7 @@ auto K4ServerNetwork::send_filters(size_t idG, const camera::DCFilters &filters)
     }
 }
 
-auto K4ServerNetwork::send_delay(size_t idG, camera::DCDelaySettings delay) -> void{
+auto DCServerNetwork::send_delay(size_t idG, camera::DCDelaySettings delay) -> void{
     if(idG < connections.size()){
         connections[idG]->udpSender.send_delay_settings_message(delay);
     }else{
@@ -138,7 +138,7 @@ auto K4ServerNetwork::send_delay(size_t idG, camera::DCDelaySettings delay) -> v
     }
 }
 
-auto K4ServerNetwork::do_not_use_global_signals() -> void {
+auto DCServerNetwork::do_not_use_global_signals() -> void {
     for(auto &connection : connections){
         connection->do_not_use_global_signals();
     }

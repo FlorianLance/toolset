@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "network/kinect4/k4_client_connection.hpp"
+#include "camera/network/dc_client_connection.hpp"
 #include "camera/dc_device_manager.hpp"
 #include "camera/dc_recorder.hpp"
 
@@ -43,7 +43,7 @@ struct K4SGModel{
     auto trigger_settings() -> void;
 
     K4SGSettings settings;
-    network::K4ClientConnection connection;
+    network::DCClientConnection connection;
     camera::DCDeviceManager device;
     camera::DCRecorder recorder;
 

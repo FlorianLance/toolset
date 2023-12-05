@@ -30,7 +30,7 @@
 #include <QObject>
 
 // base
-#include "network/network_utility.hpp"
+#include "network/network_types.hpp"
 #include "camera/kinect2/k2_types.hpp"
 
 namespace tool::network{

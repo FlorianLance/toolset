@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -25,15 +24,29 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_network.hpp"
+#pragma once
 
+// local
+#include "geometry/matrix4.hpp"
+#include "files/text_settings.hpp"
 
-using namespace tool::network;
-using namespace tool::camera;
+namespace tool::camera {
+struct DCModelSettings : files::TextSettings{
 
-K4NetworkSendingSettings::K4NetworkSendingSettings(std::string ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket) : port(port), maxSizeUdpPacket(maxSizeUdpPacket) {
-    std::fill(ipAdress.begin(), ipAdress.end(), ' ');
-    if(ipAdressStr.size() <= 45){
-        std::copy(std::begin(ipAdressStr), std::end(ipAdressStr), ipAdress.begin());
+    geo::Mat4f transformation = geo::Mat4f::identity();
+
+    // local
+    geo::Vec3f rotation = {};
+    geo::Vec3f translation = {};
+    geo::Vec3f scaling = {1.f,1.f,1.f};
+
+    auto compute_full_transformation() const -> geo::Mat4f{
+        return geo::transform(scaling, rotation, translation) * transformation;
     }
+
+    // i/o
+    auto init_from_text(const std::string &text) -> void override;
+    auto convert_to_text() const -> std::string override;
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Model);};
+};
 }

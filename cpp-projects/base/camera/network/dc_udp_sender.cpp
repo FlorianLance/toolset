@@ -26,7 +26,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "k4_udp_sender.hpp"
+#include "dc_udp_sender.hpp"
 
 // std
 #include <format>
@@ -37,7 +37,7 @@
 
 using namespace tool::network;
 
-auto DCServerUdpSender::send_init_message(const K4NetworkSendingSettings &network) -> Header{
+auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &network) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_init_message: sender not opened, message canceled.\n");
@@ -45,10 +45,10 @@ auto DCServerUdpSender::send_init_message(const K4NetworkSendingSettings &networ
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::init_network_infos), sizeof(K4NetworkSendingSettings));
+    Header header = Header::generate_mono_packet(to_i8(MessageType::init_network_infos), sizeof(UdpNetworkSendingSettings));
 
     // init data
-    UdpMonoPacketData::copy_to_data<network::K4NetworkSendingSettings>(header, &network, packetBuffer);
+    UdpMonoPacketData::copy_to_data<network::UdpNetworkSendingSettings>(header, &network, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -113,7 +113,7 @@ auto DCServerUdpSender::send_delay_settings_message(camera::DCDelaySettings dela
     return header;
 }
 
-auto DCServerUdpSender::send_command_message(network::K4Command command) -> Header{
+auto DCServerUdpSender::send_command_message(network::Command command) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_command_message: sender not opened, message canceled.\n");
@@ -121,10 +121,10 @@ auto DCServerUdpSender::send_command_message(network::K4Command command) -> Head
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::command), sizeof(K4Command));
+    Header header = Header::generate_mono_packet(to_i8(MessageType::command), sizeof(Command));
 
     // init data
-    UdpMonoPacketData::copy_to_data<network::K4Command>(header, &command, packetBuffer);
+    UdpMonoPacketData::copy_to_data<network::Command>(header, &command, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -132,7 +132,7 @@ auto DCServerUdpSender::send_command_message(network::K4Command command) -> Head
     return header;
 }
 
-auto DCServerUdpSender::send_update_filters_settings_message(const camera::DCFilters &filters) -> bool{
+auto DCServerUdpSender::send_update_filters_settings_message(const camera::DCFiltersSettings &filters) -> bool{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_update_filters_settings_message: sender not opened, message canceled.\n");
@@ -180,7 +180,7 @@ auto DCClientUdpSender::send_synchronisation_message() -> bool{
     return send_mono_packet(header) != 0;
 }
 
-auto DCClientUdpSender::send_feedback_message(K4Feedback feedback) -> bool{
+auto DCClientUdpSender::send_feedback_message(Feedback feedback) -> bool{
 
     if(!is_opened()){
         Logger::error("DCClientUdpSender::send_feedback_message: sender not opened, message canceled.\n");
@@ -188,10 +188,10 @@ auto DCClientUdpSender::send_feedback_message(K4Feedback feedback) -> bool{
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::feedback), sizeof(K4UdpFeedback));
+    Header header = Header::generate_mono_packet(to_i8(MessageType::feedback), sizeof(Feedback));
 
     // init data
-    UdpMonoPacketData::copy_to_data<K4Feedback>(header, &feedback, packetBuffer);
+    UdpMonoPacketData::copy_to_data<Feedback>(header, &feedback, packetBuffer);
 
     // send data
     return send_mono_packet(header) != 0;

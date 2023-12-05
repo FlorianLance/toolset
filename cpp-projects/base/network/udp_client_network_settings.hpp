@@ -30,16 +30,15 @@
 #include <chrono>
 
 // base
-#include "network/network_utility.hpp"
+#include "network/network_types.hpp"
 #include "files/text_settings.hpp"
-#include "k4_network.hpp"
 
 namespace tool::network {
 
-struct K4ClientNetworkSettings : files::TextSettings{
+struct UdpClientNetworkSettings : files::TextSettings{
 
     auto initialize() -> bool;
-    auto init_sending_settings(const K4NetworkSendingSettings &sendingSettings) -> void;
+    auto init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void;
 
     auto is_connected_to_manager() const noexcept -> bool {return m_connectedToManager;}
     auto disconnect_from_manager() -> void {m_connectedToManager = false;}
@@ -60,9 +59,7 @@ private:
 
     auto init_from_text(const std::string &text) -> void override;
     auto convert_to_text() const -> std::string override;
-
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(camera::DCSettingsType::Network);};
-    auto file_description() const noexcept -> std::string_view override {return settings_name(static_cast<camera::DCSettingsType>(type()));}
+    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Network);};
 
     // local
     bool m_connectedToManager = false;

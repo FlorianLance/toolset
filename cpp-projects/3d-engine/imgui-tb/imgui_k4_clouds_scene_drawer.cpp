@@ -446,7 +446,7 @@ auto K4CloudsSceneDrawer::update_scene_display_settings(const camera::DCSceneDis
     m_redrawClouds = true;
 }
 
-auto K4CloudsSceneDrawer::update_model(size_t idCloud, const camera::DCModel &model) -> void{
+auto K4CloudsSceneDrawer::update_model(size_t idCloud, const camera::DCModelSettings &model) -> void{
     cloudsD[idCloud].model = model.compute_full_transformation();
     m_redrawClouds = true;
 }
