@@ -38,10 +38,6 @@ namespace tool::camera{
 struct Frame{
     std::int32_t idCapture = 0;
     std::int64_t afterCaptureTS = 0;    
-
-
-//    auto read_header();
-
     virtual ~Frame(){}
 };
 

@@ -43,15 +43,12 @@
 // # utility
 #include "utility/types.hpp"
 #include "utility/logger.hpp"
-#include "camera/kinect4/k4_compressed_frame.hpp"
 
 using namespace tool;
 using namespace tool::geo;
 using namespace tool::camera;
 
 struct DCFrameUncompressor::Impl{
-
-
 
     Impl() {
         jpegUncompressor = tjInitDecompress();
@@ -86,9 +83,8 @@ struct DCFrameUncompressor::Impl{
     }
 
     tjhandle jpegUncompressor = nullptr;
-    std::vector<size_t> indicesValid1D;
-    std::vector<size_t> indicesDepths1D;
 
+    // common values
     static constexpr std::array<Pt3f, 5> depthGradient ={
         Pt3f{0.f,0.f,1.f},
         {0.f,1.f,1.f},
@@ -97,10 +93,13 @@ struct DCFrameUncompressor::Impl{
         {1.f,0.f,0.f},
     };
 
+    std::vector<size_t> indicesValid1D;
+    std::vector<size_t> indicesDepths1D;
     std::vector<Pt3<uint8_t>> decodedColorData;
     std::vector<std::uint16_t> decodedDepthData;
     std::vector<std::uint16_t> decodedVerticesData;
 
+    // kinect4 values
     k4a::image depthImage;
     k4a::image pointCloudImage;
     std::tuple<DCMode, std::optional<k4a_transformation_t>> modeTr;
@@ -145,12 +144,12 @@ struct DCFrameUncompressor::Impl{
     // ## from cloud buffer
     auto convert_to_cloud(DCVertexMeshData *vertices, std::vector<geo::Pt3<uint8_t>> &uncompressedColor, std::vector<std::uint16_t> &uncompressedDepth, geo::Pt3<int16_t> *cloudBuffer) -> void;
 
-    auto k4_uncompress(K4CompressedFrame *cFrame, DCFrame &frame) -> bool;
-    auto k4_uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
-    auto k4_uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
-    auto k4_uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
-    auto k4_uncompress(K4CompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
-    auto k4_uncompress(K4CompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
+    auto k4_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
+    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
+    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
+    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
+    auto k4_uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
 
 };
 
@@ -853,20 +852,7 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
     });
 }
 
-auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool{
-    return i->uncompress_jpeg_8_bits_data(width, height, format, jpegSize, jpegData, data);
-}
-
-
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF, DCFrame &frame) -> bool{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, frame);
-    }
-    return false;
-}
-
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCFrame &frame) -> bool{
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
 
     // info
     frame.idCapture      = cFrame->idCapture;
@@ -932,9 +918,11 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCFrame
 
             convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
 
-        }else if(cFrame->calibration.has_value() && !frame.imageColorData.empty() && !frame.depthData.empty()){
+        }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
 
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), frame.depthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
 
             convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, cloud_image_data());
         }
@@ -958,15 +946,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCFrame
     return true;
 }
 
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF, Pt3f *vertices, Pt3f *colors) -> bool{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, vertices, colors);
-    }
-    return false;
-}
 
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
@@ -988,7 +969,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
 
             return true;
 
-        }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
+        }else if(cFrame->has_calibration() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, decodedColorData)){
@@ -1001,7 +982,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
             }
 
             // generate cloud
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), decodedDepthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
             convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
@@ -1012,15 +995,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
     return false;
 }
 
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF, Pt3f *vertices, Pt4f *colors) -> bool{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, vertices, colors);
-    }
-    return false;
-}
 
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
@@ -1042,7 +1018,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
 
             return true;
 
-        }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
+        }else if(cFrame->has_calibration() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, decodedColorData)){
@@ -1055,7 +1031,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
             }
 
             // generate cloud
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), decodedDepthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
             convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
@@ -1066,15 +1044,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
     return false;
 }
 
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, vertices, colors);
-    }
-    return false;
-}
 
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
@@ -1096,7 +1067,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
 
             return true;
 
-        }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
+        }else if(cFrame->has_calibration() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, decodedColorData)){
@@ -1109,7 +1080,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
             }
 
             // generate cloud
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), decodedDepthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
             convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
@@ -1120,15 +1093,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
     return false;
 }
 
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF,Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, vertices, colors);
-    }
-    return false;
-}
 
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
+
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
@@ -1150,7 +1117,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
 
             return true;
 
-        }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
+        }else if(cFrame->has_calibration() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, decodedColorData)){
@@ -1163,7 +1130,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
             }
 
             // generate cloud
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), decodedDepthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
             convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
@@ -1174,15 +1143,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, Pt3f *v
     return false;
 }
 
-auto DCFrameUncompressor::uncompress(DCCompressedFrame *cF, DCVertexMeshData *vertices) -> int{
-    auto cFrame = dynamic_cast<K4CompressedFrame*>(cF);
-    if(cFrame){
-        return i->k4_uncompress(cFrame, vertices);
-    }
-    return -1;
-}
-
-auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCVertexMeshData *vertices) -> int{
+auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
@@ -1204,7 +1165,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCVerte
 
             return 1;
 
-        }else if(cFrame->calibration.has_value() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
+        }else if(cFrame->has_calibration() && !cFrame->encodedColorData.empty() && !cFrame->encodedDepthData.empty()){
 
             // decode colors
             if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedColorData, decodedColorData)){
@@ -1217,7 +1178,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCVerte
             }
 
             // generate cloud
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, cFrame->calibration.value(), decodedDepthData);
+            k4a_calibration_t calibration;
+            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
             convert_to_cloud(vertices, decodedColorData, decodedDepthData, cloud_image_data());
@@ -1228,3 +1191,48 @@ auto DCFrameUncompressor::Impl::k4_uncompress(K4CompressedFrame *cFrame, DCVerte
     return -1; // empty cloud
 }
 
+auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool{
+    return i->uncompress_jpeg_8_bits_data(width, height, format, jpegSize, jpegData, data);
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, frame);
+    }
+    return false;
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, vertices, colors);
+    }
+    return false;
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, vertices, colors);
+    }
+    return false;
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, vertices, colors);
+    }
+    return false;
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, vertices, colors);
+    }
+    return false;
+}
+
+auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int{
+    if(get_device(cFrame->mode) == DCType::Kinect4){
+        return i->k4_uncompress(cFrame, vertices);
+    }
+    return -1;
+}

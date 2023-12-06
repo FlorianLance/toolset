@@ -119,7 +119,7 @@ struct UdpMonoPacketMessage {
 struct UdpMultiPacketsMessage{
 
     bool receivingFrame = false;
-    size_t timeoutMs = 100;
+    std::int64_t timeoutMs = 100;
     std::int64_t firstPacketTimestamp;
     size_t totalBytesReceived = 0;
     size_t nbPacketsReceived = 0;

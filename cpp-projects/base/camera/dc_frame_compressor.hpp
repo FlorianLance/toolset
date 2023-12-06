@@ -41,6 +41,7 @@ struct DCFrameCompressor{
     auto add_infra(size_t width,  size_t height, std::uint16_t *data, DCCompressedFrame *cFrame) -> void;
     auto add_cloud(size_t colorWidth, size_t colorHeight, std::uint8_t *colorData, size_t depthSize, std::uint16_t *depthData, int jpegQuality, DCCompressedFrame *cFrame)  -> void;
     auto add_frame(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void;
+    auto compress_frame(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>;
 
 private:
     struct Impl;

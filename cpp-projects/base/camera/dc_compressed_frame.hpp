@@ -33,9 +33,8 @@ namespace tool::camera{
 
 struct DCCompressedFrame : Frame{
 
-    static auto generate_compressed_frame(DCMode mode) -> std::unique_ptr<DCCompressedFrame>{
-        return nullptr;
-    }
+    DCCompressedFrame();
+    ~DCCompressedFrame();
 
     DCMode mode;
 
@@ -69,61 +68,83 @@ struct DCCompressedFrame : Frame{
     // audio
     std::vector<std::array<float, 7>> audioFrames;
 
-    // sizes
-    auto infos_size() const noexcept{
-        return
-            sizeof(std::int32_t) + // id capture
-            sizeof(std::int64_t) + // after capture TS
-            sizeof(DCMode);
-    }
-
-    auto color_size()  const noexcept -> size_t{
-        return encodedColorData.size() +
-            sizeof(size_t) * 3; // colorWidth, colorHeight, encoded size
-    }
-    auto depth_size()  const noexcept -> size_t{
-        return encodedDepthData.size() +
-            sizeof(size_t) * 3; // depthWidth, depthHeight, encoded size
-    }
-    auto infra_size()  const noexcept -> size_t{
-        return encodedInfraData.size() +
-            sizeof(size_t) * 3; // infraWidth, infraHeight, encoded size
-    }
-
-    auto cloud_vertices_size() const noexcept -> size_t{
-        return encodedCloudVerticesData.size() +
-            sizeof(size_t)*2; // validVerticesCount, encoded size
-    }
-    auto cloud_color_size()  const noexcept -> size_t{
-        return encodedCloudColorData.size() +
-            sizeof(size_t) * 3; // cloudColorWidth, cloudColorHeight, encoded size
-    }
-
-    auto imu_sample_size() const noexcept -> size_t{
-        return (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
-            sizeof(bool); // has IMU
-    }
-    auto audio_size() const noexcept      -> size_t{
-        return audioFrames.size()*7*sizeof(float) +
-            sizeof(size_t); // nb audio frames
-    }
-
-    virtual auto total_data_size() const -> size_t{
+    // getters
+    // # sizes
+    auto infos_size() const noexcept -> size_t;
+    auto color_size()  const noexcept -> size_t;
+    auto depth_size()  const noexcept -> size_t;
+    auto infra_size()  const noexcept -> size_t;
+    auto cloud_vertices_size() const noexcept -> size_t;
+    auto cloud_color_size()  const noexcept -> size_t;
+    auto imu_sample_size() const noexcept -> size_t;
+    auto audio_size() const noexcept      -> size_t;
+    auto bodies_size() const noexcept -> size_t;
+    auto calibration_size() const noexcept -> size_t;
+    auto total_data_size() const -> size_t{
         return
             infos_size() +
             color_size() + cloud_color_size() + depth_size() + infra_size() + cloud_vertices_size() +
-            imu_sample_size() + audio_size();
+            calibration_size() + imu_sample_size() + audio_size() + bodies_size();
     }
+    // # has
+    auto has_calibration() const noexcept -> bool;
 
-    // file stream
-    virtual auto init_from_file_stream(std::ifstream &file) -> void{static_cast<void>(file);}
-    virtual auto write_to_file_stream(std::ofstream &file) -> void{static_cast<void>(file);}
-    // data
-    virtual auto init_from_data(std::int8_t *data) -> void{static_cast<void>(data);}
-    virtual auto convert_to_data(std::vector<std::int8_t> &data) -> size_t{static_cast<void>(data);return 0;}
-protected:
+    // init
+    auto init_from_file_stream(std::ifstream &file) -> void;
+    auto init_from_data(std::int8_t *data) -> void;
+    // # legacy
+    auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
+    auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
+    // write
+    auto write_to_file_stream(std::ofstream &file) -> void;
+    auto write_to_data(std::vector<std::int8_t> &data) -> size_t;
+    // # calibration
+    auto write_calibration_to_data(std::int8_t *data) -> void;
+    auto update_calibration_from_data(std::int8_t *data) -> void;
+
+private:
 
     auto read_infos_from_file_stream(std::ifstream &file) -> void;
     auto read_color_from_file_stream(std::ifstream &file) -> void;
+    auto read_depth_from_file_stream(std::ifstream &file) -> void;
+    auto read_infra_from_file_stream(std::ifstream &file) -> void;
+    auto read_cloud_from_file_stream(std::ifstream &file) -> void;
+    auto read_calibration_from_file_stream(std::ifstream &file) -> void;
+    auto read_imu_from_file_stream(std::ifstream &file) -> void;
+    auto read_audio_from_file_stream(std::ifstream &file) -> void;
+    auto read_bodies_from_file_stream(std::ifstream &file) -> void;
+
+    auto write_infos_to_file_stream(std::ofstream &file) -> void;
+    auto write_color_to_file_stream(std::ofstream &file) -> void;
+    auto write_depth_to_file_stream(std::ofstream &file) -> void;
+    auto write_infra_to_file_stream(std::ofstream &file) -> void;
+    auto write_cloud_to_file_stream(std::ofstream &file) -> void;
+    auto write_calibration_to_file_stream(std::ofstream &file) -> void;
+    auto write_imu_to_file_stream(std::ofstream &file) -> void;
+    auto write_audio_to_file_stream(std::ofstream &file) -> void;
+    auto write_bodies_to_file_stream(std::ofstream &file) -> void;
+
+    auto init_infos_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_color_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_depth_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_infra_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_cloud_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_calibration_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_imu_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_audio_from_data(std::int8_t *data, size_t &offset) -> void;
+    auto init_bodies_from_data(std::int8_t *data, size_t &offset) -> void;
+
+    auto write_infos_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_color_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_depth_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_infra_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_cloud_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_calibration_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_imu_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_audio_to_data(std::int8_t *data, size_t &offset) -> void;
+    auto write_bodies_to_data(std::int8_t *data, size_t &offset) -> void;
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 }

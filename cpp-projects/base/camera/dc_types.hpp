@@ -43,6 +43,46 @@ namespace tool::camera {
         }
     };
 
+    // Define the bone list based on the documentation
+    static constexpr auto bones_list(DCType device) -> std::array<std::pair<DCJointType, DCJointType>, 31>{
+        if(device == DCType::Kinect4){
+            return{
+                std::make_pair(DCJointType::spine_chest,    DCJointType::spine_navel),
+                std::make_pair(DCJointType::spine_navel,    DCJointType::pelvis),
+                std::make_pair(DCJointType::spine_chest,    DCJointType::neck),
+                std::make_pair(DCJointType::neck,           DCJointType::head),
+                std::make_pair(DCJointType::head,           DCJointType::nose),
+                std::make_pair(DCJointType::spine_chest,    DCJointType::clavicle_left),
+                std::make_pair(DCJointType::clavicle_left,  DCJointType::shoulder_left),
+                std::make_pair(DCJointType::shoulder_left,  DCJointType::elbow_left),
+                std::make_pair(DCJointType::elbow_left,     DCJointType::wrist_left),
+                std::make_pair(DCJointType::wrist_left,     DCJointType::hand_left),
+                std::make_pair(DCJointType::hand_left,      DCJointType::handtip_left),
+                std::make_pair(DCJointType::wrist_left,     DCJointType::thumb_left),
+                std::make_pair(DCJointType::pelvis,         DCJointType::hip_left),
+                std::make_pair(DCJointType::hip_left,       DCJointType::knee_left),
+                std::make_pair(DCJointType::knee_left,      DCJointType::ankle_left),
+                std::make_pair(DCJointType::ankle_left,     DCJointType::foot_left),
+                std::make_pair(DCJointType::nose,           DCJointType::eye_left),
+                std::make_pair(DCJointType::eye_left,       DCJointType::ear_left),
+                std::make_pair(DCJointType::spine_chest,    DCJointType::clavicle_right),
+                std::make_pair(DCJointType::clavicle_right, DCJointType::shoulder_right),
+                std::make_pair(DCJointType::shoulder_right, DCJointType::elbow_right),
+                std::make_pair(DCJointType::elbow_right,    DCJointType::wrist_right),
+                std::make_pair(DCJointType::wrist_right,    DCJointType::hand_right),
+                std::make_pair(DCJointType::hand_right,     DCJointType::handtip_right),
+                std::make_pair(DCJointType::wrist_right,    DCJointType::thumb_right),
+                std::make_pair(DCJointType::pelvis,         DCJointType::hand_right),
+                std::make_pair(DCJointType::hip_right,      DCJointType::knee_right),
+                std::make_pair(DCJointType::knee_right,     DCJointType::ankle_right),
+                std::make_pair(DCJointType::ankle_right,    DCJointType::foot_right),
+                std::make_pair(DCJointType::nose,           DCJointType::eye_right),
+                std::make_pair(DCJointType::eye_right,      DCJointType::ear_right)
+            };
+        }
+        return {};
+    }
+
     struct DCSkeleton{
         std::array<DCJoint, static_cast<std::int8_t>(DCJointType::SizeEnum)> joints;
 

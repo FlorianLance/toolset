@@ -90,8 +90,14 @@ LIBS +=\
 
 HEADERS += \
     # ui
-    imgui-tb/imgui_k4_calibrator_drawer.hpp \
-    imgui-tb/imgui_k4_direct_drawer.hpp \
+    imgui-tb/imgui_dc_calibrator_drawer.hpp \
+    imgui-tb/imgui_dc_cloud_drawer.hpp \
+    imgui-tb/imgui_dc_clouds_scene_drawer.hpp \
+    imgui-tb/imgui_dc_device_drawer.hpp \
+    imgui-tb/imgui_dc_direct_drawer.hpp \
+    imgui-tb/imgui_dc_player_drawer.hpp \
+    imgui-tb/imgui_dc_recorder_drawer.hpp \
+    imgui-tb/imgui_dc_ui_drawer.hpp \
     immediate_ui.hpp \
     # resources
     resources.hpp \
@@ -133,12 +139,6 @@ HEADERS += \
     imgui-tb/imgui_convert.hpp \
     imgui-tb/imgui_fbo_ui_drawer.hpp \
     imgui-tb/imgui_helper.hpp \
-    imgui-tb/imgui_k4_cloud_drawer.hpp \
-    imgui-tb/imgui_k4_clouds_scene_drawer.hpp \
-    imgui-tb/imgui_k4_device_drawer.hpp \
-    imgui-tb/imgui_k4_player_drawer.hpp \
-    imgui-tb/imgui_k4_recorder_drawer.hpp \
-    imgui-tb/imgui_k4_ui_drawer.hpp \
     imgui-tb/imgui_logs.hpp \
     imgui-tb/imgui_texture_ui_drawer.hpp \
     imgui-tb/imgui_types.hpp \
@@ -147,8 +147,14 @@ HEADERS += \
 
 SOURCES += \
     # resources
-    imgui-tb/imgui_k4_calibrator_drawer.cpp \
-    imgui-tb/imgui_k4_direct_drawer.cpp \
+    imgui-tb/imgui_dc_calibrator_drawer.cpp \
+    imgui-tb/imgui_dc_cloud_drawer.cpp \
+    imgui-tb/imgui_dc_clouds_scene_drawer.cpp \
+    imgui-tb/imgui_dc_device_drawer.cpp \
+    imgui-tb/imgui_dc_direct_drawer.cpp \
+    imgui-tb/imgui_dc_player_drawer.cpp \
+    imgui-tb/imgui_dc_recorder_drawer.cpp \
+    imgui-tb/imgui_dc_ui_drawer.cpp \
     resources/resources.cpp \
     # engine
     engine/drawers_manager.cpp \
@@ -175,12 +181,6 @@ SOURCES += \
     imgui-sfml/imgui-SFML.cpp \
     # imgui-tb
     imgui-tb/imgui_fbo_ui_drawer.cpp \
-    imgui-tb/imgui_k4_cloud_drawer.cpp \
-    imgui-tb/imgui_k4_clouds_scene_drawer.cpp \
-    imgui-tb/imgui_k4_device_drawer.cpp \
-    imgui-tb/imgui_k4_player_drawer.cpp \
-    imgui-tb/imgui_k4_recorder_drawer.cpp \
-    imgui-tb/imgui_k4_ui_drawer.cpp \
     imgui-tb/imgui_logs.cpp \
     imgui-tb/imgui_texture_ui_drawer.cpp \
     imgui-tb/imgui_ui_drawer.cpp \

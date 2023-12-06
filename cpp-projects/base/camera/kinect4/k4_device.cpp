@@ -54,14 +54,13 @@
 // # graphics
 #include "graphics/color.hpp"
 // # camera
-#include "k4_types.hpp"
 #include "camera/dc_frame_compressor.hpp"
 #include "camera/dc_frame_uncompressor.hpp"
-#include "k4_compressed_frame.hpp"
 
 using namespace tool;
 using namespace tool::geo;
 using namespace tool::camera;
+
 
 
 struct K4Device::Impl{
@@ -112,7 +111,7 @@ struct K4Device::Impl{
     // bodies
     std::chrono::nanoseconds bodiesTS = std::chrono::nanoseconds{0};
     size_t bodiesCount = 0;
-    std::vector<K4Body> bodies;
+    std::vector<DCBody> bodies;
 
     // parameters
     DCDataSettings data;
@@ -216,6 +215,8 @@ struct K4Device::Impl{
         bool disableLED = false) -> k4a_device_configuration_t;
 
     static auto generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t;
+
+    static auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void;
 
 private:
 
@@ -367,6 +368,19 @@ auto K4Device::Impl::generate_bt_config(const DCConfigSettings &config) -> k4abt
     ka4BtConfig.sensor_orientation  = static_cast<k4abt_sensor_orientation_t>(config.btOrientation);
     ka4BtConfig.model_path          = nullptr;
     return ka4BtConfig;
+}
+
+auto K4Device::Impl::update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
+    body.id = static_cast<std::int8_t>(k4aBody.id);
+    for(const auto &jointD : dcJoints.data){
+        const auto &kaKoint = k4aBody.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+        auto &joint = body.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+        joint.confidence = static_cast<DCJointConfidenceLevel>(kaKoint.confidence_level);
+        const auto &p = kaKoint.position;
+        joint.position = {-p.v[0],-p.v[1],p.v[2]};
+        const auto &o = kaKoint.orientation;
+        joint.orientation = {o.wxyz.x,o.wxyz.y,o.wxyz.z,o.wxyz.w};
+    }
 }
 
 
@@ -951,7 +965,7 @@ auto K4Device::Impl::read_frames(DCMode mode) -> void{
                             bodies.resize(bodiesCount);
                         }
                         for(size_t ii = 0; ii < bodiesCount; ++ii){
-                            bodies[ii].update(bodyFrame.get_body(ii));
+                            update_body(bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
                         }
                         bodiesTS = bodyFrame.get_system_timestamp();
                     }
@@ -1424,7 +1438,7 @@ auto K4Device::Impl::keep_only_biggest_cluster() -> void{
                 continue;
             }
 
-            zonesId[id] = zoneId;
+            zonesId[id] = static_cast<int>(zoneId);
             count++;
 
             if(id >= 1){
@@ -1694,12 +1708,12 @@ auto K4Device::Impl::compress_frame(const DCFiltersSettings &f, const DCDataSett
 
     tool::Bench::start("[K4Device::compress_frame] Generate compressed frame");
 
-    auto cFrame                = std::make_unique<K4CompressedFrame>();
+    auto cFrame                = std::make_unique<DCCompressedFrame>();
     cFrame->mode               = mode;
     cFrame->idCapture          = static_cast<std::int32_t>(idCapture);
     cFrame->afterCaptureTS     = localTimestamps["after_capture"sv]->count();
     cFrame->validVerticesCount = validDepthValues;
-    cFrame->calibration        = calibration;
+    cFrame->update_calibration_from_data(reinterpret_cast<std::int8_t*>(&calibration));
 
     // compressed color
     if(colorImage.has_value() && d.sendColor){

@@ -37,9 +37,9 @@ TOOLSET_CPP_PROJECTS +=\
     SCANER_GRABBER:scaner-grabber \
     SCANER_MANAGER:scaner-manager \
     GUARDIAN:guardian \
-    K4_SCANER_GRABBER:k4-scaner-grabber \
-    K4_SCANER_MANAGER:k4-scaner-manager \
-    K4_MONITORING:k4-monitoring \
+    DC_GRABBER:dc-grabber \
+    DC_MANAGER:dc-manager \
+    DC_MONITORING:dc-monitoring \
 
 # define functions
 defineTest(generate_variables) {

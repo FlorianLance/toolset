@@ -40,7 +40,6 @@
 #include "utility/io_file.hpp"
 #include "camera/kinect2/k2_device.hpp"
 #include "camera/kinect4/k4_device.hpp"
-#include "camera/kinect4/k4_compressed_frame.hpp"
 #include "camera/dc_device_manager.hpp"
 
 #include "data/integers_encoder.hpp"
@@ -181,10 +180,10 @@ auto test_compress_frame() -> void{
         std::cout << "cframe " << cFrame->idCapture << "\n";
 
         std::vector<std::int8_t> bufferToSend;
-        size_t totalDataSizeBytes = cFrame->convert_to_data(bufferToSend);
+        size_t totalDataSizeBytes = cFrame->write_to_data(bufferToSend);
 
 //        std::cout << totalDataSizeBytes << "\n" << std::flush;
-        auto cFrame2 = std::make_shared<K4CompressedFrame>();
+        auto cFrame2 = std::make_shared<DCCompressedFrame>();
         cFrame2->init_from_data(bufferToSend.data());
 
         DCFrame frame;

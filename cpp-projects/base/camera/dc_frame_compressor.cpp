@@ -322,4 +322,10 @@ auto DCFrameCompressor::add_frame(DCFrame &frame, int jpegQuality, DCCompressedF
     // ...
 }
 
+auto DCFrameCompressor::compress_frame(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>{
+    auto cFrame = std::make_unique<DCCompressedFrame>();
+    add_frame(frame, jpegQuality, cFrame.get());
+    return cFrame;
+}
+
 

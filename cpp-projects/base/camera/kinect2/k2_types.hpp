@@ -405,14 +405,6 @@ struct K2BodiesDisplayData{
 // frame data
 struct K2FrameData{
 
-    // infos
-//    std::uint32_t currentFrame;
-//    std::vector<float> intrinsics;
-    // timestamp
-    // times
-    // frame id
-    // sizes
-
     K2FrameData(){
         depth = std::make_unique<K2DepthData>();
         infra = std::make_unique<K2InfraData>();
@@ -510,7 +502,6 @@ struct K2Settings{
     static K2Settings from_string(const std::string &parametersStr);
 };
 
-
 struct K2Frame{
 
     K2Frame(bool initData);
@@ -547,7 +538,6 @@ struct K2Frame{
     std::array<K2BodyInfos,6> bodiesData;    // 6 bodies, 25 joints
 
 };
-using K2FrameUP = std::unique_ptr<K2Frame>;
 
 
 }

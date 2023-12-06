@@ -29,7 +29,7 @@
 
 // local
 #include "utility/time.hpp"
-#include "camera/kinect4/k4_compressed_frame.hpp"
+#include "camera/dc_compressed_frame.hpp"
 
 using namespace tool::camera;
 using namespace tool::network;
@@ -113,7 +113,7 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
         if(compressedFrameMessage.all_received(header)){
 
             // create compressed frame from data
-            auto cFrame = std::make_shared<K4CompressedFrame>();
+            auto cFrame = std::make_shared<DCCompressedFrame>();
             cFrame->init_from_data(m_data.data());
 
             // TEST

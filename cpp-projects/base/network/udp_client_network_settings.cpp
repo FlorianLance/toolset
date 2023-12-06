@@ -1,7 +1,7 @@
 
 
 /*******************************************************************************
-** Toolset-k4-scaner-grabber                                                  **
+** Toolset-dc-grabber                                                  **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **

@@ -196,7 +196,6 @@ HEADERS += \
     camera/network/dc_udp_reader.hpp \
     camera/network/dc_udp_sender.hpp \
     ## orbbec
-    camera/orbbec/orbbec_compressed_frame.hpp \
     camera/orbbec/orbbec_device.hpp \
     ## kinect2
     camera/kinect2/k2_config_files.hpp \
@@ -205,9 +204,7 @@ HEADERS += \
     camera/kinect2/k2_network.hpp \
     camera/kinect2/k2_types.hpp \
     ## kinect4
-    camera/kinect4/k4_compressed_frame.hpp \
     camera/kinect4/k4_device.hpp \
-    camera/kinect4/k4_types.hpp \
     # exvr
     exvr/ex_element.hpp \
     exvr/ex_experiment.hpp \
@@ -314,7 +311,6 @@ HEADERS += \
 
 SOURCES += \
     # files
-    camera/dc_compressed_frame.cpp \
     files/assimp_loader.cpp \
     files/cloud_io.cpp \
     files/settings.cpp \
@@ -347,6 +343,7 @@ SOURCES += \
     network/udp_reader.cpp \
     network/udp_sender.cpp \
     # camera
+    camera/dc_compressed_frame.cpp \
     camera/dc_camera_data.cpp \
     camera/dc_frame_compressor.cpp \
     camera/dc_frame_uncompressor.cpp \
@@ -381,7 +378,6 @@ SOURCES += \
     camera/kinect2/k2_manager.cpp \
     camera/kinect2/k2_types.cpp \
     ## kinect4
-    camera/kinect4/k4_compressed_frame.cpp \
     camera/kinect4/k4_device.cpp \
     ## orbbec
     camera/orbbec/orbbec_device.cpp \

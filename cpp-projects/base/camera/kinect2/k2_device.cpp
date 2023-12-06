@@ -146,7 +146,7 @@ struct K2Device::Impl{
 
     // frames
     std::uint32_t currentFrame = 0;
-    K2FrameUP processedFrame = nullptr;
+    std::unique_ptr<K2Frame> processedFrame = nullptr;
 
     Impl(){
 

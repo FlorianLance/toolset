@@ -40,8 +40,6 @@
 #include "dc_frame_compressor.hpp"
 #include "dc_frame_uncompressor.hpp"
 
-#include "camera/kinect4/k4_compressed_frame.hpp"
-//#include "camera/orbbec/orbbec_frame_uncompressor.hpp"
 
 using namespace tool::camera;
 
@@ -370,6 +368,20 @@ auto DCVolumetricVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBo
         return;
     }
 
+    for(const auto &cData : m_framesPerCamera){
+        if(!cData.check_same_mode_for_every_frame()){
+            Logger::error("[DCVolumetricVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            return;
+        }
+    }
+    auto mode = m_framesPerCamera.front().first_frame_ptr()->mode;
+    for(const auto &cData : m_framesPerCamera){
+        if(cData.first_frame_ptr()->mode != mode){
+            Logger::error("[DCVolumetricVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            return;
+        }
+    }
+
     auto c0FirstFrameTS = m_framesPerCamera.front().frames.front()->afterCaptureTS;
 
     DCFrameCompressor compressor;
@@ -412,7 +424,6 @@ auto DCVolumetricVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBo
             }
 
             DCFrame current;
-//            std::cout << "uncompress_frame " << c0TimeMs.count() << " " <<  jj << " " << idF << "\n";
             if(!uncompress_frame(jj, idF, current)){
                 continue;
             }
@@ -422,10 +433,8 @@ auto DCVolumetricVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBo
         grid.compute_grid();
         grid.convert_to_cloud(final.cloud);
 
-        // compress frame
-        auto cFrame = std::make_unique<K4CompressedFrame>();
-        compressor.add_frame(final, 90, cFrame.get());
-        m_framesPerCamera.front().frames[idF] = std::move(cFrame);
+        // compress frame        
+        m_framesPerCamera.front().frames[idF] = compressor.compress_frame(final, 90);
     }
 
     m_framesPerCamera.front().transform = geo::Mat4d::identity();
@@ -579,7 +588,6 @@ auto DCVolumetricVideo::read_file(std::ifstream &file) -> bool{
     std::int8_t nbCameras;
     read(nbCameras, file);    
     initialize(nbCameras);
-//    std::cout << "nbCameras : " << nbCameras << "\n";
 
     // read infos per camera
     std::int32_t nbFrames;
@@ -595,7 +603,7 @@ auto DCVolumetricVideo::read_file(std::ifstream &file) -> bool{
             cameraData.frames.reserve(nbFrames);
 
             for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-                cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
+                cameraData.frames.push_back(std::make_shared<DCCompressedFrame>());
             }
 
             // calibration matrix
@@ -609,37 +617,17 @@ auto DCVolumetricVideo::read_file(std::ifstream &file) -> bool{
     }
     m_framesPerCamera.resize(currentC);
 
-//    for(auto &cameraData : m_framesPerCamera){
-
-//        // read nb frames
-//        read(nbFrames, file);
-//        std::cout << "nbFrames : " << nbFrames << "\n";
-
-//        // create frames
-//        cameraData.frames.reserve(nbFrames);
-//        for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-//            cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
-//        }
-
-//        // calibration matrix
-//        read_array(cameraData.transform.array.data(), file, 16);
-
-//        std::cout << "calibration : " << cameraData.transform << "\n";
-//    }
-
     // read frames
     for(auto &cameraData : m_framesPerCamera){
         for(auto &frame : cameraData.frames){
             double timeMsNotUsed;
             read(timeMsNotUsed, file); // read time ms
-//            std::cout << "timeMsNotUsed " << timeMsNotUsed << "\n";
             frame->init_from_file_stream(file);
         }
     }
 
     // remove empty cameras
-
-
+    // TODO: ...
 
     return true;
 }
@@ -688,7 +676,7 @@ auto DCVolumetricVideo::read_legacy_cloud_video_file(std::ifstream &file) -> voi
         // create frames
         cameraData.frames.reserve(nbFrames);
         for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-            cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
+            cameraData.frames.push_back(std::make_shared<DCCompressedFrame>());
         }
 
         // calibration matrix
@@ -699,10 +687,7 @@ auto DCVolumetricVideo::read_legacy_cloud_video_file(std::ifstream &file) -> voi
     for(auto &cameraData : m_framesPerCamera){
         for(auto &frame : cameraData.frames){
             // read frame
-            auto k4Frame = dynamic_cast<K4CompressedFrame*>(frame.get());
-            if(k4Frame){
-                k4Frame->init_legacy_cloud_frame_file_stream(file);
-            }
+            frame->init_legacy_cloud_frame_from_file_stream(file);
         }
     }
 }
@@ -724,7 +709,7 @@ auto DCVolumetricVideo::read_legacy_full_video_file(std::ifstream &file) -> void
         // create frames
         cameraData.frames.reserve(nbFrames);
         for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-            cameraData.frames.push_back(std::make_shared<K4CompressedFrame>());
+            cameraData.frames.push_back(std::make_shared<DCCompressedFrame>());
         }
 
         // calibration matrix
@@ -737,16 +722,14 @@ auto DCVolumetricVideo::read_legacy_full_video_file(std::ifstream &file) -> void
 
             std::int32_t idFrame;
             std::int64_t timestamp;
+
             // # read frame info
             read(idFrame, file);
             read(timestamp, file);
             frame->afterCaptureTS = timestamp;
 
             // read frame            
-            auto k4Frame = dynamic_cast<K4CompressedFrame*>(frame.get());
-            if(k4Frame){
-                k4Frame->init_legacy_full_frame_file_stream(file);
-            }
+            frame->init_legacy_full_frame_from_file_stream(file);
         }
     }
 }

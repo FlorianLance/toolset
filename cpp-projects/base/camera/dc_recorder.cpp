@@ -98,7 +98,7 @@ auto DCRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompres
     }
 
     using namespace std::chrono;
-    auto ff = video()->first_frame_capture_timestamp();
+//    auto ff = video()->first_frame_capture_timestamp();
 //    if(ff != -1){
 //        auto diff = duration_cast<milliseconds>(nanoseconds(frame->afterCaptureTS-ff));
 //        std::cout << idCamera << " " << video()->get_camera_data(idCamera)->nb_frames() << " "  << diff << "\n";

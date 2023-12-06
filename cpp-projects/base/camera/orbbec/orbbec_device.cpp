@@ -134,6 +134,7 @@ auto OrbbecDevice::refresh_devices_list() -> void{
 
 auto OrbbecDevice::open(uint32_t deviceId) -> bool {
 
+    static_cast<void>(deviceId);
     if(is_opened()){
         return false;
     }
@@ -301,6 +302,7 @@ auto OrbbecDevice::open(uint32_t deviceId) -> bool {
 //    //  void sendFile(const char *filePath, const char *dstPath, SendFileCallback callback, bool async = true);
 
 //    return true;
+    return false;
 }
 
 
@@ -325,6 +327,7 @@ auto OrbbecDevice::cameras_started() const noexcept -> bool{
 
 auto OrbbecDevice::start_cameras(const DCConfigSettings &configS) -> bool{
 
+    static_cast<void>(configS);
 //    if(cameras_started() || !is_opened()){
 //        return false;
 //    }
@@ -533,6 +536,7 @@ auto OrbbecDevice::start_cameras(const DCConfigSettings &configS) -> bool{
 
 auto OrbbecDevice::set_color_settings(const DCColorSettings &colorS) -> void {
 
+    static_cast<void>(colorS);
     if(!is_opened()){
         return;
     }

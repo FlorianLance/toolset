@@ -55,6 +55,19 @@ struct DCCameraData{
 
     friend DCVolumetricVideo;
 
+    auto check_same_mode_for_every_frame() const noexcept -> bool{
+        if(frames.empty()){
+            return true;
+        }
+        auto mode = frames.front()->mode;
+        for(const auto &frame : frames){
+            if(mode != frame->mode){
+                return false;
+            }
+        }
+        return true;
+    }
+
 private:
 
     auto first_frame_ptr() const -> DCCompressedFrame*;

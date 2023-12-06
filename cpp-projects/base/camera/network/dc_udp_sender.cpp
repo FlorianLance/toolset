@@ -209,7 +209,7 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<camera::DC
     header.idMessage = static_cast<std::int32_t>(idLastFrameMutliPacketsMessageSent);
 
     // init data
-    size_t totalDataSizeBytes = frame->convert_to_data(bufferToSend);
+    size_t totalDataSizeBytes = frame->write_to_data(bufferToSend);
 
     // send data
     size_t nbBytesSent = send_packets(header, totalDataSizeBytes);
