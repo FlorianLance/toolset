@@ -31,8 +31,8 @@
 #include <fstream>
 
 // local
-#include "utility/format.hpp"
 #include "utility/logger.hpp"
+#include "utility/string.hpp"
 
 using namespace tool;
 using namespace tool::camera;

@@ -58,8 +58,6 @@ CONFIG -= qt
 INCLUDEPATH += \
     # base
     $$BASE_INCLUDES\
-    # opengl-utility
-    $$OPENGL_UTILITY_INCLUDES\
     # thirdparty
     $$GLEW_INCLUDES\
     $$GLFW_INCLUDES\
@@ -72,6 +70,7 @@ INCLUDEPATH += \
     $$OPEN3D_INCLUDES \
     $$LIBSOUNDIO_INCLUDES \
     $$TURBOPFOR_INCLUDES \
+    $$ORBBEC_INCLUDES \
 
 ####################################### LIBRAIRIES
 
@@ -82,7 +81,6 @@ PRE_TARGETDEPS += \
 LIBS +=\
     # tool
     $$BASE_LIB\
-    $$OPENGL_UTILITY_LIB \
     # thirdparty
     $$GLEW_LIBS \
     $$GLFW_LIBS \
@@ -95,7 +93,7 @@ LIBS +=\
     $$OPEN3D_LIBS \
     $$LIBSOUNDIO_LIBS \
     $$TURBOPFOR_LIBS \
-
+    $$ORBBEC_LIBS \
 
 ####################################### PROJECT FILES
 

@@ -108,7 +108,7 @@ struct DCGSettings{
     // # network
     network::UdpClientNetworkSettings network;    
     // # camera
-    camera::DCDeviceSettings device = camera::DCDeviceSettings::default_init_for_grabber(camera::DCType::Kinect4);
+    camera::DCDeviceSettings device = camera::DCDeviceSettings::default_init_for_grabber();
     camera::DCFiltersSettings filters;
     camera::DCColorSettings color;
     // # scene

@@ -227,7 +227,7 @@ auto DCGSettings::triggers_device_settings() -> void {
     DCGSignals::get()->update_device_settings_signal(device);
 }
 
-void DCGSettings::triggers_color_settings() {
+auto DCGSettings::triggers_color_settings() -> void{
     DCGSignals::get()->update_color_settings_signal(color);
 }
 
@@ -243,13 +243,12 @@ auto DCGSettings::triggers_delay_settings() -> void {
     DCGSignals::get()->update_delay_signal(delay);
 }
 
-void DCGSettings::disconnect(){
+auto DCGSettings::disconnect() -> void{
     network.disconnect_from_manager();
 }
 
 auto DCGSettings::reset_device_settings() -> void{
-    Logger::message("reset_device_settings\n");
-    device = camera::DCDeviceSettings::default_init_for_grabber(camera::DCType::Kinect4);
+    device = camera::DCDeviceSettings::default_init_for_grabber();
     triggers_device_settings();
 }
 

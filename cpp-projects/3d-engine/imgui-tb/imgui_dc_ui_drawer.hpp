@@ -44,12 +44,32 @@
 
 namespace tool::graphics {
 
-[[maybe_unused]] static constexpr const char* modeItems[] = {
-    "Cloud_320x288",
-    "Cloud_640x576_MJPEG","Cloud_640x576_YUY2", "Cloud_640x576_NV12", "Cloud_640x576_BGRA32",
-    "Cloud_512x512", "Cloud_1024x1024",
-    "Full_frame_320x288", "Full_frame_640x576", "Full_frame_512x512", "Full_frame_1024x1024",
-    "Only_color_1280x720", "Only_color_1920x1080", "Only_color_2560x1440", "Only_color_2048x1536", "Only_color_3840x2160", "Only_color_4096x3072"
+[[maybe_unused]] static constexpr const char* devicesTypes[] = {
+    "Kinect4", "Orbbecc femto"
+};
+
+[[maybe_unused]] static constexpr const char* k4ModeItems[] = {
+    "CLOUD_C1280x720_DI320x288_NV12_F30",
+    "CLOUD_C1280x720_DI640x576_MJPG_F30",
+    "CLOUD_C1280x720_DI640x576_YUY2_F30",
+    "CLOUD_C1280x720_DI640x576_NV12_F30",
+    "CLOUD_C1280x720_DI640x576_BGRA_F30",
+    "CLOUD_C1280x720_DI512x512_NV12_F30",
+    "CLOUD_C1280x720_DI1024x1024_NV12_F15",
+    "IMG_C1280x720_DI320x288_MJPG_F30",
+    "IMG_C1280x720_DI640x576_MJPG_F30",
+    "IMG_C1280x720_DI512x512_MJPG_F30",
+    "IMG_C1280x720_DI1024x1024_MJPG_F15",
+    "IMG_C1280x720_BGRA_F30",
+    "IMG_C1920x1080_BGRA_F30",
+    "IMG_C2560x1440_BGRA_F30",
+    "IMG_C2048x1536_BGRA__F30",
+    "IMG_C3840x2160_BGRA__F30",
+    "IMG_C4096x3072_BGRA__F30",
+    "IMG_C2048x1536_DI640x576_BGRA_F15",
+    "IMG_C2048x1536_DI1024x1024_BGRA_F15",
+    "IMG_C4096x3072_DI640x576_BGRA_F15",
+    "IMG_C4096x3072_DI1024x1024_BGRA_F15"
 };
 
 [[maybe_unused]] static constexpr const char* compressModeItems[] = {
@@ -76,10 +96,10 @@ class DCUIDrawer{
 
 public:
 
-    static auto draw_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
-    static auto draw_data_settings(camera::DCDataSettings &data, bool &updateP) -> void;
-    static auto draw_actions_settings(camera::DCActionsSettings &actions,  bool &updateP) -> void;
-    static auto draw_device_settings_tab_item(
+    static auto draw_dc_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
+    static auto draw_dc_data_settings(camera::DCDataSettings &data, bool &updateP) -> void;
+    static auto draw_dc_actions_settings(camera::DCActionsSettings &actions,  bool &updateP) -> void;
+    static auto draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
         const std::vector<std::string> &devicesName,
         camera::DCDeviceSettings &device,
@@ -87,14 +107,14 @@ public:
         bool &autoUpdate
     ) -> bool;
 
-    static auto draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
-    static auto draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
-    static auto draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_calibration_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool;
-    static auto draw_recording_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
-    static auto draw_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
-    static auto draw_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
+    static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
+    static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_dc_model_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool;
+    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};
     static inline ImGuiDragS  modelTrDs  = {45.f, true, true, false, true, true};

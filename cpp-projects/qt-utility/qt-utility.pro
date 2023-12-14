@@ -196,6 +196,8 @@ RESOURCES += \
     $$TOOLSET_CPP_RESOURCES_DIR"/resources.qrc" \
 
 FORMS += \
+    gui/forms/dc_all_networks_settings_w.ui \
+    gui/forms/dc_network_settings_w.ui \
     gui/forms/grabber_parameters.ui \
 
 

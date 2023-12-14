@@ -31,12 +31,13 @@
 
 // base
 #include "network/network_types.hpp"
-#include "files/text_settings.hpp"
+#include "io/text_settings.hpp"
 
 namespace tool::network {
 
-struct UdpClientNetworkSettings : files::TextSettings{
+struct UdpClientNetworkSettings : io::TextSettings{
 
+    UdpClientNetworkSettings();
     auto initialize() -> bool;
     auto init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void;
 
@@ -57,9 +58,8 @@ struct UdpClientNetworkSettings : files::TextSettings{
 
 private:
 
-    auto init_from_text(const std::string &text) -> void override;
-    auto convert_to_text() const -> std::string override;
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Network);};
+    auto init_from_text(std::string_view &text) -> void override;
+    auto write_to_text() const -> std::string override;
 
     // local
     bool m_connectedToManager = false;

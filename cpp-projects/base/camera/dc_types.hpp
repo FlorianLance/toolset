@@ -45,7 +45,7 @@ namespace tool::camera {
 
     // Define the bone list based on the documentation
     static constexpr auto bones_list(DCType device) -> std::array<std::pair<DCJointType, DCJointType>, 31>{
-        if(device == DCType::Kinect4){
+        if(device == DCType::AzureKinect){
             return{
                 std::make_pair(DCJointType::spine_chest,    DCJointType::spine_navel),
                 std::make_pair(DCJointType::spine_navel,    DCJointType::pelvis),

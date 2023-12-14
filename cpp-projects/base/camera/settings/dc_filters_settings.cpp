@@ -26,10 +26,19 @@
 
 #include "dc_filters_settings.hpp"
 
+// std
+#include <format>
+
 // local
 #include "utility/io_data.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::camera;
+
+DCFiltersSettings::DCFiltersSettings(){
+    sType   = io::SettingsType::Filters;
+    version = io::Version::v1_0;
+}
 
 auto DCFiltersSettings::default_init_for_calibration() -> DCFiltersSettings{
     DCFiltersSettings filters;
@@ -37,70 +46,114 @@ auto DCFiltersSettings::default_init_for_calibration() -> DCFiltersSettings{
     return filters;
 }
 
-auto DCFiltersSettings::init_from_data(std::int8_t *data) -> void{
+auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
 
-    size_t offset = 0;
-    read(minWidth, data, offset, m_inputFileSize);
-    read(maxWidth, data, offset, m_inputFileSize);
-    read(minHeight, data, offset, m_inputFileSize);
-    read(maxHeight, data, offset, m_inputFileSize);
-    read(minDepthValue, data, offset, m_inputFileSize);
-    read(maxDepthValue, data, offset, m_inputFileSize);
-    read(yFactor, data, offset, m_inputFileSize);
-    read(uFactor, data, offset, m_inputFileSize);
-    read(vFactor, data, offset, m_inputFileSize);
-    read(filterDepthWithColor, data, offset, m_inputFileSize);
-    read(filterColor, data, offset, m_inputFileSize);
-    read(maxDiffColor, data, offset, m_inputFileSize);
-    read(jpegCompressionRate, data, offset, m_inputFileSize);
-    read(doLocalDiffFiltering, data, offset, m_inputFileSize);
-    read(maxLocalDiff, data, offset, m_inputFileSize);
-    read(doMinNeighboursFiltering, data, offset, m_inputFileSize);
-    read(nbMinNeighbours, data, offset, m_inputFileSize);
-    read(minNeighboursLoops, data, offset, m_inputFileSize);
-    read(doErosion, data, offset, m_inputFileSize);
-    read(erosionLoops, data, offset, m_inputFileSize);
-    read(keepOnlyBiggestCluster, data, offset, m_inputFileSize);
-    read(invalidateColorFromDepth, data, offset, m_inputFileSize);
-    read(invalidateInfraFromDepth, data, offset, m_inputFileSize);
-    read(p1FMode, data, offset, m_inputFileSize);
-    read(p1Pos, data, offset, m_inputFileSize);
-    read(p1Rot, data, offset, m_inputFileSize);
-    read(p2FMode, data, offset, m_inputFileSize);
-    read(p2Pos, data, offset, m_inputFileSize);
-    read(p2Rot, data, offset, m_inputFileSize);
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCFiltersSettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::init_from_data(data, offset, sizeData);
+    read(minWidth, data, offset, sizeData);
+    read(maxWidth, data, offset, sizeData);
+    read(minHeight, data, offset, sizeData);
+    read(maxHeight, data, offset, sizeData);
+    read(minDepthValue, data, offset, sizeData);
+    read(maxDepthValue, data, offset, sizeData);
+    read(yFactor, data, offset, sizeData);
+    read(uFactor, data, offset, sizeData);
+    read(vFactor, data, offset, sizeData);
+    read(filterDepthWithColor, data, offset, sizeData);    
+    read(filterColor, data, offset, sizeData);
+    read(maxDiffColor, data, offset, sizeData);
+    read(jpegCompressionRate, data, offset, sizeData);
+    read(doLocalDiffFiltering, data, offset, sizeData);
+    read(maxLocalDiff, data, offset, sizeData);    
+    read(doMinNeighboursFiltering, data, offset, sizeData);
+    read(nbMinNeighbours, data, offset, sizeData);    
+    read(minNeighboursLoops, data, offset, sizeData);
+    read(doErosion, data, offset, sizeData);
+    read(erosionLoops, data, offset, sizeData);
+    read(keepOnlyBiggestCluster, data, offset, sizeData);    
+    read(invalidateColorFromDepth, data, offset, sizeData);
+    read(invalidateInfraFromDepth, data, offset, sizeData);    
+    read(p1FMode, data, offset, sizeData);
+    read(p1Pos, data, offset, sizeData);
+    read(p1Rot, data, offset, sizeData);
+    read(p2FMode, data, offset, sizeData);
+    read(p2Pos, data, offset, sizeData);
+    read(p2Rot, data, offset, sizeData);
 }
 
-auto DCFiltersSettings::convert_to_data(std::int8_t *data) const -> void{
+auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
 
-    size_t offset = 0;
-    write(minWidth, data, offset);
-    write(maxWidth, data, offset);
-    write(minHeight, data, offset);
-    write(maxHeight, data, offset);
-    write(minDepthValue, data, offset);
-    write(maxDepthValue, data, offset);
-    write(yFactor, data, offset);
-    write(uFactor, data, offset);
-    write(vFactor, data, offset);
-    write(filterDepthWithColor, data, offset);
-    write(filterColor, data, offset);
-    write(maxDiffColor, data, offset);
-    write(jpegCompressionRate, data, offset);
-    write(doLocalDiffFiltering, data, offset);
-    write(maxLocalDiff, data, offset);
-    write(doMinNeighboursFiltering, data, offset);
-    write(nbMinNeighbours, data, offset);
-    write(minNeighboursLoops, data, offset);
-    write(doErosion, data, offset);
-    write(erosionLoops, data, offset);
-    write(keepOnlyBiggestCluster, data, offset);
-    write(invalidateColorFromDepth, data, offset);
-    write(invalidateInfraFromDepth, data, offset);
-    write(p1FMode, data, offset);
-    write(p1Pos, data, offset);
-    write(p1Rot, data, offset);
-    write(p2FMode, data, offset);
-    write(p2Pos, data, offset);
-    write(p2Rot, data, offset);
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCFiltersSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::write_to_data(data, offset, sizeData);
+    write(minWidth, data, offset, sizeData);
+    write(maxWidth, data, offset, sizeData);
+    write(minHeight, data, offset, sizeData);
+    write(maxHeight, data, offset, sizeData);
+    write(minDepthValue, data, offset, sizeData);
+    write(maxDepthValue, data, offset, sizeData);
+    write(yFactor, data, offset, sizeData);
+    write(uFactor, data, offset, sizeData);
+    write(vFactor, data, offset, sizeData);
+    write(filterDepthWithColor, data, offset, sizeData);
+    write(filterColor, data, offset, sizeData);
+    write(maxDiffColor, data, offset, sizeData);
+    write(jpegCompressionRate, data, offset, sizeData);
+    write(doLocalDiffFiltering, data, offset, sizeData);
+    write(maxLocalDiff, data, offset, sizeData);
+    write(doMinNeighboursFiltering, data, offset, sizeData);
+    write(nbMinNeighbours, data, offset, sizeData);
+    write(minNeighboursLoops, data, offset, sizeData);
+    write(doErosion, data, offset, sizeData);
+    write(erosionLoops, data, offset, sizeData);
+    write(keepOnlyBiggestCluster, data, offset, sizeData);
+    write(invalidateColorFromDepth, data, offset, sizeData);
+    write(invalidateInfraFromDepth, data, offset, sizeData);
+    write(p1FMode, data, offset, sizeData);
+    write(p1Pos, data, offset, sizeData);
+    write(p1Rot, data, offset, sizeData);
+    write(p2FMode, data, offset, sizeData);
+    write(p2Pos, data, offset, sizeData);
+    write(p2Rot, data, offset, sizeData);
+}
+
+auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
+    return
+        BaseSettings::total_data_size() +
+        sizeof(minWidth) +
+        sizeof(maxWidth) +
+        sizeof(minHeight) +
+        sizeof(maxHeight) +
+        sizeof(minDepthValue) +
+        sizeof(maxDepthValue) +
+        sizeof(yFactor) +
+        sizeof(uFactor) +
+        sizeof(vFactor) +
+        sizeof(filterDepthWithColor) +
+        sizeof(filterColor) +
+        sizeof(maxDiffColor) +
+        sizeof(jpegCompressionRate) +
+        sizeof(doLocalDiffFiltering) +
+        sizeof(maxLocalDiff) +
+        sizeof(doMinNeighboursFiltering) +
+        sizeof(nbMinNeighbours) +
+        sizeof(minNeighboursLoops) +
+        sizeof(doErosion) +
+        sizeof(erosionLoops) +
+        sizeof(keepOnlyBiggestCluster) +
+        sizeof(invalidateColorFromDepth) +
+        sizeof(invalidateInfraFromDepth) +
+        sizeof(p1FMode) +
+        sizeof(p1Pos) +
+        sizeof(p1Rot) +
+        sizeof(p2FMode) +
+        sizeof(p2Pos) +
+        sizeof(p2Rot);
 }

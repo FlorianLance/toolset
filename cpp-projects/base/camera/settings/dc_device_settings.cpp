@@ -27,39 +27,66 @@
 
 #include "dc_device_settings.hpp"
 
+// std
+#include <format>
 
+// utility
+#include "utility/logger.hpp"
 
 using namespace tool::camera;
 
-auto DCDeviceSettings::default_init_for_grabber(DCType type) -> DCDeviceSettings{
+auto DCDeviceSettings::default_init_for_grabber() -> DCDeviceSettings{
     DCDeviceSettings device;
-    device.configS  = DCConfigSettings::default_init_for_grabber(type);
+    device.configS  = DCConfigSettings::default_init_for_grabber();
     device.dataS    = DCDataSettings::default_init_for_grabber();
     device.actionsS = DCActionsSettings::default_init_for_grabber();
     return device;
 }
 
-auto DCDeviceSettings::default_init_for_manager(DCType type) -> DCDeviceSettings{
+auto DCDeviceSettings::default_init_for_manager() -> DCDeviceSettings{
     DCDeviceSettings device;
-    device.configS  = DCConfigSettings::default_init_for_manager(type);
+    device.configS  = DCConfigSettings::default_init_for_manager();
     device.dataS    = DCDataSettings::default_init_for_manager();
     device.actionsS = DCActionsSettings::default_init_for_manager();
     return device;
 }
 
-auto DCDeviceSettings::init_from_data(std::int8_t *data) -> void {
-    configS.init_from_data(data);
-    data += configS.total_data_size();
-    dataS.init_from_data(data);
-    data += dataS.total_data_size();
-    actionsS.init_from_data(data);
+DCDeviceSettings::DCDeviceSettings(){
+    sType   = io::SettingsType::Device;
+    version = io::Version::v1_0;
 }
 
-auto DCDeviceSettings::convert_to_data(std::int8_t *data) const -> void{
-    configS.convert_to_data(data);
-    data += configS.total_data_size();
-    dataS.convert_to_data(data);
-    data += dataS.total_data_size();
-    actionsS.convert_to_data(data);
+auto DCDeviceSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void {
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCDeviceSettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::init_from_data(data, offset, sizeData);
+    configS.init_from_data(data, offset, sizeData);
+    dataS.init_from_data(data, offset, sizeData);
+    actionsS.init_from_data(data, offset, sizeData);
+}
+
+auto DCDeviceSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCDeviceSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::write_to_data(data, offset, sizeData);
+    configS.write_to_data(data, offset, sizeData);
+    dataS.write_to_data(data, offset, sizeData);
+    actionsS.write_to_data(data, offset, sizeData);
+}
+
+auto DCDeviceSettings::total_data_size() const noexcept -> size_t{
+    return
+        BaseSettings::total_data_size() +
+        configS.total_data_size() +
+        dataS.total_data_size() +
+        actionsS.total_data_size();
 }
 

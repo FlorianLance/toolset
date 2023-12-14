@@ -223,8 +223,8 @@ ScanerManagerWindow::~ScanerManagerWindow(){
 }
 
 void ScanerManagerWindow::init_managers(const std::vector<K2GrabberTargetInfo> &infos){
-
-    m_udpReaderManager = std::make_unique<UdpReaderManager>(localInterfaces, m_ui->teNetworkInfoUdpReader);
+    
+    m_udpReaderManager = std::make_unique<K2UdpReaderManager>(localInterfaces, m_ui->teNetworkInfoUdpReader);
     m_calibrationManager = std::make_unique<CalibrationManager>(&m_grabbersManager);
 
 

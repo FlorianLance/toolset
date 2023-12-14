@@ -49,6 +49,7 @@ struct Interface{
 };
 
 struct ReadSendNetworkInfos{
+    bool local = false;
     size_t idReadingInterface = 0;
     std::string readingAdress;
     int readingPort;

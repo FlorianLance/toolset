@@ -123,7 +123,6 @@ struct DCMSettings{
     auto update_player_states(camera::DCPlayerStates playerStates) -> void;
     auto update_calibrator_states(camera::DCCalibratorStates calibratorStates) -> void;
 
-
     // trigger
     auto trigger_all_models() -> void;
     auto trigger_all_cloud_display() -> void;

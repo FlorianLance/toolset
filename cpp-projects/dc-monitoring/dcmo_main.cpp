@@ -37,7 +37,7 @@
 #include "thirdparty/k4a/k4aaudiomanager.h"
 
 // base
-#include "camera/kinect4/k4_device.hpp"
+// #include "camera/kinect4/k4_device.hpp"
 
 
 

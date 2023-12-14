@@ -91,59 +91,19 @@ struct DCCompressedFrame : Frame{
 
     // init
     auto init_from_file_stream(std::ifstream &file) -> void;
-    auto init_from_data(std::int8_t *data) -> void;
+    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
     // # legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
     // write
     auto write_to_file_stream(std::ofstream &file) -> void;
-    auto write_to_data(std::vector<std::int8_t> &data) -> size_t;
+    auto write_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
     // # calibration
-    auto write_calibration_to_data(std::int8_t *data) -> void;
-    auto update_calibration_from_data(std::int8_t *data) -> void;
+    auto write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
+    auto init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
+    auto calibration_data_size() const noexcept -> size_t;
 
 private:
-
-    auto read_infos_from_file_stream(std::ifstream &file) -> void;
-    auto read_color_from_file_stream(std::ifstream &file) -> void;
-    auto read_depth_from_file_stream(std::ifstream &file) -> void;
-    auto read_infra_from_file_stream(std::ifstream &file) -> void;
-    auto read_cloud_from_file_stream(std::ifstream &file) -> void;
-    auto read_calibration_from_file_stream(std::ifstream &file) -> void;
-    auto read_imu_from_file_stream(std::ifstream &file) -> void;
-    auto read_audio_from_file_stream(std::ifstream &file) -> void;
-    auto read_bodies_from_file_stream(std::ifstream &file) -> void;
-
-    auto write_infos_to_file_stream(std::ofstream &file) -> void;
-    auto write_color_to_file_stream(std::ofstream &file) -> void;
-    auto write_depth_to_file_stream(std::ofstream &file) -> void;
-    auto write_infra_to_file_stream(std::ofstream &file) -> void;
-    auto write_cloud_to_file_stream(std::ofstream &file) -> void;
-    auto write_calibration_to_file_stream(std::ofstream &file) -> void;
-    auto write_imu_to_file_stream(std::ofstream &file) -> void;
-    auto write_audio_to_file_stream(std::ofstream &file) -> void;
-    auto write_bodies_to_file_stream(std::ofstream &file) -> void;
-
-    auto init_infos_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_color_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_depth_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_infra_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_cloud_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_calibration_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_imu_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_audio_from_data(std::int8_t *data, size_t &offset) -> void;
-    auto init_bodies_from_data(std::int8_t *data, size_t &offset) -> void;
-
-    auto write_infos_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_color_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_depth_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_infra_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_cloud_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_calibration_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_imu_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_audio_to_data(std::int8_t *data, size_t &offset) -> void;
-    auto write_bodies_to_data(std::int8_t *data, size_t &offset) -> void;
-
     struct Impl;
     std::unique_ptr<Impl> i;
 };

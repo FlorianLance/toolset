@@ -35,6 +35,7 @@
 #include "gui/widgets/grabber_parameters_widget.hpp"
 
 // base
+#include "utility/vector.hpp"
 #include "network/network_enums.hpp"
 #include "camera/kinect2/k2_config_files.hpp"
 
@@ -55,7 +56,7 @@ class GrabberController : public QObject{
     Q_OBJECT
 public:
 
-    GrabberController(network::UdpReaderManager *udpReaderManager, std::vector<network::Interface> *localInterfaces, size_t id, camera::K2GrabberTargetInfo info, QColor color);
+    GrabberController(network::K2UdpReaderManager *udpReaderManager, std::vector<network::Interface> *localInterfaces, size_t id, camera::K2GrabberTargetInfo info, QColor color);
 
     // init
     void init_connections();
@@ -188,12 +189,12 @@ public:
 private:
 
     // workers
-    std::unique_ptr<network::FrameReader> m_frameReaderW = nullptr;
+    std::unique_ptr<network::FrameReaderW> m_frameReaderW = nullptr;
     std::unique_ptr<network::TcpSenderWorker> m_tcpSenderW = nullptr;
     ProcessDataWorkerUP m_processDataW = nullptr;
 
     // manager
-    network::UdpReaderManager *m_udpReaderManager = nullptr;
+    network::K2UdpReaderManager *m_udpReaderManager = nullptr;
 
     // threads
     QThread m_tcpSenderT;

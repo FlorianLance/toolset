@@ -26,52 +26,88 @@
 
 #include "dc_config_settings.hpp"
 
+// std
+#include <format>
+
 // local
 #include "utility/io_data.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::camera;
 
-auto DCConfigSettings::default_init_for_grabber(DCType typeDevice) -> DCConfigSettings{
+auto DCConfigSettings::default_init_for_grabber() -> DCConfigSettings{
     DCConfigSettings config;
-    config.typeDevice = typeDevice;
+
     // TODO
     return config;
 }
 
-auto DCConfigSettings::default_init_for_manager(DCType typeDevice) -> DCConfigSettings{
+auto DCConfigSettings::default_init_for_manager() -> DCConfigSettings{
     DCConfigSettings config;
-    config.typeDevice = typeDevice;
+
     // TODO
     return config;
 }
 
-auto DCConfigSettings::init_from_data(std::int8_t *data) -> void{
-    auto sizeData = total_data_size();
-    size_t offset = 0;
-    read(idDevice, data, offset);
-    read(mode, data, offset);
-    read(synchronizeColorAndDepth, data, offset);
-    read(delayBetweenColorAndDepthUsec, data, offset);
-    read(synchMode, data, offset);
-    read(subordinateDelayUsec, data, offset);
-    read(disableLED, data, offset);
-    read(btOrientation, data, offset);
-    read(btProcessingMode, data, offset);
-    read(btGPUId, data, offset);
-    read(typeDevice, data, offset, sizeData); // TODO: check
+DCConfigSettings::DCConfigSettings(){
+    sType   = io::SettingsType::Device_config;
+    version = io::Version::v1_0;
 }
 
-auto DCConfigSettings::convert_to_data(std::int8_t *data) const -> void{
-    size_t offset = 0;
-    write(idDevice, data, offset);
-    write(mode, data, offset);
-    write(synchronizeColorAndDepth, data, offset);
-    write(delayBetweenColorAndDepthUsec, data, offset);
-    write(synchMode, data, offset);
-    write(subordinateDelayUsec, data, offset);
-    write(disableLED, data, offset);
-    write(btOrientation, data, offset);
-    write(btProcessingMode, data, offset);
-    write(btGPUId, data, offset);    
-    write(typeDevice, data, offset); // TODO: check
+auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCConfigSettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::init_from_data(data, offset, sizeData);
+    read(typeDevice, data, offset, sizeData);
+    read(idDevice, data, offset, sizeData);
+    read(mode, data, offset, sizeData);
+    read(synchronizeColorAndDepth, data, offset, sizeData);
+    read(delayBetweenColorAndDepthUsec, data, offset, sizeData);
+    read(synchMode, data, offset, sizeData);
+    read(subordinateDelayUsec, data, offset, sizeData);
+    read(disableLED, data, offset, sizeData);
+    read(btOrientation, data, offset, sizeData);
+    read(btProcessingMode, data, offset, sizeData);
+    read(btGPUId, data, offset, sizeData);
+}
+
+auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCConfigSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::write_to_data(data, offset, sizeData);
+    write(typeDevice, data, offset, sizeData);
+    write(idDevice, data, offset, sizeData);
+    write(mode, data, offset, sizeData);
+    write(synchronizeColorAndDepth, data, offset, sizeData);
+    write(delayBetweenColorAndDepthUsec, data, offset, sizeData);
+    write(synchMode, data, offset, sizeData);
+    write(subordinateDelayUsec, data, offset, sizeData);
+    write(disableLED, data, offset, sizeData);
+    write(btOrientation, data, offset, sizeData);
+    write(btProcessingMode, data, offset, sizeData);
+    write(btGPUId, data, offset, sizeData);
+}
+
+auto DCConfigSettings::total_data_size() const noexcept -> size_t{
+    return
+        BaseSettings::total_data_size() +
+        sizeof(typeDevice) +
+        sizeof(idDevice) +
+        sizeof(mode) +
+        sizeof(synchronizeColorAndDepth) +
+        sizeof(delayBetweenColorAndDepthUsec) +
+        sizeof(synchMode) +
+        sizeof(subordinateDelayUsec) +
+        sizeof(disableLED) +
+        sizeof(btOrientation) +
+        sizeof(btProcessingMode) +
+        sizeof(btGPUId);
 }

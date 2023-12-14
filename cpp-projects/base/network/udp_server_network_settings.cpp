@@ -28,20 +28,21 @@
 #include "udp_server_network_settings.hpp"
 
 // std
-#include <format>
-#include <filesystem>
-#include <fstream>
 #include <numeric>
+#include <format>
 
 // local
 #include "utility/logger.hpp"
 #include "utility/string.hpp"
-#include "utility/format.hpp"
 
 using namespace tool;
 using namespace tool::network;
 
-namespace fs = std::filesystem;
+
+UdpServerNetworkSettings::UdpServerNetworkSettings(){
+    sType   = io::SettingsType::Server_network;
+    version = io::Version::v1_0;
+}
 
 auto UdpServerNetworkSettings::initialize() -> bool{
 
@@ -55,46 +56,56 @@ auto UdpServerNetworkSettings::initialize() -> bool{
     return true;
 }
 
-auto UdpServerNetworkSettings::init_from_text(const std::string &text) -> void{
+auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
+
+    io::BaseSettings::init_from_text(text);
 
     clientsInfo.clear();
 
-    for(const auto &line : String::split(text, '\n')){
+    for(const auto &line : String::split_view(text, "\n"sv)){
 
-        auto values = String::split(line, ' ');
-        size_t idReadingInterface = std::stoi(values[0]);
+        if(auto values = String::split_view(line, " "sv); values.size() >= 5){
 
-        if(idReadingInterface >= interfaces.size()){
-            Logger::error(fmt("Invalid network config file format.\n"));
-            return;
+            ReadSendNetworkInfos info;
+            info.local          = values[0] == "local"sv;
+            info.readingPort    = String::to_int(values[2]);
+
+            size_t idReadingInterface = String::to_int(values[1]);
+            if(idReadingInterface >= interfaces.size()){
+                Logger::error(std::format("Invalid network config file format.\n"));
+                return;
+            }
+            info.idReadingInterface = idReadingInterface;
+            info.readingAdress      = interfaces[idReadingInterface].ipAddress;
+
+            bool localhost   = (values[3] == "localhost") || (values[3] == "127.0.0.1");
+            if(localhost){
+                info.sendingAdress = interfaces[idReadingInterface].ipAddress;
+            }else{
+                info.sendingAdress = values[3];
+            }
+            info.sendingPort = String::to_int(values[4]);
+
+            Logger::message(std::format("Network infos read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
+                info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
+
+            clientsInfo.push_back(std::move(info));
         }
-
-        ReadSendNetworkInfos info;
-        info.idReadingInterface = idReadingInterface;
-        info.readingAdress = interfaces[idReadingInterface].ipAddress;
-        info.readingPort   = std::stoi(values[1]);
-
-        bool localhost   = (values[2] == "localhost") || (values[2] == "127.0.0.1");
-        if(localhost){
-            info.sendingAdress = interfaces[idReadingInterface].ipAddress;
-        }else{
-            info.sendingAdress = values[2];
-        }
-        info.sendingPort = std::stoi(values[3]);
-
-        Logger::message(fmt("Network infos read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
-            info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
-
-        clientsInfo.push_back(std::move(info));
     }
 }
 
-auto UdpServerNetworkSettings::convert_to_text() const -> std::string{
+auto UdpServerNetworkSettings::write_to_text() const -> std::string{
     std::vector<std::string> lines;
+    lines.reserve(clientsInfo.size() + 1);
+
+    lines.push_back(BaseSettings::write_to_text());
     for(const auto &grabber : clientsInfo){
-        lines.push_back(fmt("{} {} {} {}\n",
-            grabber.idReadingInterface,grabber.readingPort,
-            grabber.sendingAdress,grabber.sendingPort));
+        lines.push_back(std::format("{} {} {} {} {}\n",
+            grabber.local ? "local"sv : "remote"sv,
+            grabber.idReadingInterface,
+            grabber.readingPort,
+            grabber.sendingAdress,
+            grabber.sendingPort));
     }
-    return std::accumulate(lines.begin(), lines.end(), std::string{});
+    return String::join(lines);
 }

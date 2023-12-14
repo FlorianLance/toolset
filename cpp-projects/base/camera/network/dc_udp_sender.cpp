@@ -145,14 +145,16 @@ auto DCServerUdpSender::send_update_filters_settings_message(const camera::DCFil
     header.idMessage = static_cast<std::int32_t>(idLastMasksFiltersMessageSent);
 
     // init data
-    auto sizeMessage = filters.total_data_size();
-    if(bufferToSend.size() < sizeMessage){
-        bufferToSend.resize(sizeMessage);
+    auto totalDataSizeBytes = filters.total_data_size();
+    if(bufferToSend.size() < totalDataSizeBytes){
+        bufferToSend.resize(totalDataSizeBytes);
     }
-    filters.convert_to_data(bufferToSend.data());
+
+    size_t offset = 0;
+    filters.write_to_data(bufferToSend.data(), offset, totalDataSizeBytes);
 
     // send data
-    size_t nbBytesSent = send_packets(header, sizeMessage);
+    size_t nbBytesSent = send_packets(header, totalDataSizeBytes);
     if(nbBytesSent != header.totalSizeBytes){
         Logger::error(std::format("K4SMUdpSender::send_update_filters_settings_message: Invalid nb of bytes send, {} instead of {}.\n",
                 nbBytesSent, header.totalSizeBytes));
@@ -209,7 +211,14 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<camera::DC
     header.idMessage = static_cast<std::int32_t>(idLastFrameMutliPacketsMessageSent);
 
     // init data
-    size_t totalDataSizeBytes = frame->write_to_data(bufferToSend);
+
+    size_t totalDataSizeBytes = frame->total_data_size();
+    if(bufferToSend.size() < totalDataSizeBytes){
+        bufferToSend.resize(totalDataSizeBytes);
+    }
+
+    size_t offset = 0;
+    frame->write_to_data(bufferToSend.data(), offset, totalDataSizeBytes);
 
     // send data
     size_t nbBytesSent = send_packets(header, totalDataSizeBytes);

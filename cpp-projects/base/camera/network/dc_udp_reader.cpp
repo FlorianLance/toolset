@@ -57,7 +57,8 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
             break;
         }
         if(filtersMessage.all_received(header)){
-            update_filters_signal(std::move(header), std::make_shared<camera::DCFiltersSettings>(m_data.data()));
+            size_t offset = 0;
+            update_filters_signal(std::move(header), std::make_shared<camera::DCFiltersSettings>(m_data.data(), offset, header.total_size_data_bytes()));
         }
     }break;
     case MessageType::update_color_settings:{        
@@ -114,7 +115,8 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 
             // create compressed frame from data
             auto cFrame = std::make_shared<DCCompressedFrame>();
-            cFrame->init_from_data(m_data.data());
+            size_t offset = 0;
+            cFrame->init_from_data(m_data.data(), offset, header.total_size_data_bytes());
 
             // TEST
             cFrame->afterCaptureTS = compressedFrameMessage.firstPacketTimestamp - cFrame->afterCaptureTS;

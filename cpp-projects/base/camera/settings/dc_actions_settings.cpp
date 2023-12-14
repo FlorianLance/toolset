@@ -26,33 +26,61 @@
 
 #include "dc_actions_settings.hpp"
 
+// std
+#include <format>
+
 // local
 #include "utility/io_data.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::camera;
 
 auto DCActionsSettings::default_init_for_grabber() -> DCActionsSettings{
     DCActionsSettings actions;
-    actions.startDevice   = false;
-    actions.openCamera    = false;
+    actions.openDevice   = false;
+    actions.startReading    = false;
     return actions;
 }
 
 auto DCActionsSettings::default_init_for_manager() -> DCActionsSettings{
     DCActionsSettings actions;
-    actions.startDevice   = false;
-    actions.openCamera    = false;
+    actions.openDevice   = false;
+    actions.startReading    = false;
     return actions;
 }
 
-auto DCActionsSettings::init_from_data(std::int8_t *data) -> void{
-    size_t offset = 0;
-    read(startDevice, data, offset);
-    read(openCamera, data, offset);
+DCActionsSettings::DCActionsSettings(){
+    sType   = io::SettingsType::Device_actions;
+    version = io::Version::v1_0;
 }
 
-auto DCActionsSettings::convert_to_data(std::int8_t *data) const -> void{
-    size_t offset = 0;
-    write(startDevice, data, offset);
-    write(openCamera, data, offset);
+auto DCActionsSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCActionsSettings::init_from_data: Not enought data space for initializing from data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::init_from_data(data, offset, sizeData);
+    read(openDevice, data, offset, sizeData);
+    read(startReading, data, offset, sizeData);
+}
+
+auto DCActionsSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
+
+    if(offset + total_data_size() > sizeData){
+        tool::Logger::error(std::format("DCActionsSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
+        return;
+    }
+
+    BaseSettings::write_to_data(data, offset, sizeData);
+    write(openDevice, data, offset, sizeData);
+    write(startReading, data, offset, sizeData);
+}
+
+auto DCActionsSettings::total_data_size() const noexcept -> size_t{
+    return
+        BaseSettings::total_data_size() +
+           sizeof(openDevice) +
+        sizeof(startReading);
 }

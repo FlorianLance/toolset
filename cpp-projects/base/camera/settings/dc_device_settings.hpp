@@ -33,30 +33,24 @@
 
 namespace tool::camera {
 
-    struct DCDeviceSettings : files::BinaryFileSettings{
+    struct DCDeviceSettings : io::BinaryFileSettings{
 
         DCConfigSettings configS;
         DCDataSettings dataS;
         DCActionsSettings actionsS;
 
-        DCDeviceSettings() = default;
-        DCDeviceSettings(std::int8_t *data){
-            DCDeviceSettings::init_from_data(data);
-        }
+        static auto default_init_for_grabber() -> DCDeviceSettings;
+        static auto default_init_for_manager() -> DCDeviceSettings;
 
-        static auto default_init_for_grabber(DCType type) -> DCDeviceSettings;
-        static auto default_init_for_manager(DCType type) -> DCDeviceSettings;
+        DCDeviceSettings();
+        DCDeviceSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
+            DCDeviceSettings::init_from_data(data, offset, sizeData);
+        }
 
         // i/o
-        auto init_from_data(std::int8_t *data) -> void override;
-        auto convert_to_data(std::int8_t *data) const -> void override;
-        auto total_data_size() const noexcept -> size_t override{
-            return
-                configS.total_data_size() +
-                dataS.total_data_size() +
-                actionsS.total_data_size();
-        }
-        auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Device);};
+        auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
+        auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
+        auto total_data_size() const noexcept -> size_t override;
 
         static auto save_array_to_file(const std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;
         static auto init_array_from_file(std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;

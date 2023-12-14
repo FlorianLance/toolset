@@ -57,7 +57,7 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings 
                     draw_device_tab_item(settings.devicesNames, settings.device);
                     draw_filters_tab_item(settings.ui, settings.device.configS, settings.filters);
                     draw_model_tab_item(settings.model);
-                    draw_colors_settings_tab_item(settings.color);
+                    draw_colors_settings_tab_item(settings.device.configS.typeDevice, settings.color);
                     draw_display_tab_item(settings.sceneDisplay, settings.cloudDisplay);                    
                     draw_recording_tab_item(settings.recStates, settings.recSettings);
                     ImGui::EndTabItem();
@@ -187,7 +187,7 @@ auto DCGLeftPanelChildDrawer::draw_device_tab_item(
     auto signals = DCGSignals::get();
 
     bool updateDeviceList = false;
-    auto update = DCUIDrawer::draw_device_settings_tab_item("Device###device_tabitem",
+    auto update = DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",
         devicesNames,
         device,
         updateDeviceList,
@@ -208,16 +208,16 @@ auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
     const camera::DCConfigSettings &config,
     camera::DCFiltersSettings &filters) -> void {
 
-    auto ret = DCUIDrawer::draw_filters_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
+    auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
     ui.settingsFiltersSubPanelDisplayed  = std::get<0>(ret);
     if(std::get<1>(ret)){
         DCGSignals::get()->update_filters_signal(filters);
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::DCColorSettings &colors) -> void{
+auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::DCType type, camera::DCColorSettings &colors) -> void{
 
-    if(DCUIDrawer::draw_colors_settings_tab_item("Colors###colors_tabitem", colors, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors, m_autoUpdate)){
         DCGSignals::get()->update_color_settings_signal(colors);
     }
 }
@@ -231,10 +231,10 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(
     }
 
     if (ImGui::BeginTabBar("###display_tabbar")){
-        if(DCUIDrawer::draw_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay, m_autoUpdate)){
+        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay, m_autoUpdate)){
             DCGSignals::get()->update_scene_display_settings_signal(sceneDisplay);
         }
-        if(DCUIDrawer::draw_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", cloudDisplay, m_autoUpdate)){
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", cloudDisplay, m_autoUpdate)){
             DCGSignals::get()->update_cloud_display_settings_signal(0, cloudDisplay);
         }
         ImGui::EndTabBar();
@@ -277,7 +277,7 @@ auto DCGLeftPanelChildDrawer::draw_ui_tab_item(ui::DCGUiSettings &ui) -> void {
 }
 
 auto DCGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void {
-    if(DCUIDrawer::draw_recording_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
         DCGSignals::get()->update_recorder_settings_signal(recSetings);
     }
 
@@ -304,7 +304,7 @@ auto DCGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates &
 
 auto DCGLeftPanelChildDrawer::draw_model_tab_item(camera::DCModelSettings &model) -> void {
 
-    if(DCUIDrawer::draw_calibration_tab_item("Model###model_tabitem", model, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model, m_autoUpdate)){
         DCGSignals::get()->update_model_signal(0, model);
     }
 }

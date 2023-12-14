@@ -26,24 +26,27 @@
 #pragma once
 
 // local
-#include "files/binary_settings.hpp"
+#include "io/binary_settings.hpp"
 
 namespace tool::camera {
 
-struct DCActionsSettings : files::SubBinarySettings{
+struct DCActionsSettings : public io::BinaryFileSettings{
 
     // device
-    bool startDevice   = true;
-    bool openCamera    = true;
+    bool openDevice   = true;
+    bool startReading    = true;
 
     static auto default_init_for_grabber() -> DCActionsSettings;
     static auto default_init_for_manager() -> DCActionsSettings;
 
-    // i/o
-    auto init_from_data(std::int8_t *data) -> void override;
-    auto convert_to_data(std::int8_t *data) const -> void override;
-    auto total_data_size() const noexcept-> size_t override{
-        return sizeof(startDevice) + sizeof(openCamera);
+    DCActionsSettings();
+    DCActionsSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
+        DCActionsSettings::init_from_data(data, offset, sizeData);
     }
+
+    // i/o
+    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
+    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
+    auto total_data_size() const noexcept-> size_t override;
 };
 }

@@ -75,6 +75,7 @@ INCLUDEPATH += \
     $$OPEN3D_INCLUDES \
     $$TURBOPFOR_INCLUDES \
     $$GLFW_INCLUDES \
+    $$ORBBEC_INCLUDES \
 
 ####################################### LIBRAIRIES
 
@@ -103,6 +104,7 @@ LIBS +=  \
     $$OPEN3D_LIBS \
     $$TURBOPFOR_LIBS \
     $$WINDOWS_LIBS \
+    $$ORBBEC_LIBS \
 
 ####################################### PROJECT FILES
 

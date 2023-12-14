@@ -27,7 +27,6 @@
 #include "frame_reader_worker.hpp"
 
 // std
-#include <iostream>
 #include <execution>
 #include <chrono>
 
@@ -36,17 +35,15 @@
 #include <QThread>
 #include <QDebug>
 
-
 // qt-utility
 #include "qt_logger.hpp"
-
 
 using namespace std::chrono;
 using namespace tool;
 using namespace tool::network;
 using namespace tool::camera;
 
-struct FrameReader::Impl{
+struct FrameReaderW::Impl{
 
     K2UdpHeader firstHeader;
     K2UdpHeader lastHeader;
@@ -54,11 +51,15 @@ struct FrameReader::Impl{
     size_t nbFramesReceived = 0;
 };
 
-FrameReader::FrameReader() : m_p(std::make_unique<Impl>()){
+FrameReaderW::FrameReaderW() : m_p(std::make_unique<Impl>()){
+}
+
+FrameReaderW::~FrameReaderW(){
+
 }
 
 
-void FrameReader::process_packets(std::vector<QByteArray *> data){
+auto FrameReaderW::process_packets(std::vector<QByteArray *> data) -> void{
 
     if(data.size() < 2){
         // error...
@@ -186,6 +187,3 @@ void FrameReader::process_packets(std::vector<QByteArray *> data){
     m_p->nbFramesReceived++;
     emit frame_received_signal(m_p->firstHeader, frame);
 }
-
-
-#include "moc_frame_reader_worker.cpp"

@@ -47,13 +47,13 @@ using namespace tool::network;
 using namespace tool::camera;
 using namespace tool::geo;
 
-GrabberController::GrabberController(UdpReaderManager *udpReaderManager, std::vector<Interface> *localInterfaces, size_t id, K2GrabberTargetInfo info, QColor color) : idC(id), initColorC(color){
+GrabberController::GrabberController(K2UdpReaderManager *udpReaderManager, std::vector<Interface> *localInterfaces, size_t id, K2GrabberTargetInfo info, QColor color) : idC(id), initColorC(color){
 
     // init workers
     m_udpReaderManager  = udpReaderManager;
     m_tcpSenderW        = std::make_unique<TcpSenderWorker>(id, localInterfaces);
     m_processDataW      = std::make_unique<ProcessDataWorker>(id);
-    m_frameReaderW      = std::make_unique<FrameReader>();
+    m_frameReaderW      = std::make_unique<FrameReaderW>();
 
     // move threads
     m_tcpSenderW->moveToThread(&m_tcpSenderT);
@@ -87,8 +87,8 @@ void GrabberController::init_connections(){
     using GM  = GrabberController;
     using GPW = GrabberParametersW;
     using TCP = TcpSenderWorker;
-    using UDP = UdpReaderManager;
-    using FR  = FrameReader;
+    using UDP = K2UdpReaderManager;
+    using FR  = FrameReaderW;
     using PD  = ProcessDataWorker;
     auto tcpW   = m_tcpSenderW.get();
     auto frW    = m_frameReaderW.get();

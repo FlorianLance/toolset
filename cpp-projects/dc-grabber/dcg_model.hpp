@@ -41,7 +41,7 @@ struct DCGModel{
     auto initialize() -> bool;
     auto update() -> void;
     auto clean() -> void;
-    auto trigger_settings() -> void;
+    auto trigger_settings() -> void;    
 
     DCGSettings settings;
     network::DCClientConnection connection;

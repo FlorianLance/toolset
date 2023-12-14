@@ -27,14 +27,14 @@
 #pragma once
 
 // local
-#include "files/binary_settings.hpp"
+#include "io/binary_settings.hpp"
 #include "graphics/color.hpp"
 #include "utility/bit_mask.hpp"
 #include "camera/dc_enums.hpp"
 
 namespace tool::camera {
 
-struct DCFiltersSettings : files::BinaryFileSettings{
+struct DCFiltersSettings : io::BinaryFileSettings{
 
     // # width / height
     unsigned int minWidth  = 0;
@@ -45,14 +45,14 @@ struct DCFiltersSettings : files::BinaryFileSettings{
     // color
     float yFactor = 1.f; // deprecated
     float uFactor = 1.f; // deprecated
-    float vFactor = 1.f; // deprecated
+    float vFactor = 1.f; // deprecated    
 
     ColorRGB32 filterColor  = ColorRGB32{0.f,0.5f,0.08f};
     geo::Pt3f maxDiffColor = geo::Pt3f{20.f,0.5f,0.5f};
 
     // # depth
     std::int16_t minDepthValue = static_cast<std::int16_t>(range(dcDefaultMode).x()*1000.f);
-    std::int16_t maxDepthValue = static_cast<std::int16_t>(range(dcDefaultMode).y()*1000.f);
+    std::int16_t maxDepthValue = static_cast<std::int16_t>(range(dcDefaultMode).y()*1000.f);       
 
     // compression
     unsigned char jpegCompressionRate = 80;
@@ -72,7 +72,7 @@ struct DCFiltersSettings : files::BinaryFileSettings{
     bool doErosion                  = false;
     bool keepOnlyBiggestCluster     = false;
     bool invalidateColorFromDepth   = false;
-    bool invalidateInfraFromDepth   = false;
+    bool invalidateInfraFromDepth   = false;       
 
     enum class PlaneFilteringMode : std::int8_t{
         None,
@@ -89,35 +89,23 @@ struct DCFiltersSettings : files::BinaryFileSettings{
     geo::Pt3f p2Rot;
 
     // masks
-    static constexpr auto maskMaxRes  = camera::depth_resolution(camera::DCMode::Cloud_1024x1024);
+    static constexpr auto maskMaxRes  = camera::depth_resolution(camera::DCMode::K4_CLOUD_C1280x720_DI1024x1024_NV12_F15);
     static constexpr auto maskMaxSize = maskMaxRes.x()*maskMaxRes.y();
     BitMask<maskMaxSize> depthMask = BitMask<maskMaxSize>(true);
 
     // local
     int idPencil = 0;
 
-    DCFiltersSettings() = default;
-    DCFiltersSettings(std::int8_t *data){DCFiltersSettings::init_from_data(data);}
+    DCFiltersSettings();
+    DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
+        DCFiltersSettings::init_from_data(data, offset, sizeData);
+    }
     static auto default_init_for_calibration() -> DCFiltersSettings;
 
     // i/o
-    auto init_from_data(std::int8_t *data) -> void override;
-    auto convert_to_data(std::int8_t *data) const -> void override;
-
-    auto total_data_size() const noexcept -> size_t override{
-        return
-            sizeof(unsigned int)*4+
-            sizeof(float)*5+
-            sizeof(geo::Pt3f)*2+
-            sizeof(std::int16_t)*2+
-            sizeof(unsigned char)*4 +
-            sizeof(bool)*7 +
-            //  planes test
-            sizeof(geo::Pt3f)*4 +
-            sizeof(std::int8_t) * 2
-        ;
-    }
-    auto type() const noexcept  -> std::int32_t override {return static_cast<std::int32_t>(tool::files::FileSettingsType::Filters);};
+    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
+    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
+    auto total_data_size() const noexcept -> size_t override;
 };
 
 }

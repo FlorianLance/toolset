@@ -31,6 +31,7 @@
 // std
 #include <cstdint>
 #include <string>
+#include <span>
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
@@ -46,50 +47,43 @@ namespace tool::camera {
 class DCDevice{
 public:
 
-    virtual ~DCDevice(){}
+    DCDevice(DCType type);
+    ~DCDevice();
 
-    virtual auto open(std::uint32_t deviceId) -> bool{static_cast<void>(deviceId);return false;}
-    virtual auto refresh_devices_list() -> void{}
-    virtual auto close() -> void{}
-    virtual auto clean() -> void{}
-
-    // getters
-    virtual auto nb_devices() const noexcept -> std::uint32_t{return 0;}
-    virtual auto device_id() const noexcept -> std::uint32_t{return 0;};
-    virtual auto device_name() const noexcept -> std::string{return "";}
-    virtual auto is_opened() const noexcept -> bool{return false;}
-    virtual auto cameras_started() const noexcept -> bool{return false;}
-    virtual auto is_sync_in_connected() const noexcept -> bool{return false;} // TODO: ORBBEC IMPL
-    virtual auto is_sync_out_connected() const noexcept -> bool{return false;} // TODO: ORBBEC IMPL
-    virtual auto get_nb_capture_per_second() const noexcept -> float{return 0.f;} // TODO: ORBBEC IMPL
-    virtual auto get_capture_duration_ms() noexcept -> std::int64_t{return 0; } // TODO: ORBBEC IMPL
-    virtual auto get_processing_duration_ms() noexcept -> std::int64_t{return 0;} // TODO: ORBBEC IMPL
-    virtual auto get_compressing_duration_ms() noexcept -> std::int64_t{return 0;} // TODO: ORBBEC IMPL
-    virtual auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t{static_cast<void>(from);static_cast<void>(to);return 0;} // TODO: ORBBEC IMPL
-    virtual auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t{static_cast<void>(from);static_cast<void>(to);return 0;} // TODO: ORBBEC IMPL
-
-    // # config
-    virtual auto mode() const noexcept -> DCMode{return {};}  // TODO: ORBBEC IMPL
-    virtual auto is_LED_disabled() const noexcept -> bool{return false;}  // TODO: ORBBEC IMPL
-    virtual auto synch_mode() const noexcept -> DCSynchronisationMode{return {};}  // TODO: ORBBEC IMPL
-    virtual auto subordinate_delay_usec() const noexcept -> int{return 0;}  // TODO: ORBBEC IMPL
-    virtual auto color_and_depth_synchronized() const noexcept -> bool{return false;}  // TODO: ORBBEC IMPL
-    virtual auto delay_between_color_and_depth_usec() const noexcept -> int{return 0;}  // TODO: ORBBEC IMPL
-
-    // cameras
-    virtual auto start_cameras(const DCConfigSettings &configS) -> bool{static_cast<void>(configS);return false;} // TODO: ORBBEC IMPL
-    virtual auto stop_cameras() -> void{} // TODO: ORBBEC IMPL
+    //  actions
+    auto open(std::uint32_t deviceId) -> bool;
+    auto start_reading(const DCConfigSettings &configS) -> bool;
+    auto stop_reading() -> void;
+    auto close() -> void;
+    auto clean() -> void;
 
     // settings
-    virtual auto set_color_settings(const DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
-    virtual auto set_data_settings(const DCDataSettings &dataS) -> void{static_cast<void>(dataS);} // TODO: ORBBEC IMPL
-    virtual auto set_filters(const DCFiltersSettings &filters) -> void{static_cast<void>(filters);} // TODO: ORBBEC IMPL
-    virtual auto send_data_state(bool state) -> void{static_cast<void>(state);} // TODO: ORBBEC IMPL
-    virtual auto set_delay(DCDelaySettings delay) -> void{static_cast<void>(delay);} // TODO: ORBBEC IMPL
+    auto set_color_settings(const DCColorSettings &colorS) -> void;
+    auto set_data_settings(const DCDataSettings &dataS) -> void;
+    auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
+    auto send_data_state(bool state) -> void;
+    auto set_delay_settings(const DCDelaySettings &delayS) -> void;
+
+    // getters
+    auto nb_devices() const noexcept -> std::uint32_t;
+    auto device_name() const noexcept -> std::string;
+    auto is_opened() const noexcept -> bool;
+    auto is_reading() const noexcept -> bool;
+    auto get_nb_capture_per_second() const noexcept -> float;
+    auto get_capture_duration_ms() noexcept -> std::int64_t;
+    auto get_processing_duration_ms() noexcept -> std::int64_t;
+    auto get_compressing_duration_ms() noexcept -> std::int64_t;
+    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t;
+    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t;
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
     sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
     sigslot::signal<DCImuSample> new_imu_sample_signal;
+
+private:
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 }

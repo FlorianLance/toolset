@@ -143,11 +143,11 @@ auto DCGController::set_connections() -> void{
     s->load_default_color_settings_file_signal.connect(              &Sett::load_default_settings_color_file,               sett);
     s->load_current_hostname_color_settings_file_signal.connect(     &Sett::load_current_hostname_color_settings_file,      sett);
     // # device
-    CCo::update_device_list_signal.connect(                          &DevM::update_device_list,                             dev);
-    s->update_device_settings_signal.connect(                        &DevM::update_settings,                                dev);
-    s->update_filters_signal.connect(                                &DevM::update_filters,                                 dev);
+    // CCo::update_device_list_signal.connect(                          &DevM::update_device_list,                             dev);
+    s->update_device_settings_signal.connect(                        &DevM::update_device_settings,                         dev);
+    s->update_filters_signal.connect(                                &DevM::update_filters_settings,                        dev);
     s->update_color_settings_signal.connect(                         &DevM::update_color_settings,                          dev);
-    s->update_delay_signal.connect(                                  &DevM::update_delay,                                   dev);
+    s->update_delay_signal.connect(                                  &DevM::update_delay_settings,                          dev);
     // # recorder
     s->save_recording_to_file_signal.connect(                        &Rec::save_to_file,                                    rec);
     s->update_recorder_settings_signal.connect(                      &Rec::update_settings,                                 rec);

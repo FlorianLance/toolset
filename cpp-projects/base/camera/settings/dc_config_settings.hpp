@@ -27,16 +27,15 @@
 
 // local
 #include "camera/dc_enums.hpp"
-#include "files/binary_settings.hpp"
+#include "io/binary_settings.hpp"
 
 namespace tool::camera {
 
-struct DCConfigSettings : files::SubBinarySettings{
-
-    DCType typeDevice = DCType::Kinect4;
-
+struct DCConfigSettings : io::BinaryFileSettings{
+    
+    DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
-    DCMode mode = DCMode::Cloud_640x576_MJPEG;
+    DCMode mode = DCMode::K4_CLOUD_C1280x720_DI640x576_MJPG_F30;
     bool synchronizeColorAndDepth = true;
     int delayBetweenColorAndDepthUsec = 0;
     DCSynchronisationMode synchMode = DCSynchronisationMode::K4_Standalone;
@@ -48,25 +47,19 @@ struct DCConfigSettings : files::SubBinarySettings{
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::K4_GPU_DIRECTML;
     std::int8_t btGPUId = 0;
 
-    static auto default_init_for_grabber(DCType typeDevice) -> DCConfigSettings;
-    static auto default_init_for_manager(DCType typeDevice) -> DCConfigSettings;
+    static auto default_init_for_grabber() -> DCConfigSettings;
+    static auto default_init_for_manager() -> DCConfigSettings;
+
+
+    DCConfigSettings();
+    DCConfigSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
+        DCConfigSettings::init_from_data(data, offset, sizeData);
+    }
 
     // i/o
-    auto init_from_data(std::int8_t *data) -> void override;
-    auto convert_to_data(std::int8_t *data) const -> void override;
-    auto total_data_size() const noexcept-> size_t override{
-        return
-            sizeof(idDevice) +
-            sizeof(mode) +
-            sizeof(synchronizeColorAndDepth) +
-            sizeof(delayBetweenColorAndDepthUsec) +
-            sizeof(synchMode) +
-            sizeof(subordinateDelayUsec) +
-            sizeof(disableLED) +
-            sizeof(btOrientation) +
-            sizeof(btProcessingMode) +
-            sizeof(btGPUId);
-    }
+    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
+    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
+    auto total_data_size() const noexcept-> size_t override;
 };
 
 

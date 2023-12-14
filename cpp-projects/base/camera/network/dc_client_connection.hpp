@@ -122,7 +122,7 @@ public:
     static inline SSS<> quit_signal;
     static inline SSS<> restart_signal;
     static inline SSS<> disconnect_signal;
-    static inline SSS<> update_device_list_signal;
+    // static inline SSS<> update_device_list_signal;
 
     auto dummy_device_trigger() -> void;
 

@@ -46,14 +46,10 @@ public:
     DCDeviceManager();
     ~DCDeviceManager();
 
-    auto initialize(DCType type) -> void;
-    auto clean() -> void;
-
-    auto update_delay(DCDelaySettings delayMs) -> void;
-    auto update_device_list() -> void;
-    auto update_settings(const DCDeviceSettings &settings) -> void;
-    auto update_filters(const DCFiltersSettings &filters) -> void;
+    auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
+    auto update_filters_settings(const DCFiltersSettings &filters) -> void;
     auto update_color_settings(const DCColorSettings &colorS) -> void;
+    auto update_delay_settings(const DCDelaySettings &delayS) -> void;
 
     auto get_capture_duration_ms() -> std::int64_t;
     auto get_processing_duration_ms() -> std::int64_t;
@@ -69,7 +65,7 @@ public:
 
 private:
 
-    auto init_connections() -> void;
+    auto generate_device(DCType typeDevice) -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

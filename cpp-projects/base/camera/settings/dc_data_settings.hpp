@@ -27,11 +27,11 @@
 #pragma once
 
 // local
-#include "files/binary_settings.hpp"
+#include "io/binary_settings.hpp"
 
 namespace tool::camera {
 
-struct DCDataSettings : files::SubBinarySettings{
+struct DCDataSettings : io::BinaryFileSettings{
 
     // capture
     bool captureAudio             = true;   /**< restricted to kinect4 */
@@ -59,26 +59,14 @@ struct DCDataSettings : files::SubBinarySettings{
     static auto default_init_for_grabber() -> DCDataSettings;
     static auto default_init_for_manager() -> DCDataSettings;
 
-    // i/o
-    auto init_from_data(std::int8_t *data) -> void override;
-    auto convert_to_data(std::int8_t *data) const -> void override;
-    auto total_data_size() const noexcept-> size_t override{
-        return
-            sizeof(captureAudio) +
-            sizeof(captureIMU) +
-            sizeof(captureBodies) +
-            sizeof(generateRGBLocalFrame) +
-            sizeof(generateDepthLocalFrame) +
-            sizeof(generateInfraLocalFrame) +
-            sizeof(generateCloudLocal) +
-            sizeof(sendColor) +
-            sizeof(sendDepth) +
-            sizeof(sendInfra) +
-            sizeof(sendCloud) +
-            sizeof(sendIMU) +
-            sizeof(sendAudio) +
-            sizeof(sendBodies)+
-            sizeof(btTemporalSmoothing);
+    DCDataSettings();
+    DCDataSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
+        DCDataSettings::init_from_data(data, offset, sizeData);
     }
+
+    // i/o
+    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
+    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
+    auto total_data_size() const noexcept-> size_t override;
 };
 }

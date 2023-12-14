@@ -85,6 +85,7 @@ LIBS +=\
     $$SFML_LIBS \
     $$ASSIMP_LIBS\
     $$KINECT4_LIBS \
+    $$ORBBEC_LIBS \
 
 ####################################### PROJECT FILES
 

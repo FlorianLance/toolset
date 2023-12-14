@@ -921,9 +921,9 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
         }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
 
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
-
             convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, cloud_image_data());
         }
     }
@@ -983,7 +983,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
 
             // generate cloud
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
@@ -1032,7 +1033,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
 
             // generate cloud
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
@@ -1081,7 +1083,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
 
             // generate cloud
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
@@ -1131,7 +1134,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
 
             // generate cloud
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
@@ -1179,7 +1183,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCVerte
 
             // generate cloud
             k4a_calibration_t calibration;
-            cFrame->write_calibration_to_data(reinterpret_cast<std::int8_t*>(&calibration));
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
@@ -1196,42 +1201,42 @@ auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, Colo
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, frame);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int{
-    if(get_device(cFrame->mode) == DCType::Kinect4){
+    if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices);
     }
     return -1;

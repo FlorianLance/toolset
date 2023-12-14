@@ -62,6 +62,7 @@ private:
         camera::DCFiltersSettings &filters) -> void;
 
     auto draw_colors_settings_tab_item(
+        camera::DCType type,
         camera::DCColorSettings &colors) -> void;
 
     auto draw_display_tab_item(

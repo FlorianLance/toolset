@@ -49,6 +49,13 @@ struct Header{
     std::uint16_t currentPacketSizeBytes = 0;
     std::int8_t type = 0;
 
+    constexpr auto total_headers_size_bytes() const noexcept -> size_t{
+        return totalNumberPackets * sizeof(Header);
+    }
+    constexpr auto total_size_data_bytes() const noexcept -> size_t{
+        return totalSizeBytes - total_headers_size_bytes();
+    }
+
     static auto generate_mono_packet(int8_t type, size_t messageNbBytes) -> Header;
 };
 

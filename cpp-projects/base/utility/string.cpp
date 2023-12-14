@@ -30,7 +30,11 @@
 // std
 #include <numeric>
 #include <sstream>
-#include <algorithm>
+#include <charconv>
+
+auto tool::String::join(const std::vector<std::string> &parts) -> std::string{
+    return std::accumulate(parts.begin(), parts.end(), std::string{});
+}
 
 auto tool::String::join(const std::vector<std::string> &parts, const std::string &delim) -> std::string{
 
@@ -119,17 +123,6 @@ auto tool::String::split(const std::string& str, const std::string &delimiter, b
     return tokens;
 }
 
-//auto tool::String::split(const std::string &str, int lineMaxSize) -> std::vector<std::string>{
-//    if(str.size() < lineMaxSize){
-//        return {str};
-//    }
-//    std::vector<std::string> lines;
-//    std::string_view strV = str;
-//    while(strV.size() > lineMaxSize){
-
-//    }
-//}
-
 
 auto tool::String::replace_first(std::string &str, const std::string &from, const std::string &to) -> bool{
     size_t start_pos = str.find(from);
@@ -168,4 +161,47 @@ auto tool::String::replace_all2(std::string &source, const std::string &from, co
     // Care for the rest after last occurrence
     newString.append(source, lastPos, source.length() - lastPos);
     source.swap(newString);
+}
+
+auto tool::String::advance_view_to_delim(std::string_view str, std::string_view delims) -> std::string_view{
+    if(auto elem = str.find_first_of(delims); elem != std::string_view::npos){
+        return str.substr(elem+1);
+    }
+    return str;
+}
+
+auto tool::String::split_view(std::string_view strv, std::string_view delims) -> std::vector<std::string_view>{
+
+    std::vector<std::string_view> output;
+    size_t first = 0;
+    while (first < strv.size()){
+
+        const auto second = strv.find_first_of(delims, first);
+        if (first != second){
+            output.emplace_back(strv.substr(first, second-first));
+        }
+        if (second == std::string_view::npos){
+            break;
+        }
+        first = second + 1;
+    }
+    return output;
+}
+
+auto tool::String::to_char(std::string_view str) -> char{
+    char value;
+    std::from_chars(str.data(), str.data() + str.size(), value);
+    return value;
+}
+
+auto tool::String::to_int(std::string_view str) -> int{
+    int value;
+    std::from_chars(str.data(), str.data() + str.size(), value);
+    return value;
+}
+
+auto tool::String::to_float(std::string_view str) -> float{
+    float value;
+    std::from_chars(str.data(), str.data() + str.size(), value);
+    return value;
 }

@@ -115,7 +115,7 @@ private:
 
     // managers
     std::unique_ptr<CalibrationManager> m_calibrationManager = nullptr;
-    std::unique_ptr<network::UdpReaderManager> m_udpReaderManager = nullptr;
+    std::unique_ptr<network::K2UdpReaderManager> m_udpReaderManager = nullptr;
     std::vector<std::unique_ptr<GrabberController>> m_grabbersManager;
 
     // timers

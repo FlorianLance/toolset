@@ -39,7 +39,7 @@
 using namespace tool::graphics;
 
 
-auto DCUIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
 
     static_cast<void>(autoUpdate);
 
@@ -339,7 +339,7 @@ auto DCUIDrawer::draw_filters_tab_item(const std::string &tabItemName, camera::D
     return {true, update};
 }
 
-auto DCUIDrawer::draw_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGui::BeginTabItem(tabItemName.c_str())){
         return false;
@@ -366,7 +366,7 @@ auto DCUIDrawer::draw_scene_display_setings_tab_item(const std::string &tabItemN
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -422,7 +422,7 @@ auto DCUIDrawer::draw_cloud_display_setings_tab_item(const std::string &tabItemN
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool{
 
     static_cast<void>(autoUpdate);
 
@@ -521,7 +521,7 @@ auto DCUIDrawer::draw_calibration_tab_item(const std::string &tabItemName, camer
     return update;
 }
 
-auto DCUIDrawer::draw_recording_tab_item(
+auto DCUIDrawer::draw_dc_recorder_tab_item(
     const std::string &tabItemName,
     camera::DCRecorderStates &rStates,
     camera::DCRecorderSettings &rSettings,
@@ -617,7 +617,7 @@ auto DCUIDrawer::draw_recording_tab_item(
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_player_tab_item(
+auto DCUIDrawer::draw_dc_player_tab_item(
     const std::string &tabItemName,
     camera::DCPlayerStates &pStates,
     camera::DCPlayerSettings &pSettings,
@@ -725,7 +725,7 @@ auto DCUIDrawer::draw_player_tab_item(
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_calibrator_tab_item(
+auto DCUIDrawer::draw_dc_calibrator_tab_item(
     const std::string &tabItemName,
     bool useNormalFilteringSettings,
     camera::DCCalibratorStates &cStates,
@@ -988,7 +988,7 @@ auto DCUIDrawer::draw_calibrator_tab_item(
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_device_settings_tab_item(
+auto DCUIDrawer::draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
         const std::vector<std::string> &devicesName,
         camera::DCDeviceSettings &device,
@@ -999,10 +999,10 @@ auto DCUIDrawer::draw_device_settings_tab_item(
         return false;
     }
     bool update = false;
-
-    draw_config(devicesName, device.configS, updateDeviceList, update);
-    draw_data_settings(device.dataS, update);
-    draw_actions_settings(device.actionsS, update);
+    
+    draw_dc_config(devicesName, device.configS, updateDeviceList, update);
+    draw_dc_data_settings(device.dataS, update);
+    draw_dc_actions_settings(device.actionsS, update);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -1019,16 +1019,30 @@ auto DCUIDrawer::draw_device_settings_tab_item(
     return  (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("CONFIG");
     ImGui::Separator();
 
     ImGui::Spacing();
+
+    ImGui::Text("Device type:");
+    ImGui::Indent();
+    ImGui::SetNextItemWidth(150.f);
+
+    int guiCurrentTypeSelection = static_cast<int>(config.typeDevice);
+    if(ImGui::Combo("###settings_device_type", &guiCurrentTypeSelection, devicesTypes, IM_ARRAYSIZE(devicesTypes))){
+        updateP            = true;
+        config.typeDevice  = static_cast<camera::DCType>(guiCurrentTypeSelection);
+    }
+    updateDeviceList = ImGui::Button("Refresh devices list");
+    ImGui::Unindent();
+
     ImGui::Text("Device id:");
     ImGui::Indent();
     ImGui::SetNextItemWidth(150.f);
+
 
     if(devicesName.size() != 0){
         if(ImGui::BeginCombo("###settings_device_id", devicesName[config.idDevice].c_str())){
@@ -1048,7 +1062,6 @@ auto DCUIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
         ImGui::Text("No device found.");
     }
 
-    updateDeviceList = ImGui::Button("Refresh devices list");
     ImGui::Unindent();
 
     ImGui::Spacing();
@@ -1065,13 +1078,13 @@ auto DCUIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
     }
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
-    if(ImGui::Combo("###settings_mode_combo", &guiCurrentModeSelection, modeItems, IM_ARRAYSIZE(modeItems))){
+    if(ImGui::Combo("###settings_mode_combo", &guiCurrentModeSelection, k4ModeItems, IM_ARRAYSIZE(k4ModeItems))){
         updateP       = true;
         config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
     }
     ImGui::SameLine();
     if(ImGui::Button(">###settings_mode_right")){
-        if(guiCurrentModeSelection < IM_ARRAYSIZE(modeItems)-1){
+        if(guiCurrentModeSelection < IM_ARRAYSIZE(k4ModeItems)-1){
             ++guiCurrentModeSelection;
             updateP       = true;
             config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
@@ -1120,7 +1133,7 @@ auto DCUIDrawer::draw_config(const std::vector<std::string> &devicesName, camera
     ImGui::Spacing();
 }
 
-auto DCUIDrawer::draw_data_settings(camera::DCDataSettings &data, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_data_settings(camera::DCDataSettings &data, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("DATA");
@@ -1189,18 +1202,18 @@ auto DCUIDrawer::draw_data_settings(camera::DCDataSettings &data, bool &updateP)
     }
 }
 
-auto DCUIDrawer::draw_actions_settings(camera::DCActionsSettings &actions, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_actions_settings(camera::DCActionsSettings &actions, bool &updateP) -> void{
 
     ImGui::Spacing();
     ImGuiUiDrawer::text_centered("ACTIONS TO DO");
     ImGui::Separator();
     ImGui::Spacing();
-
-    if(ImGui::Checkbox("Start device###settings_start_device", &actions.startDevice)){
+    
+    if(ImGui::Checkbox("Start device###settings_start_device", &actions.openDevice)){
         updateP = true;
     }
     ImGui::SameLine();
-    if(ImGui::Checkbox("Open camera###settings_open_camera", &actions.openCamera)){
+    if(ImGui::Checkbox("Open camera###settings_open_camera", &actions.startReading)){
         updateP = true;
     }
 
@@ -1208,7 +1221,7 @@ auto DCUIDrawer::draw_actions_settings(camera::DCActionsSettings &actions, bool 
 }
 
 
-auto DCUIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
 
     static_cast<void>(autoUpdate);
 
@@ -1316,7 +1329,21 @@ auto DCUIDrawer::draw_colors_settings_tab_item(const std::string &tabItemName, c
         colors.powerlineFrequency = guiSel == 0 ? camera::PowerlineFrequency::F50 : camera::PowerlineFrequency::F60;
     }
     ImGui::SameLine();
-    ImGui::Text("Powerline frequency:");
+    ImGui::Text("Powerline frequency");
+
+    ImGui::Spacing();
+
+    if(type == camera::DCType::FemtoOrbbec){
+        if(ImGui::Button("D###default_hdr")){
+            colors.hdr = true;
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("HDR", &colors.hdr)){
+            update = true;
+        }
+        ImGui::Spacing();
+    }
 
     ImGui::EndTabItem();
 

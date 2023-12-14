@@ -59,6 +59,7 @@ CONFIG -= qt
 INCLUDEPATH += \
     # base
     $$BASE_INCLUDES \
+    # thirdparty
     $$KINECT2_INCLUDES \
     $$BOOST_INCLUDES \
     $$TURBOJPG_INCLUDES \
@@ -81,21 +82,21 @@ LIBS +=  \
 ####################################### PROJECT FILES
 
 HEADERS += \
-    grabber_controller.hpp \
-    network/scaner_tcp_sender.hpp \
-    network/scaner_udp_reader.hpp \
-    process_data.hpp \
-    network/frame_reader.hpp \
-    network/udp_reader_manager.hpp \
+    k2_grabber_controller.hpp \
+    k2_process_data.hpp \
+    network/k2_frame_reader.hpp \
+    network/k2_scaner_tcp_sender.hpp \
+    network/k2_scaner_udp_reader.hpp \
+    network/k2_udp_reader_manager.hpp \
 
 SOURCES += \
     export_main_test.cpp \
-    grabber_controller.cpp \
-    network/scaner_tcp_sender.cpp \
-    network/scaner_udp_reader.cpp \
-    process_data.cpp \
-    network/frame_reader.cpp \
-    network/udp_reader_manager.cpp \
+    k2_grabber_controller.cpp \
+    k2_process_data.cpp \
+    network/k2_frame_reader.cpp \
+    network/k2_scaner_tcp_sender.cpp \
+    network/k2_scaner_udp_reader.cpp \
+    network/k2_udp_reader_manager.cpp \
 
 
 DISTFILES += \

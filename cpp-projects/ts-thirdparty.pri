@@ -265,7 +265,7 @@ WINDOWS_LIBS = \
 
         ORBBEC_LIBS =\
             -L$$ORBBEC_DIR"/lib" \
-            -OrbbecSDK \
+            -lOrbbecSDK \
     }
 }
 

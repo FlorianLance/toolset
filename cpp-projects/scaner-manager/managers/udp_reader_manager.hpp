@@ -34,15 +34,15 @@
 
 namespace tool::network {
 
-class UdpReaderManager;
-using UdpReaderManagerUP = std::unique_ptr<UdpReaderManager>;
+class K2UdpReaderManager;
+using UdpReaderManagerUP = std::unique_ptr<K2UdpReaderManager>;
 
-class UdpReaderManager : public QObject{
+class K2UdpReaderManager : public QObject{
     Q_OBJECT
 public:
-
-    UdpReaderManager(const std::vector<Interface> &interfaces, QTextEdit *logsW);
-    ~UdpReaderManager();
+    
+    K2UdpReaderManager(const std::vector<Interface> &interfaces, QTextEdit *logsW);
+    ~K2UdpReaderManager();
 
     // threads
     void quit_threads();

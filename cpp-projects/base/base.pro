@@ -93,13 +93,23 @@ LIBS += \
 ####################################### PROJECT FILES
 
 HEADERS += \
-    # files
-    files/binary_settings.hpp \
-    files/cloud_io.hpp \
-    files/assimp_loader.hpp \
-    files/files_enum.hpp \
-    files/settings.hpp \
-    files/text_settings.hpp \
+    # io
+    camera/dc_device_impl.hpp \
+    camera/kinect2/k2_enums.hpp \
+    camera/kinect4/azure_kinect_device_impl.hpp \
+    camera/network/dc_server_device.hpp \
+    camera/network/dc_server_local_device.hpp \
+    camera/network/dc_server_remote_device.hpp \
+    camera/orbbec/femto_orbbec_device_impl.hpp \
+    io/binary_settings.hpp \
+    io/cloud_io.hpp \
+    io/assimp_loader.hpp \
+    io/io_enum.hpp \
+    io/settings.hpp \
+    io/text_settings.hpp \
+    io/joypad.hpp \
+    io/mouse.hpp \
+    io/keyboard.hpp \
     # geometry 
     geometry/cloud.hpp \
     geometry/geometry.hpp \
@@ -144,10 +154,6 @@ HEADERS += \
     graphics/texture.hpp \
     graphics/model.hpp \
     graphics/camera.hpp \
-    # input
-    input/joypad.hpp \
-    input/mouse.hpp \
-    input/keyboard.hpp \    
     # network
     network/udp_server_network_settings.hpp \
     network/udp_client_network_settings.hpp \
@@ -196,7 +202,6 @@ HEADERS += \
     camera/network/dc_udp_reader.hpp \
     camera/network/dc_udp_sender.hpp \
     ## orbbec
-    camera/orbbec/orbbec_device.hpp \
     ## kinect2
     camera/kinect2/k2_config_files.hpp \
     camera/kinect2/k2_device.hpp \
@@ -204,7 +209,6 @@ HEADERS += \
     camera/kinect2/k2_network.hpp \
     camera/kinect2/k2_types.hpp \
     ## kinect4
-    camera/kinect4/k4_device.hpp \
     # exvr
     exvr/ex_element.hpp \
     exvr/ex_experiment.hpp \
@@ -311,9 +315,15 @@ HEADERS += \
 
 SOURCES += \
     # files
-    files/assimp_loader.cpp \
-    files/cloud_io.cpp \
-    files/settings.cpp \
+    camera/dc_device.cpp \
+    camera/dc_device_impl.cpp \
+    camera/kinect4/azure_kinect_device_impl.cpp \
+    camera/network/dc_server_local_device.cpp \
+    camera/network/dc_server_remote_device.cpp \
+    camera/orbbec/femto_orbbec_device_impl.cpp \
+    io/assimp_loader.cpp \
+    io/cloud_io.cpp \
+    io/settings.cpp \
     # graphics     
     graphics/color.cpp \
     graphics/model.cpp \
@@ -378,9 +388,7 @@ SOURCES += \
     camera/kinect2/k2_manager.cpp \
     camera/kinect2/k2_types.cpp \
     ## kinect4
-    camera/kinect4/k4_device.cpp \
     ## orbbec
-    camera/orbbec/orbbec_device.cpp \
     # exvr
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \

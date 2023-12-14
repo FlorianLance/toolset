@@ -36,7 +36,7 @@
 using namespace tool;
 using namespace tool::network;
 
-struct UdpReaderManager::Impl{
+struct K2UdpReaderManager::Impl{
 
     QTextEdit *logsW = nullptr;
     std::vector<std::unique_ptr<QThread>> readersT;
@@ -44,7 +44,7 @@ struct UdpReaderManager::Impl{
 
 
 // TODO: add enabled interfaces id
-UdpReaderManager::UdpReaderManager(const std::vector<Interface> &interfaces, QTextEdit *logsW) : m_p(std::make_unique<Impl>()){
+K2UdpReaderManager::K2UdpReaderManager(const std::vector<Interface> &interfaces, QTextEdit *logsW) : m_p(std::make_unique<Impl>()){
 
     m_p->logsW = logsW;
 
@@ -65,7 +65,7 @@ UdpReaderManager::UdpReaderManager(const std::vector<Interface> &interfaces, QTe
     }
 
     // manager connections
-    connect(this, &UdpReaderManager::kill_workers_signal, this, [&]{
+    connect(this, &K2UdpReaderManager::kill_workers_signal, this, [&]{
         for(auto &reader : readers) {
             reader->disable_reading();
         }
@@ -89,9 +89,9 @@ UdpReaderManager::UdpReaderManager(const std::vector<Interface> &interfaces, QTe
         connect(reader.get(), &InterfaceUdpReceiverWorker::timeout_packet_signal, this, [=](){
             m_p->logsW->append("[" + QString::number(readerPtr->id()) + "] timeout");
         });
-        connect(reader.get(), &InterfaceUdpReceiverWorker::packet_received_signal,      this,   &UdpReaderManager::packet_received_signal);
-        connect(reader.get(), &InterfaceUdpReceiverWorker::frame_dropped_signal,        this,   &UdpReaderManager::frame_dropped_signal);
-        connect(reader.get(), &InterfaceUdpReceiverWorker::all_packets_received_signal, this,   &UdpReaderManager::all_packets_received_signal);
+        connect(reader.get(), &InterfaceUdpReceiverWorker::packet_received_signal,      this,   &K2UdpReaderManager::packet_received_signal);
+        connect(reader.get(), &InterfaceUdpReceiverWorker::frame_dropped_signal,        this,   &K2UdpReaderManager::frame_dropped_signal);
+        connect(reader.get(), &InterfaceUdpReceiverWorker::all_packets_received_signal, this,   &K2UdpReaderManager::all_packets_received_signal);
     }
 
     // enable reading for all availale interfaces
@@ -100,12 +100,12 @@ UdpReaderManager::UdpReaderManager(const std::vector<Interface> &interfaces, QTe
     }
 }
 
-UdpReaderManager::~UdpReaderManager(){
+K2UdpReaderManager::~K2UdpReaderManager(){
     readers.clear();
     m_p = nullptr;
 }
 
-void UdpReaderManager::quit_threads(){
+void K2UdpReaderManager::quit_threads(){
 
     emit kill_workers_signal();
     QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
@@ -115,7 +115,7 @@ void UdpReaderManager::quit_threads(){
     }
 }
 
-void UdpReaderManager::wait_for_threads(){
+void K2UdpReaderManager::wait_for_threads(){
     for(auto &t : m_p->readersT){
         t->wait();
     }

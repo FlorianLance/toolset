@@ -151,7 +151,7 @@ auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMSettings &settings) -> v
 
 auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings) -> void {
 
-    if(DCUIDrawer::draw_recording_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings, autoUpdate)){
+    if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings, autoUpdate)){
         DCMSignals::get()->update_recorder_settings_signal(rSettings);
     }
 
@@ -180,7 +180,7 @@ auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(camera::DCRecorderStates &r
 
 auto DCMLeftPanelChildDrawer::draw_player_tab_item(camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings) -> void{
 
-    if(DCUIDrawer::draw_player_tab_item("Player###settings_player_tabitem", pStates, pSettings, autoUpdate)){
+    if(DCUIDrawer::draw_dc_player_tab_item("Player###settings_player_tabitem", pStates, pSettings, autoUpdate)){
         DCMSignals::get()->update_player_settings_signal(pSettings);
     }
 
@@ -234,7 +234,7 @@ auto DCMLeftPanelChildDrawer::draw_player_tab_item(camera::DCPlayerStates &pStat
 
 auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings) -> void{
 
-    if(DCUIDrawer::draw_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings, autoUpdate)){
+    if(DCUIDrawer::draw_dc_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings, autoUpdate)){
         DCMSignals::get()->update_calibration_settings_signal(cSettings);
         DCMSignals::get()->update_calibration_drawer_settings_signal(cdSettings);
     }
@@ -503,7 +503,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
         for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
 
             bool updateDeviceList = false;
-            auto update = DCUIDrawer::draw_device_settings_tab_item(fmt("[{}]###device_{}_tabitem", ii, ii),
+            auto update = DCUIDrawer::draw_dc_device_settings_tab_item(fmt("[{}]###device_{}_tabitem", ii, ii),
                 {"Cam 0","Cam 1","Cam 2","Cam 3"},
                 settings.grabbersSet[ii].device,
                 updateDeviceList,
@@ -554,7 +554,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
 
                 for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
 
-                    auto ret =  DCUIDrawer::draw_filters_tab_item(
+                    auto ret =  DCUIDrawer::draw_dc_filters_settings_tab_item(
                             fmt("[{}]{}_normal_{}_tabitem", ii, base, ii),
                             settings.grabbersSet[ii].device.configS.mode,
                             settings.grabbersSet[ii].filters,
@@ -578,7 +578,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
 
                 for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
 
-                    auto ret = DCUIDrawer::draw_filters_tab_item(
+                    auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
                             fmt("[{}]{}_calibration_{}_tabitem", ii, base, ii),
                             settings.grabbersSet[ii].device.configS.mode,
                             settings.grabbersSet[ii].calibrationFilters,
@@ -747,12 +747,12 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(camera::DCSceneDisplaySettin
         return;
     }
 
-    if(DCUIDrawer::draw_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay, autoUpdate)){
+    if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay, autoUpdate)){
         DCMSignals::get()->update_scene_display_settings_signal(sceneDisplay);
     }
 
     for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_cloud_display_setings_tab_item(fmt("[{}]###{}_cloud_display_tabitem", ii, ii), grabbers[ii].cloudDisplay, autoUpdate)){
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item(fmt("[{}]###{}_cloud_display_tabitem", ii, ii), grabbers[ii].cloudDisplay, autoUpdate)){
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
@@ -782,7 +782,7 @@ auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DC
     }
 
     for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_calibration_tab_item(fmt("[{}]###{}_cloud_calibration_tabitem", ii, ii), grabbers[ii].model, autoUpdate)){
+        if(DCUIDrawer::draw_dc_model_tab_item(fmt("[{}]###{}_cloud_calibration_tabitem", ii, ii), grabbers[ii].model, autoUpdate)){
             DCMSignals::get()->update_model_settings_signal(ii, grabbers[ii].model);
         }
     }
@@ -791,7 +791,7 @@ auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DC
     ImGui::EndTabItem();
 }
 
-void DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings> &grabbers){
+auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings> &grabbers) -> void{
 
     static constexpr std::string_view base = "###settings_colors";
     if (!ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_tabitem", base).c_str())){
@@ -802,8 +802,9 @@ void DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings
     if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###color_tabbar")){
         return;
     }
-    for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_colors_settings_tab_item(fmt("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].color, autoUpdate)){
+
+    for(size_t ii = 0; ii < grabbers.size(); ++ii){        
+        if(DCUIDrawer::draw_dc_colors_settings_tab_item(fmt("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color, autoUpdate)){
             DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
         }
     }

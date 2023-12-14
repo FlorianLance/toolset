@@ -28,7 +28,7 @@
 
 // local
 #include "geometry/point4.hpp"
-//#include "files/binary_settings.hpp"
+//#include "io/binary_settings.hpp"
 
 namespace tool::camera {
 

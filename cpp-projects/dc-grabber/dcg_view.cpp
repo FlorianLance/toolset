@@ -43,7 +43,7 @@ DCGView::DCGView(){
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
     const std::string numVersion = "1.6";
-    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("Depth camera grabber v{}", numVersion), screen,context);
+    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber v{}", numVersion), screen,context);
     m_glW->init();
 }
 

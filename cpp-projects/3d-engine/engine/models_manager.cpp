@@ -7,7 +7,7 @@
 #include <format>
 
 // base
-#include "files/assimp_loader.hpp"
+#include "io/assimp_loader.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool;
@@ -59,7 +59,7 @@ auto ModelsManager::add(std::vector<std::pair<Alias, Path>> &&aliasPaths, bool f
     s_umap<Alias, std::future<std::shared_ptr<Model>>> m;
     for(const auto &ap : newV){
         aliasPerPath[ap.first] = ap.second;
-        m[ap.first] = std::async(std::launch::async, files::AiLoader::load_model, ap.second, false);
+        m[ap.first] = std::async(std::launch::async, io::AiLoader::load_model, ap.second, false);
     }
 
     // add results to map
@@ -87,7 +87,7 @@ auto ModelsManager::add(const std::string &alias, const std::string &path) -> bo
         );
 
     }
-    if(auto model = files::AiLoader::load_model(path); model != nullptr){
+    if(auto model = io::AiLoader::load_model(path); model != nullptr){
         models.add_element(alias, std::move(model));
         aliasPerPath[path] = alias;
         return true;

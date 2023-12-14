@@ -37,7 +37,7 @@
 #include "utility/vector.hpp"
 
 
-namespace tool::files{
+namespace tool::io{
 
 template <typename acc>
 static bool save_cloud(QString path, const std::vector<geo::Point3<acc>> &cloud){

@@ -34,19 +34,20 @@
 
 namespace tool::network{
 
-class FrameReader : public QObject{
+class FrameReaderW : public QObject{
 Q_OBJECT
 public:
 
-    FrameReader();
+    FrameReaderW();
+    ~FrameReaderW();
 
 public slots:
 
-    void process_packets(std::vector<QByteArray*> data);
+    auto process_packets(std::vector<QByteArray*> data) -> void;
 
 signals:
 
-    void frame_received_signal(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame);
+    auto frame_received_signal(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame) -> void;
 
 private:
 

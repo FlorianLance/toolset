@@ -45,12 +45,6 @@ auto DCGModel::initialize() -> bool{
         return false;
     }
 
-    // device
-    Logger::message("Init device reader\n");
-    device.initialize(camera::DCType::Kinect4);
-    device.update_delay(settings.delay);
-
-
     return true;
 }
 
@@ -61,15 +55,16 @@ auto DCGModel::update() -> void{
 }
 
 auto DCGModel::clean() -> void{
-    device.clean();
     connection.clean();
 }
 
 auto DCGModel::trigger_settings() -> void{
     // triggers data to init ui
     settings.triggers_filters_settings();
-    settings.triggers_display_settings();
-    settings.triggers_device_settings();
+    settings.triggers_display_settings();    
+    settings.triggers_color_settings();
+    settings.triggers_delay_settings();
     settings.triggers_model();
+    settings.triggers_device_settings();
 }
 

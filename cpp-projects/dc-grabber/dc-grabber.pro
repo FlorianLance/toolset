@@ -52,8 +52,6 @@ CONFIG -= qt
 ####################################### BUILD FILES
 OBJECTS_DIR = $$DC_GRABBER_OBJ
 DESTDIR     = $$DC_GRABBER_DEST
-message("dest")
-message($$DESTDIR)
 
 ####################################### INCLUDES
 
@@ -77,6 +75,8 @@ INCLUDEPATH += \
     $$EIGEN_INCLUDES\
     $$OPEN3D_INCLUDES \
     $$TURBOPFOR_INCLUDES \
+    $$ORBBEC_INCLUDES \
+    $$OPENCV_INCLUDES \
 
 ####################################### LIBRAIRIES
 
@@ -105,6 +105,8 @@ LIBS +=  \
     $$EIGEN_LIBS\
     $$OPEN3D_LIBS \
     $$TURBOPFOR_LIBS \
+    $$ORBBEC_LIBS \
+    $$OPENCV_LIBS \
 
 ####################################### PROJECT FILES
 

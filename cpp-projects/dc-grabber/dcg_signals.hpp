@@ -67,6 +67,8 @@ public:
     SSS<const camera::DCDeviceSettings&> update_device_settings_signal;
     SSS<camera::DCDelaySettings> update_delay_signal;
     SSS<> update_device_list_signal;
+    SSS<> update_device_type_signal;
+
     SSS<size_t, const camera::DCModelSettings&> update_model_signal;
     SSS<ui::DCGUiSettings*> update_ui_settings_signal;
 

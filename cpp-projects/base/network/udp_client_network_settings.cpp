@@ -39,6 +39,11 @@ using namespace tool;
 using namespace tool::network;
 
 
+UdpClientNetworkSettings::UdpClientNetworkSettings(){
+    sType   = io::SettingsType::Client_network;
+    version = io::Version::v1_0;
+}
+
 auto UdpClientNetworkSettings::initialize() -> bool{
 
     interfaces = Interface::list_local_interfaces(Protocol::ipv4);
@@ -56,23 +61,29 @@ auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSett
     m_connectedToManager = true;
 }
 
-auto UdpClientNetworkSettings::init_from_text(const std::string &text) -> void{
+auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
 
-    auto lines = String::split(text, '\n');
+    io::BaseSettings::init_from_text(text);
+
+    auto lines = String::split_view(text, "\n"sv);
+    if(lines.size() < 2){
+        Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
+        return;
+    }
 
     // udp_id_reading_interface
-    auto split = String::split(lines[0], ' ');
+    auto split = String::split_view(lines[0], " "sv);
     if(split.size() > 1){
-        udpReadingInterfaceId = std::stoi(split[1]);
+        udpReadingInterfaceId = String::to_int(split[1]);
     }else{
         Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
         return;
     }
 
     // udp_reading_port
-    split = String::split(lines[1], ' ');
+    split = String::split_view(lines[1], " "sv);
     if(split.size() > 1){
-        udpReadingPort = std::stoi(split[1]);
+        udpReadingPort = String::to_int(split[1]);
     }else{
         Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
         return;
@@ -81,8 +92,13 @@ auto UdpClientNetworkSettings::init_from_text(const std::string &text) -> void{
     udpReadingInterface = interfaces[udpReadingInterfaceId];
 }
 
-auto UdpClientNetworkSettings::convert_to_text() const -> std::string{
-    return std::format("udp_id_reading_interface {}\nudp_reading_port {}\n", udpReadingInterfaceId, udpReadingPort);
+auto UdpClientNetworkSettings::write_to_text() const -> std::string{
+    return std::format(
+        "{}udp_id_reading_interface {}\nudp_reading_port {}\n",
+        BaseSettings::write_to_text(),
+        udpReadingInterfaceId,
+        udpReadingPort
+    );
 }
 
 

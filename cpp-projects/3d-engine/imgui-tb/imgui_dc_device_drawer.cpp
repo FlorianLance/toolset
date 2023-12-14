@@ -30,7 +30,7 @@
 #include <format>
 
 // base
-#include "files/cloud_io.hpp"
+#include "io/cloud_io.hpp"
 #include "utility/string.hpp"
 #include "utility/logger.hpp"
 
@@ -82,7 +82,7 @@ auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
 
     if(frame != nullptr){
         Logger::message(std::format("save_cloud: {}\n", path));
-        tool::files::CloudIO::save_cloud(path, frame->cloud);
+        tool::io::CloudIO::save_cloud(path, frame->cloud);
         auto c = frame->cloud;
         for(size_t ii = 0; ii < c.size(); ++ii){
             c.vertices[ii] += c.normals[ii]*0.2f;
@@ -90,6 +90,6 @@ auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
 
         auto nPath = path;
         tool::String::replace_first(nPath, ".obj", "_.obj");
-        tool::files::CloudIO::save_cloud(nPath, c);
+        tool::io::CloudIO::save_cloud(nPath, c);
     }
 }

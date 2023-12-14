@@ -33,83 +33,32 @@ namespace tool{
 
 // read
 template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data) -> void {
-    std::copy(
-        data,
-        data + sizeof(ReadValueType),
-        reinterpret_cast<std::int8_t*>(&v)
-    );
-}
+static auto read(ReadValueType &v, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void {
 
-template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data, size_t &offset) -> void {
-    std::copy(
-        data + offset,
-        data + offset + sizeof(ReadValueType),
-        reinterpret_cast<std::int8_t*>(&v)
-    );
-    offset += sizeof(ReadValueType);
-}
-
-template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data, size_t &offset, size_t sizeData) -> void {
-
-    if((offset + sizeof(ReadValueType) >= sizeData) && (sizeData != 0)){
+    auto nbBytes = sizeof(ReadValueType);
+    if((offset + nbBytes > sizeData)){
         return;
     }
 
     std::copy(
         data + offset,
-        data + offset + sizeof(ReadValueType),
+        data + offset + nbBytes,
         reinterpret_cast<std::int8_t*>(&v)
     );
-    offset += sizeof(ReadValueType);
+    offset += nbBytes;
 }
 
 template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data, ReadValueType min, ReadValueType max) -> void {
-    read(v, data);
-    v = std::clamp<ReadValueType>(v, min, max);
-}
-
-template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data, size_t &offset, ReadValueType min, ReadValueType max) -> void {
-    read(v, data, offset);
-    v = std::clamp<ReadValueType>(v, min, max);
-}
-
-template<typename ReadValueType>
-static auto read(ReadValueType &v, const std::int8_t *data, size_t &offset, ReadValueType min, ReadValueType max, size_t sizeData) -> void {
+static auto read(ReadValueType &v, std::int8_t const * const data, size_t &offset, size_t sizeData, ReadValueType min, ReadValueType max) -> void {
     read(v, data, offset, sizeData);
     v = std::clamp<ReadValueType>(v, min, max);
 }
 
 template<typename ReadArrayValueType>
-static auto read_array(ReadArrayValueType *a, const std::int8_t *data, size_t sizeArray) -> void {
-    auto nbBytes = sizeArray * sizeof(ReadArrayValueType);
-    std::copy(
-        data,
-        data + nbBytes,
-        reinterpret_cast<std::int8_t*>(a)
-    );
-}
-
-template<typename ReadArrayValueType>
-static auto read_array(ReadArrayValueType *a, const std::int8_t *data, size_t sizeArray, size_t &offset) -> void {
-    auto nbBytes = sizeArray * sizeof(ReadArrayValueType);
-    std::copy(
-        data + offset,
-        data + offset + nbBytes,
-        reinterpret_cast<std::int8_t*>(a)
-    );
-    offset += nbBytes;
-}
-
-template<typename ReadArrayValueType>
-static auto read_array(ReadArrayValueType *a, const std::int8_t *data, size_t sizeArray, size_t &offset, size_t sizeData) -> void {
+static auto read_array(ReadArrayValueType *a, std::int8_t const * const data, size_t sizeArray, size_t &offset, size_t sizeData) -> void {
 
     auto nbBytes = sizeArray * sizeof(ReadArrayValueType);
-    if((offset + nbBytes >= sizeData) && (sizeData != 0)){
+    if(offset + nbBytes > sizeData){
         return;
     }
 
@@ -121,40 +70,31 @@ static auto read_array(ReadArrayValueType *a, const std::int8_t *data, size_t si
     offset += nbBytes;
 }
 
-
 // write
 template<typename WriteValueType>
-static auto write(const WriteValueType &v, std::int8_t *data) -> void {
-    std::copy(
-        reinterpret_cast<const std::int8_t*>(&v),
-        reinterpret_cast<const std::int8_t*>(&v) + sizeof(WriteValueType),
-        data
-    );
-}
+static auto write(const WriteValueType &v, std::int8_t * const data, size_t &offset, size_t sizeData) -> void {
 
-template<typename WriteValueType>
-static auto write(const WriteValueType &v, std::int8_t *data, size_t &offset) -> void {
+    auto nbBytes = sizeof(WriteValueType);
+    if(offset + nbBytes > sizeData){
+        return;
+    }
+
     std::copy(
         reinterpret_cast<const std::int8_t*>(&v),
-        reinterpret_cast<const std::int8_t*>(&v) + sizeof(WriteValueType),
+        reinterpret_cast<const std::int8_t*>(&v) + nbBytes,
         data + offset
     );
-    offset += sizeof(WriteValueType);
+    offset += nbBytes;
 }
 
 template<typename WriteArrayValueType>
-static auto write_array(const WriteArrayValueType *a, std::int8_t *data, size_t sizeArray) -> void {
-    auto nbBytes = sizeArray * sizeof(WriteArrayValueType);
-    std::copy(
-        reinterpret_cast<const std::int8_t*>(a),
-        reinterpret_cast<const std::int8_t*>(a) + nbBytes,
-        data
-    );
-}
+static auto write_array(const WriteArrayValueType *a, std::int8_t * const data, size_t sizeArray, size_t &offset, size_t sizeData) -> void {
 
-template<typename WriteArrayValueType>
-static auto write_array(const WriteArrayValueType *a, std::int8_t *data, size_t sizeArray, size_t &offset) -> void {
     auto nbBytes = sizeArray * sizeof(WriteArrayValueType);
+    if(offset + nbBytes > sizeData){
+        return;
+    }
+
     std::copy(
         reinterpret_cast<const std::int8_t*>(a),
         reinterpret_cast<const std::int8_t*>(a) + nbBytes,
@@ -162,5 +102,4 @@ static auto write_array(const WriteArrayValueType *a, std::int8_t *data, size_t 
     );
     offset += nbBytes;
 }
-
 }

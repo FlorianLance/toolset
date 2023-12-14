@@ -26,10 +26,14 @@
 #include "k2_types.hpp"
 
 // std
-#include <iostream>
+// #include <optional>
+#include <sstream>
 
 // turbojpeg
 #include <turbojpeg.h>
+
+// local
+#include "utility/string.hpp"
 
 using namespace std;
 

@@ -33,8 +33,8 @@
 #include <QPolygonF>
 
 // base
-#include "input/keyboard.hpp"
-#include "input/mouse.hpp"
+#include "io/keyboard.hpp"
+#include "io/mouse.hpp"
 #include "utility/decimal.hpp"
 #include "utility/types.hpp"
 #include "geometry/point2.hpp"
@@ -181,12 +181,12 @@ struct Convertor{
         return to_str(value.position) % QSL("\n") % to_str(value.rotation) %  QSL("\n") % to_str(value.scale);
     }
 
-    static QString to_str(input::Keyboard::Button value){
-        return from_view(input::Keyboard::get_name(value));
+    static QString to_str(io::Keyboard::Button value){
+        return from_view(io::Keyboard::get_name(value));
     }
 
-    static QString to_str(input::Mouse::Button value){
-        return from_view(input::Mouse::get_name(value));
+    static QString to_str(io::Mouse::Button value){
+        return from_view(io::Mouse::get_name(value));
     }
 
     static QString to_str(bool value){

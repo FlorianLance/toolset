@@ -26,153 +26,186 @@
 
 #include "dc_device_manager.hpp"
 
+// std
+#include <format>
+
 // local
-// # utility
-#include "utility/format.hpp"
-//#include "utility/thread.hpp"
-// # camera
-#include "camera/kinect4/k4_device.hpp"
-#include "camera/orbbec/orbbec_device.hpp"
+#include "dc_device.hpp"
 
 using namespace tool::camera;
 using namespace std::chrono;
 
 struct DCDeviceManager::Impl{
+
     // device
     std::unique_ptr<DCDevice> device = nullptr;
+
+    // settings
+    DCDeviceSettings deviceS;
+    DCFiltersSettings filters;
+    DCColorSettings colorsS;
+    DCDelaySettings delayS;
 };
 
 DCDeviceManager::DCDeviceManager(): i(std::make_unique<Impl>()){
 }
 
 DCDeviceManager::~DCDeviceManager(){
-    clean();
 }
 
-auto DCDeviceManager::initialize(DCType type) -> void {
+auto DCDeviceManager::generate_device(DCType typeDevice) -> void {
 
-    if(type == DCType::Kinect4){
-        i->device = std::make_unique<K4Device>();
-    }else if(type == DCType::Orbbec){
-        i->device = std::make_unique<OrbbecDevice>();
-    }
+    // init device
+    i->device = std::make_unique<DCDevice>(typeDevice);
 
-    init_connections();
-
-    for(size_t ii = 0; ii < i->device->nb_devices(); ++ii){
-        auto t = std::format("Cam {}", ii);
-        update_device_name_signal(static_cast<int>(ii), t);
-    }
-}
-
-auto DCDeviceManager::clean() -> void {
-    i->device->clean();
-}
-
-auto DCDeviceManager::update_delay(DCDelaySettings delayMs) -> void{
-    i->device->set_delay(delayMs);
-}
-
-auto DCDeviceManager::update_filters(const DCFiltersSettings &filters) -> void {
-    i->device->set_filters(filters);
-}
-
-auto DCDeviceManager::update_color_settings(const DCColorSettings &colorS) -> void {
-    i->device->set_color_settings(colorS);
-}
-
-auto DCDeviceManager::get_capture_duration_ms() -> int64_t{
-    return i->device->get_capture_duration_ms();
-}
-auto DCDeviceManager::get_nb_capture_per_second() -> float{
-    return i->device->get_nb_capture_per_second();
-}
-
-auto DCDeviceManager::get_processing_duration_ms() -> int64_t{
-    return i->device->get_processing_duration_ms();
-}
-
-auto DCDeviceManager::get_compressing_duration_ms() -> int64_t{
-    return i->device->get_compressing_duration_ms();
-}
-
-auto DCDeviceManager::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> int64_t{
-    return i->device->get_duration_between_ms(from, to);
-}
-
-auto DCDeviceManager::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> int64_t{
-    return i->device->get_duration_between_micro_s(from, to);
-}
-
-auto DCDeviceManager::update_device_list() -> void{
-
-    i->device->refresh_devices_list();
-
-    if(i->device->nb_devices() > 0){
-        for(size_t ii = 0; ii < i->device->nb_devices(); ++ii){
-            update_device_name_signal(static_cast<int>(ii), std::format("Id:{} Num:...", ii));
-        }
-    }else{
-        update_device_name_signal(-1, "");
-    }
-}
-
-auto DCDeviceManager::update_settings(const DCDeviceSettings &settings) -> void{
-
-    i->device->set_data_settings(settings.dataS);
-
-    bool stopDevice =
-        ((i->device->is_opened() ? (i->device->device_id() != settings.configS.idDevice) : false) || !settings.actionsS.startDevice);
-
-    bool stopCamera =
-        stopDevice ||
-        !settings.actionsS.openCamera ||
-        (settings.configS.mode != i->device->mode()) ||
-        (settings.configS.disableLED != i->device->is_LED_disabled()) ||
-        (settings.configS.synchronizeColorAndDepth != i->device->color_and_depth_synchronized()) ||
-        (settings.configS.delayBetweenColorAndDepthUsec != i->device->delay_between_color_and_depth_usec()) ||
-        (settings.configS.subordinateDelayUsec != i->device->subordinate_delay_usec()) ||
-        (settings.configS.synchMode != i->device->synch_mode());
-
-    // stop / close
-    if(i->device->is_opened()){
-        if(stopCamera){
-            i->device->stop_cameras();
-        }
-        if(stopDevice){
-            i->device->close();
-        }
-    }
-
-    if(stopDevice || stopCamera){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    // open device
-    if(settings.actionsS.startDevice){
-        if(i->device->open(settings.configS.idDevice)){
-            update_device_name_signal(settings.configS.idDevice, fmt("Id:{} Num:{}",  settings.configS.idDevice, i->device->device_name()));
-        }
-    }
-
-    // start camera
-    if(settings.actionsS.openCamera){
-        i->device->start_cameras(settings.configS);
-    }
-}
-
-auto DCDeviceManager::init_connections() -> void {
-
+    // set connections
     i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
         new_frame_signal(std::move(frame));
     });
-
     i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){
         new_compressed_frame_signal(std::move(frame));
     });
-
     i->device->new_imu_sample_signal.connect([&](DCImuSample sample){
         new_imu_sample_signal(sample);
     });
+
+    for(size_t ii = 0; ii < i->device->nb_devices(); ++ii){
+        update_device_name_signal(static_cast<int>(ii), std::format("Cam {}", ii));
+    }
 }
+
+auto DCDeviceManager::update_delay_settings(const DCDelaySettings &delayS) -> void{
+    i->delayS = delayS;
+    if(i->device){
+        i->device->set_delay_settings(i->delayS);
+    }
+}
+
+auto DCDeviceManager::update_filters_settings(const DCFiltersSettings &filters) -> void {
+    i->filters = filters;
+    if(i->device){
+        i->device->set_filters_settings(i->filters);
+    }
+}
+
+auto DCDeviceManager::update_color_settings(const DCColorSettings &colorS) -> void {
+    i->colorsS = colorS;
+    if(i->device){
+        i->device->set_color_settings(i->colorsS);
+    }
+}
+
+auto DCDeviceManager::get_capture_duration_ms() -> int64_t{
+    if(i->device){
+        return i->device->get_capture_duration_ms();
+    }
+    return 0;
+}
+
+auto DCDeviceManager::get_nb_capture_per_second() -> float{
+    if(i->device){
+        return i->device->get_nb_capture_per_second();
+    }
+    return 0;
+}
+
+auto DCDeviceManager::get_processing_duration_ms() -> int64_t{
+    if(i->device){
+        return i->device->get_processing_duration_ms();
+    }
+    return 0;
+}
+
+auto DCDeviceManager::get_compressing_duration_ms() -> int64_t{
+    if(i->device){
+        return i->device->get_compressing_duration_ms();
+    }
+    return 0;
+}
+
+auto DCDeviceManager::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> int64_t{
+    if(i->device){
+        return i->device->get_duration_between_ms(from, to);
+    }
+    return 0;
+}
+
+auto DCDeviceManager::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> int64_t{    
+    if(i->device){
+        return i->device->get_duration_between_micro_s(from, to);
+    }
+    return 0;
+}
+
+auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) -> void{
+
+    const auto &newActionsS = deviceS.actionsS;
+    const auto &newConfigS  = deviceS.configS;
+    const auto &currConfigS = i->deviceS.configS;
+
+    bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
+    bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
+    bool cameraSettingsChanged =
+        (newConfigS.mode                            != currConfigS.mode) ||
+        (newConfigS.disableLED                      != currConfigS.disableLED) ||
+        (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
+        (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
+        (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
+        (newConfigS.synchMode                       != currConfigS.synchMode);
+
+    bool closeDevice = false;
+    bool stopReading = false;
+    if(i->device){
+        if(i->device->is_opened()){
+            closeDevice = deviceChanged || deviceIdChanged || !newActionsS.openDevice;
+        }
+        if(i->device->is_reading()){
+            stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
+        }
+    }
+
+    // stop / close camera
+    if(i->device){
+        if(stopReading){
+            i->device->stop_reading();
+        }
+        if(closeDevice){
+            i->device->close();
+        }
+    }
+    if(closeDevice || stopReading){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    // generate device
+    if(!i->device || deviceChanged){
+        generate_device(newConfigS.typeDevice);
+    }
+
+    bool openDevice  = newActionsS.openDevice    && (!i->device->is_opened());
+    bool startCamera = newActionsS.startReading  && (!i->device->is_reading());
+
+    // update device settings
+    i->deviceS = deviceS;
+
+    // set device data settings
+    i->device->set_data_settings(i->deviceS.dataS);
+
+    // open device camera
+    auto idDevice = i->deviceS.configS.idDevice;
+    if(openDevice){
+        if(i->device->open(idDevice)){
+            i->device->set_filters_settings(i->filters);
+            i->device->set_color_settings(i->colorsS);
+            i->device->set_delay_settings(i->delayS);                        
+            update_device_name_signal(idDevice, std::format("Id:{} Num:{}", idDevice, i->device->device_name()));
+        }
+    }
+
+    // start device camera
+    if(startCamera){
+        i->device->start_reading(i->deviceS.configS);
+    }
+}
+
 

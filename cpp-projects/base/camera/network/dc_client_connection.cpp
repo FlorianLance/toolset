@@ -208,8 +208,8 @@ auto DCClientConnection::update() -> void{
                 quit_signal();
                 break;
             case Command::UpdateDeviceList:
-                send_feedback({MessageType::command, FeedbackType::update_device_list});
-                update_device_list_signal();
+                // send_feedback({MessageType::command, FeedbackType::update_device_list});
+                // update_device_list_signal();
                 break;
         }
     }
@@ -250,9 +250,9 @@ auto DCClientConnection::dummy_device_trigger() -> void {
 
     Header header;
     DCDeviceSettings settings;
-    settings.actionsS.openCamera  = true;
-    settings.actionsS.startDevice = true;
-    settings.configS.typeDevice   = DCType::Kinect4;
+    settings.actionsS.startReading  = true;
+    settings.actionsS.openDevice = true;
+    settings.configS.typeDevice   = DCType::AzureKinect;
     settings.configS.synchMode    = DCSynchronisationMode::K4_Standalone;
 
     std::lock_guard l(m_readerL);
