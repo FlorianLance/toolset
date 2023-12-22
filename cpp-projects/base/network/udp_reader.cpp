@@ -124,7 +124,7 @@ auto UdpReader::clean_socket() -> void{
         try {
             i->ioService.stop();
             i->socket->shutdown(udp::socket::shutdown_receive);
-            std::this_thread::sleep_for (std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for (std::chrono::milliseconds(75));
             i->socket->close();
         }catch (const boost::system::system_error &error){
             Logger::error(fmt("UdpReader::clean_socket: Cannot shutdown socket, error message: {}.\n", error.what()));

@@ -41,7 +41,7 @@ auto DCGModel::initialize() -> bool{
     };
 
     // start udp reading
-    if(!connection.start_reading(&settings.network)){
+    if(!connection.start_reading(&settings.networkS)){
         return false;
     }
 
@@ -50,8 +50,8 @@ auto DCGModel::initialize() -> bool{
 
 auto DCGModel::update() -> void{
     connection.update();
-    settings.network.lastFrameIdSent = connection.last_frame_id_sent();
-    settings.network.lastFrameSentTS = connection.last_frame_sent_timestamp_nanosecond();
+    settings.networkS.lastFrameIdSent = connection.last_frame_id_sent();
+    settings.networkS.lastFrameSentTS = connection.last_frame_sent_timestamp_nanosecond();
 }
 
 auto DCGModel::clean() -> void{

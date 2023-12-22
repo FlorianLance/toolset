@@ -96,7 +96,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             if(ImGui::BeginTabBar("Main###MainTabBar")){
 
                 if(ImGui::BeginTabItem("Device###device_tabitem")){
-                    deviceD.draw(model->settings.ui.focusWindow);
+                    deviceD.draw(model->settings.displayS.focusWindow);
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Recorder###recorder_tabitem")){

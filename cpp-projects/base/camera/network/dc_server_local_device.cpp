@@ -27,43 +27,76 @@
 
 #include "dc_server_local_device.hpp"
 
-// std
-#include <format>
-
 // local
 #include "camera/dc_device_manager.hpp"
-// #include "dc_udp_sender.hpp"
-// #include "dc_udp_reader.hpp"
-// #include "utility/logger.hpp"
 
+using namespace tool::camera;
 using namespace tool::network;
 
 struct DCServerLocalDevice::Impl{
-
-    // size_t id = 0;
-    // ReadSendNetworkInfos infos;
-    // bool remoteDeviceConnected = false;
-
-    // std::int64_t initTs;
-    // std::atomic<size_t> totalReceivedBytes = 0;
-    // DCServerUdpSender udpSender;
-    // DCServerUdpReader udpReader;
-
-    // static constexpr std::uint16_t maxSizeUpdMessage = 9000;
+    std::unique_ptr<DCDeviceManager>  deviceM = nullptr;
 };
 
 DCServerLocalDevice::DCServerLocalDevice() : i(std::make_unique<DCServerLocalDevice::Impl>()){
-
 }
 
 DCServerLocalDevice::~DCServerLocalDevice(){
-
+    clean();
 }
 
-auto DCServerLocalDevice::initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool{
+auto DCServerLocalDevice::initialize(const ReadSendNetworkInfos &infos) -> bool{
+    i->deviceM = std::make_unique<DCDeviceManager>();
+    i->deviceM->new_frame_signal.connect(&DCServerLocalDevice::local_frame_signal, this);
     return true;
 }
 
 auto DCServerLocalDevice::clean() -> void {
+    i->deviceM = nullptr;
+}
 
+auto DCServerLocalDevice::apply_command(Command command) -> void{
+    static_cast<void>(command);
+    // switch(command){
+    // case Command::Disconnect:
+    //     break;
+    // case Command::Quit:
+    //     break;
+    // case Command::Shutdown:
+    //     break;
+    // case Command::Restart:
+    //     break;
+    // case Command::UpdateDeviceList:
+    //     break;
+    // }
+}
+
+auto DCServerLocalDevice::update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{
+    if(i->deviceM){
+        i->deviceM->update_device_settings(deviceS);
+    }
+}
+
+auto DCServerLocalDevice::update_color_settings(const camera::DCColorSettings &colorS) -> void{
+    if(i->deviceM){
+        i->deviceM->update_color_settings(colorS);
+    }
+}
+
+auto DCServerLocalDevice::update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{
+    if(i->deviceM){
+        i->deviceM->update_filters_settings(filtersS);
+    }
+}
+
+auto DCServerLocalDevice::update_delay_settings(const camera::DCDelaySettings &delayS) -> void{
+    if(i->deviceM){
+        i->deviceM->update_delay_settings(delayS);
+    }
+}
+
+auto DCServerLocalDevice::device_connected() const noexcept -> bool{
+    if(i->deviceM){
+        return i->deviceM->is_opened();
+    }
+    return false;
 }

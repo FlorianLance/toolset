@@ -46,12 +46,16 @@ struct DCInfos{
     size_t colorWidth   = 0;
     size_t colorHeight  = 0;
     size_t colorSize    = 0;
+    DCDepthResolution initialDepthResolution;
     size_t depthWidth   = 0;
     size_t depthHeight  = 0;
     size_t depthSize    = 0;
-    DCColorResolution colorResolution;
+    size_t infraWidth   = 0;
+    size_t infraHeight  = 0;
+    size_t infraSize    = 0;
+    DCColorResolution initialColorResolution;
     DCImageFormat imageFormat;
-    DCDepthMode depthMode;
+    DCDepthResolution depthMode;
     DCFramerate fps;
     std::int32_t timeoutMs;
 };
@@ -62,6 +66,8 @@ struct DCIndices{
 
     // colors
     std::vector<size_t> colors1D;
+    // infrared
+    std::vector<size_t> infras1D;
     // depths
     std::vector<size_t> depths1D;
     std::vector<size_t> depths1DNoBorders;
@@ -111,7 +117,7 @@ struct DCFrames{
     // cFrame->afterCaptureTS = afterCompressingTS.count() - cFrame->afterCaptureTS;
     auto add_frame(std::shared_ptr<camera::DCFrame> frame) -> void;
     auto add_compressed_frame(std::shared_ptr<camera::DCCompressedFrame> cFrame) -> void;
-    auto get_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<camera::DCFrame>;
+    auto take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<camera::DCFrame>;
     auto get_compressed_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<camera::DCCompressedFrame>;
 
     // delay buffer
@@ -205,7 +211,7 @@ protected:
     auto stop_reading_thread() -> void;
 
     // get data
-    virtual auto depth_sized_color_data() -> std::span<ColorRGBA8> {return {};}
+    virtual auto color_data() -> std::span<ColorRGBA8> {return {};}
     virtual auto depth_data() -> std::span<std::uint16_t> {return {};}
     virtual auto infra_data() -> std::span<std::uint16_t> {return {};}
 
@@ -222,10 +228,10 @@ protected:
 
     // process data
     virtual auto convert_color_image() -> void{}
-    virtual auto resize_color_to_fit_depth() -> void{}
-    auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> depthSizedColorBuffer, std::span<uint16_t> infraBuffer) -> void;
-    auto filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> depthSizedColorBuffer, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer) -> void;
-    auto filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> depthSizedColorBuffer) -> void;
+    virtual auto resize_images() -> void{}
+    auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer) -> void;
+    auto filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer) -> void;
+    auto filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer) -> void;
 
     // frame generation
     virtual auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{

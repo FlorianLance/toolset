@@ -28,30 +28,46 @@
 #pragma once
 
 // local
-#include "dc_server_connection.hpp"
+#include "network/udp_server_network_settings.hpp"
+#include "camera/settings/dc_device_settings.hpp"
+#include "camera/settings/dc_color_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
+#include "camera/settings/dc_delay_settings.hpp"
+#include "camera/dc_compressed_frame.hpp"
+#include "thirdparty/sigslot/signal.hpp"
 
 namespace tool::network {
 
+template<typename ...arg>
+using SSS = sigslot::signal<arg...>;
+
 struct DCServerNetwork{
 
+    DCServerNetwork();
     ~DCServerNetwork();
-    auto initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool;
+    auto initialize(const UdpServerNetworkSettings &networkS) -> bool;
     auto clean() -> void;
 
     auto init_connection(size_t idG) -> void;
-    auto send_command(size_t idG, Command command) -> void;
-    auto send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
-    auto send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
-    auto send_filters(size_t idG, const camera::DCFiltersSettings &filters) -> void;
-    auto send_delay(size_t idG, camera::DCDelaySettings delay) -> void;
+    auto apply_command(size_t idG, Command command) -> void;
+    auto update_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
+    auto update_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
+    auto update_filters_settings(size_t idG, const camera::DCFiltersSettings &filtersS) -> void;
+    auto update_delay_settings(size_t idG, const camera::DCDelaySettings &delayS) -> void;
 
-    auto connections_nb() const noexcept -> size_t {return connections.size();}
-    auto get_connection(size_t idG) const -> DCServerConnection*{return connections[idG].get();}
+    auto devices_nb() const noexcept -> size_t;
+    auto device_connected(size_t idG) const noexcept -> bool;
 
-    auto do_not_use_global_signals() ->void;
+    // signals
+    SSS<size_t, std::int64_t> remote_synchro_signal;
+    SSS<size_t, network::Feedback> remote_feedback_signal;
+    SSS<size_t, std::shared_ptr<camera::DCFrame>> local_frame_signal;
+    SSS<size_t, std::shared_ptr<camera::DCCompressedFrame>> remote_frame_signal;
 
 private:
-    std::vector<std::unique_ptr<DCServerConnection>> connections;
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 
 }

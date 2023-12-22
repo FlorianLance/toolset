@@ -50,14 +50,13 @@ public:
 
 private:
 
-    auto draw_infos_tab_item(DCGSettings &settings) -> void;
+    auto draw_client_info_tab_item(DCGSettings &settings) -> void;
 
     auto draw_device_tab_item(
-        const std::vector<std::string> &devicesNames,
         camera::DCDeviceSettings &device) -> void;
 
     auto draw_filters_tab_item(
-        ui::DCGUiSettings &ui,
+        ui::DCGDisplaySettingsSettings &ui,
         const camera::DCConfigSettings &config,
         camera::DCFiltersSettings &filters) -> void;
 
@@ -65,11 +64,7 @@ private:
         camera::DCType type,
         camera::DCColorSettings &colors) -> void;
 
-    auto draw_display_tab_item(
-        camera::DCSceneDisplaySettings &sceneDisplay,
-        camera::DCCloudDisplaySettings &cloudDisplay) -> void;
-
-    auto draw_ui_tab_item(ui::DCGUiSettings &ui)-> void;
+    auto draw_display_tab_item(ui::DCGDisplaySettingsSettings &ui)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void;

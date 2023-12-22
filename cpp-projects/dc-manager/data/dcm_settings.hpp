@@ -123,12 +123,14 @@ struct DCMSettings{
     auto update_player_states(camera::DCPlayerStates playerStates) -> void;
     auto update_calibrator_states(camera::DCCalibratorStates calibratorStates) -> void;
 
+    auto update_color_settings_from_device(size_t id, const camera::DCColorSettings &color) -> void;
+
     // trigger
     auto trigger_all_models() -> void;
     auto trigger_all_cloud_display() -> void;
 
     // tests
-    auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
+    // auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
 
     DCMGlobalSettings globalSet;
     DCMGlobalStates globalSta;

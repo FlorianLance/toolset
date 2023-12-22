@@ -31,6 +31,7 @@
 
 // local
 #include "dc_device.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::camera;
 using namespace std::chrono;
@@ -79,6 +80,13 @@ auto DCDeviceManager::update_delay_settings(const DCDelaySettings &delayS) -> vo
     if(i->device){
         i->device->set_delay_settings(i->delayS);
     }
+}
+
+auto DCDeviceManager::is_opened() const noexcept -> bool{
+    if(i->device){
+        return i->device->is_opened();
+    }
+    return false;
 }
 
 auto DCDeviceManager::update_filters_settings(const DCFiltersSettings &filters) -> void {
@@ -196,6 +204,12 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     if(openDevice){
         if(i->device->open(idDevice)){
             i->device->set_filters_settings(i->filters);
+
+            if(deviceChanged){
+                tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
+                i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                color_settings_reset_signal(i->colorsS);
+            }
             i->device->set_color_settings(i->colorsS);
             i->device->set_delay_settings(i->delayS);                        
             update_device_name_signal(idDevice, std::format("Id:{} Num:{}", idDevice, i->device->device_name()));

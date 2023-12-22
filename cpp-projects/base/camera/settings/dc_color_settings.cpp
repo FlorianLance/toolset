@@ -51,18 +51,16 @@ auto DCColorSettings::init_from_data(std::int8_t const * const data, size_t &off
 
     BaseSettings::init_from_data(data, offset, sizeData);
     read(autoExposureTime, data, offset, sizeData);
-    read<std::int8_t>(exposureTimeAbsolute, data, offset, sizeData, 0, 5);
-    read<std::uint8_t>(brightness, data, offset, sizeData);
-    read<std::uint8_t>(contrast, data, offset, sizeData, 0, 10);
-    read<std::uint8_t>(saturation, data, offset, sizeData, 0, 63);
-    read<std::uint8_t>(sharpness, data, offset, sizeData, 0, 4);
+    read(exposureTime, data, offset, sizeData);
+    read(brightness, data, offset, sizeData);
+    read(contrast, data, offset, sizeData);
+    read(saturation, data, offset, sizeData);
+    read(sharpness, data, offset, sizeData);
     read(autoWhiteBalance, data, offset, sizeData);
-    read<std::uint16_t>(whiteBalance, data, offset, sizeData, 2500, 12500);
+    read(whiteBalance, data, offset, sizeData);
     read(backlightCompensation, data, offset, sizeData);
-    read<std::uint8_t>(gain, data, offset, sizeData);
-    std::int8_t plf;
-    read(plf, data, offset, sizeData);
-    powerlineFrequency = static_cast<PowerlineFrequency>(plf);
+    read(gain, data, offset, sizeData);
+    read(powerlineFrequency, data, offset, sizeData);
     read(hdr, data, offset, sizeData);
 }
 
@@ -75,7 +73,7 @@ auto DCColorSettings::write_to_data(std::int8_t * const data, size_t &offset, si
 
     BaseSettings::write_to_data(data, offset, sizeData);
     write(autoExposureTime, data, offset, sizeData);
-    write(exposureTimeAbsolute, data, offset, sizeData);
+    write(exposureTime, data, offset, sizeData);
     write(brightness, data, offset, sizeData);
     write(contrast, data, offset, sizeData);
     write(saturation, data, offset, sizeData);
@@ -84,7 +82,7 @@ auto DCColorSettings::write_to_data(std::int8_t * const data, size_t &offset, si
     write(whiteBalance, data, offset, sizeData);
     write(backlightCompensation, data, offset, sizeData);
     write(gain, data, offset, sizeData);
-    write(static_cast<std::int8_t>(powerlineFrequency), data, offset, sizeData);
+    write(powerlineFrequency, data, offset, sizeData);
     write(hdr, data, offset, sizeData);
 }
 
@@ -92,7 +90,7 @@ auto DCColorSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
         sizeof(autoExposureTime) +
-        sizeof(exposureTimeAbsolute) +
+        sizeof(exposureTime) +
         sizeof(brightness) +
         sizeof(contrast) +
         sizeof(saturation) +
@@ -103,4 +101,19 @@ auto DCColorSettings::total_data_size() const noexcept -> size_t{
         sizeof(gain) +
         sizeof(powerlineFrequency) +
         sizeof(hdr);
+}
+
+auto DCColorSettings::set_default_values(DCType type) -> void{
+    whiteBalance            = static_cast<std::uint16_t>(default_value(ColorSettingsType::White_balance, type));
+    exposureTime            = static_cast<std::uint16_t>(default_value(ColorSettingsType::Exposure, type));
+    brightness              = static_cast<std::uint8_t>(default_value(ColorSettingsType::Brightness, type));
+    contrast                = static_cast<std::uint8_t>(default_value(ColorSettingsType::Contrast, type));
+    saturation              = static_cast<std::uint8_t>(default_value(ColorSettingsType::Saturation, type));
+    sharpness               = static_cast<std::uint8_t>(default_value(ColorSettingsType::Sharpness, type));
+    gain                    = static_cast<std::uint8_t>(default_value(ColorSettingsType::Gain, type));
+    powerlineFrequency      = static_cast<std::uint8_t>(default_value(ColorSettingsType::Power_line_frequency, type));
+    backlightCompensation   = static_cast<bool>(default_value(ColorSettingsType::Backlight_compensation, type));
+    autoExposureTime        = static_cast<bool>(default_value(ColorSettingsType::Auto_exposure, type));
+    autoWhiteBalance        = static_cast<bool>(default_value(ColorSettingsType::Auto_white_balance, type));
+    hdr                     = static_cast<bool>(default_value(ColorSettingsType::HDR, type));
 }

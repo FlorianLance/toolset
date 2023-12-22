@@ -39,7 +39,7 @@ using namespace tool::network;
 
 struct DCServerRemoteDevice::Impl{
 
-    size_t id = 0;
+    // size_t id = 0;
     ReadSendNetworkInfos infos;
     bool remoteDeviceConnected = false;
 
@@ -59,9 +59,9 @@ DCServerRemoteDevice::~DCServerRemoteDevice(){
     DCServerRemoteDevice::clean();
 }
 
-auto DCServerRemoteDevice::initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool {
+auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool {
 
-    i->id    = id;
+    // i->id    = id;
     i->infos = infos;
 
     // init reader
@@ -79,7 +79,7 @@ auto DCServerRemoteDevice::initialize(size_t id, const ReadSendNetworkInfos &inf
 
     // connections
     i->udpReader.synchro_signal.connect([&](std::int64_t timestamp){
-        synchro_signal(i->id, timestamp);
+        remote_synchro_signal(timestamp);
     });
     i->udpReader.feedback_signal.connect(&DCServerRemoteDevice::receive_feedback, this);
     i->udpReader.compressed_frame_signal.connect(&DCServerRemoteDevice::receive_compressed_frame, this);
@@ -121,7 +121,7 @@ auto DCServerRemoteDevice::clean() -> void{
     i->udpSender.clean_socket();
 }
 
-auto DCServerRemoteDevice::send_command(Command command) -> void{
+auto DCServerRemoteDevice::apply_command(Command command) -> void{
 
     switch(command){
     case Command::Disconnect:
@@ -142,20 +142,24 @@ auto DCServerRemoteDevice::send_command(Command command) -> void{
     }
 }
 
-auto DCServerRemoteDevice::udpate_device_settings(const camera::DCDeviceSettings &deviceS) -> void{
+auto DCServerRemoteDevice::update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{
     i->udpSender.send_update_device_settings_message(deviceS);
 }
 
-auto DCServerRemoteDevice::udpate_color_settings(const camera::DCColorSettings &colorS) -> void{
+auto DCServerRemoteDevice::update_color_settings(const camera::DCColorSettings &colorS) -> void{
     i->udpSender.send_update_color_settings_message(colorS);
 }
 
-auto DCServerRemoteDevice::udpate_filters_settings(const camera::DCFiltersSettings &filters) -> void{
-    i->udpSender.send_update_filters_settings_message(filters);
+auto DCServerRemoteDevice::update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{
+    i->udpSender.send_update_filters_settings_message(filtersS);
 }
 
-auto DCServerRemoteDevice::udpate_delay_settings(camera::DCDelaySettings delay) -> void{
-    i->udpSender.send_delay_settings_message(delay);
+auto DCServerRemoteDevice::update_delay_settings(const camera::DCDelaySettings &delayS) -> void{
+    i->udpSender.send_delay_settings_message(delayS);
+}
+
+auto DCServerRemoteDevice::device_connected() const noexcept -> bool {
+    return i->remoteDeviceConnected;
 }
 
 auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void{
@@ -186,7 +190,7 @@ auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedb
         break;
     }
 
-    feedback_signal(i->id, std::move(message.data));
+    remote_feedback_signal(std::move(message.data));
 }
 
 auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<camera::DCCompressedFrame> compressedFrame) -> void{
@@ -194,6 +198,6 @@ auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<ca
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
     if(compressedFrame){
-        compressed_frame_signal(i->id, std::move(compressedFrame));
+        remote_frame_signal(std::move(compressedFrame));
     }
 }

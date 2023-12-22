@@ -34,6 +34,7 @@
 #include "imgui-sfml/imgui-SFML.h"
 
 // imgui
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 
 // base

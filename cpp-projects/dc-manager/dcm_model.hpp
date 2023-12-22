@@ -26,6 +26,9 @@
 
 #pragma once
 
+// std
+#include <deque>
+
 // base
 #include "camera/network/dc_server_network.hpp"
 #include "camera/dc_server_data.hpp"
@@ -60,7 +63,7 @@ struct DCMModel{
 
 
     DCMSettings settings;
-    network::DCServerNetwork network;
+    network::DCServerNetwork sNetwork;
     camera::DCServerData sData;
     camera::DCRecorder recorder;
     camera::DCPlayer player;

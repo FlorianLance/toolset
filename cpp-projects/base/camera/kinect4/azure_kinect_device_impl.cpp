@@ -166,10 +166,10 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
 
         Logger::message("Start imu\n");
         device->start_imu();
-
-        if(depth_mode(settings.config.mode) != DCDepthMode::K4_OFF){
+        
+        if(depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF){
             // Logger::message("[AzureKinectDeviceImpl::start_cameras] start body tracker\n");
-            //  tracker = k4abt::tracker::create(calibration, k4aBtConfig);
+            // tracker = k4abt::tracker::create(calibration, k4aBtConfig);
         }
 
     }  catch (k4a::error error) {
@@ -187,17 +187,13 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
     return true;
 }
 
-#include <iostream>
 auto AzureKinectDeviceImpl::stop_reading() -> void{
 
-
-    std::cout << "#################### stop reading thread\n";
     stop_reading_thread();
-    std::cout << "#################### end stop reading thread\n";
 
-    if(depth_mode(settings.config.mode) != DCDepthMode::K4_OFF){
-        Logger::message("Shutdown body tracker\n");
-        tracker.shutdown();
+    if(depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF){
+        // Logger::message("Shutdown body tracker\n");
+        // tracker.shutdown();
     }
 
     if(is_opened()){
@@ -240,114 +236,68 @@ auto AzureKinectDeviceImpl::device_name() const noexcept -> std::string {
     }
 }
 
+auto set_value(k4a::device *dev, k4a_color_control_command_t pId, std::int32_t value, bool manual) -> void{
+
+    bool supportAuto;
+    std::int32_t minV;
+    std::int32_t maxV;
+    std::int32_t stepV;
+    std::int32_t defV;
+    k4a_color_control_mode_t dMode;
+
+    std::int32_t currV;
+    k4a_color_control_mode_t cMode;
+
+    k4a_device_get_color_control_capabilities(
+        dev->handle(),
+        pId,
+        &supportAuto,
+        &minV, &maxV, &stepV, &defV, &dMode
+    );
+
+    dev->get_color_control(pId, &cMode, &currV);
+
+    if(value < minV){
+        value = minV;
+    }
+    value += (value - minV) % stepV;
+
+    if(value > maxV){
+        value = maxV;
+    }
+
+    auto mode = manual ? K4A_COLOR_CONTROL_MODE_MANUAL : K4A_COLOR_CONTROL_MODE_AUTO;
+    if(currV != value || cMode != mode){
+        dev->set_color_control(pId, mode, value);
+    }
+}
+
 auto AzureKinectDeviceImpl::update_camera_from_colors_settings() -> void {
 
     if(!is_opened()){
         return;
     }
 
-    k4a_color_control_mode_t mode;
-    std::int32_t currentValue, newValue;
     k4a_color_control_command_t type;
-
-    const auto &colorS = settings.color;
-
-    try{
-
-        type = K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE;
-        device->get_color_control(type, &mode, &currentValue);
-
-        switch(static_cast<K4ExposureTimesMicroS>(colorS.exposureTimeAbsolute)){
-        case K4ExposureTimesMicroS::t500: newValue = 500; break;
-        case K4ExposureTimesMicroS::t1250: newValue = 1250; break;
-        case K4ExposureTimesMicroS::t2500: newValue = 2500; break;
-        case K4ExposureTimesMicroS::t8330: newValue = 8330; break;
-        case K4ExposureTimesMicroS::t16670: newValue = 16670; break;
-        case K4ExposureTimesMicroS::t33330:
-            if(colorS.powerlineFrequency == PowerlineFrequency::F60){
-                newValue = 33330;
-            }else{
-                newValue = 30000;
-            }break;
-        }
-
-        if((currentValue != newValue) || (mode != (colorS.autoExposureTime ? K4A_COLOR_CONTROL_MODE_AUTO : K4A_COLOR_CONTROL_MODE_MANUAL))){
-            device->set_color_control(
-                type,
-                colorS.autoExposureTime ? K4A_COLOR_CONTROL_MODE_AUTO : K4A_COLOR_CONTROL_MODE_MANUAL,
-                newValue
-            );
-        }
-
-        type = K4A_COLOR_CONTROL_WHITEBALANCE;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = colorS.whiteBalance - (colorS.whiteBalance % 10);
-
-        if((currentValue != newValue) || (mode != (colorS.autoWhiteBalance ? K4A_COLOR_CONTROL_MODE_AUTO : K4A_COLOR_CONTROL_MODE_MANUAL))){
-            device->set_color_control(
-                type,
-                colorS.autoWhiteBalance ? K4A_COLOR_CONTROL_MODE_AUTO : K4A_COLOR_CONTROL_MODE_MANUAL,
-                newValue
-            );
-        }
-
-        type = K4A_COLOR_CONTROL_BRIGHTNESS;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.brightness);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_CONTRAST;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.contrast);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_SHARPNESS;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.sharpness);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_SATURATION;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.saturation);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = colorS.backlightCompensation ? 1 : 0;
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_GAIN;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.gain);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
-
-        type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY;
-        device->get_color_control(type, &mode, &currentValue);
-        newValue = static_cast<std::int32_t>(colorS.powerlineFrequency);
-        if(currentValue != newValue){
-            device->set_color_control(type, K4A_COLOR_CONTROL_MODE_MANUAL, newValue);
-        }
+    try{        
+        set_value(device.get(), type = K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,   settings.color.exposureTime,                    !settings.color.autoExposureTime);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_WHITEBALANCE,             settings.color.whiteBalance,                    !settings.color.autoWhiteBalance);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_BRIGHTNESS,               settings.color.brightness,                      true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_CONTRAST,                 settings.color.contrast,                        true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_SHARPNESS,                settings.color.sharpness,                       true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_SATURATION,               settings.color.saturation,                      true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION,   settings.color.backlightCompensation ? 1 : 0,   true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_GAIN,                     settings.color.gain,                            true);
+        set_value(device.get(), type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,      settings.color.powerlineFrequency,              true);
 
     }  catch (std::runtime_error error) {
-        Logger::error(std::format("[AzureKinectDeviceImpl::update_camera_from_colors_settings] Set color settings error: {} T:{} CV:{} NV:{}\n", error.what(), static_cast<int>(type), currentValue, newValue));
+        Logger::error(std::format("[AzureKinectDeviceImpl::update_camera_from_colors_settings] Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
     }
 }
 
 auto AzureKinectDeviceImpl::read_color_image() -> bool {
-
-    if(infos.colorResolution != DCColorResolution::OFF){
+    
+    if(infos.initialColorResolution != DCColorResolution::OFF){
 
         Bench::start("[AzureKinectDeviceImpl::read_color_image]");
         colorImage = capture->get_color_image();
@@ -364,8 +314,8 @@ auto AzureKinectDeviceImpl::read_color_image() -> bool {
 }
 
 auto AzureKinectDeviceImpl::read_depth_image() -> bool {
-
-    if(infos.depthMode != DCDepthMode::K4_OFF){
+    
+    if(infos.depthMode != DCDepthResolution::K4_OFF){
 
         Bench::start("[AzureKinectDeviceImpl::read_depth_image]");
         depthImage = capture->get_depth_image();
@@ -464,28 +414,28 @@ auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
 }
 
 auto AzureKinectDeviceImpl::read_bodies() -> void{
+    
+    if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF)){
+        // if(tracker.enqueue_capture(*capture.get(), std::chrono::milliseconds(1))){
 
-    if((depth_mode(settings.config.mode) != DCDepthMode::K4_OFF)){
-        if(tracker.enqueue_capture(*capture.get(), std::chrono::milliseconds(1))){
+        //     if(k4abt::frame bodyFrame = tracker.pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+        //         auto bodiesCount = bodyFrame.get_num_bodies();
+        //         if(data.bodies.size() < bodiesCount){
+        //             data.bodies.resize(bodiesCount);
+        //         }
+        //         for(size_t ii = 0; ii < bodiesCount; ++ii){
+        //             update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
+        //         }
+        //         timing.bodiesTS = bodyFrame.get_system_timestamp();
+        //     }
 
-            if(k4abt::frame bodyFrame = tracker.pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
-                auto bodiesCount = bodyFrame.get_num_bodies();
-                if(data.bodies.size() < bodiesCount){
-                    data.bodies.resize(bodiesCount);
-                }
-                for(size_t ii = 0; ii < bodiesCount; ++ii){
-                    update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
-                }
-                timing.bodiesTS = bodyFrame.get_system_timestamp();
-            }
-
-            //  k4a::image body_index_map = body_frame.get_body_index_map();
-            //  if (body_index_map != nullptr){
-            ////    print_body_index_map_middle_line(body_index_map);
-            //  }else{
-            //      Logger::error("Error: Failed to generate bodyindex map!\n");
-            //  }
-        }
+        //     //  k4a::image body_index_map = body_frame.get_body_index_map();
+        //     //  if (body_index_map != nullptr){
+        //     ////    print_body_index_map_middle_line(body_index_map);
+        //     //  }else{
+        //     //      Logger::error("Error: Failed to generate bodyindex map!\n");
+        //     //  }
+        // }
     }
 }
 
@@ -495,11 +445,24 @@ auto AzureKinectDeviceImpl::generate_cloud() -> void{
         transformation.depth_image_to_point_cloud(depthImage.value(), K4A_CALIBRATION_TYPE_DEPTH, &pointCloudImage.value());
         Bench::stop();
     }
+
+    // image depth_image_to_color_camera(const image &depth_image) const
+    // {
+    //     image transformed_depth_image = image::create(K4A_IMAGE_FORMAT_DEPTH16,
+    //                                                   m_color_resolution.width,
+    //                                                   m_color_resolution.height,
+    //                                                   m_color_resolution.width *
+    //                                                       static_cast<int32_t>(sizeof(uint16_t)));
+    //     depth_image_to_color_camera(depth_image, &transformed_depth_image);
+    //     return transformed_depth_image;
+    // }
+
+
 }
 
 auto AzureKinectDeviceImpl::convert_color_image() -> void{
-
-    if(infos.colorResolution == DCColorResolution::OFF){
+    
+    if(infos.initialColorResolution == DCColorResolution::OFF){
         return;
     }
 
@@ -593,7 +556,7 @@ auto AzureKinectDeviceImpl::convert_color_image() -> void{
     }
 }
 
-auto AzureKinectDeviceImpl::resize_color_to_fit_depth() -> void{
+auto AzureKinectDeviceImpl::resize_images() -> void{
 
     if(colorImage.has_value() && depthImage.has_value()){
 
@@ -608,9 +571,9 @@ auto AzureKinectDeviceImpl::resize_color_to_fit_depth() -> void{
 
 auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> {
 
-    auto mode = settings.config.mode;
     tool::Bench::start("[AzureKinectDeviceImpl::compress_frame] Generate compressed frame");
 
+    auto mode = settings.config.mode;
     auto cFrame                = std::make_unique<DCCompressedFrame>();
     cFrame->mode               = mode;
     cFrame->idCapture          = static_cast<std::int32_t>(infos.idCapture);
@@ -650,7 +613,7 @@ auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
         );
     }
     // compressed cloud
-    if(colorImage.has_value() && depthImage.has_value() && pointCloudImage.has_value() && dataS.sendCloud){
+    if(colorImage.has_value() && depthImage.has_value() && dataS.sendCloud){
         frames.frameCompressor.add_cloud(
             colorImage->get_width_pixels(), colorImage->get_height_pixels(), colorImage.value().get_buffer(),
             depthImage->get_width_pixels()*depthImage->get_height_pixels(), reinterpret_cast<std::uint16_t*>(depthImage.value().get_buffer()),
@@ -760,7 +723,7 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
         dFrame->imageDepthData.resize(dFrame->depthWidth * dFrame->depthHeight);
 
         auto depthBuffer  = reinterpret_cast<const uint16_t*>(depthImage->get_buffer());
-        const auto dRange = range(mode)*1000.f;
+        const auto dRange = depth_range(mode)*1000.f;
         const auto diff   = dRange.y() - dRange.x();
 
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
@@ -942,34 +905,38 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
     capture = std::make_unique<k4a::capture>();
 
     // init converted color image
-    if(infos.colorResolution != DCColorResolution::OFF){
-        colorConvBuffer     = cv::Mat(static_cast<int>(infos.colorWidth), static_cast<int>(infos.colorHeight), CV_8UC4);
+    if(infos.initialColorResolution != DCColorResolution::OFF){
+
+        auto colorRes   = color_resolution(settings.config.mode);
         convertedColorImage = k4a::image::create(
             K4A_IMAGE_FORMAT_COLOR_BGRA32,
-            static_cast<int>(infos.colorWidth),
-            static_cast<int>(infos.colorHeight),
-            static_cast<int32_t>(infos.colorWidth * 4 * sizeof(uint8_t))
+            static_cast<int>(color_width(colorRes)),
+            static_cast<int>(color_height(colorRes)),
+            static_cast<int32_t>(color_width(colorRes) * 4 * sizeof(uint8_t))
         );
     }
 
-    // init resized color image
-    if(infos.depthMode != DCDepthMode::K4_OFF){
-        if(infos.colorResolution != DCColorResolution::OFF){
+    // init depth resized color image
+    if(infos.depthMode != DCDepthResolution::K4_OFF){
+        if(infos.initialColorResolution != DCColorResolution::OFF){
+            auto depthRes   = depth_resolution(settings.config.mode);
             depthSizedColorImage = k4a::image::create(
                 K4A_IMAGE_FORMAT_COLOR_BGRA32,
-                static_cast<int>(infos.depthWidth),
-                static_cast<int>(infos.depthHeight),
-                static_cast<int32_t>(infos.depthWidth * 4 * sizeof(uint8_t))
+                static_cast<int>(depth_width(depthRes)),
+                static_cast<int>(depth_height(depthRes)),
+                static_cast<int32_t>(depth_width(depthRes) * 4 * sizeof(uint8_t))
             );            
         }
     }
 
     // init cloud image
     if(has_cloud(settings.config.mode)){
+
+        auto depthRes   = depth_resolution(settings.config.mode);
         pointCloudImage = k4a::image::create(
             K4A_IMAGE_FORMAT_CUSTOM,
-            static_cast<int>(infos.depthWidth),
-            static_cast<int>(infos.depthHeight),
+            static_cast<int>(depth_width(depthRes)),
+            static_cast<int>(depth_height(depthRes)),
             static_cast<int32_t>(infos.depthWidth * 3 * sizeof(int16_t))
         );
     }
@@ -980,12 +947,12 @@ auto AzureKinectDeviceImpl::generate_config(bool synchInConnected, bool synchOut
     k4a_device_configuration_t ka4Config = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
     ka4Config.color_format               = static_cast<k4a_image_format_t>(get_k4_image_format(image_format(config.mode)));
     ka4Config.color_resolution           = static_cast<k4a_color_resolution_t>(color_resolution(config.mode));
-    ka4Config.depth_mode                 = static_cast<k4a_depth_mode_t>(depth_mode(config.mode));
+    ka4Config.depth_mode                 = static_cast<k4a_depth_mode_t>(depth_resolution(config.mode));
     ka4Config.camera_fps                 = static_cast<k4a_fps_t>(framerate(config.mode));
 
     ka4Config.synchronized_images_only = false;
-
-    if(depth_mode(config.mode) == DCDepthMode::K4_OFF){
+    
+    if(depth_resolution(config.mode) == DCDepthResolution::K4_OFF){
         ka4Config.synchronized_images_only = false;
     }else{
         ka4Config.synchronized_images_only = config.synchronizeColorAndDepth;
@@ -996,22 +963,22 @@ auto AzureKinectDeviceImpl::generate_config(bool synchInConnected, bool synchOut
     ka4Config.subordinate_delay_off_master_usec = config.subordinateDelayUsec;
 
     // check modes
-    if(config.synchMode == DCSynchronisationMode::K4_Subordinate){
+    if(config.synchMode == DCSynchronisationMode::Subordinate){
         if(!synchInConnected){
-            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::K4_Standalone);
+            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::Standalone);
             Logger::warning("[AzureKinectDeviceImpl::generate_config] No input synchronisation cable found, switch from [Subordinate] to [Standalone] mode and set subordinate delay to [0].\n");
         }
-    }else if(config.synchMode == DCSynchronisationMode::K4_Master){
+    }else if(config.synchMode == DCSynchronisationMode::Main){
         if(!synchOutConnected){
-            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::K4_Standalone);
+            ka4Config.wired_sync_mode = static_cast<k4a_wired_sync_mode_t>(DCSynchronisationMode::Standalone);
             Logger::warning("[AzureKinectDeviceImpl::generate_config] No output synchronisation cable found, switch from [Master] to [Standalone] mode.\n");
         }
     }
 
-    if(config.synchMode == DCSynchronisationMode::K4_Master && config.subordinateDelayUsec != 0){
+    if(config.synchMode == DCSynchronisationMode::Main && config.subordinateDelayUsec != 0){
         Logger::warning("[AzureKinectDeviceImpl::generate_config] Subordinate delay != 0 for mode [Master], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
-    }else if (config.synchMode == DCSynchronisationMode::K4_Standalone && config.subordinateDelayUsec != 0){
+    }else if (config.synchMode == DCSynchronisationMode::Standalone && config.subordinateDelayUsec != 0){
         Logger::warning("[AzureKinectDeviceImpl::generate_config] Subordinate delay != 0 for mode [Standalone], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
     }
@@ -1028,7 +995,7 @@ auto AzureKinectDeviceImpl::generate_bt_config(const DCConfigSettings &config) -
     return ka4BtConfig;
 }
 
-auto AzureKinectDeviceImpl::depth_sized_color_data() -> std::span<tool::ColorRGBA8> {
+auto AzureKinectDeviceImpl::color_data() -> std::span<tool::ColorRGBA8> {
     if(depthSizedColorImage.has_value()){
         return std::span<tool::ColorRGBA8>{
             reinterpret_cast<tool::ColorRGBA8*>(depthSizedColorImage.value().get_buffer()),
@@ -1042,7 +1009,7 @@ auto AzureKinectDeviceImpl::depth_data() -> std::span<uint16_t> {
     if(depthImage.has_value()){
         return std::span<std::uint16_t>{
             reinterpret_cast<std::uint16_t*>(depthImage.value().get_buffer()),
-            depthImage.value().get_size()
+            static_cast<size_t>(depthImage.value().get_width_pixels() * depthImage.value().get_height_pixels())
         };
     }
     return {};
@@ -1052,7 +1019,7 @@ auto AzureKinectDeviceImpl::infra_data() -> std::span<uint16_t> {
     if(infraredImage.has_value()){
         return std::span<std::uint16_t>{
             reinterpret_cast<std::uint16_t*>(infraredImage.value().get_buffer()),
-            infraredImage.value().get_size()
+            static_cast<size_t>(infraredImage.value().get_width_pixels() * infraredImage.value().get_height_pixels())
         };
     }
     return {};

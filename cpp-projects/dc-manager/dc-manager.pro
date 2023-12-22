@@ -76,6 +76,7 @@ INCLUDEPATH += \
     $$TURBOPFOR_INCLUDES \
     $$GLFW_INCLUDES \
     $$ORBBEC_INCLUDES \
+    $$OPENCV_INCLUDES \
 
 ####################################### LIBRAIRIES
 
@@ -105,6 +106,7 @@ LIBS +=  \
     $$TURBOPFOR_LIBS \
     $$WINDOWS_LIBS \
     $$ORBBEC_LIBS \
+    $$OPENCV_LIBS \
 
 ####################################### PROJECT FILES
 

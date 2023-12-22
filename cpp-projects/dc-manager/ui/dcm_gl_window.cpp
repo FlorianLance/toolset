@@ -35,6 +35,7 @@
 #include "opengl/buffer/framebuffer_object.hpp"
 
 // 3d-engine
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 #include "engine/managers.hpp"
 

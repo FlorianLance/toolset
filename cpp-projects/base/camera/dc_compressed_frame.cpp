@@ -31,6 +31,10 @@
 // kinect4
 #include <k4a/k4atypes.h>
 
+// orbbec
+#include "libobsensor/ObSensor.hpp"
+
+
 // local
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
@@ -42,7 +46,7 @@ struct DCCompressedFrame::Impl{
     // kinect4 types
     std::optional<k4a_calibration_t> k4Calibration = std::nullopt;
     // orbbec types
-    // ...
+    std::optional<OBCameraParam> obCalibration = std::nullopt;
 };
 
 DCCompressedFrame::DCCompressedFrame() : i(std::make_unique<Impl>()){
@@ -82,15 +86,14 @@ auto DCCompressedFrame::cloud_color_size()  const noexcept -> size_t{
 auto DCCompressedFrame::calibration_size() const noexcept -> size_t{
     if(i->k4Calibration.has_value()){
         return sizeof(k4a_calibration_t) + sizeof(bool);
+    }else if(i->obCalibration.has_value()){
+        return sizeof(OBCameraParam) + sizeof(bool);
     }
     return sizeof(bool);
 }
 
 auto DCCompressedFrame::has_calibration() const noexcept -> bool {
-    if(i->k4Calibration.has_value()){
-        return true;
-    }
-    return false;
+    return i->k4Calibration.has_value() || i->obCalibration.has_value();
 }
 
 auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
@@ -158,6 +161,10 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
             k4a_calibration_t rCalibration;
             read(rCalibration, file);
             i->k4Calibration = rCalibration;
+        }else if(get_device(mode) == DCType::FemtoOrbbec){
+            OBCameraParam rCalibration;
+            read(rCalibration, file);
+            i->obCalibration = rCalibration;
         }
     }
 
@@ -245,6 +252,9 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     if(i->k4Calibration.has_value()){
         write(true, file);
         write(i->k4Calibration.value(), file);
+    }else if(i->obCalibration.has_value()){
+        write(true, file);
+        write(i->obCalibration.value(), file);
     }else{
         write(false, file);
     }
@@ -335,6 +345,10 @@ auto DCCompressedFrame::init_from_data(std::int8_t const * const data, size_t &o
             k4a_calibration_t rCalibration;
             read(rCalibration, data, offset, sizeData);
             i->k4Calibration = rCalibration;
+        }else if(get_device(mode) == DCType::FemtoOrbbec){
+            OBCameraParam rCalibration;
+            read(rCalibration, data, offset, sizeData);
+            i->obCalibration = rCalibration;
         }
     }
 
@@ -421,6 +435,9 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
     if(i->k4Calibration.has_value()){
         write(true, data, offset, sizeData);
         write(i->k4Calibration.value(), data, offset, sizeData);
+    }else if(i->obCalibration.has_value()){
+        write(true, data, offset, sizeData);
+        write(i->obCalibration.value(), data, offset, sizeData);
     }else{
         write(false, data, offset, sizeData);
     }
@@ -447,6 +464,8 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
 auto DCCompressedFrame::write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
     if(i->k4Calibration.has_value()){
         write(i->k4Calibration.value(), data, offset, sizeData);
+    }else if(i->obCalibration.has_value()){
+        write(i->obCalibration.value(), data, offset, sizeData);
     }
 }
 
@@ -455,12 +474,18 @@ auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t cons
         k4a_calibration_t rCalibration;
         read(rCalibration, data, offset, sizeData);
         i->k4Calibration = rCalibration;
+    }else if(type == DCType::FemtoOrbbec){
+        OBCameraParam rCalibration;
+        read(rCalibration, data, offset, sizeData);
+        i->obCalibration = rCalibration;
     }
 }
 
 auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
     if(get_device(mode) == DCType::AzureKinect){
         return sizeof(k4a_calibration_t);
+    }else if(get_device(mode) == DCType::FemtoOrbbec){
+        return sizeof(OBCameraParam);
     }
     return 0;
 }

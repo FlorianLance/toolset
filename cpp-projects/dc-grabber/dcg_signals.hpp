@@ -70,7 +70,7 @@ public:
     SSS<> update_device_type_signal;
 
     SSS<size_t, const camera::DCModelSettings&> update_model_signal;
-    SSS<ui::DCGUiSettings*> update_ui_settings_signal;
+    SSS<ui::DCGDisplaySettingsSettings*> update_ui_settings_signal;
 
     // recording
     SSS<> start_recorder_signal;

@@ -65,7 +65,7 @@ auto DCMController::initialize() -> bool{
         return false;
     }
     // # view
-    view->initialize(model->network.connections_nb());
+    view->initialize(model->sNetwork.devices_nb());
 
     model->trigger_settings();
 
@@ -76,19 +76,18 @@ auto DCMController::set_connections() -> void{
 
     // aliases
     // # drawers
-    using LeftD   = graphics::DCMLeftPanelChildDrawer;
-    using DirectD = graphics::DCDirectDrawer;
-    using RecD    = graphics::DCRecorderDrawer;
-    using PlayerD = graphics::DCPlayerDrawer;
-    using CalibD  = graphics::DCCalibratorDrawer;
+    using LeftD         = graphics::DCMLeftPanelChildDrawer;
+    using DirectD       = graphics::DCDirectDrawer;
+    using RecD          = graphics::DCRecorderDrawer;
+    using PlayerD       = graphics::DCPlayerDrawer;
+    using CalibD        = graphics::DCCalibratorDrawer;
     // # model
-    using Rec     = camera::DCRecorder;
-    using Player  = camera::DCPlayer;
-    using Calib   = camera::DCCalibrator;
-    using ServerD = camera::DCServerData;
-    using ServerC = network::DCServerConnection;
-    using ServerN = network::DCServerNetwork;
-    using Settings= DCMSettings;
+    using Rec           = camera::DCRecorder;
+    using Player        = camera::DCPlayer;
+    using Calib         = camera::DCCalibrator;
+    using ServerData    = camera::DCServerData;
+    using ServerNet     = network::DCServerNetwork;
+    using Settings      = DCMSettings;
 
     // pointers
     auto s              = DCMSignals::get();
@@ -101,7 +100,7 @@ auto DCMController::set_connections() -> void{
     auto playerD        = &middleD->playerD;
     auto calibrationD   = &middleD->calibratorD;
     // # model
-    auto network        = &model->network;
+    auto serverNet      = &model->sNetwork;
     auto serverData     = &model->sData;
     auto settings       = &model->settings;
     auto recorder       = &model->recorder;
@@ -123,8 +122,9 @@ auto DCMController::set_connections() -> void{
     });
 
     // to model
-    ServerC::synchro_signal.connect(                        &DCMModel::update_synchro,             model.get());
-    ServerC::feedback_signal.connect(                       &DCMModel::add_feedback,               model.get());
+
+    serverNet->remote_synchro_signal.connect(               &DCMModel::update_synchro,             model.get());
+    serverNet->remote_feedback_signal.connect(              &DCMModel::add_feedback,               model.get());
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,            model.get());
     s->update_filters_settings_signal.connect(              &DCMModel::update_filters,             model.get());
     s->update_calibration_filters_settings_signal.connect(  &DCMModel::update_calibration_filters, model.get());
@@ -134,18 +134,18 @@ auto DCMController::set_connections() -> void{
 
     // # network
     // ## init
-    s->init_connection_signal.connect(                  &ServerN::init_connection,           network);
+    s->init_connection_signal.connect(                  &ServerNet::init_connection,           serverNet);
     // ## send data
-    s->command_signal.connect(                          &ServerN::send_command,              network);
-    s->update_device_settings_signal.connect(           &ServerN::send_device_settings,      network);
+    s->command_signal.connect(                          &ServerNet::apply_command,              serverNet);
+    s->update_device_settings_signal.connect(           &ServerNet::update_device_settings,      serverNet);
 //    s->update_filters_settings_signal.connect(          &ServerN::send_filters,              network);
-    s->update_color_settings_signal.connect(            &ServerN::send_color_settings,       network);
-    s->update_delay_signal.connect(                     &ServerN::send_delay,                network);
+    s->update_color_settings_signal.connect(            &ServerNet::update_color_settings,       serverNet);
+    s->update_delay_signal.connect(                     &ServerNet::update_delay_settings,                serverNet);
 
     // # server data
     // ## update settings
     s->process_settings_action_signal.connect(          &Settings::process_settings_action,  settings);
-    s->mouse_pressed_depth_direct_signal.connect(       &Settings::update_filters_depth_mask,settings);
+    // s->mouse_pressed_depth_direct_signal.connect(       &Settings::update_filters_depth_mask,settings);
     // ## update model
     s->update_model_settings_signal.connect(            &Settings::update_model,             settings);
     calibration->validated_calibration_signal.connect(  &Settings::update_model,             settings);
@@ -153,8 +153,9 @@ auto DCMController::set_connections() -> void{
     recorder->states_updated_signal.connect(            &Settings::update_recorder_states,   settings);
     player->states_updated_signal.connect(              &Settings::update_player_states,     settings);
     calibration->states_updated_signal.connect(         &Settings::update_calibrator_states, settings);    
-    // ## update data
-    ServerC::compressed_frame_signal.connect(           &ServerD::new_compressed_frame,      serverData);
+    // ## update data    
+    serverNet->remote_frame_signal.connect(             &ServerData::new_compressed_frame,      serverData);
+    serverNet->local_frame_signal.connect(              &ServerData::new_frame,                 serverData);
 
 //    s->calibrate_signal.connect(                        [&](){
 //        std::vector<camera::K4Model> models;
@@ -164,6 +165,8 @@ auto DCMController::set_connections() -> void{
 //        std::cout << "CAL " << models.size() << "\n";
 //        calibration->calibrate(models);
 //    });
+
+    s->color_settings_reset_signal.connect(             &Settings::update_color_settings_from_device, settings);
 
     // # recorder
     // ## update settings

@@ -37,6 +37,7 @@
 #include "opengl/gl_texture.hpp"
 
 using namespace tool::graphics;
+using namespace tool::camera;
 
 
 auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
@@ -51,71 +52,39 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
 
     ImGuiUiDrawer::title2("PIXELS");
     {
-        int minMaxD[2] = {filters.minDepthValue, filters.maxDepthValue};
-        auto range = (camera::range(mode)*1000.f).conv<int>();
-        if(minMaxD[0] < range.x()){
-            minMaxD[0] = range.x();
-        }
-        if(minMaxD[1] > range.y()){
-            minMaxD[1] = range.y();
-        }
+        float minMaxD[2] = {filters.minDepthF, filters.maxDepthF};
 
-//        ImGui::Text("Mask:");
-//        ImGui::Indent();
-//        {
-//            if(ImGui::Button("Fill")){
-//                filters.depthMask.fill(false);
-//                update = true;
-//            }
-//            ImGui::SameLine();
-//            if(ImGui::Button("Empty")){
-//                filters.depthMask.fill(true);
-//                update = true;
-//            }
-//            ImGui::SameLine();
-//            ImGui::Text("Pencil");
-//            ImGui::SameLine();
-//            ImGui::SetNextItemWidth(60.f);
 
-//            if(ImGui::Combo("###settings_pencil_combo", &filters.idPencil, sizesPencilItems, IM_ARRAYSIZE(sizesPencilItems))){
-//                update = true;
-//            }
-//        }
-//        ImGui::Unindent();
+        auto dRange = (camera::depth_range(mode)*1000.f).conv<int>();
+        auto diff   = dRange.y() - dRange.x();
 
-        ImGui::Text("Depth (mm):");
+        ImGuiUiDrawer::text(std::format("Depth (factor): min: {}mm, max: {}mm", static_cast<int>(dRange.x() + minMaxD[0]*diff),  static_cast<int>(dRange.x() + minMaxD[1]*diff)));
         ImGui::Indent();
-        if(ImGui::SliderInt2("###settings_depth_min_max_sliderint2", minMaxD, range.x(), range.y())){
-            filters.minDepthValue = static_cast<std::int16_t>(minMaxD[0]);
-            filters.maxDepthValue = static_cast<std::int16_t>(minMaxD[1]);
+        if(ImGui::SliderFloat2("###settings_depth_min_max_factors", minMaxD, 0.f, 1.f)){
+            filters.minDepthF = minMaxD[0];
+            filters.maxDepthF = minMaxD[1];
             update = true;
         }
         ImGui::Unindent();
 
-        int minMaxWidth[2] = {static_cast<int>(filters.minWidth), static_cast<int>(filters.maxWidth)};
-        auto depthRes = camera::depth_resolution(mode);
-        if(minMaxWidth[1] > depthRes.x()){
-            minMaxWidth[1] = depthRes.x();
-        }
-        ImGui::Text("Width (pixels):");
+        auto resolution = camera::mixed_resolution(mode);
+
+        float minMaxW[2] = {filters.minWidthF, filters.maxWidthF};
+        ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*resolution.x()),  static_cast<int>(minMaxW[1]*resolution.x())));
         ImGui::Indent();
-        if(ImGui::SliderInt2("###settings_width_min_max_sliderint2", minMaxWidth, 0, depthRes.x())){
-            filters.minWidth = static_cast<unsigned int>(minMaxWidth[0]);
-            filters.maxWidth = static_cast<unsigned int>(minMaxWidth[1]);
+        if(ImGui::SliderFloat2("###settings_width_min_max_factors", minMaxW, 0.f, 1.f)){
+            filters.minWidthF = minMaxW[0];
+            filters.maxWidthF = minMaxW[1];
             update = true;
         }
         ImGui::Unindent();
 
-        int minMaxHeight[2] = {static_cast<int>(filters.minHeight), static_cast<int>(filters.maxHeight)};
-        if(minMaxHeight[1] > depthRes.y()){
-            minMaxHeight[1] = depthRes.y();
-        }
-
-        ImGui::Text("Height (pixels):");
+        float minMaxH[2] = {filters.minHeightF, filters.maxHeightF};
+        ImGuiUiDrawer::text(std::format("Height (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxH[0]*resolution.y()),  static_cast<int>(minMaxH[1]*resolution.y())));
         ImGui::Indent();
-        if(ImGui::SliderInt2("###settings_height_min_max_sliderint2", minMaxHeight, 0, depthRes.y())){
-            filters.minHeight = static_cast<unsigned int>(minMaxHeight[0]);
-            filters.maxHeight = static_cast<unsigned int>(minMaxHeight[1]);
+        if(ImGui::SliderFloat2("###settings_height_min_max_factors", minMaxH, 0.f, 1.f)){
+            filters.minHeightF = minMaxH[0];
+            filters.maxHeightF = minMaxH[1];
             update = true;
         }
         ImGui::Unindent();
@@ -990,7 +959,6 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
 
 auto DCUIDrawer::draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
-        const std::vector<std::string> &devicesName,
         camera::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate) -> bool{
@@ -1000,8 +968,8 @@ auto DCUIDrawer::draw_dc_device_settings_tab_item(
     }
     bool update = false;
     
-    draw_dc_config(devicesName, device.configS, updateDeviceList, update);
-    draw_dc_data_settings(device.dataS, update);
+    draw_dc_config(device.configS, updateDeviceList, update);
+    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);
     draw_dc_actions_settings(device.actionsS, update);
 
     ImGui::Spacing();
@@ -1019,12 +987,19 @@ auto DCUIDrawer::draw_dc_device_settings_tab_item(
     return  (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
 
-    ImGui::Spacing();
-    ImGuiUiDrawer::text_centered("CONFIG");
-    ImGui::Separator();
+    // init
+    if(modesNames.empty()){
+        for(const auto &m : k4Modes){
+            modesNames[m] = std::string(camera::mode_name(m));
+        }
+        for(const auto &m : foModes){
+            modesNames[m] = std::string(camera::mode_name(m));
+        }
+    }
 
+    ImGuiUiDrawer::title2("CONFIG");
     ImGui::Spacing();
 
     ImGui::Text("Device type:");
@@ -1032,9 +1007,13 @@ auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, cam
     ImGui::SetNextItemWidth(150.f);
 
     int guiCurrentTypeSelection = static_cast<int>(config.typeDevice);
-    if(ImGui::Combo("###settings_device_type", &guiCurrentTypeSelection, devicesTypes, IM_ARRAYSIZE(devicesTypes))){
-        updateP            = true;
-        config.typeDevice  = static_cast<camera::DCType>(guiCurrentTypeSelection);
+    if(ImGui::Combo("###settings_device_type", &guiCurrentTypeSelection, devicesTypes, IM_ARRAYSIZE(devicesTypes))){        
+        auto nDeviceType = static_cast<camera::DCType>(guiCurrentTypeSelection);
+        if(nDeviceType != config.typeDevice){
+            config.typeDevice = nDeviceType;
+            config.mode       = camera::default_camera_mode(config.typeDevice);
+            updateP = true;
+        }
     }
     updateDeviceList = ImGui::Button("Refresh devices list");
     ImGui::Unindent();
@@ -1043,12 +1022,11 @@ auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, cam
     ImGui::Indent();
     ImGui::SetNextItemWidth(150.f);
 
-
-    if(devicesName.size() != 0){
-        if(ImGui::BeginCombo("###settings_device_id", devicesName[config.idDevice].c_str())){
-            for(size_t ii = 0; ii < devicesName.size(); ++ii){
+    if(devicesNames.size() != 0){
+        if(ImGui::BeginCombo("###settings_device_id", devicesNames[config.idDevice].c_str())){
+            for(size_t ii = 0; ii < devicesNames.size(); ++ii){
                 bool selected = ii == config.idDevice;
-                if (ImGui::Selectable(devicesName[ii].c_str(),selected)){
+                if (ImGui::Selectable(devicesNames[ii].c_str(),selected)){
                     config.idDevice = static_cast<std::uint32_t>(ii);
                     updateP = true;
                 }
@@ -1067,27 +1045,35 @@ auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, cam
     ImGui::Spacing();
     ImGui::Text("Mode:");
     ImGui::Indent();
-    int guiCurrentModeSelection = static_cast<int>(config.mode);
 
-    if(ImGui::Button("<###settings_mode_left")){
-        if(guiCurrentModeSelection > 0){
-            --guiCurrentModeSelection;
-            updateP       = true;
-            config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
+    auto currentModeName = modesNames[config.mode];
+    if(config.typeDevice == camera::DCType::FemtoOrbbec){
+        if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
+            for(const auto &m : foModes){
+                bool selected = m == config.mode;
+                if (ImGui::Selectable(modesNames[m].c_str(), selected)){
+                    config.mode = m;
+                    updateP = true;
+                }
+                if(selected){
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
-    }
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(150.f);
-    if(ImGui::Combo("###settings_mode_combo", &guiCurrentModeSelection, k4ModeItems, IM_ARRAYSIZE(k4ModeItems))){
-        updateP       = true;
-        config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
-    }
-    ImGui::SameLine();
-    if(ImGui::Button(">###settings_mode_right")){
-        if(guiCurrentModeSelection < IM_ARRAYSIZE(k4ModeItems)-1){
-            ++guiCurrentModeSelection;
-            updateP       = true;
-            config.mode  = static_cast<camera::DCMode>(guiCurrentModeSelection);
+    }else if(config.typeDevice == camera::DCType::AzureKinect){
+        if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
+            for(const auto &m : k4Modes){
+                bool selected = m == config.mode;
+                if (ImGui::Selectable(modesNames[m].c_str(), selected)){
+                    config.mode = m;
+                    updateP = true;
+                }
+                if(selected){
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
     }
 
@@ -1133,24 +1119,28 @@ auto DCUIDrawer::draw_dc_config(const std::vector<std::string> &devicesName, cam
     ImGui::Spacing();
 }
 
-auto DCUIDrawer::draw_dc_data_settings(camera::DCDataSettings &data, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_data_settings(camera::DCType type, camera::DCDataSettings &data, bool &updateP) -> void{
 
+    ImGuiUiDrawer::title2("DATA");
     ImGui::Spacing();
-    ImGuiUiDrawer::text_centered("DATA");
-    ImGui::Separator();
 
-    ImGui::Spacing();
     ImGui::Text("Capture:");
-    if(ImGui::Checkbox("audio###settings_capture_audio", &data.captureAudio)){
-        updateP = true;
+
+    if(type == DCType::AzureKinect){
+        if(ImGui::Checkbox("audio###settings_capture_audio", &data.captureAudio)){
+            updateP = true;
+        }
+        ImGui::SameLine();
     }
-    ImGui::SameLine();
     if(ImGui::Checkbox("IMU###settings_capture_imu", &data.captureIMU)){
         updateP = true;
     }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
-        updateP = true;
+
+    if(type == DCType::AzureKinect){
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
+            updateP = true;
+        }
     }
 
     ImGui::Spacing();
@@ -1174,13 +1164,19 @@ auto DCUIDrawer::draw_dc_data_settings(camera::DCDataSettings &data, bool &updat
     if(ImGui::Checkbox("IMU###settings_send_imu", &data.sendIMU)){
         updateP = true;
     }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Audio###settings_send_audio", &data.sendAudio)){
-        updateP = true;
+
+    if(type == DCType::AzureKinect){
+        ImGui::SameLine();
+        if(ImGui::Checkbox("Audio###settings_send_audio", &data.sendAudio)){
+            updateP = true;
+        }
     }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Bodies###settings_send_bodies", &data.sendBodies)){
-        updateP = true;
+
+    if(type == DCType::AzureKinect){
+        ImGui::SameLine();
+        if(ImGui::Checkbox("Bodies###settings_send_bodies", &data.sendBodies)){
+            updateP = true;
+        }
     }
 
     ImGui::Spacing();
@@ -1204,9 +1200,7 @@ auto DCUIDrawer::draw_dc_data_settings(camera::DCDataSettings &data, bool &updat
 
 auto DCUIDrawer::draw_dc_actions_settings(camera::DCActionsSettings &actions, bool &updateP) -> void{
 
-    ImGui::Spacing();
-    ImGuiUiDrawer::text_centered("ACTIONS TO DO");
-    ImGui::Separator();
+    ImGuiUiDrawer::title2("ACTIONS TO DO");
     ImGui::Spacing();
     
     if(ImGui::Checkbox("Start device###settings_start_device", &actions.openDevice)){
@@ -1220,123 +1214,161 @@ auto DCUIDrawer::draw_dc_actions_settings(camera::DCActionsSettings &actions, bo
     ImGui::Spacing();
 }
 
+auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIntS{
+    tool::ImGuiIntS intS;
+    intS.min            = min_value(sType,dType);
+    intS.max            = max_value(sType,dType);
+    intS.defaultValue   = default_value(sType,dType);
+    intS.speedInc       = step_value(sType,dType);
+    intS.speedDrag      = intS.speedInc; // TODO: ...
+    return intS;
+}
 
 auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
 
+    using CST = ColorSettingsType;
     static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
     }
 
-    int guiSel = static_cast<int>(colors.exposureTimeAbsolute);
     bool update = false;
-
-    ImGuiUiDrawer::title2("CAMERA HARDWARE SETTINGS");
-    if(ImGui::Button("D###default_exposure_time")){
-        colors.exposureTimeAbsolute = 5;
-        update = true;
-    }
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(100);
-    if(ImGui::Combo("###exposure_time", &guiSel, exposureTimesMicroSTimes, IM_ARRAYSIZE(exposureTimesMicroSTimes))){
-        colors.exposureTimeAbsolute = guiSel;
-        update = true;
-    }
-    ImGui::SameLine();
-    ImGui::Text("Exposure time");
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto###auto_exposure_time", &colors.autoExposureTime)){
-        update = true;
-    }
-    ImGui::Spacing();
-
-
-    int value = colors.brightness;
+    int value;
     ImGuiDragS ds;
     ds.widthDrag = 100.f;
 
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Brightness", "color_brightness", &value, ImGuiIntS{128,0,255,1.f,1}, ds)){
-        colors.brightness = value;
-        update = true;
-    }
-    ImGui::Spacing();
+    ImGuiUiDrawer::title2("CAMERA HARDWARE SETTINGS");
 
-    value = colors.contrast;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Contrast", "color_contrast", &value, ImGuiIntS{5,0,10,1.f,1}, ds)){
-        colors.contrast = value;
-        update = true;
-    }
-
-    ImGui::Spacing();
-
-    value = colors.saturation;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Saturation", "color_saturation", &value, ImGuiIntS{32, 0, 63, 1.f, 1}, ds)){
-        colors.saturation = value;
-        update = true;
-    }
-
-    ImGui::Spacing();
-
-    value = colors.sharpness;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sharpness", "color_sharpness", &value, ImGuiIntS{4,0,4,1.f,1}, ds)){
-        colors.sharpness = value;
-        update = true;
-    }
-
-    ImGui::Spacing();
-
-    value = colors.gain;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Gain", "color_gain", &value, ImGuiIntS{128, 0, 255, 1.f, 1}, ds)){
-        colors.gain = value;
-        update = true;
-    }
-
-    ImGui::Spacing();
-
-    value = colors.whiteBalance;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("White balance", "color_white_balance", &value, ImGuiIntS{4500, 2500, 12500, 1, 10}, ds)){
-        colors.whiteBalance = value;
-        update = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("A###auto_white_balance", &colors.autoWhiteBalance)){
-        update = true;
-    }
-
-    ImGui::Spacing();
-
-    if(ImGui::Button("D###default_Backlight compensation")){
-        colors.backlightCompensation = false;
-        update = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Backlight compensation", &colors.backlightCompensation)){
-        update = true;
-    }
-    ImGui::Spacing();
-
-    if(ImGui::Button("D###default_Powerline frequency")){
-        colors.powerlineFrequency = camera::PowerlineFrequency::F60;
-        update = true;
-    }
-    ImGui::SameLine();
-
-    guiSel = colors.powerlineFrequency == camera::PowerlineFrequency::F50 ? 0 : 1;        
-    ImGui::SetNextItemWidth(100.f);
-    if(ImGui::Combo("###settings_mode_combo", &guiSel, powerlineFrequencyItems, IM_ARRAYSIZE(powerlineFrequencyItems))){
-        update       = true;
-        colors.powerlineFrequency = guiSel == 0 ? camera::PowerlineFrequency::F50 : camera::PowerlineFrequency::F60;
-    }
-    ImGui::SameLine();
-    ImGui::Text("Powerline frequency");
-
-    ImGui::Spacing();
-
-    if(type == camera::DCType::FemtoOrbbec){
-        if(ImGui::Button("D###default_hdr")){
-            colors.hdr = true;
+    if(is_available(CST::Auto_exposure, type)){
+        if(ImGui::Checkbox("Auto exposure###auto_exposure_time", &colors.autoExposureTime)){
             update = true;
+        }
+    }
+
+    ImGui::BeginDisabled(!colors.autoExposureTime);
+    if(is_available(CST::Brightness, type)){
+        value = colors.brightness;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Brightness", "color_brightness", &value, get_imgui_int_scale(CST::Brightness, type), ds)){
+            colors.brightness = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+    ImGui::EndDisabled();
+
+    ImGui::BeginDisabled(colors.autoExposureTime);
+
+    if(is_available(CST::Exposure, type)){
+        value = colors.exposureTime;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Exposure", "color_exposure", &value, get_imgui_int_scale(CST::Exposure, type), ds)){
+            colors.exposureTime = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::Gain, type)){
+        value = colors.gain;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Gain", "color_gain", &value, get_imgui_int_scale(CST::Gain, type), ds)){
+            colors.gain = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    ImGui::EndDisabled();
+
+    if(is_available(CST::Contrast, type)){
+        value = colors.contrast;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Contrast", "color_contrast", &value, get_imgui_int_scale(CST::Contrast, type), ds)){
+            colors.contrast = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::Saturation, type)){
+        value = colors.saturation;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Saturation", "color_saturation", &value, get_imgui_int_scale(CST::Saturation, type), ds)){
+            colors.saturation = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::Sharpness, type)){
+        value = colors.sharpness;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sharpness", "color_sharpness", &value, get_imgui_int_scale(CST::Sharpness, type), ds)){
+            colors.sharpness = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::Auto_white_balance, type)){
+        if(ImGui::Checkbox("Auto white balance###auto_white_balance", &colors.autoWhiteBalance)){
+            update = true;
+        }
+    }
+
+    ImGui::BeginDisabled(colors.autoWhiteBalance);
+    if(is_available(CST::White_balance, type)){
+        value = colors.whiteBalance;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("White balance", "color_white_balance", &value, get_imgui_int_scale(CST::White_balance, type), ds)){
+            colors.whiteBalance = value;
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+    ImGui::EndDisabled();
+
+    if(is_available(CST::Backlight_compensation, type)){
+        if(ImGui::Button("D###default_Backlight compensation")){
+            colors.backlightCompensation = default_value(CST::Backlight_compensation, type);
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("Backlight compensation", &colors.backlightCompensation)){
+            update = true;
+        }
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::Power_line_frequency, type)){
+
+        if(ImGui::Button("D###default_Powerline frequency")){
+            colors.powerlineFrequency = default_value(CST::Power_line_frequency, type);
+            update = true;
+        }
+        ImGui::SameLine();
+
+        int guiSel;
+        if(type == DCType::AzureKinect){
+            guiSel = colors.powerlineFrequency-1;
+            ImGui::SetNextItemWidth(100.f);
+            if(ImGui::Combo("###settings_mode_combo", &guiSel, k4PowerlineFrequencyItems, IM_ARRAYSIZE(k4PowerlineFrequencyItems))){
+                update       = true;
+                colors.powerlineFrequency = guiSel + 1;
+            }
+        }else if(type == DCType::FemtoOrbbec){
+            guiSel = colors.powerlineFrequency;
+            ImGui::SetNextItemWidth(100.f);
+            if(ImGui::Combo("###settings_mode_combo", &guiSel, obPowerlineFrequencyItems, IM_ARRAYSIZE(obPowerlineFrequencyItems))){
+                update       = true;
+                colors.powerlineFrequency = guiSel;
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("Powerline frequency");
+        ImGui::Spacing();
+    }
+
+    if(is_available(CST::HDR, type)){
+
+        if(ImGui::Button("D###default_hdr")){
+            colors.hdr = default_value(CST::HDR, type);
+            update     = true;
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("HDR", &colors.hdr)){
@@ -1351,3 +1383,26 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
 }
 
 
+
+//        ImGui::Text("Mask:");
+//        ImGui::Indent();
+//        {
+//            if(ImGui::Button("Fill")){
+//                filters.depthMask.fill(false);
+//                update = true;
+//            }
+//            ImGui::SameLine();
+//            if(ImGui::Button("Empty")){
+//                filters.depthMask.fill(true);
+//                update = true;
+//            }
+//            ImGui::SameLine();
+//            ImGui::Text("Pencil");
+//            ImGui::SameLine();
+//            ImGui::SetNextItemWidth(60.f);
+
+//            if(ImGui::Combo("###settings_pencil_combo", &filters.idPencil, sizesPencilItems, IM_ARRAYSIZE(sizesPencilItems))){
+//                update = true;
+//            }
+//        }
+//        ImGui::Unindent();

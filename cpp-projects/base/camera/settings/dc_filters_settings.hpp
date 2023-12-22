@@ -29,30 +29,30 @@
 // local
 #include "io/binary_settings.hpp"
 #include "graphics/color.hpp"
-#include "utility/bit_mask.hpp"
-#include "camera/dc_enums.hpp"
+// #include "utility/bit_mask.hpp"
+// #include "camera/dc_enums.hpp"
 
 namespace tool::camera {
 
 struct DCFiltersSettings : io::BinaryFileSettings{
 
-    // # width / height
-    unsigned int minWidth  = 0;
-    unsigned int maxWidth  = depth_resolution(dcDefaultMode).x();
-    unsigned int minHeight = 0;
-    unsigned int maxHeight = depth_resolution(dcDefaultMode).y();
+    enum class PlaneFilteringMode : std::int8_t{
+        None,
+        Above,
+        Below
+    };
+
+    // width / height / depth
+    float minWidthF  = 0.f;
+    float maxWidthF  = 1.f;
+    float minHeightF = 0.f;
+    float maxHeightF = 1.f;
+    float minDepthF  = 0.f;
+    float maxDepthF  = 1.f;
 
     // color
-    float yFactor = 1.f; // deprecated
-    float uFactor = 1.f; // deprecated
-    float vFactor = 1.f; // deprecated    
-
     ColorRGB32 filterColor  = ColorRGB32{0.f,0.5f,0.08f};
-    geo::Pt3f maxDiffColor = geo::Pt3f{20.f,0.5f,0.5f};
-
-    // # depth
-    std::int16_t minDepthValue = static_cast<std::int16_t>(range(dcDefaultMode).x()*1000.f);
-    std::int16_t maxDepthValue = static_cast<std::int16_t>(range(dcDefaultMode).y()*1000.f);       
+    geo::Pt3f maxDiffColor  = geo::Pt3f{20.f,0.5f,0.5f};
 
     // compression
     unsigned char jpegCompressionRate = 80;
@@ -60,9 +60,9 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     // # neigbhours
     float maxLocalDiff = 10.f;
     unsigned char nbMinNeighbours = 1;
-    unsigned char minNeighboursLoops = 1;
 
-    // # erosion
+    // loops
+    unsigned char minNeighboursLoops = 1;
     unsigned char erosionLoops = 1;
 
     // flogs
@@ -74,12 +74,6 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     bool invalidateColorFromDepth   = false;
     bool invalidateInfraFromDepth   = false;       
 
-    enum class PlaneFilteringMode : std::int8_t{
-        None,
-        Above,
-        Below
-    };
-
     PlaneFilteringMode p1FMode = PlaneFilteringMode::None;
     geo::Pt3f p1Pos;
     geo::Pt3f p1Rot;
@@ -88,13 +82,6 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     geo::Pt3f p2Pos;
     geo::Pt3f p2Rot;
 
-    // masks
-    static constexpr auto maskMaxRes  = camera::depth_resolution(camera::DCMode::K4_CLOUD_C1280x720_DI1024x1024_NV12_F15);
-    static constexpr auto maskMaxSize = maskMaxRes.x()*maskMaxRes.y();
-    BitMask<maskMaxSize> depthMask = BitMask<maskMaxSize>(true);
-
-    // local
-    int idPencil = 0;
 
     DCFiltersSettings();
     DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){

@@ -126,7 +126,9 @@ void ImguiLogs::draw(const char* name){
 void ImguiLogs2::draw(const char *name){
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::BeginChild(name, ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 260), false, window_flags);
+    auto wcrw = ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x;
+
+    ImGui::BeginChild(name, ImVec2(wcrw * 0.5f, 260), false, window_flags);
     for(const auto &log : logs){
         ImGui::Selectable(log.c_str());
     }

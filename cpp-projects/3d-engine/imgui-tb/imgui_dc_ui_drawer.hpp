@@ -48,60 +48,31 @@ namespace tool::graphics {
     "Kinect4", "Orbbecc femto"
 };
 
-[[maybe_unused]] static constexpr const char* k4ModeItems[] = {
-    "CLOUD_C1280x720_DI320x288_NV12_F30",
-    "CLOUD_C1280x720_DI640x576_MJPG_F30",
-    "CLOUD_C1280x720_DI640x576_YUY2_F30",
-    "CLOUD_C1280x720_DI640x576_NV12_F30",
-    "CLOUD_C1280x720_DI640x576_BGRA_F30",
-    "CLOUD_C1280x720_DI512x512_NV12_F30",
-    "CLOUD_C1280x720_DI1024x1024_NV12_F15",
-    "IMG_C1280x720_DI320x288_MJPG_F30",
-    "IMG_C1280x720_DI640x576_MJPG_F30",
-    "IMG_C1280x720_DI512x512_MJPG_F30",
-    "IMG_C1280x720_DI1024x1024_MJPG_F15",
-    "IMG_C1280x720_BGRA_F30",
-    "IMG_C1920x1080_BGRA_F30",
-    "IMG_C2560x1440_BGRA_F30",
-    "IMG_C2048x1536_BGRA__F30",
-    "IMG_C3840x2160_BGRA__F30",
-    "IMG_C4096x3072_BGRA__F30",
-    "IMG_C2048x1536_DI640x576_BGRA_F15",
-    "IMG_C2048x1536_DI1024x1024_BGRA_F15",
-    "IMG_C4096x3072_DI640x576_BGRA_F15",
-    "IMG_C4096x3072_DI1024x1024_BGRA_F15"
-};
-
-[[maybe_unused]] static constexpr const char* compressModeItems[] = {
-    "Full", "Cloud", "None"
-};
-
 [[maybe_unused]] static constexpr const char* synchItems[] = {
-    "Standalone", "Master", "Subordinate"
+    "Standalone", "Primary", "Subordinate"
 };
 
-[[maybe_unused]] static constexpr const char* powerlineFrequencyItems[] = {
+[[maybe_unused]] static constexpr const char* k4PowerlineFrequencyItems[] = {
     "50", "60"
+};
+[[maybe_unused]] static constexpr const char* obPowerlineFrequencyItems[] = {
+    "Close","50", "60"
 };
 
 [[maybe_unused]] static constexpr const char* sizesPencilItems[] = {
     "10", "40", "100"
 };
 
-[[maybe_unused]] static constexpr const char* exposureTimesMicroSTimes[] = {
-    "500", "1250", "2500", "8330", "16670", "33330"
-};
 
 class DCUIDrawer{
 
 public:
 
-    static auto draw_dc_config(const std::vector<std::string> &devicesName, camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
-    static auto draw_dc_data_settings(camera::DCDataSettings &data, bool &updateP) -> void;
+    static auto draw_dc_config(camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
+    static auto draw_dc_data_settings(camera::DCType type, camera::DCDataSettings &data, bool &updateP) -> void;
     static auto draw_dc_actions_settings(camera::DCActionsSettings &actions,  bool &updateP) -> void;
     static auto draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
-        const std::vector<std::string> &devicesName,
         camera::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate
@@ -122,6 +93,19 @@ public:
     static inline ImGuiFloatS modelRotFs = {0.f, -360.f, 360.f, 0.01f, 0.01f, "%.2f"};
     static inline ImGuiFloatS modelTrFs  = {0.f, -10.f, 10.f, 0.001f, 0.001f, "%.3f"};
     static inline ImGuiFloatS modelScFs  = {1.f, -100.f, 100.f, 0.01f, 0.01f, "%.3f"};
+
+    static inline std::vector<std::string> devicesNames = {
+        "dev_0", "dev_1", "dev_2", "dev_3", "dev_4", "dev_5", "dev_6", "dev_7", "dev_8", "dev_9"};
+    static inline std::vector<camera::DCMode> k4Modes = camera::get_device_modes(camera::DCType::AzureKinect);
+    static inline std::vector<camera::DCMode> foModes = camera::get_device_modes(camera::DCType::FemtoOrbbec);
+    static inline std::map<camera::DCMode, std::string> modesNames = {};
+
+    static auto udpate_device_name(size_t idDevice, const std::string &deviceName) -> void{
+        if(idDevice > devicesNames.size()){
+            devicesNames.resize(idDevice);
+        }
+        devicesNames[idDevice] = deviceName;
+    }
 };
 
 

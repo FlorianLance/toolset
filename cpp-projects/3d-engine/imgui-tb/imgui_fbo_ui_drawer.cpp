@@ -28,6 +28,7 @@
 #include "imgui_fbo_ui_drawer.hpp"
 
 // imgui
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 
 // local
@@ -105,9 +106,9 @@ auto ImguiFboUiDrawer::draw() -> void{
         ImGui::Text("Texture not initialized.");
     }else{
         if(invertTexture){
-            ImGui::Image(m_texture.id(), sizeI,  ImVec2(0,1), ImVec2(1,0));
+            ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture.id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
         }else{
-            ImGui::Image(m_texture.id(), sizeI,  ImVec2(0,0), ImVec2(1,1));
+            ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture.id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
         }
     }
 
@@ -152,28 +153,28 @@ auto ImguiFboUiDrawer::check_inputs() -> void{
             m_cameraUpdated = true;
         }
 
-        // up key
-        if(ImGui::IsKeyDown(73)){
+        // up key        
+        if(ImGui::IsKeyDown(ImGuiKey::ImGuiKey_UpArrow)){
             m_camera.move_front(movingSpeed);
             m_cameraUpdated = true;
         }
         // down key
-        if(ImGui::IsKeyDown(74)){
+        if(ImGui::IsKeyDown(ImGuiKey::ImGuiKey_DownArrow)){
             m_camera.move_back(movingSpeed);
             m_cameraUpdated = true;
         }
         // left key
-        if(ImGui::IsKeyDown(71)){
+        if(ImGui::IsKeyDown(ImGuiKey::ImGuiKey_LeftArrow)){
             m_camera.move_left(movingSpeed);
             m_cameraUpdated = true;
         }
         // right key
-        if(ImGui::IsKeyDown(72)){
+        if(ImGui::IsKeyDown(ImGuiKey::ImGuiKey_RightArrow)){
             m_camera.move_right(movingSpeed);
             m_cameraUpdated = true;
         }
         // R key
-        if(ImGui::IsKeyPressed(17, false)){            
+        if(ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_R, false)){
             m_camera.reset_init_values();
             m_cameraUpdated = true;
         }

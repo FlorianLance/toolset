@@ -47,11 +47,6 @@ struct FemtoOrbbecDeviceImpl : public DCDeviceImpl{
     std::shared_ptr<ob::DeviceList> deviceList = nullptr;
     std::shared_ptr<ob::SensorList> sensorList = nullptr;
     std::unique_ptr<ob::Pipeline> pipe = nullptr;
-    std::shared_ptr<ob::StreamProfileList> colorStreamProfileList = nullptr;
-    std::shared_ptr<ob::StreamProfileList> depthStreamProfileList = nullptr;
-    std::shared_ptr<ob::StreamProfileList> infraStreamProfileList = nullptr;
-    std::shared_ptr<ob::StreamProfileList> accelStreamProfileList = nullptr;
-    std::shared_ptr<ob::StreamProfileList> gyroStreamProfileList  = nullptr;
     std::unique_ptr<ob::PointCloudFilter> pointCloud = nullptr;
     OBCameraParam cameraParam;
 
@@ -65,7 +60,7 @@ struct FemtoOrbbecDeviceImpl : public DCDeviceImpl{
     // processing
     cv::Mat colorConvBuffer;
     std::shared_ptr<ob::ColorFrame> convertedColorImage = nullptr;
-    std::shared_ptr<ob::ColorFrame> depthSizedColorImage = nullptr;
+    // std::shared_ptr<ob::ColorFrame> depthSizedColorImage = nullptr;
 
     // actions
     auto open(std::uint32_t deviceId) -> bool override;
@@ -85,7 +80,7 @@ private:
     auto update_camera_from_colors_settings() -> void override;
 
     // get data
-    auto depth_sized_color_data() -> std::span<ColorRGBA8> override;
+    auto color_data() -> std::span<ColorRGBA8> override;
     auto depth_data() -> std::span<std::uint16_t> override;
     auto infra_data() -> std::span<std::uint16_t> override;
 
@@ -97,7 +92,7 @@ private:
 
     // process data
     auto convert_color_image() -> void override;
-    auto resize_color_to_fit_depth() -> void override;
+    auto resize_images() -> void override;
     auto generate_cloud() -> void override;
 
     // frame generation
@@ -362,3 +357,133 @@ private:
 //    // Other
 //    //  void triggerCapture();
 //    //  void sendFile(const char *filePath, const char *dstPath, SendFileCallback callback, bool async = true);
+
+// OB_FORMAT_YUYV       = 0,    /**< YUYV format */
+// OB_FORMAT_YUY2       = 1,    /**< YUY2 format (the actual format is the same as YUYV) */
+// OB_FORMAT_UYVY       = 2,    /**< UYVY format */
+// OB_FORMAT_NV12       = 3,    /**< NV12 format */
+// OB_FORMAT_NV21       = 4,    /**< NV21 format */
+// OB_FORMAT_MJPG       = 5,    /**< MJPEG encoding format */
+// OB_FORMAT_H264       = 6,    /**< H.264 encoding format */
+// OB_FORMAT_H265       = 7,    /**< H.265 encoding format */
+// OB_FORMAT_Y16        = 8,    /**< Y16 format, single channel 16-bit depth */
+// OB_FORMAT_Y8         = 9,    /**< Y8 format, single channel 8-bit depth */
+// OB_FORMAT_Y10        = 10,   /**< Y10 format, single channel 10-bit depth (SDK will unpack into Y16 by default) */
+// OB_FORMAT_Y11        = 11,   /**< Y11 format, single channel 11-bit depth (SDK will unpack into Y16 by default) */
+// OB_FORMAT_Y12        = 12,   /**< Y12 format, single channel 12-bit depth (SDK will unpack into Y16 by default) */
+// OB_FORMAT_GRAY       = 13,   /**< GRAY (the actual format is the same as YUYV) */
+// OB_FORMAT_HEVC       = 14,   /**< HEVC encoding format (the actual format is the same as H265) */
+// OB_FORMAT_I420       = 15,   /**< I420 format */
+// OB_FORMAT_ACCEL      = 16,   /**< Acceleration data format */
+// OB_FORMAT_GYRO       = 17,   /**< Gyroscope data format */
+// OB_FORMAT_POINT      = 19,   /**< XYZ 3D coordinate point format */
+// OB_FORMAT_RGB_POINT  = 20,   /**< XYZ 3D coordinate point format with RGB information */
+// OB_FORMAT_RLE        = 21,   /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
+// OB_FORMAT_RGB        = 22,   /**< RGB format (actual RGB888)  */
+// OB_FORMAT_BGR        = 23,   /**< BGR format (actual BGR888) */
+// OB_FORMAT_Y14        = 24,   /**< Y14 format, single channel 14-bit depth (SDK will unpack into Y16 by default) */
+// OB_FORMAT_BGRA       = 25,   /**< BGRA format */
+// OB_FORMAT_COMPRESSED = 26,   /**< Compression format */
+// OB_FORMAT_RVL        = 27,   /**< RVL pressure test format (SDK will be unpacked into Y16 by default) */
+// OB_FORMAT_UNKNOWN    = 0xff, /**< unknown format */
+
+// ####################### COLOR PROFILES
+
+// ########################################################### FEMTO BOLT PROFILES
+// COLOR PROFILES
+// FPS: 5/15/25/30
+// -> 3840 x 2160 -> NV12 / MJPG / BGRA / RGB
+// -> 2560 x 1440 -> NV12 / MJPG / BGRA / RGB
+// -> 1920 x 1080 -> NV12 / MJPG / BGRA / RGB
+// -> 1280 x 960  -> NV12 / MJPG / BGRA / RGB
+// -> 1280 x 720  -> NV12 / MJPG / YUYV / BGRA / RGB
+
+// DEPTH PROFILES
+// FPS: 5/15/25/30
+// -> 1024 x 1024 -> Y16
+// -> 640  x 576  -> Y16
+// -> 512  x 512  -> Y16
+// -> 320  x 288  -> Y16
+
+// INFRA PROFILES
+// FPS: 5/15/25/30
+// -> 1024 x 1024 -> Y16
+// -> 640  x 576  -> Y16
+// -> 512  x 512  -> Y16
+// -> 320  x 288  -> Y16
+
+// list accel profiles : 24
+//     6 1
+//     9 1
+//     9 2
+//     9 3
+//     9 4
+//     6 2
+//     6 3
+//     6 4
+//     7 1
+//     7 2
+//     7 3
+//     7 4
+//     8 1
+//     8 2
+//     8 3
+//     8 4
+//     10 1
+//     10 2
+//     10 3
+//     10 4
+//     11 1
+//     11 2
+//     11 3
+//     11 4
+
+// list gyuro profiles : 48
+//     6 5
+//     9 1
+//     9 2
+//     9 3
+//     9 4
+//     9 5
+//     9 6
+//     9 7
+//     9 8
+//     6 1
+//     6 2
+//     6 3
+//     6 4
+//     6 6
+//     6 7
+//     6 8
+//     7 1
+//     7 2
+//     7 3
+//     7 4
+//     7 5
+//     7 6
+//     7 7
+//     7 8
+//     8 1
+//     8 2
+//     8 3
+//     8 4
+//     8 5
+//     8 6
+//     8 7
+//     8 8
+//     10 1
+//     10 2
+//     10 3
+//     10 4
+//     10 5
+//     10 6
+//     10 7
+//     10 8
+//     11 1
+//     11 2
+//     11 3
+//     11 4
+//     11 5
+//     11 6
+//     11 7
+//     11 8

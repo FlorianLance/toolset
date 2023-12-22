@@ -253,7 +253,7 @@ auto DCClientConnection::dummy_device_trigger() -> void {
     settings.actionsS.startReading  = true;
     settings.actionsS.openDevice = true;
     settings.configS.typeDevice   = DCType::AzureKinect;
-    settings.configS.synchMode    = DCSynchronisationMode::K4_Standalone;
+    settings.configS.synchMode    = DCSynchronisationMode::Standalone;
 
     std::lock_guard l(m_readerL);
     m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<UdpMonoPacketMessage<camera::DCDeviceSettings>>(settings)};

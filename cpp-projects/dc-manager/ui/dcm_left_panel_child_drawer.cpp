@@ -503,15 +503,18 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
         for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
 
             bool updateDeviceList = false;
+
+            auto currentDeviceType = settings.grabbersSet[ii].device.configS.typeDevice;
             auto update = DCUIDrawer::draw_dc_device_settings_tab_item(fmt("[{}]###device_{}_tabitem", ii, ii),
-                {"Cam 0","Cam 1","Cam 2","Cam 3"},
                 settings.grabbersSet[ii].device,
                 updateDeviceList,
                 autoUpdate
             );
 
-            if(updateDeviceList){
-                // ...
+            if(currentDeviceType != settings.grabbersSet[ii].device.configS.typeDevice){
+                tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
+                settings.grabbersSet[ii].color.set_default_values(settings.grabbersSet[ii].device.configS.typeDevice);
+                DCMSignals::get()->color_settings_reset_signal(ii, settings.grabbersSet[ii].color);
             }
 
             if(update){

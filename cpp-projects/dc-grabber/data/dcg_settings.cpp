@@ -68,7 +68,7 @@ auto DCGSettings::initialize() -> bool{
 
     // network
     // # initialize
-    if(!network.initialize()){
+    if(!networkS.initialize()){
         return false;
     }
     // # read network config file
@@ -79,7 +79,7 @@ auto DCGSettings::initialize() -> bool{
         netWorkFilePath = DCGPaths::defaultNetwork.string();
     }
     if(netWorkFilePath.length() > 0){
-        if(!network.init_from_file(netWorkFilePath)){
+        if(!networkS.init_from_file(netWorkFilePath)){
             return false;
         }
     }else{
@@ -88,17 +88,17 @@ auto DCGSettings::initialize() -> bool{
     }
 
 
-    if(network.udpReadingInterfaceId > network.interfaces.size()){
-        Logger::error(std::format("Cannot find ipv4 interface with id [{}]. Abort initialization.\n", network.udpReadingInterfaceId));
+    if(networkS.udpReadingInterfaceId > networkS.interfaces.size()){
+        Logger::error(std::format("Cannot find ipv4 interface with id [{}]. Abort initialization.\n", networkS.udpReadingInterfaceId));
         return false;
     }
 
     Logger::message("Local interfaces available:\n");
-    for(const auto &interface : network.interfaces){
+    for(const auto &interface : networkS.interfaces){
         Logger::message(" -> " + interface.ipAddress + "\n");
     }
-    Logger::message(std::format("UDP reading interface id: [{}]\n", network.udpReadingInterfaceId));
-    Logger::message(std::format("UDP reading port [{}]\n", network.udpReadingPort));
+    Logger::message(std::format("UDP reading interface id: [{}]\n", networkS.udpReadingInterfaceId));
+    Logger::message(std::format("UDP reading port [{}]\n", networkS.udpReadingPort));
 
 
     // read filters settings file
@@ -108,7 +108,7 @@ auto DCGSettings::initialize() -> bool{
         filtersFilePath = DCGPaths::defaultFilters.string();
     }
     if(filtersFilePath.length() > 0){
-        filters.init_from_file(filtersFilePath);
+        filtersS.init_from_file(filtersFilePath);
     }else{
         Logger::error("No filters file found.\n");
     }
@@ -120,7 +120,7 @@ auto DCGSettings::initialize() -> bool{
         deviceFilePath = DCGPaths::defaultDevice.string();
     }
     if(deviceFilePath.length() > 0){
-        device.init_from_file(deviceFilePath);
+        deviceS.init_from_file(deviceFilePath);
     }else{
         Logger::error("No device settings file found.\n");
     }
@@ -132,7 +132,7 @@ auto DCGSettings::initialize() -> bool{
         colorFilePath = DCGPaths::defaultColor.string();
     }
     if(colorFilePath.length() > 0){
-        color.init_from_file(colorFilePath);
+        colorS.init_from_file(colorFilePath);
     }else{
         Logger::error("No color settings file found.\n");
     }
@@ -144,124 +144,119 @@ auto DCGSettings::initialize() -> bool{
         modelFilePath = DCGPaths::defaultModel.string();
     }
     if(modelFilePath.length() > 0){
-        model.init_from_file(modelFilePath);
+        modelS.init_from_file(modelFilePath);
     }else{
         Logger::error("No calibration model file found.\n");
     }
 
-    device.configS.idDevice = idLocalGrabber;
+    // device.configS.idDevice = idLocalGrabber;
 
     return true;
 }
 
 auto DCGSettings::init_network_sending_settings(std::shared_ptr<network::UdpNetworkSendingSettings> networkSendingS) -> void{
-    network.init_sending_settings(*networkSendingS);
+    networkS.init_sending_settings(*networkSendingS);
     triggers_init_network_sending_settings();
 }
 
 auto DCGSettings::update_filters(std::shared_ptr<camera::DCFiltersSettings> filtersS) -> void {
-    filters = *filtersS;
+    this->filtersS = *filtersS;
     triggers_filters_settings();
 }
 
 auto DCGSettings::update_device_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCDeviceSettings>> deviceS) -> void {
-    device = std::move(deviceS->data);
+    this->deviceS = std::move(deviceS->data);
     triggers_device_settings();
 }
 
 auto DCGSettings::update_color_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCColorSettings>> colorS) -> void{
-    color = std::move(colorS->data);
+    this->colorS = std::move(colorS->data);
     triggers_color_settings();
 }
 
+auto DCGSettings::update_color_settings_from_device_manager(const camera::DCColorSettings &colorS) -> void{
+    this->colorS = colorS;
+}
+
 auto DCGSettings::update_delay(network::UdpMonoPacketMessage<camera::DCDelaySettings> delayS) -> void{
-    delay = std::move(delayS.data);
+    this->delayS = std::move(delayS.data);
     triggers_delay_settings();
 }
 
-auto DCGSettings::update_device_name(int id, const std::string &name) -> void {
 
-    if(id < 0){
-        devicesNames = {};
-        return;
-    }
 
-    if(id >= static_cast<int>(devicesNames.size())){
-        devicesNames.resize(id + 1 );
-    }
-    devicesNames[id] = name;
-}
+// auto DCGSettings::update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<uint8_t> value) -> void{
 
-auto DCGSettings::update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<uint8_t> value) -> void{
+//     static_cast<void>(value);
+//     if(idC != 0 || (idB != 0 && idB != 1) || !ui.settingsFiltersSubPanelDisplayed){
+//         return;
+//     }
 
-    static_cast<void>(value);
-    if(idC != 0 || (idB != 0 && idB != 1) || !ui.settingsFiltersSubPanelDisplayed){
-        return;
-    }
+//     auto dRes = depth_resolution(device.configS.mode);
+//     auto dW   = depth_width(dRes);
+//     auto dH   = depth_height(dRes);
+//     for(const auto &idP : pencils[filters.idPencil]){
+//         auto pt = idP + pixel;
+//         if(pt.x() >= 0 && pt.x() < dW && pt.y() >= 0 && pt.y() < dH){
+//             auto id = pt.y()*dW + pt.x();
+//             filters.depthMask.set(id, idB == 0);
+//         }
+//     }
 
-    auto dRes = depth_resolution(device.configS.mode);
-    for(const auto &idP : pencils[filters.idPencil]){
-        auto pt = idP + pixel;
-        if(pt.x() >= 0 && pt.x() < dRes.x() && pt.y() >= 0 && pt.y() < dRes.y()){
-            auto id = pt.y()*dRes.x() + pt.x();
-            filters.depthMask.set(id, idB == 0);
-        }
-    }
-
-    triggers_filters_settings();
-}
+//     triggers_filters_settings();
+// }
 
 auto DCGSettings::update_imu_sample(camera::DCImuSample imuSample) -> void{
     this->imuSample = imuSample;
 }
 
 auto DCGSettings::triggers_init_network_sending_settings() -> void {
-    DCGSignals::get()->init_network_sending_settings_signal(&network);
+    DCGSignals::get()->init_network_sending_settings_signal(&networkS);
 }
 
 auto DCGSettings::triggers_filters_settings() -> void {
-    DCGSignals::get()->update_filters_signal(filters);
+    DCGSignals::get()->update_filters_signal(filtersS);
 }
 
 auto DCGSettings::triggers_device_settings() -> void {
-    DCGSignals::get()->update_device_settings_signal(device);
+    DCGSignals::get()->update_device_settings_signal(deviceS);
 }
 
 auto DCGSettings::triggers_color_settings() -> void{
-    DCGSignals::get()->update_color_settings_signal(color);
+    DCGSignals::get()->update_color_settings_signal(colorS);
 }
 
 auto DCGSettings::triggers_display_settings() -> void {
-    DCGSignals::get()->update_cloud_display_settings_signal(0, cloudDisplay);
+    DCGSignals::get()->update_cloud_display_settings_signal(0, displayS.cloudDisplay);
 }
 
 auto DCGSettings::triggers_model() -> void {
-    DCGSignals::get()->update_model_signal(0, model);
+    DCGSignals::get()->update_model_signal(0, modelS);
 }
 
 auto DCGSettings::triggers_delay_settings() -> void {
-    DCGSignals::get()->update_delay_signal(delay);
+    DCGSignals::get()->update_delay_signal(delayS);
 }
 
 auto DCGSettings::disconnect() -> void{
-    network.disconnect_from_manager();
+    networkS.disconnect_from_manager();
 }
 
 auto DCGSettings::reset_device_settings() -> void{
-    device = camera::DCDeviceSettings::default_init_for_grabber();
+    deviceS = camera::DCDeviceSettings::default_init_for_grabber();
     triggers_device_settings();
 }
 
 auto DCGSettings::save_device_settings_to_default_file() -> bool{
-    return device.save_to_file(DCGPaths::defaultDevice.string());
+    return deviceS.save_to_file(DCGPaths::defaultDevice.string());
 }
 
 auto DCGSettings::save_device_settings_to_current_hostname_file() -> bool{
-    return device.save_to_file(DCGPaths::hostDevice.string());
+    return deviceS.save_to_file(DCGPaths::hostDevice.string());
 }
 
 auto DCGSettings::load_default_device_settings_file() -> bool{
-    if(device.init_from_file(DCGPaths::defaultDevice.string())){
+    if(deviceS.init_from_file(DCGPaths::defaultDevice.string())){
         triggers_device_settings();
         return true;
     }
@@ -269,7 +264,7 @@ auto DCGSettings::load_default_device_settings_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
-    if(device.init_from_file(DCGPaths::hostDevice.string())){
+    if(deviceS.init_from_file(DCGPaths::hostDevice.string())){
         triggers_device_settings();
         return true;
     }
@@ -277,20 +272,20 @@ auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_filters() -> void{
-    filters = camera::DCFiltersSettings();
+    filtersS = camera::DCFiltersSettings();
     triggers_device_settings();
 }
 
 auto DCGSettings::save_filters_to_default_file() -> bool{
-    return filters.save_to_file(DCGPaths::defaultFilters.string());
+    return filtersS.save_to_file(DCGPaths::defaultFilters.string());
 }
 
 auto DCGSettings::save_filters_to_current_hostname_file() -> bool{
-    return filters.save_to_file(DCGPaths::hostFilters.string());
+    return filtersS.save_to_file(DCGPaths::hostFilters.string());
 }
 
 auto DCGSettings::load_default_filters_file() -> bool{
-    if(filters.init_from_file(DCGPaths::defaultFilters.string())){
+    if(filtersS.init_from_file(DCGPaths::defaultFilters.string())){
         triggers_filters_settings();
         return true;
     }
@@ -298,7 +293,7 @@ auto DCGSettings::load_default_filters_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_filters_file() -> bool{
-    if(filters.init_from_file(DCGPaths::hostFilters.string())){
+    if(filtersS.init_from_file(DCGPaths::hostFilters.string())){
         triggers_filters_settings();
         return true;
     }
@@ -306,20 +301,20 @@ auto DCGSettings::load_current_hostname_filters_file() -> bool{
 }
 
 auto DCGSettings::reset_color_settings() -> void{
-    color = camera::DCColorSettings();
+    colorS = camera::DCColorSettings();
     triggers_color_settings();
 }
 
 auto DCGSettings::save_color_settings_to_default_file() -> bool{
-    return color.save_to_file(DCGPaths::defaultColor.string());
+    return colorS.save_to_file(DCGPaths::defaultColor.string());
 }
 
 auto DCGSettings::save_color_settings_to_current_hostname_file() -> bool{
-    return color.save_to_file(DCGPaths::hostColor.string());
+    return colorS.save_to_file(DCGPaths::hostColor.string());
 }
 
 auto DCGSettings::load_default_settings_color_file() -> bool{
-    if(color.init_from_file(DCGPaths::defaultColor.string())){
+    if(colorS.init_from_file(DCGPaths::defaultColor.string())){
         triggers_color_settings();
         return true;
     }
@@ -327,7 +322,7 @@ auto DCGSettings::load_default_settings_color_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
-    if(color.init_from_file(DCGPaths::hostColor.string())){
+    if(colorS.init_from_file(DCGPaths::hostColor.string())){
         triggers_color_settings();
         return true;
     }
@@ -335,20 +330,20 @@ auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_model() -> void{
-    model = camera::DCModelSettings();
+    modelS = camera::DCModelSettings();
     triggers_model();
 }
 
 auto DCGSettings::save_model_to_default_file() -> bool{
-    return model.save_to_file(DCGPaths::defaultModel.string());
+    return modelS.save_to_file(DCGPaths::defaultModel.string());
 }
 
 auto DCGSettings::save_model_to_current_hostname_file() -> bool{
-    return model.save_to_file(DCGPaths::hostModel.string());
+    return modelS.save_to_file(DCGPaths::hostModel.string());
 }
 
 auto DCGSettings::load_default_model_file() -> bool{
-    if(model.init_from_file(DCGPaths::defaultModel.string())){
+    if(modelS.init_from_file(DCGPaths::defaultModel.string())){
         triggers_model();
         return true;
     }
@@ -356,7 +351,7 @@ auto DCGSettings::load_default_model_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_model_file() -> bool{
-    if(model.init_from_file(DCGPaths::hostModel.string())){
+    if(modelS.init_from_file(DCGPaths::hostModel.string())){
         triggers_model();
         return true;
     }

@@ -40,12 +40,13 @@ using namespace tool::camera;
 
 auto DCInfos::initialize(DCMode mode) -> void{
 
-    idCapture       = 0;
-    colorResolution = color_resolution(mode);
-    imageFormat     = image_format(mode);
-    depthMode       = depth_mode(mode);
-    fps             = framerate(mode);
-    timeoutMs       = 0;
+    idCapture               = 0;
+    initialColorResolution         = color_resolution(mode);
+    imageFormat             = image_format(mode);
+    depthMode               = depth_resolution(mode);
+    initialDepthResolution  = depth_resolution(mode);
+    fps                     = framerate(mode);
+    timeoutMs               = 0;
     switch (fps) {
     case DCFramerate::F30:
         timeoutMs = 40;
@@ -62,9 +63,9 @@ auto DCInfos::initialize(DCMode mode) -> void{
     }
 
     // retrieve colors dimensions
-    if(colorResolution != DCColorResolution::OFF){
-        colorWidth      = color_width(colorResolution);
-        colorHeight     = color_height(colorResolution);
+    if(initialColorResolution != DCColorResolution::OFF){
+        colorWidth      = color_width(initialColorResolution);
+        colorHeight     = color_height(initialColorResolution);
         colorSize       = colorWidth * colorHeight;
     }else{
         colorWidth      = 0;
@@ -73,22 +74,71 @@ auto DCInfos::initialize(DCMode mode) -> void{
     }
 
     // retrieve depth dimensions
-    if(depthMode != DCDepthMode::K4_OFF){
-        auto depthRes   = depth_resolution(mode);
-        depthWidth      = depthRes.x();
-        depthHeight     = depthRes.y();
-        depthSize       = depthWidth * depthHeight;
-    }else{
-        depthWidth      = 0;
-        depthHeight     = 0;
-        depthSize       = 0;
+    auto dev = get_device(mode);
+    if(dev == DCType::FemtoOrbbec){
+
+        if(depthMode != DCDepthResolution::K4_OFF){
+            if(initialColorResolution != DCColorResolution::OFF){
+                // depth always aligned to color
+                depthWidth      = colorWidth;
+                depthHeight     = colorHeight;
+                depthSize       = colorSize;
+
+                auto depthRes   = depth_resolution(mode);
+                infraWidth      = depth_width(depthRes);
+                infraHeight     = depth_height(depthRes);
+                infraSize       = infraWidth * infraHeight;
+
+            }else{
+                auto depthRes   = depth_resolution(mode);
+                depthWidth      = depth_width(depthRes);
+                depthHeight     = depth_height(depthRes);
+                depthSize       = depthWidth * depthHeight;
+                infraWidth      = depthWidth;
+                infraHeight     = depthHeight;
+                infraSize       = depthSize;
+            }
+
+        }else{
+            depthWidth      = 0;
+            depthHeight     = 0;
+            depthSize       = 0;
+            infraWidth      = 0;
+            infraHeight     = 0;
+            infraSize       = 0;
+        }
+    }else if(dev == DCType::AzureKinect){
+        if(depthMode != DCDepthResolution::K4_OFF){
+            auto depthRes   = depth_resolution(mode);
+            depthWidth      = depth_width(depthRes);
+            depthHeight     = depth_height(depthRes);
+            depthSize       = depthWidth * depthHeight;
+            infraWidth      = depthWidth;
+            infraHeight     = depthHeight;
+            infraSize       = depthSize;
+        }else{
+            depthWidth      = 0;
+            depthHeight     = 0;
+            depthSize       = 0;
+            infraWidth      = 0;
+            infraHeight     = 0;
+            infraSize       = 0;
+        }
     }
+
+    std::cout << "COLOR " << colorWidth << " " << colorHeight << " " << colorSize << "\n";
+    std::cout << "DEPTH " << depthWidth << " " << depthHeight << " " << depthSize << "\n";
+    std::cout << "INFRA " << infraWidth << " " << infraHeight << " " << infraSize << "\n";
+    std::cout << "FPS" << framerate_value(fps) << "\n";
+    std::cout << "FORMAT: " << (int)imageFormat << "\n";
+
 }
 
 auto DCIndices::initialize(const DCInfos &infos) -> void{
 
     // set color indices
-    if(infos.colorResolution != DCColorResolution::OFF){
+    if(infos.initialColorResolution != DCColorResolution::OFF){
+
         colors1D.resize(infos.colorSize);
         std::iota(std::begin(colors1D), std::end(colors1D), 0);
     }else{
@@ -96,19 +146,23 @@ auto DCIndices::initialize(const DCInfos &infos) -> void{
     }
 
     // set depth indices
-    if(infos.depthMode != DCDepthMode::K4_OFF){
+    if(infos.depthMode != DCDepthResolution::K4_OFF){
 
         // depthMask.resize(depthSize);
         // filteringMask.resize(depthSize);
         // depthFiltering.resize(depthSize);
-        // zonesId.resize(depthSize);
+        // zonesId.resize(depthSize);        
+        infras1D.resize(infos.infraSize);
+        std::iota(std::begin(infras1D), std::end(infras1D), 0);
 
         depths1D.resize(infos.depthSize);
+        std::iota(std::begin(depths1D), std::end(depths1D), 0);
+
         depthVertexCorrrespondance.resize(infos.depthSize);
 
         depthsSortedCorrespondanceNoBorders.resize((infos.depthWidth-2)*(infos.depthHeight-2));
 
-        std::iota(std::begin(depths1D), std::end(depths1D), 0);
+
         depths3D.resize(infos.depthSize);
 
         depths1DNoBorders.clear();
@@ -264,16 +318,12 @@ auto DCTiming::get_duration_between_micro_s(std::string_view from, std::string_v
     return std::nullopt;
 }
 
-
-
-
-
 auto DCDeviceImpl::initialize() -> void{
 
     infos.initialize(settings.config.mode);
     indices.initialize(infos);
 
-    if(infos.depthMode != DCDepthMode::K4_OFF){
+    if(infos.depthMode != DCDepthResolution::K4_OFF){
         depthMask.resize(infos.depthSize);
         filteringMask.resize(infos.depthSize);
         depthFiltering.resize(infos.depthSize);
@@ -297,7 +347,6 @@ auto DCDeviceImpl::read_frames() -> void {
 
     // start loop
     readFramesFromCameras = true;
-
     timing.reset();
 
     while(readFramesFromCameras){
@@ -346,39 +395,34 @@ auto DCDeviceImpl::read_frames() -> void {
             break;
         }
 
+
         // get images
-        if(!read_color_image()){
-            continue;
-        }
-        if(!read_depth_image()){
-            continue;
-        }
-        if(!read_infra_image()){
-            continue;
-        }
+        read_color_image();
+        read_depth_image();
+        read_infra_image();
         timing.update_local("after_get_images"sv);
 
         // process
         convert_color_image();
         timing.update_local("after_color_convert"sv);
 
-        resize_color_to_fit_depth();
+        resize_images();
         timing.update_local("after_color_resize"sv);
 
-        filter_depth_image(cFiltersS,depth_data(), depth_sized_color_data(), infra_data());
+        filter_depth_image(cFiltersS,depth_data(), color_data(), infra_data());
         timing.update_local("after_depth_filter"sv);
 
-        filter_color_image(cFiltersS, depth_sized_color_data(), infra_data(), depth_data());
+        filter_color_image(cFiltersS, color_data(), infra_data(), depth_data());
         timing.update_local("after_color_filter"sv);
 
-        filter_infrared_image(cFiltersS, infra_data(), depth_data(), depth_sized_color_data());
+        filter_infrared_image(cFiltersS, infra_data(), depth_data(), color_data());
         timing.update_local("after_infrared_filter"sv);
 
-        if(cDataS.sendCloud || cDataS.generateCloudLocal){
+        if(cDataS.generateCloudLocal){
             generate_cloud();
             timing.update_local("after_cloud_generation"sv);
         }
-        timing.update_local("after_processing"sv);        
+        timing.update_local("after_processing"sv);
 
         if(!readFramesFromCameras){
             break;
@@ -387,21 +431,17 @@ auto DCDeviceImpl::read_frames() -> void {
         // compressed frame
         if(sendData){
 
-            if(settings.config.typeDevice != DCType::FemtoOrbbec){
+            // generate
+            auto compressedFrame = compress_frame(cFiltersS,cDataS);
+            timing.update_local("after_compressing"sv);
+            frames.add_compressed_frame(std::move(compressedFrame));
 
-                // generate
-                auto compressedFrame = compress_frame(cFiltersS,cDataS);
-                timing.update_local("after_compressing"sv);
-                frames.add_compressed_frame(std::move(compressedFrame));
-
-                // send with delay
-                if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timing.get_local("after_capture"sv), cDelayS.delayMs)){
-                    dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
-                    timing.update_local("after_compressed_frame_sending"sv);
-                }
+            // send with delay
+            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timing.get_local("after_capture"sv), cDelayS.delayMs)){
+                dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
+                timing.update_local("after_compressed_frame_sending"sv);
             }
         }
-
 
         // local frame
         if(cDataS.generateRGBLocalFrame || cDataS.generateDepthLocalFrame || cDataS.generateInfraLocalFrame || cDataS.generateCloudLocal){
@@ -412,7 +452,7 @@ auto DCDeviceImpl::read_frames() -> void {
             frames.add_frame(std::move(dFrame));
 
             // send with delay
-            if(auto frameToSend = frames.get_frame_with_delay(timing.get_local("after_capture"sv), cDelayS.delayMs)){
+            if(auto frameToSend = frames.take_frame_with_delay(timing.get_local("after_capture"sv), cDelayS.delayMs)){
                 dcDevice->new_frame_signal(std::move(frameToSend));
                 timing.update_local("after_frame_sending"sv);
             }
@@ -421,7 +461,7 @@ auto DCDeviceImpl::read_frames() -> void {
     }
 }
 
-auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> depthSizedColorBuffer, std::span<uint16_t> infraBuffer) -> void{
+auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer) -> void{
 
     static_cast<void>(infraBuffer); // not used yet
 
@@ -429,18 +469,28 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         return;
     }
 
+    if(!colorBuffer.empty() && (colorBuffer.size() != depthBuffer.size())){
+        return;
+    }
+
     Bench::start("[DCDeviceData::filter_depth_image]");
 
-    const auto dRange = range(settings.config.mode)*1000.f;
-    auto minD = filtersS.minDepthValue < dRange.x() ? static_cast<std::int16_t>(dRange.x()) : filtersS.minDepthValue;
-    auto maxD = filtersS.maxDepthValue > dRange.y() ? static_cast<std::int16_t>(dRange.y()) : filtersS.maxDepthValue;
+    const auto dRange = depth_range(settings.config.mode)*1000.f;
+
+    auto minW = infos.depthWidth  * filtersS.minWidthF;
+    auto maxW = infos.depthWidth  * filtersS.maxWidthF;
+    auto minH = infos.depthHeight * filtersS.minHeightF;
+    auto maxH = infos.depthHeight * filtersS.maxHeightF;
+    auto minD = filtersS.minDepthF * dRange.x();
+    auto maxD = filtersS.maxDepthF * dRange.y();
     auto hsvDiffColor = Convert::to_hsv(filtersS.filterColor);
 
     // reset depth mask
     std::fill(depthMask.begin(), depthMask.end(), 1);
 
-
     auto pl1Dir = normalize(filtersS.p1Rot);
+    auto pl2Dir = normalize(filtersS.p2Rot);
+
 
     // depth/width/height/mask/color/infra filtering
     std::for_each(std::execution::par_unseq, std::begin(indices.depths3D), std::end(indices.depths3D), [&](const Pt3<size_t> &dIndex){
@@ -458,8 +508,8 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         }
 
         // depth filtering
-        if( (ii < filtersS.minWidth)  || (ii > filtersS.maxWidth)  ||   // width
-            (jj < filtersS.minHeight) || (jj > filtersS.maxHeight) ||   // height
+        if( (ii < minW)  || (ii > maxW)  ||   // width
+            (jj < minH)  || (jj > maxH) ||   // height
             (currentDepth < minD) || (currentDepth > maxD) ){           // depth
             depthMask[id] = 0;
             return;
@@ -480,12 +530,24 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
                     return;
                 }
             }
+
+            if(dot(pt - filtersS.p2Pos, pl2Dir) < 0){
+                if(filtersS.p2FMode == DCFiltersSettings::PlaneFilteringMode::Above){
+                    depthMask[id] = 0;
+                    return;
+                }
+            }else{
+                if(filtersS.p2FMode == DCFiltersSettings::PlaneFilteringMode::Below){
+                    depthMask[id] = 0;
+                    return;
+                }
+            }
         }
 
         // color filtering
-        if(!depthSizedColorBuffer.empty() && filtersS.filterDepthWithColor){
+        if(!colorBuffer.empty() && filtersS.filterDepthWithColor){
 
-            auto hsv = Convert::to_hsv(depthSizedColorBuffer[id]);
+            auto hsv = Convert::to_hsv(colorBuffer[id]);
             if((std::abs(hsv.h()- hsvDiffColor.h()) > filtersS.maxDiffColor.x()) ||
                 (std::abs(hsv.s()- hsvDiffColor.s()) > filtersS.maxDiffColor.y()) ||
                 (std::abs(hsv.v()- hsvDiffColor.v()) > filtersS.maxDiffColor.z())){
@@ -533,15 +595,17 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> depthSizedColorBuffer, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer) -> void{
+auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer) -> void{
 
-    static_cast<void>(infraBuffer); // not used yet
-
-    if(depthSizedColorBuffer.empty()){
+    if(colorBuffer.empty()){
         return;
     }
 
-    if(depthBuffer.empty() && infraBuffer.empty()){
+    if(!depthBuffer.empty() && (depthBuffer.size() != colorBuffer.size())){
+        return;
+    }
+
+    if(!infraBuffer.empty() && (infraBuffer.size() != colorBuffer.size())){
         return;
     }
 
@@ -552,10 +616,10 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::sp
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
             if(filtersS.invalidateColorFromDepth){
                 if(depthBuffer[id] == dc_invalid_depth_value){
-                    depthSizedColorBuffer[id] = ColorRGBA8{dc_invalid_color_value};
+                    colorBuffer[id] = ColorRGBA8{dc_invalid_color_value};
                 }else{
                     if(filtersS.keepOnlyBiggestCluster){
-                        depthSizedColorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};
+                        colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};
                     }
                 }
             }
@@ -565,16 +629,18 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::sp
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> depthSizedColorBuffer) -> void{
+auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer) -> void{
 
-
-    static_cast<void>(depthSizedColorBuffer); // not used yet
 
     if(infraBuffer.empty()){
         return;
     }
 
-    if(depthSizedColorBuffer.empty() && depthBuffer.empty()){
+    if(!colorBuffer.empty() && (colorBuffer.size() != infraBuffer.size())){
+        return;
+    }
+
+    if(!depthBuffer.empty() && (depthBuffer.size() != infraBuffer.size())){
         return;
     }
 
@@ -894,7 +960,7 @@ auto DCFrames::add_compressed_frame(std::shared_ptr<DCCompressedFrame> cFrame) -
     compressedFrames.push_back(std::make_tuple(afterCaptureTS, std::move(cFrame)));
 }
 
-auto DCFrames::get_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCFrame>{
+auto DCFrames::take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCFrame>{
 
     // check delay
     using namespace std::chrono;

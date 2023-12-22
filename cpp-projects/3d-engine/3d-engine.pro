@@ -119,18 +119,18 @@ HEADERS += \
     imgui/imstb_truetype.h \
     imgui/misc/cpp/imgui_stdlib.h \
     # imgui-extra
-    imgui/extra/imgui_markdown.h \
+    # imgui/extra/imgui_markdown.h \
     imgui/extra/implot/implot.h \
     imgui/extra/implot/implot_internal.h \
-    imgui/extra/imgui-node-editor/crude_json.h \
-    imgui/extra/imgui-node-editor/imgui_bezier_math.h \
-    imgui/extra/imgui-node-editor/imgui_bezier_math.inl \
-    imgui/extra/imgui-node-editor/imgui_canvas.h \
-    imgui/extra/imgui-node-editor/imgui_extra_math.h \
-    imgui/extra/imgui-node-editor/imgui_extra_math.inl \
-    imgui/extra/imgui-node-editor/imgui_node_editor.h \
-    imgui/extra/imgui-node-editor/imgui_node_editor_internal.h \
-    imgui/extra/imgui-node-editor/imgui_node_editor_internal.inl \
+    # imgui/extra/imgui-node-editor/crude_json.h \
+    # imgui/extra/imgui-node-editor/imgui_bezier_math.h \
+    # imgui/extra/imgui-node-editor/imgui_bezier_math.inl \
+    # imgui/extra/imgui-node-editor/imgui_canvas.h \
+    # imgui/extra/imgui-node-editor/imgui_extra_math.h \
+    # imgui/extra/imgui-node-editor/imgui_extra_math.inl \
+    # imgui/extra/imgui-node-editor/imgui_node_editor.h \
+    # imgui/extra/imgui-node-editor/imgui_node_editor_internal.h \
+    # imgui/extra/imgui-node-editor/imgui_node_editor_internal.inl \
     imgui/extra/ImGuiFileDialog.h \
     imgui/extra/ImGuiFileDialogConfig.h \
     # imgui-sfml
@@ -173,10 +173,10 @@ SOURCES += \
     # imgui-extra
     imgui/extra/implot/implot.cpp \
     imgui/extra/implot/implot_items.cpp \
-    imgui/extra/imgui-node-editor/crude_json.cpp \
-    imgui/extra/imgui-node-editor/imgui_canvas.cpp \
-    imgui/extra/imgui-node-editor/imgui_node_editor.cpp \
-    imgui/extra/imgui-node-editor/imgui_node_editor_api.cpp \    
+    # imgui/extra/imgui-node-editor/crude_json.cpp \
+    # imgui/extra/imgui-node-editor/imgui_canvas.cpp \
+    # imgui/extra/imgui-node-editor/imgui_node_editor.cpp \
+    # imgui/extra/imgui-node-editor/imgui_node_editor_api.cpp \
     imgui/extra/ImGuiFileDialog.cpp \
     # imgui-sfml
     imgui-sfml/imgui-SFML.cpp \

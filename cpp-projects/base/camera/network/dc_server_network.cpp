@@ -33,113 +33,137 @@
 #include "utility/logger.hpp"
 #include "utility/format.hpp"
 
+#include "dc_server_local_device.hpp"
+#include "dc_server_remote_device.hpp"
+
+
 using namespace tool::network;
 using namespace tool::camera;
 using namespace std::literals::string_view_literals;
+
+struct DCServerNetwork::Impl{
+    std::vector<std::unique_ptr<DCServerDevice>> devices;
+};
+
+DCServerNetwork::DCServerNetwork() : i(std::make_unique<DCServerNetwork::Impl>()){
+}
 
 DCServerNetwork::~DCServerNetwork(){
     clean();
 }
 
-auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos> &infos) -> bool{
+auto DCServerNetwork::initialize(const UdpServerNetworkSettings &networkS) -> bool{
 
-    if(connections.size() != 0){
+    if(i->devices.size() != 0){
         clean();
     }
 
-    size_t id = 0;
-    for(const auto &info : infos){
-        auto connection = std::make_unique<DCServerConnection>();
-        if(!connection->initialize(id, info)){
+    size_t idDevice = 0;
+    for(const auto &clientInfo : networkS.clientsInfo){
+
+        std::unique_ptr<DCServerDevice> device = nullptr;
+
+        if(clientInfo.local){
+            Logger::message("[DCServerNetwork::initialize] Create local device. \n");
+            auto lDevice = std::make_unique<DCServerLocalDevice>();
+            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCFrame> frame){
+                this->local_frame_signal(idDevice, std::move(frame));
+            });
+            device = std::move(lDevice);
+        }else{
+            Logger::message("[DCServerNetwork::initialize] Create remote device. \n");
+            auto rDevice = std::make_unique<DCServerRemoteDevice>();
+            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t s){
+                this->remote_synchro_signal(idDevice, s);
+            });
+            rDevice->remote_feedback_signal.connect([this,idDevice](network::Feedback feedback){
+                this->remote_feedback_signal(idDevice, feedback);
+            });
+            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCCompressedFrame> cFrame){
+                this->remote_frame_signal(idDevice, std::move(cFrame));
+            });
+            device = std::move(rDevice);
+        }
+
+        if(!device->initialize(clientInfo)){
             return false;
         }
-        connections.push_back(std::move(connection));
-        ++id;
+
+        i->devices.push_back(std::move(device));
+        ++idDevice;
     }
 
     return true;
 }
 
+
 auto DCServerNetwork::clean() -> void{
-    for(auto &connection : connections){
-        connection->clean();
+    for(auto &device : i->devices){
+        device->clean();
     }
-    connections.clear();
+    i->devices.clear();
 }
 
 auto DCServerNetwork::init_connection(size_t idG) -> void{
-    if(idG < connections.size()){
-        connections[idG]->init_connection_with_grabber();
-    }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
-    }
-}
-
-auto DCServerNetwork::send_command(size_t idG, Command command) -> void {
-
-    if(idG < connections.size()){
-
-        if(!connections[idG]->grabber_connected_to_server()){
-            Logger::error(fmt("Grabber id [{}] not connected to server yet.\n"sv, idG));
-            return;
-        }
-
-        switch(command){
-        case Command::Disconnect:
-            connections[idG]->disconnect_grabber();
-            break;
-        case Command::Quit:
-            connections[idG]->quit_grabber();
-            break;
-        case Command::Shutdown:
-            connections[idG]->shutdown_grabber_computer();
-            break;
-        case Command::Restart:
-            connections[idG]->restart_grabber_computer();
-            break;
-        case Command::UpdateDeviceList:
-            connections[idG]->update_device_list();
-            break;
+    if(idG < i->devices.size()){
+        if(i->devices[idG]->type() == DCServerType::remote){
+            dynamic_cast<DCServerRemoteDevice*>(i->devices[idG].get())->init_remote_connection();
         }
     }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
+        Logger::error(std::format("[DCServerNetwork::init_connection] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
 
-auto DCServerNetwork::send_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
-    if(idG < connections.size()){
-        connections[idG]->udpSender.send_update_device_settings_message(deviceS);
+auto DCServerNetwork::apply_command(size_t idG, Command command) -> void {
+    if(idG < i->devices.size()){
+        i->devices[idG]->apply_command(command);
     }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
+        Logger::error(std::format("[DCServerNetwork::send_command] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
 
-auto DCServerNetwork::send_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
-    if(idG < connections.size()){
-        connections[idG]->udpSender.send_update_color_settings_message(colorS);
+auto DCServerNetwork::update_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
+    if(idG < i->devices.size()){
+        i->devices[idG]->update_device_settings(deviceS);
     }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
+        Logger::error(std::format("[DCServerNetwork::send_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
 
-auto DCServerNetwork::send_filters(size_t idG, const camera::DCFiltersSettings &filters) -> void {
-    if(idG < connections.size()){
-        connections[idG]->udpSender.send_update_filters_settings_message(filters);
+auto DCServerNetwork::update_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
+    if(idG < i->devices.size()){
+        i->devices[idG]->update_color_settings(colorS);
     }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
+        Logger::error(std::format("[DCServerNetwork::send_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
 
-auto DCServerNetwork::send_delay(size_t idG, camera::DCDelaySettings delay) -> void{
-    if(idG < connections.size()){
-        connections[idG]->udpSender.send_delay_settings_message(delay);
+auto DCServerNetwork::update_filters_settings(size_t idG, const camera::DCFiltersSettings &filters) -> void {
+    if(idG < i->devices.size()){
+        i->devices[idG]->update_filters_settings(filters);
     }else{
-        Logger::error(fmt("Invalid id [{}], nb of connections available [{}].\n"sv, idG, connections.size()));
+        Logger::error(std::format("[DCServerNetwork::send_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
 
-auto DCServerNetwork::do_not_use_global_signals() -> void {
-    for(auto &connection : connections){
-        connection->do_not_use_global_signals();
+auto DCServerNetwork::update_delay_settings(size_t idG, const camera::DCDelaySettings &delay) -> void{
+    if(idG < i->devices.size()){
+        i->devices[idG]->update_delay_settings(delay);
+    }else{
+        Logger::error(std::format("[DCServerNetwork::send_delay] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));
     }
 }
+
+auto DCServerNetwork::devices_nb() const noexcept -> size_t {
+    return i->devices.size();
+}
+
+auto DCServerNetwork::device_connected(size_t idG) const noexcept -> bool{
+    if(idG < i->devices.size()){
+        i->devices[idG]->device_connected();
+    }
+    return false;
+}
+
+
+

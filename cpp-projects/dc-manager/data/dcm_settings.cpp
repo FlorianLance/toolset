@@ -187,33 +187,35 @@ auto DCMSettings::initialize() -> bool{
     return true;
 }
 
-auto DCMSettings::update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<uint8_t> value) -> void{
+// auto DCMSettings::update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<uint8_t> value) -> void{
 
-    static_cast<void>(value);
-    if(idB != 0 && idB != 1){
-        return;
-    }
+//     static_cast<void>(value);
+//     if(idB != 0 && idB != 1){
+//         return;
+//     }
 
-    auto dRes = depth_resolution(grabbersSet[idC].device.configS.mode);
-    for(const auto &idP : pencils[grabbersSet[idC].filters.idPencil]){
-        auto pt = idP + pixel;
-        if(pt.x() >= 0 && pt.x() < dRes.x() && pt.y() >= 0 && pt.y() < dRes.y()){
+//     auto dRes = depth_resolution(grabbersSet[idC].device.configS.mode);
+//     auto dW   = depth_width(dRes);
+//     auto dH   = depth_height(dRes);
+//     for(const auto &idP : pencils[grabbersSet[idC].filters.idPencil]){
+//         auto pt = idP + pixel;
+//         if(pt.x() >= 0 && pt.x() < dW && pt.y() >= 0 && pt.y() < dH){
 
-            auto id = pt.y()*dRes.x() + pt.x();
-            if(globalSet.ui.settingsFiltersNormalSubPanelDisplayed){
-                grabbersSet[idC].filters.depthMask.set(id, idB == 0);
-            }else if(globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed){
-                grabbersSet[idC].calibrationFilters.depthMask.set(id, idB == 0);
-            }
-        }
-    }
+//             auto id = pt.y()*dW + pt.x();
+//             if(globalSet.ui.settingsFiltersNormalSubPanelDisplayed){
+//                 grabbersSet[idC].filters.depthMask.set(id, idB == 0);
+//             }else if(globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed){
+//                 grabbersSet[idC].calibrationFilters.depthMask.set(id, idB == 0);
+//             }
+//         }
+//     }
 
-    if(globalSet.ui.settingsFiltersNormalSubPanelDisplayed){
-        DCMSignals::get()->update_filters_settings_signal(idC, grabbersSet[idC].filters);
-    }else if(globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed){
-        DCMSignals::get()->update_filters_settings_signal(idC, grabbersSet[idC].calibrationFilters);
-    }
-}
+//     if(globalSet.ui.settingsFiltersNormalSubPanelDisplayed){
+//         DCMSignals::get()->update_filters_settings_signal(idC, grabbersSet[idC].filters);
+//     }else if(globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed){
+//         DCMSignals::get()->update_filters_settings_signal(idC, grabbersSet[idC].calibrationFilters);
+//     }
+// }
 
 auto DCMSettings::host_name() -> std::string{
     return Host::get_name();
@@ -422,6 +424,10 @@ auto DCMSettings::update_player_states(camera::DCPlayerStates playerStates) -> v
 
 auto DCMSettings::update_calibrator_states(camera::DCCalibratorStates calibratorStates) -> void{
     globalSta.calibrator = calibratorStates;
+}
+
+auto DCMSettings::update_color_settings_from_device(size_t id, const camera::DCColorSettings &color) -> void{
+    grabbersSet[id].color = color;
 }
 
 auto DCMSettings::trigger_all_models() -> void {

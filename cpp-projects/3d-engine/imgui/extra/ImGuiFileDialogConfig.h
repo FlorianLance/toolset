@@ -2,11 +2,23 @@
 
 // uncomment and modify defines under for customize ImGuiFileDialog
 
-//this options need c++17
-//#define USE_STD_FILESYSTEM
+// uncomment if you need to use your FileSystem Interface
+// if commented, you have two defualt interface, std::filesystem or dirent
+// #define USE_CUSTOM_FILESYSTEM
+
+// this options need c++17
+// #define USE_STD_FILESYSTEM
 
 //#define MAX_FILE_DIALOG_NAME_BUFFER 1024
 //#define MAX_PATH_BUFFER_SIZE 1024
+
+// the slash's buttons in path cna be used for quick select parallles directories
+//#define USE_QUICK_PATH_SELECT
+
+// the spacing between button path's can be customized. 
+// if disabled the spacing is defined by the imgui theme
+// define the space between path buttons 
+//#define CUSTOM_PATH_SPACING 2
 
 //#define USE_THUMBNAILS
 //the thumbnail generation use the stb_image and stb_resize lib who need to define the implementation
@@ -25,26 +37,31 @@
 //#define DisplayMode_ThumbailsGrid_ButtonString "TG"
 //#define DisplayMode_ThumbailsGrid_ButtonHelp "Thumbnails Grid"
 
-
 //#define USE_EXPLORATION_BY_KEYS
 // this mapping by default is for GLFW but you can use another
 //#include <GLFW/glfw3.h> 
 // Up key for explore to the top
-//#define IGFD_KEY_UP GLFW_KEY_UP
+//#define IGFD_KEY_UP ImGuiKey_UpArrow
 // Down key for explore to the bottom
-//#define IGFD_KEY_DOWN GLFW_KEY_DOWN
+//#define IGFD_KEY_DOWN ImGuiKey_DownArrow
 // Enter key for open directory
-//#define IGFD_KEY_ENTER GLFW_KEY_ENTER
+//#define IGFD_KEY_ENTER ImGuiKey_Enter
 // BackSpace for comming back to the last directory
-//#define IGFD_KEY_BACKSPACE GLFW_KEY_BACKSPACE
+//#define IGFD_KEY_BACKSPACE ImGuiKey_Backspace
 
 // by ex you can quit the dialog by pressing the key excape
 //#define USE_DIALOG_EXIT_WITH_KEY
-//#define IGFD_EXIT_KEY GLFW_KEY_ESCAPE
+//#define IGFD_EXIT_KEY ImGuiKey_Escape
 
 // widget
+// begin combo widget
+//#define IMGUI_BEGIN_COMBO ImGui::BeginCombo
+// when auto resized, FILTER_COMBO_MIN_WIDTH will be considered has minimum width
+// FILTER_COMBO_AUTO_SIZE is enabled by default now to 1
+// uncomment if you want disable
+//#define FILTER_COMBO_AUTO_SIZE 0
 // filter combobox width
-//#define FILTER_COMBO_WIDTH 120.0f
+//#define FILTER_COMBO_MIN_WIDTH 120.0f
 // button widget use for compose path
 //#define IMGUI_PATH_BUTTON ImGui::Button
 // standard button
@@ -52,8 +69,6 @@
 
 // locales string
 //#define createDirButtonString "+"
-//#define okButtonString " OK"
-//#define cancelButtonString " Cancel"
 //#define resetButtonString "R"
 //#define drivesButtonString "Drives"
 //#define editPathButtonString "E"
@@ -73,6 +88,15 @@
 //#define OverWriteDialogConfirmButtonString "Confirm"
 //#define OverWriteDialogCancelButtonString "Cancel"
 
+//Validation buttons
+//#define okButtonString " OK"
+//#define okButtonWidth 0.0f
+//#define cancelButtonString " Cancel"
+//#define cancelButtonWidth 0.0f
+//alignement [0:1], 0.0 is left, 0.5 middle, 1.0 right, and other ratios
+//#define okCancelButtonAlignement 0.0f
+//#define invertOkAndCancelButtons 0
+
 // DateTimeFormat
 // see strftime functionin <ctime> for customize
 // "%Y/%m/%d %H:%M" give 2021:01:22 11:47
@@ -87,6 +111,20 @@
 //#define tableHeaderFileTypeString " Type"
 //#define tableHeaderFileSizeString " Size"
 //#define tableHeaderFileDateTimeString " Date"
+//#define fileSizeBytes "o"
+//#define fileSizeKiloBytes "Ko"
+//#define fileSizeMegaBytes "Mo"
+//#define fileSizeGigaBytes "Go"
+
+// default table sort field (must be FIELD_FILENAME, FIELD_TYPE, FIELD_SIZE, FIELD_DATE or FIELD_THUMBNAILS)
+//#define defaultSortField FIELD_FILENAME
+
+// default table sort order for each field (true => Descending, false => Ascending)
+//#define defaultSortOrderFilename true
+//#define defaultSortOrderType true
+//#define defaultSortOrderSize true
+//#define defaultSortOrderDate true
+//#define defaultSortOrderThumbnails true
 
 //#define USE_BOOKMARK
 //#define bookmarkPaneWith 150.0f

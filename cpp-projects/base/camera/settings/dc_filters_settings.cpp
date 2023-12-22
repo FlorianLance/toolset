@@ -54,15 +54,12 @@ auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &o
     }
 
     BaseSettings::init_from_data(data, offset, sizeData);
-    read(minWidth, data, offset, sizeData);
-    read(maxWidth, data, offset, sizeData);
-    read(minHeight, data, offset, sizeData);
-    read(maxHeight, data, offset, sizeData);
-    read(minDepthValue, data, offset, sizeData);
-    read(maxDepthValue, data, offset, sizeData);
-    read(yFactor, data, offset, sizeData);
-    read(uFactor, data, offset, sizeData);
-    read(vFactor, data, offset, sizeData);
+    read(minWidthF, data, offset, sizeData);
+    read(maxWidthF, data, offset, sizeData);
+    read(minHeightF, data, offset, sizeData);
+    read(maxHeightF, data, offset, sizeData);
+    read(minDepthF, data, offset, sizeData);
+    read(maxDepthF, data, offset, sizeData);
     read(filterDepthWithColor, data, offset, sizeData);    
     read(filterColor, data, offset, sizeData);
     read(maxDiffColor, data, offset, sizeData);
@@ -93,15 +90,12 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
     }
 
     BaseSettings::write_to_data(data, offset, sizeData);
-    write(minWidth, data, offset, sizeData);
-    write(maxWidth, data, offset, sizeData);
-    write(minHeight, data, offset, sizeData);
-    write(maxHeight, data, offset, sizeData);
-    write(minDepthValue, data, offset, sizeData);
-    write(maxDepthValue, data, offset, sizeData);
-    write(yFactor, data, offset, sizeData);
-    write(uFactor, data, offset, sizeData);
-    write(vFactor, data, offset, sizeData);
+    write(minWidthF, data, offset, sizeData);
+    write(maxWidthF, data, offset, sizeData);
+    write(minHeightF, data, offset, sizeData);
+    write(maxHeightF, data, offset, sizeData);
+    write(minDepthF, data, offset, sizeData);
+    write(maxDepthF, data, offset, sizeData);
     write(filterDepthWithColor, data, offset, sizeData);
     write(filterColor, data, offset, sizeData);
     write(maxDiffColor, data, offset, sizeData);
@@ -127,15 +121,12 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
 auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
-        sizeof(minWidth) +
-        sizeof(maxWidth) +
-        sizeof(minHeight) +
-        sizeof(maxHeight) +
-        sizeof(minDepthValue) +
-        sizeof(maxDepthValue) +
-        sizeof(yFactor) +
-        sizeof(uFactor) +
-        sizeof(vFactor) +
+        sizeof(minWidthF) +
+        sizeof(maxWidthF) +
+        sizeof(minHeightF) +
+        sizeof(maxHeightF) +
+        sizeof(minDepthF) +
+        sizeof(maxDepthF) +
         sizeof(filterDepthWithColor) +
         sizeof(filterColor) +
         sizeof(maxDiffColor) +

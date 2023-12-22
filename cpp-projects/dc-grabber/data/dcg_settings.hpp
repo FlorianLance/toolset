@@ -32,7 +32,6 @@
 
 // base
 #include "camera/settings/dc_device_settings.hpp"
-#include "camera/settings/dc_display_settings.hpp"
 #include "camera/settings/dc_recorder_settings.hpp"
 #include "camera/settings/dc_color_settings.hpp"
 #include "camera/settings/dc_delay_settings.hpp"
@@ -56,9 +55,9 @@ struct DCGSettings{
     auto update_filters(std::shared_ptr<camera::DCFiltersSettings> filtersS) -> void;
     auto update_device_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCDeviceSettings>> deviceS) -> void;
     auto update_color_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCColorSettings>> colorS) -> void;
+    auto update_color_settings_from_device_manager(const camera::DCColorSettings &colorS) -> void;
     auto update_delay(network::UdpMonoPacketMessage<camera::DCDelaySettings> delayS) -> void;
-    auto update_device_name(int id, const std::string &name) -> void;
-    auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
+    // auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
     auto update_imu_sample(camera::DCImuSample imuSample) -> void;
 
     // triggers
@@ -101,31 +100,18 @@ struct DCGSettings{
 
     static auto host_name() -> std::string;
 
-    // devices
-    std::vector<std::string> devicesNames;
+    // settings
+    network::UdpClientNetworkSettings networkS;
+    camera::DCDeviceSettings deviceS = camera::DCDeviceSettings::default_init_for_grabber();
+    camera::DCFiltersSettings filtersS;
+    camera::DCColorSettings colorS;
+    camera::DCModelSettings modelS;
+    camera::DCDelaySettings delayS;
+    camera::DCRecorderSettings recorderS;
+    ui::DCGDisplaySettingsSettings displayS;
 
-    // settings    
-    // # network
-    network::UdpClientNetworkSettings network;    
-    // # camera
-    camera::DCDeviceSettings device = camera::DCDeviceSettings::default_init_for_grabber();
-    camera::DCFiltersSettings filters;
-    camera::DCColorSettings color;
-    // # scene
-    camera::DCSceneDisplaySettings sceneDisplay = camera::DCSceneDisplaySettings::default_init_for_grabber();
-    camera::DCCloudDisplaySettings cloudDisplay = camera::DCCloudDisplaySettings::default_init_for_grabber();
-    // # model
-    camera::DCModelSettings model;   
-    // # delay
-    camera::DCDelaySettings delay;
-    // # recording
-    camera::DCRecorderSettings recSettings;
-    camera::DCRecorderStates recStates;
-    // # ui
-    ui::DCGUiSettings ui;
-
-    // data to be displayed in ui
-    // # imu
+    // states
+    camera::DCRecorderStates recorderStates;
     std::optional<camera::DCImuSample> imuSample;
 
     // files settings paths
@@ -135,7 +121,7 @@ struct DCGSettings{
     std::string colorFilePath;
     std::string modelFilePath;
 
-    static inline unsigned int idLocalGrabber = 0;
+    size_t idLocalGrabber = 0;
 
 private:
 

@@ -25,8 +25,8 @@
 ********************************************************************************/
 
 // base
-#include "utility/paths.hpp"
 #include "utility/logger.hpp"
+#include "utility/paths.hpp"
 
 // local
 #include "dcg_controller.hpp"
@@ -38,28 +38,26 @@ int main(int argc, char *argv[]){
     // init paths
     Paths::initialize(argv);
 
-    // define grabber id from command line arg
     Logger::message("Start DC-Grabber.\n");
     Logger::message(std::format("Args {}.\n", argc));
+    // define grabber id from command line arg
     bool argsFound = false;
-    size_t id = 0;
+    size_t idLocalGrabber = 0;
     for(int ii = 0; ii < argc; ++ii){
         std::string arg = argv[ii];
         if(arg.starts_with("-i")){
             argsFound = true;
-            id = std::stoi(arg.substr(2,1));
+            idLocalGrabber = std::stoi(arg.substr(2,1));
         }
     }
     if(!argsFound){
         Logger::warning("No id argument found. ID set to '0'\n");
     }
-
-    Logger::message(std::format("ID {}\n", id));
-    DCGSettings::idLocalGrabber = static_cast<unsigned int>(id);
+    Logger::message(std::format("ID local grabber: {}\n", idLocalGrabber));
 
     // init controller
     DCGController controller;
-    if(controller.initialize()){
+    if(controller.initialize(idLocalGrabber)){
         controller.start();
         Logger::message("Exit Depth camera grabber.\n");
         return 0;

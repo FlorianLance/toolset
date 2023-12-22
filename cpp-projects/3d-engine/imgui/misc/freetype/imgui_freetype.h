@@ -2,8 +2,8 @@
 // (headers)
 
 #pragma once
-
 #include "imgui.h"      // IMGUI_API
+#ifndef IMGUI_DISABLE
 
 // Forward declarations
 struct ImFontAtlas;
@@ -25,7 +25,9 @@ enum ImGuiFreeTypeBuilderFlags
     ImGuiFreeTypeBuilderFlags_MonoHinting   = 1 << 4,   // Strong hinting algorithm that should only be used for monochrome output.
     ImGuiFreeTypeBuilderFlags_Bold          = 1 << 5,   // Styling: Should we artificially embolden the font?
     ImGuiFreeTypeBuilderFlags_Oblique       = 1 << 6,   // Styling: Should we slant the font, emulating italic style?
-    ImGuiFreeTypeBuilderFlags_Monochrome    = 1 << 7    // Disable anti-aliasing. Combine this with MonoHinting for best results!
+    ImGuiFreeTypeBuilderFlags_Monochrome    = 1 << 7,   // Disable anti-aliasing. Combine this with MonoHinting for best results!
+    ImGuiFreeTypeBuilderFlags_LoadColor     = 1 << 8,   // Enable FreeType color-layered glyphs
+    ImGuiFreeTypeBuilderFlags_Bitmap        = 1 << 9    // Enable FreeType bitmap glyphs
 };
 
 namespace ImGuiFreeType
@@ -38,11 +40,12 @@ namespace ImGuiFreeType
 
     // Override allocators. By default ImGuiFreeType will use IM_ALLOC()/IM_FREE()
     // However, as FreeType does lots of allocations we provide a way for the user to redirect it to a separate memory heap if desired.
-    IMGUI_API void                      SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* user_data), void (*free_func)(void* ptr, void* user_data), void* user_data = NULL);
+    IMGUI_API void                      SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* user_data), void (*free_func)(void* ptr, void* user_data), void* user_data = nullptr);
 
     // Obsolete names (will be removed soon)
-    // Prefer using '#define IMGUI_ENABLE_FREETYPE'
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas->FontBuilderIO = GetBuilderForFreeType(); atlas->FontBuilderFlags = flags; return atlas->Build(); }
+    //static inline bool BuildFontAtlas(ImFontAtlas* atlas, unsigned int flags = 0) { atlas->FontBuilderIO = GetBuilderForFreeType(); atlas->FontBuilderFlags = flags; return atlas->Build(); } // Prefer using '#define IMGUI_ENABLE_FREETYPE'
 #endif
 }
+
+#endif // #ifndef IMGUI_DISABLE

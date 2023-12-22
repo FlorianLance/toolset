@@ -106,6 +106,7 @@ public:
     SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<const camera::DCPlayerSettings&> update_player_settings_signal;
     SSS<size_t, camera::DCDelaySettings> update_delay_signal;
+    SSS<size_t, camera::DCColorSettings> color_settings_reset_signal;
 
 
     // i/o

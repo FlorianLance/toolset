@@ -39,6 +39,9 @@
 // kinect
 #include "k4a/k4a.hpp"
 
+// orbbec
+#include "libobsensor/ObSensor.hpp"
+
 // local
 // # utility
 #include "utility/types.hpp"
@@ -63,7 +66,7 @@ struct DCFrameUncompressor::Impl{
         decodedVerticesData.reserve(defaultResolution);
 
         // generate k4a image for storing depth values
-        depthImage = k4a::image::create(
+        k4DepthImage = k4a::image::create(
             k4a_image_format_t::K4A_IMAGE_FORMAT_DEPTH16,
             to_int(defaultWidth),
             to_int(defaultHeight),
@@ -71,7 +74,7 @@ struct DCFrameUncompressor::Impl{
         );
 
         // generate k4a image for storing cloud values
-        pointCloudImage = k4a::image::create(K4A_IMAGE_FORMAT_CUSTOM,
+        k4PointCloudImage = k4a::image::create(K4A_IMAGE_FORMAT_CUSTOM,
             to_int(defaultWidth),
             to_int(defaultHeight),
             static_cast<int32_t>(defaultWidth * 3 * sizeof(int16_t))
@@ -100,15 +103,24 @@ struct DCFrameUncompressor::Impl{
     std::vector<std::uint16_t> decodedVerticesData;
 
     // kinect4 values
-    k4a::image depthImage;
-    k4a::image pointCloudImage;
-    std::tuple<DCMode, std::optional<k4a_transformation_t>> modeTr;
+    k4a::image k4DepthImage;
+    k4a::image k4PointCloudImage;
+    std::tuple<DCMode, std::optional<k4a_transformation_t>> k4ModeTr;
+
+    // femto orbbec values
+    std::unique_ptr<ob::Context> obContext = nullptr;
+    std::unique_ptr<ob::PointCloudFilter> obPointCloud = nullptr;
+    // std::shared_ptr<ob::Frame> obDepthBuffer = nullptr;
+    std::shared_ptr<ob::Frame> obCloud = nullptr;
+
 
     // utility
-    auto update_id_array(size_t idV) -> void;    
-    auto cloud_image_data() -> geo::Pt3<int16_t>*;
+    auto update_id_array(size_t idV) -> void;
+    auto k4_cloud_image_data() -> geo::Pt3<int16_t>*;
+    auto ob_cloud_image_data() -> geo::Pt3f*;
     // convert decoded data
-    auto generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, k4a_calibration_t &calibration, const std::vector<uint16_t> &uncompressedDepth) -> void;
+    auto k4_generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, k4a_calibration_t &calibration, const std::vector<uint16_t> &uncompressedDepth) -> void;
+    auto ob_generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, OBCameraParam &calibration, std::vector<uint16_t> &uncompressedDepth, std::vector<geo::Pt4<std::uint8_t>> &uncompressedColor) -> void;
 
     // uncompress data
     auto uncompress_jpeg_8_bits_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool; // data not resized
@@ -127,6 +139,7 @@ struct DCFrameUncompressor::Impl{
     auto convert_to_cloud(DCMode mode, size_t validVerticesCount, geo::ColoredCloudData &cloudData, std::vector<geo::Pt3<uint8_t>> &uncompressedColor, std::vector<uint16_t> &uncompressedVertices) -> void;
     // ## from cloud buffer
     auto convert_to_cloud(size_t validVerticesCount, geo::ColoredCloudData &cloudData, std::vector<geo::Pt4<uint8_t>> &uncompressedColor, std::vector<std::uint16_t> &uncompressedDepth, geo::Pt3<int16_t> *cloudBuffer) -> void;
+    auto convert_to_cloud(size_t validVerticesCount, geo::ColoredCloudData &cloudData, std::vector<geo::Pt4<uint8_t>> &uncompressedColor, std::vector<std::uint16_t> &uncompressedDepth, geo::Pt3f *cloudBuffer) -> void;
     // # vertices,colors pointers
     // ## from vertices
     auto convert_to_cloud(DCMode mode, size_t validVerticesCount, geo::Pt3f *vertices, geo::Pt3f *colors,          std::vector<geo::Pt3<uint8_t>> &uncompressedColor, std::vector<std::uint16_t> &uncompressedVertices) -> void;
@@ -151,6 +164,8 @@ struct DCFrameUncompressor::Impl{
     auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
     auto k4_uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
 
+    auto ob_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+
 };
 
 auto DCFrameUncompressor::Impl::update_id_array(size_t idV) -> void{
@@ -160,27 +175,33 @@ auto DCFrameUncompressor::Impl::update_id_array(size_t idV) -> void{
     }
 }
 
-auto DCFrameUncompressor::Impl::cloud_image_data() -> Pt3<int16_t>*{
-    if(pointCloudImage.is_valid()){
-        return reinterpret_cast<Pt3<int16_t>*>(pointCloudImage.get_buffer());
+auto DCFrameUncompressor::Impl::k4_cloud_image_data() -> Pt3<int16_t>*{
+    if(k4PointCloudImage.is_valid()){
+        return reinterpret_cast<Pt3<int16_t>*>(k4PointCloudImage.get_buffer());
     }
     return nullptr;
 }
 
+auto DCFrameUncompressor::Impl::ob_cloud_image_data() -> Pt3f*{
+    if(obCloud != nullptr){
+        return reinterpret_cast<Pt3f*>(obCloud->data());
+    }
+    return nullptr;
+}
 
-auto DCFrameUncompressor::Impl::generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, k4a_calibration_t &calibration, const std::vector<uint16_t> &uncompressedDepth) -> void{
+auto DCFrameUncompressor::Impl::k4_generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, k4a_calibration_t &calibration, const std::vector<uint16_t> &uncompressedDepth) -> void{
 
     // reset k4a transformation if necessary
-    if(!std::get<1>(modeTr).has_value() || (mode != std::get<0>(modeTr))){
-        std::get<0>(modeTr) = mode;
-        std::get<1>(modeTr) = k4a_transformation_create(&calibration);
+    if(!std::get<1>(k4ModeTr).has_value() || (mode != std::get<0>(k4ModeTr))){
+        std::get<0>(k4ModeTr) = mode;
+        std::get<1>(k4ModeTr) = k4a_transformation_create(&calibration);
     }
 
     // reset k4a images if necessary
     bool resetK4AImages = false;
-    if(depthImage.is_valid()){
-        if(depthImage.get_width_pixels()    != to_int(dephtWidth) ||
-            depthImage.get_height_pixels()  != to_int(depthHeight) ){
+    if(k4DepthImage.is_valid()){
+        if(k4DepthImage.get_width_pixels()    != to_int(dephtWidth) ||
+            k4DepthImage.get_height_pixels()  != to_int(depthHeight) ){
             resetK4AImages = true;
         }
     }else{
@@ -189,7 +210,7 @@ auto DCFrameUncompressor::Impl::generate_cloud(DCMode mode, size_t dephtWidth, s
     if(resetK4AImages){
 
         // generate k4a image for storing depth values
-        depthImage = k4a::image::create(
+        k4DepthImage = k4a::image::create(
             k4a_image_format_t::K4A_IMAGE_FORMAT_DEPTH16,
             to_int(dephtWidth),
             to_int(depthHeight),
@@ -197,7 +218,7 @@ auto DCFrameUncompressor::Impl::generate_cloud(DCMode mode, size_t dephtWidth, s
         );
 
         // generate k4a image for storing cloud values
-        pointCloudImage = k4a::image::create(K4A_IMAGE_FORMAT_CUSTOM,
+        k4PointCloudImage = k4a::image::create(K4A_IMAGE_FORMAT_CUSTOM,
             to_int(dephtWidth),
             to_int(depthHeight),
             static_cast<int32_t>(dephtWidth * 3 * sizeof(int16_t))
@@ -205,16 +226,55 @@ auto DCFrameUncompressor::Impl::generate_cloud(DCMode mode, size_t dephtWidth, s
     }
 
     // copy depth values
-    std::copy(uncompressedDepth.begin(), uncompressedDepth.end(), reinterpret_cast<std::uint16_t*>(depthImage.get_buffer()));
+    std::copy(uncompressedDepth.begin(), uncompressedDepth.end(), reinterpret_cast<std::uint16_t*>(k4DepthImage.get_buffer()));
 
     // generate point cloud from depth image
     k4a_transformation_depth_image_to_point_cloud(
-        std::get<1>(modeTr).value(),
-        depthImage.handle(),
+        std::get<1>(k4ModeTr).value(),
+        k4DepthImage.handle(),
         K4A_CALIBRATION_TYPE_DEPTH,
-        pointCloudImage.handle()
+        k4PointCloudImage.handle()
     );
 }
+
+auto DCFrameUncompressor::Impl::ob_generate_cloud(DCMode mode, size_t dephtWidth, size_t depthHeight, OBCameraParam &calibration, std::vector<uint16_t> &uncompressedDepth, std::vector<geo::Pt4<std::uint8_t>> &uncompressedColor) -> void{
+
+    if(obContext == nullptr){
+        obContext = std::make_unique<ob::Context>();
+        obContext->enableNetDeviceEnumeration(false);
+        obContext->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+    }
+
+    if(obPointCloud == nullptr){
+        obPointCloud = std::make_unique<ob::PointCloudFilter>();
+    }
+
+    obPointCloud->setCameraParam(calibration);
+    obPointCloud->setCreatePointFormat(OB_FORMAT_POINT);
+    obPointCloud->setPositionDataScaled(0.001f);
+
+    std::shared_ptr<ob::FrameSet> fSet = ob::FrameHelper::createFrameSet();
+    // auto depthBuffer = ob::FrameHelper::createFrameFromBuffer(
+        // OB_FORMAT_Y16, dephtWidth, depthHeight, reinterpret_cast<std::uint8_t*>(uncompressedDepth.data()), uncompressedDepth.size()*2, ob::BufferDestroyCallback(), nullptr);
+
+    auto depthBuffer = ob::FrameHelper::createFrame(
+        OB_FRAME_DEPTH, OB_FORMAT_Y16, static_cast<int>(dephtWidth), static_cast<int>(depthHeight), static_cast<int>(dephtWidth) * sizeof(std::uint16_t));
+    std::copy(uncompressedDepth.begin(), uncompressedDepth.end(), reinterpret_cast<std::uint16_t*>(depthBuffer->data()));
+
+    ob::FrameHelper::pushFrame(fSet, OB_FRAME_DEPTH, depthBuffer);
+
+    try{
+        obCloud = obPointCloud->process(fSet);
+        // if(obCloud){
+        //     std::cout << "cloud " << obCloud->dataSize()/sizeof(OBPoint) << "\n";
+        // }else{
+        //     std::cout << "cloud null\n";
+        // }
+    }catch(ob::Error &e) {
+        Logger::error(std::format("[DCFrameUncompressor] process {}\n", e.getMessage()));
+    }
+}
+
 
 DCFrameUncompressor::DCFrameUncompressor() : i(std::make_unique<Impl>()){}
 
@@ -327,8 +387,8 @@ auto DCFrameUncompressor::Impl::convert_to_depth_image(DCMode mode, size_t depth
     if(imageDepth.size() != imageDepthSize){
         imageDepth.resize(imageDepthSize);
     }
-
-    const auto dRange = range(mode)*1000.f;
+    
+    const auto dRange = depth_range(mode)*1000.f;
     const auto diff = dRange(1) - dRange(0);
 
     // convert data
@@ -431,7 +491,7 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
 
 auto DCFrameUncompressor::Impl::convert_to_cloud(
     size_t validVerticesCount,
-    ColoredCloudData &cloud,
+    ColoredCloudData &cloudData,
     std::vector<Pt4<uint8_t>> &uncompressedColor,
     std::vector<std::uint16_t> &uncompressedDepth,
     geo::Pt3<int16_t> *cloudBuffer
@@ -440,7 +500,7 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
     const auto vvc = validVerticesCount;
 
     // resize cloud if necessary
-    cloud.resize(vvc);
+    cloudData.resize(vvc);
 
     // resize depth indices
     if(indicesDepths1D.size() != uncompressedDepth.size()){
@@ -456,12 +516,53 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
             return;
         }
 
-        cloud.vertices[idV]= Pt3f{
+        cloudData.vertices[idV]= Pt3f{
             static_cast<float>(-cloudBuffer[id].x()),
             static_cast<float>(-cloudBuffer[id].y()),
             static_cast<float>( cloudBuffer[id].z())
         }*0.001f;
-        cloud.colors[idV] = Pt3f{
+        cloudData.colors[idV] = Pt3f{
+            static_cast<float>(uncompressedColor[id].x()),
+            static_cast<float>(uncompressedColor[id].y()),
+            static_cast<float>(uncompressedColor[id].z())
+        }/255.f;
+
+        ++idV;
+    });
+}
+
+auto DCFrameUncompressor::Impl::convert_to_cloud(
+    size_t validVerticesCount,
+    ColoredCloudData &cloudData,
+    std::vector<geo::Pt4<uint8_t>> &uncompressedColor,
+    std::vector<uint16_t> &uncompressedDepth,
+    Pt3f *cloudBuffer) -> void{
+
+    const auto vvc = validVerticesCount;
+
+    // resize cloud if necessary
+    cloudData.resize(vvc);
+
+    // resize depth indices
+    if(indicesDepths1D.size() != uncompressedDepth.size()){
+        indicesDepths1D.resize(uncompressedDepth.size());
+        std::iota(std::begin(indicesDepths1D), std::end(indicesDepths1D), 0);
+    }
+
+    // update cloud values
+    size_t idV = 0;
+    std::for_each(std::execution::unseq, std::begin(indicesDepths1D), std::end(indicesDepths1D), [&](size_t id){
+
+        if(uncompressedDepth[id] == dc_invalid_depth_value){
+            return;
+        }
+
+        cloudData.vertices[idV]= Pt3f{
+            -cloudBuffer[id].x(),
+            -cloudBuffer[id].y(),
+            cloudBuffer[id].z()
+        };
+        cloudData.colors[idV] = Pt3f{
             static_cast<float>(uncompressedColor[id].x()),
             static_cast<float>(uncompressedColor[id].y()),
             static_cast<float>(uncompressedColor[id].z())
@@ -819,7 +920,6 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
 }
 
 auto DCFrameUncompressor::Impl::convert_to_cloud(
-
     Pt3f *vertices, Pt4<uint8_t> *colors,
     std::vector<Pt3<uint8_t> > &uncompressedColor, std::vector<uint16_t> &uncompressedDepth, geo::Pt3<int16_t> *cloudBuffer) -> void{
 
@@ -851,6 +951,7 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
         ++idV;
     });
 }
+
 
 auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
 
@@ -923,8 +1024,8 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
-            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, cloud_image_data());
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
+            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, k4_cloud_image_data());
         }
     }
 
@@ -985,10 +1086,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
-            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
+            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, k4_cloud_image_data());
 
             return true;
         }
@@ -1035,10 +1136,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
-            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
+            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, k4_cloud_image_data());
 
             return true;
         }
@@ -1085,10 +1186,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
-            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
+            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, k4_cloud_image_data());
 
             return true;
         }
@@ -1136,10 +1237,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
-            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, cloud_image_data());
+            convert_to_cloud(vertices, colors, decodedColorData, decodedDepthData, k4_cloud_image_data());
 
             return true;
         }
@@ -1185,16 +1286,104 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCVerte
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
-            generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
+            k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, decodedDepthData);
 
             // convert
-            convert_to_cloud(vertices, decodedColorData, decodedDepthData, cloud_image_data());
+            convert_to_cloud(vertices, decodedColorData, decodedDepthData, k4_cloud_image_data());
 
             return 1;
         }
     }
     return -1; // empty cloud
 }
+
+
+auto DCFrameUncompressor::Impl::ob_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+
+    // info
+    frame.idCapture      = cFrame->idCapture;
+    frame.afterCaptureTS = cFrame->afterCaptureTS;
+    frame.mode           = cFrame->mode;
+
+    // reset sizes
+    frame.colorWidth  = 0;
+    frame.colorHeight = 0;
+    frame.depthWidth  = 0;
+    frame.depthHeight = 0;
+    frame.infraWidth  = 0;
+    frame.infraHeight = 0;
+    frame.depthSizedColorWidth  = 0;
+    frame.depthSizedColorHeight = 0;
+
+    // color
+    if(!cFrame->encodedColorData.empty()){
+
+        if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::BGRA, cFrame->encodedColorData, frame.imageColorData)){
+            return false;
+        }
+        frame.colorWidth  = cFrame->colorWidth;
+        frame.colorHeight = cFrame->colorHeight;
+    }
+
+    // depth
+    if(!cFrame->encodedDepthData.empty()){
+
+        if(!uncompress_lossless_16_bits_128padded_data(cFrame->depthWidth*cFrame->depthHeight, cFrame->encodedDepthData, frame.depthData)){
+            return false;
+        }
+
+        convert_to_depth_image(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, frame.depthData, frame.imageDepthData);
+        frame.depthWidth  = cFrame->depthWidth;
+        frame.depthHeight = cFrame->depthHeight;
+    }
+
+    // infra
+    if(!cFrame->encodedInfraData.empty()){
+
+        if(!uncompress_lossless_16_bits_128padded_data(cFrame->infraWidth*cFrame->infraHeight, cFrame->encodedInfraData, frame.infraData)){
+            return false;
+        }
+
+        convert_to_infra_image(cFrame->infraWidth, cFrame->infraHeight, frame.infraData, frame.imageInfraData);
+        frame.infraWidth  = cFrame->infraWidth;
+        frame.infraHeight = cFrame->infraHeight;
+    }
+
+    // cloud
+    if(cFrame->validVerticesCount > 0){
+
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+
+        //     if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
+        //         return false;
+        //     }
+
+        //     if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+        //         return false;
+        //     }
+
+        //     convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
+
+        }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
+
+            OBCameraParam calibration;
+            size_t offset = 0;
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(OBCameraParam));
+            ob_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData, frame.imageColorData);
+            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, ob_cloud_image_data());
+        }
+    }
+
+    // imu
+    if(cFrame->imuSample.has_value()){
+        frame.imuSample = cFrame->imuSample;
+    }else{
+        frame.imuSample = std::nullopt;
+    }
+
+    return true;
+}
+
 
 auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool{
     return i->uncompress_jpeg_8_bits_data(width, height, format, jpegSize, jpegData, data);
@@ -1203,6 +1392,8 @@ auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, Colo
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
     if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, frame);
+    }else if(get_device(cFrame->mode) == DCType::FemtoOrbbec){
+        return i->ob_uncompress(cFrame, frame);
     }
     return false;
 }

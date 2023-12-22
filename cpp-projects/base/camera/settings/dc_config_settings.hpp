@@ -38,12 +38,13 @@ struct DCConfigSettings : io::BinaryFileSettings{
     DCMode mode = DCMode::K4_CLOUD_C1280x720_DI640x576_MJPG_F30;
     bool synchronizeColorAndDepth = true;
     int delayBetweenColorAndDepthUsec = 0;
-    DCSynchronisationMode synchMode = DCSynchronisationMode::K4_Standalone;
+    DCSynchronisationMode synchMode = DCSynchronisationMode::Standalone;
     int subordinateDelayUsec = 0;
     bool disableLED = false;
 
     // body tracking
-    DCBTSensorOrientation btOrientation = DCBTSensorOrientation::K4_default_orientation;
+    // TODO: capture bodies
+    DCBTSensorOrientation btOrientation = DCBTSensorOrientation::k4_default_orientation;
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::K4_GPU_DIRECTML;
     std::int8_t btGPUId = 0;
 

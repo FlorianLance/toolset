@@ -33,7 +33,9 @@
 #include "camera/settings/dc_filters_settings.hpp"
 #include "camera/settings/dc_delay_settings.hpp"
 
+
 namespace tool::network {
+
 
 enum class DCServerType{
     local,remote,undefined
@@ -42,14 +44,17 @@ enum class DCServerType{
 class DCServerDevice{
 public:
     virtual ~DCServerDevice(){}
-    virtual auto initialize(size_t id, const ReadSendNetworkInfos &infos) -> bool{return false;}
-    virtual auto clean() -> void{}
+    virtual auto initialize(const ReadSendNetworkInfos &infos) -> bool{static_cast<void>(infos);return false;}
+    virtual auto clean() -> void{}    
 
-    virtual auto udpate_device_settings(const camera::DCDeviceSettings &deviceS) -> void{}
-    virtual auto udpate_color_settings(const camera::DCColorSettings &colorS) -> void{}
-    virtual auto udpate_filters_settings(const camera::DCFiltersSettings &filters) -> void{}
-    virtual auto udpate_delay_settings(camera::DCDelaySettings delay) -> void{}
+    virtual auto apply_command(Command command) -> void{static_cast<void>(command);}
+    virtual auto update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{static_cast<void>(deviceS);}
+    virtual auto update_color_settings(const camera::DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
+    virtual auto update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
+    virtual auto update_delay_settings(const camera::DCDelaySettings &delayS) -> void{static_cast<void>(delayS);}
+
     virtual constexpr auto type() const noexcept -> DCServerType {return DCServerType::undefined;}
+    virtual auto device_connected() const noexcept -> bool{return false;}
 };
 
 

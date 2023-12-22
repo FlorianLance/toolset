@@ -26,9 +26,6 @@
 
 #pragma once
 
-// opencv
-#include <opencv2/imgproc.hpp>
-
 // k4a
 #include "thirdparty/k4a/k4astaticimageproperties.h"
 #include "thirdparty/k4a/k4amicrophonelistener.h"
@@ -60,7 +57,6 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
     std::optional<k4a::image> infraredImage      = std::nullopt;
     std::optional<k4a::image> pointCloudImage    = std::nullopt;
     // # processing
-    cv::Mat colorConvBuffer;
     std::optional<k4a::image> convertedColorImage = std::nullopt;
     std::optional<k4a::image> depthSizedColorImage = std::nullopt;
 
@@ -90,7 +86,7 @@ private:
     auto update_camera_from_colors_settings() -> void override;
 
     // get data
-    auto depth_sized_color_data() -> std::span<ColorRGBA8> override;
+    auto color_data() -> std::span<ColorRGBA8> override;
     auto depth_data() -> std::span<std::uint16_t> override;
     auto infra_data() -> std::span<std::uint16_t> override;
 
@@ -105,7 +101,7 @@ private:
 
     // process data    
     auto convert_color_image() -> void override;
-    auto resize_color_to_fit_depth() -> void override;
+    auto resize_images() -> void override;
     auto generate_cloud() -> void override;
 
     // frame generation

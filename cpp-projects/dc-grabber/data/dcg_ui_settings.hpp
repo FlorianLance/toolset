@@ -26,12 +26,18 @@
 **                                                                            **
 ********************************************************************************/
 
+// base
+#include "camera/settings/dc_display_settings.hpp"
+
 namespace tool::ui {
 
-struct DCGUiSettings{
+struct DCGDisplaySettingsSettings{
     bool focusWindow = false;
     int currentWindow = 3;
 
     bool settingsFiltersSubPanelDisplayed = false;
+
+    camera::DCSceneDisplaySettings sceneDisplay = camera::DCSceneDisplaySettings::default_init_for_grabber();
+    camera::DCCloudDisplaySettings cloudDisplay = camera::DCCloudDisplaySettings::default_init_for_grabber();
 };
 }

@@ -46,27 +46,28 @@ using namespace tool::camera;
 
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings &settings) -> void {
 
-    settings.ui.settingsFiltersSubPanelDisplayed = false;
+    settings.displayS.settingsFiltersSubPanelDisplayed = false;
 
     if(ImGui::BeginChild("###settings_child2", ImVec2(size.x(), size.y()), true, windowFlags)){
         if (ImGui::BeginTabBar("###settings_tabbar")){
-            draw_infos_tab_item(settings);
+            draw_client_info_tab_item(settings);
 
             if (ImGui::BeginTabItem("Settings###settings_tabitem")){
                 if(ImGui::BeginTabBar("###sub_settings_tabbar")){
-                    draw_device_tab_item(settings.devicesNames, settings.device);
-                    draw_filters_tab_item(settings.ui, settings.device.configS, settings.filters);
-                    draw_model_tab_item(settings.model);
-                    draw_colors_settings_tab_item(settings.device.configS.typeDevice, settings.color);
-                    draw_display_tab_item(settings.sceneDisplay, settings.cloudDisplay);                    
-                    draw_recording_tab_item(settings.recStates, settings.recSettings);
+                    draw_device_tab_item(settings.deviceS);
+                    draw_filters_tab_item(settings.displayS, settings.deviceS.configS, settings.filtersS);
+                    draw_model_tab_item(settings.modelS);
+                    draw_colors_settings_tab_item(settings.deviceS.configS.typeDevice, settings.colorS);
+                    draw_display_tab_item(settings.displayS);
+
                     ImGui::EndTabItem();
                 }
                 ImGui::EndTabBar();
             }
-            draw_ui_tab_item(settings.ui);
-            draw_logs_tab_item();                                    
-            draw_audio_tab_item();
+
+            draw_recording_tab_item(settings.recorderStates, settings.recorderS);
+            // draw_audio_tab_item();
+            draw_logs_tab_item();
             ImGui::EndTabBar();
         }
     }
@@ -91,44 +92,46 @@ auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_infos_tab_item(DCGSettings &settings) -> void {
+auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -> void {
 
-    if (!ImGui::BeginTabItem("Infos###settings_infos_tabitem")){
+    if (!ImGui::BeginTabItem("Client info###settings_client_info_tabitem")){
         return;
     }
 
+
+
+    ImGuiUiDrawer::title2("NETWORK");
+    ImGui::Spacing();
+
     ImGuiUiDrawer::text(fmt("Id grabber: {}", settings.idLocalGrabber));
     ImGui::Spacing();
-    ImGuiUiDrawer::text_centered("Network");
-
-    ImGui::Text("UDP reading:");
-    ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", settings.network.udpReadingInterface.ipAddress));
-    ImGuiUiDrawer::text(fmt("Port: {}", settings.network.udpReadingPort));
-    ImGui::Unindent();
-
-    ImGui::Text("UDP sending:");
-    ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", settings.network.udpSendingAdress));
-    ImGuiUiDrawer::text(fmt("Port: {}", settings.network.udpSendingPort));
-    ImGui::Unindent();
-
-    ImGui::Separator();
 
     ImGui::Text("Connection state:");
     ImGui::SameLine();
-    if(settings.network.is_connected_to_manager()){
+    if(settings.networkS.is_connected_to_manager()){
         ImGuiUiDrawer::text("Connected to manager"sv, geo::Pt4f{0,1.f,0,1.f});
     }else{
         ImGuiUiDrawer::text("Not connected"sv, geo::Pt4f{1.f,0.5f,0.15f,1.f});
     }
 
+    ImGui::Text("UDP reading:");
+    ImGui::Indent();
+    ImGuiUiDrawer::text(fmt("IP address: {}", settings.networkS.udpReadingInterface.ipAddress));
+    ImGuiUiDrawer::text(fmt("Port: {}", settings.networkS.udpReadingPort));
+    ImGui::Unindent();
+
+    ImGui::Text("UDP sending:");
+    ImGui::Indent();
+    ImGuiUiDrawer::text(fmt("IP address: {}", settings.networkS.udpSendingAdress));
+    ImGuiUiDrawer::text(fmt("Port: {}", settings.networkS.udpSendingPort));
+    ImGui::Unindent();   
+
     ImGui::Separator();
 
     ImGui::Text("Last frame sent:");
     ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("ID: {}", settings.network.lastFrameIdSent));
-    ImGuiUiDrawer::text(fmt("Time (ms): {}", std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - settings.network.lastFrameSentTS).count()));
+    ImGuiUiDrawer::text(fmt("ID: {}", settings.networkS.lastFrameIdSent));
+    ImGuiUiDrawer::text(fmt("Time (ms): {}", std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - settings.networkS.lastFrameSentTS).count()));
     ImGui::Unindent();
 
     ImGui::Separator();
@@ -150,45 +153,53 @@ auto DCGLeftPanelChildDrawer::draw_infos_tab_item(DCGSettings &settings) -> void
     ImGui::Text("Other:");
     ImGui::Indent();
 
-    int delay = settings.delay.delayMs;
+    int delay = settings.delayS.delayMs;
     if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-        settings.delay.delayMs = delay;
-        DCGSignals::get()->update_delay_signal(settings.delay);
+        settings.delayS.delayMs = delay;
+        DCGSignals::get()->update_delay_signal(settings.delayS);
     }
     ImGui::Unindent();
-
-
     ImGui::Spacing();
 
-    ImGui::Separator();
-    ImGui::Text("Config Files loaded:");
+    ImGuiUiDrawer::title2("CONFIG FILES");
     ImGui::Spacing();
 
-    ImGui::Indent();
     ImGui::Text("Network:");
+    ImGui::Indent();
     draw_config_file_name(settings.netWorkFilePath);
+    ImGui::Unindent();
+
     ImGui::Text("Color:");
+    ImGui::Indent();
     draw_config_file_name(settings.colorFilePath);
+    ImGui::Unindent();
+
     ImGui::Text("Filters:");
+    ImGui::Indent();
     draw_config_file_name(settings.filtersFilePath);
+    ImGui::Unindent();
+
     ImGui::Text("Device:");
+    ImGui::Indent();
     draw_config_file_name(settings.deviceFilePath);
+    ImGui::Unindent();
+
     ImGui::Text("Model:");
-    draw_config_file_name(settings.modelFilePath);  
+    ImGui::Indent();
+    draw_config_file_name(settings.modelFilePath);
     ImGui::Unindent();
 
     ImGui::EndTabItem();
 }
 
 auto DCGLeftPanelChildDrawer::draw_device_tab_item(
-    const std::vector<std::string> &devicesNames,
     camera::DCDeviceSettings &device) -> void {
 
     auto signals = DCGSignals::get();
 
     bool updateDeviceList = false;
+
     auto update = DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",
-        devicesNames,
         device,
         updateDeviceList,
         m_autoUpdate
@@ -204,7 +215,7 @@ auto DCGLeftPanelChildDrawer::draw_device_tab_item(
 }
 
 auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
-    ui::DCGUiSettings &ui,
+    ui::DCGDisplaySettingsSettings &ui,
     const camera::DCConfigSettings &config,
     camera::DCFiltersSettings &filters) -> void {
 
@@ -222,55 +233,29 @@ auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::DCType type,
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_display_tab_item(
-    camera::DCSceneDisplaySettings &sceneDisplay,
-    camera::DCCloudDisplaySettings &cloudDisplay) -> void {
+auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettings &dcDisplaySettings) -> void {
 
     if (!ImGui::BeginTabItem("Display###display_settings_tabitem")){
         return;
     }
+    bool update = false;
+
+    if(ImGui::Checkbox("Focus window###settings_focus_window", &dcDisplaySettings.focusWindow)){
+        update = true;
+    }
 
     if (ImGui::BeginTabBar("###display_tabbar")){
-        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay, m_autoUpdate)){
-            DCGSignals::get()->update_scene_display_settings_signal(sceneDisplay);
+        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", dcDisplaySettings.sceneDisplay, m_autoUpdate)){
+            DCGSignals::get()->update_scene_display_settings_signal(dcDisplaySettings.sceneDisplay);
         }
-        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", cloudDisplay, m_autoUpdate)){
-            DCGSignals::get()->update_cloud_display_settings_signal(0, cloudDisplay);
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", dcDisplaySettings.cloudDisplay, m_autoUpdate)){
+            DCGSignals::get()->update_cloud_display_settings_signal(0, dcDisplaySettings.cloudDisplay);
         }
         ImGui::EndTabBar();
     }
 
-    ImGui::EndTabItem();
-}
-
-
-auto DCGLeftPanelChildDrawer::draw_ui_tab_item(ui::DCGUiSettings &ui) -> void {
-
-    if (!ImGui::BeginTabItem("UI###ui_settings_tabitem")){
-        return;
-    }
-    bool update = false;
-
-    if(ImGui::Checkbox("Focus window###settings_focus_window", &ui.focusWindow)){
-        update = true;
-    }
-    //    if(ImGui::BeginCombo("Current window###settings_current_window", windows[ui.currentWindow].c_str())){
-
-    //        for(int ii = 0; ii < static_cast<int>(windows.size()); ++ii){
-    //            bool selected = ii == ui.currentWindow;
-    //            if (ImGui::Selectable(windows[ii].c_str(), selected)){
-    //                ui.currentWindow = ii;
-    //                update = true;
-    //            }
-    //            if(selected){
-    //                ImGui::SetItemDefaultFocus();
-    //            }
-    //        }
-    //        ImGui::EndCombo();
-    //    }
-
     if(update){
-        DCGSignals::get()->update_ui_settings_signal(&ui);
+        DCGSignals::get()->update_ui_settings_signal(&dcDisplaySettings);
     }
 
     ImGui::EndTabItem();

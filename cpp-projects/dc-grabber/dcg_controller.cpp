@@ -31,9 +31,12 @@
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 
+// 3d-engine
+#include "imgui-tb/imgui_dc_ui_drawer.hpp"
+
 // local
-#include "data/dcg_paths.hpp"
 #include "dcg_signals.hpp"
+#include "data/dcg_paths.hpp"
 
 using namespace tool;
 
@@ -42,11 +45,10 @@ DCGController::~DCGController(){
     model->clean();
 }
 
-auto DCGController::initialize() -> bool{
+auto DCGController::initialize(size_t idLocalGrabber) -> bool{
 
     // init paths
-    DCGPaths::initialize(DCGSettings::idLocalGrabber, tool::Paths::applicationDir, DCGSettings::host_name());
-
+    DCGPaths::initialize(idLocalGrabber, tool::Paths::applicationDir, DCGSettings::host_name());
     // init logger
     Logger::init(Paths::logsDir, DCGPaths::logName);
 
@@ -55,6 +57,7 @@ auto DCGController::initialize() -> bool{
 
     view  = std::make_unique<DCGView>();
     model = std::make_unique<DCGModel>();
+    model->settings.idLocalGrabber = idLocalGrabber;
 
     // connections
     set_connections();
@@ -125,13 +128,15 @@ auto DCGController::set_connections() -> void{
     CCo::receive_delay_signal.connect(                               &Sett::update_delay,                                   sett);
     CCo::disconnect_signal.connect(                                  &Sett::disconnect,                                     sett);
     dev->new_imu_sample_signal.connect(                              &Sett::update_imu_sample,                              sett);
-    DevM::update_device_name_signal.connect(                         &Sett::update_device_name,                             sett);
+    DevM::update_device_name_signal.connect(                         [&](int deviceId, std::string deviceName){
+        tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName);
+    });
     s->reset_device_settings_signal.connect(                         &Sett::reset_device_settings,                          sett);
     s->save_device_settings_to_default_file_signal.connect(          &Sett::save_device_settings_to_default_file,           sett);
     s->save_device_settings_to_current_hostname_file_signal.connect( &Sett::save_device_settings_to_current_hostname_file,  sett);
     s->load_default_device_settings_file_signal.connect(             &Sett::load_default_device_settings_file,              sett);
     s->load_current_hostname_device_settings_file_signal.connect(    &Sett::load_current_hostname_device_settings_file,     sett);
-    s->mouse_pressed_depth_direct_signal.connect(                    &Sett::update_filters_depth_mask,                      sett);
+    // s->mouse_pressed_depth_direct_signal.connect(                    &Sett::update_filters_depth_mask,                      sett);
     s->reset_filters_signal.connect(                                 &Sett::reset_filters,                                  sett);
     s->save_filters_to_default_file_signal.connect(                  &Sett::save_filters_to_default_file,                   sett);
     s->save_filters_to_current_hostname_file_signal.connect(         &Sett::save_filters_to_current_hostname_file,          sett);
@@ -142,6 +147,7 @@ auto DCGController::set_connections() -> void{
     s->save_color_settings_to_current_hostname_file_signal.connect(  &Sett::save_color_settings_to_current_hostname_file,   sett);
     s->load_default_color_settings_file_signal.connect(              &Sett::load_default_settings_color_file,               sett);
     s->load_current_hostname_color_settings_file_signal.connect(     &Sett::load_current_hostname_color_settings_file,      sett);
+    dev->color_settings_reset_signal.connect(                        &Sett::update_color_settings_from_device_manager,      sett);
     // # device
     // CCo::update_device_list_signal.connect(                          &DevM::update_device_list,                             dev);
     s->update_device_settings_signal.connect(                        &DevM::update_device_settings,                         dev);

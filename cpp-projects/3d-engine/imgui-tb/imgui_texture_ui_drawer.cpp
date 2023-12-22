@@ -64,9 +64,9 @@ void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
                 }else{
 
                     if(m_invert){
-                        ImGui::Image(m_texture->id(), sizeI,  ImVec2(0,1), ImVec2(1,0));
+                        ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
                     }else{
-                        ImGui::Image(m_texture->id(), sizeI,  ImVec2(0,0), ImVec2(1,1));
+                        ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
                     }
 
                     auto io       = ImGui::GetIO();
@@ -132,9 +132,10 @@ void ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const ge
         auto cursorScreenPos = ImGui::GetCursorScreenPos();
 
         if(m_invert){
-            ImGui::Image(m_texture->id(), to_iv2(sizeTexture),  ImVec2(0,1), ImVec2(1,0));
+            ImTextureID id;
+            ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), to_iv2(sizeTexture),  ImVec2(0,1), ImVec2(1,0));
         }else{
-            ImGui::Image(m_texture->id(), to_iv2(sizeTexture),  ImVec2(0,0), ImVec2(1,1));
+            ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), to_iv2(sizeTexture),  ImVec2(0,0), ImVec2(1,1));
         }
 
         auto io       = ImGui::GetIO();

@@ -37,7 +37,7 @@ public:
 
     ~DCGController();
 
-    auto initialize() -> bool;
+    auto initialize(size_t idLocalGrabber) -> bool;
     auto set_connections() -> void;
 
     auto start() -> void;
