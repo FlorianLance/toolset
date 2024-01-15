@@ -64,17 +64,17 @@ auto UdpSender::is_opened() const -> bool{
     return i->socket != nullptr;
 }
 
-auto UdpSender::init_socket(std::string targetName, std::string port) -> bool{
+auto UdpSender::init_socket(std::string targetName, std::string port, Protocol protocol) -> bool{
 
-    // reset socket if necessary
-    if(i->socket){
-        clean_socket();
-    }
+    // // reset socket if necessary
+    // if(i->socket){
+    //     clean_socket();
+    // }
 
     // init socket and service
     try{
         i->socket = std::make_unique<ip::udp::socket>(i->ioService);
-        i->socket->open(ip::udp::v4());
+        i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
         i->socket->set_option(detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ 5 });
         i->socket->set_option(ip::udp::socket::reuse_address(true));
         i->socket->set_option(ip::udp::socket::send_buffer_size(9000*1000));

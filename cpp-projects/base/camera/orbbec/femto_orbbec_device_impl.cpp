@@ -76,8 +76,10 @@ auto set_value(ob::Device *dev, OBPropertyID pId, std::int32_t value) -> void{
 
 FemtoOrbbecDeviceImpl::FemtoOrbbecDeviceImpl(){
     context      = std::make_unique<ob::Context>();
+    context->enableNetDeviceEnumeration(true);
     context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
     deviceList   = context->queryDeviceList();
+    Logger::message(std::format("FemtoOrbbecDeviceImpl: {} devices found.\n", deviceList->deviceCount()));
 }
 
 auto FemtoOrbbecDeviceImpl::open(uint32_t deviceId) -> bool{
@@ -212,6 +214,7 @@ auto FemtoOrbbecDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
 
             if(depthStreamProfileList->count() > 0) {
                 try {
+                    std::cout << "DEPTH " << static_cast<int>(depth_width(infos.initialDepthResolution)) << " " << static_cast<int>(depth_height(infos.initialDepthResolution)) << "\n";
                     depthProfile = depthStreamProfileList->getVideoStreamProfile(
                         static_cast<int>(depth_width(infos.initialDepthResolution)),
                         static_cast<int>(depth_height(infos.initialDepthResolution)),
@@ -306,6 +309,7 @@ auto FemtoOrbbecDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
 
         currSynchConfig.colorDelayUs = 0;
         currSynchConfig.depthDelayUs = 0;
+
         // curConfig.trigger2ImageDelayUs = c.trigger2ImageDelayUs;
         // curConfig.framesPerTrigger     = c.framesPerTrigger;
         // device->setMultiDeviceSyncConfig(currSynchConfig);
@@ -315,6 +319,7 @@ auto FemtoOrbbecDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         // ALIGN_D2C_HW_MODE, /**< Hardware D2C alignment mode */
         // ALIGN_D2C_SW_MODE, /**< Software D2C alignment mode */
         // config->setDepthScaleRequire(true);
+        // config->setD2CTargetResolution(512,512);
         // config->setD2CTargetResolution(uint32_t d2cTargetWidth, uint32_t d2cTargetHeight);
 
         // frame synch
@@ -338,6 +343,71 @@ auto FemtoOrbbecDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         pointCloud = std::make_unique<ob::PointCloudFilter>();
         pointCloud->setCameraParam(cameraParam);
 
+
+        if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking){
+
+            k4a::calibration calibration;
+            calibration.depth_mode       = K4A_DEPTH_MODE_NFOV_UNBINNED;
+            calibration.color_resolution = K4A_COLOR_RESOLUTION_OFF;
+
+            auto &cdi = calibration.depth_camera_calibration.intrinsics;
+
+            auto &cc = calibration.color_camera_calibration;
+            cc.metric_radius = 1.7f;
+            cc.resolution_width = 1280;
+            cc.resolution_width = 720;
+            cc.intrinsics.type = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+            cc.intrinsics.parameter_count = 14;
+
+            auto &cp = cc.intrinsics.parameters.param;
+            cp.cx = 642.212f;
+            cp.cy = 363.123f;
+            cp.fx = 608.033f;
+            cp.fy = 607.952f;
+            cp.k1 = 0.718214f;
+            cp.k2 = -2.7539f;
+            cp.k3 = 1.53235f;
+            cp.k4 = 0.598884f;
+            cp.k5 = -2.59631f;
+            cp.k6 = 1.47102f;
+            cp.codx = 0.f;
+            cp.cody = 0.f;
+            cp.p2  = 6.46868e-05f;
+            cp.p1  = 0.000889385f;
+            cp.metric_radius = 0.f;
+
+            auto &dc = calibration.depth_camera_calibration;
+            dc.metric_radius = 1.74f;
+            dc.resolution_width = 640;
+            dc.resolution_height = 576;
+            dc.intrinsics.type = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+            dc.intrinsics.parameter_count = 14;
+
+            auto &dp = dc.intrinsics.parameters.param;
+            dp.cx = 322.494f;
+            dp.cy = 333.486f;
+            dp.fx = 502.959f;
+            dp.fy = 503.111f;
+            dp.k1 = 1.416f;
+            dp.k2 = 0.814468f;
+            dp.k3 = 0.041968f;
+            dp.k4 = 1.75103f;
+            dp.k5 = 1.23649f;
+            dp.k6 = 0.22332f;
+            dp.codx = 0.f;
+            dp.cody = 0.f;
+            dp.p2  = 6.94212e-05f;
+            dp.p1  = -9.19473e-05f;
+            dp.metric_radius = 0.f;
+
+            try{
+                Logger::message("[FemtoOrbbecDeviceImpl::start_cameras] Start body tracker\n");
+                bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(calibration, k4aBtConfig));
+            }catch (k4a::error error) {
+                Logger::error("[FemtoOrbbecDeviceImpl::start_reading] body tracker error: {}\n", error.what());
+            }
+        }
+
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
         device = nullptr;
@@ -352,6 +422,12 @@ auto FemtoOrbbecDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
 auto FemtoOrbbecDeviceImpl::stop_reading() -> void{
 
     stop_reading_thread();
+
+    if(bodyTracker != nullptr){
+        Logger::message("[FemtoOrbbecDeviceImpl::start_cameras] Stop body tracker\n");
+        bodyTracker->shutdown();
+        bodyTracker = nullptr;
+    }
 
     // stop pipe
     if(pipe != nullptr){
@@ -390,6 +466,12 @@ auto FemtoOrbbecDeviceImpl::initialize_device_specific() -> void{
     pointCloudImage      = nullptr;
     convertedColorImage  = nullptr;
 
+    k4aBtConfig.gpu_device_id       = settings.config.btGPUId;
+    k4aBtConfig.processing_mode     = static_cast<k4abt_tracker_processing_mode_t>(settings.config.btProcessingMode);
+    k4aBtConfig.sensor_orientation  = static_cast<k4abt_sensor_orientation_t>(settings.config.btOrientation);
+    k4aBtConfig.model_path          = nullptr;
+
+
     // init converted color image
     if(infos.initialColorResolution != DCColorResolution::OFF){
 
@@ -410,27 +492,32 @@ auto FemtoOrbbecDeviceImpl::update_camera_from_colors_settings() -> void{
         return;
     }
 
-    const auto &colorS = settings.color;
-    set_value(device.get(), OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, colorS.autoExposureTime);
-    set_value(device.get(), OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, colorS.autoWhiteBalance);
-    set_value(device.get(), OB_PROP_COLOR_EXPOSURE_INT, colorS.exposureTime);
-    set_value(device.get(), OB_PROP_COLOR_WHITE_BALANCE_INT, colorS.whiteBalance);
-    set_value(device.get(), OB_PROP_COLOR_BRIGHTNESS_INT, colorS.brightness);
-    set_value(device.get(), OB_PROP_COLOR_CONTRAST_INT, colorS.contrast);
-    set_value(device.get(), OB_PROP_COLOR_SHARPNESS_INT, colorS.sharpness);
-    set_value(device.get(), OB_PROP_COLOR_SATURATION_INT, colorS.saturation);
-    set_value(device.get(), OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, colorS.backlightCompensation ? 1 : 0); // NOT AVAILABLE
-    set_value(device.get(), OB_PROP_COLOR_GAIN_INT, colorS.gain);
-    set_value(device.get(), OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, static_cast<int>(colorS.powerlineFrequency));
 
-    // color HDR
-    auto currHDR = device->getBoolProperty(OB_PROP_COLOR_HDR_BOOL);
-    if(currHDR != colorS.hdr){
-        if(!readFramesFromCameras){
-            set_value(device.get(), OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
-        }else{
-            Logger::warning("[FemtoOrbbecDeviceImpl::update_camera_from_colors_settings] Reading must be stopped before changing HDR settings.\n");
+    try{
+        const auto &colorS = settings.color;
+        set_value(device.get(), OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, colorS.autoExposureTime);
+        set_value(device.get(), OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, colorS.autoWhiteBalance);
+        set_value(device.get(), OB_PROP_COLOR_EXPOSURE_INT, colorS.exposureTime);
+        set_value(device.get(), OB_PROP_COLOR_WHITE_BALANCE_INT, colorS.whiteBalance);
+        set_value(device.get(), OB_PROP_COLOR_BRIGHTNESS_INT, colorS.brightness);
+        set_value(device.get(), OB_PROP_COLOR_CONTRAST_INT, colorS.contrast);
+        set_value(device.get(), OB_PROP_COLOR_SHARPNESS_INT, colorS.sharpness);
+        set_value(device.get(), OB_PROP_COLOR_SATURATION_INT, colorS.saturation);
+        set_value(device.get(), OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, colorS.backlightCompensation ? 1 : 0); // NOT AVAILABLE
+        set_value(device.get(), OB_PROP_COLOR_GAIN_INT, colorS.gain);
+        set_value(device.get(), OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, static_cast<int>(colorS.powerlineFrequency));
+
+        // color HDR
+        auto currHDR = device->getBoolProperty(OB_PROP_COLOR_HDR_BOOL);
+        if(currHDR != colorS.hdr){
+            if(!readFramesFromCameras){
+                set_value(device.get(), OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
+            }else{
+                Logger::warning("[FemtoOrbbecDeviceImpl::update_camera_from_colors_settings] Reading must be stopped before changing HDR settings.\n");
+            }
         }
+    }catch(ob::Error &e) {
+        Logger::error(std::format("[FemtoOrbbecDeviceImpl::update_camera_from_colors_settings] Error: {}\n", e.getMessage()));
     }
 }
 
@@ -463,6 +550,18 @@ auto FemtoOrbbecDeviceImpl::infra_data() -> std::span<uint16_t>{
     }
     return{};
 }
+
+auto FemtoOrbbecDeviceImpl::bodies_index_data() -> std::span<uint8_t> {
+    if(bodiesIndexImage.has_value()){
+        return std::span<std::uint8_t>{
+            reinterpret_cast<std::uint8_t*>(bodiesIndexImage.value().get_buffer()),
+            static_cast<size_t>(bodiesIndexImage.value().get_width_pixels() * bodiesIndexImage.value().get_height_pixels())
+        };
+    }
+    return {};
+}
+
+
 
 auto FemtoOrbbecDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{
 
@@ -515,6 +614,96 @@ auto FemtoOrbbecDeviceImpl::read_infra_image() -> bool{
     }
 
     return false;
+}
+
+auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
+    body.id = static_cast<std::int8_t>(k4aBody.id);
+    for(const auto &jointD : dcJoints.data){
+        const auto &kaKoint = k4aBody.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+        auto &joint = body.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+        joint.confidence = static_cast<DCJointConfidenceLevel>(kaKoint.confidence_level);
+        const auto &p = kaKoint.position;
+        joint.position = {-p.v[0],-p.v[1],p.v[2]};
+        const auto &o = kaKoint.orientation;
+        joint.orientation = {o.wxyz.x,o.wxyz.y,o.wxyz.z,o.wxyz.w};
+    }
+}
+
+
+auto FemtoOrbbecDeviceImpl::read_bodies() -> void{
+
+    // std::cout << "read bodies\n";
+    if(!depthImage || ! infraredImage){
+        // std::cout << "no depth image\n";
+        return;
+    }
+
+    if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking && (bodyTracker != nullptr)){
+
+
+        try{
+
+            // std::cout << "create capture\n";
+            k4a_capture_t captureH = nullptr;
+            k4a_capture_create(&captureH);
+            k4a::capture capture(captureH);
+
+            // std::cout << "create d image\n";
+            // std::cout << depthImage->width() << " " << depthImage->height() << " "<< depthImage->width()*depthImage->height() << " " << depthImage->dataSize() << "\n";
+            k4a::image k4DepthImage = k4a::image::create_from_buffer(
+                K4A_IMAGE_FORMAT_DEPTH16,
+                depthImage->width(),
+                depthImage->height(),
+                depthImage->width()*sizeof(std::uint16_t),
+                reinterpret_cast<std::uint8_t*>(depthImage.get()->data()),
+                depthImage->dataSize(),
+                nullptr,
+                nullptr
+            );
+
+            // std::cout << "create ir image\n";
+            // std::cout << infraredImage->width() << " " << infraredImage->height() << " "<< infraredImage->width()*infraredImage->height() << " " << infraredImage->dataSize() << "\n";
+            k4a::image k4IRImage = k4a::image::create_from_buffer(
+                K4A_IMAGE_FORMAT_DEPTH16,
+                infraredImage->width(),
+                infraredImage->height(),
+                infraredImage->width()*sizeof(std::uint16_t),
+                reinterpret_cast<std::uint8_t*>(infraredImage.get()->data()),
+                infraredImage->dataSize(),
+                nullptr,
+                nullptr
+            );
+
+            // std::cout << "set depth image\n";
+            capture.set_depth_image(k4DepthImage);
+
+            // std::cout << "set ir image\n";
+            capture.set_ir_image(k4IRImage);
+
+
+            // std::cout << "enqueue capture\n";
+            if(bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
+                if(k4abt::frame bodyFrame = bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+                    auto bodiesCount = bodyFrame.get_num_bodies();
+                    if(data.bodies.size() < bodiesCount){
+                        data.bodies.resize(bodiesCount);
+                    }
+                    std::cout << "bodiesCount " << bodiesCount << "\n";
+                    for(size_t ii = 0; ii < bodiesCount; ++ii){
+                        update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
+                    }
+                    timing.bodiesTS = bodyFrame.get_system_timestamp();
+                    bodiesIndexImage = bodyFrame.get_body_index_map();
+                }
+            }
+
+        }  catch (k4a::error error) {
+            Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
+        }  catch (std::runtime_error error) {
+            Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
+        }
+
+    }
 }
 
 auto FemtoOrbbecDeviceImpl::convert_color_image() -> void{
@@ -598,11 +787,92 @@ auto FemtoOrbbecDeviceImpl::resize_images() -> void{
 
 auto FemtoOrbbecDeviceImpl::generate_cloud() -> void{
 
-    if(has_cloud(settings.config.mode) && (depthImage != nullptr) && (colorImage != nullptr)){
-        auto depthValueScale = depthImage->getValueScale()*0.001f;
-        pointCloud->setCreatePointFormat(OB_FORMAT_RGB_POINT);
-        pointCloud->setPositionDataScaled(depthValueScale);                       
-        pointCloudImage = pointCloud->process(frameSet);
+    if(has_cloud(settings.config.mode) && (depthImage != nullptr)){
+        if(validDepthValues > 0){
+            auto depthValueScale = depthImage->getValueScale()*0.001f;
+            if(colorImage != nullptr){
+                pointCloud->setCreatePointFormat(OB_FORMAT_RGB_POINT);
+            }else{
+                pointCloud->setCreatePointFormat(OB_FORMAT_POINT);
+            }
+            pointCloud->setPositionDataScaled(depthValueScale);
+            pointCloudImage = pointCloud->process(frameSet);
+        }
+    }
+}
+
+auto FemtoOrbbecDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS) -> void{
+
+    if(pointCloudImage != nullptr){
+        auto p1     = filtersS.p1A;
+        auto p2     = filtersS.p1B;
+        auto p3     = filtersS.p1C;
+        auto meanPt = (p1+p2+p3)/3.f;
+        auto AB = vec(p2,p1);
+        auto AC = vec(p3,p1);
+        auto normalV = cross(AB,AC);
+        normalV = normalize(normalV);
+        auto depthBuffer  = reinterpret_cast<uint16_t*>(depthImage->data());
+
+        bool rgbCloud = colorImage != nullptr;
+        OBColorPoint *cloudColorBuffer = nullptr;
+        OBPoint *cloudBuffer = nullptr;
+        if(rgbCloud){
+            cloudColorBuffer = reinterpret_cast<OBColorPoint*>(pointCloudImage->data());
+        }else{
+            cloudBuffer = reinterpret_cast<OBPoint*>(pointCloudImage->data());
+        }
+
+        std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
+
+            auto idD = std::get<0>(idC);
+            if(depthBuffer[idD] == dc_invalid_depth_value){
+                return;
+            }
+
+            if(filtersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
+
+                geo::Pt3f pt;
+                if(rgbCloud){
+                    pt = geo::Pt3f{
+                        static_cast<float>(-cloudColorBuffer[idD].x),
+                        static_cast<float>(-cloudColorBuffer[idD].y),
+                        static_cast<float>( cloudColorBuffer[idD].z)
+                    };
+                }else{
+                    pt = geo::Pt3f{
+                        static_cast<float>(-cloudBuffer[idD].x),
+                        static_cast<float>(-cloudBuffer[idD].y),
+                        static_cast<float>( cloudBuffer[idD].z)
+                    };
+                }
+
+                auto angle =  dot(normalV,vec(meanPt,pt));
+                if(angle < 0){
+                    if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
+                        depthMask[idD] = 0;
+                        return;
+                    }
+                }else{
+                    if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
+                        depthMask[idD] = 0;
+                        return;
+                    }
+                }
+            }
+        });
+
+        // count valid depth values
+        validDepthValues = 0;
+        for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
+            if(depthMask[id] == 0){
+                depthBuffer[id] = dc_invalid_depth_value;
+                indices.depthVertexCorrrespondance[id] = {id, -1};
+            }else{
+                indices.depthVertexCorrrespondance[id] = {id, validDepthValues};
+                validDepthValues++;
+            }
+        });
     }
 }
 
@@ -675,7 +945,7 @@ auto FemtoOrbbecDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
     return cFrame;
 }
 
-auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::unique_ptr<DCFrame>{
+auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>{
 
     // write frame
     tool::Bench::start("[FemtoOrbbecDeviceImpl::create_local_frame] Write display data frame");
@@ -684,6 +954,9 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
     dFrame->idCapture       = static_cast<std::int32_t>(infos.idCapture);
     dFrame->afterCaptureTS  = timing.get_local("after_capture"sv).count();
     dFrame->mode            = settings.config.mode;
+
+    const auto dRange = depth_range(settings.config.mode)*1000.f;
+    const auto diff   = dRange.y() - dRange.x();
 
     static constexpr std::array<Pt3f,5> depthGradient ={
         Pt3f{0.f,0.f,1.f},
@@ -694,7 +967,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
     };
 
     // color frame
-    if(d.generateRGBLocalFrame && colorImage != nullptr){
+    if(dataS.generateRGBLocalFrame && colorImage != nullptr){
 
         tool::Bench::start("[FemtoOrbbecDeviceImpl::create_local_frame] color");
 
@@ -711,7 +984,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
     }
 
     // depth frame
-    if(d.generateDepthLocalFrame && depthImage != nullptr){
+    if(dataS.generateDepthLocalFrame && depthImage != nullptr){
 
         tool::Bench::start("[FemtoOrbbecDeviceImpl::create_local_frame] depth");
 
@@ -720,8 +993,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
         dFrame->imageDepthData.resize(dFrame->depthWidth * dFrame->depthHeight);
 
         auto depthBuffer  = reinterpret_cast<const uint16_t*>(depthImage->data());
-        const auto dRange = depth_range(settings.config.mode)*1000.f;
-        const auto diff   = dRange.y() - dRange.x();
+
 
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
 
@@ -747,7 +1019,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
     }
 
     // infrared frame
-    if(d.generateInfraLocalFrame && infraredImage != nullptr){
+    if(dataS.generateInfraLocalFrame && infraredImage != nullptr){
 
         tool::Bench::start("[OrbbecDevice::create_local_frame] display_infrared");
 
@@ -774,7 +1046,16 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
     }
 
     // cloud
-    if(d.generateCloudLocal && (pointCloudImage != nullptr) && (depthImage != nullptr) && (colorImage != nullptr)){
+    if(dataS.generateCloudLocal && (pointCloudImage != nullptr) && (depthImage != nullptr)){
+
+        bool rgbCloud = colorImage != nullptr;
+        OBColorPoint *cloudColorBuffer = nullptr;
+        OBPoint *cloudBuffer = nullptr;
+        if(rgbCloud){
+            cloudColorBuffer = reinterpret_cast<OBColorPoint*>(pointCloudImage->data());
+        }else{
+            cloudBuffer = reinterpret_cast<OBPoint*>(pointCloudImage->data());
+        }
 
         tool::Bench::start("[OrbbecDevice::create_local_frame] cloud");
 
@@ -783,7 +1064,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
         // dFrame->cloud.normals.resize(validDepthValues);
 
         auto depthBuffer  = reinterpret_cast<const uint16_t*>(depthImage->data());
-        OBColorPoint *cloudBuffer = reinterpret_cast<OBColorPoint*>(pointCloudImage->data());
+
         std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
 
             auto idD = std::get<0>(idC);
@@ -792,31 +1073,48 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &d) -> std::
             }
 
             auto idV = std::get<1>(idC);
-            dFrame->cloud.vertices[idV]= geo::Pt3f{
-                static_cast<float>(-cloudBuffer[idD].x),
-                static_cast<float>(-cloudBuffer[idD].y),
-                static_cast<float>( cloudBuffer[idD].z)
-            };
 
-            dFrame->cloud.colors[idV] = geo::Pt3f{
-                cloudBuffer[idD].r,
-                cloudBuffer[idD].g,
-                cloudBuffer[idD].b
-            }/255.f;
+            if(rgbCloud){
+                dFrame->cloud.vertices[idV]= geo::Pt3f{
+                    static_cast<float>(-cloudColorBuffer[idD].x),
+                    static_cast<float>(-cloudColorBuffer[idD].y),
+                    static_cast<float>( cloudColorBuffer[idD].z)
+                };
+                dFrame->cloud.colors[idV] = geo::Pt3f{
+                    cloudColorBuffer[idD].r,
+                    cloudColorBuffer[idD].g,
+                    cloudColorBuffer[idD].b
+                }/255.f;
+            }else{
+
+                float vF = (static_cast<float>(depthBuffer[idD]) - dRange.x())/diff;
+                float intPart;
+                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                size_t idG = static_cast<size_t>(intPart);
+
+                dFrame->cloud.vertices[idV]= geo::Pt3f{
+                    static_cast<float>(-cloudBuffer[idD].x),
+                    static_cast<float>(-cloudBuffer[idD].y),
+                    static_cast<float>( cloudBuffer[idD].z)
+                };
+                dFrame->cloud.colors[idV] = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+            }
         });
 
         tool::Bench::stop();
     }
 
     // imu sample
-    if(d.captureIMU){
+    if(dataS.captureIMU){
         dFrame->imuSample = data.imuSample;
     }else{
         dFrame->imuSample = std::nullopt;
     }
 
     // send bodies
-    // ...
+    if(dataS.captureBodies){
+        dFrame->bodies = data.bodies;
+    }
 
     tool::Bench::stop();
 

@@ -39,12 +39,14 @@ using namespace std::literals::string_view_literals;
 enum class DCType : std::int8_t{
     AzureKinect = 0,
     FemtoOrbbec,
-    // Kinect2,
+    Kinect2,
+    Recording,
     Undefined,
     SizeEnum,
-    // K2 = Kinect2,
+    K2 = Kinect2,
     K4 = AzureKinect,
-    FO = FemtoOrbbec
+    FO = FemtoOrbbec,
+    REC = Recording
 };
 
 // Camera parameters
@@ -188,7 +190,7 @@ static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes
     {DCDepthResolution::OFF,           0,      0},
     {DCDepthResolution::R_320x288,     320,    288},
     {DCDepthResolution::R_640x576,     640,    576},
-    {DCDepthResolution::R_512x512,     5121,   512},
+    {DCDepthResolution::R_512x512,     512,    512},
     {DCDepthResolution::R_1024x1024,   1024,   1024},
 }};
 [[maybe_unused]] static constexpr auto depth_width(DCDepthResolution r) -> int{
@@ -248,7 +250,11 @@ enum class DCMode : std::int8_t {
     Merged,
     // femto orbbec
     FO_CLOUD_C1280x720_DI640x576_NV12_F30,
+    FO_CLOUD_C1280x720_DI640x576_MJPG_F30,
+    FO_CLOUD_C1280x720_DI512x512_MJPG_F30,
+    FO_TEST,
     FO_IMG_C1280x720_MJPG_F30,
+    FO_IMG_DI640x576_NV12_F30,
     // other
     Invalid,
     SizeEnum
@@ -280,7 +286,11 @@ static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     {DCMode::K4_IMG_C4096x3072_DI1024x1024_BGRA_F15,    "C4096_D1024_BGRA_F15"sv},
     {DCMode::Merged,                                    "Merged"sv},
     {DCMode::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
+    {DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
+    {DCMode::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     "C1280_D512_MJPG_F30"sv},
+    {DCMode::FO_TEST,                                   "TEST"sv},
     {DCMode::FO_IMG_C1280x720_MJPG_F30,                 "C1280_MJPG_F30"sv},
+    {DCMode::FO_IMG_DI640x576_NV12_F30,                 "DEP_DI640x576_NV12_F30"sv},
     {DCMode::Invalid,                                   "Invalid"sv},
 }};
 
@@ -328,6 +338,10 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     // orbbec
     {M::FO_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,               FPS::F30, {0,0},         {0,0},         false,  false,  Dev::FO},
     {M::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
+    {M::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
+    {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
+    {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
+    {M::FO_TEST,                                   IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
     // invalid
     {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,               FPS::F30, {0.f,0.f},     {0,0},         false,  false,  Dev::Undefined},
 }};

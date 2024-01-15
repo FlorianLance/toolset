@@ -63,6 +63,13 @@ namespace tool::graphics {
     "10", "40", "100"
 };
 
+[[maybe_unused]] static constexpr const char* processingModeBodyTrackingItems[] = {
+    "GPU", "CPU", "GPU_CUDA", "GPU_TENSORRT", "GPU_DIRECTML"
+};
+
+[[maybe_unused]] static constexpr const char* orientationBodyTrackingItems[] = {
+    "Default", "Clockwise 90°", "Counter clockwise 90", "Flip 180°"
+};
 
 class DCUIDrawer{
 

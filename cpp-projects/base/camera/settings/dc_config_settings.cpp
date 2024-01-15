@@ -62,17 +62,22 @@ auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &of
     }
 
     BaseSettings::init_from_data(data, offset, sizeData);
+    // device
     read(typeDevice, data, offset, sizeData);
     read(idDevice, data, offset, sizeData);
     read(mode, data, offset, sizeData);
+    // synch
     read(synchronizeColorAndDepth, data, offset, sizeData);
     read(delayBetweenColorAndDepthUsec, data, offset, sizeData);
     read(synchMode, data, offset, sizeData);
     read(subordinateDelayUsec, data, offset, sizeData);
-    read(disableLED, data, offset, sizeData);
+    // body tracking
+    read(enableBodyTracking, data, offset, sizeData);
     read(btOrientation, data, offset, sizeData);
     read(btProcessingMode, data, offset, sizeData);
     read(btGPUId, data, offset, sizeData);
+    // others
+    read(disableLED, data, offset, sizeData);
 }
 
 auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
@@ -83,31 +88,41 @@ auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, s
     }
 
     BaseSettings::write_to_data(data, offset, sizeData);
+    // device
     write(typeDevice, data, offset, sizeData);
     write(idDevice, data, offset, sizeData);
     write(mode, data, offset, sizeData);
+    // synch
     write(synchronizeColorAndDepth, data, offset, sizeData);
     write(delayBetweenColorAndDepthUsec, data, offset, sizeData);
     write(synchMode, data, offset, sizeData);
     write(subordinateDelayUsec, data, offset, sizeData);
-    write(disableLED, data, offset, sizeData);
+    // body tracking
+    write(enableBodyTracking, data, offset, sizeData);
     write(btOrientation, data, offset, sizeData);
     write(btProcessingMode, data, offset, sizeData);
     write(btGPUId, data, offset, sizeData);
+    // other
+    write(disableLED, data, offset, sizeData);
 }
 
 auto DCConfigSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
+        // device
         sizeof(typeDevice) +
         sizeof(idDevice) +
         sizeof(mode) +
+        // synch
         sizeof(synchronizeColorAndDepth) +
         sizeof(delayBetweenColorAndDepthUsec) +
         sizeof(synchMode) +
         sizeof(subordinateDelayUsec) +
-        sizeof(disableLED) +
+        // body tracking
+        sizeof(enableBodyTracking) +
         sizeof(btOrientation) +
         sizeof(btProcessingMode) +
-        sizeof(btGPUId);
+        sizeof(btGPUId) +
+        // other
+        sizeof(disableLED);
 }

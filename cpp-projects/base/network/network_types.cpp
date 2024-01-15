@@ -50,7 +50,7 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
 
     io_service ioService;
     udp::resolver resolver(ioService);
-    udp::resolver::query query(host_name(),"");
+    udp::resolver::query query(host_name(), "");
 
     std::vector<Interface> interfaces;
     try{
@@ -59,7 +59,7 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
         while(it!=udp::resolver::iterator()){
             address addr =(it++)->endpoint().address();
             if((addr.is_v6() ? Protocol::ipv6 : (addr.is_v4() ? Protocol::ipv4 : Protocol::unknow)) == protocol){
-                interfaces.emplace_back(Interface{protocol,addr.to_string()});
+                interfaces.emplace_back(Interface{protocol,addr.to_string()});                
             }
         }
     }catch (const boost::system::system_error &error){

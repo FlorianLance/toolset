@@ -83,7 +83,7 @@ auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bo
     }
 
     // init reader
-    if(!m_udpReaderG.init_socket(networkS->interfaces[networkS->udpReadingInterfaceId].ipAddress, networkS->udpReadingPort)){
+    if(!m_udpReaderG.init_socket(networkS->udpReadingInterface.ipAddress, networkS->udpReadingPort, networkS->protocol)){
         return false;
     }
 
@@ -96,7 +96,12 @@ auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bo
 
 auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> bool{
 
-    if(m_udpSenderG.init_socket(networkS->udpSendingAdress, std::to_string(networkS->udpSendingPort))){
+    if(m_udpSenderG.is_opened()){
+        Logger::warning("[DCClientConnection::init_sender] Sender already initializede. Call clean before.\n");
+        return false;
+    }
+
+    if(m_udpSenderG.init_socket(networkS->udpSendingAdress, std::to_string(networkS->udpSendingPort), networkS->protocol)){
 
         // start sending
         sendMessages = false;

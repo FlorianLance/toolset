@@ -46,7 +46,7 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
     std::unique_ptr<k4a::device> device = nullptr;
     k4a::calibration calibration;
     k4a::transformation transformation;
-    k4abt::tracker tracker;
+    std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
     k4a_device_configuration_t k4aConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
     k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
     std::unique_ptr<k4a::capture> capture = nullptr;
@@ -56,6 +56,7 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
     std::optional<k4a::image> depthImage         = std::nullopt;
     std::optional<k4a::image> infraredImage      = std::nullopt;
     std::optional<k4a::image> pointCloudImage    = std::nullopt;
+    std::optional<k4a::image> bodiesIndexImage   = std::nullopt;
     // # processing
     std::optional<k4a::image> convertedColorImage = std::nullopt;
     std::optional<k4a::image> depthSizedColorImage = std::nullopt;
@@ -89,6 +90,7 @@ private:
     auto color_data() -> std::span<ColorRGBA8> override;
     auto depth_data() -> std::span<std::uint16_t> override;
     auto infra_data() -> std::span<std::uint16_t> override;
+    auto bodies_index_data() -> std::span<std::uint8_t> override;
 
     // read data
     auto capture_frame(std::int32_t timeoutMs) -> bool override;

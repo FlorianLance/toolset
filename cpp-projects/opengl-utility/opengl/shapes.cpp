@@ -107,7 +107,24 @@ Grid::Grid(GLfloat width, GLfloat height, GLuint nbX, GLuint nbY){
     data = std::move(lmd);
 }
 
+TriangleLines::TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3){
 
+    std::vector<GLuint> indices = {
+        0, 1,
+        1, 2,
+        2, 0
+    };
+
+    std::vector<GLfloat> points = {
+        p1.x(), p1.y(), p1.z(),
+        p2.x(), p2.y(), p2.z(),
+        p3.x(), p3.y(), p3.z()
+    };
+
+    auto lmd = std::make_unique<LineMeshData>();
+    lmd->init_buffers(&indices, &points);
+    data = std::move(lmd);
+}
 
 Skybox::Skybox(GLfloat size){
 
@@ -318,6 +335,7 @@ Plane::Plane(GLfloat xsize, GLfloat zsize, size_t xdivs, size_t zdivs, GLfloat s
             p[vidx] = x;
             p[vidx+1] = 0.0f;
             p[vidx+2] = z;
+
             n[vidx] = 0.0f;
             n[vidx+1] = 1.0f;
             n[vidx+2] = 0.0f;
@@ -980,12 +998,9 @@ Cloud::Cloud(std::vector<Pt3f> *vertices, std::vector<Pt3f> *colors, std::vector
     data = std::move(pmd);
 }
 
-
-
 Voxels::Voxels(size_t size, geo::Pt3<int> *voxels, Pt3f *colors){
     auto pmd = std::make_unique<PointMeshData>();
     pmd->init_buffers(static_cast<GLuint>(size), voxels, colors);
     data = std::move(pmd);
 }
-
 

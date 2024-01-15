@@ -31,6 +31,8 @@
 
 // orbbec
 #include "libobsensor/ObSensor.hpp"
+// kabt
+#include <kabt/k4abt.hpp>
 
 // local
 #include "camera/dc_device_impl.hpp"
@@ -50,12 +52,16 @@ struct FemtoOrbbecDeviceImpl : public DCDeviceImpl{
     std::unique_ptr<ob::PointCloudFilter> pointCloud = nullptr;
     OBCameraParam cameraParam;
 
+    std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
+    k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
+
     // images
     std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
     std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
     std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
     std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
     std::shared_ptr<ob::Frame> pointCloudImage = nullptr;
+    std::optional<k4a::image> bodiesIndexImage   = std::nullopt;
 
     // processing
     cv::Mat colorConvBuffer;
@@ -83,17 +89,20 @@ private:
     auto color_data() -> std::span<ColorRGBA8> override;
     auto depth_data() -> std::span<std::uint16_t> override;
     auto infra_data() -> std::span<std::uint16_t> override;
+    auto bodies_index_data() -> std::span<std::uint8_t> override;
 
     // read data
     auto capture_frame(std::int32_t timeoutMs) -> bool override;
     auto read_color_image() -> bool override;
     auto read_depth_image() -> bool override;
     auto read_infra_image() -> bool override;
+    auto read_bodies() -> void override;
 
     // process data
     auto convert_color_image() -> void override;
     auto resize_images() -> void override;
     auto generate_cloud() -> void override;
+    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override;
 
     // frame generation
     auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override;

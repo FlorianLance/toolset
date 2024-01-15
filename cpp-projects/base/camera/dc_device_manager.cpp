@@ -154,12 +154,20 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
     bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
     bool cameraSettingsChanged =
+        // device
         (newConfigS.mode                            != currConfigS.mode) ||
-        (newConfigS.disableLED                      != currConfigS.disableLED) ||
+        // synch
         (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
         (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
         (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
-        (newConfigS.synchMode                       != currConfigS.synchMode);
+        (newConfigS.synchMode                       != currConfigS.synchMode) ||
+        // body tracking
+        (newConfigS.enableBodyTracking              != currConfigS.enableBodyTracking) ||
+        (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
+        (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
+        (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
+        // others
+        (newConfigS.disableLED                      != currConfigS.disableLED);
 
     bool closeDevice = false;
     bool stopReading = false;

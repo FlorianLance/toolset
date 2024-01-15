@@ -101,7 +101,7 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 
 
     ImGuiUiDrawer::title2("NETWORK");
-    ImGui::Spacing();
+    ImGui::Spacing();   
 
     ImGuiUiDrawer::text(fmt("Id grabber: {}", settings.idLocalGrabber));
     ImGui::Spacing();
@@ -113,6 +113,13 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
     }else{
         ImGuiUiDrawer::text("Not connected"sv, geo::Pt4f{1.f,0.5f,0.15f,1.f});
     }
+
+    if(settings.networkS.protocol == network::Protocol::ipv6){
+        ImGui::Text("PROTOCOL: IPV6");
+    }else{
+        ImGui::Text("PROTOCOL: IPV4");
+    }
+    ImGui::Spacing();
 
     ImGui::Text("UDP reading:");
     ImGui::Indent();

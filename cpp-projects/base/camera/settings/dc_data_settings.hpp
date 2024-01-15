@@ -36,7 +36,7 @@ struct DCDataSettings : io::BinaryFileSettings{
     // capture
     bool captureAudio             = true;   /**< restricted to kinect4 */
     bool captureIMU               = true;
-    bool captureBodies            = false;  /**< restricted to kinect4 */
+    bool captureBodies            = false;  /**< restricted to kinect4 and orbbec femto */
 
     // send
     bool sendColor                = true;
@@ -68,5 +68,9 @@ struct DCDataSettings : io::BinaryFileSettings{
     auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
     auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
     auto total_data_size() const noexcept-> size_t override;
+
+    auto has_data_to_send() const noexcept -> bool{
+        return sendColor || sendDepth || sendInfra || sendCloud;//|| sendIMU || sendAudio || sendBodies;
+    }
 };
 }

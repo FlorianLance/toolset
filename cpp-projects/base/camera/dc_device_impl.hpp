@@ -214,6 +214,7 @@ protected:
     virtual auto color_data() -> std::span<ColorRGBA8> {return {};}
     virtual auto depth_data() -> std::span<std::uint16_t> {return {};}
     virtual auto infra_data() -> std::span<std::uint16_t> {return {};}
+    virtual auto bodies_index_data() -> std::span<std::uint8_t> {return {};}
 
     // read data
     auto read_frames() -> void;
@@ -230,8 +231,9 @@ protected:
     virtual auto convert_color_image() -> void{}
     virtual auto resize_images() -> void{}
     auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer) -> void;
-    auto filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer) -> void;
-    auto filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer) -> void;
+    auto filter_color_image(const DCFiltersSettings &filtersS) -> void;
+    auto filter_infrared_image(const DCFiltersSettings &filtersS) -> void;
+    virtual auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{}
 
     // frame generation
     virtual auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{

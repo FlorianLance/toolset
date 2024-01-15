@@ -36,6 +36,8 @@
 #include "dc_server_local_device.hpp"
 #include "dc_server_remote_device.hpp"
 
+#include <iostream>
+
 
 using namespace tool::network;
 using namespace tool::camera;
@@ -80,6 +82,7 @@ auto DCServerNetwork::initialize(const UdpServerNetworkSettings &networkS) -> bo
                 this->remote_feedback_signal(idDevice, feedback);
             });
             rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCCompressedFrame> cFrame){
+                std::cout << "RECEIVED FRAME " << cFrame->idCapture << "\n";
                 this->remote_frame_signal(idDevice, std::move(cFrame));
             });
             device = std::move(rDevice);
@@ -160,7 +163,7 @@ auto DCServerNetwork::devices_nb() const noexcept -> size_t {
 
 auto DCServerNetwork::device_connected(size_t idG) const noexcept -> bool{
     if(idG < i->devices.size()){
-        i->devices[idG]->device_connected();
+        return i->devices[idG]->device_connected();
     }
     return false;
 }

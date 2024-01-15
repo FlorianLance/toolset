@@ -90,48 +90,67 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         ImGui::Unindent();
 
 
-        ImGui::Text("Plane1:");
+        ImGui::Text("Plane filtering:");
         ImGui::Indent();
 
         int mode = static_cast<int>(filters.p1FMode);
-        if(ImGui::RadioButton("No filtering###mode_none_plane1", &mode,0)){
+        if(ImGui::RadioButton("None###mode_none_plane1", &mode,0)){
             update = true;
             filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::None;
         }
+        ImGui::SameLine();
         if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
             update = true;
             filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Above;
         }
+        ImGui::SameLine();
         if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
             update = true;
             filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Below;
         }
+        if(filters.p1FMode != camera::DCFiltersSettings::PlaneFilteringMode::None){
 
-        ImGui::Text("Rotation (euler angles):");
-        auto rotPtr = filters.p1Rot.array.data();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","p1_rot_x", rotPtr, modelRotFs, modelRotDs)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","p1_rot_y", rotPtr+1, modelRotFs, modelRotDs)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","p1_rot_z", rotPtr+2, modelRotFs, modelRotDs)){
-            update = true;
-        }
-        ImGui::Text("Translation (mm):");
-        auto trPtr = filters.p1Pos.array.data();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","p1_tr_x", trPtr, modelTrFs, modelTrDs)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","p1_tr_y", trPtr+1, modelTrFs, modelTrDs)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","p1_tr_z", trPtr+2, modelTrFs, modelTrDs)){
-            update = true;
+            ImGui::Text("Point A (mm):");
+            auto p1APtr = filters.p1A.array.data();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pA_x", p1APtr, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pA_y", p1APtr+1, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pA_z", p1APtr+2, modelTrFs, modelTrDs)){
+                update = true;
+            }
+
+            ImGui::Text("Point B (mm):");
+            auto p1BPtr = filters.p1B.array.data();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pB_x", p1BPtr, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pB_y", p1BPtr+1, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pB_z", p1BPtr+2, modelTrFs, modelTrDs)){
+                update = true;
+            }
+
+            ImGui::Text("Point C (mm):");
+            auto p1CPtr = filters.p1C.array.data();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pC_x", p1CPtr, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pC_y", p1CPtr+1, modelTrFs, modelTrDs)){
+                update = true;
+            }
+            ImGui::SameLine();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pC_z", p1CPtr+2, modelTrFs, modelTrDs)){
+                update = true;
+            }
         }
 
         ImGui::Unindent();
@@ -1079,6 +1098,7 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
 
     ImGui::Unindent();
     ImGui::Spacing();
+    ImGui::Separator();
 
     ImGui::Text("Synch mode:");
     ImGui::Indent();
@@ -1110,8 +1130,41 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
         updateP          = true;
     }
     ImGui::Unindent();
+    ImGui::Spacing();
+
+    ImGui::Separator();
+    if(ImGui::Checkbox("Enable body tracking (perfomance costly)", &config.enableBodyTracking)){
+        updateP          = true;
+    }
+    ImGui::BeginDisabled(!config.enableBodyTracking);
+
+    ImGui::Text("Processing mode:");
+    ImGui::Indent();
+    ImGui::SetNextItemWidth(150.f);
+    int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
+    if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
+        config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
+        updateP = true;
+    }
+    ImGui::Unindent();
+
+    // add gpu id
+    // ...
+
+    ImGui::Text("Orientation:");
+    ImGui::Indent();
+    ImGui::SetNextItemWidth(150.f);
+    int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
+    if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
+        config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
+        updateP = true;
+    }
+    ImGui::Unindent();
+
+    ImGui::EndDisabled();
 
     ImGui::Spacing();
+    ImGui::Separator();
     if(ImGui::Checkbox("Disable LED", &config.disableLED)){
         updateP          = true;
     }
@@ -1136,7 +1189,7 @@ auto DCUIDrawer::draw_dc_data_settings(camera::DCType type, camera::DCDataSettin
         updateP = true;
     }
 
-    if(type == DCType::AzureKinect){
+    if(type == DCType::AzureKinect || type == DCType::FemtoOrbbec){
         ImGui::SameLine();
         if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
             updateP = true;
@@ -1172,7 +1225,7 @@ auto DCUIDrawer::draw_dc_data_settings(camera::DCType type, camera::DCDataSettin
         }
     }
 
-    if(type == DCType::AzureKinect){
+    if(type == DCType::AzureKinect || type == DCType::FemtoOrbbec){
         ImGui::SameLine();
         if(ImGui::Checkbox("Bodies###settings_send_bodies", &data.sendBodies)){
             updateP = true;

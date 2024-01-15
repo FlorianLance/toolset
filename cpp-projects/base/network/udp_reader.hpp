@@ -28,6 +28,7 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
+#include "network_enums.hpp"
 
 namespace tool::network{
 
@@ -40,7 +41,7 @@ public:
     ~UdpReader();
 
     // slots
-    auto init_socket(std::string readingAdress, int readingPort) -> bool;
+    auto init_socket(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
     auto clean_socket() -> void;
 
     // reading thread

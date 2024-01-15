@@ -37,7 +37,8 @@ struct UdpServerNetworkSettings : io::TextSettings{
     UdpServerNetworkSettings();
     auto initialize() -> bool;
 
-    std::vector<network::Interface> interfaces = {};
+    std::vector<network::Interface> ipv4Interfaces = {};
+    std::vector<network::Interface> ipv6Interfaces = {};
     std::vector<network::ReadSendNetworkInfos> clientsInfo;
 
 private:

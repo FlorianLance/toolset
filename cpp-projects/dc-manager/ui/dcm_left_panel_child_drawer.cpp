@@ -97,7 +97,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings 
 
             static ImGuiID tabId = 0;
             if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_tabbar1")){
-                draw_commands_tab_item(settings.grabbersSet);
+                draw_commands_tab_item(settings.globalSet.network, settings.grabbersSet);
                 draw_settings_tab_item(settings);
                 draw_recorder_tab_item(settings.globalSta.recorder, settings.globalSet.recorder);
                 draw_player_tab_item(settings.globalSta.player, settings.globalSet.player);
@@ -313,7 +313,7 @@ auto DCMLeftPanelChildDrawer::draw_ui_tab_item(ui::DCMUiSettings &ui) -> void {
     }
 }
 
-auto DCMLeftPanelChildDrawer::draw_commands_tab_item(std::vector<DCMGrabberSettings> &grabbersS)  -> void {
+auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS)  -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Commands###settings_commands_tabitem")){
         return;
@@ -325,7 +325,7 @@ auto DCMLeftPanelChildDrawer::draw_commands_tab_item(std::vector<DCMGrabberSetti
         return;
     }
 
-    draw_all_commands_tab_item(grabbersS);
+    draw_all_commands_tab_item(networkS, grabbersS);
 
     for(auto &grabber : grabbersS){
         draw_individual_commands_tab_item(grabber);
@@ -335,7 +335,7 @@ auto DCMLeftPanelChildDrawer::draw_commands_tab_item(std::vector<DCMGrabberSetti
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(std::vector<DCMGrabberSettings> &grabbersS) -> void{
+auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void{
 
     if (!ImGuiUiDrawer::begin_tab_item("[all]###all_settings_commands_tabitem")){
         return;
@@ -400,6 +400,24 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(std::vector<DCMGrabberS
     ImGui::Unindent();
     ImGui::Unindent();
 
+    ImGui::Text("Network interfaces:");
+    ImGui::Spacing();
+    ImGui::Text("IPV4:");
+    for(size_t id = 0; id < networkS.ipv4Interfaces.size(); ++id){
+        ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
+            id,
+            networkS.ipv4Interfaces[id].ipAddress)
+        );
+    }
+    ImGui::Spacing();
+    ImGui::Text("IPV6:");
+    for(size_t id = 0; id < networkS.ipv6Interfaces.size(); ++id){
+        ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
+            id,
+            networkS.ipv6Interfaces[id].ipAddress)
+        );
+    }
+
     ImGui::EndTabItem();
 }
 
@@ -414,7 +432,6 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGui::Indent();
 
     if(ImGui::Button("Connect###settings_connect_button")){
-        Logger::message(fmt("connect {}\n", grabberS.id));
         DCMSignals::get()->init_connection_signal(grabberS.id);
     }
     ImGui::SameLine();
@@ -460,6 +477,13 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGuiUiDrawer::text(fmt("IP address: {}", grabberS.network.readingAdress));
     ImGuiUiDrawer::text(fmt("Port: {}", grabberS.network.readingPort));
     ImGui::Unindent();
+
+    if(grabberS.network.protocol == network::Protocol::ipv6){
+        ImGui::Text("PROTOCOL: IPV6");
+    }else{
+        ImGui::Text("PROTOCOL: IPV4");
+    }
+    ImGui::Spacing();
 
     ImGui::Text("UDP sending:");
     ImGui::Indent();

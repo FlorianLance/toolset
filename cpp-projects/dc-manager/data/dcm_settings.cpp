@@ -99,14 +99,15 @@ auto DCMSettings::initialize() -> bool{
     // init grabbers settings
     size_t idC = 0;
     grabbersSet.resize(globalSet.network.clientsInfo.size());
-    for(const auto &grabber : globalSet.network.clientsInfo){
+    for(const auto &clientInfo : globalSet.network.clientsInfo){
 
         grabbersSet[idC].id = idC;
         grabbersSet[idC].network.name          = std::format("G{}", idC);
-        grabbersSet[idC].network.sendingAdress = grabber.sendingAdress;
-        grabbersSet[idC].network.readingAdress = grabber.readingAdress;
-        grabbersSet[idC].network.sendingPort   = grabber.sendingPort;
-        grabbersSet[idC].network.readingPort   = grabber.readingPort;
+        grabbersSet[idC].network.sendingAdress = clientInfo.sendingAdress;
+        grabbersSet[idC].network.readingAdress = clientInfo.readingAdress;
+        grabbersSet[idC].network.sendingPort   = clientInfo.sendingPort;
+        grabbersSet[idC].network.readingPort   = clientInfo.readingPort;
+        grabbersSet[idC].network.protocol      = clientInfo.protocol;
 
         // read filters settings file
         if(std::filesystem::exists(DCMPaths::grabbersFilters[idC])){

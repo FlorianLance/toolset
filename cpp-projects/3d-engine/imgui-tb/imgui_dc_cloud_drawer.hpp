@@ -28,6 +28,7 @@
 
 // base
 #include "camera/settings/dc_display_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
 #include "camera/dc_frame.hpp"
 
 // opengl
@@ -54,6 +55,7 @@ struct DCCloudDrawer{
 
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
+    camera::DCFiltersSettings filters;
     camera::DCCloudDisplaySettings display;
 
     // joints sub models

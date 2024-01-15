@@ -32,6 +32,7 @@
 
 // local
 #include "udp_header.hpp"
+#include "network_enums.hpp"
 
 namespace tool::network{
 
@@ -45,7 +46,7 @@ public:
     auto is_opened() const -> bool;
 
     // socket
-    auto init_socket(std::string tagetName, std::string writingPort) -> bool;
+    auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol) -> bool;
     auto clean_socket() -> void;
 
     // send

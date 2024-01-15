@@ -35,8 +35,8 @@
 #include "utility/logger.hpp"
 
 // local
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui/imgui.h"
+// #define IMGUI_DEFINE_MATH_OPERATORS
+// #include "imgui/imgui.h"
 
 using namespace tool::graphics;
 

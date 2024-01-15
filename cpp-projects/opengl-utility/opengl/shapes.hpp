@@ -99,6 +99,10 @@ private:
     geo::Mat4f m_view;
 };
 
+class TriangleLines : public BaseShape{
+public:
+    TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3);
+};
 
 class Plane : public BaseShape{
 public:

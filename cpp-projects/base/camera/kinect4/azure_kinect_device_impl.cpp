@@ -152,7 +152,7 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         Logger::message("Retrieve calibration\n");
         calibration     = device->get_calibration(k4aConfig.depth_mode, k4aConfig.color_resolution);
         transformation  = k4a::transformation(calibration);
-
+        
         const auto &c = calibration;
         Logger::message("[Calibration]\n");
         Logger::message(std::format("  color resolution: {}\n",     static_cast<int>(c.color_resolution)));
@@ -167,9 +167,9 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         Logger::message("Start imu\n");
         device->start_imu();
         
-        if(depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF){
-            // Logger::message("[AzureKinectDeviceImpl::start_cameras] start body tracker\n");
-            // tracker = k4abt::tracker::create(calibration, k4aBtConfig);
+        if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking){
+            Logger::message("[AzureKinectDeviceImpl::start_cameras] Start body tracker\n");
+            bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(calibration, k4aBtConfig));
         }
 
     }  catch (k4a::error error) {
@@ -191,9 +191,10 @@ auto AzureKinectDeviceImpl::stop_reading() -> void{
 
     stop_reading_thread();
 
-    if(depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF){
-        // Logger::message("Shutdown body tracker\n");
-        // tracker.shutdown();
+    if(bodyTracker != nullptr){
+        Logger::message("[AzureKinectDeviceImpl::start_cameras] Stop body tracker\n");
+        bodyTracker->shutdown();
+        bodyTracker = nullptr;
     }
 
     if(is_opened()){
@@ -400,7 +401,7 @@ auto AzureKinectDeviceImpl::read_from_imu() -> void {
     }
 }
 
-auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
+auto update_k4_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
     body.id = static_cast<std::int8_t>(k4aBody.id);
     for(const auto &jointD : dcJoints.data){
         const auto &kaKoint = k4aBody.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
@@ -414,28 +415,21 @@ auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
 }
 
 auto AzureKinectDeviceImpl::read_bodies() -> void{
-    
-    if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF)){
-        // if(tracker.enqueue_capture(*capture.get(), std::chrono::milliseconds(1))){
-
-        //     if(k4abt::frame bodyFrame = tracker.pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
-        //         auto bodiesCount = bodyFrame.get_num_bodies();
-        //         if(data.bodies.size() < bodiesCount){
-        //             data.bodies.resize(bodiesCount);
-        //         }
-        //         for(size_t ii = 0; ii < bodiesCount; ++ii){
-        //             update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
-        //         }
-        //         timing.bodiesTS = bodyFrame.get_system_timestamp();
-        //     }
-
-        //     //  k4a::image body_index_map = body_frame.get_body_index_map();
-        //     //  if (body_index_map != nullptr){
-        //     ////    print_body_index_map_middle_line(body_index_map);
-        //     //  }else{
-        //     //      Logger::error("Error: Failed to generate bodyindex map!\n");
-        //     //  }
-        // }
+        
+    if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking && (bodyTracker != nullptr)){
+        if(bodyTracker->enqueue_capture(*capture.get(), std::chrono::milliseconds(1))){
+            if(k4abt::frame bodyFrame = bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+                auto bodiesCount = bodyFrame.get_num_bodies();
+                if(data.bodies.size() < bodiesCount){
+                    data.bodies.resize(bodiesCount);
+                }
+                for(size_t ii = 0; ii < bodiesCount; ++ii){
+                    update_k4_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
+                }
+                timing.bodiesTS = bodyFrame.get_system_timestamp();
+                bodiesIndexImage = bodyFrame.get_body_index_map();
+            }
+        }
     }
 }
 
@@ -445,19 +439,6 @@ auto AzureKinectDeviceImpl::generate_cloud() -> void{
         transformation.depth_image_to_point_cloud(depthImage.value(), K4A_CALIBRATION_TYPE_DEPTH, &pointCloudImage.value());
         Bench::stop();
     }
-
-    // image depth_image_to_color_camera(const image &depth_image) const
-    // {
-    //     image transformed_depth_image = image::create(K4A_IMAGE_FORMAT_DEPTH16,
-    //                                                   m_color_resolution.width,
-    //                                                   m_color_resolution.height,
-    //                                                   m_color_resolution.width *
-    //                                                       static_cast<int32_t>(sizeof(uint16_t)));
-    //     depth_image_to_color_camera(depth_image, &transformed_depth_image);
-    //     return transformed_depth_image;
-    // }
-
-
 }
 
 auto AzureKinectDeviceImpl::convert_color_image() -> void{
@@ -1020,6 +1001,16 @@ auto AzureKinectDeviceImpl::infra_data() -> std::span<uint16_t> {
         return std::span<std::uint16_t>{
             reinterpret_cast<std::uint16_t*>(infraredImage.value().get_buffer()),
             static_cast<size_t>(infraredImage.value().get_width_pixels() * infraredImage.value().get_height_pixels())
+        };
+    }
+    return {};
+}
+
+auto AzureKinectDeviceImpl::bodies_index_data() -> std::span<uint8_t> {
+    if(bodiesIndexImage.has_value()){
+        return std::span<std::uint8_t>{
+            reinterpret_cast<std::uint8_t*>(bodiesIndexImage.value().get_buffer()),
+            static_cast<size_t>(bodiesIndexImage.value().get_width_pixels() * bodiesIndexImage.value().get_height_pixels())
         };
     }
     return {};

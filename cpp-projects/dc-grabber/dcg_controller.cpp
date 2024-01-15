@@ -166,7 +166,7 @@ auto DCGController::set_connections() -> void{
     s->update_scene_display_settings_signal.connect(                 &DevD::update_scene_display_settings,                  devD);
     s->update_cloud_display_settings_signal.connect(                 &DevD::update_cloud_display_settings,                  devD);
     s->update_model_signal.connect(                                  &graphics::DCCloudsSceneDrawer::update_model,          devD);
-//    s->update_filters_signal.connect(                                &DevD::update_filters,                                 devD);
+    s->update_filters_signal.connect(                                &DevD::update_filters_settings,                        devD);
     // # recorder
     s->update_scene_display_settings_signal.connect(                 &RecD::update_scene_display_settings,                  recD);
     s->update_cloud_display_settings_signal.connect(                 &RecD::update_cloud_display_settings,                  recD);

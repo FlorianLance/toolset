@@ -33,24 +33,28 @@ namespace tool::camera {
 
 struct DCConfigSettings : io::BinaryFileSettings{
     
+    // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
     DCMode mode = DCMode::K4_CLOUD_C1280x720_DI640x576_MJPG_F30;
+
+    // synch
     bool synchronizeColorAndDepth = true;
     int delayBetweenColorAndDepthUsec = 0;
     DCSynchronisationMode synchMode = DCSynchronisationMode::Standalone;
     int subordinateDelayUsec = 0;
-    bool disableLED = false;
 
     // body tracking
-    // TODO: capture bodies
+    bool enableBodyTracking = false;
     DCBTSensorOrientation btOrientation = DCBTSensorOrientation::k4_default_orientation;
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::K4_GPU_DIRECTML;
     std::int8_t btGPUId = 0;
 
+    // other
+    bool disableLED = false;
+
     static auto default_init_for_grabber() -> DCConfigSettings;
     static auto default_init_for_manager() -> DCConfigSettings;
-
 
     DCConfigSettings();
     DCConfigSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){

@@ -52,14 +52,14 @@ private:
 
     auto draw_grabbers_ui(DCMSettings &settings) -> void;
     // tab items
-    auto draw_commands_tab_item(std::vector<DCMGrabberSettings> &grabbersS) -> void;
+    auto draw_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void;
     auto draw_settings_tab_item(DCMSettings &settings) -> void;
     auto draw_ui_tab_item(ui::DCMUiSettings &ui) -> void;
     auto draw_logs_tab_item() -> void;
     auto draw_infos_tab_item(const DCMSettings &settings) -> void;
     // sub tab items
     // # command
-    auto draw_all_commands_tab_item(std::vector<DCMGrabberSettings> &grabbersS) -> void;
+    auto draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void;
     auto draw_individual_commands_tab_item(DCMGrabberSettings &grabberS) -> void;
     // # settings
     auto draw_device_tab_item(DCMSettings &settings) -> void;

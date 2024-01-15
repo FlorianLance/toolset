@@ -82,7 +82,7 @@ UdpReader::~UdpReader(){
     }
 }
 
-auto UdpReader::init_socket(std::string readingAdress, int port) -> bool{
+auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
 
     if(is_reading()){
         Logger::error(fmt("UdpReader: Cannot init socket while reading thread is still active.\n"));
@@ -95,10 +95,9 @@ auto UdpReader::init_socket(std::string readingAdress, int port) -> bool{
     }
 
     try {
-
         // open socket
         i->socket   = std::make_unique<udp::socket>(i->ioService);
-        i->socket->open(udp::v4());
+        i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
         i->socket->set_option(socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{500});
         i->socket->set_option(udp::socket::reuse_address(true));
         i->socket->set_option(udp::socket::receive_buffer_size(9000*50));//*10));

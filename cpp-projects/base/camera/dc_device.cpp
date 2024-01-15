@@ -61,7 +61,7 @@ auto DCDevice::open(std::uint32_t deviceId) -> bool{
     // cameras
     auto deviceCount = nb_devices();
     if(deviceCount == 0){
-        Logger::error("[DCDevice::open] No K4A devices found\n");
+        Logger::error("[DCDevice::open] No device found\n");
         return false;
     }
     Logger::message(std::format("[DCDevice] Devices found: {}\n", deviceCount));

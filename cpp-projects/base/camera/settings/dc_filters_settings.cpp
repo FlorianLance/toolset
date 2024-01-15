@@ -75,11 +75,9 @@ auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &o
     read(invalidateColorFromDepth, data, offset, sizeData);
     read(invalidateInfraFromDepth, data, offset, sizeData);    
     read(p1FMode, data, offset, sizeData);
-    read(p1Pos, data, offset, sizeData);
-    read(p1Rot, data, offset, sizeData);
-    read(p2FMode, data, offset, sizeData);
-    read(p2Pos, data, offset, sizeData);
-    read(p2Rot, data, offset, sizeData);
+    read(p1A, data, offset, sizeData);
+    read(p1B, data, offset, sizeData);
+    read(p1C, data, offset, sizeData);
 }
 
 auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
@@ -111,11 +109,9 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
     write(invalidateColorFromDepth, data, offset, sizeData);
     write(invalidateInfraFromDepth, data, offset, sizeData);
     write(p1FMode, data, offset, sizeData);
-    write(p1Pos, data, offset, sizeData);
-    write(p1Rot, data, offset, sizeData);
-    write(p2FMode, data, offset, sizeData);
-    write(p2Pos, data, offset, sizeData);
-    write(p2Rot, data, offset, sizeData);
+    write(p1A, data, offset, sizeData);
+    write(p1B, data, offset, sizeData);
+    write(p1C, data, offset, sizeData);
 }
 
 auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
@@ -142,9 +138,7 @@ auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
         sizeof(invalidateColorFromDepth) +
         sizeof(invalidateInfraFromDepth) +
         sizeof(p1FMode) +
-        sizeof(p1Pos) +
-        sizeof(p1Rot) +
-        sizeof(p2FMode) +
-        sizeof(p2Pos) +
-        sizeof(p2Rot);
+        sizeof(p1A) +
+        sizeof(p1B) +
+        sizeof(p1C);
 }

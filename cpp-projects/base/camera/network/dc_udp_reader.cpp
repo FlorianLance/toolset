@@ -30,6 +30,7 @@
 // local
 #include "utility/time.hpp"
 #include "camera/dc_compressed_frame.hpp"
+// #include "utility/logger.hpp"
 
 using namespace tool::camera;
 using namespace tool::network;
@@ -41,10 +42,11 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     Header header(packetData);
     packetData += sizeof(Header);
 
-//    Logger::message(std::format(
-//        "[pp {} {} {} {} {} {} {}] ",
-//        nbBytes, header.idMessage, header.currentPacketSizeBytes, header.currentPacketId,
-//        header.totalSizeBytes, header.dataOffset, header.idMessage));
+   // Logger::message(std::format(
+   //     "[pp {} {} {} {} {} {} {}] ",
+   //     nbBytes, header.idMessage, header.currentPacketSizeBytes, header.currentPacketId,
+   //     header.totalSizeBytes, header.dataOffset, header.idMessage));
+
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::init_network_infos:{
         init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<UdpNetworkSendingSettings>(packetData));

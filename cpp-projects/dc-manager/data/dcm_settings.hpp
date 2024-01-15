@@ -57,6 +57,7 @@ struct DCMGrabberNetworkSettings{
     int readingPort;
     std::string sendingAdress;
     int sendingPort;
+    network::Protocol protocol;
 
     size_t lastFrameIdReceived = 0;
 };

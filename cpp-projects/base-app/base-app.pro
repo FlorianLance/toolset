@@ -101,6 +101,12 @@ LIBS += \
 ####################################### PROJECT FILES
 
 HEADERS += \
+    test_frames_processing.hpp \
+    test_k2_device.hpp \
+    test_k4_device.hpp \
+    test_ob_device.hpp \
+    test_ob_utility.hpp \
+    test_volumetric_video_player.hpp
 
 SOURCES += \
     # main

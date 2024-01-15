@@ -33,8 +33,7 @@
 #include <QTimer>
 
 
-
-void wait_process(int ms){
+auto wait_process(int ms) -> void {
     QTime dieTime= QTime::currentTime().addMSecs(ms);
     while (QTime::currentTime() < dieTime){
         QCoreApplication::processEvents( QEventLoop::AllEvents, 5 > ms ? ms : 5);
@@ -44,14 +43,20 @@ void wait_process(int ms){
 int main(int argc, char *argv[]){
 
     QCoreApplication a(argc, argv);
-//    QLocale::setDefault(QLocale::c());
 
+    QStringList args = QCoreApplication::arguments();
+    if(args.size() < 2){
+        qDebug() << "Not enought arguments.";
+        return 0;
+    }
     QString exeDirPath = QCoreApplication::applicationDirPath();
-    QString grabberExePath = exeDirPath + "/scaner-grabber.exe";
+    qDebug() << "Executable to guard: " << exeDirPath;
+
+    QString exeProgramPath = QString("%1/%2").arg(exeDirPath, args[1]);
+    args.removeFirst();
+    qDebug() << "Arguments to use: " << args;
 
     QProcess process;
-    QStringList args;
-
     QEventLoop::connect(&process, &QProcess::stateChanged, &a, [&](QProcess::ProcessState newState){
         switch (newState) {
             case QProcess::ProcessState::Running:
@@ -101,10 +106,10 @@ int main(int argc, char *argv[]){
     QTimer timer;
     QEventLoop::connect(&timer, &QTimer::timeout,  [&](){
         if(process.state() != QProcess::ProcessState::Running && process.state() != QProcess::ProcessState::Starting){
-            process.start(grabberExePath, args);
+            process.start(exeProgramPath, args);
         }
     });
-    timer.start(1000);
+    timer.start(200);
 
     return a.exec();
 }

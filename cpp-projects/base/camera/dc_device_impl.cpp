@@ -345,17 +345,18 @@ auto DCDeviceImpl::start_reading_thread() -> void{
 
 auto DCDeviceImpl::read_frames() -> void {
 
+    auto dev = get_device(settings.config.mode);
+
     // start loop
     readFramesFromCameras = true;
     timing.reset();
 
     while(readFramesFromCameras){
 
-        // copy parameters
         parametersM.lock();
-        const auto cFiltersS = settings.filters;
-        const auto cDataS    = settings.data;
-        const auto cDelayS   = settings.delay;
+        auto cFiltersS = settings.filters;
+        auto cDataS    = settings.data;
+        auto cDelayS   = settings.delay;
         timing.swap_local_timestamps();
         parametersM.unlock();
 
@@ -412,15 +413,19 @@ auto DCDeviceImpl::read_frames() -> void {
         filter_depth_image(cFiltersS,depth_data(), color_data(), infra_data());
         timing.update_local("after_depth_filter"sv);
 
-        filter_color_image(cFiltersS, color_data(), infra_data(), depth_data());
+        filter_color_image(cFiltersS);
         timing.update_local("after_color_filter"sv);
 
-        filter_infrared_image(cFiltersS, infra_data(), depth_data(), color_data());
+        filter_infrared_image(cFiltersS);
         timing.update_local("after_infrared_filter"sv);
 
-        if(cDataS.generateCloudLocal){
+        if(cDataS.generateCloudLocal || cFiltersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
             generate_cloud();
             timing.update_local("after_cloud_generation"sv);
+
+            // filter from geometry
+            filter_cloud_image(cFiltersS);
+            timing.update_local("after_cloud_filtering"sv);
         }
         timing.update_local("after_processing"sv);
 
@@ -428,8 +433,15 @@ auto DCDeviceImpl::read_frames() -> void {
             break;
         }
 
+        bool hasDataToSend = false;
+        if(dev == DCType::FemtoOrbbec){
+            hasDataToSend = cDataS.has_data_to_send() || cDataS.sendIMU || cDataS.sendBodies;
+        }else if (dev == DCType::AzureKinect){
+            hasDataToSend = cDataS.has_data_to_send() || cDataS.sendIMU || cDataS.sendAudio || cDataS.sendBodies;
+        }
+
         // compressed frame
-        if(sendData){
+        if(sendData && hasDataToSend){
 
             // generate
             auto compressedFrame = compress_frame(cFiltersS,cDataS);
@@ -473,7 +485,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         return;
     }
 
-    Bench::start("[DCDeviceData::filter_depth_image]");
+    // Bench::start("[DCDeviceData::filter_depth_image]");
 
     const auto dRange = depth_range(settings.config.mode)*1000.f;
 
@@ -481,16 +493,14 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
     auto maxW = infos.depthWidth  * filtersS.maxWidthF;
     auto minH = infos.depthHeight * filtersS.minHeightF;
     auto maxH = infos.depthHeight * filtersS.maxHeightF;
-    auto minD = filtersS.minDepthF * dRange.x();
-    auto maxD = filtersS.maxDepthF * dRange.y();
+
+    auto diffRange = dRange.y()-dRange.x();
+    auto minD = dRange.x() + filtersS.minDepthF * diffRange;
+    auto maxD = dRange.x() + filtersS.maxDepthF * diffRange;
     auto hsvDiffColor = Convert::to_hsv(filtersS.filterColor);
 
     // reset depth mask
     std::fill(depthMask.begin(), depthMask.end(), 1);
-
-    auto pl1Dir = normalize(filtersS.p1Rot);
-    auto pl2Dir = normalize(filtersS.p2Rot);
-
 
     // depth/width/height/mask/color/infra filtering
     std::for_each(std::execution::par_unseq, std::begin(indices.depths3D), std::end(indices.depths3D), [&](const Pt3<size_t> &dIndex){
@@ -513,35 +523,6 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
             (currentDepth < minD) || (currentDepth > maxD) ){           // depth
             depthMask[id] = 0;
             return;
-        }
-
-        // plane filtering
-        if(filtersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
-            geo::Pt3<float> pt{0.001f * ii,0.001f * jj, 0.001f * currentDepth};
-
-            if(dot(pt - filtersS.p1Pos, pl1Dir) < 0){
-                if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
-                    depthMask[id] = 0;
-                    return;
-                }
-            }else{
-                if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
-                    depthMask[id] = 0;
-                    return;
-                }
-            }
-
-            if(dot(pt - filtersS.p2Pos, pl2Dir) < 0){
-                if(filtersS.p2FMode == DCFiltersSettings::PlaneFilteringMode::Above){
-                    depthMask[id] = 0;
-                    return;
-                }
-            }else{
-                if(filtersS.p2FMode == DCFiltersSettings::PlaneFilteringMode::Below){
-                    depthMask[id] = 0;
-                    return;
-                }
-            }
         }
 
         // color filtering
@@ -581,6 +562,8 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         meanBiggestZoneId = 0;
     }
 
+
+
     // count valid depth values
     validDepthValues = 0;
     for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
@@ -592,10 +575,17 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
             validDepthValues++;
         }
     });
-    Bench::stop();
+    // Bench::stop();
+
+
 }
 
-auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer) -> void{
+auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS) -> void{
+
+    std::span<ColorRGBA8> colorBuffer = color_data();
+    std::span<uint16_t> infraBuffer = infra_data();
+    std::span<uint16_t> depthBuffer = depth_data();
+    std::span<uint8_t> bodiesBuffer = bodies_index_data();
 
     if(colorBuffer.empty()){
         return;
@@ -609,6 +599,8 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::sp
         return;
     }
 
+    bool writeBodies = (bodiesBuffer.size() == colorBuffer.size()) && true; // TODO
+
     Bench::start("[DCDeviceData::filter_color_image]");
 
     if(!depthBuffer.empty()){
@@ -619,8 +611,14 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::sp
                     colorBuffer[id] = ColorRGBA8{dc_invalid_color_value};
                 }else{
                     if(filtersS.keepOnlyBiggestCluster){
-                        colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};
-                    }
+                        // colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};// TODO ?
+                    }                                       
+                }                                
+            }
+
+            if(writeBodies){
+                if(bodiesBuffer[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                    colorBuffer[id] = ColorRGBA8{255,0,0,255};
                 }
             }
         });
@@ -629,7 +627,12 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::sp
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraBuffer, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer) -> void{
+auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> void{
+
+    std::span<ColorRGBA8> colorBuffer = color_data();
+    std::span<uint16_t> infraBuffer = infra_data();
+    std::span<uint16_t> depthBuffer = depth_data();
+    std::span<uint8_t> bodiesBuffer = bodies_index_data();
 
 
     if(infraBuffer.empty()){
@@ -644,6 +647,8 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std:
         return;
     }
 
+    bool writeBodies = (bodiesBuffer.size() == infraBuffer.size()) && true; // TODO
+
     Bench::start("[DCDeviceData::filter_infrared_image]");
     if(!depthBuffer.empty()){
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
@@ -652,10 +657,18 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std:
                     infraBuffer[id] = dc_invalid_infra_value;
                 }
             }
+
+
+            if(writeBodies){
+                if(bodiesBuffer[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                    infraBuffer[id] = 16000;
+                }
+            }
         });
     }
     Bench::stop();
 }
+
 
 auto DCDeviceImpl::stop_reading_thread() -> void{
 

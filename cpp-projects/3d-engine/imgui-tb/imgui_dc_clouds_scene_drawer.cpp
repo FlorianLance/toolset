@@ -51,6 +51,12 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
     }
 
     gridD = std::make_unique<gl::GridDrawer>();
+
+
+    plane1PointsD[0] = std::make_unique<gl::CubeDrawer>(0.1f);
+    plane1PointsD[1] = std::make_unique<gl::CubeDrawer>(0.1f);
+    plane1PointsD[2] = std::make_unique<gl::CubeDrawer>(0.1f);
+    plane1D = std::make_unique<gl::TriangleLineDrawer>();
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -145,10 +151,27 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                 }
             }
 
-            if(plane1D){
-                auto pTr = plane1Tr * cloudD.model;
-//                std::cout << plane1Tr << " ";
-                shader->set_uniform("model", pTr);
+            if(cloudD.filters.p1FMode != tool::camera::DCFiltersSettings::PlaneFilteringMode::None && plane1D){
+
+                auto p1 = cloudD.filters.p1A;
+                auto p2 = cloudD.filters.p1B;
+                auto p3 = cloudD.filters.p1C;
+
+                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p1));
+                shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,0.f, 1.f});
+                plane1PointsD[0]->draw(shader);
+
+                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p2));
+                shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
+                plane1PointsD[1]->draw(shader);
+
+                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p3));
+                shader->set_uniform("unicolor", geo::Pt4f{0.f,0.f,1.f, 1.f});
+                plane1PointsD[2]->draw(shader);
+
+                plane1D->init(p1,p2,p3);
+
+                shader->set_uniform("model",  cloudD.model);
                 shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,0.f, 1.f});
                 plane1D->draw(shader);
             }
@@ -369,6 +392,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
 
 auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor, bool drawDepth, bool drawInfra, bool drawCloud, std::optional<geo::Pt2<int>> sizeW) -> void{
 
+    static_cast<void>(sizeW);
     if(focusWindow){        
         if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("Frames###{}_frames_tab_bar", name).data())){
 
@@ -451,10 +475,16 @@ auto DCCloudsSceneDrawer::update_model(size_t idCloud, const camera::DCModelSett
     m_redrawClouds = true;
 }
 
+// #include <iostream>
+auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const camera::DCFiltersSettings &filters) -> void {
+    cloudsD[idCloud].filters = filters;
+    m_redrawClouds = true;
+}
+
 auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, const std::vector<const gl::Texture2D *> &textures) -> std::vector<std::tuple<geo::Pt2f, geo::Pt2f>>{
 
-//    constexpr bool allow_flip = false;
-//    const auto runtime_flipping_mode = rectpack2D::flipping_option::DISABLED;
+    //    constexpr bool allow_flip = false;
+    //    const auto runtime_flipping_mode = rectpack2D::flipping_option::DISABLED;
 //    using spaces_type = rectpack2D::empty_spaces<allow_flip, rectpack2D::default_empty_spaces>;
 //    using rect_type = rectpack2D::output_rect_t<spaces_type>;
 

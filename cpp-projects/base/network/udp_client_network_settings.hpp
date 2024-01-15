@@ -47,9 +47,12 @@ struct UdpClientNetworkSettings : io::TextSettings{
     // data
     size_t udpReadingInterfaceId = 0;
     int udpReadingPort = 8888;
+    Protocol protocol = Protocol::unknow;
 
     // local
-    std::vector<network::Interface> interfaces = {};
+    std::vector<network::Interface> ipv4Interfaces = {};
+    std::vector<network::Interface> ipv6Interfaces = {};
+
     network::Interface udpReadingInterface;
     int udpSendingPort = 8889;
     std::string udpSendingAdress;

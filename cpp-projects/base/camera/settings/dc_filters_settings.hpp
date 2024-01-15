@@ -75,13 +75,9 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     bool invalidateInfraFromDepth   = false;       
 
     PlaneFilteringMode p1FMode = PlaneFilteringMode::None;
-    geo::Pt3f p1Pos;
-    geo::Pt3f p1Rot;
-
-    PlaneFilteringMode p2FMode = PlaneFilteringMode::None;
-    geo::Pt3f p2Pos;
-    geo::Pt3f p2Rot;
-
+    geo::Pt3f p1A;
+    geo::Pt3f p1B;
+    geo::Pt3f p1C;
 
     DCFiltersSettings();
     DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){

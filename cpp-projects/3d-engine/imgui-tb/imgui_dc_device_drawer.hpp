@@ -44,6 +44,10 @@ struct DCDeviceDrawer : public DCCloudsSceneDrawer{
 
     auto save_cloud(const std::string &path) -> void;
 
+    auto update_filters_settings(const camera::DCFiltersSettings &filters) -> void {
+        DCCloudsSceneDrawer::update_filters_settings(0, filters);
+    }
+
 private:
     std::mutex locker;
     bool redrawClouds = false;

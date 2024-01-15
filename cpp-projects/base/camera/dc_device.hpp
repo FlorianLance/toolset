@@ -31,7 +31,6 @@
 // std
 #include <cstdint>
 #include <string>
-#include <span>
 
 // local
 #include "thirdparty/sigslot/signal.hpp"

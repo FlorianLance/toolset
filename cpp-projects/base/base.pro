@@ -101,6 +101,7 @@ HEADERS += \
     camera/network/dc_server_local_device.hpp \
     camera/network/dc_server_remote_device.hpp \
     camera/orbbec/femto_orbbec_device_impl.hpp \
+    camera/playback_device_impl.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \

@@ -363,3 +363,11 @@ auto FrustumDrawer::init() -> void{
     drawableObject = std::make_unique<Frustum>();
 }
 
+TriangleLineDrawer::TriangleLineDrawer(){
+    init(geo::Pt3f{1.f,0.f,0.f},geo::Pt3f{0.f,1.f,0.f},geo::Pt3f{0.f,0.f,1.f});
+}
+
+auto TriangleLineDrawer::init(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3) -> void{
+    clean();
+    drawableObject = std::make_unique<TriangleLines>(p1,p2,p3);
+}

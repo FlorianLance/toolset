@@ -87,14 +87,16 @@ auto DCGSettings::initialize() -> bool{
         return false;
     }
 
-
-    if(networkS.udpReadingInterfaceId > networkS.interfaces.size()){
-        Logger::error(std::format("Cannot find ipv4 interface with id [{}]. Abort initialization.\n", networkS.udpReadingInterfaceId));
+    const auto &interfaces = (networkS.protocol == Protocol::ipv6) ? networkS.ipv6Interfaces : networkS.ipv4Interfaces;
+    if(networkS.udpReadingInterfaceId > interfaces.size()){
+        Logger::error(std::format("Cannot find {} interface with id [{}]. Abort initialization.\n",
+        networkS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4",
+        networkS.udpReadingInterfaceId));
         return false;
     }
 
     Logger::message("Local interfaces available:\n");
-    for(const auto &interface : networkS.interfaces){
+    for(const auto &interface : interfaces){
         Logger::message(" -> " + interface.ipAddress + "\n");
     }
     Logger::message(std::format("UDP reading interface id: [{}]\n", networkS.udpReadingInterfaceId));

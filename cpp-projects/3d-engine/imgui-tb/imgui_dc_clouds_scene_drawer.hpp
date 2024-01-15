@@ -30,6 +30,7 @@
 
 // local
 #include "camera/settings/dc_model_settings.hpp"
+#include "camera/settings/dc_filters_settings.hpp"
 #include "imgui_dc_cloud_drawer.hpp"
 #include "imgui_fbo_ui_drawer.hpp"
 
@@ -69,6 +70,8 @@ struct DCCloudsSceneDrawer{
     auto update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void;
     auto update_model(size_t idCloud, const camera::DCModelSettings &model)  -> void;
 
+    auto update_filters_settings(size_t idCloud, const camera::DCFiltersSettings &filters) -> void;
+
     // signals
     sigslot::signal<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_signal;
@@ -82,7 +85,9 @@ struct DCCloudsSceneDrawer{
     camera::DCSceneDisplaySettings display;
 
     // test
-    std::unique_ptr<gl::GridDrawer> plane1D = nullptr;
+    std::unique_ptr<gl::TriangleLineDrawer> plane1D = nullptr;
+    std::array<std::unique_ptr<gl::CubeDrawer>,3> plane1PointsD = {nullptr, nullptr, nullptr};
+
     geo::Matrix<float,4,4> plane1Tr = geo::Mat4f::identity();
 
 private:

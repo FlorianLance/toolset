@@ -25,11 +25,7 @@
 **                                                                            **
 ********************************************************************************/
 
-
 #include "udp_client_network_settings.hpp"
-
-// std
-#include <fstream>
 
 // local
 #include "utility/logger.hpp"
@@ -46,57 +42,75 @@ UdpClientNetworkSettings::UdpClientNetworkSettings(){
 
 auto UdpClientNetworkSettings::initialize() -> bool{
 
-    interfaces = Interface::list_local_interfaces(Protocol::ipv4);
-    if(interfaces.size() == 0){
+    // retrieve interfaces
+    ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
+    if(ipv4Interfaces.size() == 0){
+        Logger::warning("Cannot find any ipv4 interface.\n");
+    }
+
+    ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
+    if(ipv6Interfaces.size() == 0){
+        Logger::warning("Cannot find any ipv6 interface.\n");
+    }
+
+    if(ipv4Interfaces.empty() && ipv6Interfaces.empty()){
+        Logger::error("Cannot find any ipv4/ipv6 interface. Abort initialization.\n");
         return false;
     }
 
     return true;
 }
 
+#include <iostream>
+
 auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void {
     udpSendingAdress = std::string(sendingSettings.ipAdress.begin(), sendingSettings.ipAdress.end());
     String::remove_after_right(udpSendingAdress, ' ');
     udpSendingPort  = sendingSettings.port;
+    std::cout << "init_sending_settings: " << udpSendingPort << " " << udpSendingAdress << "\n";
     m_connectedToManager = true;
 }
 
+
 auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
 
+    // read version
     io::BaseSettings::init_from_text(text);
 
-    auto lines = String::split_view(text, "\n"sv);
-    if(lines.size() < 2){
-        Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
-        return;
-    }
+    // skip header
+    auto line = String::advance_view_to_delim(text, "\n"sv);
 
-    // udp_id_reading_interface
-    auto split = String::split_view(lines[0], " "sv);
-    if(split.size() > 1){
-        udpReadingInterfaceId = String::to_int(split[1]);
+    if(auto values = String::split_view(line, " "sv); values.size() >= 2){
+
+        // read protocol
+        if(values.size() > 2){
+            if(values[2] == "ipv6"){
+                protocol = Protocol::ipv6;
+            }else{
+                protocol = Protocol::ipv4;
+            }
+        }else{
+            protocol = Protocol::ipv4;
+        }
+        udpReadingInterfaceId = String::to_int(values[0]);
+        udpReadingPort = String::to_int(values[1]);
+
+        const auto &interfaces = (protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+        udpReadingInterface = interfaces[udpReadingInterfaceId];
+
     }else{
         Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
         return;
     }
-
-    // udp_reading_port
-    split = String::split_view(lines[1], " "sv);
-    if(split.size() > 1){
-        udpReadingPort = String::to_int(split[1]);
-    }else{
-        Logger::error("DCClientNetworkSettings::init_from_file: Invalid file format.\n");
-        return;
-    }
-
-    udpReadingInterface = interfaces[udpReadingInterfaceId];
 }
 
 auto UdpClientNetworkSettings::write_to_text() const -> std::string{
     return std::format(
-        "{}udp_id_reading_interface {}\nudp_reading_port {}\n",
-        BaseSettings::write_to_text(),
+        "{} {} {} {} {}\n",
+        BaseSettings::write_to_text(), // write version
+        "id_interface | reading_port | ipv4/ipv6\n"sv, // write header
         udpReadingInterfaceId,
+        udpReadingPort,
         udpReadingPort
     );
 }

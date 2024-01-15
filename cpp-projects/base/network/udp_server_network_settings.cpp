@@ -47,9 +47,18 @@ UdpServerNetworkSettings::UdpServerNetworkSettings(){
 auto UdpServerNetworkSettings::initialize() -> bool{
 
     // retrieve interfaces
-    interfaces = Interface::list_local_interfaces(Protocol::ipv4);
-    if(interfaces.size() == 0){
-        Logger::error("Cannot find any ipv4 interface. Abort initialization.\n");
+    ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
+    if(ipv4Interfaces.size() == 0){
+        Logger::warning("Cannot find any ipv4 interface.\n");
+    }
+
+    ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
+    if(ipv6Interfaces.size() == 0){
+        Logger::warning("Cannot find any ipv6 interface.\n");
+    }
+
+    if(ipv4Interfaces.empty() && ipv6Interfaces.empty()){
+        Logger::error("Cannot find any ipv4/ipv6 interface. Abort initialization.\n");
         return false;
     }
 
@@ -58,7 +67,11 @@ auto UdpServerNetworkSettings::initialize() -> bool{
 
 auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
 
+    // read version
     io::BaseSettings::init_from_text(text);
+
+    // skip header
+    text = String::advance_view_to_delim(text, "\n"sv);
 
     clientsInfo.clear();
 
@@ -70,6 +83,20 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
             info.local          = values[0] == "local"sv;
             info.readingPort    = String::to_int(values[2]);
 
+            // read protocol
+            if(values.size() > 5){
+                if(values[5] == "ipv6"){
+                    info.protocol = Protocol::ipv6;
+                }else{
+                    info.protocol = Protocol::ipv4;
+                }
+            }else{
+                info.protocol = Protocol::ipv4;
+            }
+
+            const auto &interfaces = (info.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+
+
             size_t idReadingInterface = String::to_int(values[1]);
             if(idReadingInterface >= interfaces.size()){
                 Logger::error(std::format("Invalid network config file format.\n"));
@@ -78,7 +105,7 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
             info.idReadingInterface = idReadingInterface;
             info.readingAdress      = interfaces[idReadingInterface].ipAddress;
 
-            bool localhost   = (values[3] == "localhost") || (values[3] == "127.0.0.1");
+            bool localhost   = (values[3] == "localhost");// || (values[3] == "127.0.0.1");
             if(localhost){
                 info.sendingAdress = interfaces[idReadingInterface].ipAddress;
             }else{
@@ -86,10 +113,13 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
             }
             info.sendingPort = String::to_int(values[4]);
 
-            Logger::message(std::format("Network infos read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
-                info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
+            Logger::message(std::format("Network infos read: M:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
+                info.local ? "local"sv : "remote"sv, info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort,
+                info.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
 
             clientsInfo.push_back(std::move(info));
+        }else{
+            Logger::error("UdpServerNetworkSettings::init_from_file: Invalid line format.\n");
         }
     }
 }
@@ -98,14 +128,20 @@ auto UdpServerNetworkSettings::write_to_text() const -> std::string{
     std::vector<std::string> lines;
     lines.reserve(clientsInfo.size() + 1);
 
+    // write version
     lines.push_back(BaseSettings::write_to_text());
-    for(const auto &grabber : clientsInfo){
-        lines.push_back(std::format("{} {} {} {} {}\n",
-            grabber.local ? "local"sv : "remote"sv,
-            grabber.idReadingInterface,
-            grabber.readingPort,
-            grabber.sendingAdress,
-            grabber.sendingPort));
+
+    // write header
+    lines.push_back("local/remote | id_interface | reading_port | sending_address | sending_port | ipv4/ipv6");
+
+    for(const auto &clientInfo : clientsInfo){
+        lines.push_back(std::format("{} {} {} {} {} {}\n",
+            clientInfo.local ? "local"sv : "remote"sv,
+            clientInfo.idReadingInterface,
+            clientInfo.readingPort,
+            clientInfo.sendingAdress,
+            clientInfo.sendingPort,
+            clientInfo.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
     }
     return String::join(lines);
 }

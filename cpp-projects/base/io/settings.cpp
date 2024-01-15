@@ -81,14 +81,12 @@ auto BaseSettings::save_to_text_file(const std::string &filePath) const -> bool{
     return true;
 }
 
-#include <iostream>
 
 auto BaseSettings::save_to_binary_file(const std::string &filePath) const -> bool{
     Logger::message(std::format("Save [{}] to binary file with path [{}]\n", type_description(),  filePath));
     std::vector<std::int8_t> content;
     content.resize(total_data_size());
 
-    std::cout <<"BIN: " << total_data_size() << "\n";
     size_t offset = 0;
     write_to_data(content.data(), offset, content.size());
     if(!File::write_binary_content(filePath, content)){

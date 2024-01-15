@@ -141,6 +141,12 @@ public:
     auto init(float xSize, float zSize, std::vector<TextureName> textures) -> void;
 };
 
+class TriangleLineDrawer : public Drawer{
+public:
+    TriangleLineDrawer();
+    auto init(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3) -> void;
+};
+
 class GridDrawer : public Drawer{
 public:
     GridDrawer(float width = 0.2f, float height = 0.2f, int nbX = 100.f, int nbY = 100.f);
