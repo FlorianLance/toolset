@@ -61,13 +61,11 @@ auto UdpClientNetworkSettings::initialize() -> bool{
     return true;
 }
 
-#include <iostream>
-
 auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void {
     udpSendingAdress = std::string(sendingSettings.ipAdress.begin(), sendingSettings.ipAdress.end());
     String::remove_after_right(udpSendingAdress, ' ');
     udpSendingPort  = sendingSettings.port;
-    std::cout << "init_sending_settings: " << udpSendingPort << " " << udpSendingAdress << "\n";
+    // std::cout << "init_sending_settings: " << udpSendingPort << " " << udpSendingAdress << "\n";
     m_connectedToManager = true;
 }
 

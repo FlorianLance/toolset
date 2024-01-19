@@ -39,7 +39,7 @@
 
 // base
 #include "data/integers_encoder.hpp"
-#include "camera/kinect2/k2_config_files.hpp"
+#include "camera/impl/k2_config_files.hpp"
 
 using namespace std::chrono;
 using namespace tool::ui;

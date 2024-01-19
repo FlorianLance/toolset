@@ -28,7 +28,6 @@
 #include "udp_server_network_settings.hpp"
 
 // std
-#include <numeric>
 #include <format>
 
 // local
@@ -44,25 +43,70 @@ UdpServerNetworkSettings::UdpServerNetworkSettings(){
     version = io::Version::v1_0;
 }
 
-auto UdpServerNetworkSettings::initialize() -> bool{
+auto UdpServerNetworkSettings::reset_interfaces() -> void{
 
     // retrieve interfaces
     ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
     if(ipv4Interfaces.size() == 0){
-        Logger::warning("Cannot find any ipv4 interface.\n");
+        Logger::warning("UdpServerNetworkSettings::reset_interfaces: Cannot find any ipv4 interface.\n");
     }
 
     ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
     if(ipv6Interfaces.size() == 0){
-        Logger::warning("Cannot find any ipv6 interface.\n");
+        Logger::warning("UdpServerNetworkSettings::reset_interfaces: Cannot find any ipv6 interface.\n");
+    }
+}
+
+auto UdpServerNetworkSettings::initialize(const std::string &filePath) -> bool{
+
+    reset_interfaces();
+
+    if(filePath.length() > 0){
+        return init_from_file(this->filePath = filePath);
     }
 
-    if(ipv4Interfaces.empty() && ipv6Interfaces.empty()){
-        Logger::error("Cannot find any ipv4/ipv6 interface. Abort initialization.\n");
-        return false;
+    Logger::error("UdpServerNetworkSettings::initialize: Empty path.\n");
+    return false;
+}
+
+auto UdpServerNetworkSettings::add_client(const network::ReadSendNetworkInfos &nClientInfo) -> void{
+
+    auto clientInfo = nClientInfo;
+    const auto &interfaces   = (clientInfo.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+    if(clientInfo.idReadingInterface >= interfaces.size()){
+        Logger::error("UdpServerNetworkSettings::add_client: Invalid interface id.\n");
+        return;
     }
 
-    return true;
+    clientInfo.local                = false;
+    clientInfo.idReadingInterface   = 0;
+    clientInfo.readingAdress        = interfaces[clientInfo.idReadingInterface].ipAddress;
+    clientInfo.readingPort          = 8888;
+    clientInfo.sendingAdress        = interfaces[clientInfo.idReadingInterface].ipAddress;
+    clientInfo.sendingPort          = 8889;
+    clientsInfo.push_back(std::move(clientInfo));
+}
+
+auto UdpServerNetworkSettings::update_client(size_t idC, const network::ReadSendNetworkInfos &nClientInfo) -> void{
+
+    if(idC >= clientsInfo.size()){
+        Logger::error("UdpServerNetworkSettings::update_client: Invalid client id.\n");
+        return;
+    }
+
+    clientsInfo[idC] = nClientInfo;
+
+    auto &clientInfo        = clientsInfo[idC];
+    const auto &interfaces   = (clientInfo.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+    if(clientInfo.idReadingInterface >= interfaces.size()){
+        Logger::error("UdpServerNetworkSettings::update_client: Invalid interface id.\n");
+        return;
+    }
+    clientInfo.readingAdress = interfaces[clientInfo.idReadingInterface].ipAddress;
+
+    if(clientInfo.sendingAdress == "localhost"){
+        clientInfo.sendingAdress = interfaces[clientInfo.idReadingInterface].ipAddress;
+    }
 }
 
 auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
@@ -94,18 +138,16 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
                 info.protocol = Protocol::ipv4;
             }
 
-            const auto &interfaces = (info.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-
-
+            const auto &interfaces = (info.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;   
             size_t idReadingInterface = String::to_int(values[1]);
             if(idReadingInterface >= interfaces.size()){
-                Logger::error(std::format("Invalid network config file format.\n"));
+                Logger::error(std::format("UdpServerNetworkSettings::init_from_text: Invalid network config file format.\n"));
                 return;
             }
             info.idReadingInterface = idReadingInterface;
             info.readingAdress      = interfaces[idReadingInterface].ipAddress;
 
-            bool localhost   = (values[3] == "localhost");// || (values[3] == "127.0.0.1");
+            bool localhost   = (values[3] == "localhost");;
             if(localhost){
                 info.sendingAdress = interfaces[idReadingInterface].ipAddress;
             }else{
@@ -119,7 +161,7 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
 
             clientsInfo.push_back(std::move(info));
         }else{
-            Logger::error("UdpServerNetworkSettings::init_from_file: Invalid line format.\n");
+            Logger::error("UdpServerNetworkSettings::init_from_text: Invalid line format.\n");
         }
     }
 }

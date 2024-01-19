@@ -234,6 +234,7 @@ protected:
     auto filter_color_image(const DCFiltersSettings &filtersS) -> void;
     auto filter_infrared_image(const DCFiltersSettings &filtersS) -> void;
     virtual auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{}
+    auto update_valid_depth_values() -> void;
 
     // frame generation
     virtual auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{

@@ -41,7 +41,7 @@
 #include "gui/widgets/image_viewer.hpp"
 
 // local
-#include "camera/kinect2/k2_manager.hpp"
+#include "camera/impl/k2_manager.hpp"
 // # ui
 #include "ui_GrabberW.h"
 // # network

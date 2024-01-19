@@ -39,6 +39,9 @@ namespace tool::camera {
         DCDataSettings dataS;
         DCActionsSettings actionsS;
 
+        // local
+        std::string filePath;
+
         static auto default_init_for_grabber() -> DCDeviceSettings;
         static auto default_init_for_manager() -> DCDeviceSettings;
 

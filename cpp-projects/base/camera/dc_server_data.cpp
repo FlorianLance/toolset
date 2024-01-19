@@ -54,9 +54,8 @@ DCServerData::~DCServerData(){
 
 auto DCServerData::initialize(size_t nbDevices) -> void {
 
-    if(i->grabbersDataProcessing.size() > 0){
-        Logger::error("[DCServerData::initialize] Server must be cleaned before initialization.\n");
-        return;
+    if(nb_grabbers() != 0){
+        clean();
     }
 
     i->grabbersDataProcessing.reserve(nbDevices);
@@ -66,6 +65,20 @@ auto DCServerData::initialize(size_t nbDevices) -> void {
 
     for(auto &grabber : i->grabbersDataProcessing){
         grabber->start();
+    }
+}
+
+auto DCServerData::add_device() -> void{
+    auto grabber = std::make_unique<DCGrabberDataProcessing>();
+    grabber->start();
+    i->grabbersDataProcessing.push_back(std::move(grabber));
+}
+
+auto DCServerData::remove_device(size_t idDevice) -> void{
+    if(idDevice < nb_grabbers()){
+        i->grabbersDataProcessing[idDevice]->stop();
+        i->grabbersDataProcessing[idDevice]->clean();
+        i->grabbersDataProcessing.erase(i->grabbersDataProcessing.begin() + idDevice);
     }
 }
 

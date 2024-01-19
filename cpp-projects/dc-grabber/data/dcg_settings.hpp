@@ -38,6 +38,9 @@
 #include "camera/settings/dc_model_settings.hpp"
 #include "camera/settings/dc_filters_settings.hpp"
 #include "camera/dc_types.hpp"
+
+#include "camera/states/dc_recorder_states.hpp"
+
 #include "network/udp_client_network_settings.hpp"
 #include "network/udp_header.hpp"
 

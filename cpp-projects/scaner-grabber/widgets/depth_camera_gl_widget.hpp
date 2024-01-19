@@ -34,7 +34,7 @@
 #include "wrapper/qt_gl_wrapper.hpp"
 
 // lib
-#include "camera/kinect2/k2_types.hpp"
+#include "camera/impl/k2_types.hpp"
 
 namespace tool::ui{
 

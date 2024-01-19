@@ -41,7 +41,7 @@ class DCMMiddlePanelChildDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto draw(geo::Pt2f size, const ui::DCMUiSettings &uiS) -> void;
+    auto draw(geo::Pt2f size, const DCMUiSettings &uiS) -> void;
 
     DCDirectDrawer directD;
     DCRecorderDrawer recorderD;
@@ -49,8 +49,6 @@ public:
     DCCalibratorDrawer calibratorD;
 
 private:
-
-    auto draw_direct(const ui::DCMUiSettings &ui) -> void;
 
 
     bool m_directTabOpened = false;

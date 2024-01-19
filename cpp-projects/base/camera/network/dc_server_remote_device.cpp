@@ -66,14 +66,14 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
 
     // init reader
     if(!i->udpReader.init_socket(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
-        Logger::error("DCServerRemoteDevice: Cannot init udp reader.\n");
+        Logger::error("[DCServerRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
     i->udpReader.start_reading();
 
     // init sender
     if(!i->udpSender.init_socket(i->infos.sendingAdress, std::to_string(i->infos.sendingPort), i->infos.protocol)){
-        Logger::error("DCServerRemoteDevice: Cannot init udp sender.\n");
+        Logger::error("[DCServerRemoteDevice]: Cannot init udp sender.\n");
         return false;
     }
 

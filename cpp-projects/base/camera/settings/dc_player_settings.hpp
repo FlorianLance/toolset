@@ -26,43 +26,11 @@
 
 #pragma once
 
-// std
-#include <vector>
 
 // local
 //#include "files/binary_settings.hpp"
 
 namespace tool::camera {
-
-struct DCPlayerStates{
-
-    bool isPlaying = false;
-    std::vector<size_t> nbFrames;
-    std::vector<size_t> currentFrames;
-    double currentTime = 0.0;
-    double duration = 0.0;
-
-    // actions
-    bool play        = false;
-    bool pause       = false;    
-    bool restart     = false;
-    bool moveTime    = false;
-    bool removeUntil = false;
-    bool removeAfter = false;
-    bool merge       = false;
-    bool info        = false;
-
-    auto reset_actions() -> void{
-        play        = false;
-        pause       = false;
-        restart     = false;
-        moveTime    = false;
-        removeUntil = false;
-        removeAfter = false;
-        merge       = false;
-        info        = false;
-    }
-};
 
 struct DCPlayerSettings{
     bool doLoop = true;

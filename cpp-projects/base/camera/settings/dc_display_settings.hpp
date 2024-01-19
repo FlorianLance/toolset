@@ -30,7 +30,7 @@
 #include "geometry/point4.hpp"
 //#include "io/binary_settings.hpp"
 
-namespace tool::camera {
+namespace tool {
 
 struct DCSceneDisplaySettings{
     geo::Pt4f backgroundColor = {0.83f, 0.84f, 0.81f, 1.f};

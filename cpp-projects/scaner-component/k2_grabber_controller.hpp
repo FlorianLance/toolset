@@ -18,7 +18,7 @@
 #include "geometry/point4.hpp"
 #include "utility/utility.hpp"
 #include "utility/io_file.hpp"
-#include "camera/kinect2/k2_config_files.hpp"
+#include "camera/impl/k2_config_files.hpp"
 
 // local
 #include "network/k2_scaner_tcp_sender.hpp"

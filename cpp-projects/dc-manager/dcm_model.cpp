@@ -37,26 +37,23 @@ auto DCMModel::initialize() -> bool{
     if(!settings.initialize()){
         return false;
     }
-    if(!sNetwork.initialize(settings.globalSet.network)){
-        return false;
-    }
+    reset_network();
 
     size_t nbConnections = sNetwork.devices_nb();
     sData.initialize(nbConnections);
     recorder.initialize(nbConnections);
     calibration.initialize(nbConnections);
-
     return true;
 }
 
 
-auto DCMModel::clean() -> void{
-    sNetwork.clean();
-}
-
 auto DCMModel::trigger_settings() -> void{
     settings.trigger_all_models();
     settings.trigger_all_cloud_display();
+}
+
+auto DCMModel::reset_network() -> void{
+    sNetwork.initialize(settings.networkS.clientsInfo);
 }
 
 auto DCMModel::add_feedback(size_t id, network::Feedback feedback) -> void{
@@ -66,21 +63,25 @@ auto DCMModel::add_feedback(size_t id, network::Feedback feedback) -> void{
 }
 
 auto DCMModel::update_synchro(size_t id, int64_t averageDiffNs) -> void{
-    settings.grabbersSet[id].synchroAverageDiff = averageDiffNs;
+    settings.grabbersS[id].synchroAverageDiff = averageDiffNs;
+}
+
+auto DCMModel::add_default_device() -> void{
+    settings.add_default_device();
 }
 
 auto DCMModel::ask_calibration() -> void{
     std::vector<camera::DCModelSettings> models;
-    for(const auto &grabberS : settings.grabbersSet){
+    for(const auto &grabberS : settings.grabbersS){
         models.push_back(grabberS.model);
     }
     DCMSignals::get()->calibrate_signal(std::move(models));
 }
 
 auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
-    if(settings.globalSet.useNormalFilteringSettings != useNormalMode){
-        settings.globalSet.useNormalFilteringSettings = useNormalMode;
-        for(const auto &grabber : settings.grabbersSet){
+    if(settings.useNormalFilteringSettings != useNormalMode){
+        settings.useNormalFilteringSettings = useNormalMode;
+        for(const auto &grabber : settings.grabbersS){
             if(useNormalMode){
                 sNetwork.update_filters_settings(grabber.id, grabber.filters);
             }else{
@@ -91,16 +92,16 @@ auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
 }
 
 auto DCMModel::update_filters(size_t id, const camera::DCFiltersSettings &filters) -> void {
-    settings.grabbersSet[id].filters = filters;
-    if(settings.globalSet.useNormalFilteringSettings){
-        sNetwork.update_filters_settings(id, settings.grabbersSet[id].filters);
+    settings.grabbersS[id].filters = filters;
+    if(settings.useNormalFilteringSettings){
+        sNetwork.update_filters_settings(id, settings.grabbersS[id].filters);
     }
 }
 
 auto DCMModel::update_calibration_filters(size_t id, const camera::DCFiltersSettings &filters) -> void{
-    settings.grabbersSet[id].calibrationFilters = filters;
-    if(!settings.globalSet.useNormalFilteringSettings){
-        sNetwork.update_filters_settings(id, settings.grabbersSet[id].calibrationFilters);
+    settings.grabbersS[id].calibrationFilters = filters;
+    if(!settings.useNormalFilteringSettings){
+        sNetwork.update_filters_settings(id, settings.grabbersS[id].calibrationFilters);
     }
 }
 
@@ -118,7 +119,7 @@ auto DCMModel::read_feedbacks() -> void{
     }
 
     for(const auto &message : messagesR){
-        settings.grabbersSet[message.first].network.connected = sNetwork.device_connected(message.first);
+        settings.grabbersS[message.first].network.connected = sNetwork.device_connected(message.first);
         DCMSignals::get()->feedback_received_signal(message.first, std::format("Valid [{}] received\n", to_string(message.second.receivedMessageType)));
     }
     messagesR.clear();
@@ -154,7 +155,7 @@ auto DCMModel::update() -> void{
         if(auto lastFrame = sData.get_frame(ii); lastFrame != nullptr){
 
             // update last frame id
-            settings.grabbersSet[ii].network.lastFrameIdReceived = lastFrame->idCapture;
+            settings.grabbersS[ii].network.lastFrameIdReceived = lastFrame->idCapture;
 
             // send it
             DCMSignals::get()->new_frame_signal(ii, lastFrame);

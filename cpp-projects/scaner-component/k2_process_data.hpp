@@ -11,7 +11,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "camera/kinect2/k2_network.hpp"
+#include "camera/impl/k2_network.hpp"
 
 namespace tool{
 

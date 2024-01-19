@@ -81,7 +81,7 @@ auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::DC
     m_redrawClouds = true;
 }
 
-auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const camera::DCCloudDisplaySettings &cloudDisplay) -> void{
+auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCCloudDisplaySettings &cloudDisplay) -> void{
 
     auto &cdC = cloudsD[idGrabber].display;
     cdC.forceCloudColor = true;

@@ -669,6 +669,23 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> v
     Bench::stop();
 }
 
+auto DCDeviceImpl::update_valid_depth_values() -> void{
+
+    auto depthBuffer  = depth_data();
+
+    // count valid depth values
+    validDepthValues = 0;
+    for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
+        if(depthMask[id] == 0){
+            depthBuffer[id] = dc_invalid_depth_value;
+            indices.depthVertexCorrrespondance[id] = {id, -1};
+        }else{
+            indices.depthVertexCorrrespondance[id] = {id, validDepthValues};
+            validDepthValues++;
+        }
+    });
+}
+
 
 auto DCDeviceImpl::stop_reading_thread() -> void{
 

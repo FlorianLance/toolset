@@ -327,7 +327,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
     return {true, update};
 }
 
-auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGui::BeginTabItem(tabItemName.c_str())){
         return false;
@@ -354,7 +354,7 @@ auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabIt
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;

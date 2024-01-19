@@ -46,7 +46,7 @@
 #include "utility/types.hpp"
 #include "utility/io_fstream.hpp"
 #include "utility/logger.hpp"
-#include "camera/kinect2/k2_config_files.hpp"
+#include "camera/impl/k2_config_files.hpp"
 
 // qt_utility
 #include "qt_logger.hpp"

@@ -29,7 +29,7 @@
 // std
 #include <vector>
 #include <string>
-#include <chrono>
+#include <format>
 
 // local
 #include "camera/dc_frame.hpp"
@@ -51,38 +51,23 @@ struct RANSACSettings{
     int FPFHFeatureMaxNeghbours = 100; // Specifies the max neighbors to be searched.
 };
 
-struct DCCalibratorStates{
-
-    // # time
-    bool isRegistering = false;
-    std::chrono::milliseconds startTime = std::chrono::milliseconds(0);
-    std::chrono::milliseconds elapsedTime = std::chrono::milliseconds(0);
-    std::vector<size_t> nbFramesRegistered;
-
-    // # actions
-    bool recomputeRegisteringProcessing = false;
-    bool resetCalibration               = false;
-    bool startCalibration               = false;
-    bool stopCalibration                = false;
-    bool calibrate                      = false;
-    bool validateCalibration            = false;
-    bool updateDisplaySettings          = false;
-    bool updateFilteringMode            = false;
-    int filteringMode                   = 0;
-
-    auto reset_actions() -> void{
-        recomputeRegisteringProcessing = false;
-        resetCalibration               = false;
-        startCalibration               = false;
-        stopCalibration                = false;
-        calibrate                      = false;
-        validateCalibration            = false;
-        updateDisplaySettings          = false;
-        updateFilteringMode            = false;
-    }
-};
-
 struct DCCalibratorSettings{
+
+    auto initialize(size_t nbClients) -> void{
+
+        models.resize(nbClients);
+        sources.resize(nbClients+1);
+        for(size_t idC = 0; idC < nbClients; ++idC){
+            auto name = std::format("[{}]", idC);
+            models[idC]  = name;
+            sources[idC] = name;
+        }
+        sources.push_back("All");
+
+        if(nbClients > 1){
+            sourceSelectionId = 1;
+        }
+    }
 
     // # grabbers to use
     std::vector<std::string> models;
@@ -119,7 +104,6 @@ struct DCCalibratorSettings{
     double icpMaxDistanceCorr = 0.075; // max_correspondence_distance Maximum correspondence points-pair
     int icpMaxIteration = 30; // Maximum iteration before iteration stops.
 };
-
 
 struct DCCalibratorGrabberData{
 

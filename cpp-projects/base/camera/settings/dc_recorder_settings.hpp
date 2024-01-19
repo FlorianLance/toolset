@@ -34,27 +34,6 @@
 
 namespace tool::camera {
 
-struct DCRecorderStates{
-
-    bool isRecording = false;
-    std::vector<size_t> nbFramesRecorded;
-    std::vector<size_t> currentFrames;
-    double currentTime = 0.0;
-    double duration = 0.0;
-
-    // actions
-    bool startRecording = false;
-    bool stopRecording  = false;
-    bool resetRecording = false;
-    bool moveTime       = false;
-
-    auto reset_actions() -> void{
-        startRecording = false;
-        stopRecording  = false;
-        resetRecording = false;
-        moveTime       = false;
-    }
-};
 
 struct DCRecorderSettings{
     int cameraMaxFramesToRecord = 10000;

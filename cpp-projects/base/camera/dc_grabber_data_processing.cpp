@@ -74,7 +74,6 @@ auto DCGrabberDataProcessing::stop() -> void {
 auto DCGrabberDataProcessing::clean() -> void {
 
     i->isProcessing = false;
-
     if(i->thread != nullptr){
         if(i->thread->joinable()){
             i->thread->join();

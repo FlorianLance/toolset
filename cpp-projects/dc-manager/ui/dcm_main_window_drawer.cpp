@@ -55,7 +55,7 @@ auto DCMMainWindowDrawer::initialize(size_t nbGrabbers) -> bool{
     return true;
 }
 
-auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMSettings &settings) -> void{
+auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMSettings &settings, DCMStates &states) -> void{
 
     BenchGuard g("update_imgui");
 
@@ -80,9 +80,9 @@ auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMSettings &settings) -> void{
         // settings
         auto sw = size.x();
         auto sh = size.y();
-        m_leftPanelD.draw({450.f,sh-50.f}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, settings);
+        m_leftPanelD.draw({450.f,sh-50.f}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, settings, states);
         ImGui::SameLine();
-        m_middlePanelD.draw({sw-450.f,sh-50.f}, settings.globalSet.ui);
+        m_middlePanelD.draw({sw-450.f,sh-50.f}, settings.uiS);
     }
     ImGui::End();
 

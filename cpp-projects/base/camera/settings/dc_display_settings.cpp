@@ -29,7 +29,7 @@
 // local
 //#include "utility/io_data.hpp"
 
-using namespace tool::camera;
+using namespace tool;
 
 
 auto DCSceneDisplaySettings::default_init_for_grabber() -> DCSceneDisplaySettings{

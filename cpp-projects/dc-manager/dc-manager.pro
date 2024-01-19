@@ -111,12 +111,12 @@ LIBS +=  \
 ####################################### PROJECT FILES
 
 HEADERS += \
+    data/dcm_states.hpp \
     dcm_view.hpp \
     dcm_controller.hpp \    
     dcm_model.hpp \
     dcm_signals.hpp \
     # data
-    data/dcm_paths.hpp \
     data/dcm_settings.hpp \
     data/dcm_types.hpp \
     data/dcm_ui_settings.hpp \
@@ -126,7 +126,7 @@ HEADERS += \
     drawers/dcm_main_window_drawer.hpp \
     drawers/dcm_middle_panel_child_drawer.hpp \
 
-SOURCES += \    
+SOURCES += \
     dcm_controller.cpp \    
     dcm_main.cpp \
     dcm_model.cpp \

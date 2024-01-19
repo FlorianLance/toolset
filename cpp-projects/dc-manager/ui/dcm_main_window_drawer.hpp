@@ -38,7 +38,7 @@ class DCMMainWindowDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> bool;
-    auto draw(geo::Pt2f size, DCMSettings &settings) -> void;
+    auto draw(geo::Pt2f size, DCMSettings &settings, DCMStates &states) -> void;
 
 private:
 

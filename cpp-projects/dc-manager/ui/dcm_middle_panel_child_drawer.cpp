@@ -40,7 +40,7 @@ auto DCMMiddlePanelChildDrawer::initialize(size_t nbGrabbers) -> void {
     calibratorD.initialize(nbGrabbers);    
 }
 
-auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const ui::DCMUiSettings &uiS) -> void {
+auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const DCMUiSettings &uiS) -> void {
 
     auto windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize;
     if(ImGui::BeginChild("###display_child", ImVec2(size.x(), size.y()), true, windowFlags)){

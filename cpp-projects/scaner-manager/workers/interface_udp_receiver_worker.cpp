@@ -42,7 +42,7 @@
 #include <boost/system/error_code.hpp>
 
 // base
-#include "camera/kinect2/k2_network.hpp"
+#include "camera/impl/k2_network.hpp"
 
 // qt_utility
 #include "qt_ui.hpp"

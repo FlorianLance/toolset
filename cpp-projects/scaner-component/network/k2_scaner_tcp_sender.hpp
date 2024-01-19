@@ -15,7 +15,7 @@
 // base
 #include "thirdparty/sigslot/signal.hpp"
 #include "network/network_types.hpp"
-#include "camera/kinect2/k2_types.hpp"
+#include "camera/impl/k2_types.hpp"
 
 namespace tool::network{
 

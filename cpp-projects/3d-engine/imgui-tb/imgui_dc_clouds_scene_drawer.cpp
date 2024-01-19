@@ -456,7 +456,7 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
     }
 }
 
-auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const camera::DCCloudDisplaySettings &cloudDisplay) -> void{
+auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void{
     if(idCloud < cloudsD.size()){
         cloudsD[idCloud].display = cloudDisplay;
         m_redrawClouds = true;
@@ -465,7 +465,7 @@ auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const ca
     }
 }
 
-auto DCCloudsSceneDrawer::update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void{
+auto DCCloudsSceneDrawer::update_scene_display_settings(const DCSceneDisplaySettings &sdS) -> void{
     display        = sdS;
     m_redrawClouds = true;
 }

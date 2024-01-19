@@ -38,20 +38,23 @@
 
 // local
 #include "data/dcm_settings.hpp"
+#include "data/dcm_states.hpp"
 
 namespace tool {
 
 struct DCMModel{
 
     auto initialize() -> bool;
-    auto clean() -> void;
     auto update() -> void;
     auto trigger_settings() -> void;
 
-
     // network
+    auto reset_network() -> void;
     auto add_feedback(size_t id, network::Feedback feedback) -> void;
     auto update_synchro(size_t id, std::int64_t averageDiffNs) -> void;
+
+    //
+    auto add_default_device() -> void;
 
     // action
     auto ask_calibration() -> void;
@@ -63,6 +66,8 @@ struct DCMModel{
 
 
     DCMSettings settings;
+    DCMStates states;
+
     network::DCServerNetwork sNetwork;
     camera::DCServerData sData;
     camera::DCRecorder recorder;

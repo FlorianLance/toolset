@@ -28,7 +28,7 @@
 
 // base
 #include "utility/array.hpp"
-#include "camera/kinect2/k2_types.hpp"
+#include "camera/impl/k2_types.hpp"
 
 // opengl-utility
 #include "opengl/draw/drawer.hpp"

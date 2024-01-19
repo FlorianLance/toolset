@@ -16,7 +16,7 @@
 #include <boost/system/error_code.hpp>
 
 // base
-#include "camera/kinect2/k2_network.hpp"
+#include "camera/impl/k2_network.hpp"
 
 using namespace boost::asio;
 using namespace boost::asio::detail;

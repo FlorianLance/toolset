@@ -30,6 +30,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "camera/settings/dc_calibrator_settings.hpp"
 #include "camera/settings/dc_model_settings.hpp"
+#include "camera/states/dc_calibrator_states.hpp"
 
 namespace tool::camera {
 

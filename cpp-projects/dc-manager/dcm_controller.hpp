@@ -35,7 +35,6 @@ namespace tool{
 class DCMController{
 public:
 
-    ~DCMController();
 
     auto initialize() -> bool;
     auto set_connections() -> void;

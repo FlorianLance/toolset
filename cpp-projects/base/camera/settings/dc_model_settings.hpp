@@ -39,6 +39,7 @@ struct DCModelSettings : io::TextSettings{
     geo::Vec3f rotation = {};
     geo::Vec3f translation = {};
     geo::Vec3f scaling = {1.f,1.f,1.f};
+    std::string filePath;
 
     DCModelSettings();
     auto compute_full_transformation() const -> geo::Mat4f;

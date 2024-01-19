@@ -30,16 +30,25 @@
 #include "io/text_settings.hpp"
 #include "network/network_types.hpp"
 
-namespace tool {
+namespace tool::network {
 
 struct UdpServerNetworkSettings : io::TextSettings{
 
     UdpServerNetworkSettings();
-    auto initialize() -> bool;
 
+    /**
+     * @brief Populate ipv4 and ipv6 network interfaces
+     */
+    auto reset_interfaces() -> void;
+
+    auto initialize(const std::string &filePath) -> bool;
+    auto add_client(const network::ReadSendNetworkInfos &clientInfo) -> void;
+    auto update_client(size_t idC, const network::ReadSendNetworkInfos &nClientInfo) -> void;
+
+    std::string filePath;
     std::vector<network::Interface> ipv4Interfaces = {};
     std::vector<network::Interface> ipv6Interfaces = {};
-    std::vector<network::ReadSendNetworkInfos> clientsInfo;
+    std::vector<network::ReadSendNetworkInfos> clientsInfo;    
 
 private:
 

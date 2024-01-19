@@ -27,8 +27,8 @@
 #include "dc_device.hpp"
 
 // local
-#include "camera/kinect4/azure_kinect_device_impl.hpp"
-#include "camera/orbbec/femto_orbbec_device_impl.hpp"
+#include "camera/impl/azure_kinect_device_impl.hpp"
+#include "camera/impl/femto_orbbec_device_impl.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool::geo;

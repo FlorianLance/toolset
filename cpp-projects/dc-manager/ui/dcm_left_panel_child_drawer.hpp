@@ -31,6 +31,7 @@
 
 // local
 #include "data/dcm_settings.hpp"
+#include "data/dcm_states.hpp"
 
 namespace tool::graphics {
 
@@ -44,29 +45,29 @@ class DCMLeftPanelChildDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto draw(geo::Pt2f size, int windowFlags, DCMSettings &settings) -> void;
+    auto draw(geo::Pt2f size, int windowFlags, DCMSettings &settings, DCMStates &states) -> void;
     auto append_global_log(const std::string &log) -> void;
     auto append_feedback_log(size_t idG, const std::string &log) -> void;
 
 private:
 
-    auto draw_grabbers_ui(DCMSettings &settings) -> void;
+    auto draw_grabbers_ui(DCMSettings &settings, DCMStates &states) -> void;
     // tab items
-    auto draw_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void;
+    auto draw_commands_tab_item(const network::UdpServerNetworkSettings &networkS, std::vector<camera::DCMGrabberSettings> &grabbersS) -> void;
     auto draw_settings_tab_item(DCMSettings &settings) -> void;
-    auto draw_ui_tab_item(ui::DCMUiSettings &ui) -> void;
+    auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
     auto draw_logs_tab_item() -> void;
     auto draw_infos_tab_item(const DCMSettings &settings) -> void;
     // sub tab items
     // # command
-    auto draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void;
-    auto draw_individual_commands_tab_item(DCMGrabberSettings &grabberS) -> void;
+    auto draw_all_commands_tab_item(const network::UdpServerNetworkSettings &networkS, std::vector<camera::DCMGrabberSettings> &grabbersS) -> void;
+    auto draw_individual_commands_tab_item(camera::DCMGrabberSettings &grabberS) -> void;
     // # settings
     auto draw_device_tab_item(DCMSettings &settings) -> void;
     auto draw_filters_tab_item(DCMSettings &settings) -> void;
-    auto draw_display_tab_item(camera::DCSceneDisplaySettings &sceneDisplay, std::vector<DCMGrabberSettings> &grabbers) -> void;
-    auto draw_calibration_tab_item( std::vector<DCMGrabberSettings> &grabbers) -> void;
-    auto draw_color_tab_item(std::vector<DCMGrabberSettings> &grabbers) -> void;
+    auto draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<camera::DCMGrabberSettings> &grabbers) -> void;
+    auto draw_calibration_tab_item( std::vector<camera::DCMGrabberSettings> &grabbers) -> void;
+    auto draw_color_tab_item(std::vector<camera::DCMGrabberSettings> &grabbers) -> void;
     auto draw_recorder_tab_item(camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings) -> void;
     auto draw_player_tab_item(camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings) -> void;
     auto draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings) -> void;

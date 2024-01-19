@@ -45,8 +45,9 @@ struct DCServerNetwork{
 
     DCServerNetwork();
     ~DCServerNetwork();
-    auto initialize(const UdpServerNetworkSettings &networkS) -> bool;
+    auto initialize(const std::vector<network::ReadSendNetworkInfos> &clientsInfo) -> void;
     auto clean() -> void;
+    // auto reset_device(size_t idD, const network::ReadSendNetworkInfos &clientInfo) -> void;
 
     auto init_connection(size_t idG) -> void;
     auto apply_command(size_t idG, Command command) -> void;

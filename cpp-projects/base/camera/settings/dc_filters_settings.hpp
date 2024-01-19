@@ -79,6 +79,9 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     geo::Pt3f p1B;
     geo::Pt3f p1C;
 
+    // local
+    std::string filePath;
+
     DCFiltersSettings();
     DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
         DCFiltersSettings::init_from_data(data, offset, sizeData);

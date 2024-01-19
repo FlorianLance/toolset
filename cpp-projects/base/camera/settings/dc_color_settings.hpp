@@ -187,6 +187,9 @@ struct DCColorSettings : io::BinaryFileSettings{
     bool autoWhiteBalance                   = true;
     bool hdr                                = true;
 
+    // local
+    std::string filePath;
+
     DCColorSettings();
     DCColorSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
         DCColorSettings::init_from_data(data, offset, sizeData);

@@ -34,7 +34,7 @@
 
 // base
 #include "utility/benchmark.hpp"
-#include "camera/kinect2/k2_config_files.hpp"
+#include "camera/impl/k2_config_files.hpp"
 
 // qt-utility
 #include "qt_logger.hpp"

@@ -56,7 +56,7 @@ auto DCMView::start() -> void{
 }
 
 auto DCMView::draw(geo::Pt2f size, DCMModel *model) -> void{
-    mainW.draw(size, model->settings);
+    mainW.draw(size, model->settings, model->states);
 }
 
 auto DCMView::exit() -> void{

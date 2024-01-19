@@ -30,7 +30,7 @@
 #include <QObject>
 
 // base
-#include "camera/kinect2/k2_network.hpp"
+#include "camera/impl/k2_network.hpp"
 
 namespace tool::network{
 

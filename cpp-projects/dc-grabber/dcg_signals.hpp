@@ -60,8 +60,8 @@ public:
 
     // config
     SSS<network::UdpClientNetworkSettings*> init_network_sending_settings_signal;
-    SSS<size_t,const camera::DCCloudDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<const camera::DCSceneDisplaySettings&> update_scene_display_settings_signal;
+    SSS<size_t,const DCCloudDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<const DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<const camera::DCFiltersSettings&> update_filters_signal;
     SSS<const camera::DCColorSettings&> update_color_settings_signal;
     SSS<const camera::DCDeviceSettings&> update_device_settings_signal;

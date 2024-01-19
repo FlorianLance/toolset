@@ -31,7 +31,7 @@
 #include <QElapsedTimer>
 
 // base
-#include "camera/kinect2/k2_network.hpp"
+#include "camera/impl/k2_network.hpp"
 
 // qt_utility
 #include "gui/widgets/image_viewer.hpp"

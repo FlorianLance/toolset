@@ -44,7 +44,7 @@ using namespace tool::camera;
 using namespace std::literals::string_view_literals;
 
 struct DCServerNetwork::Impl{
-    std::vector<std::unique_ptr<DCServerDevice>> devices;
+    std::vector<std::unique_ptr<DCServerDevice>> devices;   
 };
 
 DCServerNetwork::DCServerNetwork() : i(std::make_unique<DCServerNetwork::Impl>()){
@@ -54,14 +54,14 @@ DCServerNetwork::~DCServerNetwork(){
     clean();
 }
 
-auto DCServerNetwork::initialize(const UdpServerNetworkSettings &networkS) -> bool{
+auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos> &clientsInfo) -> void{
 
-    if(i->devices.size() != 0){
+    if(devices_nb() != 0){
         clean();
     }
 
     size_t idDevice = 0;
-    for(const auto &clientInfo : networkS.clientsInfo){
+    for(const auto &clientInfo : clientsInfo){
 
         std::unique_ptr<DCServerDevice> device = nullptr;
 
@@ -82,21 +82,20 @@ auto DCServerNetwork::initialize(const UdpServerNetworkSettings &networkS) -> bo
                 this->remote_feedback_signal(idDevice, feedback);
             });
             rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCCompressedFrame> cFrame){
-                std::cout << "RECEIVED FRAME " << cFrame->idCapture << "\n";
                 this->remote_frame_signal(idDevice, std::move(cFrame));
             });
             device = std::move(rDevice);
         }
 
+        Logger::message("[DCServerNetwork::initialize] Initialize device. \n");
         if(!device->initialize(clientInfo)){
-            return false;
+            Logger::error(std::format("[DCServerNetwork::initialize] Cannot initialize device with name {} \n",clientInfo.sendingAdress));
         }
 
+        Logger::message("[DCServerNetwork::initialize] Add device to list.\n");
         i->devices.push_back(std::move(device));
         ++idDevice;
     }
-
-    return true;
 }
 
 
@@ -106,6 +105,16 @@ auto DCServerNetwork::clean() -> void{
     }
     i->devices.clear();
 }
+
+// auto DCServerNetwork::reset_device(size_t idD, const network::ReadSendNetworkInfos &clientInfo) -> void{
+//     if(idD < devices_nb()){
+//         i->devices[idD]->clean();
+
+//         // std::unique_ptr<DCServerDevice> device = nullptr;
+
+//     }
+//     // auto &clientInfo = networkS.clientsInfo[idD];
+// }
 
 auto DCServerNetwork::init_connection(size_t idG) -> void{
     if(idG < i->devices.size()){

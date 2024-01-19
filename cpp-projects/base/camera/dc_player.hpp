@@ -30,6 +30,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "settings/dc_player_settings.hpp"
 #include "settings/dc_model_settings.hpp"
+#include "states/dc_player_states.hpp"
 #include "dc_volumetric_video.hpp"
 
 namespace tool::camera {

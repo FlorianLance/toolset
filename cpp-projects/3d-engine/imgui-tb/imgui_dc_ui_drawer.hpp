@@ -36,6 +36,11 @@
 #include "camera/settings/dc_model_settings.hpp"
 #include "camera/settings/dc_filters_settings.hpp"
 
+#include "camera/states/dc_player_states.hpp"
+#include "camera/states/dc_recorder_states.hpp"
+#include "camera/states/dc_calibrator_states.hpp"
+
+
 // opengl
 #include "opengl/draw/drawer.hpp"
 
@@ -87,8 +92,8 @@ public:
 
     static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
     static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
-    static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, camera::DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, camera::DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
+    static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
     static auto draw_dc_model_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool;
     static auto draw_dc_recorder_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
     static auto draw_dc_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;

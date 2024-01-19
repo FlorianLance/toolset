@@ -66,11 +66,6 @@ auto UdpSender::is_opened() const -> bool{
 
 auto UdpSender::init_socket(std::string targetName, std::string port, Protocol protocol) -> bool{
 
-    // // reset socket if necessary
-    // if(i->socket){
-    //     clean_socket();
-    // }
-
     // init socket and service
     try{
         i->socket = std::make_unique<ip::udp::socket>(i->ioService);

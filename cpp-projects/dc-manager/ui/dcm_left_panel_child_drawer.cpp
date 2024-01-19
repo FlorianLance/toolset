@@ -42,6 +42,7 @@
 using namespace tool;
 using namespace tool::camera;
 using namespace tool::graphics;
+using namespace tool::network;
 
 auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
 
@@ -81,10 +82,10 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
     feedbacksLogs.resize(nbGrabbers);
 }
 
-auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings &settings) -> void {
+auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings &settings, DCMStates &states) -> void {
 
-    settings.globalSet.ui.settingsFiltersNormalSubPanelDisplayed      = false;
-    settings.globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed = false;
+    settings.uiS.settingsFiltersNormalSubPanelDisplayed      = false;
+    settings.uiS.settingsFiltersCalibrationSubPanelDisplayed = false;
 
     if(ImGui::BeginChild("###settings_child", ImVec2(size.x(), size.y()), true, windowFlags)){
 
@@ -93,15 +94,15 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings 
         auto region2 = region;
         region1.y *= 0.75f;
         if(ImGui::BeginChild("###settings_grabbers_child1", region1, true, windowFlags)){
-            draw_grabbers_ui(settings);
+            draw_grabbers_ui(settings, states);
 
             static ImGuiID tabId = 0;
             if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_tabbar1")){
-                draw_commands_tab_item(settings.globalSet.network, settings.grabbersSet);
+                draw_commands_tab_item(settings.networkS, settings.grabbersS);
                 draw_settings_tab_item(settings);
-                draw_recorder_tab_item(settings.globalSta.recorder, settings.globalSet.recorder);
-                draw_player_tab_item(settings.globalSta.player, settings.globalSet.player);
-                draw_calibrator_tab_item(settings.globalSet.useNormalFilteringSettings, settings.globalSta.calibrator, settings.globalDrawerSet.calibrator, settings.globalSet.calibrator);
+                draw_recorder_tab_item(states.recorder, settings.recorderS);
+                draw_player_tab_item(states.player, settings.playerS);
+                draw_calibrator_tab_item(settings.useNormalFilteringSettings, states.calibrator, settings.calibratorDrawerS, settings.calibratorS);
                 ImGui::EndTabBar();
             }
         }
@@ -138,10 +139,10 @@ auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMSettings &settings) -> v
         if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###sub_settings_tabbar")){
             draw_device_tab_item(settings);
             draw_filters_tab_item(settings);
-            draw_calibration_tab_item(settings.grabbersSet);
-            draw_color_tab_item(settings.grabbersSet);
-            draw_display_tab_item(settings.globalSet.sceneDisplay, settings.grabbersSet);
-            draw_ui_tab_item(settings.globalSet.ui);
+            draw_calibration_tab_item(settings.grabbersS);
+            draw_color_tab_item(settings.grabbersS);
+            draw_display_tab_item(settings.sceneDisplayS, settings.grabbersS);
+            draw_ui_tab_item(settings.uiS);
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -267,29 +268,29 @@ auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSe
     cStates.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMSettings &settings) -> void {
+auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMSettings &settings, DCMStates &states) -> void {
 
     ImGui::Text("Grabbers");
 
-    for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
-        ImGuiUiDrawer::text_colored(settings.grabbersSet[ii].network.connected ? DCMSettings::connectedSelectedC : DCMSettings::selectedC, settings.grabbersSet[ii].network.name);
+    for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+        ImGuiUiDrawer::text_colored(settings.grabbersS[ii].network.connected ? DCMSettings::connectedSelectedC : DCMSettings::selectedC, settings.grabbersS[ii].network.name);
         if((ii % 4) != 0 || ii == 0){
             ImGui::SameLine();
         }
     }
 
     int nbConnected = 0;
-    for(const auto &grabber : settings.grabbersSet){
+    for(const auto &grabber : settings.grabbersS){
         if(grabber.network.connected){
             ++nbConnected;
         }
     }
-    ImGuiUiDrawer::text(fmt("Count: {}", settings.grabbersSet.size()));
+    ImGuiUiDrawer::text(fmt("Count: {}", settings.grabbersS.size()));
     ImGui::SameLine();
     ImGuiUiDrawer::text(fmt("Connected: {}", nbConnected));
     ImGui::SameLine();
 
-    if(settings.globalSta.recorder.isRecording){
+    if(states.recorder.isRecording){
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
         ImGui::Text("RECORDING...");
         ImGui::PopStyleColor();
@@ -305,7 +306,7 @@ auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMSettings &settings) -> void {
 
 
 
-auto DCMLeftPanelChildDrawer::draw_ui_tab_item(ui::DCMUiSettings &ui) -> void {
+auto DCMLeftPanelChildDrawer::draw_ui_tab_item(DCMUiSettings &ui) -> void {
 
     if (ImGuiUiDrawer::begin_tab_item("UI###settings_ui_tabitem")){
         ImGui::Checkbox("Focus window", &ui.focusWindow);
@@ -345,6 +346,10 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::Text("Network:");
     ImGui::Indent();
 
+    if(ImGui::Button("Reset###settings_reset_network")){
+        DCMSignals::get()->reset_network_signal();
+    }
+    ImGui::SameLine();
     if(ImGui::Button("Connect all###settings_connect_all_button")){
         for(const auto &grabberS : grabbersS){
             DCMSignals::get()->init_connection_signal(grabberS.id);
@@ -515,8 +520,8 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
 
     ImGui::Spacing();
     if(ImGui::Button("Send all###device_send_all")){
-        for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
-            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersSet[ii].device);
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
         }
     }
     ImGui::Dummy(ImVec2{0,20});
@@ -524,25 +529,25 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     static ImGuiID tabId = 0;
     if(ImGuiUiDrawer::begin_tab_bar(&tabId, "Device_sub###device_sub_tabbar")){
 
-        for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
             bool updateDeviceList = false;
 
-            auto currentDeviceType = settings.grabbersSet[ii].device.configS.typeDevice;
+            auto currentDeviceType = settings.grabbersS[ii].device.configS.typeDevice;
             auto update = DCUIDrawer::draw_dc_device_settings_tab_item(fmt("[{}]###device_{}_tabitem", ii, ii),
-                settings.grabbersSet[ii].device,
+                                                                       settings.grabbersS[ii].device,
                 updateDeviceList,
                 autoUpdate
             );
 
-            if(currentDeviceType != settings.grabbersSet[ii].device.configS.typeDevice){
+            if(currentDeviceType != settings.grabbersS[ii].device.configS.typeDevice){
                 tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
-                settings.grabbersSet[ii].color.set_default_values(settings.grabbersSet[ii].device.configS.typeDevice);
-                DCMSignals::get()->color_settings_reset_signal(ii, settings.grabbersSet[ii].color);
+                settings.grabbersS[ii].color.set_default_values(settings.grabbersS[ii].device.configS.typeDevice);
+                DCMSignals::get()->color_settings_reset_signal(ii, settings.grabbersS[ii].color);
             }
 
             if(update){
-                DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersSet[ii].device);
+                DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
             }
         }
 
@@ -559,7 +564,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
         return;
     }
 
-    int filteringMode = settings.globalSet.useNormalFilteringSettings ? 0 : 1;
+    int filteringMode = settings.useNormalFilteringSettings ? 0 : 1;
     ImGui::Text("Use filtering mode:");
     ImGui::SameLine();
     if(ImGui::RadioButton("Normal###filters_normal_mode", &filteringMode, 0)){
@@ -579,18 +584,18 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
             static ImGuiId tabId2 = 0;
             if (ImGuiUiDrawer::begin_tab_bar(&tabId2, fmt("{}_normal_sub_tabbar",base).c_str())){
 
-                for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
                     auto ret =  DCUIDrawer::draw_dc_filters_settings_tab_item(
                             fmt("[{}]{}_normal_{}_tabitem", ii, base, ii),
-                            settings.grabbersSet[ii].device.configS.mode,
-                            settings.grabbersSet[ii].filters,
+                        settings.grabbersS[ii].device.configS.mode,
+                        settings.grabbersS[ii].filters,
                         autoUpdate);
 
-                    settings.globalSet.ui.settingsFiltersNormalSubPanelDisplayed = std::get<0>(ret) || settings.globalSet.ui.settingsFiltersNormalSubPanelDisplayed;
+                    settings.uiS.settingsFiltersNormalSubPanelDisplayed = std::get<0>(ret) || settings.uiS.settingsFiltersNormalSubPanelDisplayed;
 
                     if(std::get<1>(ret)){
-                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersSet[ii].filters);
+                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].filters);
                     }
                 }
                 ImGui::EndTabBar();
@@ -603,18 +608,18 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
             static ImGuiId tabId2 = 0;
             if (ImGuiUiDrawer::begin_tab_bar(&tabId2, fmt("{}_calibration_sub_tabbar",base).c_str())){
 
-                for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
                     auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
                             fmt("[{}]{}_calibration_{}_tabitem", ii, base, ii),
-                            settings.grabbersSet[ii].device.configS.mode,
-                            settings.grabbersSet[ii].calibrationFilters,
+                        settings.grabbersS[ii].device.configS.mode,
+                        settings.grabbersS[ii].calibrationFilters,
                         autoUpdate);
 
-                    settings.globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed = std::get<0>(ret) || settings.globalSet.ui.settingsFiltersCalibrationSubPanelDisplayed;
+                    settings.uiS.settingsFiltersCalibrationSubPanelDisplayed = std::get<0>(ret) || settings.uiS.settingsFiltersCalibrationSubPanelDisplayed;
 
                     if(std::get<1>(ret)){
-                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersSet[ii].calibrationFilters);
+                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
                     }
                 }
                 ImGui::EndTabBar();
@@ -630,32 +635,32 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     if(ImGui::Button(fmt("Copy{}_copy_filters", base).c_str())){
 
         DCFiltersSettings *fromFilters = nullptr;
-        if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersSet.size())){
+        if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersS.size())){
             int idGrabber = guiCurrentFromFiltersSelection;
-            fromFilters = &settings.grabbersSet[idGrabber].filters;
+            fromFilters = &settings.grabbersS[idGrabber].filters;
         }else{
-            int idGrabber = guiCurrentFromFiltersSelection - static_cast<int>(settings.grabbersSet.size());
-            fromFilters = &settings.grabbersSet[idGrabber].calibrationFilters;
+            int idGrabber = guiCurrentFromFiltersSelection - static_cast<int>(settings.grabbersS.size());
+            fromFilters = &settings.grabbersS[idGrabber].calibrationFilters;
         }
 
         if(guiCurrentTargetFiltersSelection == 0){ // all
-            for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
                 DCMSignals::get()->update_filters_settings_signal(ii, *fromFilters);
                 DCMSignals::get()->update_calibration_filters_settings_signal(ii, *fromFilters);
             }
         }else if(guiCurrentTargetFiltersSelection == 1){ // all normal
-            for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
                 DCMSignals::get()->update_filters_settings_signal(ii, *fromFilters);
             }
         }else if(guiCurrentTargetFiltersSelection == 2){ // all calibration
-            for(size_t ii = 0; ii < settings.grabbersSet.size(); ++ii){
+            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
                 DCMSignals::get()->update_calibration_filters_settings_signal(ii, *fromFilters);
             }
-        }else if(guiCurrentTargetFiltersSelection < static_cast<int>(settings.grabbersSet.size() + 3)){ // normal grabbers
+        }else if(guiCurrentTargetFiltersSelection < static_cast<int>(settings.grabbersS.size() + 3)){ // normal grabbers
             int idGrabber = guiCurrentTargetFiltersSelection-3;
             DCMSignals::get()->update_filters_settings_signal(idGrabber, *fromFilters);
         }else{ // calibration grabbers
-            int idGrabber = guiCurrentTargetFiltersSelection-3 - static_cast<int>(settings.grabbersSet.size());
+            int idGrabber = guiCurrentTargetFiltersSelection-3 - static_cast<int>(settings.grabbersS.size());
             DCMSignals::get()->update_calibration_filters_settings_signal(idGrabber, *fromFilters);
         }
     }
@@ -674,7 +679,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_display_tab_item(camera::DCSceneDisplaySettings &sceneDisplay, std::vector<DCMGrabberSettings> &grabbers) -> void {
+auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<DCMGrabberSettings> &grabbers) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Display###display_settings_tabitem")){
         return;
@@ -898,24 +903,24 @@ auto DCMLeftPanelChildDrawer::draw_infos_tab_item(const DCMSettings &settings) -
         ImGui::Indent();
             ImGui::Text("Network:");
             ImGui::SameLine();
-            draw_config_file_name(settings.globalSet.networkFilePath);
+            draw_config_file_name(settings.networkS.filePath);
         ImGui::Unindent();
 
-        for(const auto &grabber : settings.grabbersSet){
+            for(const auto &grabber : settings.grabbersS){
             ImGuiUiDrawer::text(std::format("Grabber {}:", grabber.id));
             ImGui::Indent();
             ImGui::Text("Device:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.deviceFilePath);
+            draw_config_file_name(grabber.device.filePath);
             ImGui::Text("Model:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.modelFilePath);
+            draw_config_file_name(grabber.model.filePath);
             ImGui::Text("Filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.filtersFilePath);
+            draw_config_file_name(grabber.filters.filePath);
             ImGui::Text("Cal. filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.calibrationFiltersFilePath);
+            draw_config_file_name(grabber.calibrationFilters.filePath);
             ImGui::Unindent();
         }
 

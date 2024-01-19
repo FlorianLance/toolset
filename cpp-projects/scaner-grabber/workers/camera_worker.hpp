@@ -30,7 +30,7 @@
 #include <QObject>
 
 // local
-#include "camera/kinect2/k2_manager.hpp"
+#include "camera/impl/k2_manager.hpp"
 
 namespace tool::scan{
 

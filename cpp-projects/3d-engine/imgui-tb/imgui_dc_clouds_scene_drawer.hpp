@@ -66,8 +66,8 @@ struct DCCloudsSceneDrawer{
     auto draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor=true, bool drawDepth=true, bool drawInfra=true, bool drawCloud=true, std::optional<geo::Pt2<int>> sizeW = std::nullopt) -> void;
 
     // settings
-    auto update_cloud_display_settings(size_t idCloud, const camera::DCCloudDisplaySettings &cloudDisplay) -> void;
-    auto update_scene_display_settings(const camera::DCSceneDisplaySettings &sdS) -> void;
+    auto update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void;
+    auto update_scene_display_settings(const DCSceneDisplaySettings &sdS) -> void;
     auto update_model(size_t idCloud, const camera::DCModelSettings &model)  -> void;
 
     auto update_filters_settings(size_t idCloud, const camera::DCFiltersSettings &filters) -> void;
@@ -82,7 +82,7 @@ struct DCCloudsSceneDrawer{
     std::unique_ptr<gl::GridDrawer> gridD = nullptr;    
     ImguiFboUiDrawer fboD;
     // settings
-    camera::DCSceneDisplaySettings display;
+    DCSceneDisplaySettings display;
 
     // test
     std::unique_ptr<gl::TriangleLineDrawer> plane1D = nullptr;

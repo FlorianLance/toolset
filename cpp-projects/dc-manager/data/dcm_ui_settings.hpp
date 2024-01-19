@@ -26,7 +26,7 @@
 
 #pragma once
 
-namespace tool::ui {
+namespace tool {
 
 struct DCMUiSettings{
     bool focusWindow = false;

@@ -37,7 +37,7 @@ struct DCGDisplaySettingsSettings{
 
     bool settingsFiltersSubPanelDisplayed = false;
 
-    camera::DCSceneDisplaySettings sceneDisplay = camera::DCSceneDisplaySettings::default_init_for_grabber();
-    camera::DCCloudDisplaySettings cloudDisplay = camera::DCCloudDisplaySettings::default_init_for_grabber();
+    DCSceneDisplaySettings sceneDisplay = DCSceneDisplaySettings::default_init_for_grabber();
+    DCCloudDisplaySettings cloudDisplay = DCCloudDisplaySettings::default_init_for_grabber();
 };
 }

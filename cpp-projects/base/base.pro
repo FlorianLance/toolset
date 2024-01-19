@@ -94,14 +94,6 @@ LIBS += \
 
 HEADERS += \
     # io
-    camera/dc_device_impl.hpp \
-    camera/kinect2/k2_enums.hpp \
-    camera/kinect4/azure_kinect_device_impl.hpp \
-    camera/network/dc_server_device.hpp \
-    camera/network/dc_server_local_device.hpp \
-    camera/network/dc_server_remote_device.hpp \
-    camera/orbbec/femto_orbbec_device_impl.hpp \
-    camera/playback_device_impl.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -184,7 +176,19 @@ HEADERS += \
     camera/dc_types.hpp \
     camera/dc_player_settings.hpp \
     camera/dc_calibrator.hpp \
+    camera/dc_device_impl.hpp \
+    camera/network/dc_server_device.hpp \
+    camera/network/dc_server_local_device.hpp \
+    camera/network/dc_server_remote_device.hpp \
+    ## states
+    camera/states/dc_calibrator_states.hpp \
+    camera/states/dc_player_states.hpp \
+    camera/states/dc_recorder_states.hpp \
     ## settings
+    camera/settings/dc_grabber_network_settings.hpp \
+    camera/settings/dc_grabber_settings.hpp \
+    camera/settings/dc_player_settings.hpp \
+    camera/settings/dc_settings_paths.hpp \
     camera/settings/dc_device_settings.hpp \
     camera/settings/dc_data_settings.hpp \
     camera/settings/dc_recorder_settings.hpp \
@@ -202,14 +206,16 @@ HEADERS += \
     camera/network/dc_server_network.hpp \
     camera/network/dc_udp_reader.hpp \
     camera/network/dc_udp_sender.hpp \
-    ## orbbec
-    ## kinect2
-    camera/kinect2/k2_config_files.hpp \
-    camera/kinect2/k2_device.hpp \
-    camera/kinect2/k2_manager.hpp \
-    camera/kinect2/k2_network.hpp \
-    camera/kinect2/k2_types.hpp \
-    ## kinect4
+    ## impl
+    camera/impl/k2_config_files.hpp \
+    camera/impl/k2_device.hpp \
+    camera/impl/k2_manager.hpp \
+    camera/impl/k2_network.hpp \
+    camera/impl/k2_types.hpp \
+    camera/impl/k2_enums.hpp \
+    camera/impl/femto_orbbec_device_impl.hpp \
+    camera/impl/azure_kinect_device_impl.hpp \
+    camera/impl/playback_device_impl.hpp \
     # exvr
     exvr/ex_element.hpp \
     exvr/ex_experiment.hpp \
@@ -315,13 +321,7 @@ HEADERS += \
 
 
 SOURCES += \
-    # files
-    camera/dc_device.cpp \
-    camera/dc_device_impl.cpp \
-    camera/kinect4/azure_kinect_device_impl.cpp \
-    camera/network/dc_server_local_device.cpp \
-    camera/network/dc_server_remote_device.cpp \
-    camera/orbbec/femto_orbbec_device_impl.cpp \
+    # io
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -367,12 +367,16 @@ SOURCES += \
     camera/dc_frame.cpp \
     camera/dc_packed_data.cpp \
     camera/dc_calibrator.cpp \
+    camera/dc_device.cpp \
+    camera/dc_device_impl.cpp \
     ## network
     camera/network/dc_client_connection.cpp \
     camera/network/dc_server_connection.cpp \
     camera/network/dc_server_network.cpp \
     camera/network/dc_udp_reader.cpp \
     camera/network/dc_udp_sender.cpp \
+    camera/network/dc_server_local_device.cpp \
+    camera/network/dc_server_remote_device.cpp \
     ## settings
     camera/settings/dc_filters_settings.cpp \
     camera/settings/dc_model_settings.cpp \
@@ -383,13 +387,15 @@ SOURCES += \
     camera/settings/dc_delay_settings.cpp \
     camera/settings/dc_data_settings.cpp \
     camera/settings/dc_device_settings.cpp \
-    ## kinect2
-    camera/kinect2/k2_config_files.cpp \
-    camera/kinect2/k2_device.cpp \
-    camera/kinect2/k2_manager.cpp \
-    camera/kinect2/k2_types.cpp \
-    ## kinect4
-    ## orbbec
+    camera/settings/dc_grabber_settings.cpp \
+    camera/settings/dc_settings_paths.cpp \
+    ## impl
+    camera/impl/k2_config_files.cpp \
+    camera/impl/k2_device.cpp \
+    camera/impl/k2_manager.cpp \
+    camera/impl/k2_types.cpp \
+    camera/impl/azure_kinect_device_impl.cpp \
+    camera/impl/femto_orbbec_device_impl.cpp \
     # exvr
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \

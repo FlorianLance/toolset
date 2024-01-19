@@ -252,7 +252,7 @@ enum class DCMode : std::int8_t {
     FO_CLOUD_C1280x720_DI640x576_NV12_F30,
     FO_CLOUD_C1280x720_DI640x576_MJPG_F30,
     FO_CLOUD_C1280x720_DI512x512_MJPG_F30,
-    FO_TEST,
+    FO_CLOUD_DI512x512_MJPG_F30,
     FO_IMG_C1280x720_MJPG_F30,
     FO_IMG_DI640x576_NV12_F30,
     // other
@@ -288,7 +288,7 @@ static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     {DCMode::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
     {DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
     {DCMode::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     "C1280_D512_MJPG_F30"sv},
-    {DCMode::FO_TEST,                                   "TEST"sv},
+    {DCMode::FO_CLOUD_DI512x512_MJPG_F30,               "D512x512_MJPG_F30"sv},
     {DCMode::FO_IMG_C1280x720_MJPG_F30,                 "C1280_MJPG_F30"sv},
     {DCMode::FO_IMG_DI640x576_NV12_F30,                 "DEP_DI640x576_NV12_F30"sv},
     {DCMode::Invalid,                                   "Invalid"sv},
@@ -340,8 +340,7 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     {M::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
     {M::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
     {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
-    {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
-    {M::FO_TEST,                                   IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
+    {M::FO_CLOUD_DI512x512_MJPG_F30,                                   IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
     // invalid
     {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,               FPS::F30, {0.f,0.f},     {0,0},         false,  false,  Dev::Undefined},
 }};

@@ -34,7 +34,7 @@
 // base
 #include "geometry/matrix4.hpp"
 #include "network/network_types.hpp"
-#include "camera/kinect2/k2_config_files.hpp"
+#include "camera/impl/k2_config_files.hpp"
 
 // ui
 #include "ui_grabber_parameters.h"

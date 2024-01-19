@@ -56,7 +56,7 @@ struct DCCloudDrawer{
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
     camera::DCFiltersSettings filters;
-    camera::DCCloudDisplaySettings display;
+    DCCloudDisplaySettings display;
 
     // joints sub models
     size_t nbBodies = 0;

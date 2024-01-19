@@ -39,6 +39,8 @@ public:
     ~DCServerData();
 
     auto initialize(size_t nbDevices) -> void;
+    auto add_device() -> void;
+    auto remove_device(size_t idDevice) -> void;
     auto clean() -> void;
 
     auto new_compressed_frame(size_t idC, std::shared_ptr<camera::DCCompressedFrame> frame) -> void;
