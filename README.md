@@ -15,9 +15,9 @@ List of applications:
      * [scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/scaner-grabber) : client program for fetching Kinect2 data to be sent to UDP
      * [scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/scaner-manager) : server program for getting scaner-grabber data from UDP (settings and calibration)
      * [guardian](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/guardian)  : app for managing scaner-grabber execution 
-  * Azure Kinect:
-     * [k4-scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/k4-scaner-grabber)
-     * [k4-scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/k4-scaner-manager)
+  * Azure Kinect/Femto bolt:
+     * [dc-scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-grabber)
+     * [dc-scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-manager)
    
 
 ![k4-scaner-grabber](https://github.com/FlorianLance/toolset/assets/1221777/4da392e9-0d2b-49e4-bb06-5e0554de6600)
