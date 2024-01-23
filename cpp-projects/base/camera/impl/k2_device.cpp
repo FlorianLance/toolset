@@ -52,14 +52,13 @@
 
 // local
 #include "utility/view.hpp"
-#include "utility/utility.hpp"
 #include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "data/integers_encoder.hpp"
 
 
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace tool::geo;
 using namespace std::chrono_literals;
 

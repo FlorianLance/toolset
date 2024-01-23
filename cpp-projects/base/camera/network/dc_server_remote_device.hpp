@@ -32,7 +32,7 @@
 #include "camera/dc_compressed_frame.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
@@ -49,23 +49,23 @@ public:
     auto clean() -> void override;
 
     auto apply_command(Command command) -> void override;
-    auto update_device_settings(const camera::DCDeviceSettings &deviceS) -> void override;
-    auto update_color_settings(const camera::DCColorSettings &colorS) -> void override;
-    auto update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void override;
-    auto update_delay_settings(const camera::DCDelaySettings &delayS) -> void override;
+    auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void override;
+    auto update_color_settings(const cam::DCColorSettings &colorS) -> void override;
+    auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
+    auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void override;
 
     constexpr auto type() const noexcept -> DCServerType override {return DCServerType::remote;}
     auto device_connected() const noexcept -> bool override;
 
     // signals
     SSS<std::int64_t> remote_synchro_signal;
-    SSS<network::Feedback> remote_feedback_signal;
-    SSS<std::shared_ptr<camera::DCCompressedFrame>> remote_frame_signal;
+    SSS<net::Feedback> remote_feedback_signal;
+    SSS<std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
 
 private:
 
     auto receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void;
-    auto receive_compressed_frame(Header h, std::shared_ptr<camera::DCCompressedFrame> compressedFrame) -> void;
+    auto receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

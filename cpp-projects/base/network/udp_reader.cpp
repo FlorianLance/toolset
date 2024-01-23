@@ -42,7 +42,7 @@ using namespace boost::asio::detail;
 using namespace boost::asio::ip;
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 
 struct UdpReader::Impl{

@@ -29,7 +29,7 @@
 // local
 #include "dc_compressed_frame.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 struct DCFrameUncompressor{
 

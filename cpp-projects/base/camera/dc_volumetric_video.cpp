@@ -41,7 +41,7 @@
 #include "dc_frame_uncompressor.hpp"
 
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 
 DCVolumetricVideo &DCVolumetricVideo::operator=(const DCVolumetricVideo &other){

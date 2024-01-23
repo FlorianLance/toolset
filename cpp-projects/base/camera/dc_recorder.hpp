@@ -33,7 +33,7 @@
 #include "states/dc_recorder_states.hpp"
 #include "dc_volumetric_video.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 class DCRecorder{
 public:
@@ -62,14 +62,14 @@ public:
 
     // settings
     auto update_settings(DCRecorderSettings recordingsS) noexcept -> void;
-    auto update_model(size_t id, const camera::DCModelSettings &model) -> void;
+    auto update_model(size_t id, const cam::DCModelSettings &model) -> void;
 
     // i/o
     auto save_to_file(std::string_view path) -> bool;
 
     // signals
     sigslot::signal<DCRecorderStates> states_updated_signal;
-    sigslot::signal<size_t, std::shared_ptr<camera::DCFrame>> new_frame_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
 
 private:
 

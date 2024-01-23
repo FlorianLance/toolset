@@ -35,7 +35,7 @@
 #include "dc_frame.hpp"
 #include "dc_compressed_frame.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;

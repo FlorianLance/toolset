@@ -33,7 +33,7 @@
 // local
 #include "k2_network.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 class K2ConfigFiles{
 

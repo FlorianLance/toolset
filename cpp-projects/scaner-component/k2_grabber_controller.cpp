@@ -14,11 +14,12 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/format.hpp"
+#include "utility/types.hpp"
 
 using namespace tool;
 using namespace tool::scan;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 using namespace tool::geo;
 
 K2GrabberController::K2GrabberController(K2UdpReaderManager *udpReaderManager, std::vector<Interface> *localInterfaces, size_t id, K2GrabberTargetInfo info) : idC(id), m_info(info){
@@ -91,7 +92,7 @@ void K2GrabberController::init_connections(){
     });
 
     // from frame reader
-    m_frameReader->frame_received_signal.connect([&](K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame){
+    m_frameReader->frame_received_signal.connect([&](K2UdpHeader header, std::shared_ptr<cam::K2Frame> frame){
 
         // process current frame
         if(m_dataProcessT != nullptr){
@@ -106,13 +107,13 @@ void K2GrabberController::init_connections(){
     });
 
     // from data process
-    m_dataProcess->update_cloud_data_signal.connect([&](camera::K2CloudDisplayData *cloudData){
+    m_dataProcess->update_cloud_data_signal.connect([&](cam::K2CloudDisplayData *cloudData){
         update_cloud_data_signal(idC, cloudData);
     });
-    m_dataProcess->update_mesh_data_signal.connect([&](camera::K2MeshDisplayData *meshData){
+    m_dataProcess->update_mesh_data_signal.connect([&](cam::K2MeshDisplayData *meshData){
         update_mesh_data_signal(idC, meshData);
     });
-    m_dataProcess->update_bodies_data_signal.connect([&](camera::K2BodiesDisplayData *bodiesData){
+    m_dataProcess->update_bodies_data_signal.connect([&](cam::K2BodiesDisplayData *bodiesData){
         update_bodies_data_signal(idC, bodiesData);
     });
     m_dataProcess->end_processing_signal.connect([&](std::int64_t timeStampGet, std::int64_t timeProcessing){

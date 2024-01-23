@@ -34,7 +34,7 @@
 #include "utility/benchmark.hpp"
 
 using namespace std::chrono;
-using namespace tool::camera;
+using namespace tool::cam;
 
 K2Manager::K2Manager(){
 }

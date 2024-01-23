@@ -37,7 +37,7 @@
 #include "utility/benchmark.hpp"
 
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 AzureKinectDeviceImpl::AzureKinectDeviceImpl(){
 

@@ -33,13 +33,13 @@ namespace tool::graphics {
 
 struct DCPlayerDrawer : public DCCloudsSceneDrawer{
 
-    auto initialize(const std::vector<camera::DCModelSettings> &models) -> void;
-    auto set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void;
+    auto initialize(const std::vector<cam::DCModelSettings> &models) -> void;
+    auto set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto draw() -> void;
 
 private:
 
-    std::vector<std::shared_ptr<camera::DCFrame>> m_currentFrames;
+    std::vector<std::shared_ptr<cam::DCFrame>> m_currentFrames;
     bool m_redrawClouds = false;
     bool m_allTabOpened = false;
 };

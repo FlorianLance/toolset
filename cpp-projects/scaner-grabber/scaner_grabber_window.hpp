@@ -75,7 +75,7 @@ public:
 
 private slots:
 
-    void new_frame(std::int64_t time, std::shared_ptr<camera::K2Frame> frame);
+    void new_frame(std::int64_t time, std::shared_ptr<cam::K2Frame> frame);
 
     void save_cloud();
     void start_saving_cloud();
@@ -84,7 +84,7 @@ private slots:
     void update_display_state(bool state);
     void set_display_parameters(DisplayOptions parameters);
 
-    void read_tcp_command(camera::K2TcpPacket command);
+    void read_tcp_command(cam::K2TcpPacket command);
     void new_tcp_connection_signal(QString address, QString port);
     void tcp_connection_ended(QString address, QString port);
     void update_tcp_connection_state(QString readingAddress, int readingPort, bool state);
@@ -94,8 +94,8 @@ private slots:
     void update_udp_frame_sent(std::int64_t time);
     void update_udp_nb_bytes_sent(qint64 timeStamp, size_t nbBytesSent);
 
-    void update_cloud_data(camera::K2CloudDisplayData *cloudData);
-    void update_mesh_data(camera::K2MeshDisplayData *meshData);
+    void update_cloud_data(cam::K2CloudDisplayData *cloudData);
+    void update_mesh_data(cam::K2MeshDisplayData *meshData);
 
     void set_process_time(std::int64_t time);
     void erase_time_get_data_timeout();
@@ -120,8 +120,8 @@ signals:
     void kill_camera_loop_signal();
 
     // frame
-    void send_frame_signal(camera::K2TcpPacket, std::shared_ptr<camera::K2Frame>);
-    void process_and_display_signal(std::shared_ptr<camera::K2Frame>);
+    void send_frame_signal(cam::K2TcpPacket, std::shared_ptr<cam::K2Frame>);
+    void process_and_display_signal(std::shared_ptr<cam::K2Frame>);
 
     // camera
     void save_camera_intrinsics_signal(QString path);
@@ -142,12 +142,12 @@ private:
     ImageViewer m_infraW;
     DepthCameraGlWidget m_depthCameraW;
 
-    // network
+    // net
     // # tcp
-    network::TcpReaderUP m_tcpReader = nullptr;
+    net::TcpReaderUP m_tcpReader = nullptr;
     // # udp
     QThread m_udpSenderT;
-    network::UdpSenderWorkerUP m_udpSenderW = nullptr;
+    net::UdpSenderWorkerUP m_udpSenderW = nullptr;
     // data
     QThread m_dataT;
     ProcessDataWorkerUP m_dataW = nullptr;
@@ -163,15 +163,15 @@ private:
     int m_nbFramesSent =0;
     int m_totalPacketFailure = 0;
     bool m_sendNextFrame = false;
-    camera::K2TcpPacket m_lastCommand;
+    cam::K2TcpPacket m_lastCommand;
 
     // info
     std::vector<std::pair<qint64, size_t>> m_sendRate;
 
     // saved frames
     bool saveData = false;
-    std::vector<std::shared_ptr<camera::K2Frame>> m_savedFrames;
-    std::shared_ptr<camera::K2Frame> m_lastFrame = nullptr;
+    std::vector<std::shared_ptr<cam::K2Frame>> m_savedFrames;
+    std::shared_ptr<cam::K2Frame> m_lastFrame = nullptr;
 
     // timers
     QTimer m_eraseTimeGetDataT;

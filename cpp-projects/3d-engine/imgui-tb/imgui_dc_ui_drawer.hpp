@@ -80,24 +80,24 @@ class DCUIDrawer{
 
 public:
 
-    static auto draw_dc_config(camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
-    static auto draw_dc_data_settings(camera::DCType type, camera::DCDataSettings &data, bool &updateP) -> void;
-    static auto draw_dc_actions_settings(camera::DCActionsSettings &actions,  bool &updateP) -> void;
+    static auto draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
+    static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void;
+    static auto draw_dc_actions_settings(cam::DCActionsSettings &actions,  bool &updateP) -> void;
     static auto draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
-        camera::DCDeviceSettings &device,
+        cam::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate
     ) -> bool;
 
-    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool;
-    static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
+    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors, bool &autoUpdate) -> bool;
+    static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>;
     static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
     static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_dc_model_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool;
-    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
-    static auto draw_dc_player_tab_item(const std::string &tabItemName, camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
-    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model, bool &autoUpdate) -> bool;
+    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCRecorderStates &rStates, cam::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCPlayerStates &pStates, cam::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};
     static inline ImGuiDragS  modelTrDs  = {45.f, true, true, false, true, true};
@@ -108,9 +108,9 @@ public:
 
     static inline std::vector<std::string> devicesNames = {
         "dev_0", "dev_1", "dev_2", "dev_3", "dev_4", "dev_5", "dev_6", "dev_7", "dev_8", "dev_9"};
-    static inline std::vector<camera::DCMode> k4Modes = camera::get_device_modes(camera::DCType::AzureKinect);
-    static inline std::vector<camera::DCMode> foModes = camera::get_device_modes(camera::DCType::FemtoOrbbec);
-    static inline std::map<camera::DCMode, std::string> modesNames = {};
+    static inline std::vector<cam::DCMode> k4Modes = cam::get_device_modes(cam::DCType::AzureKinect);
+    static inline std::vector<cam::DCMode> foModes = cam::get_device_modes(cam::DCType::FemtoOrbbec);
+    static inline std::map<cam::DCMode, std::string> modesNames = {};
 
     static auto udpate_device_name(size_t idDevice, const std::string &deviceName) -> void{
         if(idDevice > devicesNames.size()){

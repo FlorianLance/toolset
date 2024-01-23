@@ -31,10 +31,10 @@
 #include "utility/logger.hpp"
 
 using namespace std::chrono;
-using namespace tool::network;
+using namespace tool::net;
 
 
-auto Header::generate_mono_packet(std::int8_t type, size_t messageNbBytes) -> Header{
+auto Header::generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header{
     Header header;
     header.type = type;
     header.totalSizeBytes = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);

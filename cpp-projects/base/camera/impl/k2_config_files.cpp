@@ -35,7 +35,7 @@
 #include "utility/string.hpp"
 
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 
 bool K2ConfigFiles::save_grabber_settings_config_file(const K2Settings &settings, std::string path){
 

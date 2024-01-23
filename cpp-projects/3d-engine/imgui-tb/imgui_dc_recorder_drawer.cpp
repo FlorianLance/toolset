@@ -41,7 +41,7 @@ auto DCRecorderDrawer::initialize(size_t nbGrabbers) -> void {
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);
 }
 
-auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void{
+auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void{
 
     if(idC >= m_currentFrames.size()){
         return;

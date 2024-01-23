@@ -39,7 +39,7 @@ auto DCCalibratorDrawer::initialize(size_t nbGrabbers) -> void{
     }
 }
 
-auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<camera::DCCalibratorGrabberData>* grabbersData) -> void{
+auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DCCalibratorGrabberData>* grabbersData) -> void{
 
     auto allSelection = modelId == grabbersData->size();
     for(size_t ii = 0; ii < grabbersData->size(); ++ii){
@@ -73,7 +73,7 @@ auto DCCalibratorDrawer::draw() -> void{
     draw_all_clouds_drawers_in_one_tab(false, false, false, true, "Calibration clouds");
 }
 
-auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const camera::DCModelSettings &model) -> void{
+auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const cam::DCModelSettings &model) -> void{
 
     auto tr = model.compute_full_transformation();
     cloudsD[idGrabber].model                      = tr;

@@ -41,7 +41,7 @@
 #include "utility/logger.hpp"
 
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct DCFrameCompressor::Impl{
     tjhandle jpegCompressor = nullptr;

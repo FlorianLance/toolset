@@ -1205,15 +1205,15 @@ int main(int argc, char *argv[]){
 ////        device->stop_cameras();
 ////        device->close();
 ////    }
-////    tool::camera::K4Device device;
+////    tool::cam::K4Device device;
 ////    std::puts("### Open device.\n");
 ////    if(device.open(0)){
-////        tool::camera::K4ConfigSettings config;
+////        tool::cam::K4ConfigSettings config;
 ////        config.idDevice = 0;
-////        config.mode = tool::camera::K4Mode::Cloud_640x576_NV12;
+////        config.mode = tool::cam::K4Mode::Cloud_640x576_NV12;
 ////        config.synchronizeColorAndDepth = true;
 ////        config.delayBetweenColorAndDepthUsec = 0;
-////        config.synchMode = tool::camera::K4SynchronisationMode::Standalone;
+////        config.synchMode = tool::cam::K4SynchronisationMode::Standalone;
 ////        config.subordinateDelayUsec = 0;
 ////        config.disableLED = false;
 

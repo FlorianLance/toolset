@@ -31,7 +31,7 @@
 #include "geometry/point4.hpp"
 #include "utility/tuple_array.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 using namespace std::literals::string_view_literals;
 

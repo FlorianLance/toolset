@@ -36,7 +36,7 @@
 #include "camera/dc_frame_uncompressor.hpp"
 #include "dc_device.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCInfos{
 
@@ -115,14 +115,14 @@ struct DCFrames{
 
     // test
     // cFrame->afterCaptureTS = afterCompressingTS.count() - cFrame->afterCaptureTS;
-    auto add_frame(std::shared_ptr<camera::DCFrame> frame) -> void;
-    auto add_compressed_frame(std::shared_ptr<camera::DCCompressedFrame> cFrame) -> void;
-    auto take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<camera::DCFrame>;
-    auto get_compressed_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<camera::DCCompressedFrame>;
+    auto add_frame(std::shared_ptr<cam::DCFrame> frame) -> void;
+    auto add_compressed_frame(std::shared_ptr<cam::DCCompressedFrame> cFrame) -> void;
+    auto take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCFrame>;
+    auto get_compressed_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCCompressedFrame>;
 
     // delay buffer
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<DCFrame>>> frames;
-    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<camera::DCCompressedFrame>>> compressedFrames;
+    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<cam::DCCompressedFrame>>> compressedFrames;
 
     // compression
     DCFrameCompressor frameCompressor;

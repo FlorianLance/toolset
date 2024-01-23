@@ -33,7 +33,7 @@
 // local
 #include "utility/stop_watch.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace std::chrono;
 
 struct DCRecorder::Impl{

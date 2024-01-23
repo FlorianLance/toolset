@@ -9,7 +9,7 @@
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct DCPlayer::Impl{
 

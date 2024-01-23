@@ -66,7 +66,7 @@ auto DCDeviceDrawer::draw(bool focusWindow) -> void{
     draw_cloud_drawer_tab(0, focusWindow, "device"sv);
 }
 
-auto DCDeviceDrawer::update_frame(std::shared_ptr<camera::DCFrame> frame) -> void{
+auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
     locker.lock();
     lastFrame = frame;
     locker.unlock();
@@ -76,7 +76,7 @@ auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
 
     Logger::message("DCDeviceDrawer::save_cloud\n");
 
-    std::shared_ptr<camera::DCFrame> frame = nullptr;
+    std::shared_ptr<cam::DCFrame> frame = nullptr;
     locker.lock();
     frame = lastFrame;
     locker.unlock();

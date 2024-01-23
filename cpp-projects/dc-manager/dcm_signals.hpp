@@ -53,8 +53,8 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
     // network
-    SSS<size_t, std::shared_ptr<camera::DCCompressedFrame>> new_compressed_frame_signal;
-    SSS<size_t, std::shared_ptr<camera::DCFrame>> new_frame_signal;
+    SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> new_compressed_frame_signal;
+    SSS<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
 
     // recording
     SSS<> start_recorder_signal;
@@ -62,7 +62,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const camera::DCRecorderSettings&> update_recorder_settings_signal;
+    SSS<const cam::DCRecorderSettings&> update_recorder_settings_signal;
 
     // player
     SSS<> start_player_signal;
@@ -78,36 +78,36 @@ public:
     SSS<std::string> load_video_player_signal;
 
     // calibration
-    SSS<const camera::DCCalibratorSettings &> update_calibration_settings_signal;
+    SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;
     SSS<const graphics::DCCalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
     SSS<> reset_calibration_registering_signal;
     SSS<> start_calibration_registering_signal;
     SSS<> stop_calibration_registering_signal;
     SSS<> recompute_registering_processing_signal;
     SSS<> ask_calibration_signal;
-    SSS<std::vector<camera::DCModelSettings>> calibrate_signal;
+    SSS<std::vector<cam::DCModelSettings>> calibrate_signal;
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
 
     // filters
     SSS<bool> update_filtering_mode_signal;
-    SSS<size_t, const camera::DCFiltersSettings&> update_filters_settings_signal;
-    SSS<size_t, const camera::DCFiltersSettings&> update_calibration_filters_settings_signal;
+    SSS<size_t, const cam::DCFiltersSettings&> update_filters_settings_signal;
+    SSS<size_t, const cam::DCFiltersSettings&> update_calibration_filters_settings_signal;
 
 
     SSS<size_t> init_connection_signal;
     SSS<> reset_network_signal;
-    SSS<size_t, network::Command> command_signal;
+    SSS<size_t, net::Command> command_signal;
 
     // settings
-    SSS<size_t, const camera::DCDeviceSettings &> update_device_settings_signal;
-    SSS<size_t, const camera::DCColorSettings &> update_color_settings_signal;
+    SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
+    SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
     SSS<size_t, const DCCloudDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<size_t, const camera::DCModelSettings&> update_model_settings_signal;
+    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     SSS<const DCSceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<const camera::DCPlayerSettings&> update_player_settings_signal;
-    SSS<size_t, camera::DCDelaySettings> update_delay_signal;
-    SSS<size_t, camera::DCColorSettings> color_settings_reset_signal;
+    SSS<const cam::DCPlayerSettings&> update_player_settings_signal;
+    SSS<size_t, cam::DCDelaySettings> update_delay_signal;
+    SSS<size_t, cam::DCColorSettings> color_settings_reset_signal;
 
 
     // i/o

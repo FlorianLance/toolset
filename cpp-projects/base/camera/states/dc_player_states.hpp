@@ -29,7 +29,7 @@
 // std
 #include <vector>
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCPlayerStates{
 

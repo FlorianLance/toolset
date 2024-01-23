@@ -33,7 +33,7 @@
 #include "dc_device.hpp"
 #include "utility/logger.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace std::chrono;
 
 struct DCDeviceManager::Impl{

@@ -30,10 +30,11 @@
 // local
 #include "utility/time.hpp"
 #include "camera/dc_compressed_frame.hpp"
-// #include "utility/logger.hpp"
+#include "utility/logger.hpp"
 
-using namespace tool::camera;
-using namespace tool::network;
+using namespace tool::cam;
+using namespace tool::net;
+
 
 auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
@@ -42,41 +43,42 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     Header header(packetData);
     packetData += sizeof(Header);
 
-   // Logger::message(std::format(
-   //     "[pp {} {} {} {} {} {} {}] ",
-   //     nbBytes, header.idMessage, header.currentPacketSizeBytes, header.currentPacketId,
-   //     header.totalSizeBytes, header.dataOffset, header.idMessage));
-
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::init_network_infos:{
+        Logger::message("[DCClientUdpReader] init_network_infos message received.\n");
         init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<UdpNetworkSendingSettings>(packetData));
     }break;
     case MessageType::update_device_settings:{
+        Logger::message("[DCClientUdpReader] update_device_settings message received.\n");
         update_device_settings_signal(std::move(header), std::make_shared<UdpMonoPacketMessage<DCDeviceSettings>>(packetData));
     }break;
     case MessageType::update_filters:{
+
         if(!filtersMessage.copy_packet_to_data(header, nbBytes, packetData, m_data)){
             break;
         }
         if(filtersMessage.all_received(header)){
+            Logger::message("[DCClientUdpReader] update_filters message received.\n");
             size_t offset = 0;
-            update_filters_signal(std::move(header), std::make_shared<camera::DCFiltersSettings>(m_data.data(), offset, header.total_size_data_bytes()));
+            update_filters_signal(std::move(header), std::make_shared<cam::DCFiltersSettings>(m_data.data(), offset, header.total_size_data_bytes()));
         }
     }break;
-    case MessageType::update_color_settings:{        
+    case MessageType::update_color_settings:{
+        Logger::message("[DCClientUdpReader] update_color_settings message received.\n");
         update_color_settings_signal(std::move(header), std::make_shared<UdpMonoPacketMessage<DCColorSettings>>(packetData));
     }break;
     case MessageType::delay:{
+        Logger::message("[DCClientUdpReader] delay message received.\n");
         update_delay_signal(std::move(header), UdpMonoPacketMessage<DCDelaySettings>(packetData));
     }break;
     case MessageType::command:{
+        Logger::message("[DCClientUdpReader] command message received.\n");
         command_signal(header, UdpMonoPacketData::generate_data_from_packet_raw<Command>(packetData));
     }break;
     default:
         break;
     }
 }
-
 
 auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 

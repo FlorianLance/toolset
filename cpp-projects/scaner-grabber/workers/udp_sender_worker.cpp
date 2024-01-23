@@ -51,9 +51,9 @@
 using namespace std::chrono;
 using namespace boost::asio::ip;
 
-using namespace tool::network;
+using namespace tool::net;
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct UdpSenderWorker::Impl{
 

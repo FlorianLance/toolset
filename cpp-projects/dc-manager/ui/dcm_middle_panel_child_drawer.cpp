@@ -32,7 +32,7 @@
 
 using namespace tool;
 using namespace tool::graphics;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCMMiddlePanelChildDrawer::initialize(size_t nbGrabbers) -> void {
     directD.initialize(nbGrabbers);

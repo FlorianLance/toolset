@@ -33,7 +33,7 @@
 // local
 #include "k2_types.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 /**
  * @brief Check validity of input depth value (defined by kinect2_invalid_value)

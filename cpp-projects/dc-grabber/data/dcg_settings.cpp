@@ -35,7 +35,7 @@
 #include "dcg_paths.hpp"
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 auto DCGSettings::initialize() -> bool{
 
@@ -156,31 +156,33 @@ auto DCGSettings::initialize() -> bool{
     return true;
 }
 
-auto DCGSettings::init_network_sending_settings(std::shared_ptr<network::UdpNetworkSendingSettings> networkSendingS) -> void{
+auto DCGSettings::init_network_sending_settings(std::shared_ptr<net::UdpNetworkSendingSettings> networkSendingS) -> void{    
     networkS.init_sending_settings(*networkSendingS);
     triggers_init_network_sending_settings();
 }
 
-auto DCGSettings::update_filters(std::shared_ptr<camera::DCFiltersSettings> filtersS) -> void {
+auto DCGSettings::update_filters(std::shared_ptr<cam::DCFiltersSettings> filtersS) -> void {
     this->filtersS = *filtersS;
     triggers_filters_settings();
 }
 
-auto DCGSettings::update_device_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCDeviceSettings>> deviceS) -> void {
+auto DCGSettings::update_device_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCDeviceSettings>> deviceS) -> void {
     this->deviceS = std::move(deviceS->data);
     triggers_device_settings();
 }
 
-auto DCGSettings::update_color_settings(std::shared_ptr<network::UdpMonoPacketMessage<camera::DCColorSettings>> colorS) -> void{
+#include <iostream>
+auto DCGSettings::update_color_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCColorSettings>> colorS) -> void{
+    std::cout << "DCGSettings::update_color_settings\n";
     this->colorS = std::move(colorS->data);
     triggers_color_settings();
 }
 
-auto DCGSettings::update_color_settings_from_device_manager(const camera::DCColorSettings &colorS) -> void{
+auto DCGSettings::update_color_settings_from_device_manager(const cam::DCColorSettings &colorS) -> void{
     this->colorS = colorS;
 }
 
-auto DCGSettings::update_delay(network::UdpMonoPacketMessage<camera::DCDelaySettings> delayS) -> void{
+auto DCGSettings::update_delay(net::UdpMonoPacketMessage<cam::DCDelaySettings> delayS) -> void{
     this->delayS = std::move(delayS.data);
     triggers_delay_settings();
 }
@@ -208,7 +210,7 @@ auto DCGSettings::update_delay(network::UdpMonoPacketMessage<camera::DCDelaySett
 //     triggers_filters_settings();
 // }
 
-auto DCGSettings::update_imu_sample(camera::DCImuSample imuSample) -> void{
+auto DCGSettings::update_imu_sample(cam::DCImuSample imuSample) -> void{
     this->imuSample = imuSample;
 }
 
@@ -224,7 +226,9 @@ auto DCGSettings::triggers_device_settings() -> void {
     DCGSignals::get()->update_device_settings_signal(deviceS);
 }
 
+#include <iostream>
 auto DCGSettings::triggers_color_settings() -> void{
+    std::cout << "triggers_color_settings\n";
     DCGSignals::get()->update_color_settings_signal(colorS);
 }
 
@@ -245,7 +249,7 @@ auto DCGSettings::disconnect() -> void{
 }
 
 auto DCGSettings::reset_device_settings() -> void{
-    deviceS = camera::DCDeviceSettings::default_init_for_grabber();
+    deviceS = cam::DCDeviceSettings::default_init_for_grabber();
     triggers_device_settings();
 }
 
@@ -274,7 +278,7 @@ auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_filters() -> void{
-    filtersS = camera::DCFiltersSettings();
+    filtersS = cam::DCFiltersSettings();
     triggers_device_settings();
 }
 
@@ -303,7 +307,7 @@ auto DCGSettings::load_current_hostname_filters_file() -> bool{
 }
 
 auto DCGSettings::reset_color_settings() -> void{
-    colorS = camera::DCColorSettings();
+    colorS = cam::DCColorSettings();
     triggers_color_settings();
 }
 
@@ -332,7 +336,7 @@ auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_model() -> void{
-    modelS = camera::DCModelSettings();
+    modelS = cam::DCModelSettings();
     triggers_model();
 }
 

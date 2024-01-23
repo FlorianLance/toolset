@@ -32,7 +32,7 @@
 #include "camera/settings/dc_model_settings.hpp"
 #include "camera/states/dc_calibrator_states.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 class DCCalibrator{
 public:
@@ -55,7 +55,7 @@ public:
     auto reset_registering() -> void;    
 
     // frames
-    auto add_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> void;
+    auto add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto process_all_frames() -> void;
 
     // calibrate

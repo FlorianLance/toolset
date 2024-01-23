@@ -55,9 +55,9 @@
 #include "ui_about_dialog.h"
 
 using namespace tool::ui;
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace tool::scan;
-using namespace tool::network;
+using namespace tool::net;
 
 
 int main(int argc, char *argv[]){
@@ -585,14 +585,14 @@ void ScanerGrabberWindow::set_meta_types(){
     qRegisterMetaType<QHostAddress>("QHostAddress");
 
     qRegisterMetaType<K2TcpPacket>("K2TcpPacket");
-    qRegisterMetaType<K2TcpPacket>("camera::K2TcpPacket");
-    qRegisterMetaType<K2TcpPacket>("tool::camera::K2TcpPacket");
+    qRegisterMetaType<K2TcpPacket>("cam::K2TcpPacket");
+    qRegisterMetaType<K2TcpPacket>("tool::cam::K2TcpPacket");
 
-    qRegisterMetaType<std::shared_ptr<camera::K2Frame>>("std::shared_ptr<camera::K2Frame>");
+    qRegisterMetaType<std::shared_ptr<cam::K2Frame>>("std::shared_ptr<cam::K2Frame>");
 
     qRegisterMetaType<K2Settings>("K2Settings");
-    qRegisterMetaType<K2Settings>("camera::K2Settings");
-    qRegisterMetaType<K2Settings>("tool::camera::K2Settings");
+    qRegisterMetaType<K2Settings>("cam::K2Settings");
+    qRegisterMetaType<K2Settings>("tool::cam::K2Settings");
 
     qRegisterMetaType<DisplayOptions>("DisplayOptions");
     qRegisterMetaType<DisplayOptions>("ui::DisplayOptions");
@@ -604,13 +604,13 @@ void ScanerGrabberWindow::set_meta_types(){
 
     qRegisterMetaType<K2FrameRequest>("K2FrameRequest");
     qRegisterMetaType<K2FrameRequest>("K2FrameRequest");
-    qRegisterMetaType<K2FrameRequest>("camera::K2FrameRequest");
-    qRegisterMetaType<K2FrameRequest>("tool::camera::K2FrameRequest");
+    qRegisterMetaType<K2FrameRequest>("cam::K2FrameRequest");
+    qRegisterMetaType<K2FrameRequest>("tool::cam::K2FrameRequest");
 
     qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<K2BodyJoint, 25*6>");
     qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<K2BodyJoint, 25*6>");
-    qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<camera::K2BodyJoint, 25*6>");
-    qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<tool::camera::K2BodyJoint, 25*6>");
+    qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<cam::K2BodyJoint, 25*6>");
+    qRegisterMetaType<std::array<K2BodyJoint, 25*6>>("std::array<tool::cam::K2BodyJoint, 25*6>");
 }
 
 

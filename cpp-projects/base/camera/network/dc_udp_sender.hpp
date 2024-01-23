@@ -36,14 +36,14 @@
 #include "camera/settings/dc_color_settings.hpp"
 #include "camera/settings/dc_delay_settings.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 class DCClientUdpSender : public UdpSender{
 public:
 
     auto send_synchronisation_message() -> bool;
     auto send_feedback_message(Feedback feedback) -> bool;
-    auto send_compressed_frame_message(std::shared_ptr<camera::DCCompressedFrame> frame) -> bool;
+    auto send_compressed_frame_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool;
 
 private:
     size_t idLastFrameMutliPacketsMessageSent = 0;
@@ -53,11 +53,11 @@ class DCServerUdpSender : public UdpSender{
 public:
 
     auto send_init_message(const UdpNetworkSendingSettings &network) -> Header;
-    auto send_update_device_settings_message(const camera::DCDeviceSettings &device) -> Header;
-    auto send_update_color_settings_message(const camera::DCColorSettings &color) -> Header;
-    auto send_delay_settings_message(camera::DCDelaySettings delay) -> Header;
-    auto send_command_message(network::Command command) -> Header;
-    auto send_update_filters_settings_message(const camera::DCFiltersSettings &filters) -> bool;
+    auto send_update_device_settings_message(const cam::DCDeviceSettings &device) -> Header;
+    auto send_update_color_settings_message(const cam::DCColorSettings &color) -> Header;
+    auto send_delay_settings_message(cam::DCDelaySettings delay) -> Header;
+    auto send_command_message(net::Command command) -> Header;
+    auto send_update_filters_settings_message(const cam::DCFiltersSettings &filters) -> bool;
 
 private:
     size_t idLastMasksFiltersMessageSent = 0;

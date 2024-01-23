@@ -41,9 +41,9 @@
 #include "qt_logger.hpp"
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 using namespace tool::ui;
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace tool::geo;
 
 
@@ -179,7 +179,7 @@ void GrabberParametersW::update_grabber_writing_info(QString writingAddress, int
     send_writing_connection_parameters();
 }
 
-void GrabberParametersW::init_from_manager(QColor color, std::vector<Interface> *interfaces, const camera::K2GrabberTargetInfo &info){
+void GrabberParametersW::init_from_manager(QColor color, std::vector<Interface> *interfaces, const cam::K2GrabberTargetInfo &info){
 
     setObjectName("GrabberParametersW manager");
     grabberUi = false;
@@ -456,7 +456,7 @@ void GrabberParametersW::send_current_ui_settings(){
     emit send_settings_parameters_signal(read_settings_from_ui());
 }
 
-void GrabberParametersW::send_ui_settings(camera::K2Settings settings){
+void GrabberParametersW::send_ui_settings(cam::K2Settings settings){
     emit send_settings_parameters_signal(settings);
 }
 

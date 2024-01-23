@@ -10,8 +10,8 @@ auto test_raw_kinect2() -> void{
 auto test_kinect2() -> void{
 
     //    using namespace std::chrono_literals;
-    //    camera::K2Device kinect;
-    //    if(!kinect.open(camera::K2FrameRequest::compressed_color_mesh)){
+    //    cam::K2Device kinect;
+    //    if(!kinect.open(cam::K2FrameRequest::compressed_color_mesh)){
     //        std::cerr << "Cannot init kinect 2\n";
     //        return;
     //    }

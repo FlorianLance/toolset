@@ -35,7 +35,7 @@ namespace tool::graphics {
 struct DCDirectDrawer : public DCCloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto set_frame(size_t idGrabber, std::shared_ptr<camera::DCFrame> frame) -> void;
+    auto set_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void;
 
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;

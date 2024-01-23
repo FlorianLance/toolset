@@ -54,8 +54,8 @@ using boost::asio::ip::address;
 using namespace std::chrono_literals;
 
 using namespace tool;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 
 struct TcpSenderWorker::Impl{
 
@@ -71,7 +71,7 @@ struct TcpSenderWorker::Impl{
     std::vector<std::uint8_t> data;
     int sizeUdpPackets = 512;
 
-    std::vector<network::Interface> *localInterfaces = nullptr;
+    std::vector<net::Interface> *localInterfaces = nullptr;
     size_t readingInterface = 0;
 
     bool connectionValid = false;

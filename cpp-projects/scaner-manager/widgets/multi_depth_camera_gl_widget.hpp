@@ -50,9 +50,9 @@ public slots:
 
     // update data
     void update_grabber_cloud_display_parameters(size_t id, tool::ui::DisplayOptions p);
-    void update_cloud(size_t id, tool::camera::K2CloudDisplayData *cloudData);
-    void update_mesh(size_t id, tool::camera::K2MeshDisplayData *meshData);
-    void update_bodies(size_t id, std::array<tool::camera::K2BodyInfos, 6> *bodies);
+    void update_cloud(size_t id, tool::cam::K2CloudDisplayData *cloudData);
+    void update_mesh(size_t id, tool::cam::K2MeshDisplayData *meshData);
+    void update_bodies(size_t id, std::array<tool::cam::K2BodyInfos, 6> *bodies);
     void update_raw_cloud(size_t id, std::vector<geo::Pt3f> *points, std::vector<geo::Pt3f> *colors);
 
 protected:
@@ -88,7 +88,7 @@ private:
     std::vector<float> sizePts;
 
     // bodies
-    std::vector<std::array<camera::K2BodyInfos, 6>> kinectsBodies;
+    std::vector<std::array<cam::K2BodyInfos, 6>> kinectsBodies;
     std::unordered_map<std::uint64_t, geo::Pt4f> m_bodiesColors;
 
     // objects to draw

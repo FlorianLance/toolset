@@ -33,7 +33,7 @@
 #include "dc_types.hpp"
 #include "geometry/cloud.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 struct Frame{
     std::int32_t idCapture = 0;

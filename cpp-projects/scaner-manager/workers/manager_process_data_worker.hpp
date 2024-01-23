@@ -49,14 +49,14 @@ public :
     ProcessDataWorker(size_t id);
     ~ProcessDataWorker();
 
-    std::shared_ptr<camera::K2Frame> processed_frame();
+    std::shared_ptr<cam::K2Frame> processed_frame();
 
-    camera::K2CloudDisplayData *cloud_data();
-    camera::K2MeshDisplayData *mesh_data();
+    cam::K2CloudDisplayData *cloud_data();
+    cam::K2MeshDisplayData *mesh_data();
 
 public slots:
 
-    void process_data_from_udp_frame(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame);
+    void process_data_from_udp_frame(cam::K2UdpHeader header, std::shared_ptr<cam::K2Frame> frame);
 
 signals:
 
@@ -67,12 +67,12 @@ signals:
     void update_depth_signal(QImage);
     void update_infra_signal(QImage);
     // # opengl
-    void update_cloud_data_signal(camera::K2CloudDisplayData *coloredCloudData);
-    void update_mesh_data_signal(camera::K2MeshDisplayData *coloredMeshData);
-    void update_bodies_data_signal(std::array<camera::K2BodyInfos,6> *bodiesData);
+    void update_cloud_data_signal(cam::K2CloudDisplayData *coloredCloudData);
+    void update_mesh_data_signal(cam::K2MeshDisplayData *coloredMeshData);
+    void update_bodies_data_signal(std::array<cam::K2BodyInfos,6> *bodiesData);
 
     // recording
-    void new_frame_to_save_signal(std::shared_ptr<camera::K2Frame> frame);
+    void new_frame_to_save_signal(std::shared_ptr<cam::K2Frame> frame);
 
 private :
 

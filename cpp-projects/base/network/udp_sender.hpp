@@ -34,7 +34,7 @@
 #include "udp_header.hpp"
 #include "network_enums.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class UdpSender {
 

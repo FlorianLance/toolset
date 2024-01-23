@@ -30,8 +30,8 @@
 // local
 #include "camera/dc_device_manager.hpp"
 
-using namespace tool::camera;
-using namespace tool::network;
+using namespace tool::cam;
+using namespace tool::net;
 
 struct DCServerLocalDevice::Impl{
     std::unique_ptr<DCDeviceManager>  deviceM = nullptr;
@@ -70,25 +70,25 @@ auto DCServerLocalDevice::apply_command(Command command) -> void{
     // }
 }
 
-auto DCServerLocalDevice::update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{
+auto DCServerLocalDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
     if(i->deviceM){
         i->deviceM->update_device_settings(deviceS);
     }
 }
 
-auto DCServerLocalDevice::update_color_settings(const camera::DCColorSettings &colorS) -> void{
+auto DCServerLocalDevice::update_color_settings(const cam::DCColorSettings &colorS) -> void{
     if(i->deviceM){
         i->deviceM->update_color_settings(colorS);
     }
 }
 
-auto DCServerLocalDevice::update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{
+auto DCServerLocalDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
     if(i->deviceM){
         i->deviceM->update_filters_settings(filtersS);
     }
 }
 
-auto DCServerLocalDevice::update_delay_settings(const camera::DCDelaySettings &delayS) -> void{
+auto DCServerLocalDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
     if(i->deviceM){
         i->deviceM->update_delay_settings(delayS);
     }

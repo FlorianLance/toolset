@@ -41,7 +41,7 @@
 
 using namespace tool;
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto set_value(ob::Device *dev, OBPropertyID pId, bool value) -> void{
 
@@ -430,7 +430,11 @@ auto FemtoOrbbecDeviceImpl::stop_reading() -> void{
 
     // stop pipe
     if(pipe != nullptr){
-        pipe->stop();
+        try{
+            pipe->stop();
+        }catch(ob::Error &e) {
+            Logger::error(std::format("[FemtoOrbbecDeviceImpl::stop_reading] Error: {}\n", e.getMessage()));
+        }
     }
 }
 
@@ -638,9 +642,7 @@ auto update_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
 
 auto FemtoOrbbecDeviceImpl::read_bodies() -> void{
 
-    // std::cout << "read bodies\n";
     if(!depthImage || ! infraredImage){
-        // std::cout << "no depth image\n";
         return;
     }
 
@@ -649,7 +651,6 @@ auto FemtoOrbbecDeviceImpl::read_bodies() -> void{
 
         try{
 
-            // std::cout << "create capture\n";
             k4a_capture_t captureH = nullptr;
             k4a_capture_create(&captureH);
             k4a::capture capture(captureH);
@@ -694,7 +695,7 @@ auto FemtoOrbbecDeviceImpl::read_bodies() -> void{
                     if(data.bodies.size() < bodiesCount){
                         data.bodies.resize(bodiesCount);
                     }
-                    std::cout << "bodiesCount " << bodiesCount << "\n";
+                    // std::cout << "bodiesCount " << bodiesCount << "\n";
                     for(size_t ii = 0; ii < bodiesCount; ++ii){
                         update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
                     }

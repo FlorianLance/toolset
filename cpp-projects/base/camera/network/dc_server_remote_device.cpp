@@ -35,7 +35,7 @@
 #include "dc_udp_reader.hpp"
 #include "utility/logger.hpp"
 
-using namespace tool::network;
+using namespace tool::net;
 
 struct DCServerRemoteDevice::Impl{
 
@@ -65,6 +65,7 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
     i->infos = infos;
 
     // init reader
+    Logger::message(std::format("DCServerRemoteDevice init reader: {} {} {}\n", i->infos.readingAdress, std::to_string(i->infos.readingPort), static_cast<int>(i->infos.protocol)));
     if(!i->udpReader.init_socket(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
         Logger::error("[DCServerRemoteDevice]: Cannot init udp reader.\n");
         return false;
@@ -72,6 +73,7 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
     i->udpReader.start_reading();
 
     // init sender
+    Logger::message(std::format("DCServerRemoteDevice init sender: {} {} {}\n", i->infos.sendingAdress, std::to_string(i->infos.sendingPort), static_cast<int>(i->infos.protocol)));
     if(!i->udpSender.init_socket(i->infos.sendingAdress, std::to_string(i->infos.sendingPort), i->infos.protocol)){
         Logger::error("[DCServerRemoteDevice]: Cannot init udp sender.\n");
         return false;
@@ -90,12 +92,13 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
 auto DCServerRemoteDevice::init_remote_connection() -> void{
 
     Logger::message(
-        std::format("DCServerRemoteDevice: init remote connection infos: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
+        std::format("DCServerRemoteDevice: init remote connection infos: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] PRO:[{}].\n",
         i->infos.idReadingInterface,
         i->infos.readingAdress,
         i->infos.readingPort,
         i->infos.sendingAdress,
-        i->infos.sendingPort)
+        i->infos.sendingPort,
+        static_cast<int>(i->infos.protocol))
     );
 
     i->initTs = i->udpSender.send_init_message(
@@ -142,19 +145,19 @@ auto DCServerRemoteDevice::apply_command(Command command) -> void{
     }
 }
 
-auto DCServerRemoteDevice::update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{
+auto DCServerRemoteDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
     i->udpSender.send_update_device_settings_message(deviceS);
 }
 
-auto DCServerRemoteDevice::update_color_settings(const camera::DCColorSettings &colorS) -> void{
+auto DCServerRemoteDevice::update_color_settings(const cam::DCColorSettings &colorS) -> void{
     i->udpSender.send_update_color_settings_message(colorS);
 }
 
-auto DCServerRemoteDevice::update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{
+auto DCServerRemoteDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
     i->udpSender.send_update_filters_settings_message(filtersS);
 }
 
-auto DCServerRemoteDevice::update_delay_settings(const camera::DCDelaySettings &delayS) -> void{
+auto DCServerRemoteDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
     i->udpSender.send_delay_settings_message(delayS);
 }
 
@@ -193,7 +196,7 @@ auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedb
     remote_feedback_signal(std::move(message.data));
 }
 
-auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<camera::DCCompressedFrame> compressedFrame) -> void{
+auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void{
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;

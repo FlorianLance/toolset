@@ -36,7 +36,7 @@
 #include "utility/logger.hpp"
 
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCInfos::initialize(DCMode mode) -> void{
 
@@ -692,12 +692,14 @@ auto DCDeviceImpl::stop_reading_thread() -> void{
     // wait for reading thread to finish
     if(readFramesFromCameras){
         readFramesFromCameras = false;
+        std::cout << "read bool stop\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     // stop thread
-    if(frameReaderT != nullptr){
+    if(frameReaderT != nullptr){        
         if(frameReaderT->joinable()){
+            std::cout << "join thread\n";
             frameReaderT->join();
         }
         frameReaderT = nullptr;

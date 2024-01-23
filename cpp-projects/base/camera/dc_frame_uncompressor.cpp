@@ -49,7 +49,7 @@
 
 using namespace tool;
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct DCFrameUncompressor::Impl{
 

@@ -31,7 +31,7 @@
 #include "dc_camera_data.hpp"
 #include "dc_frame_uncompressor.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 class DCVolumetricVideo{
 
@@ -75,7 +75,7 @@ public:
     auto clean_all_cameras_compressed_frames() noexcept -> void;
     auto clean_camera_compressed_frames(size_t idCamera) noexcept -> void;
     // # merge
-    auto merge_cameras_clouds(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, camera::DCFrame &frame) -> void;
+    auto merge_cameras_clouds(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
     auto merge_cameras_clouds(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound) -> tool::geo::ColoredCloudData;
     auto merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
 

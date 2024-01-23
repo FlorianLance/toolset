@@ -29,4 +29,4 @@
 
 #include "dc_frame.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;

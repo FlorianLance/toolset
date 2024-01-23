@@ -56,7 +56,7 @@ auto DCMModel::reset_network() -> void{
     sNetwork.initialize(settings.networkS.clientsInfo);
 }
 
-auto DCMModel::add_feedback(size_t id, network::Feedback feedback) -> void{
+auto DCMModel::add_feedback(size_t id, net::Feedback feedback) -> void{
     readMessagesL.lock();
     messages.emplace_back(id, feedback);
     readMessagesL.unlock();
@@ -71,7 +71,7 @@ auto DCMModel::add_default_device() -> void{
 }
 
 auto DCMModel::ask_calibration() -> void{
-    std::vector<camera::DCModelSettings> models;
+    std::vector<cam::DCModelSettings> models;
     for(const auto &grabberS : settings.grabbersS){
         models.push_back(grabberS.model);
     }
@@ -91,14 +91,14 @@ auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
     }
 }
 
-auto DCMModel::update_filters(size_t id, const camera::DCFiltersSettings &filters) -> void {
+auto DCMModel::update_filters(size_t id, const cam::DCFiltersSettings &filters) -> void {
     settings.grabbersS[id].filters = filters;
     if(settings.useNormalFilteringSettings){
         sNetwork.update_filters_settings(id, settings.grabbersS[id].filters);
     }
 }
 
-auto DCMModel::update_calibration_filters(size_t id, const camera::DCFiltersSettings &filters) -> void{
+auto DCMModel::update_calibration_filters(size_t id, const cam::DCFiltersSettings &filters) -> void{
     settings.grabbersS[id].calibrationFilters = filters;
     if(!settings.useNormalFilteringSettings){
         sNetwork.update_filters_settings(id, settings.grabbersS[id].calibrationFilters);

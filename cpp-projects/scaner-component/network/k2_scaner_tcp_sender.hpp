@@ -17,13 +17,13 @@
 #include "network/network_types.hpp"
 #include "camera/impl/k2_types.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class K2ScanerTcpSender {
 
 public:
 
-    K2ScanerTcpSender(size_t id, std::vector<network::Interface> *localInterfaces);
+    K2ScanerTcpSender(size_t id, std::vector<net::Interface> *localInterfaces);
     ~K2ScanerTcpSender();
 
 // slots
@@ -32,9 +32,9 @@ public:
     auto disable_writing() -> void;
 
     // commands
-    auto open_camera_command(camera::K2FrameRequest mode) -> void;
+    auto open_camera_command(cam::K2FrameRequest mode) -> void;
     auto close_camera_command() -> void;
-    auto update_settings_command(camera::K2Settings parameters) -> void;
+    auto update_settings_command(cam::K2Settings parameters) -> void;
     auto ask_new_frame_command() -> void;
     auto set_size_udp_packets(int size) -> void;
     auto reading_interface() const -> size_t;

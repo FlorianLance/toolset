@@ -30,7 +30,7 @@
 #include "dc_enums.hpp"
 #include "geometry/quaternion.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
     struct DCJoint{
 

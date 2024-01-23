@@ -43,7 +43,7 @@
 
 using namespace std::chrono;
 using namespace tool::ui;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct ProcessDataWorker::Impl{
 
@@ -88,9 +88,9 @@ struct ProcessDataWorker::Impl{
     std::vector<bool> validityDepth2Rgb;
     std::vector<std::uint32_t> validIdPerPointMesh;
 
-    camera::K2CloudDisplayData cloudData;
-    camera::K2MeshDisplayData meshData;
-    std::array<camera::K2BodyInfos,6> bodiesData;
+    cam::K2CloudDisplayData cloudData;
+    cam::K2MeshDisplayData meshData;
+    std::array<cam::K2BodyInfos,6> bodiesData;
 
     // time measurment
     std::int64_t allProcessTime = 0;

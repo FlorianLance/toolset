@@ -10,7 +10,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "camera/impl/k2_network.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class K2FrameReader{
 public:
@@ -21,7 +21,7 @@ public:
     auto process_packets(std::vector<std::vector<char>*> *data) -> void;
 
 // signals
-    sigslot::signal<camera::K2UdpHeader, std::shared_ptr<camera::K2Frame>> frame_received_signal;
+    sigslot::signal<cam::K2UdpHeader, std::shared_ptr<cam::K2Frame>> frame_received_signal;
     sigslot::signal<std::string> stack_trace_message_signal;
 
 private:

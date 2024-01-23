@@ -31,16 +31,13 @@
 #include "dc_data_settings.hpp"
 #include "dc_actions_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
     struct DCDeviceSettings : io::BinaryFileSettings{
 
         DCConfigSettings configS;
         DCDataSettings dataS;
         DCActionsSettings actionsS;
-
-        // local
-        std::string filePath;
 
         static auto default_init_for_grabber() -> DCDeviceSettings;
         static auto default_init_for_manager() -> DCDeviceSettings;

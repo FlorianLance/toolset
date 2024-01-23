@@ -32,7 +32,7 @@
 // local
 #include "workers/interface_udp_receiver_worker.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 class K2UdpReaderManager;
 using UdpReaderManagerUP = std::unique_ptr<K2UdpReaderManager>;

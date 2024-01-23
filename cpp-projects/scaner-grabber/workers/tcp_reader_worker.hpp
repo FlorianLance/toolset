@@ -32,7 +32,7 @@
 // base
 #include "camera/impl/k2_network.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class TcpReaderWorker;
 using TcpReaderUP = std::unique_ptr<TcpReaderWorker>;
@@ -62,7 +62,7 @@ private:
 
 signals:
 
-    void tcp_packet_received_signal(camera::K2TcpPacket tcpPacket);
+    void tcp_packet_received_signal(cam::K2TcpPacket tcpPacket);
 
     void connected_state_signal(QString readingAddress, int readingPort, bool state);
     void new_connection_signal(QString address, QString port);

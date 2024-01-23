@@ -32,7 +32,7 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class TcpSender {
 

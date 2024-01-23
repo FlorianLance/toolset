@@ -45,7 +45,7 @@ struct DCCloudsSceneDrawer{
         return fboD.is_camera_updated() || fboD.is_screen_updated() || m_redrawClouds;
     }
 
-    auto update_from_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> bool;
+    auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool;
     auto update_from_colored_cloud_data(size_t idCloud, const geo::ColoredCloudData &cloud) -> bool;
 
     auto draw_clouds_to_fbo() -> void;
@@ -68,9 +68,9 @@ struct DCCloudsSceneDrawer{
     // settings
     auto update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void;
     auto update_scene_display_settings(const DCSceneDisplaySettings &sdS) -> void;
-    auto update_model(size_t idCloud, const camera::DCModelSettings &model)  -> void;
+    auto update_model(size_t idCloud, const cam::DCModelSettings &model)  -> void;
 
-    auto update_filters_settings(size_t idCloud, const camera::DCFiltersSettings &filters) -> void;
+    auto update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void;
 
     // signals
     sigslot::signal<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_signal;

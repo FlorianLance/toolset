@@ -38,7 +38,7 @@
 using namespace std;
 
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 
 std::string K2Settings::to_string() const{
     std::ostringstream ss;

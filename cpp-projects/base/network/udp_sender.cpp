@@ -43,7 +43,7 @@ using namespace std::chrono;
 using namespace boost::asio;
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 struct UdpSender::Impl{
     io_service ioService;
@@ -79,16 +79,22 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
 
         if(ip::host_name() == targetName){
             i->endpoint = resolver.resolve(ip::udp::resolver::query(
-                targetName = "localhost", port, ip::udp::resolver::canonical_name));
+                protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(),
+                targetName = "localhost", port, ip::udp::resolver::canonical_name)
+            );
         }else{
-            i->endpoint = resolver.resolve(
-                ip::udp::resolver::query(targetName, port));
+            i->endpoint = resolver.resolve(ip::udp::resolver::query(
+                protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(),
+                targetName,
+                port)
+            );
         }
 
     }catch (const boost::system::system_error& error){
-
-        Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}, error message: {}.\n",
-            targetName, port, error.what()));
+        Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}.\n",
+            targetName, port));
+        // Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}, error message: {}.\n",
+        //                           targetName, port, error.what()));
         clean_socket();
         return false;
     }

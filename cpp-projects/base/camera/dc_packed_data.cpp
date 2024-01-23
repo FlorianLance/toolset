@@ -29,7 +29,7 @@
 #include "dc_packed_data.hpp"
 
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCPackedVoxel::pack(const geo::Pt3<int16_t> &pos, const geo::Pt4<uint8_t> &col) noexcept -> std::tuple<std::uint32_t,std::uint32_t>{
 

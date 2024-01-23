@@ -29,7 +29,7 @@
 #include "camera/dc_types.hpp"
 #include "io/binary_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCDelaySettings : io::BinarySettings{
     std::int64_t delayMs = 0;

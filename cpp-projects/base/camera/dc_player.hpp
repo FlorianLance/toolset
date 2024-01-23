@@ -33,7 +33,7 @@
 #include "states/dc_player_states.hpp"
 #include "dc_volumetric_video.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 class DCPlayer{
 public:

@@ -43,7 +43,7 @@
 
 using namespace tool;
 using namespace tool::scan;
-using namespace tool::camera;
+using namespace tool::cam;
 
 
 void CameraWorker::open_camera(K2FrameRequest mode){

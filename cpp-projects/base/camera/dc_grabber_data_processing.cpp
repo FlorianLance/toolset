@@ -33,7 +33,7 @@
 // local
 #include "camera/dc_frame_uncompressor.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct DCGrabberDataProcessing::Impl{
 

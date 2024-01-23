@@ -30,7 +30,7 @@
 #include "geometry/point3.hpp"
 #include "geometry/point4.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 //    struct DCVoxelData{
 //        std::int64_t idX : 13, idY : 13, idZ : 14, r : 8, g : 8, b : 8;

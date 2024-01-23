@@ -30,7 +30,7 @@
 // local
 #include "utility/tuple_array.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 enum class Protocol : std::uint8_t{
     ipv4, ipv6, unknow
@@ -82,6 +82,7 @@ enum class MessageType : std::int8_t {
     feedback,
     delay,
     synchro,
+    undefined,
     // filter_mask
     SizeEnum
 };

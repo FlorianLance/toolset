@@ -79,11 +79,11 @@ auto DCMController::set_connections() -> void{
     using PlayerD       = graphics::DCPlayerDrawer;
     using CalibD        = graphics::DCCalibratorDrawer;
     // # model
-    using Rec           = camera::DCRecorder;
-    using Player        = camera::DCPlayer;
-    using Calib         = camera::DCCalibrator;
-    using ServerData    = camera::DCServerData;
-    using ServerNet     = network::DCServerNetwork;
+    using Rec           = cam::DCRecorder;
+    using Player        = cam::DCPlayer;
+    using Calib         = cam::DCCalibrator;
+    using ServerData    = cam::DCServerData;
+    using ServerNet     = net::DCServerNetwork;
     using Settings      = DCMSettings;
     using States        = DCMStates;
 
@@ -225,7 +225,7 @@ auto DCMController::set_connections() -> void{
     //    s->use_normal_filtering_for_all_signal.connect(     &K4SMModel::use_normal_filtering_for_all,      model.get());
     //    s->use_calibration_filtering_for_all_signal.connect(&K4SMModel::use_calibration_filtering_for_all, model.get());
     //    s->calibrate_signal.connect(                        [&](){
-    //        std::vector<camera::K4Model> models;
+    //        std::vector<cam::K4Model> models;
     //        for(const auto &grabberS : model.settings.grabbersSet){
     //            models.push_back(grabberS.model);
     //        }

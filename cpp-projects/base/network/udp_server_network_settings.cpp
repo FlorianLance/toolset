@@ -35,7 +35,7 @@
 #include "utility/string.hpp"
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 
 UdpServerNetworkSettings::UdpServerNetworkSettings(){
@@ -69,7 +69,7 @@ auto UdpServerNetworkSettings::initialize(const std::string &filePath) -> bool{
     return false;
 }
 
-auto UdpServerNetworkSettings::add_client(const network::ReadSendNetworkInfos &nClientInfo) -> void{
+auto UdpServerNetworkSettings::add_client(const net::ReadSendNetworkInfos &nClientInfo) -> void{
 
     auto clientInfo = nClientInfo;
     const auto &interfaces   = (clientInfo.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
@@ -87,7 +87,7 @@ auto UdpServerNetworkSettings::add_client(const network::ReadSendNetworkInfos &n
     clientsInfo.push_back(std::move(clientInfo));
 }
 
-auto UdpServerNetworkSettings::update_client(size_t idC, const network::ReadSendNetworkInfos &nClientInfo) -> void{
+auto UdpServerNetworkSettings::update_client(size_t idC, const net::ReadSendNetworkInfos &nClientInfo) -> void{
 
     if(idC >= clientsInfo.size()){
         Logger::error("UdpServerNetworkSettings::update_client: Invalid client id.\n");

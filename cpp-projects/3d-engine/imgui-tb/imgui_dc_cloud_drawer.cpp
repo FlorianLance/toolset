@@ -63,7 +63,7 @@ auto DCCloudDrawer::reset() -> void{
     cpD.clean();
 }
 
-auto DCCloudDrawer::init_from_frame(std::shared_ptr<camera::DCFrame> frame) -> bool {
+auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
 
     if(lastFrameId == frame->idCapture){
         return false;

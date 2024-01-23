@@ -37,11 +37,11 @@
 #include "dc_delay_settings.hpp"
 #include "dc_display_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCMGrabberSettings{
 
-    auto initialize(size_t idC, const network::ReadSendNetworkInfos &clientInfos) -> void;
+    auto initialize(size_t idC, const net::ReadSendNetworkInfos &clientInfos) -> void;
 
     size_t id = 0;
     DCMGrabberNetworkSettings network;
@@ -52,6 +52,12 @@ struct DCMGrabberSettings{
     DCColorSettings color;
     DCModelSettings model;
     DCDelaySettings delay;
+
+    std::string filtersFilePath;
+    std::string calibrationFiltersFilePath;
+    std::string deviceFilePath;
+    std::string colorFilePath;
+    std::string modelFilePath;
 
     DCCloudDisplaySettings cloudDisplay;
 

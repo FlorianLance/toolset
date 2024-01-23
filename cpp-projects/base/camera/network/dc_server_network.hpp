@@ -36,7 +36,7 @@
 #include "camera/dc_compressed_frame.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
@@ -45,25 +45,25 @@ struct DCServerNetwork{
 
     DCServerNetwork();
     ~DCServerNetwork();
-    auto initialize(const std::vector<network::ReadSendNetworkInfos> &clientsInfo) -> void;
+    auto initialize(const std::vector<net::ReadSendNetworkInfos> &clientsInfo) -> void;
     auto clean() -> void;
-    // auto reset_device(size_t idD, const network::ReadSendNetworkInfos &clientInfo) -> void;
+    // auto reset_device(size_t idD, const net::ReadSendNetworkInfos &clientInfo) -> void;
 
     auto init_connection(size_t idG) -> void;
     auto apply_command(size_t idG, Command command) -> void;
-    auto update_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void;
-    auto update_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void;
-    auto update_filters_settings(size_t idG, const camera::DCFiltersSettings &filtersS) -> void;
-    auto update_delay_settings(size_t idG, const camera::DCDelaySettings &delayS) -> void;
+    auto update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void;
+    auto update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void;
+    auto update_filters_settings(size_t idG, const cam::DCFiltersSettings &filtersS) -> void;
+    auto update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void;
 
     auto devices_nb() const noexcept -> size_t;
     auto device_connected(size_t idG) const noexcept -> bool;
 
     // signals
     SSS<size_t, std::int64_t> remote_synchro_signal;
-    SSS<size_t, network::Feedback> remote_feedback_signal;
-    SSS<size_t, std::shared_ptr<camera::DCFrame>> local_frame_signal;
-    SSS<size_t, std::shared_ptr<camera::DCCompressedFrame>> remote_frame_signal;
+    SSS<size_t, net::Feedback> remote_feedback_signal;
+    SSS<size_t, std::shared_ptr<cam::DCFrame>> local_frame_signal;
+    SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
 
 private:
 

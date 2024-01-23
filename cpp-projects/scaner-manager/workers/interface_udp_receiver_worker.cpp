@@ -53,9 +53,9 @@ using namespace boost::asio;
 using namespace boost::asio::detail;
 using namespace boost::asio::ip;
 
-using namespace tool::network;
+using namespace tool::net;
 using namespace tool::ui;
-using namespace tool::camera;
+using namespace tool::cam;
 
 
 struct InterfaceUdpReceiverWorker::Impl{
@@ -74,7 +74,7 @@ struct InterfaceUdpReceiverWorker::Impl{
     std::vector<QByteArray> buffers;
 //    std::vector<std::unique_ptr<std::mutex>> lockers;
 
-    network::Interface interface;
+    net::Interface interface;
     std::atomic_bool connectionValid = false;
 
 //    std::mutex locker;

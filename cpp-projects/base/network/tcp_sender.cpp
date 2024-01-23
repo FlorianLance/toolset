@@ -42,7 +42,7 @@ using namespace std::chrono;
 using namespace boost::asio;
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 struct TcpSender::Impl{
 

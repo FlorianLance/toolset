@@ -36,7 +36,7 @@
 // local
 #include "camera/dc_device_impl.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct AzureKinectDeviceImpl : public DCDeviceImpl{
 

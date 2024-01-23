@@ -13,7 +13,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "network/network_types.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class K2UdpReaderManager{
 

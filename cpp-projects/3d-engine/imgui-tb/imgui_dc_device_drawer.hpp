@@ -40,18 +40,18 @@ struct DCDeviceDrawer : public DCCloudsSceneDrawer{
     auto update() -> void;
     auto draw(bool focusWindow) -> void;
 
-    auto update_frame(std::shared_ptr<camera::DCFrame> frame) -> void;
+    auto update_frame(std::shared_ptr<cam::DCFrame> frame) -> void;
 
     auto save_cloud(const std::string &path) -> void;
 
-    auto update_filters_settings(const camera::DCFiltersSettings &filters) -> void {
+    auto update_filters_settings(const cam::DCFiltersSettings &filters) -> void {
         DCCloudsSceneDrawer::update_filters_settings(0, filters);
     }
 
 private:
     std::mutex locker;
     bool redrawClouds = false;
-    std::shared_ptr<camera::DCFrame> lastFrame = nullptr;
+    std::shared_ptr<cam::DCFrame> lastFrame = nullptr;
     std::int32_t previousFrameId = 0;
 };
 }

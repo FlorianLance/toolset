@@ -28,7 +28,7 @@
 // local
 #include "io/binary_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCActionsSettings : public io::BinaryFileSettings{
 

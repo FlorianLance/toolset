@@ -35,7 +35,7 @@
 #include "utility/logger.hpp"
 
 
-using namespace tool::network;
+using namespace tool::net;
 
 auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &network) -> Header{
 
@@ -45,10 +45,10 @@ auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &netwo
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::init_network_infos), sizeof(UdpNetworkSendingSettings));
+    Header header = Header::generate_mono_packet(MessageType::init_network_infos, sizeof(UdpNetworkSendingSettings));
 
     // init data
-    UdpMonoPacketData::copy_to_data<network::UdpNetworkSendingSettings>(header, &network, packetBuffer);
+    UdpMonoPacketData::copy_to_data<net::UdpNetworkSendingSettings>(header, &network, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -56,7 +56,7 @@ auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &netwo
     return header;
 }
 
-auto DCServerUdpSender::send_update_device_settings_message(const camera::DCDeviceSettings &device) -> Header{
+auto DCServerUdpSender::send_update_device_settings_message(const cam::DCDeviceSettings &device) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_update_device_settings_message: sender not opened, message canceled.\n");
@@ -64,10 +64,10 @@ auto DCServerUdpSender::send_update_device_settings_message(const camera::DCDevi
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::update_device_settings), sizeof(camera::DCDeviceSettings));
+    Header header = Header::generate_mono_packet(MessageType::update_device_settings, sizeof(cam::DCDeviceSettings));
 
     // init data
-    UdpMonoPacketData::copy_to_data<camera::DCDeviceSettings>(header, &device, packetBuffer);
+    UdpMonoPacketData::copy_to_data<cam::DCDeviceSettings>(header, &device, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -75,7 +75,7 @@ auto DCServerUdpSender::send_update_device_settings_message(const camera::DCDevi
     return header;
 }
 
-auto DCServerUdpSender::send_update_color_settings_message(const camera::DCColorSettings &color) -> Header{
+auto DCServerUdpSender::send_update_color_settings_message(const cam::DCColorSettings &color) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_update_color_settings_message: sender not opened, message canceled.\n");
@@ -83,10 +83,10 @@ auto DCServerUdpSender::send_update_color_settings_message(const camera::DCColor
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::update_color_settings), sizeof(camera::DCColorSettings));
+    Header header = Header::generate_mono_packet(MessageType::update_color_settings, sizeof(cam::DCColorSettings));
 
     // init data
-    UdpMonoPacketData::copy_to_data<camera::DCColorSettings>(header, &color, packetBuffer);
+    UdpMonoPacketData::copy_to_data<cam::DCColorSettings>(header, &color, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -94,7 +94,7 @@ auto DCServerUdpSender::send_update_color_settings_message(const camera::DCColor
     return header;
 }
 
-auto DCServerUdpSender::send_delay_settings_message(camera::DCDelaySettings delay) -> Header{
+auto DCServerUdpSender::send_delay_settings_message(cam::DCDelaySettings delay) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_delay_settings_message: sender not opened, message canceled.\n");
@@ -102,10 +102,10 @@ auto DCServerUdpSender::send_delay_settings_message(camera::DCDelaySettings dela
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::delay), sizeof(camera::DCDelaySettings));
+    Header header = Header::generate_mono_packet(MessageType::delay, sizeof(cam::DCDelaySettings));
 
     // init data
-    UdpMonoPacketData::copy_to_data<camera::DCDelaySettings>(header, &delay, packetBuffer);
+    UdpMonoPacketData::copy_to_data<cam::DCDelaySettings>(header, &delay, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -113,7 +113,7 @@ auto DCServerUdpSender::send_delay_settings_message(camera::DCDelaySettings dela
     return header;
 }
 
-auto DCServerUdpSender::send_command_message(network::Command command) -> Header{
+auto DCServerUdpSender::send_command_message(net::Command command) -> Header{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_command_message: sender not opened, message canceled.\n");
@@ -121,10 +121,10 @@ auto DCServerUdpSender::send_command_message(network::Command command) -> Header
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::command), sizeof(Command));
+    Header header = Header::generate_mono_packet(MessageType::command, sizeof(Command));
 
     // init data
-    UdpMonoPacketData::copy_to_data<network::Command>(header, &command, packetBuffer);
+    UdpMonoPacketData::copy_to_data<net::Command>(header, &command, packetBuffer);
 
     // send data
     send_mono_packet(header);
@@ -132,7 +132,7 @@ auto DCServerUdpSender::send_command_message(network::Command command) -> Header
     return header;
 }
 
-auto DCServerUdpSender::send_update_filters_settings_message(const camera::DCFiltersSettings &filters) -> bool{
+auto DCServerUdpSender::send_update_filters_settings_message(const cam::DCFiltersSettings &filters) -> bool{
 
     if(!is_opened()){
         Logger::error("DCServerUdpSender::send_update_filters_settings_message: sender not opened, message canceled.\n");
@@ -141,7 +141,7 @@ auto DCServerUdpSender::send_update_filters_settings_message(const camera::DCFil
 
     // init header
     Header header;
-    header.type      = to_i8(MessageType::update_filters);
+    header.type      = MessageType::update_filters;
     header.idMessage = static_cast<std::int32_t>(idLastMasksFiltersMessageSent);
 
     // init data
@@ -173,7 +173,7 @@ auto DCClientUdpSender::send_synchronisation_message() -> bool{
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::synchro), 0);
+    Header header = Header::generate_mono_packet(MessageType::synchro, 0);
 
     // init data
     UdpMonoPacketData::copy_only_header_to_data(header, packetBuffer);
@@ -190,7 +190,7 @@ auto DCClientUdpSender::send_feedback_message(Feedback feedback) -> bool{
     }
 
     // init header
-    Header header = Header::generate_mono_packet(to_i8(MessageType::feedback), sizeof(Feedback));
+    Header header = Header::generate_mono_packet(MessageType::feedback, sizeof(Feedback));
 
     // init data
     UdpMonoPacketData::copy_to_data<Feedback>(header, &feedback, packetBuffer);
@@ -199,7 +199,7 @@ auto DCClientUdpSender::send_feedback_message(Feedback feedback) -> bool{
     return send_mono_packet(header) != 0;
 }
 
-auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<camera::DCCompressedFrame> frame) -> bool{
+auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool{
 
     if(!is_opened()){
         return false;
@@ -207,7 +207,7 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<camera::DC
 
     // init header
     Header header;
-    header.type      = to_i8(MessageType::compressed_frame_data);
+    header.type      = MessageType::compressed_frame_data;
     header.idMessage = static_cast<std::int32_t>(idLastFrameMutliPacketsMessageSent);
 
     // init data

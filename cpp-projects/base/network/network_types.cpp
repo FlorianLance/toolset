@@ -36,7 +36,7 @@
 #include "utility/logger.hpp"
 
 using namespace boost::asio;
-using namespace tool::network;
+using namespace tool::net;
 
 auto Host::get_name() -> std::string{
     return boost::asio::ip::host_name();
@@ -50,17 +50,15 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
 
     io_service ioService;
     udp::resolver resolver(ioService);
-    udp::resolver::query query(host_name(), "");
+    udp::resolver::query query(protocol ==  Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(), host_name(), "");
 
     std::vector<Interface> interfaces;
     try{
         udp::resolver::iterator it = resolver.resolve(query);
 
         while(it!=udp::resolver::iterator()){
-            address addr =(it++)->endpoint().address();
-            if((addr.is_v6() ? Protocol::ipv6 : (addr.is_v4() ? Protocol::ipv4 : Protocol::unknow)) == protocol){
-                interfaces.emplace_back(Interface{protocol,addr.to_string()});                
-            }
+            address addr = (it++)->endpoint().address();
+            interfaces.emplace_back(Interface{protocol,addr.to_string()});
         }
     }catch (const boost::system::system_error &error){
         Logger::error(std::format("list_local_interfaces: Cannot list interfaces, error message: {}\n", error.what()));

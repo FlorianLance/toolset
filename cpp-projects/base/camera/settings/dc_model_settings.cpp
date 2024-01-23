@@ -33,7 +33,7 @@
 #include "utility/string.hpp"
 
 using namespace std::literals::string_view_literals;
-using namespace tool::camera;
+using namespace tool::cam;
 
 DCModelSettings::DCModelSettings(){
     sType   = io::SettingsType::Model;

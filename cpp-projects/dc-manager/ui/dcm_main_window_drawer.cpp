@@ -43,8 +43,8 @@
 #include "dcm_signals.hpp"
 
 using namespace tool::graphics;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 
 auto DCMMainWindowDrawer::initialize(size_t nbGrabbers) -> bool{
 

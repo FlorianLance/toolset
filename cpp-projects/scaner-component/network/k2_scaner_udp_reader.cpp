@@ -23,8 +23,8 @@ using namespace boost::asio::detail;
 using namespace boost::asio::ip;
 
 using namespace tool;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 
 struct K2ScanerUdpReader::Impl{
 
@@ -42,7 +42,7 @@ struct K2ScanerUdpReader::Impl{
     std::vector<std::vector<char>> buffers;
     std::vector<std::unique_ptr<std::mutex>> lockers;
 
-    network::Interface interface;
+    net::Interface interface;
     std::atomic_bool connectionValid = false;
 
     std::thread thread;

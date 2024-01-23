@@ -52,7 +52,7 @@ public :
 
 public slots:
 
-    void process_and_display(std::shared_ptr<camera::K2Frame> frame);
+    void process_and_display(std::shared_ptr<cam::K2Frame> frame);
     void save(const std::string &path);
 
 signals:
@@ -65,9 +65,9 @@ signals:
     void update_depth_signal(QImage);
     void update_infra_signal(QImage);
     // # opengl
-    void update_cloud_data_signal(camera::K2CloudDisplayData *cloudData);
-    void update_mesh_data_signal(camera::K2MeshDisplayData *meshData);
-    void update_joint_data_signal(std::array<camera::K2BodyInfos,6> *bodiesData);
+    void update_cloud_data_signal(cam::K2CloudDisplayData *cloudData);
+    void update_mesh_data_signal(cam::K2MeshDisplayData *meshData);
+    void update_joint_data_signal(std::array<cam::K2BodyInfos,6> *bodiesData);
 
 private :
 

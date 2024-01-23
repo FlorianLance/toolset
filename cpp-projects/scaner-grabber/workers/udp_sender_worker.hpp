@@ -32,7 +32,7 @@
 // base
 #include "camera/impl/k2_network.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class UdpSenderWorker;
 using UdpSenderWorkerUP = std::unique_ptr<UdpSenderWorker>;
@@ -49,7 +49,7 @@ public slots:
 
     void enable_writing(QString writingAddress, int writingPort);
     void disable_writing();
-    void send_frame(camera::K2TcpPacket command, std::shared_ptr<camera::K2Frame> frame);
+    void send_frame(cam::K2TcpPacket command, std::shared_ptr<cam::K2Frame> frame);
 
 signals:
 

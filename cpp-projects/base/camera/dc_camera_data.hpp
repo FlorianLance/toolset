@@ -31,7 +31,7 @@
 #include "geometry/matrix4.hpp"
 #include "dc_compressed_frame.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 class DCVolumetricVideo;
 

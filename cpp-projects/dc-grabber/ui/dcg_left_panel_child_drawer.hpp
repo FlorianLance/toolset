@@ -53,22 +53,22 @@ private:
     auto draw_client_info_tab_item(DCGSettings &settings) -> void;
 
     auto draw_device_tab_item(
-        camera::DCDeviceSettings &device) -> void;
+        cam::DCDeviceSettings &device) -> void;
 
     auto draw_filters_tab_item(
         ui::DCGDisplaySettingsSettings &ui,
-        const camera::DCConfigSettings &config,
-        camera::DCFiltersSettings &filters) -> void;
+        const cam::DCConfigSettings &config,
+        cam::DCFiltersSettings &filters) -> void;
 
     auto draw_colors_settings_tab_item(
-        camera::DCType type,
-        camera::DCColorSettings &colors) -> void;
+        cam::DCType type,
+        cam::DCColorSettings &colors) -> void;
 
     auto draw_display_tab_item(ui::DCGDisplaySettingsSettings &ui)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
-    auto draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void;
-    auto draw_model_tab_item(camera::DCModelSettings &model)-> void;
+    auto draw_recording_tab_item(cam::DCRecorderStates &recStates, cam::DCRecorderSettings &recSetings) -> void;
+    auto draw_model_tab_item(cam::DCModelSettings &model)-> void;
 
     ImguiLogs m_logs;
     bool m_autoUpdate = true;

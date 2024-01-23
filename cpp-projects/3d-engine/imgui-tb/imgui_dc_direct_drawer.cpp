@@ -38,7 +38,7 @@ auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
     DCCloudsSceneDrawer::initialize(nbGrabbers);
 }
 
-auto DCDirectDrawer::set_frame(size_t idGrabber, std::shared_ptr<camera::DCFrame> frame) -> void{
+auto DCDirectDrawer::set_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
     if(update_from_frame(idGrabber, frame)){
         m_redrawClouds = true;
     }

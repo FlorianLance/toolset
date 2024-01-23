@@ -41,8 +41,8 @@
 #include "dcm_signals.hpp"
 
 using namespace tool;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 
 
 auto DCMSettings::initialize() -> bool{

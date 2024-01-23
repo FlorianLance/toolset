@@ -34,7 +34,7 @@
 #include "camera/settings/dc_delay_settings.hpp"
 
 
-namespace tool::network {
+namespace tool::net {
 
 
 enum class DCServerType{
@@ -48,10 +48,10 @@ public:
     virtual auto clean() -> void{}    
 
     virtual auto apply_command(Command command) -> void{static_cast<void>(command);}
-    virtual auto update_device_settings(const camera::DCDeviceSettings &deviceS) -> void{static_cast<void>(deviceS);}
-    virtual auto update_color_settings(const camera::DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
-    virtual auto update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
-    virtual auto update_delay_settings(const camera::DCDelaySettings &delayS) -> void{static_cast<void>(delayS);}
+    virtual auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{static_cast<void>(deviceS);}
+    virtual auto update_color_settings(const cam::DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
+    virtual auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
+    virtual auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void{static_cast<void>(delayS);}
 
     virtual constexpr auto type() const noexcept -> DCServerType {return DCServerType::undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}

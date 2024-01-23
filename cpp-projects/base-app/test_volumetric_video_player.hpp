@@ -10,7 +10,7 @@
 auto test_dc_player() -> void{
 
     using namespace tool;
-    using namespace tool::camera;
+    using namespace tool::cam;
     using namespace std::chrono;
 
     DCPlayer player;

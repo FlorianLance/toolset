@@ -37,7 +37,7 @@
 
 using namespace std::chrono;
 using namespace tool::ui;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct ProcessDataWorker::Impl{
 
@@ -84,9 +84,9 @@ struct ProcessDataWorker::Impl{
     std::vector<std::uint32_t> validIdPerPointMesh;
 
     // processed data for display
-    camera::K2CloudDisplayData cloudData;
-    camera::K2MeshDisplayData meshData;
-    std::array<camera::K2BodyInfos,6> bodiesData;
+    cam::K2CloudDisplayData cloudData;
+    cam::K2MeshDisplayData meshData;
+    std::array<cam::K2BodyInfos,6> bodiesData;
 
     // time measurment
     std::int64_t allProcessTime = 0;
@@ -96,7 +96,7 @@ struct ProcessDataWorker::Impl{
     data::IntegersEncoder depthDecompressor;
 
     // data received
-    camera::K2UdpHeader header;
+    cam::K2UdpHeader header;
     std::shared_ptr<K2Frame> frame = nullptr;
 
     // save data
@@ -118,7 +118,7 @@ K2MeshDisplayData *ProcessDataWorker::mesh_data(){
     return &m_p->meshData;
 }
 
-void ProcessDataWorker::process_data_from_udp_frame(camera::K2UdpHeader header, std::shared_ptr<K2Frame> frame){
+void ProcessDataWorker::process_data_from_udp_frame(cam::K2UdpHeader header, std::shared_ptr<K2Frame> frame){
 
     if(isProcessing){
         return;

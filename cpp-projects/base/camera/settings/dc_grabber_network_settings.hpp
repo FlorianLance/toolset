@@ -30,7 +30,7 @@
 // local
 #include "network/network_enums.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCMGrabberNetworkSettings{
 
@@ -41,7 +41,7 @@ struct DCMGrabberNetworkSettings{
     int readingPort;
     std::string sendingAdress;
     int sendingPort;
-    network::Protocol protocol;
+    net::Protocol protocol;
 
     size_t lastFrameIdReceived = 0;
 };

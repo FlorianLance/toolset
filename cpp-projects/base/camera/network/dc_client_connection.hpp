@@ -87,7 +87,7 @@ public:
     }
 };
 
-namespace tool::network {
+namespace tool::net {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
@@ -97,14 +97,14 @@ class DCClientConnection{
 public:
 
     auto init_connections() -> void;
-    auto start_reading(network::UdpClientNetworkSettings *networkS) -> bool;
-    auto init_sender(network::UdpClientNetworkSettings *networkS) -> bool;
+    auto start_reading(net::UdpClientNetworkSettings *networkS) -> bool;
+    auto init_sender(net::UdpClientNetworkSettings *networkS) -> bool;
     auto ping_server() -> void;
     auto disconnect_sender() -> void;
     auto update() -> void;
     auto clean() -> void;
 
-    auto send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void;
+    auto send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
     auto send_feedback(Feedback feedback) -> void;
 
     auto last_frame_id_sent() const -> size_t;
@@ -112,11 +112,11 @@ public:
     auto last_frame_sending_duration_micros_s() const -> std::int64_t{return lastFrameSendingDurationMicrosS;}
 
     // signals
-    static inline SSS<std::shared_ptr<network::UdpNetworkSendingSettings>> receive_init_network_sending_settings_signal;
-    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> receive_device_settings_signal;
-    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> receive_color_settings_signal;
-    static inline SSS<std::shared_ptr<camera::DCFiltersSettings>> receive_filters_signal;    
-    static inline SSS<UdpMonoPacketMessage<camera::DCDelaySettings>> receive_delay_signal;
+    static inline SSS<std::shared_ptr<net::UdpNetworkSendingSettings>> receive_init_network_sending_settings_signal;
+    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>>> receive_device_settings_signal;
+    static inline SSS<std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>>> receive_color_settings_signal;
+    static inline SSS<std::shared_ptr<cam::DCFiltersSettings>> receive_filters_signal;    
+    static inline SSS<UdpMonoPacketMessage<cam::DCDelaySettings>> receive_delay_signal;
 
     static inline SSS<> shutdown_signal;
     static inline SSS<> quit_signal;
@@ -131,7 +131,7 @@ private:
     std::unique_ptr<std::thread> sendMessagesT = nullptr;
     std::atomic_bool sendMessages = false;
 
-    Queue<std::variant<std::shared_ptr<camera::DCCompressedFrame>, Feedback>> messagesToSend;
+    Queue<std::variant<std::shared_ptr<cam::DCCompressedFrame>, Feedback>> messagesToSend;
     auto send_messages_loop() -> void;
 
     // reader
@@ -145,16 +145,16 @@ private:
     // messages
     std::pair<Header, std::shared_ptr<UdpNetworkSendingSettings>> m_initNetworkInfosMessage =
         std::make_pair<Header, std::shared_ptr<UdpNetworkSendingSettings>>({},nullptr);
-    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> m_updateDeviceSettingsMessage =
-        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>>({},nullptr);
-    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> m_updateColorSettingsMessage =
-        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>>({},nullptr);
+    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>>> m_updateDeviceSettingsMessage =
+        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>>>({},nullptr);
+    std::pair<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>>> m_updateColorSettingsMessage =
+        std::make_pair<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>>>({},nullptr);
     std::pair<Header, std::optional<Command>> m_commandMessage =
         std::make_pair<Header, std::optional<Command>>({},std::nullopt);
-    std::pair<Header, std::shared_ptr<camera::DCFiltersSettings>> m_updateFiltersMessage =
-        std::make_pair<Header, std::shared_ptr<camera::DCFiltersSettings>>({},nullptr);
-    std::pair<Header, std::optional<UdpMonoPacketMessage<camera::DCDelaySettings>>> m_updateDelayMessage =
-        std::make_pair<Header, std::optional<UdpMonoPacketMessage<camera::DCDelaySettings>>>({},std::nullopt);
+    std::pair<Header, std::shared_ptr<cam::DCFiltersSettings>> m_updateFiltersMessage =
+        std::make_pair<Header, std::shared_ptr<cam::DCFiltersSettings>>({},nullptr);
+    std::pair<Header, std::optional<UdpMonoPacketMessage<cam::DCDelaySettings>>> m_updateDelayMessage =
+        std::make_pair<Header, std::optional<UdpMonoPacketMessage<cam::DCDelaySettings>>>({},std::nullopt);
 
 //    std::int64_t m_diffTimestampFromManager = 0;
     std::atomic<size_t> m_lastFrameIdSent = 0;

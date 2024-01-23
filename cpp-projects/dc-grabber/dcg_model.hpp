@@ -44,8 +44,8 @@ struct DCGModel{
     auto trigger_settings() -> void;    
 
     DCGSettings settings;
-    network::DCClientConnection connection;
-    camera::DCDeviceManager device;
-    camera::DCRecorder recorder;
+    net::DCClientConnection connection;
+    cam::DCDeviceManager device;
+    cam::DCRecorder recorder;
 };
 }

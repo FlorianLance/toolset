@@ -52,8 +52,8 @@ struct DCMSettings{
 
     // settings
     auto process_settings_action(SAction action, STarget target, SType type, SFile file, size_t id) -> void;
-    auto update_model(size_t id, const camera::DCModelSettings &model) -> void;
-    auto update_color_settings_from_device(size_t id, const camera::DCColorSettings &color) -> void;
+    auto update_model(size_t id, const cam::DCModelSettings &model) -> void;
+    auto update_color_settings_from_device(size_t id, const cam::DCColorSettings &color) -> void;
 
     // trigger
     auto trigger_all_models() -> void;
@@ -64,12 +64,12 @@ struct DCMSettings{
     DCMUiSettings uiS;    
     // camera
     DCSceneDisplaySettings sceneDisplayS;
-    camera::DCRecorderSettings recorderS;
-    camera::DCPlayerSettings playerS;
-    camera::DCCalibratorSettings calibratorS;
-    std::vector<camera::DCMGrabberSettings> grabbersS;
-    // network
-    network::UdpServerNetworkSettings networkS;
+    cam::DCRecorderSettings recorderS;
+    cam::DCPlayerSettings playerS;
+    cam::DCCalibratorSettings calibratorS;
+    std::vector<cam::DCMGrabberSettings> grabbersS;
+    // net
+    net::UdpServerNetworkSettings networkS;
     // graphics
     graphics::DCCalibratorDrawerSettings calibratorDrawerS;
 

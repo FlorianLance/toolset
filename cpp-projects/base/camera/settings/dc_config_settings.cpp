@@ -33,7 +33,7 @@
 #include "utility/io_data.hpp"
 #include "utility/logger.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCConfigSettings::default_init_for_grabber() -> DCConfigSettings{
     DCConfigSettings config;

@@ -33,7 +33,7 @@
 #include "network/network_types.hpp"
 #include "io/text_settings.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 struct UdpClientNetworkSettings : io::TextSettings{
 
@@ -50,10 +50,10 @@ struct UdpClientNetworkSettings : io::TextSettings{
     Protocol protocol = Protocol::unknow;
 
     // local
-    std::vector<network::Interface> ipv4Interfaces = {};
-    std::vector<network::Interface> ipv6Interfaces = {};
+    std::vector<net::Interface> ipv4Interfaces = {};
+    std::vector<net::Interface> ipv6Interfaces = {};
 
-    network::Interface udpReadingInterface;
+    net::Interface udpReadingInterface;
     int udpSendingPort = 8889;
     std::string udpSendingAdress;
     size_t lastFrameIdSent = 0;

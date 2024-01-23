@@ -39,7 +39,7 @@
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 
 struct DCCompressedFrame::Impl{

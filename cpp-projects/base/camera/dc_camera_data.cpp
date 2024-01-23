@@ -33,7 +33,7 @@
 // local
 #include "utility/logger.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 //DCCameraData &DCCameraData::operator=(const DCCameraData &other){
 //    this->transform = other.transform;

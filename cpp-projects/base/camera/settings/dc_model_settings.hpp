@@ -30,7 +30,7 @@
 #include "geometry/matrix4.hpp"
 #include "io/text_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 struct DCModelSettings : io::TextSettings{
 
     geo::Mat4f transformation = geo::Mat4f::identity();
@@ -39,7 +39,6 @@ struct DCModelSettings : io::TextSettings{
     geo::Vec3f rotation = {};
     geo::Vec3f translation = {};
     geo::Vec3f scaling = {1.f,1.f,1.f};
-    std::string filePath;
 
     DCModelSettings();
     auto compute_full_transformation() const -> geo::Mat4f;

@@ -49,19 +49,19 @@ class ScanerManagerWindow : public QMainWindow{
 
 public:
 
-    ScanerManagerWindow(network::Protocol interfaceProtocol);
+    ScanerManagerWindow(net::Protocol interfaceProtocol);
     ~ScanerManagerWindow();
 
 private:
 
-    void init_managers(const std::vector<camera::K2GrabberTargetInfo> &infos);
-    void init_ui(const std::vector<camera::K2GrabberTargetInfo> &infos);
+    void init_managers(const std::vector<cam::K2GrabberTargetInfo> &infos);
+    void init_ui(const std::vector<cam::K2GrabberTargetInfo> &infos);
     void init_connections();
 
 public slots:
 
     void set_loop_ask_frames_state(bool state);
-    void copy_camera_parameters(camera::K2Settings p);
+    void copy_camera_parameters(cam::K2Settings p);
 
     // threads
     void quit_threads();
@@ -80,7 +80,7 @@ public slots:
 
     // cameras
     void focus_camera(int index);
-//    void update_all_grabbers_with_identical_settings(camera::K2Settings parameters);
+//    void update_all_grabbers_with_identical_settings(cam::K2Settings parameters);
     void save_grabbers_settings_config_files();
     void save_video_file();
 
@@ -115,17 +115,17 @@ private:
 
     // managers
     std::unique_ptr<CalibrationManager> m_calibrationManager = nullptr;
-    std::unique_ptr<network::K2UdpReaderManager> m_udpReaderManager = nullptr;
+    std::unique_ptr<net::K2UdpReaderManager> m_udpReaderManager = nullptr;
     std::vector<std::unique_ptr<GrabberController>> m_grabbersManager;
 
     // timers
     int m_totalTimeout = 0;
     QTimer m_askFrameTimer;
 
-    std::vector<network::Interface> localInterfaces;
+    std::vector<net::Interface> localInterfaces;
 
     bool saveVideo = false;
-    std::vector<std::tuple<size_t, std::shared_ptr<camera::K2Frame>>> m_savedData;
+    std::vector<std::tuple<size_t, std::shared_ptr<cam::K2Frame>>> m_savedData;
 
 };
 }

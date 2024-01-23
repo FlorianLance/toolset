@@ -29,18 +29,17 @@
 
 #include "dc_server_network.hpp"
 
+// std
+#include <format>
+
 // local
 #include "utility/logger.hpp"
-#include "utility/format.hpp"
-
 #include "dc_server_local_device.hpp"
 #include "dc_server_remote_device.hpp"
 
-#include <iostream>
 
-
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 using namespace std::literals::string_view_literals;
 
 struct DCServerNetwork::Impl{
@@ -54,7 +53,7 @@ DCServerNetwork::~DCServerNetwork(){
     clean();
 }
 
-auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos> &clientsInfo) -> void{
+auto DCServerNetwork::initialize(const std::vector<net::ReadSendNetworkInfos> &clientsInfo) -> void{
 
     if(devices_nb() != 0){
         clean();
@@ -68,7 +67,7 @@ auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos
         if(clientInfo.local){
             Logger::message("[DCServerNetwork::initialize] Create local device. \n");
             auto lDevice = std::make_unique<DCServerLocalDevice>();
-            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCFrame> frame){
+            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
                 this->local_frame_signal(idDevice, std::move(frame));
             });
             device = std::move(lDevice);
@@ -78,10 +77,10 @@ auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos
             rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t s){
                 this->remote_synchro_signal(idDevice, s);
             });
-            rDevice->remote_feedback_signal.connect([this,idDevice](network::Feedback feedback){
+            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
                 this->remote_feedback_signal(idDevice, feedback);
             });
-            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<camera::DCCompressedFrame> cFrame){
+            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){                
                 this->remote_frame_signal(idDevice, std::move(cFrame));
             });
             device = std::move(rDevice);
@@ -95,6 +94,7 @@ auto DCServerNetwork::initialize(const std::vector<network::ReadSendNetworkInfos
         Logger::message("[DCServerNetwork::initialize] Add device to list.\n");
         i->devices.push_back(std::move(device));
         ++idDevice;
+
     }
 }
 
@@ -106,7 +106,7 @@ auto DCServerNetwork::clean() -> void{
     i->devices.clear();
 }
 
-// auto DCServerNetwork::reset_device(size_t idD, const network::ReadSendNetworkInfos &clientInfo) -> void{
+// auto DCServerNetwork::reset_device(size_t idD, const net::ReadSendNetworkInfos &clientInfo) -> void{
 //     if(idD < devices_nb()){
 //         i->devices[idD]->clean();
 
@@ -134,7 +134,7 @@ auto DCServerNetwork::apply_command(size_t idG, Command command) -> void {
     }
 }
 
-auto DCServerNetwork::update_device_settings(size_t idG, const camera::DCDeviceSettings &deviceS) -> void {
+auto DCServerNetwork::update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void {
     if(idG < i->devices.size()){
         i->devices[idG]->update_device_settings(deviceS);
     }else{
@@ -142,7 +142,7 @@ auto DCServerNetwork::update_device_settings(size_t idG, const camera::DCDeviceS
     }
 }
 
-auto DCServerNetwork::update_color_settings(size_t idG, const camera::DCColorSettings &colorS) -> void {
+auto DCServerNetwork::update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void {
     if(idG < i->devices.size()){
         i->devices[idG]->update_color_settings(colorS);
     }else{
@@ -150,7 +150,7 @@ auto DCServerNetwork::update_color_settings(size_t idG, const camera::DCColorSet
     }
 }
 
-auto DCServerNetwork::update_filters_settings(size_t idG, const camera::DCFiltersSettings &filters) -> void {
+auto DCServerNetwork::update_filters_settings(size_t idG, const cam::DCFiltersSettings &filters) -> void {
     if(idG < i->devices.size()){
         i->devices[idG]->update_filters_settings(filters);
     }else{
@@ -158,7 +158,7 @@ auto DCServerNetwork::update_filters_settings(size_t idG, const camera::DCFilter
     }
 }
 
-auto DCServerNetwork::update_delay_settings(size_t idG, const camera::DCDelaySettings &delay) -> void{
+auto DCServerNetwork::update_delay_settings(size_t idG, const cam::DCDelaySettings &delay) -> void{
     if(idG < i->devices.size()){
         i->devices[idG]->update_delay_settings(delay);
     }else{

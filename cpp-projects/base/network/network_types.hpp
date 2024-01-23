@@ -36,7 +36,7 @@
 // local
 #include "network_enums.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 struct Host{
     [[maybe_unused]] static auto get_name() -> std::string;

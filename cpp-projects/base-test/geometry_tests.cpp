@@ -935,7 +935,7 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
         Logger::message(std::format("max_id: {}\n", cloud.vertices.max_id()));
 
 
-        camera::DCFrame f;
+        cam::DCFrame f;
         for(size_t ii = 0; ii < 10000; ++ii){
 //            f.cloud.vertices.push_back({(rand()%1000)*0.001f,(rand()%2000)*0.001f,(rand()%3000)*0.001f});
 //            f.cloud.colors.push_back({(rand()%1000)*0.001f,(rand()%1000)*0.001f,(rand()%1000)*0.001f});

@@ -32,7 +32,7 @@
 // base
 #include "camera/impl/k2_network.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class FrameReaderW : public QObject{
 Q_OBJECT
@@ -47,7 +47,7 @@ public slots:
 
 signals:
 
-    auto frame_received_signal(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame) -> void;
+    auto frame_received_signal(cam::K2UdpHeader header, std::shared_ptr<cam::K2Frame> frame) -> void;
 
 private:
 

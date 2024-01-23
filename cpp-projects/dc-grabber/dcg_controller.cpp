@@ -80,11 +80,11 @@ auto DCGController::set_connections() -> void{
 
     // aliases
     using Sett  = DCGSettings;
-    using CCo   = network::DCClientConnection;
-    using Rec   = camera::DCRecorder;
+    using CCo   = net::DCClientConnection;
+    using Rec   = cam::DCRecorder;
     using RecD  = graphics::DCRecorderDrawer;
     using DevD  = graphics::DCDeviceDrawer;
-    using DevM  = camera::DCDeviceManager;
+    using DevM  = cam::DCDeviceManager;
 
     // pointers
     auto s    = DCGSignals::get();

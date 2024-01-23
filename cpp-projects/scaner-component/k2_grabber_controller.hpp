@@ -16,7 +16,6 @@
 // base
 #include "thirdparty/sigslot/signal.hpp"
 #include "geometry/point4.hpp"
-#include "utility/utility.hpp"
 #include "utility/io_file.hpp"
 #include "camera/impl/k2_config_files.hpp"
 
@@ -32,7 +31,7 @@ class K2GrabberController{
 
 public :
 
-    K2GrabberController(network::K2UdpReaderManager *udpReaderManager, std::vector<network::Interface> *localInterfaces, size_t id, tool::camera::K2GrabberTargetInfo info);
+    K2GrabberController(net::K2UdpReaderManager *udpReaderManager, std::vector<net::Interface> *localInterfaces, size_t id, tool::cam::K2GrabberTargetInfo info);
 
     // init
     void init_connections();
@@ -48,9 +47,9 @@ public :
 
     // commands
     void ask_new_frame();
-    void open_camera_mode(camera::K2FrameRequest mode);
+    void open_camera_mode(cam::K2FrameRequest mode);
     void close_camera_mode();
-    void set_camera_parameters(camera::K2Settings p);
+    void set_camera_parameters(cam::K2Settings p);
 
     // settings    
     void update_size_udp_packet(int size);
@@ -64,9 +63,9 @@ public :
     sigslot::signal<size_t, size_t, size_t, size_t> frame_dropped_signal;
     sigslot::signal<size_t, size_t, std::int64_t, std::int64_t> frame_processed_signal;
 
-    sigslot::signal<size_t, camera::K2CloudDisplayData *> update_cloud_data_signal;
-    sigslot::signal<size_t, camera::K2MeshDisplayData *> update_mesh_data_signal;
-    sigslot::signal<size_t, camera::K2BodiesDisplayData *> update_bodies_data_signal;
+    sigslot::signal<size_t, cam::K2CloudDisplayData *> update_cloud_data_signal;
+    sigslot::signal<size_t, cam::K2MeshDisplayData *> update_mesh_data_signal;
+    sigslot::signal<size_t, cam::K2BodiesDisplayData *> update_bodies_data_signal;
 
 public:
 
@@ -80,17 +79,17 @@ private:
     bool m_wConnection = false;
 
     // tcp sender
-    std::unique_ptr<network::K2ScanerTcpSender> m_tcpSender = nullptr;
+    std::unique_ptr<net::K2ScanerTcpSender> m_tcpSender = nullptr;
 
     // udp reader
-    network::K2UdpReaderManager *m_udpReaderManager = nullptr;
+    net::K2UdpReaderManager *m_udpReaderManager = nullptr;
 
     // data processing
     std::unique_ptr<K2ProcessData> m_dataProcess = nullptr;
     std::unique_ptr<std::thread> m_dataProcessT = nullptr;
 
     // frame reader
-    std::unique_ptr<network::K2FrameReader> m_frameReader = nullptr;
+    std::unique_ptr<net::K2FrameReader> m_frameReader = nullptr;
     std::unique_ptr<std::thread> m_frameReaderT;
 
     std::int64_t m_lastTime = 0;
@@ -99,7 +98,7 @@ private:
     size_t m_packetsLost = 0;
     size_t m_framesLost = 0;
 
-    camera::K2GrabberTargetInfo m_info;
+    cam::K2GrabberTargetInfo m_info;
 };
 
 }

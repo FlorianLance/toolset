@@ -32,7 +32,7 @@
 // base
 #include "network/network_types.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class InterfaceUdpReceiverWorker;
 using InterfaceUdpReceiverWorkerUP = std::unique_ptr<InterfaceUdpReceiverWorker>;

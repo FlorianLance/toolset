@@ -40,7 +40,7 @@
 
 using namespace tool;
 using namespace tool::graphics;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
 
@@ -65,7 +65,7 @@ auto DCCloudsSceneDrawer::reset() -> void{
     }
 }
 
-auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> bool {
+auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool {
     if(idCloud < cloudsD.size()){
         return cloudsD[idCloud].init_from_frame(std::move(frame));
     }
@@ -151,7 +151,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                 }
             }
 
-            if(cloudD.filters.p1FMode != tool::camera::DCFiltersSettings::PlaneFilteringMode::None && plane1D){
+            if(cloudD.filters.p1FMode != tool::cam::DCFiltersSettings::PlaneFilteringMode::None && plane1D){
 
                 auto p1 = cloudD.filters.p1A;
                 auto p2 = cloudD.filters.p1B;
@@ -460,9 +460,10 @@ auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DC
     if(idCloud < cloudsD.size()){
         cloudsD[idCloud].display = cloudDisplay;
         m_redrawClouds = true;
-    }else{
-        Logger::error("invalid id cloud\n");
     }
+    // else{
+    //     Logger::error("invalid id cloud\n");
+    // }
 }
 
 auto DCCloudsSceneDrawer::update_scene_display_settings(const DCSceneDisplaySettings &sdS) -> void{
@@ -470,13 +471,13 @@ auto DCCloudsSceneDrawer::update_scene_display_settings(const DCSceneDisplaySett
     m_redrawClouds = true;
 }
 
-auto DCCloudsSceneDrawer::update_model(size_t idCloud, const camera::DCModelSettings &model) -> void{
+auto DCCloudsSceneDrawer::update_model(size_t idCloud, const cam::DCModelSettings &model) -> void{
     cloudsD[idCloud].model = model.compute_full_transformation();
     m_redrawClouds = true;
 }
 
 // #include <iostream>
-auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const camera::DCFiltersSettings &filters) -> void {
+auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void {
     cloudsD[idCloud].filters = filters;
     m_redrawClouds = true;
 }

@@ -34,7 +34,7 @@
 // local
 #include "camera/dc_frame.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct RANSACSettings{
 

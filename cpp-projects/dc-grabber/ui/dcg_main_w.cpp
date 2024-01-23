@@ -35,8 +35,8 @@
 #include "imgui-tb/imgui_ui_drawer.hpp"
 
 using namespace tool::graphics;
-using namespace tool::camera;
-using namespace tool::network;
+using namespace tool::cam;
+using namespace tool::net;
 
 auto DCGMainW::initialize() -> bool{
 

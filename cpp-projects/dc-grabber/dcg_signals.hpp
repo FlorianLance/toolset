@@ -59,17 +59,17 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
     // config
-    SSS<network::UdpClientNetworkSettings*> init_network_sending_settings_signal;
+    SSS<net::UdpClientNetworkSettings*> init_network_sending_settings_signal;
     SSS<size_t,const DCCloudDisplaySettings&> update_cloud_display_settings_signal;
     SSS<const DCSceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<const camera::DCFiltersSettings&> update_filters_signal;
-    SSS<const camera::DCColorSettings&> update_color_settings_signal;
-    SSS<const camera::DCDeviceSettings&> update_device_settings_signal;
-    SSS<camera::DCDelaySettings> update_delay_signal;
+    SSS<const cam::DCFiltersSettings&> update_filters_signal;
+    SSS<const cam::DCColorSettings&> update_color_settings_signal;
+    SSS<const cam::DCDeviceSettings&> update_device_settings_signal;
+    SSS<cam::DCDelaySettings> update_delay_signal;
     SSS<> update_device_list_signal;
     SSS<> update_device_type_signal;
 
-    SSS<size_t, const camera::DCModelSettings&> update_model_signal;
+    SSS<size_t, const cam::DCModelSettings&> update_model_signal;
     SSS<ui::DCGDisplaySettingsSettings*> update_ui_settings_signal;
 
     // recording
@@ -78,7 +78,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<camera::DCRecorderSettings> update_recorder_settings_signal;
+    SSS<cam::DCRecorderSettings> update_recorder_settings_signal;
 
     // i/o
     // # data

@@ -30,7 +30,7 @@
 #include <vector>
 #include <chrono>
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCCalibratorStates{
 

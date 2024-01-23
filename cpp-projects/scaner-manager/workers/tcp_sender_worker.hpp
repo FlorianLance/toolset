@@ -33,7 +33,7 @@
 #include "network/network_types.hpp"
 #include "camera/impl/k2_types.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class TcpSenderWorker : public QObject{
     Q_OBJECT
@@ -49,9 +49,9 @@ public slots:
     void enable_writing(QString targetName, int writingPort, int readingInterface, int readingPort);
     void disable_writing();
 
-    void open_camera_command(camera::K2FrameRequest mode);
+    void open_camera_command(cam::K2FrameRequest mode);
     void close_camera_command();
-    void update_settings_command(camera::K2Settings p);
+    void update_settings_command(cam::K2Settings p);
     void ask_new_frame_command();
     void ask_to_save_settings_file_command();
     void set_size_udp_packets(int size);

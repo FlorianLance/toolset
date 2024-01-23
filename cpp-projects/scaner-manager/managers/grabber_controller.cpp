@@ -43,8 +43,8 @@
 using namespace std::chrono;
 using namespace tool;
 using namespace tool::ui;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 using namespace tool::geo;
 
 GrabberController::GrabberController(K2UdpReaderManager *udpReaderManager, std::vector<Interface> *localInterfaces, size_t id, K2GrabberTargetInfo info, QColor color) : idC(id), initColorC(color){
@@ -173,7 +173,7 @@ void GrabberController::init_connections(){
 
     // from process data
     // -> this
-    connect(pdW, &PD::update_cloud_data_signal, this, [&](camera::K2CloudDisplayData *cloudData){
+    connect(pdW, &PD::update_cloud_data_signal, this, [&](cam::K2CloudDisplayData *cloudData){
 
         // register cloud
         if(registerCloudT.remainingTime() > 0){
@@ -275,7 +275,7 @@ void GrabberController::send_current_ui_settings(){
     grabberParametersW.send_current_ui_settings();
 }
 
-void GrabberController::send_ui_settings(camera::K2Settings settings){
+void GrabberController::send_ui_settings(cam::K2Settings settings){
     grabberParametersW.send_ui_settings(settings);
 }
 
@@ -283,7 +283,7 @@ void GrabberController::send_current_ui_display_options(){
     grabberParametersW.send_current_ui_display_options();
 }
 
-void GrabberController::update_current_ui_settings(camera::K2Settings settings){
+void GrabberController::update_current_ui_settings(cam::K2Settings settings){
     grabberParametersW.update_ui_settings(settings);
 }
 

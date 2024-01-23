@@ -36,13 +36,14 @@
 #include "dc_grabber_data_processing.hpp"
 #include "dc_volumetric_video.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct DCServerData::Impl{
     std::mutex recordLocker;
     std::atomic_bool record = false;
-    std::vector<std::unique_ptr<camera::DCGrabberDataProcessing>>grabbersDataProcessing;
-    camera::DCVolumetricVideo videoResource;
+    std::vector<std::unique_ptr<cam::DCGrabberDataProcessing>>grabbersDataProcessing;
+    cam::DCVolumetricVideo videoResource;
+    bool initialize = false;
 };
 
 DCServerData::DCServerData() : i(std::make_unique<Impl>()){
@@ -66,6 +67,8 @@ auto DCServerData::initialize(size_t nbDevices) -> void {
     for(auto &grabber : i->grabbersDataProcessing){
         grabber->start();
     }
+
+    i->initialize = true;
 }
 
 auto DCServerData::add_device() -> void{
@@ -95,6 +98,10 @@ auto DCServerData::clean() -> void{
 
 auto DCServerData::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> void {
 
+    if(!i->initialize){
+        return;
+    }
+
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::new_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
@@ -104,7 +111,11 @@ auto DCServerData::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressed
 }
 
 
-auto DCServerData::new_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void {
+auto DCServerData::new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void {
+
+    if(!i->initialize){
+        return;
+    }
 
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::new_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
@@ -119,6 +130,10 @@ auto DCServerData::nb_grabbers() const noexcept -> size_t{
 
 auto DCServerData::get_frame(size_t idC) -> std::shared_ptr<DCFrame>{
 
+    if(!i->initialize){
+        return nullptr;
+    }
+
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::get_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return nullptr;
@@ -128,6 +143,10 @@ auto DCServerData::get_frame(size_t idC) -> std::shared_ptr<DCFrame>{
 
 
 auto DCServerData::get_compressed_frame(size_t idC) -> std::shared_ptr<DCCompressedFrame>{
+
+    if(!i->initialize){
+        return nullptr;
+    }
 
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::get_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
@@ -139,6 +158,10 @@ auto DCServerData::get_compressed_frame(size_t idC) -> std::shared_ptr<DCCompres
 
 auto DCServerData::invalid_last_frame(size_t idC) -> void {
 
+    if(!i->initialize){
+        return;
+    }
+
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::invalid_last_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
@@ -147,6 +170,10 @@ auto DCServerData::invalid_last_frame(size_t idC) -> void {
 }
 
 auto DCServerData::invalid_last_compressed_frame(size_t idC) -> void {
+
+    if(!i->initialize){
+        return;
+    }
 
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::invalid_last_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));

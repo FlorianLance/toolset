@@ -65,7 +65,7 @@ public:
     void init_from_grabber(int readingPort);
     void update_grabber_writing_info(QString writingAddress, int writingPort);
 
-    void init_from_manager(QColor color, std::vector<network::Interface> *interfaces, const camera::K2GrabberTargetInfo &info);
+    void init_from_manager(QColor color, std::vector<net::Interface> *interfaces, const cam::K2GrabberTargetInfo &info);
 
     void init_force_all_cameras();
     void init_force_all_cameras_calibration();
@@ -79,18 +79,18 @@ public slots:
     void send_reading_connection_parameters();
 
     // settings
-    void update_ui_settings(camera::K2Settings settings);
-    camera::K2Settings read_settings_from_ui() const;
+    void update_ui_settings(cam::K2Settings settings);
+    cam::K2Settings read_settings_from_ui() const;
     void copy_current_ui_settings();
     void send_current_ui_settings();
-    void send_ui_settings(camera::K2Settings settings);
+    void send_ui_settings(cam::K2Settings settings);
 
     // display options
     void send_current_ui_display_options();
     DisplayOptions read_display_options_from_ui() const;
 
-    // camera
-    void open_camera(camera::K2FrameRequest frameMode);
+    // cam
+    void open_camera(cam::K2FrameRequest frameMode);
     void close_camera();
     void set_camera_state_ui(bool state);
 
@@ -116,14 +116,14 @@ signals:
     void disable_connection_signal();
 
     // settings
-    void send_settings_parameters_signal(camera::K2Settings);
-    void copy_camera_parameters_signal(camera::K2Settings);
+    void send_settings_parameters_signal(cam::K2Settings);
+    void copy_camera_parameters_signal(cam::K2Settings);
 
     // display options
     void send_display_options_signal(DisplayOptions displayOptions);
 
-    // camera
-    void open_camera_signal(camera::K2FrameRequest frameMode);
+    // cam
+    void open_camera_signal(cam::K2FrameRequest frameMode);
     void close_camera_signal();
 
     // state

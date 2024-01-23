@@ -56,7 +56,7 @@ class GrabberController : public QObject{
     Q_OBJECT
 public:
 
-    GrabberController(network::K2UdpReaderManager *udpReaderManager, std::vector<network::Interface> *localInterfaces, size_t id, camera::K2GrabberTargetInfo info, QColor color);
+    GrabberController(net::K2UdpReaderManager *udpReaderManager, std::vector<net::Interface> *localInterfaces, size_t id, cam::K2GrabberTargetInfo info, QColor color);
 
     // init
     void init_connections();
@@ -75,16 +75,16 @@ public slots:
 
     // commands
     void ask_new_frame();
-    void open_camera_mode(camera::K2FrameRequest mode);
+    void open_camera_mode(cam::K2FrameRequest mode);
     void close_camera_mode();
     void shutdown_computer();
     void restart_computer();
     void ask_to_save_settings_file();
 
     // settings
-    void send_ui_settings(camera::K2Settings settings);
+    void send_ui_settings(cam::K2Settings settings);
     void send_current_ui_settings();
-    void update_current_ui_settings(camera::K2Settings settings);
+    void update_current_ui_settings(cam::K2Settings settings);
     void copy_current_ui_settings();
 
     // display options
@@ -97,15 +97,15 @@ public slots:
     void send_current_ui_display_options();
 
     // calibration
-    void register_cloud(camera::K2CloudDisplayData *cloudData);
+    void register_cloud(cam::K2CloudDisplayData *cloudData);
     void process_registered_clouds();
 
     // IO
     void save_current_cloud(QString path);
     void save_current_mesh(QString path);
 
-    camera::K2CloudDisplayData *cloud_data();
-    camera::K2MeshDisplayData *mesh_data();
+    cam::K2CloudDisplayData *cloud_data();
+    cam::K2MeshDisplayData *mesh_data();
 
 signals:
 
@@ -116,30 +116,30 @@ signals:
     void update_size_udp_packet_signal(int size);
 
     // # commands
-    void open_camera_command_signal(camera::K2FrameRequest mode);
+    void open_camera_command_signal(cam::K2FrameRequest mode);
     void ask_new_frame_command_signal();
     void shutdown_computer_signal();
     void restart_computer_signal();
     void ask_to_save_settings_file_signal();
 
     // settings    
-    void update_ui_with_settings_signal(camera::K2Settings settings);
-    void copy_settings_parameters_signal(camera::K2Settings settings);
+    void update_ui_with_settings_signal(cam::K2Settings settings);
+    void copy_settings_parameters_signal(cam::K2Settings settings);
     // display
     void update_display_parameters_signal(size_t id, DisplayOptions p);
 
     // 3D
-    void process_frame_signal(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> data);
+    void process_frame_signal(cam::K2UdpHeader header, std::shared_ptr<cam::K2Frame> data);
     void update_registers_clouds_data_signal(size_t id, std::vector<geo::Pt3f> *calibCloudData, std::vector<geo::Pt3f> *calibColorData);
-    void update_cloud_data_signal(size_t id, camera::K2CloudDisplayData *cloudData);
-    void update_mesh_data_signal(size_t id, camera::K2MeshDisplayData *meshData);
-    void update_bodies_data_signal(size_t id, std::array<camera::K2BodyInfos,6> *bodiesData);
+    void update_cloud_data_signal(size_t id, cam::K2CloudDisplayData *cloudData);
+    void update_mesh_data_signal(size_t id, cam::K2MeshDisplayData *meshData);
+    void update_bodies_data_signal(size_t id, std::array<cam::K2BodyInfos,6> *bodiesData);
 
     // misc
     void kill_workers_signal();
     void timeout_signal();
 
-    void new_frame_to_save_signal(size_t camId, std::shared_ptr<camera::K2Frame> frame);
+    void new_frame_to_save_signal(size_t camId, std::shared_ptr<cam::K2Frame> frame);
 
 public:
 
@@ -189,12 +189,12 @@ public:
 private:
 
     // workers
-    std::unique_ptr<network::FrameReaderW> m_frameReaderW = nullptr;
-    std::unique_ptr<network::TcpSenderWorker> m_tcpSenderW = nullptr;
+    std::unique_ptr<net::FrameReaderW> m_frameReaderW = nullptr;
+    std::unique_ptr<net::TcpSenderWorker> m_tcpSenderW = nullptr;
     ProcessDataWorkerUP m_processDataW = nullptr;
 
     // manager
-    network::K2UdpReaderManager *m_udpReaderManager = nullptr;
+    net::K2UdpReaderManager *m_udpReaderManager = nullptr;
 
     // threads
     QThread m_tcpSenderT;

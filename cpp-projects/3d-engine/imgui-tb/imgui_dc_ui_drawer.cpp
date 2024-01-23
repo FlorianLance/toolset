@@ -37,10 +37,10 @@
 #include "opengl/gl_texture.hpp"
 
 using namespace tool::graphics;
-using namespace tool::camera;
+using namespace tool::cam;
 
 
-auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, camera::DCMode mode, camera::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
 
     static_cast<void>(autoUpdate);
 
@@ -55,7 +55,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         float minMaxD[2] = {filters.minDepthF, filters.maxDepthF};
 
 
-        auto dRange = (camera::depth_range(mode)*1000.f).conv<int>();
+        auto dRange = (cam::depth_range(mode)*1000.f).conv<int>();
         auto diff   = dRange.y() - dRange.x();
 
         ImGuiUiDrawer::text(std::format("Depth (factor): min: {}mm, max: {}mm", static_cast<int>(dRange.x() + minMaxD[0]*diff),  static_cast<int>(dRange.x() + minMaxD[1]*diff)));
@@ -67,7 +67,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         }
         ImGui::Unindent();
 
-        auto resolution = camera::mixed_resolution(mode);
+        auto resolution = cam::mixed_resolution(mode);
 
         float minMaxW[2] = {filters.minWidthF, filters.maxWidthF};
         ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*resolution.x()),  static_cast<int>(minMaxW[1]*resolution.x())));
@@ -96,19 +96,19 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         int mode = static_cast<int>(filters.p1FMode);
         if(ImGui::RadioButton("None###mode_none_plane1", &mode,0)){
             update = true;
-            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::None;
+            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::None;
         }
         ImGui::SameLine();
         if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
             update = true;
-            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Above;
+            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::Above;
         }
         ImGui::SameLine();
         if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
             update = true;
-            filters.p1FMode = camera::DCFiltersSettings::PlaneFilteringMode::Below;
+            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::Below;
         }
-        if(filters.p1FMode != camera::DCFiltersSettings::PlaneFilteringMode::None){
+        if(filters.p1FMode != cam::DCFiltersSettings::PlaneFilteringMode::None){
 
             ImGui::Text("Point A (mm):");
             auto p1APtr = filters.p1A.array.data();
@@ -410,7 +410,7 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
     return (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, camera::DCModelSettings &model, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model, bool &autoUpdate) -> bool{
 
     static_cast<void>(autoUpdate);
 
@@ -511,8 +511,8 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, camera::
 
 auto DCUIDrawer::draw_dc_recorder_tab_item(
     const std::string &tabItemName,
-    camera::DCRecorderStates &rStates,
-    camera::DCRecorderSettings &rSettings,
+    cam::DCRecorderStates &rStates,
+    cam::DCRecorderSettings &rSettings,
     bool &autoUpdate) -> bool{
 
 
@@ -607,8 +607,8 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
 
 auto DCUIDrawer::draw_dc_player_tab_item(
     const std::string &tabItemName,
-    camera::DCPlayerStates &pStates,
-    camera::DCPlayerSettings &pSettings,
+    cam::DCPlayerStates &pStates,
+    cam::DCPlayerSettings &pSettings,
     bool &autoUpdate) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
@@ -716,9 +716,9 @@ auto DCUIDrawer::draw_dc_player_tab_item(
 auto DCUIDrawer::draw_dc_calibrator_tab_item(
     const std::string &tabItemName,
     bool useNormalFilteringSettings,
-    camera::DCCalibratorStates &cStates,
+    cam::DCCalibratorStates &cStates,
     DCCalibratorDrawerSettings &cdSettings,
-    camera::DCCalibratorSettings &cSettings,
+    cam::DCCalibratorSettings &cSettings,
     bool &autoUpdate) -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
@@ -978,7 +978,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
 
 auto DCUIDrawer::draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
-        camera::DCDeviceSettings &device,
+        cam::DCDeviceSettings &device,
         bool &updateDeviceList,
         bool &autoUpdate) -> bool{
 
@@ -1006,15 +1006,15 @@ auto DCUIDrawer::draw_dc_device_settings_tab_item(
     return  (update && autoUpdate) || manualUpdate;
 }
 
-auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
 
     // init
     if(modesNames.empty()){
         for(const auto &m : k4Modes){
-            modesNames[m] = std::string(camera::mode_name(m));
+            modesNames[m] = std::string(cam::mode_name(m));
         }
         for(const auto &m : foModes){
-            modesNames[m] = std::string(camera::mode_name(m));
+            modesNames[m] = std::string(cam::mode_name(m));
         }
     }
 
@@ -1027,10 +1027,10 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
 
     int guiCurrentTypeSelection = static_cast<int>(config.typeDevice);
     if(ImGui::Combo("###settings_device_type", &guiCurrentTypeSelection, devicesTypes, IM_ARRAYSIZE(devicesTypes))){        
-        auto nDeviceType = static_cast<camera::DCType>(guiCurrentTypeSelection);
+        auto nDeviceType = static_cast<cam::DCType>(guiCurrentTypeSelection);
         if(nDeviceType != config.typeDevice){
             config.typeDevice = nDeviceType;
-            config.mode       = camera::default_camera_mode(config.typeDevice);
+            config.mode       = cam::default_camera_mode(config.typeDevice);
             updateP = true;
         }
     }
@@ -1066,7 +1066,7 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
     ImGui::Indent();
 
     auto currentModeName = modesNames[config.mode];
-    if(config.typeDevice == camera::DCType::FemtoOrbbec){
+    if(config.typeDevice == cam::DCType::FemtoOrbbec){
         if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
             for(const auto &m : foModes){
                 bool selected = m == config.mode;
@@ -1080,7 +1080,7 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
             }
             ImGui::EndCombo();
         }
-    }else if(config.typeDevice == camera::DCType::AzureKinect){
+    }else if(config.typeDevice == cam::DCType::AzureKinect){
         if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
             for(const auto &m : k4Modes){
                 bool selected = m == config.mode;
@@ -1106,7 +1106,7 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
     int guiCurrentSynchModeSelection = static_cast<int>(config.synchMode);
     if(ImGui::Combo("###settings_synch_mode_combo", &guiCurrentSynchModeSelection, synchItems, IM_ARRAYSIZE(synchItems))){
         updateP          = true;
-        config.synchMode = static_cast<camera::DCSynchronisationMode>(guiCurrentSynchModeSelection);
+        config.synchMode = static_cast<cam::DCSynchronisationMode>(guiCurrentSynchModeSelection);
     }
     ImGui::Unindent();
 
@@ -1172,7 +1172,7 @@ auto DCUIDrawer::draw_dc_config(camera::DCConfigSettings &config, bool &updateDe
     ImGui::Spacing();
 }
 
-auto DCUIDrawer::draw_dc_data_settings(camera::DCType type, camera::DCDataSettings &data, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void{
 
     ImGuiUiDrawer::title2("DATA");
     ImGui::Spacing();
@@ -1251,7 +1251,7 @@ auto DCUIDrawer::draw_dc_data_settings(camera::DCType type, camera::DCDataSettin
     }
 }
 
-auto DCUIDrawer::draw_dc_actions_settings(camera::DCActionsSettings &actions, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_actions_settings(cam::DCActionsSettings &actions, bool &updateP) -> void{
 
     ImGuiUiDrawer::title2("ACTIONS TO DO");
     ImGui::Spacing();
@@ -1277,7 +1277,7 @@ auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIn
     return intS;
 }
 
-auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, camera::DCType type, camera::DCColorSettings &colors, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors, bool &autoUpdate) -> bool{
 
     using CST = ColorSettingsType;
     static_cast<void>(autoUpdate);

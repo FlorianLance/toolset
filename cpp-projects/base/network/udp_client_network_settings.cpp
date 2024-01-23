@@ -32,7 +32,7 @@
 #include "utility/string.hpp"
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 
 UdpClientNetworkSettings::UdpClientNetworkSettings(){
@@ -65,7 +65,6 @@ auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSett
     udpSendingAdress = std::string(sendingSettings.ipAdress.begin(), sendingSettings.ipAdress.end());
     String::remove_after_right(udpSendingAdress, ' ');
     udpSendingPort  = sendingSettings.port;
-    // std::cout << "init_sending_settings: " << udpSendingPort << " " << udpSendingAdress << "\n";
     m_connectedToManager = true;
 }
 

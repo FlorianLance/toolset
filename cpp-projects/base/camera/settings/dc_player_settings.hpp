@@ -30,7 +30,7 @@
 // local
 //#include "files/binary_settings.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCPlayerSettings{
     bool doLoop = true;

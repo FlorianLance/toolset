@@ -39,7 +39,7 @@
 
 #include "k2_enums.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 using namespace std::literals::string_view_literals;
 

@@ -40,9 +40,9 @@
 #include "dcm_signals.hpp"
 
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace tool::graphics;
-using namespace tool::network;
+using namespace tool::net;
 
 auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
 
@@ -150,7 +150,7 @@ auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMSettings &settings) -> v
 }
 
 
-auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(camera::DCRecorderStates &rStates, camera::DCRecorderSettings &rSettings) -> void {
+auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCRecorderStates &rStates, cam::DCRecorderSettings &rSettings) -> void {
 
     if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings, autoUpdate)){
         DCMSignals::get()->update_recorder_settings_signal(rSettings);
@@ -179,7 +179,7 @@ auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(camera::DCRecorderStates &r
     rStates.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_player_tab_item(camera::DCPlayerStates &pStates, camera::DCPlayerSettings &pSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCPlayerStates &pStates, cam::DCPlayerSettings &pSettings) -> void{
 
     if(DCUIDrawer::draw_dc_player_tab_item("Player###settings_player_tabitem", pStates, pSettings, autoUpdate)){
         DCMSignals::get()->update_player_settings_signal(pSettings);
@@ -233,7 +233,7 @@ auto DCMLeftPanelChildDrawer::draw_player_tab_item(camera::DCPlayerStates &pStat
     pStates.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, camera::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, camera::DCCalibratorSettings &cSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
 
     if(DCUIDrawer::draw_dc_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings, autoUpdate)){
         DCMSignals::get()->update_calibration_settings_signal(cSettings);
@@ -358,7 +358,7 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::SameLine();
     if(ImGui::Button("Disconnect all###settings_disconnect_all_button")){
         for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, network::Command::Disconnect);
+            DCMSignals::get()->command_signal(grabberS.id, net::Command::Disconnect);
         }
     }
     ImGui::Unindent();
@@ -367,7 +367,7 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::Indent();
     if(ImGui::Button("Quit all###settings_quit_all_button")){
         for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, network::Command::Quit);
+            DCMSignals::get()->command_signal(grabberS.id, net::Command::Quit);
         }
     }
     ImGui::Unindent();
@@ -377,13 +377,13 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
 
     if(ImGui::Button("Shutdown all###settings_shutdown_all_button")){
         for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, network::Command::Shutdown);
+            DCMSignals::get()->command_signal(grabberS.id, net::Command::Shutdown);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart all###settings_restart_all_button")){
         for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, network::Command::Restart);
+            DCMSignals::get()->command_signal(grabberS.id, net::Command::Restart);
         }
     }
     ImGui::Unindent();
@@ -441,14 +441,14 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     }
     ImGui::SameLine();
     if(ImGui::Button("Disconnect###settings_disconnect_button")){
-        DCMSignals::get()->command_signal(grabberS.id, network::Command::Disconnect);
+        DCMSignals::get()->command_signal(grabberS.id, net::Command::Disconnect);
     }
     ImGui::Unindent();
 
     ImGui::Text("Program:");
     ImGui::Indent();
     if(ImGui::Button("Quit###settings_quit_button")){
-        DCMSignals::get()->command_signal(grabberS.id, network::Command::Quit);
+        DCMSignals::get()->command_signal(grabberS.id, net::Command::Quit);
     }
     ImGui::Unindent();
 
@@ -456,11 +456,11 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGui::Indent();
 
     if(ImGui::Button("Shutdown###settings_shutdown_button")){
-        DCMSignals::get()->command_signal(grabberS.id, network::Command::Shutdown);
+        DCMSignals::get()->command_signal(grabberS.id, net::Command::Shutdown);
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart###settings_restart_button")){
-        DCMSignals::get()->command_signal(grabberS.id, network::Command::Restart);
+        DCMSignals::get()->command_signal(grabberS.id, net::Command::Restart);
     }
 
     ImGui::Unindent();
@@ -483,7 +483,7 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGuiUiDrawer::text(fmt("Port: {}", grabberS.network.readingPort));
     ImGui::Unindent();
 
-    if(grabberS.network.protocol == network::Protocol::ipv6){
+    if(grabberS.network.protocol == net::Protocol::ipv6){
         ImGui::Text("PROTOCOL: IPV6");
     }else{
         ImGui::Text("PROTOCOL: IPV4");
@@ -503,7 +503,7 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGui::Unindent();
 
     ImGui::Separator();
-    // ImGui::Text(fmt("Data received (mB): {:.2f}", network::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
+    // ImGui::Text(fmt("Data received (mB): {:.2f}", net::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
     ImGui::Separator();
     ImGui::Text("Feedbacks:");
     feedbacksLogs[grabberS.id].draw(fmt("grabber_{}_feedback", grabberS.id).c_str());
@@ -911,16 +911,16 @@ auto DCMLeftPanelChildDrawer::draw_infos_tab_item(const DCMSettings &settings) -
             ImGui::Indent();
             ImGui::Text("Device:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.device.filePath);
+            draw_config_file_name(grabber.deviceFilePath);
             ImGui::Text("Model:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.model.filePath);
+            draw_config_file_name(grabber.modelFilePath);
             ImGui::Text("Filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.filters.filePath);
+            draw_config_file_name(grabber.filtersFilePath);
             ImGui::Text("Cal. filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.calibrationFilters.filePath);
+            draw_config_file_name(grabber.calibrationFiltersFilePath);
             ImGui::Unindent();
         }
 

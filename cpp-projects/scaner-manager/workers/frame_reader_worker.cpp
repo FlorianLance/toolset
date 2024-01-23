@@ -40,8 +40,8 @@
 
 using namespace std::chrono;
 using namespace tool;
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 
 struct FrameReaderW::Impl{
 

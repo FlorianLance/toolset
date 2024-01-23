@@ -30,7 +30,10 @@
 #include <vector>
 #include <memory>
 
-namespace tool::network{
+// local
+#include "network_enums.hpp"
+
+namespace tool::net{
 
 
 struct Header{
@@ -47,7 +50,8 @@ struct Header{
     std::uint16_t totalNumberPackets = 0;
     std::uint16_t currentPacketId = 0;
     std::uint16_t currentPacketSizeBytes = 0;
-    std::int8_t type = 0;
+    // std::int8_t type = 0;
+    MessageType type = MessageType::undefined;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{
         return totalNumberPackets * sizeof(Header);
@@ -56,7 +60,7 @@ struct Header{
         return totalSizeBytes - total_headers_size_bytes();
     }
 
-    static auto generate_mono_packet(int8_t type, size_t messageNbBytes) -> Header;
+    static auto generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header;
 };
 
 struct Packet{

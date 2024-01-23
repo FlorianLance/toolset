@@ -55,8 +55,8 @@
 
 using namespace tool;
 using namespace tool::ui;
-using namespace tool::camera;
-using namespace tool::network;
+using namespace tool::cam;
+using namespace tool::net;
 using namespace tool::geo;
 
 ScanerManagerWindow::ScanerManagerWindow(Protocol interfaceProtocol)  {
@@ -68,7 +68,7 @@ ScanerManagerWindow::ScanerManagerWindow(Protocol interfaceProtocol)  {
     m_ui->setupUi(this);
 
     // register types
-    qRegisterMetaType<std::shared_ptr<camera::K2Frame>>("std::shared_ptr<camera::K2Frame>");
+    qRegisterMetaType<std::shared_ptr<cam::K2Frame>>("std::shared_ptr<cam::K2Frame>");
     qRegisterMetaType<size_t>("size_t");
     qRegisterMetaType<std::int64_t>("std::int64_t");
     qRegisterMetaType<std::uint32_t>("uint32_t");
@@ -78,7 +78,7 @@ ScanerManagerWindow::ScanerManagerWindow(Protocol interfaceProtocol)  {
 
     qRegisterMetaType<K2Settings>("K2Settings");
     qRegisterMetaType<K2Settings>("video::K2Settings");
-    qRegisterMetaType<K2Settings>("camera::K2Settings");
+    qRegisterMetaType<K2Settings>("cam::K2Settings");
 
     qRegisterMetaType<DisplayOptions>("DisplayOptions");
     qRegisterMetaType<DisplayOptions>("ui::DisplayOptions");
@@ -86,15 +86,15 @@ ScanerManagerWindow::ScanerManagerWindow(Protocol interfaceProtocol)  {
 
     qRegisterMetaType<K2FrameRequest>("K2FrameRequest");
     qRegisterMetaType<K2FrameRequest>("video::K2FrameRequest");
-    qRegisterMetaType<K2FrameRequest>("camera::K2FrameRequest");
+    qRegisterMetaType<K2FrameRequest>("cam::K2FrameRequest");
 
     qRegisterMetaType<K2UdpHeader>("K2UdpHeader");
-    qRegisterMetaType<K2UdpHeader>("camera::K2UdpHeader");
-    qRegisterMetaType<K2UdpHeader>("tool::camera::K2UdpHeader");
+    qRegisterMetaType<K2UdpHeader>("cam::K2UdpHeader");
+    qRegisterMetaType<K2UdpHeader>("tool::cam::K2UdpHeader");
 
     qRegisterMetaType<K2TcpPacket>("K2TcpPacket");
-    qRegisterMetaType<K2TcpPacket>("camera::K2TcpPacket");
-    qRegisterMetaType<K2TcpPacket>("tool::camera::K2TcpPacket");
+    qRegisterMetaType<K2TcpPacket>("cam::K2TcpPacket");
+    qRegisterMetaType<K2TcpPacket>("tool::cam::K2TcpPacket");
 
     qRegisterMetaType<std::vector<QByteArray*>>("std::vector<QByteArray*>");
     qRegisterMetaType<std::vector<QByteArray*>>("std::vector<QByteArray*>");
@@ -355,7 +355,7 @@ void ScanerManagerWindow::init_connections(){
             send_all_settings();
         });
 
-        connect(&m_allCamerasW, &GrabberParametersW::send_settings_parameters_signal, this, [&](camera::K2Settings settings){
+        connect(&m_allCamerasW, &GrabberParametersW::send_settings_parameters_signal, this, [&](cam::K2Settings settings){
             if(m_ui->rbCommon->isChecked()){
                 auto settings = m_allCamerasW.read_settings_from_ui();
                 for(auto &worker : m_grabbersManager){
@@ -363,7 +363,7 @@ void ScanerManagerWindow::init_connections(){
                 }
             }
         });
-        connect(&m_allCamerasCalibW, &GrabberParametersW::send_settings_parameters_signal, this, [&](camera::K2Settings settings){
+        connect(&m_allCamerasCalibW, &GrabberParametersW::send_settings_parameters_signal, this, [&](cam::K2Settings settings){
             if(m_ui->rbCommonCalib->isChecked()){
                 auto settings = m_allCamerasCalibW.read_settings_from_ui();
                 for(auto &worker : m_grabbersManager){

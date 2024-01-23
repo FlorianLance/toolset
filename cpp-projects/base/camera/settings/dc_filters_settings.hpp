@@ -30,9 +30,9 @@
 #include "io/binary_settings.hpp"
 #include "graphics/color.hpp"
 // #include "utility/bit_mask.hpp"
-// #include "camera/dc_enums.hpp"
+// #include "cam/dc_enums.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 struct DCFiltersSettings : io::BinaryFileSettings{
 
@@ -79,8 +79,6 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     geo::Pt3f p1B;
     geo::Pt3f p1C;
 
-    // local
-    std::string filePath;
 
     DCFiltersSettings();
     DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){

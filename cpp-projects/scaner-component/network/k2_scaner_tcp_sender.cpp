@@ -19,8 +19,8 @@ using namespace std::chrono;
 using boost::asio::ip::tcp;
 using boost::asio::ip::address;
 using namespace tool;
-using namespace tool::camera;
-using namespace tool::network;
+using namespace tool::cam;
+using namespace tool::net;
 
 struct K2ScanerTcpSender::Impl{
 
@@ -36,7 +36,7 @@ struct K2ScanerTcpSender::Impl{
     std::vector<std::uint8_t> data;
     int sizeUdpPackets = 512;
 
-    std::vector<network::Interface> *localInterfaces = nullptr;
+    std::vector<net::Interface> *localInterfaces = nullptr;
     size_t readingInterface = 0;    
 
     bool connectionValid = false;

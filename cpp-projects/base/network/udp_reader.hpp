@@ -30,7 +30,7 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "network_enums.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 
 class UdpReader {

@@ -32,8 +32,8 @@
 #include "utility/format.hpp"
 #include "utility/time.hpp"
 
-using namespace tool::network;
-using namespace tool::camera;
+using namespace tool::net;
+using namespace tool::cam;
 using namespace std::chrono;
 
 auto DCClientConnection::init_connections() -> void{
@@ -44,12 +44,12 @@ auto DCClientConnection::init_connections() -> void{
         std::lock_guard l(m_readerL);
         m_initNetworkInfosMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>> message){
+    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDeviceSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>> message){
+    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateColorSettingsMessage  = {std::move(h), message};
@@ -59,7 +59,7 @@ auto DCClientConnection::init_connections() -> void{
         std::lock_guard l(m_readerL);
         m_updateFiltersMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_delay_signal.connect([&](Header h, UdpMonoPacketMessage<camera::DCDelaySettings> message){
+    m_udpReaderG.update_delay_signal.connect([&](Header h, UdpMonoPacketMessage<cam::DCDelaySettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDelayMessage  = {std::move(h), message};
@@ -97,10 +97,11 @@ auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bo
 auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> bool{
 
     if(m_udpSenderG.is_opened()){
-        Logger::warning("[DCClientConnection::init_sender] Sender already initializede. Call clean before.\n");
+        Logger::warning("[DCClientConnection::init_sender] Sender already initialized. Call clean before.\n");
         return false;
     }
 
+    Logger::message(std::format("[DCClientConnection::init_sender] Init sender with sending adress [{}] port [{}] and protocol [{}].\n", networkS->udpSendingAdress, networkS->udpSendingPort, static_cast<int>(networkS->protocol)));
     if(m_udpSenderG.init_socket(networkS->udpSendingAdress, std::to_string(networkS->udpSendingPort), networkS->protocol)){
 
         // start sending
@@ -239,7 +240,7 @@ auto DCClientConnection::disconnect_sender() -> void{
     messagesToSend.clean();
 }
 
-auto DCClientConnection::send_frame(std::shared_ptr<camera::DCCompressedFrame> frame) -> void{
+auto DCClientConnection::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
     messagesToSend.push_back(frame);
 }
 
@@ -261,7 +262,7 @@ auto DCClientConnection::dummy_device_trigger() -> void {
     settings.configS.synchMode    = DCSynchronisationMode::Standalone;
 
     std::lock_guard l(m_readerL);
-    m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<UdpMonoPacketMessage<camera::DCDeviceSettings>>(settings)};
+    m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<UdpMonoPacketMessage<cam::DCDeviceSettings>>(settings)};
 }
 
 auto DCClientConnection::send_messages_loop() -> void{
@@ -278,10 +279,11 @@ auto DCClientConnection::send_messages_loop() -> void{
         }
 
         if(auto feedback = std::get_if<Feedback>(&message.value()); feedback != nullptr){
+            Logger::message(std::format("[DCClientConnection] Send feedback of type [{}].\n", static_cast<int>(feedback->receivedMessageType)));
             m_udpSenderG.send_feedback_message(*feedback);
         }
 
-        if(auto frame = std::get_if<std::shared_ptr<camera::DCCompressedFrame>>(&message.value()); frame != nullptr){
+        if(auto frame = std::get_if<std::shared_ptr<cam::DCCompressedFrame>>(&message.value()); frame != nullptr){
 
             auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 

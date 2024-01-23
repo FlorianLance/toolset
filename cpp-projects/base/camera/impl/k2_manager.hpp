@@ -29,7 +29,7 @@
 // local
 #include "k2_device.hpp"
 
-namespace tool::camera{
+namespace tool::cam{
 
 class K2Manager{
 
@@ -37,20 +37,20 @@ public:
 
     K2Manager();
 
-    bool open_kinect(camera::K2FrameRequest id);
+    bool open_kinect(cam::K2FrameRequest id);
     void close_kinect();
 
     std::int64_t get_data();
-    void update_parameters(camera::K2Settings parameters);
+    void update_parameters(cam::K2Settings parameters);
 
-    inline camera::K2FrameRequest mode() const{return kinect.mode();}
+    inline cam::K2FrameRequest mode() const{return kinect.mode();}
 
     inline bool is_initialized() const {
         return initialized;
     }
 
-    camera::K2Device kinect;
-    std::shared_ptr<camera::K2Frame> frame = nullptr;
+    cam::K2Device kinect;
+    std::shared_ptr<cam::K2Frame> frame = nullptr;
     std::mutex lock;
 
 private:

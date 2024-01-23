@@ -35,7 +35,7 @@
 
 using namespace tool::graphics;
 
-auto DCPlayerDrawer::initialize(const std::vector<camera::DCModelSettings> &models) -> void {
+auto DCPlayerDrawer::initialize(const std::vector<cam::DCModelSettings> &models) -> void {
 
     DCCloudsSceneDrawer::initialize(models.size());
     for(size_t ii = 0; ii < models.size(); ++ii){
@@ -47,7 +47,7 @@ auto DCPlayerDrawer::initialize(const std::vector<camera::DCModelSettings> &mode
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);        
 }
 
-auto DCPlayerDrawer::set_frame(size_t idC, std::shared_ptr<camera::DCFrame> frame) -> void{
+auto DCPlayerDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void{
 
     if(idC >= m_currentFrames.size()){
         return;
@@ -107,10 +107,10 @@ auto DCPlayerDrawer::draw() -> void{
 //        m_currentFrames.clear();
 //        m_currentFrames.reserve(1);
 
-//        camera::K4Model model;
+//        cam::K4Model model;
 //        model.transformation = player->video()->get_camera_data(0)->transform.conv<float>();
 //        update_model(0, std::move(model));
-//        m_currentFrames.push_back(std::make_shared<camera::K4Frame>());
+//        m_currentFrames.push_back(std::make_shared<cam::K4Frame>());
 
 //        m_redrawClouds = true;
 //    }
@@ -125,10 +125,10 @@ auto DCPlayerDrawer::draw() -> void{
 //            m_currentFrames.clear();
 //            m_currentFrames.reserve(player->video()->nb_cameras());
 //            for(size_t ii = 0; ii < player->video()->nb_cameras(); ++ii){
-//                camera::K4Model model;
+//                cam::K4Model model;
 //                model.transformation = player->video()->get_camera_data(ii)->transform.conv<float>();
 //                update_model(ii, std::move(model));
-//                m_currentFrames.push_back(std::make_shared<camera::K4Frame>());
+//                m_currentFrames.push_back(std::make_shared<cam::K4Frame>());
 //            }
 //            m_redrawClouds = true;
 //        }
@@ -146,7 +146,7 @@ auto DCPlayerDrawer::draw() -> void{
 //    if (ImGuiFileDialog::Instance()->Display("Save cloud")) {
 //        if (ImGuiFileDialog::Instance()->IsOk()){
 //            Logger::message(std::format("Save cloud to {}\n", ImGuiFileDialog::Instance()->GetFilePathName()));
-//            camera::K4Frame f;
+//            cam::K4Frame f;
 //            player->uncompress_frame(0, f);
 //            files::CloudIO::save_cloud(ImGuiFileDialog::Instance()->GetFilePathName(), f.cloud);
 //        }

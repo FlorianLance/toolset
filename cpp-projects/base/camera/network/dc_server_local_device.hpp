@@ -31,7 +31,7 @@
 #include "camera/dc_frame.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 
-namespace tool::network {
+namespace tool::net {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
@@ -47,16 +47,16 @@ public:
     auto clean() -> void override;
 
     auto apply_command(Command command) -> void override;
-    auto update_device_settings(const camera::DCDeviceSettings &deviceS) -> void override;
-    auto update_color_settings(const camera::DCColorSettings &colorS) -> void override;
-    auto update_filters_settings(const camera::DCFiltersSettings &filtersS) -> void override;
-    auto update_delay_settings(const camera::DCDelaySettings &delayS) -> void override;
+    auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void override;
+    auto update_color_settings(const cam::DCColorSettings &colorS) -> void override;
+    auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
+    auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void override;
 
     constexpr auto type() const noexcept -> DCServerType override {return DCServerType::local;}
     auto device_connected() const noexcept -> bool override;
 
     // signals
-    sigslot::signal<std::shared_ptr<camera::DCFrame>> local_frame_signal;
+    sigslot::signal<std::shared_ptr<cam::DCFrame>> local_frame_signal;
 
 private:
 

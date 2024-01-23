@@ -36,7 +36,7 @@
 using namespace tool;
 using namespace tool::ui;
 using namespace tool::gl;
-using namespace tool::camera;
+using namespace tool::cam;
 
 
 void DepthCameraGlWidget::update_cloud(K2CloudDisplayData *cloudData){

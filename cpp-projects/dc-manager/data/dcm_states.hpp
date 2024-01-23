@@ -34,19 +34,19 @@ namespace tool{
 
 struct DCMStates{
 
-    auto update_recorder_states(camera::DCRecorderStates recorderS) -> void{
+    auto update_recorder_states(cam::DCRecorderStates recorderS) -> void{
         recorder = std::move(recorderS);
     }
-    auto update_player_states(camera::DCPlayerStates playerS) -> void{
+    auto update_player_states(cam::DCPlayerStates playerS) -> void{
         player = std::move(playerS);
     }
-    auto update_calibrator_states(camera::DCCalibratorStates calibratorS) -> void{
+    auto update_calibrator_states(cam::DCCalibratorStates calibratorS) -> void{
         calibrator = std::move(calibratorS);
     }
 
-    camera::DCRecorderStates recorder;
-    camera::DCPlayerStates player;
-    camera::DCCalibratorStates calibrator;
+    cam::DCRecorderStates recorder;
+    cam::DCPlayerStates player;
+    cam::DCCalibratorStates calibrator;
 };
 }
 

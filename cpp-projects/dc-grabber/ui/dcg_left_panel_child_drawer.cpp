@@ -42,7 +42,7 @@
 
 using namespace tool;
 using namespace tool::graphics;
-using namespace tool::camera;
+using namespace tool::cam;
 
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings &settings) -> void {
 
@@ -114,7 +114,7 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
         ImGuiUiDrawer::text("Not connected"sv, geo::Pt4f{1.f,0.5f,0.15f,1.f});
     }
 
-    if(settings.networkS.protocol == network::Protocol::ipv6){
+    if(settings.networkS.protocol == net::Protocol::ipv6){
         ImGui::Text("PROTOCOL: IPV6");
     }else{
         ImGui::Text("PROTOCOL: IPV4");
@@ -200,7 +200,7 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 }
 
 auto DCGLeftPanelChildDrawer::draw_device_tab_item(
-    camera::DCDeviceSettings &device) -> void {
+    cam::DCDeviceSettings &device) -> void {
 
     auto signals = DCGSignals::get();
 
@@ -223,8 +223,8 @@ auto DCGLeftPanelChildDrawer::draw_device_tab_item(
 
 auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
     ui::DCGDisplaySettingsSettings &ui,
-    const camera::DCConfigSettings &config,
-    camera::DCFiltersSettings &filters) -> void {
+    const cam::DCConfigSettings &config,
+    cam::DCFiltersSettings &filters) -> void {
 
     auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
     ui.settingsFiltersSubPanelDisplayed  = std::get<0>(ret);
@@ -233,7 +233,7 @@ auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(camera::DCType type, camera::DCColorSettings &colors) -> void{
+auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(cam::DCType type, cam::DCColorSettings &colors) -> void{
 
     if(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors, m_autoUpdate)){
         DCGSignals::get()->update_color_settings_signal(colors);
@@ -268,7 +268,7 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
     ImGui::EndTabItem();
 }
 
-auto DCGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates &recStates, camera::DCRecorderSettings &recSetings) -> void {
+auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCRecorderStates &recStates, cam::DCRecorderSettings &recSetings) -> void {
     if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
         DCGSignals::get()->update_recorder_settings_signal(recSetings);
     }
@@ -294,7 +294,7 @@ auto DCGLeftPanelChildDrawer::draw_recording_tab_item(camera::DCRecorderStates &
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_model_tab_item(camera::DCModelSettings &model) -> void {
+auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &model) -> void {
 
     if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model, m_autoUpdate)){
         DCGSignals::get()->update_model_signal(0, model);

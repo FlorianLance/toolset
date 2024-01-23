@@ -34,7 +34,7 @@
 #include "utility/types.hpp"
 
 using namespace tool;
-using namespace tool::network;
+using namespace tool::net;
 
 struct K2UdpReaderManager::Impl{
 

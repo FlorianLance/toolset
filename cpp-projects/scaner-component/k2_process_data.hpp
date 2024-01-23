@@ -22,20 +22,20 @@ public :
     K2ProcessData(size_t id);
     ~K2ProcessData();
 
-    camera::K2CloudDisplayData *cloud_data();
-    camera::K2MeshDisplayData *mesh_data();
+    cam::K2CloudDisplayData *cloud_data();
+    cam::K2MeshDisplayData *mesh_data();
 
 // slots
-    auto process_data_from_udp_frame(camera::K2UdpHeader header, std::shared_ptr<camera::K2Frame> frame) -> void;
+    auto process_data_from_udp_frame(cam::K2UdpHeader header, std::shared_ptr<cam::K2Frame> frame) -> void;
 
 // signals
     sigslot::signal<std::string> stack_trace_message_signal;
     sigslot::signal<std::int64_t, std::int64_t> end_processing_signal;
 
     // # images
-    sigslot::signal<camera::K2CloudDisplayData *> update_cloud_data_signal;
-    sigslot::signal<camera::K2MeshDisplayData *> update_mesh_data_signal;
-    sigslot::signal<camera::K2BodiesDisplayData *> update_bodies_data_signal;
+    sigslot::signal<cam::K2CloudDisplayData *> update_cloud_data_signal;
+    sigslot::signal<cam::K2MeshDisplayData *> update_mesh_data_signal;
+    sigslot::signal<cam::K2BodiesDisplayData *> update_bodies_data_signal;
 
 private :
 

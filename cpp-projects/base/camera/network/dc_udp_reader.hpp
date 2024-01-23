@@ -39,7 +39,7 @@
 #include "camera/dc_compressed_frame.hpp"
 
 
-namespace tool::network {
+namespace tool::net {
 
 template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
@@ -49,10 +49,10 @@ public:
 
     // signals
     SSS<Header, std::shared_ptr<UdpNetworkSendingSettings>> init_network_infos_signal;
-    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCDeviceSettings>>> update_device_settings_signal;
-    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<camera::DCColorSettings>>> update_color_settings_signal;
-    SSS<Header, std::shared_ptr<camera::DCFiltersSettings>> update_filters_signal;
-    SSS<Header, UdpMonoPacketMessage<camera::DCDelaySettings>> update_delay_signal;
+    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>>> update_device_settings_signal;
+    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>>> update_color_settings_signal;
+    SSS<Header, std::shared_ptr<cam::DCFiltersSettings>> update_filters_signal;
+    SSS<Header, UdpMonoPacketMessage<cam::DCDelaySettings>> update_delay_signal;
     SSS<Header, Command> command_signal;
 
 protected:
@@ -82,7 +82,7 @@ public:
     // signals
     SSS<std::int64_t> synchro_signal;
     SSS<Header, UdpMonoPacketMessage<Feedback>> feedback_signal;
-    SSS<Header, std::shared_ptr<camera::DCCompressedFrame>> compressed_frame_signal;
+    SSS<Header, std::shared_ptr<cam::DCCompressedFrame>> compressed_frame_signal;
 
 protected:
 

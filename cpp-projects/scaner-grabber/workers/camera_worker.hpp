@@ -44,17 +44,17 @@ public:
     CameraWorker() = default;
 
     bool is_initialized()const {return m_kinectManager.is_initialized();}
-    camera::K2FrameRequest mode() const {return m_kinectManager.mode();}
+    cam::K2FrameRequest mode() const {return m_kinectManager.mode();}
 
 public slots:
 
     void kill_loop();
 
-    void open_camera(camera::K2FrameRequest mode);
+    void open_camera(cam::K2FrameRequest mode);
 
     void manager_read_frame();
 
-    void update_camera_parameters(camera::K2Settings parameters);
+    void update_camera_parameters(cam::K2Settings parameters);
     void set_loop_state(bool state);
     void close_camera();
 
@@ -69,7 +69,7 @@ private :
 signals:
 
     void camera_opened_signal(bool state);
-    void new_frame_signal(std::int64_t time, std::shared_ptr<camera::K2Frame> frame);
+    void new_frame_signal(std::int64_t time, std::shared_ptr<cam::K2Frame> frame);
     void no_frame_signal();
     void loop_ended_signal();
 
@@ -81,6 +81,6 @@ private:
 
     bool m_isLooping = false;
     int m_fps = 30;    
-    camera::K2Manager m_kinectManager;
+    cam::K2Manager m_kinectManager;
 };
 }

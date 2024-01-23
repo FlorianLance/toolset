@@ -18,7 +18,7 @@
 
 using namespace std::chrono;
 using namespace tool;
-using namespace tool::camera;
+using namespace tool::cam;
 
 struct K2ProcessData::Impl{
 
@@ -43,9 +43,9 @@ struct K2ProcessData::Impl{
     std::vector<std::uint32_t> validIdPerPointMesh;
 
     // processed data for display
-    camera::K2CloudDisplayData cloudData;
-    camera::K2MeshDisplayData meshData;
-    camera::K2BodiesDisplayData bodiesData;
+    cam::K2CloudDisplayData cloudData;
+    cam::K2MeshDisplayData meshData;
+    cam::K2BodiesDisplayData bodiesData;
 
     // time measurment
     std::int64_t allProcessTime = 0;

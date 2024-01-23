@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     splash.show();
     QTimer::singleShot(2000, &splash, &QWidget::close); // keep displayed for 2 seconds
 
-    tool::ui::ScanerManagerWindow w(tool::network::Protocol::ipv4);
+    tool::ui::ScanerManagerWindow w(tool::net::Protocol::ipv4);
     w.show();
 
     return a.exec();

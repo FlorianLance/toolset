@@ -50,7 +50,7 @@ struct DCMModel{
 
     // network
     auto reset_network() -> void;
-    auto add_feedback(size_t id, network::Feedback feedback) -> void;
+    auto add_feedback(size_t id, net::Feedback feedback) -> void;
     auto update_synchro(size_t id, std::int64_t averageDiffNs) -> void;
 
     //
@@ -61,26 +61,26 @@ struct DCMModel{
 
     // # filtering
     auto update_filtering_mode(bool useNormalMode) -> void;
-    auto update_filters(size_t id, const camera::DCFiltersSettings& filters) -> void;
-    auto update_calibration_filters(size_t id, const camera::DCFiltersSettings& filters) -> void;
+    auto update_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
+    auto update_calibration_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
 
 
     DCMSettings settings;
     DCMStates states;
 
-    network::DCServerNetwork sNetwork;
-    camera::DCServerData sData;
-    camera::DCRecorder recorder;
-    camera::DCPlayer player;
-    camera::DCCalibrator calibration;
+    net::DCServerNetwork sNetwork;
+    cam::DCServerData sData;
+    cam::DCRecorder recorder;
+    cam::DCPlayer player;
+    cam::DCCalibrator calibration;
 
 private:
 
     auto read_feedbacks() -> void;
 
     std::mutex readMessagesL;
-    std::deque<std::pair<size_t, network::Feedback>> messages;
-    std::vector<std::pair<size_t, network::Feedback>> messagesR;
+    std::deque<std::pair<size_t, net::Feedback>> messages;
+    std::vector<std::pair<size_t, net::Feedback>> messagesR;
 
 };
 }

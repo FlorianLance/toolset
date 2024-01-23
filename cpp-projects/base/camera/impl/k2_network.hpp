@@ -29,7 +29,7 @@
 // local
 #include "k2_types.hpp"
 
-namespace tool::camera {
+namespace tool::cam {
 
 // tcp
 enum class K2TcpCommand : uint8_t{

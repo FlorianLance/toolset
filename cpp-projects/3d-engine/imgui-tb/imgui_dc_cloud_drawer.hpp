@@ -44,7 +44,7 @@ struct DCCloudDrawer{
 
     // info
     std::int32_t lastFrameId = -1;
-    std::shared_ptr<camera::DCFrame> lastFrame = nullptr;
+    std::shared_ptr<cam::DCFrame> lastFrame = nullptr;
 
     // drawers
     gl::CloudPointsDrawer cpD;
@@ -55,12 +55,12 @@ struct DCCloudDrawer{
 
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
-    camera::DCFiltersSettings filters;
+    cam::DCFiltersSettings filters;
     DCCloudDisplaySettings display;
 
     // joints sub models
     size_t nbBodies = 0;
-    std::vector<std::array<std::tuple<bool,geo::Mat4f>, camera::dcJointsCount>> jointsModels;
+    std::vector<std::array<std::tuple<bool,geo::Mat4f>, cam::dcJointsCount>> jointsModels;
 
     // textures
     gl::Texture2D colorT;
@@ -71,7 +71,7 @@ struct DCCloudDrawer{
     auto initialize() -> void;
     auto reset() -> void;
     // # from frame
-    auto init_from_frame(std::shared_ptr<camera::DCFrame> frame) -> bool;
+    auto init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool;
     // # from data
     auto init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool;
 };

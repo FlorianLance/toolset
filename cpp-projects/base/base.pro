@@ -202,7 +202,6 @@ HEADERS += \
     camera/settings/dc_model_settings.hpp \
     ## network
     camera/network/dc_client_connection.hpp \
-    camera/network/dc_server_connection.hpp \
     camera/network/dc_server_network.hpp \
     camera/network/dc_udp_reader.hpp \
     camera/network/dc_udp_sender.hpp \
@@ -248,7 +247,6 @@ HEADERS += \
     utility/vector.hpp \
     utility/logger.hpp \
     utility/tuple_array.hpp \
-    utility/utility.hpp \
     utility/view.hpp \
     utility/time.hpp \
     utility/io_file.hpp \
@@ -371,7 +369,6 @@ SOURCES += \
     camera/dc_device_impl.cpp \
     ## network
     camera/network/dc_client_connection.cpp \
-    camera/network/dc_server_connection.cpp \
     camera/network/dc_server_network.cpp \
     camera/network/dc_udp_reader.cpp \
     camera/network/dc_udp_sender.cpp \

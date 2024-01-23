@@ -39,7 +39,7 @@
 using namespace tool;
 using namespace tool::ui;
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace open3d;
 
 struct CalibrationManager::Impl{

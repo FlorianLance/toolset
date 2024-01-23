@@ -20,13 +20,13 @@
 auto test_kinect4() -> void{
 
     using namespace tool;
-    using namespace tool::camera;
+    using namespace tool::cam;
 
     std::puts("### Test femto orbbec.\n");
 
     DCDeviceManager dManager;
 
-    tool::camera::DCDeviceSettings ds;
+    tool::cam::DCDeviceSettings ds;
 
     // actions
     ds.actionsS.openDevice = true;

@@ -32,7 +32,7 @@
 using namespace tool;
 using namespace tool::ui;
 using namespace tool::geo;
-using namespace tool::camera;
+using namespace tool::cam;
 
 void MultiDepthCameraGlWidget::init(size_t nbCameras){
 
@@ -112,7 +112,7 @@ void MultiDepthCameraGlWidget::update_grabber_cloud_display_parameters(size_t id
     models[id]      = p.model;
 }
 
-void MultiDepthCameraGlWidget::update_bodies(size_t id,  std::array<tool::camera::K2BodyInfos, 6> *bodies){
+void MultiDepthCameraGlWidget::update_bodies(size_t id,  std::array<tool::cam::K2BodyInfos, 6> *bodies){
     kinectsBodies[id] = *bodies;
 }
 

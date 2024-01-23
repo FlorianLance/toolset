@@ -48,11 +48,11 @@ public:
 public slots:
 
     // update data
-    void update_cloud(camera::K2CloudDisplayData *cloudData);
-    void update_mesh(camera::K2MeshDisplayData *meshData);
+    void update_cloud(cam::K2CloudDisplayData *cloudData);
+    void update_mesh(cam::K2MeshDisplayData *meshData);
 
     // update
-    void update_joints_state(std::array<camera::K2BodyInfos, 6> *bodies);
+    void update_joints_state(std::array<cam::K2BodyInfos, 6> *bodies);
 
 protected:
 
@@ -83,7 +83,7 @@ public:
 private:
 
     // joints
-    std::array<camera::K2BodyInfos, 6> m_bodies;
+    std::array<cam::K2BodyInfos, 6> m_bodies;
     std::unordered_map<std::uint64_t, geo::Pt4f> m_bodiesColors;
 
     // objects to draw

@@ -40,7 +40,7 @@
 #include "utility/string_geo.hpp"
 #include "camera/settings/dc_model_settings.hpp"
 
-using namespace tool::camera;
+using namespace tool::cam;
 using namespace tool::geo;
 
 auto from_eigen_mat(const Eigen::Matrix4d_u &eMat) -> Mat4f {
@@ -311,7 +311,7 @@ auto DCCalibrator::calibration_grabber_data(size_t idGrabber) const -> const DCC
     return nullptr;
 }
 
-auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<camera::DCFrame> frame) -> void{
+auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void{
 
     if(!m_states.isRegistering){
         return;

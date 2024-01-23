@@ -10,17 +10,17 @@
 #include "thirdparty/sigslot/signal.hpp"
 #include "network/network_types.hpp"
 
-namespace tool::network{
+namespace tool::net{
 
 class K2ScanerUdpReader {
 
 public:
 
-    K2ScanerUdpReader(size_t id, tool::network::Interface interface);
+    K2ScanerUdpReader(size_t id, tool::net::Interface interface);
     ~K2ScanerUdpReader();
 
     size_t id() const;
-    tool::network::Interface interface() const;
+    tool::net::Interface interface() const;
 
 // slots
     auto enable_reading(int readingPort) -> bool;
