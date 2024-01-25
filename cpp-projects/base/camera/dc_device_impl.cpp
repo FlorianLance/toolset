@@ -485,7 +485,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         return;
     }
 
-    // Bench::start("[DCDeviceData::filter_depth_image]");
+    Bench::start("[DCDeviceData::filter_depth_image]");
 
     const auto dRange = depth_range(settings.config.mode)*1000.f;
 
@@ -501,6 +501,8 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
 
     // reset depth mask
     std::fill(depthMask.begin(), depthMask.end(), 1);
+
+    // std::cout << "min " << minD << " " << maxD << " " << diffRange << " " << dRange.x() << " " << dRange.y() << "\n";
 
     // depth/width/height/mask/color/infra filtering
     std::for_each(std::execution::par_unseq, std::begin(indices.depths3D), std::end(indices.depths3D), [&](const Pt3<size_t> &dIndex){
@@ -562,21 +564,9 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         meanBiggestZoneId = 0;
     }
 
+    update_valid_depth_values();
 
-
-    // count valid depth values
-    validDepthValues = 0;
-    for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
-        if(depthMask[id] == 0){
-            depthBuffer[id] = dc_invalid_depth_value;
-            indices.depthVertexCorrrespondance[id] = {id, -1};
-        }else{
-            indices.depthVertexCorrrespondance[id] = {id, validDepthValues};
-            validDepthValues++;
-        }
-    });
-    // Bench::stop();
-
+    Bench::stop();
 
 }
 
@@ -692,14 +682,12 @@ auto DCDeviceImpl::stop_reading_thread() -> void{
     // wait for reading thread to finish
     if(readFramesFromCameras){
         readFramesFromCameras = false;
-        std::cout << "read bool stop\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     // stop thread
     if(frameReaderT != nullptr){        
         if(frameReaderT->joinable()){
-            std::cout << "join thread\n";
             frameReaderT->join();
         }
         frameReaderT = nullptr;
@@ -756,7 +744,7 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
     size_t currentZoneId = 1;
     int biggestZone = -1;
     size_t sizeBiggestZone = 0;
-    for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t pt){
+    std::for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t pt){
 
         if(zonesId[pt] != 0){
             return;

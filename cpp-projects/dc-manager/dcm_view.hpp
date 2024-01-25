@@ -38,6 +38,8 @@ class DCMView {
 public:
 
     DCMView();
+    ~DCMView();
+
     auto initialize(int nbGrabbers) -> void;
 
     auto start() -> void;

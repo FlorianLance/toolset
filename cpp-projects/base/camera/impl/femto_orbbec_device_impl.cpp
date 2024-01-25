@@ -830,7 +830,7 @@ auto FemtoOrbbecDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS
         auto cloudData = reinterpret_cast<float*>(pointCloudImage->data());
         int dataSize = rgbCloud ? 6 : 3;
 
-        std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::begin(indices.depthVertexCorrrespondance) + validDepthValues, [&](auto idC){
+        std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
 
             auto idD = std::get<0>(idC);
             if(depthBuffer[idD] == dc_invalid_depth_value){
@@ -864,6 +864,7 @@ auto FemtoOrbbecDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
     cFrame->mode               = mode;
     cFrame->idCapture          = static_cast<std::int32_t>(infos.idCapture);
     cFrame->afterCaptureTS     = timing.get_local("after_capture"sv).count();
+    cFrame->receivedTS         = cFrame->afterCaptureTS;  // default init received TS with after capture TS
     cFrame->validVerticesCount = validDepthValues;
 
     size_t offset = 0;
@@ -932,6 +933,7 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
     auto dFrame             = std::make_unique<DCFrame>();
     dFrame->idCapture       = static_cast<std::int32_t>(infos.idCapture);
     dFrame->afterCaptureTS  = timing.get_local("after_capture"sv).count();
+    dFrame->receivedTS      = dFrame->afterCaptureTS;  // default init received TS with after capture TS
     dFrame->mode            = settings.config.mode;
 
     const auto dRange = depth_range(settings.config.mode)*1000.f;
@@ -1055,11 +1057,32 @@ auto FemtoOrbbecDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
 
             // set color
             if(rgbCloud){
+
+                // if(zonesId[idD] != 0){
+                //     if(zonesId[idD] == 1){
+                //         dFrame->cloud.colors[idV] = geo::Pt3f{1,0,0};
+                //     }else if(zonesId[idD] == 2){
+                //         dFrame->cloud.colors[idV] = geo::Pt3f{0,1,0};
+                //     }else if(zonesId[idD] == 3){
+                //         dFrame->cloud.colors[idV] = geo::Pt3f{0,0,1};
+                //     }else{
+                //         dFrame->cloud.colors[idV] = geo::Pt3f{1,0,1};
+                //     }
+
+                // }else{
+                //     dFrame->cloud.colors[idV] = geo::Pt3f{
+                //         0,
+                //         0,
+                //         0
+                //     };
+                // }
+
                 dFrame->cloud.colors[idV] = geo::Pt3f{
                     cloudPoint[3],
                     cloudPoint[4],
                     cloudPoint[5]
                 }/255.f;
+
             }else{
                 float vF = (static_cast<float>(depthBuffer[idD]) - dRange.x())/diff;
                 float intPart;

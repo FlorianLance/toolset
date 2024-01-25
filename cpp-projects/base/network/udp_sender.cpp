@@ -160,8 +160,8 @@ auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t
         }else{
             header.currentPacketSizeBytes = static_cast<std::uint16_t>(rest + sizeof (Header));
         }
-
-        header.currentPacketTime = Time::nanoseconds_since_epoch().count();
+        
+        header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
 
         // copy header
         std::copy(

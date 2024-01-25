@@ -43,7 +43,7 @@ struct Header{
         std::copy(data, data + sizeof(Header), reinterpret_cast<std::int8_t*>(this));
     }
 
-    std::int64_t currentPacketTime = 0;
+    std::int64_t currentPacketTimestampNs = 0;
     std::uint32_t totalSizeBytes = 0;
     std::uint32_t dataOffset = 0;
     std::int32_t idMessage = -1;

@@ -35,6 +35,10 @@ namespace tool{
 class DCMController{
 public:
 
+    ~DCMController(){
+        model = nullptr;
+        view  = nullptr;
+    }
 
     auto initialize() -> bool;
     auto set_connections() -> void;

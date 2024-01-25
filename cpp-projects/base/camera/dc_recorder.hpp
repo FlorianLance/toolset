@@ -31,7 +31,7 @@
 #include "settings/dc_recorder_settings.hpp"
 #include "settings/dc_model_settings.hpp"
 #include "states/dc_recorder_states.hpp"
-#include "dc_volumetric_video.hpp"
+#include "dc_video.hpp"
 
 namespace tool::cam {
 
@@ -46,7 +46,7 @@ public:
     auto update_frames() -> void;
 
     // video
-    auto video() -> DCVolumetricVideo*;
+    auto video() -> DCVideo*;
 
     // frames
     auto uncompress_frame(size_t idCamera, DCFrame &frame) -> bool;
@@ -72,6 +72,8 @@ public:
     sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
 
 private:
+
+    auto update_states() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

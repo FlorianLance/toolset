@@ -87,7 +87,9 @@ auto BaseSfmlGlWindow::init() -> bool{
         return false;
     }
 
-    ImGui::SFML::Init(m_scene);
+    if(!ImGui::SFML::Init(m_scene)){
+        return false;
+    }
     initialize_imgui();
 
     resize_windows();
@@ -124,10 +126,10 @@ auto BaseSfmlGlWindow::start() -> void{
             ImGui::SFML::ProcessEvent(event);
             switch (event.type) {
             case sf::Event::Closed: // The window requested to be closed
+                Logger::message("Close window.\n");
                 running = false;
                 break;
             case sf::Event::Resized: // The window was resized
-                Logger::message("resize_event-");
                 base_resize_windows(event.size);
                 break;
             case sf::Event::KeyPressed: // A key was pressed

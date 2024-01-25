@@ -26,9 +26,11 @@
 
 #include "dcm_left_panel_child_drawer.hpp"
 
+// std
+#include <format>
+
 // base
 #include "utility/logger.hpp"
-#include "utility/format.hpp"
 #include "utility/string.hpp"
 
 // 3d-engine
@@ -60,11 +62,11 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
         targetsColor.clear();
 
         for(size_t ii = 0; ii < nbGrabbers; ++ii){
-            fromFilters.push_back(fmt("[{}] normal", ii));
-            fromColor.push_back(fmt("[{}]", ii));
+            fromFilters.push_back(std::format("[{}] normal", ii));
+            fromColor.push_back(std::format("[{}]", ii));
         }
         for(size_t ii = 0; ii < nbGrabbers; ++ii){
-            fromFilters.push_back(fmt("[{}] calib", ii));
+            fromFilters.push_back(std::format("[{}] calib", ii));
         }
 
         targetsFilters.push_back("All");
@@ -285,9 +287,9 @@ auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMSettings &settings, DCMStates 
             ++nbConnected;
         }
     }
-    ImGuiUiDrawer::text(fmt("Count: {}", settings.grabbersS.size()));
+    ImGuiUiDrawer::text(std::format("Count: {}", settings.grabbersS.size()));
     ImGui::SameLine();
-    ImGuiUiDrawer::text(fmt("Connected: {}", nbConnected));
+    ImGuiUiDrawer::text(std::format("Connected: {}", nbConnected));
     ImGui::SameLine();
 
     if(states.recorder.isRecording){
@@ -479,8 +481,8 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     ImGui::Separator();
     ImGui::Text("UDP reading:");
     ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", grabberS.network.readingAdress));
-    ImGuiUiDrawer::text(fmt("Port: {}", grabberS.network.readingPort));
+    ImGuiUiDrawer::text(std::format("IP address: {}", grabberS.network.readingAdress));
+    ImGuiUiDrawer::text(std::format("Port: {}", grabberS.network.readingPort));
     ImGui::Unindent();
 
     if(grabberS.network.protocol == net::Protocol::ipv6){
@@ -492,21 +494,21 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
 
     ImGui::Text("UDP sending:");
     ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", grabberS.network.sendingAdress));
-    ImGuiUiDrawer::text(fmt("Port: {}", grabberS.network.sendingPort));
+    ImGuiUiDrawer::text(std::format("IP address: {}", grabberS.network.sendingAdress));
+    ImGuiUiDrawer::text(std::format("Port: {}", grabberS.network.sendingPort));
     ImGui::Unindent();
 
     ImGui::Text("State:");
     ImGui::Indent();
     ImGui::Text(grabberS.network.connected ? "Grabber connected to manager" : "Grabber not connected");
-    ImGuiUiDrawer::text(fmt("Last frame id sent: {}", grabberS.network.lastFrameIdReceived));
+    ImGuiUiDrawer::text(std::format("Last frame id sent: {}", grabberS.network.lastFrameIdReceived));
     ImGui::Unindent();
 
     ImGui::Separator();
-    // ImGui::Text(fmt("Data received (mB): {:.2f}", net::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
+    // ImGui::Text(std::format("Data received (mB): {:.2f}", net::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
     ImGui::Separator();
     ImGui::Text("Feedbacks:");
-    feedbacksLogs[grabberS.id].draw(fmt("grabber_{}_feedback", grabberS.id).c_str());
+    feedbacksLogs[grabberS.id].draw(std::format("grabber_{}_feedback", grabberS.id).c_str());
 
     ImGui::EndTabItem();
 }
@@ -534,7 +536,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
             bool updateDeviceList = false;
 
             auto currentDeviceType = settings.grabbersS[ii].device.configS.typeDevice;
-            auto update = DCUIDrawer::draw_dc_device_settings_tab_item(fmt("[{}]###device_{}_tabitem", ii, ii),
+            auto update = DCUIDrawer::draw_dc_device_settings_tab_item(std::format("[{}]###device_{}_tabitem", ii, ii),
                                                                        settings.grabbersS[ii].device,
                 updateDeviceList,
                 autoUpdate
@@ -560,7 +562,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
 auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> void {
 
     static constexpr std::string_view base = "###settings_filters";
-    if (!ImGuiUiDrawer::begin_tab_item(fmt("Filters{}_tabitem", base).c_str())){
+    if (!ImGuiUiDrawer::begin_tab_item(std::format("Filters{}_tabitem", base).c_str())){
         return;
     }
 
@@ -577,17 +579,17 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::Spacing();
 
     static ImGuiId tabId1 = 0;
-    if (ImGuiUiDrawer::begin_tab_bar(&tabId1, fmt("{}_sub_tabbar", base).c_str())){
+    if (ImGuiUiDrawer::begin_tab_bar(&tabId1, std::format("{}_sub_tabbar", base).c_str())){
 
-        if (ImGuiUiDrawer::begin_tab_item(fmt("Normal{}_normal_tabitem", base).c_str())){
+        if (ImGuiUiDrawer::begin_tab_item(std::format("Normal{}_normal_tabitem", base).c_str())){
 
             static ImGuiId tabId2 = 0;
-            if (ImGuiUiDrawer::begin_tab_bar(&tabId2, fmt("{}_normal_sub_tabbar",base).c_str())){
+            if (ImGuiUiDrawer::begin_tab_bar(&tabId2, std::format("{}_normal_sub_tabbar",base).c_str())){
 
                 for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
                     auto ret =  DCUIDrawer::draw_dc_filters_settings_tab_item(
-                            fmt("[{}]{}_normal_{}_tabitem", ii, base, ii),
+                            std::format("[{}]{}_normal_{}_tabitem", ii, base, ii),
                         settings.grabbersS[ii].device.configS.mode,
                         settings.grabbersS[ii].filters,
                         autoUpdate);
@@ -603,15 +605,15 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
             ImGui::EndTabItem();
         }
 
-        if (ImGuiUiDrawer::begin_tab_item(fmt("Calibration{}_calibration_tabitem", base).c_str())){
+        if (ImGuiUiDrawer::begin_tab_item(std::format("Calibration{}_calibration_tabitem", base).c_str())){
 
             static ImGuiId tabId2 = 0;
-            if (ImGuiUiDrawer::begin_tab_bar(&tabId2, fmt("{}_calibration_sub_tabbar",base).c_str())){
+            if (ImGuiUiDrawer::begin_tab_bar(&tabId2, std::format("{}_calibration_sub_tabbar",base).c_str())){
 
                 for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
                     auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
-                            fmt("[{}]{}_calibration_{}_tabitem", ii, base, ii),
+                            std::format("[{}]{}_calibration_{}_tabitem", ii, base, ii),
                         settings.grabbersS[ii].device.configS.mode,
                         settings.grabbersS[ii].calibrationFilters,
                         autoUpdate);
@@ -619,7 +621,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
                     settings.uiS.settingsFiltersCalibrationSubPanelDisplayed = std::get<0>(ret) || settings.uiS.settingsFiltersCalibrationSubPanelDisplayed;
 
                     if(std::get<1>(ret)){
-                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
+                        DCMSignals::get()->update_calibration_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
                     }
                 }
                 ImGui::EndTabBar();
@@ -632,7 +634,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::Spacing();
     ImGuiUiDrawer::title2("COPY");
 
-    if(ImGui::Button(fmt("Copy{}_copy_filters", base).c_str())){
+    if(ImGui::Button(std::format("Copy{}_copy_filters", base).c_str())){
 
         DCFiltersSettings *fromFilters = nullptr;
         if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersS.size())){
@@ -668,12 +670,12 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::Text(" from:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    ImGuiUiDrawer::combo(fmt("{}_from_filter", base).c_str(), &guiCurrentFromFiltersSelection, fromFilters);
+    ImGuiUiDrawer::combo(std::format("{}_from_filter", base).c_str(), &guiCurrentFromFiltersSelection, fromFilters);
     ImGui::SameLine();
     ImGui::Text(" to:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    ImGuiUiDrawer::combo(fmt("{}_target_filter", base).c_str(), &guiCurrentTargetFiltersSelection, targetsFilters);
+    ImGuiUiDrawer::combo(std::format("{}_target_filter", base).c_str(), &guiCurrentTargetFiltersSelection, targetsFilters);
 
 
     ImGui::EndTabItem();
@@ -784,7 +786,7 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     }
 
     for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item(fmt("[{}]###{}_cloud_display_tabitem", ii, ii), grabbers[ii].cloudDisplay, autoUpdate)){
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item(std::format("[{}]###{}_cloud_display_tabitem", ii, ii), grabbers[ii].cloudDisplay, autoUpdate)){
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
@@ -814,7 +816,7 @@ auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DC
     }
 
     for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_dc_model_tab_item(fmt("[{}]###{}_cloud_calibration_tabitem", ii, ii), grabbers[ii].model, autoUpdate)){
+        if(DCUIDrawer::draw_dc_model_tab_item(std::format("[{}]###{}_cloud_calibration_tabitem", ii, ii), grabbers[ii].model, autoUpdate)){
             DCMSignals::get()->update_model_settings_signal(ii, grabbers[ii].model);
         }
     }
@@ -836,7 +838,7 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings
     }
 
     for(size_t ii = 0; ii < grabbers.size(); ++ii){        
-        if(DCUIDrawer::draw_dc_colors_settings_tab_item(fmt("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color, autoUpdate)){
+        if(DCUIDrawer::draw_dc_colors_settings_tab_item(std::format("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color, autoUpdate)){
             DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
         }
     }
@@ -845,7 +847,7 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings
     ImGui::Spacing();
     ImGuiUiDrawer::title2("COPY");
 
-    if(ImGui::Button(fmt("Copy{}_copy_colors", base).c_str())){
+    if(ImGui::Button(std::format("Copy{}_copy_colors", base).c_str())){
         DCColorSettings *fromColor = &grabbers[guiCurrentFromColorsSelection].color;
         if(guiCurrentTargetColorsSelection == 0){ // all
             for(size_t ii = 0; ii < grabbers.size(); ++ii){
@@ -860,12 +862,12 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings
     ImGui::Text(" from:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(60);
-    ImGuiUiDrawer::combo(fmt("{}_from_color", base).c_str(), &guiCurrentFromColorsSelection, fromColor);
+    ImGuiUiDrawer::combo(std::format("{}_from_color", base).c_str(), &guiCurrentFromColorsSelection, fromColor);
     ImGui::SameLine();
     ImGui::Text(" to:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(60);
-    ImGuiUiDrawer::combo(fmt("{}_target_color", base).c_str(), &guiCurrentTargetColorsSelection, targetsColor);
+    ImGuiUiDrawer::combo(std::format("{}_target_color", base).c_str(), &guiCurrentTargetColorsSelection, targetsColor);
     ImGui::Dummy(ImVec2{0,20});
 
 

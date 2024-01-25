@@ -36,13 +36,13 @@ using namespace tool::net;
 
 auto Header::generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header{
     Header header;
-    header.type = type;
-    header.totalSizeBytes = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);
-    header.totalNumberPackets = 1;
-    header.currentPacketId = 0;
-    header.currentPacketSizeBytes = header.totalSizeBytes;
-    header.currentPacketTime = Time::nanoseconds_since_epoch().count();
-    header.dataOffset = 0;
+    header.type                     = type;
+    header.totalSizeBytes           = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);
+    header.totalNumberPackets       = 1;
+    header.currentPacketId          = 0;
+    header.currentPacketSizeBytes   = header.totalSizeBytes;
+    header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
+    header.dataOffset               = 0;
     return header;
 }
 

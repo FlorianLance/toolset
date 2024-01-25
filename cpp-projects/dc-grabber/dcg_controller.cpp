@@ -128,8 +128,8 @@ auto DCGController::set_connections() -> void{
     CCo::receive_delay_signal.connect(                               &Sett::update_delay,                                   sett);
     CCo::disconnect_signal.connect(                                  &Sett::disconnect,                                     sett);
     dev->new_imu_sample_signal.connect(                              &Sett::update_imu_sample,                              sett);
-    DevM::update_device_name_signal.connect(                         [&](int deviceId, std::string deviceName){
-        tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName);
+    dev->update_device_name_signal.connect(                          [&](int deviceId, std::string deviceName){
+        tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName); // TODO: move to settings/states ?
     });
     s->reset_device_settings_signal.connect(                         &Sett::reset_device_settings,                          sett);
     s->save_device_settings_to_default_file_signal.connect(          &Sett::save_device_settings_to_default_file,           sett);

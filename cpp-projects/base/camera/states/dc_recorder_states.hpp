@@ -34,10 +34,10 @@ namespace tool::cam {
 struct DCRecorderStates{
 
     bool isRecording = false;
-    std::vector<size_t> nbFramesRecorded;
-    std::vector<size_t> currentFrames;
     double currentTime = 0.0;
     double duration = 0.0;
+    std::vector<size_t> nbFramesRecorded;
+    std::vector<size_t> currentFrames;
 
     // actions
     bool startRecording = false;

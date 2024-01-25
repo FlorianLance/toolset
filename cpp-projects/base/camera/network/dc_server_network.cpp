@@ -74,8 +74,8 @@ auto DCServerNetwork::initialize(const std::vector<net::ReadSendNetworkInfos> &c
         }else{
             Logger::message("[DCServerNetwork::initialize] Create remote device. \n");
             auto rDevice = std::make_unique<DCServerRemoteDevice>();
-            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t s){
-                this->remote_synchro_signal(idDevice, s);
+            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t averageTimestampDiffNs){
+                this->remote_synchro_signal(idDevice, averageTimestampDiffNs);
             });
             rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
                 this->remote_feedback_signal(idDevice, feedback);
@@ -94,27 +94,20 @@ auto DCServerNetwork::initialize(const std::vector<net::ReadSendNetworkInfos> &c
         Logger::message("[DCServerNetwork::initialize] Add device to list.\n");
         i->devices.push_back(std::move(device));
         ++idDevice;
-
     }
 }
 
 
 auto DCServerNetwork::clean() -> void{
+
+    // clean devices
     for(auto &device : i->devices){
         device->clean();
     }
+
+    // remove devices
     i->devices.clear();
 }
-
-// auto DCServerNetwork::reset_device(size_t idD, const net::ReadSendNetworkInfos &clientInfo) -> void{
-//     if(idD < devices_nb()){
-//         i->devices[idD]->clean();
-
-//         // std::unique_ptr<DCServerDevice> device = nullptr;
-
-//     }
-//     // auto &clientInfo = networkS.clientsInfo[idD];
-// }
 
 auto DCServerNetwork::init_connection(size_t idG) -> void{
     if(idG < i->devices.size()){

@@ -41,7 +41,7 @@ DCServerLocalDevice::DCServerLocalDevice() : i(std::make_unique<DCServerLocalDev
 }
 
 DCServerLocalDevice::~DCServerLocalDevice(){
-    clean();
+    DCServerLocalDevice::clean();
 }
 
 auto DCServerLocalDevice::initialize(const ReadSendNetworkInfos &infos) -> bool{

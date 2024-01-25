@@ -340,7 +340,7 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     {M::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
     {M::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
     {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
-    {M::FO_CLOUD_DI512x512_MJPG_F30,                                   IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
+    {M::FO_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
     // invalid
     {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,               FPS::F30, {0.f,0.f},     {0,0},         false,  false,  Dev::Undefined},
 }};

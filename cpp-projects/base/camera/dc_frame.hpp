@@ -36,8 +36,9 @@
 namespace tool::cam{
 
 struct Frame{
-    std::int32_t idCapture = 0;
-    std::int64_t afterCaptureTS = 0;    
+    std::int32_t idCapture      = 0;
+    std::int64_t afterCaptureTS = 0;
+    std::int64_t receivedTS     = 0;
     virtual ~Frame(){}
 };
 

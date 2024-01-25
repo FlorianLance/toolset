@@ -30,9 +30,6 @@
 // local
 #include "utility/logger.hpp"
 
-#include <format>
-#include <iostream>
-
 using namespace tool::geo;
 
 VoxelGrid::VoxelGrid(float voxelSize, Pt3f minBound, Pt3f maxBound) : voxelSize(voxelSize), origin(minBound), size(maxBound){

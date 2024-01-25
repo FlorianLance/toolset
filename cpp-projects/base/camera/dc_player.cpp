@@ -11,63 +11,250 @@
 
 using namespace tool::cam;
 
+struct DCPlayerData{
+
+
+    DCVideo video;
+    std::vector<size_t> camerasFrameId;
+    std::vector<std::shared_ptr<DCCompressedFrame>> camerasCompressedFrame;
+    std::vector<std::shared_ptr<DCFrame>> camerasFrame;
+
+    auto initialize(const DCVideo &nVideo) -> void{
+
+        // copy video
+        video = nVideo;
+
+        size_t nbDevices = video.nb_cameras();
+        camerasFrameId.resize(nbDevices);
+        camerasCompressedFrame.resize(nbDevices);
+        camerasFrame.resize(nbDevices);
+
+        std::fill(std::begin(camerasFrameId),         std::end(camerasFrameId), 0);
+        std::fill(std::begin(camerasCompressedFrame), std::end(camerasCompressedFrame), nullptr);
+        std::fill(std::begin(camerasFrame),           std::end(camerasFrame), nullptr);
+    }
+
+    auto load_from_file(std::string_view path) -> bool{
+
+        if(video.load_from_file(path)){
+            size_t nbDevices = video.nb_cameras();
+            camerasFrameId.resize(nbDevices);
+            camerasCompressedFrame.resize(nbDevices);
+            camerasFrame.resize(nbDevices);
+
+            std::fill(std::begin(camerasFrameId),         std::end(camerasFrameId), 0);
+            std::fill(std::begin(camerasCompressedFrame), std::end(camerasCompressedFrame), nullptr);
+
+            for(auto &cameraFrame : camerasFrame){
+                cameraFrame = std::make_shared<DCFrame>();
+            }
+
+            // std::cout << "VIDEO " << video.nb_cameras() << " " << video.duration_ms() << "\n";
+            // for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
+            //     std::cout << "FROM idc " << idC << " " << video.nb_frames(idC) <<  "\n";
+            //     auto firstC = video.get_compressed_frames_ptr(idC)->first_frame_received_timestamp();
+            //     auto lastC = video.get_compressed_frames_ptr(idC)->last_frame_received_timestamp();
+            //     std::cout << firstC << " " << lastC << " " << video.camera_duration_ms(idC) << "\n";
+
+            //     for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
+            //         if(auto camD = video.get_compressed_frame(idC, idF).lock()){
+            //             std::cout << " -> " << camD->idCapture << " " << camD->afterCaptureTS << " " << camD->receivedTS << " " << camD->cloud_vertices_size() << " " <<
+            //                 std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(camD->receivedTS-firstC)).count() << "ms\n";
+            //         }
+            //     }
+            //     auto duration = video.duration_ms();
+            //     for(int t = 0; t < duration; t += 50){
+            //         std::cout << "T " << t << " " << video.closest_frame_id_from_time(idC, t) << "\n";
+            //     }
+            // }
+
+            return true;
+        }
+
+        return false;
+    }
+
+
+    auto set_current_time(double timeMs) -> void{
+        if(timeMs > video.duration_ms()){
+            timeMs = video.duration_ms();
+        }
+        stopWatch.set_current_time(timeMs);
+    }
+
+    auto start_playing() -> void{
+
+        if(stopWatch.is_started()){
+            return;
+        }
+        stopWatch.start();
+    }
+
+    auto stop_playing() -> void{
+
+        if(!stopWatch.is_started()){
+            return;
+        }
+        stopWatch.stop();
+    }
+
+    auto is_started() const noexcept -> bool{
+        return stopWatch.is_started();
+    }
+
+    auto current_time_ms() -> double{
+        return stopWatch.ellapsed_milli_s();
+    }
+
+    auto update_frames(double timeMs) -> void{
+        for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
+            if(auto idF = video.closest_frame_id_from_time(idC, timeMs); idF != -1){
+                if(idF != camerasFrameId[idC]){ 
+                    camerasCompressedFrame[idC] = video.get_compressed_frame(idC, idF).lock();
+                    camerasFrameId[idC]         = idF;
+                }
+            }
+        }
+    }
+
+    auto uncompress_frame(size_t idCamera) -> bool{
+        if(idCamera < camerasFrameId.size()){
+            if(camerasCompressedFrame[idCamera] != nullptr){
+                if(camerasFrame[idCamera] != nullptr){
+                    camerasFrame[idCamera] = std::make_shared<DCFrame>();
+                }
+                if(camerasCompressedFrame[idCamera]->idCapture != camerasFrame[idCamera]->idCapture){
+                    return video.uncompress_frame(idCamera, camerasCompressedFrame[idCamera].get(), *camerasFrame[idCamera]);
+                }
+            }
+        }
+        return false;
+    }
+
+
+    auto current_frame_id(size_t idCamera) const noexcept -> size_t{
+        if(idCamera < camerasFrameId.size()){
+            return camerasFrameId[idCamera];
+        }
+        return 0;
+    }
+
+
+    auto remove_empty_cameras() -> void{
+        tool::Logger::error("[DCPlayerData::remove_empty_cameras] Not implemented.\n");
+
+        // for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
+        //     Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->data.video.nb_frames(ii)));
+
+        //     for(size_t jj = 0; jj < i->data.video.nb_frames(ii); ++jj){
+        //         auto nbV = i->data.video.get_compressed_frames_ptr(ii)->valid_vertices_count(ii);
+        //         Logger::message(std::format(" {}",nbV));
+        //     }
+        // }
+
+        // size_t idC = 0;
+        // for(const auto &ccf : i->data.camerasCompressedFrame){
+        //     if(ccf != nullptr){
+        //         Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
+        //     }
+        //     idC++;
+        // }
+
+        // std::vector<size_t> idCamerasToKeep;
+        // for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
+        //     if(i->videoResource.nb_frames(ii) > 0){
+        //         Logger::message(std::format("keep camera {}",ii));
+        //         idCamerasToKeep.push_back(ii);
+        //     }
+        // }
+        // i->videoResource.keep_only_cameras_from_id(idCamerasToKeep);
+
+        // i->currentCompressedFrames.resize(idCamerasToKeep.size());
+        // for(auto &ccf : i->currentCompressedFrames){
+        //     ccf = nullptr;
+        // }
+        // i->currentFrames.resize(idCamerasToKeep.size());
+        // for(auto &cf : i->currentFrames){
+        //     cf = nullptr;
+        // }
+        // update_states();
+
+        // std::vector<DCModelSettings> models;
+        // for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
+        //     DCModelSettings model;
+        //     model.transformation = i->videoResource.get_transform(ii).conv<float>();
+        //     models.push_back(model);
+        // }
+        // initialize_signal(std::move(models));
+
+        return;
+
+    }
+
+
+    auto merge_before(DCVideo &other) -> void{
+
+        tool::Logger::error("[DCPlayerData::merge_before] Not implemented.\n");
+
+        // if(other.nb_cameras() != video.nb_cameras()){
+        //     tool::Logger::error("[DCPlayerData::merge_before] Incompatible number of cameras.\n");
+        //     return;
+        // }
+
+        // for(size_t idCamera = 0; idCamera < video.nb_cameras(); ++idCamera){
+        //     if(video.get_transform(idCamera)  != other.get_transform(idCamera)){
+        //         tool::Logger::warning("[DCPlayerData::merge_before] The video to be merged has different transforms.\n");
+        //         break;
+        //     }
+        // }
+
+        // ...
+    }
+
+private:
+
+    tool::StopWatch stopWatch;
+};
+
 struct DCPlayer::Impl{
-
-    StopWatch sw;
-    std::vector<std::shared_ptr<DCCompressedFrame>> currentCompressedFrames;
-    std::vector<std::shared_ptr<DCFrame>> currentFrames;
-
+    DCPlayerData data;
     DCPlayerStates states;
     DCPlayerSettings settings;
-    DCVolumetricVideo videoResource;
 };
 
 DCPlayer::DCPlayer(): i(std::make_unique<Impl>()){
-
 }
 
 DCPlayer::~DCPlayer(){
-
 }
 
+auto DCPlayer::set_video(const DCVideo &video) -> void{
 
-auto DCPlayer::set_video(const DCVolumetricVideo &video) -> void{
-
-    i->videoResource = video;
-
-    i->currentCompressedFrames.clear();
-    i->currentCompressedFrames.resize(i->videoResource.nb_cameras());
-    std::fill(std::begin(i->currentCompressedFrames), std::end(i->currentCompressedFrames), nullptr);
-
-    i->currentFrames.clear();
-    i->currentFrames.resize(i->videoResource.nb_cameras());
-    std::fill(std::begin(i->currentFrames), std::end(i->currentFrames), nullptr);
+    i->data.initialize(video);
     update_states();
 
+    // retrieve models and send them
     std::vector<DCModelSettings> models;
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
+    for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
         DCModelSettings model;
-        model.transformation = i->videoResource.get_transform(ii).conv<float>();
+        model.transformation = i->data.video.get_transform(ii).conv<float>();
         models.push_back(model);
     }
     initialize_signal(std::move(models));
 }
 
 auto DCPlayer::display_infos() -> void{
+    // using namespace std::chrono;
+    // for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
-    using namespace std::chrono;
-
-
-    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
-
-        std::cout << "FROM idc " << idC << "\n";
-        auto firstC = video()->get_camera_data(idC)->first_frame_capture_timestamp();
-        for(size_t idC2 = 0; idC2 < video()->nb_cameras(); ++idC2){
-            auto camD = video()->get_camera_data(idC2);
-            auto diff = nanoseconds(camD->first_frame_capture_timestamp() - firstC);
-            std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_capture_timestamp()/**.value()*/ << " " << camD->last_frame_capture_timestamp()/**.value()*/ << "\n";
-        }
-    }
+    //     std::cout << "FROM idc " << idC << "\n";
+    //     auto firstC = video()->get_compressed_frames_ptr(idC)->first_frame_received_timestamp();
+    //     for(size_t idC2 = 0; idC2 < video()->nb_cameras(); ++idC2){
+    //         auto camD = video()->get_compressed_frames_ptr(idC2);
+    //         auto diff = nanoseconds(camD->first_frame_received_timestamp() - firstC);
+    //         std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_received_timestamp()/**.value()*/ << " " << camD->last_frame_received_timestamp()/**.value()*/ << "\n";
+    //     }
+    // }
 
 //    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 //        auto camD = video()->get_camera_data(idC);
@@ -83,27 +270,18 @@ auto DCPlayer::display_infos() -> void{
 //    }
 }
 
-
 auto DCPlayer::start_playing() -> void{
-    if(i->sw.is_started()){
-        return;
-    }
-    i->sw.start();
-
+    i->data.start_playing();
     update_states();
 }
 
 auto DCPlayer::stop_playing() -> void{
-    if(!i->sw.is_started()){
-        return;
-    }
-    i->sw.stop();
-
+    i->data.stop_playing();
     update_states();
 }
 
 auto DCPlayer::current_time_ms() const noexcept -> double{
-    return i->sw.ellapsed_milli_s();
+    return i->data.current_time_ms();
 }
 
 auto DCPlayer::is_looping() const noexcept -> bool {
@@ -111,19 +289,12 @@ auto DCPlayer::is_looping() const noexcept -> bool {
 }
 
 auto DCPlayer::restart() -> void{
-    set_current_time(0.0);
+    i->data.set_current_time(0.0);
+    update_states();
 }
 
 auto DCPlayer::set_current_time(double timeMs) -> void{
-
-
-    if(timeMs > video()->duration_ms()){
-        timeMs = video()->duration_ms();
-    }
-
-    i->states.currentTime = timeMs;
-    i->sw.set_current_time(i->states.currentTime);
-
+    i->data.set_current_time(timeMs);
     update_states();
 }
 
@@ -132,163 +303,75 @@ auto DCPlayer::update_time() -> void{
     auto cTime = current_time_ms();
     if(cTime > video()->duration_ms()){
         if(is_looping()){
-            set_current_time(0.0);
+            cTime = 0.0;
+            i->data.set_current_time(cTime);
         }else{
-            stop_playing();
+            i->data.stop_playing();
         }
     }
 
-    for(size_t idC = 0; idC < i->videoResource.nb_cameras(); ++idC){
-
-        if(i->videoResource.nb_frames(idC) == 0){
-            continue;
-        }
-
-        if(auto idF = i->videoResource.closest_frame_id_from_time(idC, cTime); idF != -1){
-            i->currentCompressedFrames[idC] = i->videoResource.get_compressed_frame(idC, idF).lock();
-            update_states();
-        }else{
-            Logger::error("[DCPlayer::update_time] Invalid id for wanted time.");
-        }
-    }
+    i->data.update_frames(cTime);
+    update_states();
 }
 
 auto DCPlayer::remove_until_current_frame() -> void{
 
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        i->videoResource.remove_compressed_frames_until(ii, current_frame_id(ii));
-    }
-
-    set_current_time(0.0);    
+    for(size_t idC = 0; idC < i->data.video.nb_cameras(); ++idC){
+        i->data.video.remove_compressed_frames_until(idC, current_frame_id(idC));
+    }    
+    i->data.set_current_time(0.0);
+    update_states();
 }
 
 auto DCPlayer::remove_after_current_frame() -> void{
 
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        i->videoResource.remove_compressed_frames_after(ii, current_frame_id(ii));
+    for(size_t idC = 0; idC < i->data.video.nb_cameras(); ++idC){
+        i->data.video.remove_compressed_frames_after(idC, current_frame_id(idC));
     }
-
     update_states();
 }
 
 auto DCPlayer::merge() -> void{
-    Logger::error("MERGE.\n");
-    remove_empty_cameras();
+    Logger::error("[DCPlayer::merge] Not implemented.\n");
+    // remove_empty_cameras();
 //    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
+    // update_states();
 }
 
 auto DCPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
 
-    if(i->videoResource.nb_cameras() < 1){
+    if(i->data.video.nb_cameras() < 1){
         return;
     }
 
-    i->videoResource.merge_all_cameras(voxelSize, minBound, maxBound);
+    i->data.video.merge_all_cameras(voxelSize, minBound, maxBound);
+    i->data.camerasCompressedFrame = {nullptr};
+    i->data.camerasFrame = {nullptr};
 
-//    i->videoResource.keep_only_one_camera(2);
-
-    i->currentCompressedFrames = {nullptr};
-    i->currentFrames = {nullptr};
     update_states();
 
     std::vector<DCModelSettings> models(1);
-    models.front().transformation = i->videoResource.get_transform(0).conv<float>();
+    models.front().transformation = i->data.video.get_transform(0).conv<float>();
     initialize_signal(std::move(models));
 }
 
 auto DCPlayer::remove_empty_cameras() -> void{
-
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->videoResource.nb_frames(ii)));
-
-
-        for(size_t jj = 0; jj < i->videoResource.nb_frames(ii); ++jj){
-            auto nbV = i->videoResource.get_camera_data(ii)->valid_vertices_count(ii);
-            Logger::message(std::format(" {}",nbV));
-        }
-    }
-
-    size_t idC = 0;
-    for(const auto &ccf : i->currentCompressedFrames){
-        if(ccf != nullptr){
-            Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
-        }
-        idC++;
-    }
-
-    return;
-
-    std::vector<size_t> idCamerasToKeep;
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        if(i->videoResource.nb_frames(ii) > 0){
-            Logger::message(std::format("keep camera {}",ii));
-            idCamerasToKeep.push_back(ii);
-        }
-    }   
-    i->videoResource.keep_only_cameras_from_id(idCamerasToKeep);
-
-    i->currentCompressedFrames.resize(idCamerasToKeep.size());
-    for(auto &ccf : i->currentCompressedFrames){
-        ccf = nullptr;
-    }
-    i->currentFrames.resize(idCamerasToKeep.size());
-    for(auto &cf : i->currentFrames){
-        cf = nullptr;
-    }
+    i->data.remove_empty_cameras();
     update_states();
-
-    std::vector<DCModelSettings> models;
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        DCModelSettings model;
-        model.transformation = i->videoResource.get_transform(ii).conv<float>();
-        models.push_back(model);
-    }
-    initialize_signal(std::move(models));
 }
 
 auto DCPlayer::update_settings(const DCPlayerSettings &playerS) noexcept -> void {
     i->settings = playerS;
 }
 
-auto DCPlayer::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
-
-    if(idCamera >= i->currentCompressedFrames.size()){
-        // ...
-        return false;
-    }
-
-    if(i->currentCompressedFrames[idCamera] == nullptr){
-        // ...
-        return false;
-    }
-
-    if(i->currentCompressedFrames[idCamera]->idCapture == frame.idCapture){
-        return false;
-    }
-
-    return i->videoResource.uncompress_frame(idCamera, i->currentCompressedFrames[idCamera].get(), frame);
-}
 
 auto DCPlayer::current_frame_id(size_t idCamera) const -> size_t{
-    size_t idF = 0;
-    for(auto &frame : i->videoResource.get_camera_data(idCamera)->frames){
-        if(frame->idCapture == current_frame_id_capture(idCamera)){
-            return idF;
-        }
-        ++idF;
-    }
-    return 0;
+    return i->data.current_frame_id(idCamera);
 }
 
-auto DCPlayer::current_frame_id_capture(size_t idCamera) const -> size_t{
-    if(i->currentCompressedFrames[idCamera] != nullptr){
-        return i->currentCompressedFrames[idCamera]->idCapture;
-    }
-    return 0;
-}
 
 auto DCPlayer::is_playing() const -> bool{
-    return i->sw.is_started();
+    return i->data.is_started();
 }
 
 auto DCPlayer::update_frames() -> void{
@@ -299,96 +382,76 @@ auto DCPlayer::update_frames() -> void{
             continue;
         }
 
-        if(i->currentFrames[idC] == nullptr){
-            i->currentFrames[idC] = std::make_shared<DCFrame>();
-        }
-
-        if(uncompress_frame(idC, *i->currentFrames[idC])){
-            new_frame_signal(idC, i->currentFrames[idC]);
+        if(i->data.uncompress_frame(idC)){
+            new_frame_signal(idC, i->data.camerasFrame[idC]);
         }
     }
 }
 
-auto DCPlayer::video() -> DCVolumetricVideo* {
-    return &i->videoResource;
+auto DCPlayer::video() -> DCVideo* {
+    return &i->data.video;
 }
 
 auto DCPlayer::load_from_file(std::string_view path) -> bool{
 
-    auto res = i->videoResource.load_from_file(path);
-
-    if(res){
-        i->currentCompressedFrames.clear();
-        i->currentCompressedFrames.resize(i->videoResource.nb_cameras());
-        std::fill(std::begin(i->currentCompressedFrames), std::end(i->currentCompressedFrames), nullptr);
-
-        i->currentFrames.clear();
-        i->currentFrames.resize(i->videoResource.nb_cameras());
-        std::fill(std::begin(i->currentFrames), std::end(i->currentFrames), nullptr);
+    if(i->data.load_from_file(path)){
 
         update_states();
 
+        // retrieve models and send them
         std::vector<DCModelSettings> models;
-        for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
+        for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
             DCModelSettings model;
-            model.transformation = i->videoResource.get_transform(ii).conv<float>();
+            model.transformation = i->data.video.get_transform(ii).conv<float>();
             models.push_back(model);
         }
         initialize_signal(std::move(models));
-    }   
 
-    return res;
+        return true;
+    }
+
+    return false;
 }
 
-auto DCPlayer::save_to_file(std::string_view path) -> bool{ return i->videoResource.save_to_file(path);}
+auto DCPlayer::save_to_file(std::string_view path) -> bool{
+    return i->data.video.save_to_file(path);
+}
 
-auto DCPlayer::merge_before(DCVolumetricVideo &other) -> void{
-
-    if(other.nb_cameras() != i->videoResource.nb_cameras()){
-        Logger::error("[DCPlayer::merge_before] Incompatible number of cameras.\n");
-        return;
-    }
-
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        if(i->videoResource.get_camera_data(ii)->transform != other.get_camera_data(ii)->transform){
-            Logger::warning("[DCPlayer::merge_before] The video to be merged has different transforms.\n");
-            break;
-        }
-    }
-
-    // ...
+auto DCPlayer::merge_before(DCVideo &other) -> void{    
+    i->data.merge_before(other);
     update_states();
 }
 
 auto DCPlayer::save_cloud_to_file(std::string_view path) -> bool{
-    Logger::error("[DCPlayer::save_cloud_to_file] Not implemented.\n");
 
-    size_t idC = 0;
-    for(const auto &ccf : i->currentCompressedFrames){
-        if(ccf != nullptr){
-            Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
-        }
-        idC++;
-    }
+    Logger::error("[DCPlayer::save_cloud_to_file] Not implemented.\n");
+    // size_t idC = 0;
+    // for(const auto &ccf : i->data.camerasCompressedFrame){
+    //     if(ccf != nullptr){
+    //         Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
+    //     }
+    //     idC++;
+    // }
 
     return true;
 }
 
-auto DCPlayer::update_states() -> void{
+auto DCPlayer::update_states() -> void{    
 
-    if(i->states.nbFrames.size() != i->videoResource.nb_cameras()){
-        i->states.nbFrames.resize(i->videoResource.nb_cameras());
-        i->states.currentFrames.resize(i->videoResource.nb_cameras());
+    if(i->states.nbFrames.size() != i->data.video.nb_cameras()){
+        i->states.nbFrames.resize(i->data.video.nb_cameras());
+        i->states.currentFrames.resize(i->data.video.nb_cameras());
     }
 
-    for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
-        i->states.nbFrames[ii] = i->videoResource.nb_frames(ii);
-        i->states.currentFrames[ii] = current_frame_id_capture(ii);
+    for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
+        i->states.nbFrames[ii]      = i->data.video.nb_frames(ii);
+        i->states.currentFrames[ii] = current_frame_id(ii);
     }
 
-    i->states.isPlaying   = i->sw.is_started();
+    i->states.isPlaying   = i->data.is_started();
     i->states.duration    = video()->duration_ms();
     i->states.currentTime = current_time_ms();
+
     states_updated_signal(i->states);
 }
 

@@ -34,7 +34,7 @@ struct Time{
 
     [[maybe_unused]] static auto nanoseconds_since_epoch() -> std::chrono::nanoseconds{
         using namespace std::chrono;
-        return duration_cast<nanoseconds>(system_clock::now().time_since_epoch()) + offsetNano;
+        return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());// + offsetNano;
     }
 
     [[maybe_unused]] static auto milliseconds_since_epoch() -> std::chrono::milliseconds{
@@ -42,7 +42,7 @@ struct Time{
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     }
 
-    static inline std::chrono::nanoseconds offsetNano = std::chrono::nanoseconds(0);
+    // static inline std::chrono::nanoseconds offsetNano = std::chrono::nanoseconds(0);
 };
 
 }

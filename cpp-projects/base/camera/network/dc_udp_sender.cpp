@@ -167,8 +167,7 @@ auto DCServerUdpSender::send_update_filters_settings_message(const cam::DCFilter
 
 auto DCClientUdpSender::send_synchronisation_message() -> bool{
 
-    if(!is_opened()){
-        Logger::error("DCClientUdpSender::send_synchronisation_message: sender not opened, message canceled.\n");
+    if(!is_opened()){ Logger::error("DCClientUdpSender::send_synchronisation_message: sender not opened, message canceled.\n");
         return false;
     }
 

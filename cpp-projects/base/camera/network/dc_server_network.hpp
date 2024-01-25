@@ -45,9 +45,9 @@ struct DCServerNetwork{
 
     DCServerNetwork();
     ~DCServerNetwork();
+
     auto initialize(const std::vector<net::ReadSendNetworkInfos> &clientsInfo) -> void;
     auto clean() -> void;
-    // auto reset_device(size_t idD, const net::ReadSendNetworkInfos &clientInfo) -> void;
 
     auto init_connection(size_t idG) -> void;
     auto apply_command(size_t idG, Command command) -> void;

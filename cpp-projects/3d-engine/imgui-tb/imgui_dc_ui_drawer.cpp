@@ -212,9 +212,6 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
             if(ImGuiUiDrawer::draw_drag_float_with_buttons("Hue","hue", mdcd, fs, ds)){
                 update = true;
             }
-//            ImGui::SameLine();
-//            tex.init_or_update_8ui(100,25,3, tData.data());
-//            ImGui::Image(tex.id(), {100,25}, ImVec2(0,0), ImVec2(1,1));
 
             fs.speedDrag = 0.001f;
             fs.speedInc = 0.01f;
@@ -223,16 +220,10 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
             if(ImGuiUiDrawer::draw_drag_float_with_buttons("Saturation","saturation", mdcd+1, fs, ds)){
                 update = true;
             }
-//            ImGui::SameLine();
-//            tex.init_or_update_8ui(100,25,3, tData.data());
-//            ImGui::Image(tex.id(), {100,25}, ImVec2(0,0), ImVec2(1,1));
 
             if(ImGuiUiDrawer::draw_drag_float_with_buttons("Value","value", mdcd+2, fs, ds)){
                 update = true;
             }
-//            ImGui::SameLine();
-//            tex.init_or_update_8ui(100,25,3, tData.data());
-//            ImGui::Image(tex.id(), {100,25}, ImVec2(0,0), ImVec2(1,1));
 
             ImGui::Unindent();
         }
@@ -561,7 +552,7 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     dSettings.displayTextLeft = true;
 
     int currentTime = static_cast<int>(rStates.currentTime);
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Timeline", "recorder_timeline", &currentTime, iSettings, dSettings)){
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Timeline (ms): ", "recorder_timeline", &currentTime, iSettings, dSettings)){
         rStates.currentTime = currentTime;
         rStates.moveTime = true;        
     }
@@ -657,7 +648,7 @@ auto DCUIDrawer::draw_dc_player_tab_item(
     dSettings.displayTextLeft = true;
 
     int currentTime = static_cast<int>(pStates.currentTime);    
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Timeline", "player_timeline", &currentTime, iSettings, dSettings)){
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Timeline (ms):", "player_timeline", &currentTime, iSettings, dSettings)){
         pStates.moveTime = true;
         pStates.currentTime = currentTime;
     }

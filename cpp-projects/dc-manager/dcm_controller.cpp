@@ -62,7 +62,7 @@ auto DCMController::initialize() -> bool{
         return false;
     }
     // # view
-    view->initialize(model->sNetwork.devices_nb());
+    view->initialize(model->sNetwork->devices_nb());
 
     model->trigger_settings();
 
@@ -98,7 +98,7 @@ auto DCMController::set_connections() -> void{
     auto playerD        = &middleD->playerD;
     auto calibrationD   = &middleD->calibratorD;
     // # model
-    auto serverNet      = &model->sNetwork;
+    auto serverNet      = model->sNetwork.get();
     auto serverData     = &model->sData;
     auto settings       = &model->settings;
     auto states         = &model->states;

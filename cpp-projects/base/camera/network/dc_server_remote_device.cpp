@@ -34,6 +34,7 @@
 #include "dc_udp_sender.hpp"
 #include "dc_udp_reader.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 
 using namespace tool::net;
 
@@ -43,11 +44,13 @@ struct DCServerRemoteDevice::Impl{
     ReadSendNetworkInfos infos;
     bool remoteDeviceConnected = false;
 
-    std::int64_t initTs;
-    std::atomic<size_t> totalReceivedBytes = 0;
-    DCServerUdpSender udpSender;
-    DCServerUdpReader udpReader;
 
+    std::atomic<size_t> totalReceivedBytes = 0;
+    DCServerUdpSender dcUdpSender;
+    DCServerUdpReader dcUdpReader;
+
+    std::int64_t initTimstampNs;
+    std::int64_t averageTimestampDiffNs = 0;
     static constexpr std::uint16_t maxSizeUpdMessage = 9000;
 };
 
@@ -59,6 +62,7 @@ DCServerRemoteDevice::~DCServerRemoteDevice(){
     DCServerRemoteDevice::clean();
 }
 
+#include <iostream>
 auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool {
 
     // i->id    = id;
@@ -66,25 +70,25 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
 
     // init reader
     Logger::message(std::format("DCServerRemoteDevice init reader: {} {} {}\n", i->infos.readingAdress, std::to_string(i->infos.readingPort), static_cast<int>(i->infos.protocol)));
-    if(!i->udpReader.init_socket(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
+    if(!i->dcUdpReader.init_socket(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
         Logger::error("[DCServerRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
-    i->udpReader.start_reading();
+    i->dcUdpReader.start_reading();
 
     // init sender
     Logger::message(std::format("DCServerRemoteDevice init sender: {} {} {}\n", i->infos.sendingAdress, std::to_string(i->infos.sendingPort), static_cast<int>(i->infos.protocol)));
-    if(!i->udpSender.init_socket(i->infos.sendingAdress, std::to_string(i->infos.sendingPort), i->infos.protocol)){
+    if(!i->dcUdpSender.init_socket(i->infos.sendingAdress, std::to_string(i->infos.sendingPort), i->infos.protocol)){
         Logger::error("[DCServerRemoteDevice]: Cannot init udp sender.\n");
         return false;
     }
 
     // connections
-    i->udpReader.synchro_signal.connect([&](std::int64_t timestamp){
-        remote_synchro_signal(timestamp);
+    i->dcUdpReader.synchro_signal.connect([&](std::int64_t averageTimestampDiffNs){
+        remote_synchro_signal(i->averageTimestampDiffNs = averageTimestampDiffNs);
     });
-    i->udpReader.feedback_signal.connect(&DCServerRemoteDevice::receive_feedback, this);
-    i->udpReader.compressed_frame_signal.connect(&DCServerRemoteDevice::receive_compressed_frame, this);
+    i->dcUdpReader.feedback_signal.connect(&DCServerRemoteDevice::receive_feedback, this);
+    i->dcUdpReader.compressed_frame_signal.connect(&DCServerRemoteDevice::receive_compressed_frame, this);
 
     return true;
 }
@@ -101,64 +105,73 @@ auto DCServerRemoteDevice::init_remote_connection() -> void{
         static_cast<int>(i->infos.protocol))
     );
 
-    i->initTs = i->udpSender.send_init_message(
+    i->initTimstampNs = i->dcUdpSender.send_init_message(
         UdpNetworkSendingSettings(
             i->infos.readingAdress,
             i->infos.readingPort,
             i->maxSizeUpdMessage
         )
-    ).currentPacketTime;
+    ).currentPacketTimestampNs;
 }
 
 auto DCServerRemoteDevice::clean() -> void{
 
-    i->udpReader.feedback_signal.disconnect(&DCServerRemoteDevice::receive_feedback, this);
-    i->udpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);
-    i->remoteDeviceConnected = false;
-
-    // manager size
-    if(i->udpReader.is_reading()){
-        i->udpReader.stop_reading();
+    // clean sender
+    // # disconnect client
+    if(i->dcUdpSender.is_opened()){
+        i->dcUdpSender.send_command_message(Command::Disconnect);
     }
-    i->udpReader.clean_socket();
-    i->udpSender.clean_socket();
+    // # clean socket
+    i->dcUdpSender.clean_socket();
+
+    // clean reader
+    // # remove connections
+    i->dcUdpReader.feedback_signal.disconnect(&DCServerRemoteDevice::receive_feedback, this);
+    i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);
+    i->remoteDeviceConnected = false;
+    // # stop reading loop
+    if(i->dcUdpReader.is_reading()){
+        i->dcUdpReader.stop_reading();
+    }
+    // # clean socket
+    i->dcUdpReader.clean_socket();
 }
 
 auto DCServerRemoteDevice::apply_command(Command command) -> void{
 
     switch(command){
     case Command::Disconnect:
-        i->udpSender.send_command_message(Command::Disconnect);
+        i->dcUdpSender.send_command_message(Command::Disconnect);
         break;
     case Command::Quit:
-        i->udpSender.send_command_message(Command::Quit);
+        i->dcUdpSender.send_command_message(Command::Quit);
         break;
     case Command::Shutdown:
-        i->udpSender.send_command_message(Command::Shutdown);
+        i->dcUdpSender.send_command_message(Command::Shutdown);
         break;
     case Command::Restart:
-        i->udpSender.send_command_message(Command::Restart);
+        i->dcUdpSender.send_command_message(Command::Restart);
         break;
     case Command::UpdateDeviceList:
-        i->udpSender.send_command_message(Command::UpdateDeviceList);
+        i->dcUdpSender.send_command_message(Command::UpdateDeviceList);
         break;
     }
 }
 
 auto DCServerRemoteDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
-    i->udpSender.send_update_device_settings_message(deviceS);
+    i->dcUdpSender.send_update_device_settings_message(deviceS);
 }
 
 auto DCServerRemoteDevice::update_color_settings(const cam::DCColorSettings &colorS) -> void{
-    i->udpSender.send_update_color_settings_message(colorS);
+    i->dcUdpSender.send_update_color_settings_message(colorS);
 }
 
 auto DCServerRemoteDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
-    i->udpSender.send_update_filters_settings_message(filtersS);
+    i->dcUdpSender.send_update_filters_settings_message(filtersS);
 }
 
 auto DCServerRemoteDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
-    i->udpSender.send_delay_settings_message(delayS);
+    i->dcUdpSender.send_delay_settings_message(delayS);
 }
 
 auto DCServerRemoteDevice::device_connected() const noexcept -> bool {
@@ -200,7 +213,7 @@ auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<ca
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
-    if(compressedFrame){
+    if(compressedFrame){        
         remote_frame_signal(std::move(compressedFrame));
     }
 }

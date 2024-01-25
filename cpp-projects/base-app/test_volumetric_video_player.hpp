@@ -20,9 +20,9 @@ auto test_dc_player() -> void{
     auto duration = player.video()->duration_ms();
 
 
-    auto ffTs = duration_cast<milliseconds>(nanoseconds(player.video()->first_frame_capture_timestamp()));//.value()));
+    auto ffTs = duration_cast<milliseconds>(nanoseconds(player.video()->first_frame_received_timestamp()));//.value()));
     for(size_t idC = 0; idC < player.video()->nb_cameras(); ++idC){
-        std::cout << player.video()->get_camera_data(idC)->frames.size() << "\n";
+        std::cout << player.video()->get_compressed_frames_ptr(idC)->frames.size() << "\n";
         //        auto ff = duration_cast<milliseconds>(nanoseconds(player.video()->get_camera_data(idC)->first_frame_capture_timestamp().value()));
         //        auto sec = duration_cast<milliseconds>(nanoseconds(player.video()->get_camera_data(idC)->frames[1]->afterCaptureTS));
         //        std::cout << "IDC " << idC << " " << ffTs << " " << ff << " " << sec << "\n";

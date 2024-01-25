@@ -47,12 +47,17 @@ DCMView::DCMView(){
     m_glW->init();
 }
 
+DCMView::~DCMView(){
+    std::cout << "DES DCMVIEW\n";
+}
+
 auto DCMView::initialize(int nbGrabbers) -> void{
     mainW.initialize(nbGrabbers);
 }
 
 auto DCMView::start() -> void{
     m_glW->start();
+    std::cout << "END LOOP\n";
 }
 
 auto DCMView::draw(geo::Pt2f size, DCMModel *model) -> void{

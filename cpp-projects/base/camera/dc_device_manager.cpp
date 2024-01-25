@@ -52,9 +52,18 @@ DCDeviceManager::DCDeviceManager(): i(std::make_unique<Impl>()){
 }
 
 DCDeviceManager::~DCDeviceManager(){
+    clean();
 }
 
-auto DCDeviceManager::generate_device(DCType typeDevice) -> void {
+auto DCDeviceManager::clean() -> void{
+
+    if(is_device_initialized()){
+        i->device->clean();
+        i->device = nullptr;
+    }
+}
+
+auto DCDeviceManager::initialize_device(DCType typeDevice) -> void {
 
     // init device
     i->device = std::make_unique<DCDevice>(typeDevice);
@@ -63,7 +72,7 @@ auto DCDeviceManager::generate_device(DCType typeDevice) -> void {
     i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
         new_frame_signal(std::move(frame));
     });
-    i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){
+    i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){        
         new_compressed_frame_signal(std::move(frame));
     });
     i->device->new_imu_sample_signal.connect([&](DCImuSample sample){
@@ -77,69 +86,80 @@ auto DCDeviceManager::generate_device(DCType typeDevice) -> void {
 
 auto DCDeviceManager::update_delay_settings(const DCDelaySettings &delayS) -> void{
     i->delayS = delayS;
-    if(i->device){
+    if(is_device_initialized()){
         i->device->set_delay_settings(i->delayS);
     }
 }
 
+auto DCDeviceManager::is_device_initialized() const noexcept -> bool{
+    return i->device!= nullptr;
+}
+
 auto DCDeviceManager::is_opened() const noexcept -> bool{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->is_opened();
+    }
+    return false;
+}
+
+auto DCDeviceManager::is_reading() const noexcept -> bool{
+    if(is_device_initialized()){
+        return i->device->is_reading();
     }
     return false;
 }
 
 auto DCDeviceManager::update_filters_settings(const DCFiltersSettings &filters) -> void {
     i->filters = filters;
-    if(i->device){
+    if(is_device_initialized()){
         i->device->set_filters_settings(i->filters);
     }
 }
 
 auto DCDeviceManager::update_color_settings(const DCColorSettings &colorS) -> void {
     i->colorsS = colorS;
-    if(i->device){
+    if(is_device_initialized()){
         i->device->set_color_settings(i->colorsS);
     }
 }
 
 auto DCDeviceManager::get_capture_duration_ms() -> int64_t{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_capture_duration_ms();
     }
     return 0;
 }
 
 auto DCDeviceManager::get_nb_capture_per_second() -> float{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_nb_capture_per_second();
     }
     return 0;
 }
 
 auto DCDeviceManager::get_processing_duration_ms() -> int64_t{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_processing_duration_ms();
     }
     return 0;
 }
 
 auto DCDeviceManager::get_compressing_duration_ms() -> int64_t{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_compressing_duration_ms();
     }
     return 0;
 }
 
 auto DCDeviceManager::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> int64_t{
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_duration_between_ms(from, to);
     }
     return 0;
 }
 
 auto DCDeviceManager::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> int64_t{    
-    if(i->device){
+    if(is_device_initialized()){
         return i->device->get_duration_between_micro_s(from, to);
     }
     return 0;
@@ -171,17 +191,15 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
 
     bool closeDevice = false;
     bool stopReading = false;
-    if(i->device){
-        if(i->device->is_opened()){
-            closeDevice = deviceChanged || deviceIdChanged || !newActionsS.openDevice;
-        }
-        if(i->device->is_reading()){
-            stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
-        }
+    if(is_opened()){
+        closeDevice = deviceChanged || deviceIdChanged || !newActionsS.openDevice;
+    }
+    if(is_reading()){
+        stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
     }
 
     // stop / close camera
-    if(i->device){
+    if(is_device_initialized()){
         if(stopReading){
             i->device->stop_reading();
         }
@@ -194,8 +212,8 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     }
 
     // generate device
-    if(!i->device || deviceChanged){
-        generate_device(newConfigS.typeDevice);
+    if(!is_device_initialized() || deviceChanged){
+        initialize_device(newConfigS.typeDevice);
     }
 
     bool openDevice  = newActionsS.openDevice    && (!i->device->is_opened());

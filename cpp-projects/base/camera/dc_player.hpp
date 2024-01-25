@@ -31,7 +31,7 @@
 #include "settings/dc_player_settings.hpp"
 #include "settings/dc_model_settings.hpp"
 #include "states/dc_player_states.hpp"
-#include "dc_volumetric_video.hpp"
+#include "dc_video.hpp"
 
 namespace tool::cam {
 
@@ -46,14 +46,14 @@ public:
     auto update_frames() ->void;
 
     // video
-    auto video() -> DCVolumetricVideo*;
-    auto set_video(const DCVolumetricVideo &video) -> void;
+    auto set_video(const DCVideo &video) -> void;
+    auto video() -> DCVideo*;
     auto display_infos() -> void;;
 
     // frames
-    auto uncompress_frame(size_t idCamera, DCFrame &frame) -> bool;
+    // auto uncompress_frame(size_t idCamera, DCFrame &frame) -> bool;
     auto current_frame_id(size_t idCamera) const -> size_t;
-    auto current_frame_id_capture(size_t idCamera) const -> size_t;    
+    // auto current_frame_id_capture(size_t idCamera) const -> size_t;
 
     // navigation
     auto is_playing() const -> bool;
@@ -68,7 +68,7 @@ public:
     auto remove_until_current_frame() -> void;
     auto remove_after_current_frame() -> void;
     auto merge() -> void;
-    auto merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;  
+    auto merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
     auto remove_empty_cameras() -> void;
 
     // settings
@@ -77,7 +77,7 @@ public:
     // i/o
     auto load_from_file(std::string_view path) -> bool;
     auto save_to_file(std::string_view path) -> bool;
-    auto merge_before(DCVolumetricVideo &other) -> void;
+    auto merge_before(DCVideo &other) -> void;
     auto save_cloud_to_file(std::string_view path) -> bool;
 
     // signals

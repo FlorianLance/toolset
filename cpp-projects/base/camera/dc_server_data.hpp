@@ -38,20 +38,22 @@ public:
     DCServerData();
     ~DCServerData();
 
+    // init / clean
     auto initialize(size_t nbDevices) -> void;
-    auto add_device() -> void;
-    auto remove_device(size_t idDevice) -> void;
     auto clean() -> void;
 
-    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-
+    // get
     size_t nb_grabbers() const noexcept;
     auto get_frame(size_t idC) -> std::shared_ptr<cam::DCFrame>;
     auto get_compressed_frame(size_t idC) -> std::shared_ptr<cam::DCCompressedFrame>;
 
+    // modify
+    auto add_device() -> void;
+    auto remove_device(size_t idDevice) -> void;
+    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
+    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto invalid_last_frame(size_t idC) -> void;
-    auto invalid_last_compressed_frame(size_t idC) -> void;
+    auto invalid_last_compressed_frame(size_t idC) -> void;   
 
 private:
 

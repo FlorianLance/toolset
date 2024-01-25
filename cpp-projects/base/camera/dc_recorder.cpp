@@ -31,39 +31,44 @@
 //#include <chrono>
 
 // local
+#include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
 
 using namespace tool::cam;
 using namespace std::chrono;
 
+
 struct DCRecorder::Impl{
 
-    StopWatch sw;
+    nanoseconds recordingStartTimestamp;
+    StopWatch recordingStopWatch;
     std::vector<std::shared_ptr<DCCompressedFrame>> currentCompressedFrames;
     std::vector<std::shared_ptr<DCFrame>> currentFrames;
 
     DCRecorderStates states;
     DCRecorderSettings settings;
-    DCVolumetricVideo videoResource;
+    DCVideo videoResource;
 };
 
 DCRecorder::DCRecorder(): i(std::make_unique<Impl>()){
-
 }
 
 DCRecorder::~DCRecorder(){
-
 }
-
 
 auto DCRecorder::initialize(size_t nbDevices) -> void{
 
+    // video
     i->videoResource.initialize(nbDevices);
-    i->states.nbFramesRecorded.resize(nbDevices);
-    i->states.currentFrames.resize(nbDevices);
-
+    // states
+    i->states = {};
+    i->states.nbFramesRecorded  = std::vector<size_t>(nbDevices, 0);
+    i->states.currentFrames     = std::vector<size_t>(nbDevices, 0);
+    // frames
     i->currentFrames.resize(nbDevices);
+    std::fill(i->currentFrames.begin(), i->currentFrames.end(), nullptr);
     i->currentCompressedFrames.resize(nbDevices);
+    std::fill(i->currentCompressedFrames.begin(), i->currentCompressedFrames.end(), nullptr);
 
     states_updated_signal(i->states);
 }
@@ -97,14 +102,12 @@ auto DCRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompres
         return;
     }
 
-    using namespace std::chrono;
-//    auto ff = video()->first_frame_capture_timestamp();
-//    if(ff != -1){
-//        auto diff = duration_cast<milliseconds>(nanoseconds(frame->afterCaptureTS-ff));
-//        std::cout << idCamera << " " << video()->get_camera_data(idCamera)->nb_frames() << " "  << diff << "\n";
-//    }
+    if(i->recordingStartTimestamp.count() > frame->receivedTS){
+        Logger::error("[DCRecorder::add_compressed_frame] Invalid frame timestamp.\n");
+        return;
+    }
 
-    if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->sw.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
+    if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
 
         // add frame to video
         i->videoResource.add_compressed_frame(idCamera, std::move(frame));
@@ -115,7 +118,8 @@ auto DCRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompres
         ++i->states.nbFramesRecorded[idCamera];
         states_updated_signal(i->states);
     }
-} 
+}
+
 
 auto DCRecorder::set_time(double timeMs) -> void{
 
@@ -152,7 +156,7 @@ auto DCRecorder::update_frames() -> void{
     }
 }
 
-auto DCRecorder::video() -> DCVolumetricVideo* {
+auto DCRecorder::video() -> DCVideo* {
     return &i->videoResource;
 }
 
@@ -161,26 +165,29 @@ auto DCRecorder::is_recording() const noexcept -> bool {
 }
 
 auto DCRecorder::start_recording() -> void {
-    i->states.isRecording = true;
-    states_updated_signal(i->states);
 
-    i->sw.start();
+    i->states.isRecording = true;    
+    i->recordingStartTimestamp = Time::nanoseconds_since_epoch();
+    i->recordingStopWatch.start();
+
+    states_updated_signal(i->states);        
 }
 
 auto DCRecorder::stop_recording() -> void {
-    i->states.isRecording = false;
-    states_updated_signal(i->states);
 
-    i->sw.stop();
+    i->states.isRecording = false;        
+    i->recordingStopWatch.stop();
+
+    states_updated_signal(i->states);
 }
 
 auto DCRecorder::reset_recording() -> void {
 
     // clean video
-    i->videoResource.clean_all_cameras_compressed_frames();
+    i->videoResource.remove_all_cameras_compressed_frames();
 
     // reset stop watch
-    i->sw.reset();
+    i->recordingStopWatch.reset();
 
     // reset frames
     std::fill(std::begin(i->currentCompressedFrames),   std::end(i->currentCompressedFrames), nullptr);
@@ -206,6 +213,8 @@ auto DCRecorder::update_model(size_t id, const DCModelSettings &model) -> void{
 auto DCRecorder::save_to_file(std::string_view path) -> bool{
     return i->videoResource.save_to_file(path);
 }
+
+
 
 
 //    AudioFile<float> af;

@@ -36,7 +36,6 @@ enum class Protocol : std::uint8_t{
     ipv4, ipv6, unknow
 };
 
-
 enum class FeedbackType : std::int8_t{
     message_received = 0,
     timeout,
@@ -82,6 +81,7 @@ enum class MessageType : std::int8_t {
     feedback,
     delay,
     synchro,
+    ping,
     undefined,
     // filter_mask
     SizeEnum
@@ -100,6 +100,7 @@ static constexpr TupleArray<MessageType::SizeEnum, TMessageTypes> MessageTypes =
     {MessageType::feedback,                     "feedback"sv},
     {MessageType::delay,                        "delay"sv},
     {MessageType::synchro,                      "synchro"sv},
+    {MessageType::ping,                         "ping"sv},
 }};
 
 [[maybe_unused]] static constexpr auto to_string(MessageType m) -> Name{

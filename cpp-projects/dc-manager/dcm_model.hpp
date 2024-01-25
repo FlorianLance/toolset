@@ -44,7 +44,10 @@ namespace tool {
 
 struct DCMModel{
 
+    DCMModel();
+    ~DCMModel();
     auto initialize() -> bool;
+    auto clean() -> void;
     auto update() -> void;
     auto trigger_settings() -> void;
 
@@ -64,11 +67,10 @@ struct DCMModel{
     auto update_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
     auto update_calibration_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
 
-
     DCMSettings settings;
     DCMStates states;
 
-    net::DCServerNetwork sNetwork;
+    std::unique_ptr<net::DCServerNetwork> sNetwork = nullptr;
     cam::DCServerData sData;
     cam::DCRecorder recorder;
     cam::DCPlayer player;
@@ -81,6 +83,5 @@ private:
     std::mutex readMessagesL;
     std::deque<std::pair<size_t, net::Feedback>> messages;
     std::vector<std::pair<size_t, net::Feedback>> messagesR;
-
 };
 }

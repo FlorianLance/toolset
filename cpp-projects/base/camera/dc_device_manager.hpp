@@ -45,13 +45,17 @@ public:
 
     DCDeviceManager();
     ~DCDeviceManager();
+    auto clean() -> void;
 
     auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
     auto update_filters_settings(const DCFiltersSettings &filters) -> void;
     auto update_color_settings(const DCColorSettings &colorS) -> void;
     auto update_delay_settings(const DCDelaySettings &delayS) -> void;
 
+    auto is_device_initialized() const noexcept -> bool;
     auto is_opened() const noexcept -> bool;
+    auto is_reading() const noexcept -> bool;
+
     auto get_capture_duration_ms() -> std::int64_t;
     auto get_processing_duration_ms() -> std::int64_t;
     auto get_compressing_duration_ms() -> std::int64_t;
@@ -59,16 +63,15 @@ public:
     auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t;
     auto get_nb_capture_per_second() -> float;
 
-    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
-    sigslot::signal<DCImuSample> new_imu_sample_signal;
-    static inline SSS<int, std::string> update_device_name_signal;
-
-    sigslot::signal<DCColorSettings> color_settings_reset_signal;
+    SSS<std::shared_ptr<DCFrame>> new_frame_signal;
+    SSS<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
+    SSS<DCImuSample> new_imu_sample_signal;
+    SSS<DCColorSettings> color_settings_reset_signal;
+    SSS<int, std::string> update_device_name_signal;
 
 private:
 
-    auto generate_device(DCType typeDevice) -> void;
+    auto initialize_device(DCType typeDevice) -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

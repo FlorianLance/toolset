@@ -560,6 +560,7 @@ auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
     cFrame->mode               = mode;
     cFrame->idCapture          = static_cast<std::int32_t>(infos.idCapture);
     cFrame->afterCaptureTS     = timing.get_local("after_capture"sv).count();
+    cFrame->receivedTS         = cFrame->afterCaptureTS;  // default init received TS with after capture TS
     cFrame->validVerticesCount = validDepthValues;
 
     size_t offset = 0;
@@ -635,6 +636,7 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
     auto dFrame            = std::make_unique<DCFrame>();
     dFrame->idCapture      = static_cast<std::int32_t>(infos.idCapture);
     dFrame->afterCaptureTS = timing.get_local("after_capture"sv).count();
+    dFrame->receivedTS     = dFrame->afterCaptureTS;  // default init received TS with after capture TS
     dFrame->mode           = mode;
 
 

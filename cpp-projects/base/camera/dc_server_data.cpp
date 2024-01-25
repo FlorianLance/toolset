@@ -34,7 +34,7 @@
 #include "utility/logger.hpp"
 
 #include "dc_grabber_data_processing.hpp"
-#include "dc_volumetric_video.hpp"
+#include "dc_video.hpp"
 
 using namespace tool::cam;
 
@@ -42,7 +42,7 @@ struct DCServerData::Impl{
     std::mutex recordLocker;
     std::atomic_bool record = false;
     std::vector<std::unique_ptr<cam::DCGrabberDataProcessing>>grabbersDataProcessing;
-    cam::DCVolumetricVideo videoResource;
+    cam::DCVideo videoResource;
     bool initialize = false;
 };
 
@@ -94,6 +94,7 @@ auto DCServerData::clean() -> void{
         grabber->clean();
     }
     i->grabbersDataProcessing.clear();
+    i->initialize = false;
 }
 
 auto DCServerData::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> void {

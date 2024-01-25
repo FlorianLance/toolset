@@ -94,6 +94,8 @@ LIBS += \
 
 HEADERS += \
     # io
+    camera/dc_compressed_frames.hpp \
+    camera/dc_video.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -159,14 +161,12 @@ HEADERS += \
     network/udp_reader.hpp \
     network/udp_sender.hpp \
     # camera
-    camera/dc_camera_data.hpp \
     camera/dc_compressed_frame.hpp \
     camera/dc_frame_compressor.hpp \
     camera/dc_frame_uncompressor.hpp \
     camera/dc_grabber_data_processing.hpp \
     camera/dc_device_manager.hpp \
     camera/dc_server_data.hpp \
-    camera/dc_volumetric_video.hpp \
     camera/dc_recorder.hpp \
     camera/dc_player.hpp \
     camera/dc_device.hpp \
@@ -320,6 +320,8 @@ HEADERS += \
 
 SOURCES += \
     # io
+    camera/dc_compressed_frames.cpp \
+    camera/dc_video.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -353,13 +355,11 @@ SOURCES += \
     network/udp_sender.cpp \
     # camera
     camera/dc_compressed_frame.cpp \
-    camera/dc_camera_data.cpp \
     camera/dc_frame_compressor.cpp \
     camera/dc_frame_uncompressor.cpp \
     camera/dc_grabber_data_processing.cpp \
     camera/dc_device_manager.cpp \
     camera/dc_server_data.cpp \
-    camera/dc_volumetric_video.cpp \
     camera/dc_recorder.cpp \
     camera/dc_player.cpp \
     camera/dc_frame.cpp \

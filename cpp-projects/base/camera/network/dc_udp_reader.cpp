@@ -80,6 +80,7 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     }
 }
 
+#include <iostream>
 auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
     using namespace std::chrono;
@@ -91,25 +92,19 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::synchro:{
-
-        nanoseconds currentTS = Time::nanoseconds_since_epoch();
-        nanoseconds diffNs    = currentTS - nanoseconds(header.currentPacketTime);
-
-        synchro.diffNs[synchro.currentId++] = diffNs;
-        if(synchro.currentId >= synchro.nbMaxValues){
-            synchro.currentId = 0;
-        }
-
-        auto totalNs = std::accumulate(std::begin(synchro.diffNs), std::end(synchro.diffNs), nanoseconds(0));
-        synchro.averageDiffNs = static_cast<std::int64_t>(1.0 * totalNs.count() / synchro.nbMaxValues);
-
+        synchro.update_average_difference(header.currentPacketTimestampNs);
         synchro_signal(synchro.averageDiffNs);
 
     }break;
     case MessageType::feedback:{
         feedback_signal(std::move(header), UdpMonoPacketMessage<Feedback>(packetData));
     }break;
-    case MessageType::compressed_frame_data:{       
+    case MessageType::compressed_frame_data:{
+
+        if(header.currentPacketId == 0){
+            firstPacketReceivedCompressedFrameTS = Time::nanoseconds_since_epoch().count();
+            firstPacketSentCompressedFrameTS     = header.currentPacketTimestampNs;
+        }
 
         if(!compressedFrameMessage.copy_packet_to_data(header, nbBytes, packetData, m_data)){
             break;
@@ -119,11 +114,17 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 
             // create compressed frame from data
             auto cFrame = std::make_shared<DCCompressedFrame>();
+
+            // init compressed frame from data packets
             size_t offset = 0;
             cFrame->init_from_data(m_data.data(), offset, header.total_size_data_bytes());
 
-            // TEST
-            cFrame->afterCaptureTS = compressedFrameMessage.firstPacketTimestamp - cFrame->afterCaptureTS;
+            // update received TS with first packet received TS
+            auto diffCaptureSending = (firstPacketSentCompressedFrameTS - cFrame->afterCaptureTS);
+            cFrame->receivedTS = firstPacketReceivedCompressedFrameTS - diffCaptureSending;
+
+            // add average diff to capture timestamp
+            cFrame->afterCaptureTS += synchro.averageDiffNs;
 
             // send compressed frame
             compressed_frame_signal(std::move(header), cFrame);
@@ -133,4 +134,23 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     default:
         break;
     }
+}
+
+Synchro::Synchro(){
+    diffNs.resize(nbMaxValues);
+    std::fill(std::begin(diffNs), std::end(diffNs), std::chrono::nanoseconds(0));
+}
+
+auto Synchro::update_average_difference(int64_t timestampNS) -> void{
+
+    using namespace std::chrono;
+    nanoseconds currentTimestampNS = Time::nanoseconds_since_epoch();
+    diffNs[currentId++] = currentTimestampNS - nanoseconds(timestampNS);
+    if(currentId >= nbMaxValues){
+        currentId = 0;
+    }
+
+    averageDiffNs = static_cast<std::int64_t>(
+        1.0 * std::accumulate(std::begin(diffNs), std::end(diffNs), nanoseconds(0)).count() / nbMaxValues
+    );
 }

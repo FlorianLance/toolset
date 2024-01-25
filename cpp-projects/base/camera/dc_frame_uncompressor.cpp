@@ -958,6 +958,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
     // info
     frame.idCapture      = cFrame->idCapture;
     frame.afterCaptureTS = cFrame->afterCaptureTS;
+    frame.receivedTS     = cFrame->receivedTS;
     frame.mode           = cFrame->mode;
 
     // reset sizes
@@ -1303,6 +1304,7 @@ auto DCFrameUncompressor::Impl::ob_uncompress(DCCompressedFrame *cFrame, DCFrame
     // info
     frame.idCapture      = cFrame->idCapture;
     frame.afterCaptureTS = cFrame->afterCaptureTS;
+    frame.receivedTS     = cFrame->receivedTS;
     frame.mode           = cFrame->mode;
 
     // reset sizes

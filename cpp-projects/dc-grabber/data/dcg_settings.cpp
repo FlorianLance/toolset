@@ -226,9 +226,7 @@ auto DCGSettings::triggers_device_settings() -> void {
     DCGSignals::get()->update_device_settings_signal(deviceS);
 }
 
-#include <iostream>
 auto DCGSettings::triggers_color_settings() -> void{
-    std::cout << "triggers_color_settings\n";
     DCGSignals::get()->update_color_settings_signal(colorS);
 }
 

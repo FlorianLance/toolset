@@ -101,6 +101,7 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     // infos
     read(idCapture, file);
     read(afterCaptureTS, file);
+    receivedTS = afterCaptureTS;
     read(mode, file);
 
     // colors
@@ -191,14 +192,13 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     if(hasBodies){
         // TODO: ...
     }
-
 }
 
 auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
 
     // infos
     write(idCapture, file);
-    write(afterCaptureTS, file);
+    write(receivedTS, file);
     write(mode, file);
 
     // colors
@@ -285,6 +285,7 @@ auto DCCompressedFrame::init_from_data(std::int8_t const * const data, size_t &o
     // infos
     read(idCapture, data, offset, sizeData);
     read(afterCaptureTS, data, offset, sizeData);
+    receivedTS = afterCaptureTS;
     read(mode, data, offset, sizeData);
 
     // colors
@@ -382,7 +383,7 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
 
     // infos
     write(idCapture, data, offset, sizeData);
-    write(afterCaptureTS, data, offset, sizeData);
+    write(receivedTS, data, offset, sizeData);
     write(mode, data, offset, sizeData);
 
     // color
@@ -509,6 +510,7 @@ auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &
     // # read info
     read(idCapture, file);
     read(afterCaptureTS, file);
+    receivedTS = afterCaptureTS;
 
     // # read cloud
     std::int32_t validVerticesC;
@@ -550,6 +552,7 @@ auto DCCompressedFrame::init_legacy_full_frame_from_file_stream(std::ifstream &f
 
     // # read info
     read(afterCaptureTS, file);
+    receivedTS = afterCaptureTS;
     read(mode, file);
 
     k4a_calibration_t rCalibration;

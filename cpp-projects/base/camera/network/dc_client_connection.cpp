@@ -94,11 +94,12 @@ auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bo
     return true;
 }
 
-auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> bool{
+auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> void{
 
     if(m_udpSenderG.is_opened()){
         Logger::warning("[DCClientConnection::init_sender] Sender already initialized. Call clean before.\n");
-        return false;
+        messagesToSend.push_back(Feedback{MessageType::init_network_infos, FeedbackType::message_received});
+        return;
     }
 
     Logger::message(std::format("[DCClientConnection::init_sender] Init sender with sending adress [{}] port [{}] and protocol [{}].\n", networkS->udpSendingAdress, networkS->udpSendingPort, static_cast<int>(networkS->protocol)));
@@ -115,12 +116,9 @@ auto DCClientConnection::init_sender(UdpClientNetworkSettings *networkS) -> bool
         sendMessagesT = std::make_unique<std::thread>(&DCClientConnection::send_messages_loop, this);
         messagesToSend.push_back(Feedback{MessageType::init_network_infos, FeedbackType::message_received});
 
-        return true;
+    }else{
+        Logger::error(fmt("[DCClientConnection::init_sender] Cannot init sender with address [{]] and port [{}]\n", networkS->udpSendingAdress,std::to_string(networkS->udpSendingPort)));
     }
-
-
-    Logger::error(fmt("[DCClientConnection::init_sender] Cannot init sender with address [{]] and port [{}]\n", networkS->udpSendingAdress,std::to_string(networkS->udpSendingPort)));
-    return false;
 }
 
 auto DCClientConnection::ping_server() -> void{    

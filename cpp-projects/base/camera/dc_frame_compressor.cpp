@@ -222,6 +222,7 @@ auto DCFrameCompressor::add_frame(DCFrame &frame, int jpegQuality, DCCompressedF
     cFrame->mode            = frame.mode;
     cFrame->idCapture       = frame.idCapture;
     cFrame->afterCaptureTS  = frame.afterCaptureTS;
+    cFrame->receivedTS      = frame.receivedTS;
 
     // color
     if(!frame.imageColorData.empty()){

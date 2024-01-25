@@ -65,14 +65,14 @@ private:
 
 struct Synchro{
 
-    Synchro(){
-        diffNs.resize(nbMaxValues);
-        std::fill(std::begin(diffNs), std::end(diffNs), std::chrono::nanoseconds(0));
-    }
+    Synchro();
+    auto update_average_difference(std::int64_t timestampNS) -> void;
+    std::int64_t averageDiffNs = 0;
+
+private:
 
     size_t currentId = 0;
-    std::vector<std::chrono::nanoseconds> diffNs;
-    std::int64_t averageDiffNs = 0;
+    std::vector<std::chrono::nanoseconds> diffNs;    
     static constexpr size_t nbMaxValues = 1000;
 };
 
@@ -90,6 +90,8 @@ protected:
 
 private:
 
+    std::int64_t firstPacketReceivedCompressedFrameTS = 0;
+    std::int64_t firstPacketSentCompressedFrameTS = 0;
     UdpMultiPacketsMessage compressedFrameMessage;
     Synchro synchro;
 };

@@ -32,6 +32,24 @@
 
 using namespace tool;
 
+DCMModel::DCMModel(){
+    sNetwork = std::make_unique<net::DCServerNetwork>();
+}
+
+DCMModel::~DCMModel(){
+    clean();
+}
+
+auto DCMModel::clean() -> void {
+
+    // clean network first
+    sNetwork->clean();
+    sNetwork = nullptr;
+
+    sData.clean();
+
+}
+
 auto DCMModel::initialize() -> bool{
 
     if(!settings.initialize()){
@@ -39,7 +57,7 @@ auto DCMModel::initialize() -> bool{
     }
     reset_network();
 
-    size_t nbConnections = sNetwork.devices_nb();
+    size_t nbConnections = sNetwork->devices_nb();
     sData.initialize(nbConnections);
     recorder.initialize(nbConnections);
     calibration.initialize(nbConnections);
@@ -53,7 +71,7 @@ auto DCMModel::trigger_settings() -> void{
 }
 
 auto DCMModel::reset_network() -> void{
-    sNetwork.initialize(settings.networkS.clientsInfo);
+    sNetwork->initialize(settings.networkS.clientsInfo);
 }
 
 auto DCMModel::add_feedback(size_t id, net::Feedback feedback) -> void{
@@ -83,9 +101,9 @@ auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
         settings.useNormalFilteringSettings = useNormalMode;
         for(const auto &grabber : settings.grabbersS){
             if(useNormalMode){
-                sNetwork.update_filters_settings(grabber.id, grabber.filters);
+                sNetwork->update_filters_settings(grabber.id, grabber.filters);
             }else{
-                sNetwork.update_filters_settings(grabber.id, grabber.calibrationFilters);
+                sNetwork->update_filters_settings(grabber.id, grabber.calibrationFilters);
             }
         }
     }
@@ -94,14 +112,14 @@ auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
 auto DCMModel::update_filters(size_t id, const cam::DCFiltersSettings &filters) -> void {
     settings.grabbersS[id].filters = filters;
     if(settings.useNormalFilteringSettings){
-        sNetwork.update_filters_settings(id, settings.grabbersS[id].filters);
+        sNetwork->update_filters_settings(id, settings.grabbersS[id].filters);
     }
 }
 
 auto DCMModel::update_calibration_filters(size_t id, const cam::DCFiltersSettings &filters) -> void{
     settings.grabbersS[id].calibrationFilters = filters;
     if(!settings.useNormalFilteringSettings){
-        sNetwork.update_filters_settings(id, settings.grabbersS[id].calibrationFilters);
+        sNetwork->update_filters_settings(id, settings.grabbersS[id].calibrationFilters);
     }
 }
 
@@ -119,7 +137,7 @@ auto DCMModel::read_feedbacks() -> void{
     }
 
     for(const auto &message : messagesR){
-        settings.grabbersS[message.first].network.connected = sNetwork.device_connected(message.first);
+        settings.grabbersS[message.first].network.connected = sNetwork->device_connected(message.first);
         DCMSignals::get()->feedback_received_signal(message.first, std::format("Valid [{}] received\n", to_string(message.second.receivedMessageType)));
     }
     messagesR.clear();
