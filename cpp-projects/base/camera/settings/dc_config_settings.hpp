@@ -36,7 +36,7 @@ struct DCConfigSettings : io::BinaryFileSettings{
     // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
-    DCMode mode = DCMode::K4_CLOUD_C1280x720_DI640x576_MJPG_F30;
+    DCMode mode = DCMode::AK_CLOUD_C1280x720_DI640x576_MJPG_F30;
 
     // synch
     bool synchronizeColorAndDepth = true;

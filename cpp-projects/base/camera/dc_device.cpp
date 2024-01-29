@@ -28,7 +28,8 @@
 
 // local
 #include "camera/impl/azure_kinect_device_impl.hpp"
-#include "camera/impl/femto_orbbec_device_impl.hpp"
+#include "camera/impl/femto_bolt_device_impl.hpp"
+#include "camera/impl/femto_mega_device_impl.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool::geo;
@@ -42,8 +43,11 @@ DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
     if(type == DCType::AzureKinect){
         i->dd = std::make_unique<AzureKinectDeviceImpl>();
         i->dd->dcDevice = this;
-    }else if(type == DCType::FemtoOrbbec){
-        i->dd = std::make_unique<FemtoOrbbecDeviceImpl>();
+    }else if(type == DCType::FemtoBolt){
+        i->dd = std::make_unique<FemtoBoltDeviceImpl>();
+        i->dd->dcDevice = this;
+    }else if(type == DCType::FemtoMega){
+        i->dd = std::make_unique<FemtoMegaDeviceImpl>();
         i->dd->dcDevice = this;
     }
 }

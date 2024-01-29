@@ -40,13 +40,12 @@ using namespace tool::cam;
 
 auto DCInfos::initialize(DCMode mode) -> void{
 
-    idCapture               = 0;
-    initialColorResolution         = color_resolution(mode);
-    imageFormat             = image_format(mode);
-    depthMode               = depth_resolution(mode);
-    initialDepthResolution  = depth_resolution(mode);
-    fps                     = framerate(mode);
-    timeoutMs               = 0;
+    idCapture        = 0;
+    imageFormat      = image_format(mode);
+    colorResolution  = color_resolution(mode);
+    depthResolution  = depth_resolution(mode);
+    fps              = framerate(mode);
+    timeoutMs        = 0;
     switch (fps) {
     case DCFramerate::F30:
         timeoutMs = 40;
@@ -63,120 +62,123 @@ auto DCInfos::initialize(DCMode mode) -> void{
     }
 
     // retrieve colors dimensions
-    if(initialColorResolution != DCColorResolution::OFF){
-        colorWidth      = color_width(initialColorResolution);
-        colorHeight     = color_height(initialColorResolution);
-        colorSize       = colorWidth * colorHeight;
-    }else{
-        colorWidth      = 0;
-        colorHeight     = 0;
-        colorSize       = 0;
-    }
+    // if(colorResolution != DCColorResolution::OFF){
+    //     colorWidth      = color_width(colorResolution);
+    //     colorHeight     = color_height(colorResolution);
+    //     colorSize       = colorWidth * colorHeight;
+    // }else{
+    //     colorWidth      = 0;
+    //     colorHeight     = 0;
+    //     colorSize       = 0;
+    // }
 
-    // retrieve depth dimensions
-    auto dev = get_device(mode);
-    if(dev == DCType::FemtoOrbbec){
+    // // retrieve depth dimensions
+    // auto dev = get_device(mode);
+    // if(dev == DCType::FemtoBolt){
+        
+    //     if(depthResolution != DCDepthResolution::OFF){
+    //         if(colorResolution != DCColorResolution::OFF){
+    //             // depth always aligned to color
+    //             depthWidth      = colorWidth;
+    //             depthHeight     = colorHeight;
+    //             depthSize       = colorSize;
 
-        if(depthMode != DCDepthResolution::K4_OFF){
-            if(initialColorResolution != DCColorResolution::OFF){
-                // depth always aligned to color
-                depthWidth      = colorWidth;
-                depthHeight     = colorHeight;
-                depthSize       = colorSize;
+    //             auto depthRes   = depth_resolution(mode);
+    //             infraWidth      = depth_width(depthRes);
+    //             infraHeight     = depth_height(depthRes);
+    //             infraSize       = infraWidth * infraHeight;
 
-                auto depthRes   = depth_resolution(mode);
-                infraWidth      = depth_width(depthRes);
-                infraHeight     = depth_height(depthRes);
-                infraSize       = infraWidth * infraHeight;
+    //         }else{
+    //             auto depthRes   = depth_resolution(mode);
+    //             depthWidth      = depth_width(depthRes);
+    //             depthHeight     = depth_height(depthRes);
+    //             depthSize       = depthWidth * depthHeight;
+    //             infraWidth      = depthWidth;
+    //             infraHeight     = depthHeight;
+    //             infraSize       = depthSize;
+    //         }
 
-            }else{
-                auto depthRes   = depth_resolution(mode);
-                depthWidth      = depth_width(depthRes);
-                depthHeight     = depth_height(depthRes);
-                depthSize       = depthWidth * depthHeight;
-                infraWidth      = depthWidth;
-                infraHeight     = depthHeight;
-                infraSize       = depthSize;
-            }
+    //     }else{
+    //         depthWidth      = 0;
+    //         depthHeight     = 0;
+    //         depthSize       = 0;
+    //         infraWidth      = 0;
+    //         infraHeight     = 0;
+    //         infraSize       = 0;
+    //     }
+    // }else if(dev == DCType::AzureKinect){
+    //     if(depthResolution != DCDepthResolution::K4_OFF){
+    //         auto depthRes   = depth_resolution(mode);
+    //         depthWidth      = depth_width(depthRes);
+    //         depthHeight     = depth_height(depthRes);
+    //         depthSize       = depthWidth * depthHeight;
+    //         infraWidth      = depthWidth;
+    //         infraHeight     = depthHeight;
+    //         infraSize       = depthSize;
+    //     }else{
+    //         depthWidth      = 0;
+    //         depthHeight     = 0;
+    //         depthSize       = 0;
+    //         infraWidth      = 0;
+    //         infraHeight     = 0;
+    //         infraSize       = 0;
+    //     }
+    // }
 
-        }else{
-            depthWidth      = 0;
-            depthHeight     = 0;
-            depthSize       = 0;
-            infraWidth      = 0;
-            infraHeight     = 0;
-            infraSize       = 0;
-        }
-    }else if(dev == DCType::AzureKinect){
-        if(depthMode != DCDepthResolution::K4_OFF){
-            auto depthRes   = depth_resolution(mode);
-            depthWidth      = depth_width(depthRes);
-            depthHeight     = depth_height(depthRes);
-            depthSize       = depthWidth * depthHeight;
-            infraWidth      = depthWidth;
-            infraHeight     = depthHeight;
-            infraSize       = depthSize;
-        }else{
-            depthWidth      = 0;
-            depthHeight     = 0;
-            depthSize       = 0;
-            infraWidth      = 0;
-            infraHeight     = 0;
-            infraSize       = 0;
-        }
-    }
-
-    std::cout << "COLOR " << colorWidth << " " << colorHeight << " " << colorSize << "\n";
-    std::cout << "DEPTH " << depthWidth << " " << depthHeight << " " << depthSize << "\n";
-    std::cout << "INFRA " << infraWidth << " " << infraHeight << " " << infraSize << "\n";
-    std::cout << "FPS" << framerate_value(fps) << "\n";
-    std::cout << "FORMAT: " << (int)imageFormat << "\n";
+    // std::cout << "COLOR " << colorWidth << " " << colorHeight << " " << colorSize << "\n";
+    // std::cout << "DEPTH " << depthWidth << " " << depthHeight << " " << depthSize << "\n";
+    // std::cout << "INFRA " << infraWidth << " " << infraHeight << " " << infraSize << "\n";
+    // std::cout << "FPS" << framerate_value(fps) << "\n";
+    // std::cout << "FORMAT: " << (int)imageFormat << "\n";
 
 }
 
 auto DCIndices::initialize(const DCInfos &infos) -> void{
 
     // set color indices
-    if(infos.initialColorResolution != DCColorResolution::OFF){
-
-        colors1D.resize(infos.colorSize);
+    if(infos.colorResolution != DCColorResolution::OFF){
+        colors1D.resize(color_size(infos.colorResolution));
         std::iota(std::begin(colors1D), std::end(colors1D), 0);
     }else{
         colors1D.clear();
     }
 
     // set depth indices
-    if(infos.depthMode != DCDepthResolution::K4_OFF){
+    if(infos.depthResolution != DCDepthResolution::OFF){
+
+        auto depthWidth  = depth_width(infos.depthResolution);
+        auto depthHeight = depth_height(infos.depthResolution);
+        auto depthSize   = depth_size(infos.depthResolution);
 
         // depthMask.resize(depthSize);
         // filteringMask.resize(depthSize);
         // depthFiltering.resize(depthSize);
         // zonesId.resize(depthSize);        
-        infras1D.resize(infos.infraSize);
+        infras1D.resize(depthSize);
         std::iota(std::begin(infras1D), std::end(infras1D), 0);
 
-        depths1D.resize(infos.depthSize);
+        depths1D.resize(depthSize);
         std::iota(std::begin(depths1D), std::end(depths1D), 0);
 
-        depthVertexCorrrespondance.resize(infos.depthSize);
+        depthVertexCorrrespondance.resize(depthSize);
 
-        depthsSortedCorrespondanceNoBorders.resize((infos.depthWidth-2)*(infos.depthHeight-2));
+        depthsSortedCorrespondanceNoBorders.resize((depthWidth-2)*(depthHeight-2));
 
 
-        depths3D.resize(infos.depthSize);
+        depths3D.resize(depthSize);
 
         depths1DNoBorders.clear();
-        depths1DNoBorders.reserve((infos.depthWidth-2)*(infos.depthHeight-2));
+        depths1DNoBorders.reserve((depthWidth-2)*(depthHeight-2));
 
         neighbours4Depth1D.clear();
-        neighbours4Depth1D.reserve(infos.depthSize);
+        neighbours4Depth1D.reserve(depthSize);
 
         neighbours8Depth1D.clear();
-        neighbours8Depth1D.reserve(infos.depthSize);
+        neighbours8Depth1D.reserve(depthSize);
 
         size_t id = 0;
-        for(size_t ii = 0; ii < infos.depthHeight; ++ii){
-            for(size_t jj = 0; jj < infos.depthWidth; ++jj){
+        for(size_t ii = 0; ii < depthHeight; ++ii){
+            for(size_t jj = 0; jj < depthWidth; ++jj){
 
                 depths3D[id] = {id,jj,ii};
 
@@ -193,33 +195,33 @@ auto DCIndices::initialize(const DCInfos &infos) -> void{
                 std::int32_t idG = -1;
 
                 bool notOnLeft   = jj > 0;
-                bool notOnRight  = jj < infos.depthWidth - 1;
+                bool notOnRight  = jj < depthWidth - 1;
                 bool notOnTop    = ii > 0;
-                bool notOnBottom = ii < infos.depthHeight-1;
+                bool notOnBottom = ii < depthHeight-1;
 
                 if(notOnLeft){
                     idD = id - 1;
                     if(notOnTop){
-                        idA = id - infos.depthWidth-1;
+                        idA = id - depthWidth-1;
                     }
                     if(notOnBottom){
-                        idF = id + infos.depthWidth-1;
+                        idF = id + depthWidth-1;
                     }
                 }
                 if(notOnRight){
                     idE = id + 1;
                     if(notOnTop){
-                        idC = id - infos.depthWidth + 1;
+                        idC = id - depthWidth + 1;
                     }
                     if(notOnBottom){
-                        idH = id + infos.depthWidth + 1;
+                        idH = id + depthWidth + 1;
                     }
                 }
                 if(notOnTop){
-                    idB = id - infos.depthWidth;
+                    idB = id - depthWidth;
                 }
                 if(notOnBottom){
-                    idG = id + infos.depthWidth;
+                    idG = id + depthWidth;
                 }
 
                 neighbours4Depth1D.push_back({idB,idD,idE,idG});
@@ -275,16 +277,18 @@ auto DCTiming::get_local(std::string_view name) const -> std::chrono::nanosecond
 
 auto DCTiming::compute_capture_framerate() -> void{
 
-    if(!localTimestamps.contains("after_capture"sv)){
+    // if(!localTimestamps.contains("after_capture"sv)){
+    if(!localTimestamps.contains("after_get_images"sv)){
         return;
     }
 
-    auto aftertCatpureTs = localTimestamps["after_capture"sv].value();
-    capturesTimes.push_back(aftertCatpureTs);
+    // auto aftertCatpureTs = localTimestamps["after_capture"sv].value();
+    auto captureTs = localTimestamps["after_get_images"sv].value();
+    capturesTimes.push_back(captureTs);
     bool foundT = false;
     size_t idT = 0;
     for(size_t ii = 0; ii < capturesTimes.size(); ++ii){
-        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(aftertCatpureTs - capturesTimes[ii]);
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(captureTs - capturesTimes[ii]);
         if(std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() > 5000){
             foundT = true;
             idT = ii;
@@ -322,12 +326,13 @@ auto DCDeviceImpl::initialize() -> void{
 
     infos.initialize(settings.config.mode);
     indices.initialize(infos);
-
-    if(infos.depthMode != DCDepthResolution::K4_OFF){
-        depthMask.resize(infos.depthSize);
-        filteringMask.resize(infos.depthSize);
-        depthFiltering.resize(infos.depthSize);
-        zonesId.resize(infos.depthSize);
+    
+    if(infos.depthResolution != DCDepthResolution::K4_OFF){
+        auto depthSize = depth_size(infos.depthResolution);
+        depthMask.resize(depthSize);
+        filteringMask.resize(depthSize);
+        depthFiltering.resize(depthSize);
+        zonesId.resize(depthSize);
     }
 
     initialize_device_specific();
@@ -366,6 +371,7 @@ auto DCDeviceImpl::read_frames() -> void {
             timing.update_local("before_capture"sv);
             bool success = capture_frame(infos.timeoutMs);
             timing.update_local("after_capture"sv);
+            // std::cout << "succes " << infos.timeoutMs << " " << success << " "<< timing.get_duration_between_ms("before_capture"sv, "after_capture"sv)->count() << "\n";
 
             if(!success){
                 // timeout
@@ -388,7 +394,7 @@ auto DCDeviceImpl::read_frames() -> void {
                 read_bodies();
             }
 
-            timing.compute_capture_framerate();
+            // timing.compute_capture_framerate();
 
         }   catch (std::exception &error) {
             Logger::error(std::format("[DCDeviceData::read_frames] Get capture error: {}\n", error.what()));
@@ -396,30 +402,36 @@ auto DCDeviceImpl::read_frames() -> void {
             break;
         }
 
-
         // get images
         read_color_image();
         read_depth_image();
         read_infra_image();
         timing.update_local("after_get_images"sv);
 
+        if(!check_data_validity()){
+            continue;
+        }
+
+        timing.compute_capture_framerate();
+
         // process
         convert_color_image();
         timing.update_local("after_color_convert"sv);
-
-        resize_images();
+        
+        resize_color_image_to_depth_size();
         timing.update_local("after_color_resize"sv);
 
-        filter_depth_image(cFiltersS,depth_data(), color_data(), infra_data());
+        filter_depth_image(cFiltersS, data.depth, data.dephtSizedColor, data.infra);
         timing.update_local("after_depth_filter"sv);
 
-        filter_color_image(cFiltersS);
+        filter_color_image(cFiltersS, data.dephtSizedColor, data.depth, data.infra, bodies_index_data());
         timing.update_local("after_color_filter"sv);
 
-        filter_infrared_image(cFiltersS);
+        filter_infrared_image(cFiltersS, data.infra, data.depth, data.dephtSizedColor, bodies_index_data());
         timing.update_local("after_infrared_filter"sv);
 
         if(cDataS.generateCloudLocal || cFiltersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
+
             generate_cloud();
             timing.update_local("after_cloud_generation"sv);
 
@@ -434,7 +446,7 @@ auto DCDeviceImpl::read_frames() -> void {
         }
 
         bool hasDataToSend = false;
-        if(dev == DCType::FemtoOrbbec){
+        if(dev == DCType::FemtoBolt){
             hasDataToSend = cDataS.has_data_to_send() || cDataS.sendIMU || cDataS.sendBodies;
         }else if (dev == DCType::AzureKinect){
             hasDataToSend = cDataS.has_data_to_send() || cDataS.sendIMU || cDataS.sendAudio || cDataS.sendBodies;
@@ -442,6 +454,7 @@ auto DCDeviceImpl::read_frames() -> void {
 
         // compressed frame
         if(sendData && hasDataToSend){
+            std::cout << "compress_frame\n";
 
             // generate
             auto compressedFrame = compress_frame(cFiltersS,cDataS);
@@ -458,6 +471,8 @@ auto DCDeviceImpl::read_frames() -> void {
         // local frame
         if(cDataS.generateRGBLocalFrame || cDataS.generateDepthLocalFrame || cDataS.generateInfraLocalFrame || cDataS.generateCloudLocal){
 
+            std::cout << "create_local_frame\n";
+
             // generate
             auto dFrame = create_local_frame(cDataS);
             timing.update_local("after_local_frame_creation"sv);
@@ -473,15 +488,15 @@ auto DCDeviceImpl::read_frames() -> void {
     }
 }
 
-auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::span<uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer) -> void{
+auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::span<uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<uint16_t> infraB) -> void{
 
-    static_cast<void>(infraBuffer); // not used yet
-
-    if(depthBuffer.empty()){
+    if(depthB.empty()){
         return;
     }
-
-    if(!colorBuffer.empty() && (colorBuffer.size() != depthBuffer.size())){
+    if(!colorB.empty() && (colorB.size() != depthB.size())){
+        return;
+    }
+    if(!infraB.empty() && (infraB.size() != depthB.size())){
         return;
     }
 
@@ -489,10 +504,13 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
 
     const auto dRange = depth_range(settings.config.mode)*1000.f;
 
-    auto minW = infos.depthWidth  * filtersS.minWidthF;
-    auto maxW = infos.depthWidth  * filtersS.maxWidthF;
-    auto minH = infos.depthHeight * filtersS.minHeightF;
-    auto maxH = infos.depthHeight * filtersS.maxHeightF;
+    auto depthWidth  = depth_width(infos.depthResolution);
+    auto depthHeight = depth_width(infos.depthResolution);
+
+    auto minW = depthWidth  * filtersS.minWidthF;
+    auto maxW = depthWidth  * filtersS.maxWidthF;
+    auto minH = depthHeight * filtersS.minHeightF;
+    auto maxH = depthHeight * filtersS.maxHeightF;
 
     auto diffRange = dRange.y()-dRange.x();
     auto minD = dRange.x() + filtersS.minDepthF * diffRange;
@@ -511,7 +529,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         size_t ii = dIndex.y();
         size_t jj = dIndex.z();
 
-        const auto &currentDepth = depthBuffer[id];
+        const auto &currentDepth = depthB[id];
 
         // check validity
         if(currentDepth == dc_invalid_depth_value){
@@ -528,9 +546,9 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
         }
 
         // color filtering
-        if(!colorBuffer.empty() && filtersS.filterDepthWithColor){
+        if(!colorB.empty() && filtersS.filterDepthWithColor){
 
-            auto hsv = Convert::to_hsv(colorBuffer[id]);
+            auto hsv = Convert::to_hsv(colorB[id]);
             if((std::abs(hsv.h()- hsvDiffColor.h()) > filtersS.maxDiffColor.x()) ||
                 (std::abs(hsv.s()- hsvDiffColor.s()) > filtersS.maxDiffColor.y()) ||
                 (std::abs(hsv.v()- hsvDiffColor.v()) > filtersS.maxDiffColor.z())){
@@ -544,7 +562,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
     });
 
     if(filtersS.doLocalDiffFiltering){
-        maximum_local_depth_difference(depthBuffer, filtersS.maxLocalDiff, Connectivity::Connectivity_4);
+        maximum_local_depth_difference(indices, depthB, filtersS.maxLocalDiff, Connectivity::Connectivity_4);
     }
 
     // minimum neighbours filtering
@@ -570,35 +588,30 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS, std::sp
 
 }
 
-auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorB, std::span<std::uint16_t> depthB, std::span<uint16_t> infraB, std::span<std::uint8_t> bodiesB) -> void{
 
-    std::span<ColorRGBA8> colorBuffer = color_data();
-    std::span<uint16_t> infraBuffer = infra_data();
-    std::span<uint16_t> depthBuffer = depth_data();
-    std::span<uint8_t> bodiesBuffer = bodies_index_data();
-
-    if(colorBuffer.empty()){
+    if(colorB.empty()){
         return;
     }
 
-    if(!depthBuffer.empty() && (depthBuffer.size() != colorBuffer.size())){
+    if(!depthB.empty() && (depthB.size() != colorB.size())){
         return;
     }
 
-    if(!infraBuffer.empty() && (infraBuffer.size() != colorBuffer.size())){
+    if(!infraB.empty() && (infraB.size() != colorB.size())){
         return;
     }
 
-    bool writeBodies = (bodiesBuffer.size() == colorBuffer.size()) && true; // TODO
+    bool writeBodies = (bodiesB.size() == colorB.size()) && true; // TODO
 
     Bench::start("[DCDeviceData::filter_color_image]");
 
-    if(!depthBuffer.empty()){
+    if(!depthB.empty()){
 
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
             if(filtersS.invalidateColorFromDepth){
-                if(depthBuffer[id] == dc_invalid_depth_value){
-                    colorBuffer[id] = ColorRGBA8{dc_invalid_color_value};
+                if(depthB[id] == dc_invalid_depth_value){
+                    colorB[id] = ColorRGBA8{dc_invalid_color_value};
                 }else{
                     if(filtersS.keepOnlyBiggestCluster){
                         // colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};// TODO ?
@@ -607,8 +620,8 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS) -> void
             }
 
             if(writeBodies){
-                if(bodiesBuffer[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
-                    colorBuffer[id] = ColorRGBA8{255,0,0,255};
+                if(bodiesB[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                    colorB[id] = ColorRGBA8{255,0,0,255};
                 }
             }
         });
@@ -617,41 +630,35 @@ auto DCDeviceImpl::filter_color_image(const DCFiltersSettings &filtersS) -> void
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraB, std::span<std::uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<std::uint8_t> bodiesB) -> void{
 
-    std::span<ColorRGBA8> colorBuffer = color_data();
-    std::span<uint16_t> infraBuffer = infra_data();
-    std::span<uint16_t> depthBuffer = depth_data();
-    std::span<uint8_t> bodiesBuffer = bodies_index_data();
-
-
-    if(infraBuffer.empty()){
+    if(infraB.empty()){
         return;
     }
 
-    if(!colorBuffer.empty() && (colorBuffer.size() != infraBuffer.size())){
+    if(!colorB.empty() && (colorB.size() != infraB.size())){
         return;
     }
 
-    if(!depthBuffer.empty() && (depthBuffer.size() != infraBuffer.size())){
+    if(!depthB.empty() && (depthB.size() != infraB.size())){
         return;
     }
 
-    bool writeBodies = (bodiesBuffer.size() == infraBuffer.size()) && true; // TODO
+    bool writeBodies = (bodiesB.size() == infraB.size()) && true; // TODO
 
     Bench::start("[DCDeviceData::filter_infrared_image]");
-    if(!depthBuffer.empty()){
+    if(!depthB.empty()){
         std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
             if(filtersS.invalidateInfraFromDepth){
-                if(depthBuffer[id] == dc_invalid_depth_value){
-                    infraBuffer[id] = dc_invalid_infra_value;
+                if(depthB[id] == dc_invalid_depth_value){
+                    infraB[id] = dc_invalid_infra_value;
                 }
             }
 
 
             if(writeBodies){
-                if(bodiesBuffer[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
-                    infraBuffer[id] = 16000;
+                if(bodiesB[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                    infraB[id] = 16000;
                 }
             }
         });
@@ -661,13 +668,11 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> v
 
 auto DCDeviceImpl::update_valid_depth_values() -> void{
 
-    auto depthBuffer  = depth_data();
-
     // count valid depth values
     validDepthValues = 0;
     for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
         if(depthMask[id] == 0){
-            depthBuffer[id] = dc_invalid_depth_value;
+            data.depth[id] = dc_invalid_depth_value;
             indices.depthVertexCorrrespondance[id] = {id, -1};
         }else{
             indices.depthVertexCorrrespondance[id] = {id, validDepthValues};
@@ -695,13 +700,35 @@ auto DCDeviceImpl::stop_reading_thread() -> void{
 
 }
 
+auto DCDeviceImpl::check_data_validity() -> bool {
+
+    if(infos.colorResolution != DCColorResolution::OFF){
+        if(data.color.empty()){
+            return false;
+        }
+    }
+
+    if(infos.depthResolution != DCDepthResolution::OFF){
+        if(data.depth.empty()){
+            return false;
+        }
+    }
+
+    if(has_infrared(settings.config.mode)){
+        if(data.infra.empty()){
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
-auto DCDeviceImpl::maximum_local_depth_difference(std::span<uint16_t> depthBuffer, float max, Connectivity connectivity) -> void{
+auto DCDeviceImpl::maximum_local_depth_difference(const DCIndices &ids, std::span<uint16_t> depthBuffer, float max, Connectivity connectivity) -> void{
 
     std::fill(filteringMask.begin(),filteringMask.end(), 0);
 
-    std::for_each(std::execution::par_unseq, std::begin(indices.depths1DNoBorders), std::end(indices.depths1DNoBorders), [&](size_t id){
+    std::for_each(std::execution::par_unseq, std::begin(ids.depths1DNoBorders), std::end(ids.depths1DNoBorders), [&](size_t id){
 
         if(depthMask[id] == 0){
             return;
@@ -711,14 +738,14 @@ auto DCDeviceImpl::maximum_local_depth_difference(std::span<uint16_t> depthBuffe
         float currDepth = depthBuffer[id];
         size_t count = 0;
         if(connectivity == Connectivity::Connectivity_4){
-            for(auto cId : indices.neighbours4Depth1D[id]){
+            for(auto cId : ids.neighbours4Depth1D[id]){
                 if(depthMask[cId] == 1){
                     meanDiff += abs(depthBuffer[cId]-currDepth);
                     ++count;
                 }
             }
         }else{
-            for(auto cId : indices.neighbours8Depth1D[id]){
+            for(auto cId : ids.neighbours8Depth1D[id]){
                 if(depthMask[cId] == 1){
                     meanDiff += abs(depthBuffer[cId]-currDepth);
                     ++count;
@@ -744,6 +771,11 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
     size_t currentZoneId = 1;
     int biggestZone = -1;
     size_t sizeBiggestZone = 0;
+
+    auto depthWidth  = depth_width(infos.depthResolution);
+    auto depthHeight = depth_height(infos.depthResolution);
+    auto depthSize   = depth_size(infos.depthResolution);
+
     std::for_each(std::execution::unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t pt){
 
         if(zonesId[pt] != 0){
@@ -778,33 +810,33 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
             if(id >= 1){
                 ids.push(id-1);
 
-                if(id >= infos.depthWidth-1){
+                if(id >= depthWidth-1){
 
-                    ids.push(id-infos.depthWidth+1);
+                    ids.push(id-depthWidth+1);
 
-                    if(id >= infos.depthWidth){
+                    if(id >= depthWidth){
 
-                        ids.push(id-infos.depthWidth);
+                        ids.push(id-depthWidth);
 
-                        if(id >= infos.depthWidth + 1){
-                            ids.push(id-infos.depthWidth-1);
+                        if(id >= depthWidth + 1){
+                            ids.push(id-depthWidth-1);
                         }
                     }
                 }
             }
 
-            if(id < infos.depthSize-1){
+            if(id < depthSize-1){
 
                 ids.push(id+1);
 
-                if(id < infos.depthSize - infos.depthWidth+1){
-                    ids.push(id+infos.depthWidth-1);
+                if(id < depthSize - depthWidth+1){
+                    ids.push(id+depthWidth-1);
 
-                    if(id < infos.depthSize -infos.depthWidth){
-                        ids.push(id+infos.depthWidth);
+                    if(id < depthSize -depthWidth){
+                        ids.push(id+depthWidth);
 
-                        if(id < infos.depthSize -infos.depthWidth-1){
-                            ids.push(id+infos.depthWidth+1);
+                        if(id < depthSize -depthWidth-1){
+                            ids.push(id+depthWidth+1);
                         }
                     }
                 }
@@ -836,7 +868,7 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
         });
 
         meanBiggestZone /= count;
-        meanBiggestZoneId = meanBiggestZone.y() * infos.depthWidth + meanBiggestZone.x();
+        meanBiggestZoneId = meanBiggestZone.y() * depthWidth + meanBiggestZone.x();
     }
 
 }

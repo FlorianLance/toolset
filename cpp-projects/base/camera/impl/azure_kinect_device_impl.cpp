@@ -153,6 +153,8 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         calibration     = device->get_calibration(k4aConfig.depth_mode, k4aConfig.color_resolution);
         transformation  = k4a::transformation(calibration);
         
+
+
         const auto &c = calibration;
         Logger::message("[Calibration]\n");
         Logger::message(std::format("  color resolution: {}\n",     static_cast<int>(c.color_resolution)));
@@ -163,6 +165,12 @@ auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) ->
         Logger::message("  depth mode:\n");
         Logger::message(std::format("      width: {}\n",            c.depth_camera_calibration.resolution_width));
         Logger::message(std::format("      height: {}\n",           c.depth_camera_calibration.resolution_height));
+        Logger::message(std::format("      metric radius: {}\n",    c.depth_camera_calibration.metric_radius));
+
+        auto rot = c.depth_camera_calibration.extrinsics.rotation;
+        Logger::message(std::format("      rot ext: {} {} {} {} {} {} {} {} {}\n",  rot[0], rot[1], rot[2], rot[3],  rot[4], rot[5], rot[6], rot[7], rot[8]));
+        auto tr = c.depth_camera_calibration.extrinsics.translation;
+        Logger::message(std::format("      tr ext: {} {} {}\n",  tr[0], tr[1], tr[2]));
 
         Logger::message("Start imu\n");
         device->start_imu();
@@ -298,7 +306,7 @@ auto AzureKinectDeviceImpl::update_camera_from_colors_settings() -> void {
 
 auto AzureKinectDeviceImpl::read_color_image() -> bool {
     
-    if(infos.initialColorResolution != DCColorResolution::OFF){
+    if(infos.colorResolution != DCColorResolution::OFF){
 
         Bench::start("[AzureKinectDeviceImpl::read_color_image]");
         colorImage = capture->get_color_image();
@@ -316,7 +324,7 @@ auto AzureKinectDeviceImpl::read_color_image() -> bool {
 
 auto AzureKinectDeviceImpl::read_depth_image() -> bool {
     
-    if(infos.depthMode != DCDepthResolution::K4_OFF){
+    if(infos.depthResolution != DCDepthResolution::K4_OFF){
 
         Bench::start("[AzureKinectDeviceImpl::read_depth_image]");
         depthImage = capture->get_depth_image();
@@ -341,15 +349,20 @@ auto AzureKinectDeviceImpl::read_infra_image() -> bool {
         infraredImage = capture->get_ir_image();
         Bench::stop();
 
-        if (!infraredImage->is_valid()){
+        if(infraredImage->is_valid()){
+            timing.infraredImageTS = infraredImage->get_system_timestamp();
+            data.infra = std::span<std::uint16_t>{
+                reinterpret_cast<std::uint16_t*>(infraredImage.value().get_buffer()),
+                static_cast<size_t>(infraredImage.value().get_width_pixels() * infraredImage.value().get_height_pixels())
+            };
+            return true;
+
+        }else{
+            data.infra = {};
             Logger::error("[AzureKinectDeviceImpl::read_infra_image] Failed to get infrared image from capture\n");
-            return false;
         }
-
-        timing.infraredImageTS = infraredImage->get_system_timestamp();
     }
-
-    return true;
+    return false;
 }
 
 auto AzureKinectDeviceImpl::read_from_microphones() -> void{
@@ -443,11 +456,12 @@ auto AzureKinectDeviceImpl::generate_cloud() -> void{
 
 auto AzureKinectDeviceImpl::convert_color_image() -> void{
     
-    if(infos.initialColorResolution == DCColorResolution::OFF){
+    if(infos.colorResolution == DCColorResolution::OFF){
         return;
     }
 
-    if(infos.imageFormat == DCImageFormat::NV12){
+    auto imageFormat = infos.imageFormat;
+    if(imageFormat == DCImageFormat::NV12){
 
         // cv::Mat rawMat(colorImage->get_height_pixels() * 3 / 2, colorImage->get_width_pixels(), CV_8UC1, colorImage->get_height_pixels());
         // cv::cvtColor(rawMat, colorConvBuffer, cv::COLOR_YUV2RGBA_NV12, 4);
@@ -491,7 +505,7 @@ auto AzureKinectDeviceImpl::convert_color_image() -> void{
 
         colorImage = convertedColorImage;
 
-    } else if(infos.imageFormat == DCImageFormat::YUY2 ){ // //YUY2 is a 4:2:2 format, so there are 4 bytes per 'chunk' of data, and each 'chunk' represents 2 pixels.
+    } else if(imageFormat == DCImageFormat::YUY2 ){ // //YUY2 is a 4:2:2 format, so there are 4 bytes per 'chunk' of data, and each 'chunk' represents 2 pixels.
 
         Bench::start("[AzureKinectDeviceImpl::convert_color_image] YUY2");
         const int stride = colorImage->get_width_pixels() * 4 / 2;
@@ -512,7 +526,7 @@ auto AzureKinectDeviceImpl::convert_color_image() -> void{
 
         colorImage = convertedColorImage;
 
-    }else if(infos.imageFormat == DCImageFormat::MJPG){
+    }else if(imageFormat == DCImageFormat::MJPG){
 
         Bench::start("[AzureKinectDeviceImpl::convert_color_image] MJPG");
 
@@ -533,12 +547,12 @@ auto AzureKinectDeviceImpl::convert_color_image() -> void{
 
         colorImage = convertedColorImage;
 
-    }else if(infos.imageFormat == DCImageFormat::BGRA){
+    }else if(imageFormat == DCImageFormat::BGRA){
         // nothing to do
     }
 }
 
-auto AzureKinectDeviceImpl::resize_images() -> void{
+auto AzureKinectDeviceImpl::resize_color_image_to_depth_size() -> void{
 
     if(colorImage.has_value() && depthImage.has_value()){
 
@@ -546,8 +560,15 @@ auto AzureKinectDeviceImpl::resize_images() -> void{
         transformation.color_image_to_depth_camera(
             depthImage.value(),
             colorImage.value(),
-            &depthSizedColorImage.value());
+            &k4aDepthSizedColorImage.value());
         Bench::stop();
+
+        data.dephtSizedColor = std::span<tool::ColorRGBA8>{
+                reinterpret_cast<tool::ColorRGBA8*>(k4aDepthSizedColorImage.value().get_buffer()),
+            static_cast<size_t>(k4aDepthSizedColorImage.value().get_width_pixels() * k4aDepthSizedColorImage.value().get_height_pixels())
+        };
+    }else{
+        data.dephtSizedColor = {};
     }
 }
 
@@ -567,12 +588,12 @@ auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
     cFrame->init_calibration_from_data(DCType::AzureKinect, reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
 
     // compressed color
-    if(depthSizedColorImage.has_value() && dataS.sendColor){
+    if(k4aDepthSizedColorImage.has_value() && dataS.sendColor){
         frames.frameCompressor.add_color(
-            depthSizedColorImage->get_width_pixels(),
-            depthSizedColorImage->get_height_pixels(),
+            k4aDepthSizedColorImage->get_width_pixels(),
+            k4aDepthSizedColorImage->get_height_pixels(),
             4,
-            depthSizedColorImage.value().get_buffer(),
+            k4aDepthSizedColorImage.value().get_buffer(),
             filtersS.jpegCompressionRate,
             cFrame.get()
         );
@@ -653,18 +674,18 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
 
         tool::Bench::start("[AzureKinectDeviceImpl::create_local_frame] color");
 
-        if(depthSizedColorImage.has_value()){
-            dFrame->depthSizedColorWidth  = depthSizedColorImage->get_width_pixels();
-            dFrame->depthSizedColorHeight = depthSizedColorImage->get_height_pixels();
+        if(k4aDepthSizedColorImage.has_value()){
+            dFrame->depthSizedColorWidth  = k4aDepthSizedColorImage->get_width_pixels();
+            dFrame->depthSizedColorHeight = k4aDepthSizedColorImage->get_height_pixels();
             dFrame->depthSizedImageColorData.resize(dFrame->depthSizedColorWidth*dFrame->depthSizedColorHeight);
 
             // std::copy(
-            //     reinterpret_cast<std::int8_t*>(depthSizedColorImage->get_buffer()),
-            //     reinterpret_cast<std::int8_t*>(depthSizedColorImage->get_buffer()) + dFrame->depthSizedImageColorData.size()*4,
+            //     reinterpret_cast<std::int8_t*>(k4aDepthSizedColorImage->get_buffer()),
+            //     reinterpret_cast<std::int8_t*>(k4aDepthSizedColorImage->get_buffer()) + dFrame->depthSizedImageColorData.size()*4,
             //     reinterpret_cast<std::int8_t*>(dFrame->depthSizedImageColorData.data())
             // );
 
-            auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(depthSizedColorImage->get_buffer());
+            auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(k4aDepthSizedColorImage->get_buffer());
             std::for_each(std::execution::par_unseq, std::begin(indices.depths1D), std::end(indices.depths1D), [&](size_t id){
                 dFrame->depthSizedImageColorData[id] = {
                     colorBuffer[id].z(),
@@ -763,7 +784,7 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
     }
 
     // cloud
-    if(dataS.generateCloudLocal && pointCloudImage.has_value() && depthSizedColorImage.has_value() && depthImage.has_value()){
+    if(dataS.generateCloudLocal && pointCloudImage.has_value() && k4aDepthSizedColorImage.has_value() && depthImage.has_value()){
 
         tool::Bench::start("[AzureKinectDeviceImpl::create_local_frame] cloud");
 
@@ -772,7 +793,7 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
         dFrame->cloud.normals.resize(validDepthValues);
 
         auto cloudBuffer = reinterpret_cast<geo::Pt3<int16_t>*>(pointCloudImage->get_buffer());
-        auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(depthSizedColorImage->get_buffer());
+        auto colorBuffer = reinterpret_cast<const geo::Pt4<uint8_t>*>(k4aDepthSizedColorImage->get_buffer());
         auto depthBuffer = reinterpret_cast<const uint16_t*>(depthImage->get_buffer());
 
         std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
@@ -879,7 +900,7 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
     infraredImage        = std::nullopt;
     pointCloudImage      = std::nullopt;
     convertedColorImage  = std::nullopt;
-    depthSizedColorImage = std::nullopt;
+    k4aDepthSizedColorImage = std::nullopt;
 
     // init k4a configs
     k4aConfig   = generate_config(device->is_sync_in_connected(), device->is_sync_out_connected(), settings.config);
@@ -889,7 +910,7 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
     capture = std::make_unique<k4a::capture>();
 
     // init converted color image
-    if(infos.initialColorResolution != DCColorResolution::OFF){
+    if(infos.colorResolution != DCColorResolution::OFF){
 
         auto colorRes   = color_resolution(settings.config.mode);
         convertedColorImage = k4a::image::create(
@@ -901,10 +922,10 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
     }
 
     // init depth resized color image
-    if(infos.depthMode != DCDepthResolution::K4_OFF){
-        if(infos.initialColorResolution != DCColorResolution::OFF){
+    if(infos.depthResolution != DCDepthResolution::OFF){
+        if(infos.colorResolution != DCColorResolution::OFF){
             auto depthRes   = depth_resolution(settings.config.mode);
-            depthSizedColorImage = k4a::image::create(
+            k4aDepthSizedColorImage = k4a::image::create(
                 K4A_IMAGE_FORMAT_COLOR_BGRA32,
                 static_cast<int>(depth_width(depthRes)),
                 static_cast<int>(depth_height(depthRes)),
@@ -921,7 +942,7 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
             K4A_IMAGE_FORMAT_CUSTOM,
             static_cast<int>(depth_width(depthRes)),
             static_cast<int>(depth_height(depthRes)),
-            static_cast<int32_t>(infos.depthWidth * 3 * sizeof(int16_t))
+            static_cast<int32_t>(depth_width(depthRes) * 3 * sizeof(int16_t))
         );
     }
 }
@@ -979,31 +1000,11 @@ auto AzureKinectDeviceImpl::generate_bt_config(const DCConfigSettings &config) -
     return ka4BtConfig;
 }
 
-auto AzureKinectDeviceImpl::color_data() -> std::span<tool::ColorRGBA8> {
-    if(depthSizedColorImage.has_value()){
+auto AzureKinectDeviceImpl::color_rgba_data() -> std::span<tool::ColorRGBA8> {
+    if(colorImage.has_value()){
         return std::span<tool::ColorRGBA8>{
-            reinterpret_cast<tool::ColorRGBA8*>(depthSizedColorImage.value().get_buffer()),
-            static_cast<size_t>(depthSizedColorImage.value().get_width_pixels() * depthSizedColorImage.value().get_height_pixels())
-        };
-    }
-    return {};
-}
-
-auto AzureKinectDeviceImpl::depth_data() -> std::span<uint16_t> {
-    if(depthImage.has_value()){
-        return std::span<std::uint16_t>{
-            reinterpret_cast<std::uint16_t*>(depthImage.value().get_buffer()),
-            static_cast<size_t>(depthImage.value().get_width_pixels() * depthImage.value().get_height_pixels())
-        };
-    }
-    return {};
-}
-
-auto AzureKinectDeviceImpl::infra_data() -> std::span<uint16_t> {
-    if(infraredImage.has_value()){
-        return std::span<std::uint16_t>{
-            reinterpret_cast<std::uint16_t*>(infraredImage.value().get_buffer()),
-            static_cast<size_t>(infraredImage.value().get_width_pixels() * infraredImage.value().get_height_pixels())
+            reinterpret_cast<tool::ColorRGBA8*>(colorImage.value().get_buffer()),
+            static_cast<size_t>(colorImage.value().get_width_pixels() * colorImage.value().get_height_pixels())
         };
     }
     return {};

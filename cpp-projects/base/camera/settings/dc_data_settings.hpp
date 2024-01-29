@@ -70,7 +70,7 @@ struct DCDataSettings : io::BinaryFileSettings{
     auto total_data_size() const noexcept-> size_t override;
 
     auto has_data_to_send() const noexcept -> bool{
-        return sendColor || sendDepth || sendInfra || sendCloud;//|| sendIMU || sendAudio || sendBodies;
+        return sendColor || sendDepth || sendInfra || sendCloud;
     }
 };
 }

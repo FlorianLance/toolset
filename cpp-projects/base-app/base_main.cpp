@@ -24,7 +24,7 @@
 ********************************************************************************/
 
 // local
-#include "test_k4_device.hpp"
+#include "test_ak_device.hpp"
 #include "test_ob_device.hpp"
 
 #include "geometry/matrix4.hpp"
@@ -33,26 +33,27 @@ using namespace tool::geo;
 
 int main(){
 
-    auto id = Mat4f::identity();
-    id.at(0) = 2;
-    id.at(1,1) = 3;
-    std::cout << "mat " << id << "\n";
+    // auto id = Mat4f::identity();
+    // id.at(0) = 2;
+    // id.at(1,1) = 3;
+    // std::cout << "mat " << id << "\n";
 
-    auto mat3 = cut(id,3,3);
-    auto inv = inverse(mat3);
+    // auto mat3 = cut(id,3,3);
+    // auto inv = inverse(mat3);
 
-    std::cout << mat3 << "\n";
-    std::cout << inv << "\n";
-    std::cout << inv * mat3 << "\n";
+    // std::cout << mat3 << "\n";
+    // std::cout << inv << "\n";
+    // std::cout << inv * mat3 << "\n";
 
-    auto tp = transpose(inv);
-    std::cout << tp << "\n";
+    // auto tp = transpose(inv);
+    // std::cout << tp << "\n";
 
 
     // test_raw_orbbec_femto();
-    // test_orbbec_femto();
+    // test_raw_orbbec_femto();
     // test_raw_k4device();
     // test_kinect4();
+    test_femto_mega();
     return 0;
 }
 

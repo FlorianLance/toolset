@@ -1394,7 +1394,7 @@ auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, Colo
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
     if(get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, frame);
-    }else if(get_device(cFrame->mode) == DCType::FemtoOrbbec){
+    }else if(get_device(cFrame->mode) == DCType::FemtoBolt){
         return i->ob_uncompress(cFrame, frame);
     }
     return false;

@@ -1057,7 +1057,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::Indent();
 
     auto currentModeName = modesNames[config.mode];
-    if(config.typeDevice == cam::DCType::FemtoOrbbec){
+    if(config.typeDevice == cam::DCType::FemtoBolt){
         if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
             for(const auto &m : foModes){
                 bool selected = m == config.mode;
@@ -1179,8 +1179,8 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     if(ImGui::Checkbox("IMU###settings_capture_imu", &data.captureIMU)){
         updateP = true;
     }
-
-    if(type == DCType::AzureKinect || type == DCType::FemtoOrbbec){
+    
+    if(type == DCType::AzureKinect || type == DCType::FemtoBolt){
         ImGui::SameLine();
         if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
             updateP = true;
@@ -1215,8 +1215,8 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
             updateP = true;
         }
     }
-
-    if(type == DCType::AzureKinect || type == DCType::FemtoOrbbec){
+    
+    if(type == DCType::AzureKinect || type == DCType::FemtoBolt){
         ImGui::SameLine();
         if(ImGui::Checkbox("Bodies###settings_send_bodies", &data.sendBodies)){
             updateP = true;
@@ -1395,7 +1395,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
                 update       = true;
                 colors.powerlineFrequency = guiSel + 1;
             }
-        }else if(type == DCType::FemtoOrbbec){
+        }else if(type == DCType::FemtoBolt){
             guiSel = colors.powerlineFrequency;
             ImGui::SetNextItemWidth(100.f);
             if(ImGui::Combo("###settings_mode_combo", &guiSel, obPowerlineFrequencyItems, IM_ARRAYSIZE(obPowerlineFrequencyItems))){

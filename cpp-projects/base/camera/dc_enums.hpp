@@ -38,14 +38,16 @@ using namespace std::literals::string_view_literals;
 // Camera types
 enum class DCType : std::int8_t{
     AzureKinect = 0,
-    FemtoOrbbec,
+    FemtoBolt,
+    FemtoMega,
     Kinect2,
     Recording,
     Undefined,
     SizeEnum,
-    K2 = Kinect2,
-    K4 = AzureKinect,
-    FO = FemtoOrbbec,
+    AK  = AzureKinect,
+    K2  = Kinect2,
+    FB  = FemtoBolt,
+    FM  = FemtoMega,
     REC = Recording
 };
 
@@ -67,6 +69,7 @@ enum class K4ImageFormat : std::int8_t {
     CUSTOM   = 8, // K4A_IMAGE_FORMAT_CUSTOM       : Used in conjunction with user created images or images packing non-standard data.
     CUSTOM8  = 6, // K4A_IMAGE_FORMAT_CUSTOM8      : Each pixel of CUSTOM8 is a single channel one byte of unsigned data.
     CUSTOM16 = 7, // K4A_IMAGE_FORMAT_CUSTOM16     : Each pixel of CUSTOM16 is a single channel two bytes of little endian unsigned data.
+    // Undefined,
     SizeEnum
 };
 // ## orbbec
@@ -91,6 +94,7 @@ enum class OBImageFormat : std::int8_t {
     BGR      = 23,   /**< BGR format (actual BGR888) */
     Y14      = 24,   /**< Y14 format, single channel 14-bit depth (SDK will unpack into Y16 by default) */
     BGRA     = 25,   /**< BGRA format */
+    // Undefined,
     SizeEnum
 };
 // ## all
@@ -100,6 +104,7 @@ enum class DCImageFormat : std::int8_t {
     MJPG        = 2,
     BGRA        = 3,
     DEPTH16     = 4,
+    // RGB         = 5,
     SizeEnum
 };
 
@@ -113,6 +118,7 @@ static constexpr TupleArray<DCImageFormat::SizeEnum, TDCCorr> dcDCK4Corr = {{
     {DCImageFormat::MJPG,    K4ImageFormat::MJPEG,      OBImageFormat::MJPG},
     {DCImageFormat::BGRA,    K4ImageFormat::BGRA32,     OBImageFormat::BGRA},
     {DCImageFormat::DEPTH16, K4ImageFormat::DEPTH16,    OBImageFormat::Y16},
+    // {DCImageFormat::RGB,     K4ImageFormat::Undefined,  OBImageFormat::RGB},
 }};
 
 [[maybe_unused]] static constexpr auto get_k4_image_format(DCImageFormat f) -> K4ImageFormat{
@@ -153,6 +159,10 @@ static constexpr TupleArray<DCColorResolution::SizeEnum, TDCColRes> dcColRes = {
 
 [[maybe_unused]] static constexpr auto color_height(DCColorResolution r) -> int{
     return dcColRes.at<0,2>(r);
+}
+
+[[maybe_unused]] static constexpr auto color_size(DCColorResolution r) -> int{
+    return color_width(r)*color_height(r);
 }
 
 // # color exposure time
@@ -201,6 +211,10 @@ static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes
     return dcDepthRes.at<0,2>(r);
 }
 
+[[maybe_unused]] static constexpr auto depth_size(DCDepthResolution r) -> int{
+    return depth_width(r)*depth_height(r);
+}
+
 
 // # framerate
 enum class DCFramerate : std::int8_t{
@@ -225,36 +239,41 @@ static constexpr TupleArray<DCFramerate::SizeEnum, TDCFramerate> dcFramerates = 
 
 // camera mode
 enum class DCMode : std::int8_t {
-    // kinect4
-    K4_CLOUD_C1280x720_DI320x288_NV12_F30,
-    K4_CLOUD_C1280x720_DI640x576_MJPG_F30,
-    K4_CLOUD_C1280x720_DI640x576_YUY2_F30,
-    K4_CLOUD_C1280x720_DI640x576_NV12_F30,
-    K4_CLOUD_C1280x720_DI640x576_BGRA_F30,
-    K4_CLOUD_C1280x720_DI512x512_NV12_F30,
-    K4_CLOUD_C1280x720_DI1024x1024_NV12_F15,
-    K4_IMG_C1280x720_DI320x288_MJPG_F30,
-    K4_IMG_C1280x720_DI640x576_MJPG_F30,
-    K4_IMG_C1280x720_DI512x512_MJPG_F30,
-    K4_IMG_C1280x720_DI1024x1024_MJPG_F15,
-    K4_IMG_C1280x720_BGRA_F30,
-    K4_IMG_C1920x1080_BGRA_F30,
-    K4_IMG_C2560x1440_BGRA_F30,
-    K4_IMG_C2048x1536_BGRA_F30,
-    K4_IMG_C3840x2160_BGRA_F15,
-    K4_IMG_C4096x3072_BGRA_F15,
-    K4_IMG_C2048x1536_DI640x576_BGRA_F15,
-    K4_IMG_C2048x1536_DI1024x1024_BGRA_F15,
-    K4_IMG_C4096x3072_DI640x576_BGRA_F15,
-    K4_IMG_C4096x3072_DI1024x1024_BGRA_F15,
+    // azure kinect
+    AK_CLOUD_C1280x720_DI320x288_NV12_F30,
+    AK_CLOUD_C1280x720_DI640x576_MJPG_F30,
+    AK_CLOUD_C1280x720_DI640x576_YUY2_F30,
+    AK_CLOUD_C1280x720_DI640x576_NV12_F30,
+    AK_CLOUD_C1280x720_DI640x576_BGRA_F30,
+    AK_CLOUD_C1280x720_DI512x512_NV12_F30,
+    AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,
+    AK_IMG_C1280x720_DI320x288_MJPG_F30,
+    AK_IMG_C1280x720_DI640x576_MJPG_F30,
+    AK_IMG_C1280x720_DI512x512_MJPG_F30,
+    AK_IMG_C1280x720_DI1024x1024_MJPG_F15,
+    AK_IMG_C1280x720_BGRA_F30,
+    AK_IMG_C1920x1080_BGRA_F30,
+    AK_IMG_C2560x1440_BGRA_F30,
+    AK_IMG_C2048x1536_BGRA_F30,
+    AK_IMG_C3840x2160_BGRA_F15,
+    AK_IMG_C4096x3072_BGRA_F15,
+    AK_IMG_C2048x1536_DI640x576_BGRA_F15,
+    AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,
+    AK_IMG_C4096x3072_DI640x576_BGRA_F15,
+    AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,
     Merged,
-    // femto orbbec
-    FO_CLOUD_C1280x720_DI640x576_NV12_F30,
-    FO_CLOUD_C1280x720_DI640x576_MJPG_F30,
-    FO_CLOUD_C1280x720_DI512x512_MJPG_F30,
-    FO_CLOUD_DI512x512_MJPG_F30,
-    FO_IMG_C1280x720_MJPG_F30,
-    FO_IMG_DI640x576_NV12_F30,
+    // femto bolt
+    // # narrow
+    FB_CLOUD_C1280x720_DI640x576_NV12_F30,
+    FB_CLOUD_C1280x720_DI640x576_MJPG_F30,
+    FB_CLOUD_C1280x720_DI640x576_BGRA_F30,
+    // # wide
+    FB_CLOUD_C1280x720_DI512x512_MJPG_F30,
+    FB_CLOUD_DI512x512_MJPG_F30,
+    // # no depth
+    FB_IMG_C1280x720_MJPG_F30,
+    // femto mega orbbec
+    FM_CLOUD_C1280x720_DI512x512_MJPG_F30,
     // other
     Invalid,
     SizeEnum
@@ -263,34 +282,34 @@ enum class DCMode : std::int8_t {
 using TMode = std::tuple<DCMode, std::string_view>;
 static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     TMode
-    {DCMode::K4_CLOUD_C1280x720_DI320x288_NV12_F30,     "C1280_D320_NV12_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI640x576_YUY2_F30,     "C1280_D640_YUY2_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI640x576_BGRA_F30,     "C1280_D640_BGRA_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI512x512_NV12_F30,     "C1280_D512_NV12_F30"sv},
-    {DCMode::K4_CLOUD_C1280x720_DI1024x1024_NV12_F15,   "C1280_D1024_NV12_F15"sv},
-    {DCMode::K4_IMG_C1280x720_DI320x288_MJPG_F30,       "C1280_D320_MJPG_F30"sv},
-    {DCMode::K4_IMG_C1280x720_DI640x576_MJPG_F30,       "C1280_D640_MJPG_F30"sv},
-    {DCMode::K4_IMG_C1280x720_DI512x512_MJPG_F30,       "C1280_D512_MJPG_F30"sv},
-    {DCMode::K4_IMG_C1280x720_DI1024x1024_MJPG_F15,     "C1280_D1024_MJPG_F15"sv},
-    {DCMode::K4_IMG_C1280x720_BGRA_F30,                 "C1280_BGRA_F30"sv},
-    {DCMode::K4_IMG_C1920x1080_BGRA_F30,                "C1920_BGRA_F30"sv},
-    {DCMode::K4_IMG_C2560x1440_BGRA_F30,                "C2560_BGRA_F30"sv},
-    {DCMode::K4_IMG_C2048x1536_BGRA_F30,                "C2048_BGRA_F30"sv},
-    {DCMode::K4_IMG_C3840x2160_BGRA_F15,                "C3840_BGRA_F15"sv},
-    {DCMode::K4_IMG_C4096x3072_BGRA_F15,                "C4096_BGRA_F15"sv},
-    {DCMode::K4_IMG_C2048x1536_DI640x576_BGRA_F15,      "C2048_D640_BGRA_F15"sv},
-    {DCMode::K4_IMG_C2048x1536_DI1024x1024_BGRA_F15,    "C2048_D1024_BGRA_F15"sv},
-    {DCMode::K4_IMG_C4096x3072_DI640x576_BGRA_F15,      "C4096_D640_BGRA_F15"sv},
-    {DCMode::K4_IMG_C4096x3072_DI1024x1024_BGRA_F15,    "C4096_D1024_BGRA_F15"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     "C1280_D320_NV12_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     "C1280_D640_YUY2_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     "C1280_D640_BGRA_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     "C1280_D512_NV12_F30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   "C1280_D1024_NV12_F15"sv},
+    {DCMode::AK_IMG_C1280x720_DI320x288_MJPG_F30,       "C1280_D320_MJPG_F30"sv},
+    {DCMode::AK_IMG_C1280x720_DI640x576_MJPG_F30,       "C1280_D640_MJPG_F30"sv},
+    {DCMode::AK_IMG_C1280x720_DI512x512_MJPG_F30,       "C1280_D512_MJPG_F30"sv},
+    {DCMode::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     "C1280_D1024_MJPG_F15"sv},
+    {DCMode::AK_IMG_C1280x720_BGRA_F30,                 "C1280_BGRA_F30"sv},
+    {DCMode::AK_IMG_C1920x1080_BGRA_F30,                "C1920_BGRA_F30"sv},
+    {DCMode::AK_IMG_C2560x1440_BGRA_F30,                "C2560_BGRA_F30"sv},
+    {DCMode::AK_IMG_C2048x1536_BGRA_F30,                "C2048_BGRA_F30"sv},
+    {DCMode::AK_IMG_C3840x2160_BGRA_F15,                "C3840_BGRA_F15"sv},
+    {DCMode::AK_IMG_C4096x3072_BGRA_F15,                "C4096_BGRA_F15"sv},
+    {DCMode::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      "C2048_D640_BGRA_F15"sv},
+    {DCMode::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    "C2048_D1024_BGRA_F15"sv},
+    {DCMode::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      "C4096_D640_BGRA_F15"sv},
+    {DCMode::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    "C4096_D1024_BGRA_F15"sv},
     {DCMode::Merged,                                    "Merged"sv},
-    {DCMode::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
-    {DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
-    {DCMode::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     "C1280_D512_MJPG_F30"sv},
-    {DCMode::FO_CLOUD_DI512x512_MJPG_F30,               "D512x512_MJPG_F30"sv},
-    {DCMode::FO_IMG_C1280x720_MJPG_F30,                 "C1280_MJPG_F30"sv},
-    {DCMode::FO_IMG_DI640x576_NV12_F30,                 "DEP_DI640x576_NV12_F30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     "C1280_D640_BGRA_F30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     "C1280_D512_MJPG_F30"sv},
+    {DCMode::FB_CLOUD_DI512x512_MJPG_F30,               "D512x512_MJPG_F30"sv},
+    {DCMode::FB_IMG_C1280x720_MJPG_F30,                 "C1280_MJPG_F30"sv},
     {DCMode::Invalid,                                   "Invalid"sv},
 }};
 
@@ -312,35 +331,38 @@ using Dev   = DCType;
 using TDCMode = std::tuple<
     DCMode,                                        IF,       CR,         DR,                    FPS,      Range,         MRes,          Cloud,  Infra,  Dev>;
 static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
-    // kinect4
+    // azure kinect
     TDCMode
-    {M::K4_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     true,   true,   Dev::K4},
-    {M::K4_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   true,   true,   Dev::K4},
-    {M::K4_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     false,  true,   Dev::K4},
-    {M::K4_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     false,  true,   Dev::K4},
-    {M::K4_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     false,  true,   Dev::K4},
-    {M::K4_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::K4},
-    {M::K4_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C4096x3072_BGRA_F15,                IF::BGRA, CR::R3072P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::K4},
-    {M::K4_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::K4},
-    {M::K4_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::K4},
-    {M::K4_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::K4},
-    {M::K4_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::K4},
-    // orbbec
-    {M::FO_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,               FPS::F30, {0,0},         {0,0},         false,  false,  Dev::FO},
-    {M::FO_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
-    {M::FO_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FO},
-    {M::FO_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FO},
-    {M::FO_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FO},
+    {M::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     false,  true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     false,  true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
+    {M::AK_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C4096x3072_BGRA_F15,                IF::BGRA, CR::R3072P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::AK},
+    {M::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
+    {M::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
+    {M::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
+    {M::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
+    // femto bolt
+    {M::FB_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,               FPS::F30, {0,0},         {0,0},         false,  false,  Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FB},
+    {M::FB_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FB},
+    // femto mega
+    {M::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FB},
     // invalid
     {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,               FPS::F30, {0.f,0.f},     {0,0},         false,  false,  Dev::Undefined},
 }};
@@ -349,9 +371,9 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
 [[maybe_unused]] static constexpr auto default_camera_mode(DCType type) -> DCMode{
     switch (type) {
     case DCType::AzureKinect:
-        return DCMode::K4_CLOUD_C1280x720_DI640x576_NV12_F30;
-    case DCType::FemtoOrbbec:
-        return DCMode::FO_CLOUD_C1280x720_DI640x576_NV12_F30;
+        return DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30;
+    case DCType::FemtoBolt:
+        return DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30;
     default:
         return DCMode::Invalid;
     }

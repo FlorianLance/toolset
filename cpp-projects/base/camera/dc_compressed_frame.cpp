@@ -162,7 +162,7 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
             k4a_calibration_t rCalibration;
             read(rCalibration, file);
             i->k4Calibration = rCalibration;
-        }else if(get_device(mode) == DCType::FemtoOrbbec){
+        }else if(get_device(mode) == DCType::FemtoBolt){
             OBCameraParam rCalibration;
             read(rCalibration, file);
             i->obCalibration = rCalibration;
@@ -346,7 +346,7 @@ auto DCCompressedFrame::init_from_data(std::int8_t const * const data, size_t &o
             k4a_calibration_t rCalibration;
             read(rCalibration, data, offset, sizeData);
             i->k4Calibration = rCalibration;
-        }else if(get_device(mode) == DCType::FemtoOrbbec){
+        }else if(get_device(mode) == DCType::FemtoBolt){
             OBCameraParam rCalibration;
             read(rCalibration, data, offset, sizeData);
             i->obCalibration = rCalibration;
@@ -475,7 +475,7 @@ auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t cons
         k4a_calibration_t rCalibration;
         read(rCalibration, data, offset, sizeData);
         i->k4Calibration = rCalibration;
-    }else if(type == DCType::FemtoOrbbec){
+    }else if(type == DCType::FemtoBolt){
         OBCameraParam rCalibration;
         read(rCalibration, data, offset, sizeData);
         i->obCalibration = rCalibration;
@@ -485,7 +485,7 @@ auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t cons
 auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
     if(get_device(mode) == DCType::AzureKinect){
         return sizeof(k4a_calibration_t);
-    }else if(get_device(mode) == DCType::FemtoOrbbec){
+    }else if(get_device(mode) == DCType::FemtoBolt){
         return sizeof(OBCameraParam);
     }
     return 0;

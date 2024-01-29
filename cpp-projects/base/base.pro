@@ -96,6 +96,9 @@ HEADERS += \
     # io
     camera/dc_compressed_frames.hpp \
     camera/dc_video.hpp \
+    camera/impl/femto_bolt_device_impl.hpp \
+    camera/impl/femto_mega_device_impl.hpp \
+    camera/impl/orbbec_device.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -212,7 +215,6 @@ HEADERS += \
     camera/impl/k2_network.hpp \
     camera/impl/k2_types.hpp \
     camera/impl/k2_enums.hpp \
-    camera/impl/femto_orbbec_device_impl.hpp \
     camera/impl/azure_kinect_device_impl.hpp \
     camera/impl/playback_device_impl.hpp \
     # exvr
@@ -322,6 +324,9 @@ SOURCES += \
     # io
     camera/dc_compressed_frames.cpp \
     camera/dc_video.cpp \
+    camera/impl/femto_bolt_device_impl.cpp \
+    camera/impl/femto_mega_device_impl.cpp \
+    camera/impl/orbbec_device.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -392,7 +397,6 @@ SOURCES += \
     camera/impl/k2_manager.cpp \
     camera/impl/k2_types.cpp \
     camera/impl/azure_kinect_device_impl.cpp \
-    camera/impl/femto_orbbec_device_impl.cpp \
     # exvr
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \

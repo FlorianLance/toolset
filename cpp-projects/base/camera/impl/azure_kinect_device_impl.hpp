@@ -59,7 +59,7 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
     std::optional<k4a::image> bodiesIndexImage   = std::nullopt;
     // # processing
     std::optional<k4a::image> convertedColorImage = std::nullopt;
-    std::optional<k4a::image> depthSizedColorImage = std::nullopt;
+    std::optional<k4a::image> k4aDepthSizedColorImage = std::nullopt;
 
     // audio
     std::shared_ptr<k4a::K4AMicrophone> microphone = nullptr;
@@ -87,9 +87,7 @@ private:
     auto update_camera_from_colors_settings() -> void override;
 
     // get data
-    auto color_data() -> std::span<ColorRGBA8> override;
-    auto depth_data() -> std::span<std::uint16_t> override;
-    auto infra_data() -> std::span<std::uint16_t> override;
+    auto color_rgba_data() -> std::span<ColorRGBA8> override;
     auto bodies_index_data() -> std::span<std::uint8_t> override;
 
     // read data
@@ -103,7 +101,7 @@ private:
 
     // process data    
     auto convert_color_image() -> void override;
-    auto resize_images() -> void override;
+    auto resize_color_image_to_depth_size() -> void override;
     auto generate_cloud() -> void override;
 
     // frame generation

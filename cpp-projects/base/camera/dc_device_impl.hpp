@@ -43,21 +43,20 @@ struct DCInfos{
     auto initialize(DCMode mode) -> void;
 
     size_t idCapture    = 0;
-    size_t colorWidth   = 0;
-    size_t colorHeight  = 0;
-    size_t colorSize    = 0;
-    DCDepthResolution initialDepthResolution;
-    size_t depthWidth   = 0;
-    size_t depthHeight  = 0;
-    size_t depthSize    = 0;
-    size_t infraWidth   = 0;
-    size_t infraHeight  = 0;
-    size_t infraSize    = 0;
-    DCColorResolution initialColorResolution;
     DCImageFormat imageFormat;
-    DCDepthResolution depthMode;
+    DCDepthResolution depthResolution;
+    DCColorResolution colorResolution;
     DCFramerate fps;
     std::int32_t timeoutMs;
+    // size_t colorWidth   = 0;
+    // size_t colorHeight  = 0;
+    // size_t colorSize    = 0;
+    // size_t depthWidth   = 0;
+    // size_t depthHeight  = 0;
+    // size_t depthSize    = 0;
+    // size_t infraWidth   = 0;
+    // size_t infraHeight  = 0;
+    // size_t infraSize    = 0;
 };
 
 struct DCIndices{
@@ -132,10 +131,15 @@ struct DCFrames{
 
 struct DCData{
 
+    // data
+    std::vector<std::int8_t> convertedColorData;
+
     // images
-    // std::span<ColorRGBA8> colorDephSized;
-    // std::span<std::uint16_t> depth;
-    // std::span<std::uint16_t> infra;
+    std::span<std::int8_t> rawColor;
+    std::span<ColorRGBA8> color;
+    std::span<ColorRGBA8> dephtSizedColor;
+    std::span<std::uint16_t> depth;
+    std::span<std::uint16_t> infra;
 
     // imu
     DCImuSample imuSample;
@@ -211,9 +215,7 @@ protected:
     auto stop_reading_thread() -> void;
 
     // get data
-    virtual auto color_data() -> std::span<ColorRGBA8> {return {};}
-    virtual auto depth_data() -> std::span<std::uint16_t> {return {};}
-    virtual auto infra_data() -> std::span<std::uint16_t> {return {};}
+    auto check_data_validity() -> bool;
     virtual auto bodies_index_data() -> std::span<std::uint8_t> {return {};}
 
     // read data
@@ -229,10 +231,10 @@ protected:
 
     // process data
     virtual auto convert_color_image() -> void{}
-    virtual auto resize_images() -> void{}
-    auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthBuffer, std::span<ColorRGBA8> colorBuffer, std::span<uint16_t> infraBuffer) -> void;
-    auto filter_color_image(const DCFiltersSettings &filtersS) -> void;
-    auto filter_infrared_image(const DCFiltersSettings &filtersS) -> void;
+    virtual auto resize_color_image_to_depth_size() -> void{}
+    auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<uint16_t> infraB) -> void;
+    auto filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorB, std::span<std::uint16_t> depthB, std::span<uint16_t> infraB, std::span<std::uint8_t> bodiesB) -> void;
+    auto filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraB, std::span<std::uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<std::uint8_t> bodiesB) -> void;
     virtual auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{}
     auto update_valid_depth_values() -> void;
 
@@ -245,7 +247,7 @@ protected:
 private:
 
     // depth filtering
-    auto maximum_local_depth_difference(std::span<std::uint16_t> depthBuffer, float max, Connectivity connectivity) -> void;
+    auto maximum_local_depth_difference(const DCIndices &ids, std::span<std::uint16_t> depthBuffer, float max, Connectivity connectivity) -> void;
     auto keep_only_biggest_cluster() -> void;
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, Connectivity connectivity) -> void;
     auto erode(std::uint8_t nbLoops, Connectivity connectivity) -> void;
