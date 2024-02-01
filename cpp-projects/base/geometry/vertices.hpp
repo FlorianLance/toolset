@@ -39,30 +39,30 @@ struct Vertices3D : public Buffer<Pt3f>{
 
     // get
     // # geometry
-    auto min_id() const noexcept -> size_t;
-    auto max_id() const noexcept -> size_t;
-    auto min_x_id() const noexcept -> size_t;
-    auto max_x_id() const noexcept -> size_t;
-    auto min_y_id() const noexcept -> size_t;
-    auto max_y_id() const noexcept -> size_t;
-    auto min_z_id() const noexcept -> size_t;
-    auto max_z_id() const noexcept -> size_t;
-    auto min() const noexcept -> geo::Pt3f;
-    auto max() const noexcept -> geo::Pt3f;
-    auto min_x() const noexcept -> float;
-    auto max_x() const noexcept -> float;
-    auto min_y() const noexcept -> float;
-    auto max_y() const noexcept -> float;
-    auto min_z() const noexcept -> float;
-    auto max_z() const noexcept -> float;
-    auto sum() const noexcept -> geo::Pt3f;
-    auto mean_position() const noexcept -> geo::Pt3f;
-    auto aabb() const noexcept -> AABB3<float>;    
-    auto sphere() const -> Sphere<float>; // TO CHECK
+    [[nodiscard]] auto min_id() const noexcept -> size_t;
+    [[nodiscard]] auto max_id() const noexcept -> size_t;
+    [[nodiscard]] auto min_x_id() const noexcept -> size_t;
+    [[nodiscard]] auto max_x_id() const noexcept -> size_t;
+    [[nodiscard]] auto min_y_id() const noexcept -> size_t;
+    [[nodiscard]] auto max_y_id() const noexcept -> size_t;
+    [[nodiscard]] auto min_z_id() const noexcept -> size_t;
+    [[nodiscard]] auto max_z_id() const noexcept -> size_t;
+    [[nodiscard]] auto min() const noexcept -> geo::Pt3f;
+    [[nodiscard]] auto max() const noexcept -> geo::Pt3f;
+    [[nodiscard]] auto min_x() const noexcept -> float;
+    [[nodiscard]] auto max_x() const noexcept -> float;
+    [[nodiscard]] auto min_y() const noexcept -> float;
+    [[nodiscard]] auto max_y() const noexcept -> float;
+    [[nodiscard]] auto min_z() const noexcept -> float;
+    [[nodiscard]] auto max_z() const noexcept -> float;
+    [[nodiscard]] auto sum() const noexcept -> geo::Pt3f;
+    [[nodiscard]] auto mean_position() const noexcept -> geo::Pt3f;
+    [[nodiscard]] auto aabb() const noexcept -> AABB3<float>;
+    [[nodiscard]] auto sphere() const -> Sphere<float>; // TO CHECK
 
     // id
-    auto get_outliers_id(const Pt3f &target, float maxDistance) noexcept -> std::vector<size_t>;
-    auto get_from_plane_id(const Plane3f &plane, bool keepAbove) noexcept -> std::vector<size_t>;  // TO CHECK
+    [[nodiscard]] auto get_outliers_id(const Pt3f &target, float maxDistance) noexcept -> std::vector<size_t>;
+    [[nodiscard]] auto get_from_plane_id(const Plane3f &plane, bool keepAbove) noexcept -> std::vector<size_t>;  // TO CHECK
     // remove
     auto remove_outliers(const Pt3f &target, float maxDistance) noexcept -> void;
     auto remove_from_plane(const Plane3f &plane, bool keepAbove) noexcept -> void;  // TO CHECK

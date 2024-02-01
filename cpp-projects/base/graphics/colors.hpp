@@ -26,11 +26,11 @@
 
 #pragma once
 
-// local
-#include "utility/buffer_vector.hpp"
-//#include "color.hpp"
-#include "geometry/point3.hpp"
+// // local
+// #include "utility/buffer_vector.hpp"
+// //#include "color.hpp"
+// #include "geometry/point3.hpp"
 
-namespace tool {
-    using ColorsRGB32 = Buffer<geo::Pt3f>;
-}
+// namespace tool {
+//     using ColorsRGB32 = Buffer<ColorRGB32>;
+// }

@@ -34,6 +34,7 @@
 #include "camera/settings/dc_filters_settings.hpp"
 #include "camera/settings/dc_delay_settings.hpp"
 #include "camera/dc_compressed_frame.hpp"
+#include "camera/dc_frame.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 
 namespace tool::net {

@@ -27,87 +27,66 @@
 #pragma once
 
 // local
-#include "dc_frame.hpp"
+#include "frame.hpp"
+#include "dc_enums.hpp"
+#include "utility/image_buffer.hpp"
 
 namespace tool::cam{
 
 struct DCCompressedFrame : Frame{
 
-    DCCompressedFrame();
-    ~DCCompressedFrame();
+    // DCCompressedFrame();
+    // ~DCCompressedFrame();
 
     // infos
     DCMode mode;
     size_t validVerticesCount = 0;
 
-    // color
-    DCImageBuffer<std::uint8_t> encodedImageColor;
-    // size_t colorWidth = 0;
-    // size_t colorHeight = 0;
-    // std::vector<std::uint8_t> encodedColorData;
+    // images (jpeg encoding)
+    ImageBuffer<std::uint8_t> encodedColorImage;
+    ImageBuffer<std::uint8_t> encodedDepthSizedColorImage;
 
-    // depth-sized color
-    size_t depthSizedColorWidth = 0;
-    size_t depthSizedColorHeight = 0;
-    std::vector<std::uint8_t> encodedDepthSizedColorData;
-
-    // depth
-    size_t depthWidth = 0;
-    size_t depthHeight = 0;
-    std::vector<std::uint8_t> encodedDepthData;
-
-    // infrared
-    size_t infraWidth = 0;
-    size_t infraHeight = 0;
-    std::vector<std::uint8_t> encodedInfraData;
-
-    // cloud
-    std::vector<std::uint8_t> encodedCloudVerticesData;
-
-    // imu
-    std::optional<DCImuSample> imuSample = std::nullopt;
-
-    // audio
-    std::vector<std::array<float, 7>> audioFrames;
-
-    // bodies
-    // ...
+    // data (lossless std::uint16_t encoding)
+    ImageBuffer<std::uint8_t> encodedDepthData;
+    ImageBuffer<std::uint8_t> encodedInfraData;
+    Buffer<std::uint8_t> encodedColoredCloudData;
 
     // calibration
-    // std::vector<std::int8_t> calibrationData;
+    Buffer<std::uint8_t> calibrationData;
+
+    // // imu
+    // // Buffer<std::uint8_t> imuData; // TODO
+    // std::optional<DCImuSample> imuSample = std::nullopt;
+
+    // // audio
+    // // Buffer<Buffer<float>> audioData; // TODO
+    std::vector<std::array<float, 7>> audioFrames;
+
+    // // bodies
+    // // ...
 
     // getters
-    // # sizes
-    auto infos_size()               const noexcept -> size_t;
-    auto color_size()               const noexcept -> size_t;
-    auto depth_sized_color_size()   const noexcept -> size_t;
-    auto depth_size()               const noexcept -> size_t;
-    auto infra_size()               const noexcept -> size_t;
-    auto cloud_size()               const noexcept -> size_t;
-    auto imu_sample_size()          const noexcept -> size_t;
-    auto audio_size()               const noexcept -> size_t;
-    auto bodies_size()              const noexcept -> size_t;
-    auto calibration_size()         const noexcept -> size_t;
-    auto total_data_size()          const -> size_t;
-    // # has
-    auto has_calibration()          const noexcept -> bool;
+    auto data_size() const noexcept -> size_t override;
 
     // init
-    auto init_from_file_stream(std::ifstream &file) -> void;
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
+    auto init_from_file_stream(std::ifstream &file) -> void override;
+    auto init_from_data(std::span<const std::int8_t> data, size_t &offset) -> void override;
+    // write
+    auto write_to_file_stream(std::ofstream &file) -> void override;
+    auto write_to_data(std::span<int8_t> data, size_t &offset) -> void override;
+
+    // // # calibration
+    // auto write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
+    // auto init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
+    // auto calibration_data_size() const noexcept -> size_t;
+
     // # legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
-    // write
-    auto write_to_file_stream(std::ofstream &file) -> void;
-    auto write_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
-    // # calibration
-    auto write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
-    auto init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
-    auto calibration_data_size() const noexcept -> size_t;
 
-private:
-    struct Impl;
-    std::unique_ptr<Impl> i;
+// private:
+
+//     struct Impl;
+//     std::unique_ptr<Impl> i;
 };
 }

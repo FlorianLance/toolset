@@ -95,7 +95,11 @@ LIBS += \
 HEADERS += \
     # io
     camera/dc_compressed_frames.hpp \
+    camera/dc_frame_data.hpp \
+    camera/dc_frame_indices.hpp \
+    camera/dc_frame_timing.hpp \
     camera/dc_video.hpp \
+    camera/frame.hpp \
     camera/impl/azure_base_device.hpp \
     camera/impl/azure_utility.hpp \
     camera/impl/femto_bolt_device_impl.hpp \
@@ -236,6 +240,7 @@ HEADERS += \
     utility/export.hpp \
     utility/format.hpp \
     utility/id_alias_map.hpp \
+    utility/image_buffer.hpp \
     utility/io_data.hpp \
     utility/io_fstream.hpp \
     utility/math.hpp \
@@ -325,8 +330,12 @@ HEADERS += \
 SOURCES += \
     # io
     camera/dc_compressed_frames.cpp \
+    camera/dc_frame_data.cpp \
+    camera/dc_frame_indices.cpp \
+    camera/dc_frame_timing.cpp \
     camera/dc_types.cpp \
     camera/dc_video.cpp \
+    camera/frame.cpp \
     camera/impl/azure_base_device.cpp \
     camera/impl/femto_bolt_device_impl.cpp \
     camera/impl/femto_mega_device_impl.cpp \

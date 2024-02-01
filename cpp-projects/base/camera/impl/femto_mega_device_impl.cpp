@@ -140,7 +140,7 @@ auto FemtoMegaDeviceImpl::resize_color_image_to_depth_size() -> void {
 
 auto FemtoMegaDeviceImpl::generate_cloud() -> void{
     
-    if(dc_has_cloud(settings.config.mode) && !fData.depth.empty() && validDepthValues > 0){
+    if(dc_has_cloud(settings.config.mode) && !fData.depth.empty() && fData.validDepthValues > 0){
         fData.depthCloud = orbbecD->k4a_generate_cloud(mInfos, fData.depth);
     }else{
         fData.depthCloud = {};
@@ -173,9 +173,9 @@ auto FemtoMegaDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, cons
     auto cFrame = std::make_unique<DCCompressedFrame>();
     update_compressed_frame_infos(cFrame.get());
 
-    size_t offset = 0;
     auto calibrationData = orbbecD->k4a_calibration_data();
-    cFrame->init_calibration_from_data(DCType::FemtoMega, calibrationData.data(), offset, calibrationData.size());
+    cFrame->calibrationData.resize(calibrationData.size());
+    std::copy(calibrationData.begin(), calibrationData.end(), cFrame->calibrationData.begin());
 
     update_compressed_frame_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());

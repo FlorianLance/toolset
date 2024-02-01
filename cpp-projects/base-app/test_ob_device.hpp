@@ -369,15 +369,15 @@ auto test_raw_orbbec_femto() -> void{
 
         if(colorFrame && depthFrame){
 
-            std::cout << "uncompress color\n";
-            frameUncompressor.uncompress_jpeg_data(
-                colorWidth,
-                colorHeight,
-                DCFrameUncompressor::ColorFormat::RGBA,
-                colorFrame->dataSize(),
-                reinterpret_cast<uint8_t*>(colorFrame->data()),
-                reinterpret_cast<uint8_t*>(colorImage.get_buffer())
-            );
+            // std::cout << "uncompress color\n";
+            // frameUncompressor.uncompress_jpeg_data(
+            //     colorWidth,
+            //     colorHeight,
+            //     DCFrameUncompressor::ColorFormat::RGBA,
+            //     colorFrame->dataSize(),
+            //     reinterpret_cast<uint8_t*>(colorFrame->data()),
+            //     reinterpret_cast<uint8_t*>(colorImage.get_buffer())
+            // );
 
             std::cout << "create depth from buffer\n";
             auto k4aDepthImage = k4a::image::create_from_buffer(

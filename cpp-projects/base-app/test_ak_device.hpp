@@ -52,7 +52,7 @@ auto test_kinect4() -> void{
     int idC = 0;
     dManager.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
         if(idC < 5){
-            std::cout << "frame " << frame->depthWidth << " " << frame->depthHeight << " " << frame->depthData.size() << " "<< frame->imageDepthData.size() << "\n";
+            // std::cout << "frame " << frame->depthWidth << " " << frame->depthHeight << " " << frame->depthData.size() << " "<< frame->imageDepthData.size() << "\n";
             std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
             tool::io::CloudIO::save_cloud(std::format("D:/ak_cloud_{}.obj", idC++), frame->cloud);
 

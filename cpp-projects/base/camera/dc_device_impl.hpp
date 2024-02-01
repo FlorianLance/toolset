@@ -27,8 +27,11 @@
 #pragma once
 
 // local
-#include "camera/dc_frame_compressor.hpp"
-#include "camera/dc_frame_uncompressor.hpp"
+#include "dc_frame_compressor.hpp"
+#include "dc_frame_uncompressor.hpp"
+#include "dc_frame_indices.hpp"
+#include "dc_frame_data.hpp"
+#include "dc_frame_timing.hpp"
 #include "dc_device.hpp"
 
 namespace tool::cam {
@@ -71,15 +74,6 @@ struct DCDeviceImpl{
     // state
     std::atomic_bool readFramesFromCameras = false;
     std::atomic_bool sendData = true;
-    size_t validDepthValues = 0;
-    size_t meanBiggestZoneId = 0;
-
-    std::vector<std::int8_t> filteringMask;
-    std::vector<int> depthMask;
-    std::vector<int> zonesId;
-    std::vector<std::int16_t> depthFiltering;
-
-    std::vector<std::int8_t> convertedColorData;
 
     // thread/lockers
     std::mutex parametersM; /**< mutex for reading parameters at beginning of a new frame in thread function */
@@ -165,7 +159,7 @@ protected:
     auto update_compressed_frame_imu(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
     auto update_compressed_frame_bodies(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
 
-    auto debug_save_images(std::string parentPath) -> void;
+    // auto debug_save_images(std::string parentPath) -> void;
 
 private:
 

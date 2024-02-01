@@ -219,7 +219,7 @@ auto FemtoBoltDeviceImpl::resize_color_image_to_depth_size() -> void{
 
 auto FemtoBoltDeviceImpl::generate_cloud() -> void{
     
-    if(mInfos.has_cloud() && !fData.depth.empty() && validDepthValues > 0){
+    if(mInfos.has_cloud() && !fData.depth.empty() && fData.validDepthValues > 0){
         fData.depthCloud = orbbecD->k4a_generate_cloud(mInfos, fData.depth);
     }else{
         fData.depthCloud = {};
@@ -299,9 +299,9 @@ auto FemtoBoltDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, cons
     auto cFrame = std::make_unique<DCCompressedFrame>();
     update_compressed_frame_infos(cFrame.get());
 
-    size_t offset = 0;
-    auto calibrationData = orbbecD->k4a_calibration_data();
-    cFrame->init_calibration_from_data(DCType::FemtoBolt, calibrationData.data(), offset, calibrationData.size());
+    auto calibrationData = orbbecD->k4a_calibration_data();    
+    cFrame->calibrationData.resize(calibrationData.size());
+    std::copy(calibrationData.begin(), calibrationData.end(), cFrame->calibrationData.begin());
 
     update_compressed_frame_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());

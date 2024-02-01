@@ -210,14 +210,13 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<cam::DCCom
     header.idMessage = static_cast<std::int32_t>(idLastFrameMutliPacketsMessageSent);
 
     // init data
-
-    size_t totalDataSizeBytes = frame->total_data_size();
+    size_t totalDataSizeBytes = frame->data_size();
     if(bufferToSend.size() < totalDataSizeBytes){
         bufferToSend.resize(totalDataSizeBytes);
     }
 
     size_t offset = 0;
-    frame->write_to_data(bufferToSend.data(), offset, totalDataSizeBytes);
+    frame->write_to_data(std::span<std::int8_t>(bufferToSend.data(), totalDataSizeBytes), offset);
 
     // send data
     size_t nbBytesSent = send_packets(header, totalDataSizeBytes);

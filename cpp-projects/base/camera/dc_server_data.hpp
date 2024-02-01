@@ -28,6 +28,7 @@
 
 // local
 #include "dc_compressed_frame.hpp"
+#include "dc_frame.hpp"
 
 namespace tool::cam{
 

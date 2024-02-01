@@ -116,7 +116,7 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
 
             // init compressed frame from data packets
             size_t offset = 0;
-            cFrame->init_from_data(m_data.data(), offset, header.total_size_data_bytes());
+            cFrame->init_from_data(std::span<std::int8_t>(m_data.data(), header.total_size_data_bytes()), offset);
 
             // update received TS with first packet received TS
             auto diffCaptureSending = (firstPacketSentCompressedFrameTS - cFrame->afterCaptureTS);

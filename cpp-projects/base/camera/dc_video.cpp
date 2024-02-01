@@ -421,17 +421,11 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
         final.afterCaptureTS  = c0Frame->afterCaptureTS;
         final.receivedTS      = c0Frame->receivedTS;
 
-        final.colorWidth      = 0;
-        final.colorHeight     = 0;
-        final.depthWidth      = 0;
-        final.depthHeight     = 0;
-        final.infraWidth      = 0;
-        final.infraHeight     = 0;        
-        final.imageColorData.clear();
-        final.depthData.clear();
-        final.imageDepthData.clear();
-        final.infraData.clear();
-        final.imageInfraData.clear();
+        final.colorImage.reset();
+        final.depthImage.reset();
+        final.infraImage.reset();
+        final.depthData.reset();
+        final.infraData.reset();
 
         geo::VoxelGrid grid(voxelSize, minBound, maxBound);        
         grid.add_cloud(final.cloud, m_camerasTransforms.front().conv<float>());

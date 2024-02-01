@@ -28,7 +28,6 @@
 
 // std
 #include <fstream>
-#include <ostream>
 #include <vector>
 
 namespace tool{

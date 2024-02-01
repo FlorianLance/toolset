@@ -40,6 +40,7 @@
 #include "settings/dc_config_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
 #include "dc_compressed_frame.hpp"
+#include "dc_frame.hpp"
 
 namespace tool::cam {
 

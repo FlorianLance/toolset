@@ -28,6 +28,7 @@
 
 // local
 #include "dc_compressed_frame.hpp"
+#include "dc_frame.hpp"
 
 namespace tool::cam{
 
@@ -40,15 +41,22 @@ struct DCFrameUncompressor{
     DCFrameUncompressor();
     ~DCFrameUncompressor();
 
-    auto uncompress_jpeg_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool;
+    // auto uncompress_jpeg_data(size_t width, size_t height, ColorFormat format, size_t jpegSize, std::uint8_t *jpegData, std::uint8_t *data) -> bool;
 
     // uncompress to frame
     auto uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
-    auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
-    auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
-    auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
-    auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
-    auto uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
+    // auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
+    // auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
+    // auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
+    // auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
+    // auto uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
+
+    auto decode_from_jpeg(size_t width, size_t height, std::span<std::int8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
+    auto decode_from_jpeg(size_t width, size_t height, std::span<std::int8_t> encodedImage,  ImageBuffer<ColorRGB8> &image) -> bool;
+    auto decode_from_jpeg(size_t width, size_t height, std::span<std::uint8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
+    auto decode_from_jpeg(size_t width, size_t height, std::span<std::uint8_t> encodedImage,  ImageBuffer<ColorRGB8> &image) -> bool;
+    auto decode_from_jpeg(const ImageBuffer<std::uint8_t> &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
+    auto decode_from_jpeg(const ImageBuffer<std::uint8_t> &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool;
 
 private:
 

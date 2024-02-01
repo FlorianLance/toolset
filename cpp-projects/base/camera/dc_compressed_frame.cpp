@@ -39,611 +39,494 @@
 using namespace tool::cam;
 
 
-struct DCCompressedFrame::Impl{
-    // kinect4 types
-    std::optional<k4a_calibration_t> k4Calibration = std::nullopt;
-    // orbbec types
-    std::optional<OBCameraParam> obCalibration = std::nullopt;
-};
+// struct DCCompressedFrame::Impl{
+//     // kinect4 types
+//     std::optional<k4a_calibration_t> k4Calibration = std::nullopt;
+//     // orbbec types
+//     std::optional<OBCameraParam> obCalibration = std::nullopt;
+// };
 
-DCCompressedFrame::DCCompressedFrame() : i(std::make_unique<Impl>()){
-}
+// DCCompressedFrame::DCCompressedFrame() : i(std::make_unique<Impl>()){
+// }
 
-DCCompressedFrame::~DCCompressedFrame(){}
+// DCCompressedFrame::~DCCompressedFrame(){}
 
-auto DCCompressedFrame::infos_size() const noexcept -> size_t {
+auto encoded_buffer_image_bytes_size(const tool::ImageBuffer<std::uint8_t> &iBuffer) -> size_t{
     return
-        sizeof(idCapture) +
-        sizeof(afterCaptureTS) +
-        sizeof(receivedTS) +
-        sizeof(mode) +
-        sizeof(validVerticesCount);
+        sizeof(size_t) + iBuffer.size() +
+        sizeof(iBuffer.width) + sizeof(iBuffer.height) ;
 }
 
-auto DCCompressedFrame::color_size()  const noexcept -> size_t{
+auto encoded_buffer_bytes_size(const tool::Buffer<std::uint8_t> &iBuffer) -> size_t{
     return
-        encodedColorData.size() +
-        sizeof(colorWidth) + sizeof(colorHeight) +
-        sizeof(size_t); // encoded size value
+        sizeof(size_t) + iBuffer.size();
 }
 
-auto DCCompressedFrame::depth_sized_color_size() const noexcept -> size_t{
-    return
-        encodedDepthSizedColorData.size() +
-        sizeof(depthSizedColorWidth) + sizeof(depthSizedColorHeight) +
-        sizeof(size_t); // encoded size value
-}
+auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
 
-auto DCCompressedFrame::depth_size()  const noexcept -> size_t{
-    return
-        encodedDepthData.size() +
-        sizeof(depthWidth) + sizeof(depthHeight) +
-        sizeof(size_t); // encoded size value
-}
-
-auto DCCompressedFrame::infra_size()  const noexcept -> size_t{
-    return
-        encodedInfraData.size() +
-        sizeof(infraWidth) + sizeof(infraHeight) +
-        sizeof(size_t); // encoded size value
-}
-
-auto DCCompressedFrame::cloud_size() const noexcept -> size_t{
-    return
-        encodedCloudVerticesData.size() +
-        sizeof(size_t); // encoded size value
-}
-
-auto DCCompressedFrame::calibration_size() const noexcept -> size_t{
-    if(i->k4Calibration.has_value()){
-        return
-            sizeof(k4a_calibration_t) +
-            sizeof(bool); // has calibration
-    }else if(i->obCalibration.has_value()){
-        return
-            sizeof(OBCameraParam) +
-            sizeof(bool); // has calibration
+    using namespace tool;
+    read(iBuffer.width, data, offset);
+    read(iBuffer.height, data, offset);
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, data, offset);
+    if(encodedDataSize > 0){
+        iBuffer.resize(encodedDataSize);
+        read_array(iBuffer.get_data(), data, encodedDataSize, offset);
     }
-    return sizeof(bool); // has calibration
 }
 
-auto DCCompressedFrame::imu_sample_size() const noexcept -> size_t{
-    return
-        (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
-        sizeof(bool); // has IMU
+auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
+
+    using namespace tool;
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, data, offset);
+    if(encodedDataSize > 0){
+        buffer.resize(encodedDataSize);
+        read_array(buffer.get_data(), data, encodedDataSize, offset);
+    }
 }
 
-auto DCCompressedFrame::audio_size() const noexcept -> size_t{
-    return
-        audioFrames.size()*7*sizeof(float) +
-        sizeof(size_t); // nb audio frames
+auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, std::ifstream &file) -> void{
+
+    using namespace tool;
+    read(iBuffer.width, file);
+    read(iBuffer.height, file);
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, file);
+    if(encodedDataSize > 0){
+        iBuffer.resize(encodedDataSize);
+        read_array(iBuffer.get_data(), file, encodedDataSize);
+    }
 }
 
-auto DCCompressedFrame::bodies_size() const noexcept -> size_t{
+auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, std::ifstream &file) -> void{
+
+    using namespace tool;
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, file);
+    if(encodedDataSize > 0){
+        buffer.resize(encodedDataSize);
+        read_array(buffer.get_data(), file, encodedDataSize);
+    }
+}
+
+auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, std::span<int8_t> data, size_t &offset) -> void{
+
+    using namespace tool;
+    write(iBuffer.width,  data, offset);
+    write(iBuffer.height, data, offset);
+    write(iBuffer.size(), data, offset);
+    if(!iBuffer.empty()){
+        write_array(iBuffer.get_data(), data, iBuffer.size(), offset);
+    }
+}
+
+auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::span<int8_t> data, size_t &offset) -> void{
+
+    using namespace tool;
+    write(buffer.size(), data, offset);
+    if(!buffer.empty()){
+        write_array(buffer.get_data(), data, buffer.size(), offset);
+    }
+}
+
+
+auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, std::ofstream &file) -> void{
+
+    using namespace tool;
+    write(iBuffer.width,  file);
+    write(iBuffer.height, file);
+    write(iBuffer.size(), file);
+    if(!iBuffer.empty()){
+        write_array(iBuffer.get_data(), file, iBuffer.size());
+    }
+}
+
+auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::ofstream &file) -> void{
+
+    using namespace tool;
+    write(buffer.size(), file);
+    if(!buffer.empty()){
+        write_array(buffer.get_data(), file, buffer.size());
+    }
+}
+
+auto DCCompressedFrame::data_size() const noexcept -> size_t {
     return
+        // frame
+        Frame::data_size() +
+        // infos
+        sizeof(mode) +
+        sizeof(validVerticesCount) +
+        // images
+        encoded_buffer_image_bytes_size(encodedColorImage) +
+        encoded_buffer_image_bytes_size(encodedDepthSizedColorImage) +
+        // data
+        encoded_buffer_image_bytes_size(encodedDepthData) +
+        encoded_buffer_image_bytes_size(encodedInfraData) +
+        encoded_buffer_bytes_size(encodedColoredCloudData) +
+        // calibration
+        encoded_buffer_bytes_size(calibrationData);// +
+        // // imu
+        // sizeof(bool); + // has IMU
+        // (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
+        // // audio
+        // sizeof(size_t) + // nb audio frames
+        // audioFrames.size()*7*sizeof(float) +
+        // // bodies
+        // sizeof(bool); // has body
         // ...
-        sizeof(bool); // has body
 }
 
-auto DCCompressedFrame::total_data_size() const -> size_t{
-    return
-        infos_size() +
-        color_size() + depth_sized_color_size() + depth_size() + infra_size() + cloud_size() +
-        calibration_size() + imu_sample_size() + audio_size() + bodies_size();
-}
-
-auto DCCompressedFrame::has_calibration() const noexcept -> bool {
-    return
-        i->k4Calibration.has_value() ||
-        i->obCalibration.has_value();
-}
+// auto DCCompressedFrame::has_calibration() const noexcept -> bool {
+//     return !calibrationData.empty();
+// }
 
 auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
 
+    // frame
+    Frame::init_from_file_stream(file);
+
     // infos
-    read(idCapture, file);
-    read(afterCaptureTS, file);
-    receivedTS = afterCaptureTS;
     read(mode, file);
-
-    // colors
-    size_t encColorDataSize = 0;
-    read(colorWidth, file);
-    read(colorHeight, file);
-    read(encColorDataSize, file);
-    if(encColorDataSize > 0){
-        encodedColorData.resize(encColorDataSize);
-        read_array(encodedColorData.data(), file, encColorDataSize);
-    }
-
-    // depth
-    size_t encDepthDataSize = 0;
-    read(depthWidth, file);
-    read(depthHeight, file);
-    read(encDepthDataSize, file);
-    if(encDepthDataSize > 0){
-        encodedDepthData.resize(encDepthDataSize);
-        read_array(encodedDepthData.data(), file, encDepthDataSize);
-    }
-
-    // infra
-    size_t encInfraDataSize = 0;
-    read(infraWidth, file);
-    read(infraHeight, file);
-    read(encInfraDataSize, file);
-    if(encInfraDataSize > 0){
-        encodedInfraData.resize(encInfraDataSize);
-        read_array(encodedInfraData.data(), file, encInfraDataSize);
-    }
-
-    // cloud
     read(validVerticesCount, file);
 
-    // # vertices
-    size_t encCloudVertexDataSize = 0;
-    size_t encCloudColorDataSize = 0;
-    read(encCloudVertexDataSize, file);
-    if(encCloudVertexDataSize > 0){
-        encodedCloudVerticesData.resize(encCloudVertexDataSize);
-        read_array(encodedCloudVerticesData.data(), file, encCloudVertexDataSize);
-    }
-    // # colors
-    read(depthSizedColorWidth, file);
-    read(depthSizedColorHeight, file);
-    read(encCloudColorDataSize, file);
-    if(encCloudColorDataSize > 0){
-        encodedDepthSizedColorData.resize(encCloudColorDataSize);
-        read_array(encodedDepthSizedColorData.data(), file, encCloudColorDataSize);
-    }
+    // images
+    read_encoded_image_buffer(encodedColorImage, file);
+    read_encoded_image_buffer(encodedDepthSizedColorImage, file);
+
+    // data
+    read_encoded_image_buffer(encodedDepthData, file);
+    read_encoded_image_buffer(encodedInfraData, file);
+    read_encoded_buffer(encodedColoredCloudData, file);
 
     // calibration
-    bool hasCalibration = false;
-    read(hasCalibration, file);
-    if(hasCalibration){
-        if(dc_get_device(mode) == DCType::AzureKinect){
-            k4a_calibration_t rCalibration;
-            read(rCalibration, file);
-            i->k4Calibration = rCalibration;
-        }else if(dc_get_device(mode) == DCType::FemtoBolt){
-            OBCameraParam rCalibration;
-            read(rCalibration, file);
-            i->obCalibration = rCalibration;
-        }
-    }
+    read_encoded_buffer(calibrationData, file);
 
-    // imu
-    bool hasIMU = false;
-    read(hasIMU, file);
-    if(hasIMU){
-        DCImuSample rImuSample;
-        read(rImuSample, file);
-        imuSample = rImuSample;
-    }
+    // // imu
+    // bool hasIMU = false;
+    // read(hasIMU, file);
+    // if(hasIMU){
+    //     DCImuSample rImuSample;
+    //     read(rImuSample, file);
+    //     imuSample = rImuSample;
+    // }
 
-    // audio
-    size_t nbAudioFrames = 0;
-    read(nbAudioFrames, file);
-    if(nbAudioFrames > 0){
-        audioFrames.resize(nbAudioFrames);
-        read_array(audioFrames.data()->data(), file, nbAudioFrames*7);
-    }
+    // // audio
+    // size_t nbAudioFrames = 0;
+    // read(nbAudioFrames, file);
+    // if(nbAudioFrames > 0){
+    //     audioFrames.resize(nbAudioFrames);
+    //     read_array(audioFrames.data()->data(), file, nbAudioFrames*7);
+    // }
 
-    // bodies
-    bool hasBodies = false;
-    read(hasBodies, file);
-    if(hasBodies){
-        // TODO: ...
-    }
+    // // bodies
+    // bool hasBodies = false;
+    // read(hasBodies, file);
+    // if(hasBodies){
+    //     // TODO: ...
+    // }
 }
+
+
+auto DCCompressedFrame::init_from_data(std::span<const std::int8_t> data, size_t &offset) -> void{
+
+    // frame
+    Frame::init_from_data( data, offset);
+
+    // infos
+    read(mode, data,  offset);
+    read(validVerticesCount, data, offset);
+
+    // images
+    read_encoded_image_buffer(encodedColorImage, data, offset);
+    read_encoded_image_buffer(encodedDepthSizedColorImage, data, offset);
+
+    // data
+    read_encoded_image_buffer(encodedDepthData, data, offset);
+    read_encoded_image_buffer(encodedInfraData, data, offset);
+    read_encoded_buffer(encodedColoredCloudData, data, offset);
+
+    // calibration
+    read_encoded_buffer(calibrationData, data, offset);
+
+    // // imu
+    // bool hasIMU = false;
+    // read(hasIMU, data, offset);
+    // if(hasIMU){
+    //     DCImuSample rImuSample;
+    //     read(rImuSample, data, offset);
+    //     imuSample = rImuSample;
+    // }
+
+    // // audio
+    // size_t nbAudioFrames    = 0;
+    // read(nbAudioFrames, data, offset);
+    // if(nbAudioFrames > 0){
+    //     audioFrames.resize(nbAudioFrames);
+    //     read_array(audioFrames.data()->data(), data, nbAudioFrames*7, offset);
+    // }
+
+    // // bodies
+    // bool hasBodies = false;
+    // read(hasBodies, data, offset);
+    // if(hasBodies){
+    //     // TODO: ...
+    // }
+
+}
+
 
 auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
 
+    // frame
+    Frame::write_to_file_stream(file);
+
     // infos
-    write(idCapture, file);
-    write(receivedTS, file);
     write(mode, file);
-
-    // colors
-    size_t encColorDataSize = encodedColorData.size();
-    write(colorWidth, file);
-    write(colorHeight, file);
-    write(encColorDataSize, file);
-    if(encColorDataSize > 0){
-        write_array(encodedColorData.data(), file, encColorDataSize);
-    }
-
-    // depth
-    size_t encDepthDataSize = encodedDepthData.size();
-    write(depthWidth, file);
-    write(depthHeight, file);
-    write(encDepthDataSize, file);
-    if(encDepthDataSize > 0){
-        write_array(encodedDepthData.data(), file, encDepthDataSize);
-    }
-
-    // infra
-    size_t encInfraDataSize = encodedInfraData.size();
-    write(infraWidth, file);
-    write(infraHeight, file);
-    write(encInfraDataSize, file);
-    if(encInfraDataSize > 0){
-        write_array(encodedInfraData.data(), file, encInfraDataSize);
-    }
-
-    // cloud
     write(validVerticesCount, file);
 
-    size_t encCloudVertexDataSize = encodedCloudVerticesData.size();
-    size_t encCloudColorDataSize = encodedDepthSizedColorData.size();
+    // images
+    write_encoded_image_buffer(encodedColorImage, file);
+    write_encoded_image_buffer(encodedDepthSizedColorImage, file);
 
-    // # vertices
-    write(encCloudVertexDataSize, file);
-    if(encCloudVertexDataSize > 0){
-        write_array(encodedCloudVerticesData.data(), file, encCloudVertexDataSize);
-    }
-
-    // # colors
-    write(depthSizedColorWidth, file);
-    write(depthSizedColorHeight, file);
-    write(encCloudColorDataSize, file);
-    if(encCloudColorDataSize > 0){
-        write_array(encodedDepthSizedColorData.data(), file, encCloudColorDataSize);
-    }
+    // data
+    write_encoded_image_buffer(encodedDepthData, file);
+    write_encoded_image_buffer(encodedInfraData, file);
+    write_encoded_buffer(encodedColoredCloudData, file);
 
     // calibration
-    if(i->k4Calibration.has_value()){
-        write(true, file);
-        write(i->k4Calibration.value(), file);
-    }else if(i->obCalibration.has_value()){
-        write(true, file);
-        write(i->obCalibration.value(), file);
-    }else{
-        write(false, file);
-    }
+    write_encoded_buffer(calibrationData, file);
 
-    // imu
-    write(imuSample.has_value(), file);
-    if(imuSample.has_value()){
-        write(imuSample.value(), file);
-    }
+    // // imu
+    // write(imuSample.has_value(), file);
+    // if(imuSample.has_value()){
+    //     write(imuSample.value(), file);
+    // }
 
-    // audio
-    size_t nbAudioFrames    = audioFrames.size();
-    write(nbAudioFrames, file);
-    if(nbAudioFrames > 0){
-        write_array(audioFrames.data()->data(), file, nbAudioFrames*7);
-    }
+    // // audio
+    // size_t nbAudioFrames    = audioFrames.size();
+    // write(nbAudioFrames, file);
+    // if(nbAudioFrames > 0){
+    //     write_array(audioFrames.data()->data(), file, nbAudioFrames*7);
+    // }
 
-    // bodies
-    bool hasBodies = false;
-    write(hasBodies, file);
-    if(hasBodies){
-        // TODO: ...
-    }
+    // // bodies
+    // bool hasBodies = false;
+    // write(hasBodies, file);
+    // if(hasBodies){
+    //     // TODO: ...
+    // }
 }
 
-auto DCCompressedFrame::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
+
+auto DCCompressedFrame::write_to_data(std::span<int8_t> data, size_t &offset) -> void{
+
+    // frame
+    Frame::write_to_data(data, offset);
 
     // infos
-    read(idCapture, data, offset, sizeData);
-    read(afterCaptureTS, data, offset, sizeData);
-    receivedTS = afterCaptureTS;
-    read(mode, data, offset, sizeData);
+    write(mode, data, offset);
+    write(validVerticesCount, data, offset);
 
-    // colors
-    size_t encColorDataSize = 0;
-    read(colorWidth, data, offset, sizeData);
-    read(colorHeight, data, offset, sizeData);
-    read(encColorDataSize, data, offset, sizeData);
-    if(encColorDataSize > 0){
-        encodedColorData.resize(encColorDataSize);
-        read_array(encodedColorData.data(), data, encColorDataSize, offset, sizeData);
-    }
+    // images
+    write_encoded_image_buffer(encodedColorImage, data, offset);
+    write_encoded_image_buffer(encodedDepthSizedColorImage, data, offset);
 
-    // depth
-    size_t encDepthDataSize = 0;
-    read(depthWidth, data, offset, sizeData);
-    read(depthHeight, data, offset, sizeData);
-    read(encDepthDataSize, data, offset, sizeData);
-    if(encDepthDataSize > 0){
-        encodedDepthData.resize(encDepthDataSize);
-        read_array(encodedDepthData.data(), data, encDepthDataSize, offset, sizeData);
-    }
-
-    // infra
-    size_t encInfraDataSize = 0;
-    read(infraWidth, data, offset, sizeData);
-    read(infraHeight, data, offset, sizeData);
-    read(encInfraDataSize, data, offset, sizeData);
-    if(encInfraDataSize > 0){
-        encodedInfraData.resize(encInfraDataSize);
-        read_array(encodedInfraData.data(), data, encInfraDataSize, offset, sizeData);
-    }
-
-    // cloud
-    read(validVerticesCount, data, offset, sizeData);
-
-    size_t encCloudVertexDataSize = 0;
-    size_t encCloudColorDataSize = 0;
-    // # vertices
-    read(encCloudVertexDataSize, data, offset, sizeData);
-    if(encCloudVertexDataSize > 0){
-        encodedCloudVerticesData.resize(encCloudVertexDataSize);
-        read_array(encodedCloudVerticesData.data(), data, encCloudVertexDataSize, offset, sizeData);
-    }
-    // # colors
-    read(depthSizedColorWidth, data, offset, sizeData);
-    read(depthSizedColorHeight, data, offset, sizeData);
-    read(encCloudColorDataSize, data, offset, sizeData);
-    if(encCloudColorDataSize > 0){
-        encodedDepthSizedColorData.resize(encCloudColorDataSize);
-        read_array(encodedDepthSizedColorData.data(), data, encCloudColorDataSize, offset, sizeData);
-    }
+    // data
+    write_encoded_image_buffer(encodedDepthData, data, offset);
+    write_encoded_image_buffer(encodedInfraData, data, offset);
+    write_encoded_buffer(encodedColoredCloudData, data, offset);
 
     // calibration
-    bool hasCalibration = false;
-    read(hasCalibration, data, offset, sizeData);
-    if(hasCalibration){
-        if(dc_get_device(mode) == DCType::AzureKinect){
-            k4a_calibration_t rCalibration;
-            read(rCalibration, data, offset, sizeData);
-            i->k4Calibration = rCalibration;
-        }else if(dc_get_device(mode) == DCType::FemtoBolt){
-            OBCameraParam rCalibration;
-            read(rCalibration, data, offset, sizeData);
-            i->obCalibration = rCalibration;
-        }
-    }
+    write_encoded_buffer(calibrationData, data, offset);
 
-    // imu
-    bool hasIMU = false;
-    read(hasIMU, data, offset, sizeData);
-    if(hasIMU){
-        DCImuSample rImuSample;
-        read(rImuSample, data, offset, sizeData);
-        imuSample = rImuSample;
-    }
+    // // imu
+    // write(imuSample.has_value(), data, offset, sizeData);
+    // if(imuSample.has_value()){
+    //     write(imuSample.value(), data, offset, sizeData);
+    // }
 
-    // audio
-    size_t nbAudioFrames    = 0;
-    read(nbAudioFrames, data, offset, sizeData);
-    if(nbAudioFrames > 0){
-        audioFrames.resize(nbAudioFrames);
-        read_array(audioFrames.data()->data(), data, nbAudioFrames*7, offset, sizeData);
-    }
+    // // audio
+    // size_t nbAudioFrames    = audioFrames.size();
+    // write(nbAudioFrames, data, offset, sizeData);
+    // if(nbAudioFrames > 0){
+    //     write_array(audioFrames.data()->data(), data, nbAudioFrames*7, offset, sizeData);
+    // }
 
-    // bodies
-    bool hasBodies = false;
-    read(hasBodies, data, offset, sizeData);
-    if(hasBodies){
-        // TODO: ...
-    }
-
+    // // bodies
+    // write(false, data, offset, sizeData);
+    // // TODO: ...
 }
 
-auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
+// auto DCCompressedFrame::write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
+//     if(i->k4Calibration.has_value()){
+//         write(i->k4Calibration.value(), data, offset, sizeData);
+//     }else if(i->obCalibration.has_value()){
+//         write(i->obCalibration.value(), data, offset, sizeData);
+//     }
+// }
 
-    // infos
-    write(idCapture, data, offset, sizeData);
-    write(receivedTS, data, offset, sizeData);
-    write(mode, data, offset, sizeData);
+// auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
+//     if(type == DCType::AzureKinect){
+//         k4a_calibration_t rCalibration;
+//         read(rCalibration, data, offset, sizeData);
+//         i->k4Calibration = rCalibration;
+//     }else if(type == DCType::FemtoBolt){
+//         k4a_calibration_t rCalibration;
+//         read(rCalibration, data, offset, sizeData);
+//         i->k4Calibration = rCalibration;
+//     }else if(type == DCType::FemtoBolt){
+//         k4a_calibration_t rCalibration;
+//         read(rCalibration, data, offset, sizeData);
+//         i->k4Calibration = rCalibration;
+//     }
 
-    // color
-    size_t encColorDataSize = encodedColorData.size();
-    write(colorWidth, data, offset, sizeData);
-    write(colorHeight, data, offset, sizeData);
-    write(encColorDataSize, data, offset, sizeData);
-    if(encColorDataSize > 0){
-        write_array(encodedColorData.data(), data, encColorDataSize, offset, sizeData);
-    }
+//     // OBCameraParam rCalibration;
+//     // read(rCalibration, data, offset, sizeData);
+//     // i->obCalibration = rCalibration;
+// }
 
-    // depth
-    size_t encDepthDataSize = encodedDepthData.size();
-    write(depthWidth, data, offset, sizeData);
-    write(depthHeight, data, offset, sizeData);
-    write(encDepthDataSize, data, offset, sizeData);
-    if(encDepthDataSize > 0){
-        write_array(encodedDepthData.data(), data, encDepthDataSize, offset, sizeData);
-    }
+// auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
+//     if(dc_get_device(mode) == DCType::AzureKinect){
+//         return sizeof(k4a_calibration_t);
+//     }else if(dc_get_device(mode) == DCType::FemtoBolt){
+//         return sizeof(k4a_calibration_t);
+//     }else if(dc_get_device(mode) == DCType::FemtoMega){
+//         return sizeof(k4a_calibration_t);
+//     }
+//     return 0;
 
-    // infra
-    size_t encInfraDataSize = encodedInfraData.size();
-    write(infraWidth, data, offset, sizeData);
-    write(infraHeight, data, offset, sizeData);
-    write(encInfraDataSize, data, offset, sizeData);
-    if(encInfraDataSize > 0){
-        write_array(encodedInfraData.data(), data, encInfraDataSize, offset, sizeData);
-    }
-
-    // cloud
-    write(validVerticesCount, data, offset, sizeData);
-
-    size_t encCloudVertexDataSize = encodedCloudVerticesData.size();
-    size_t encCloudColorDataSize = encodedDepthSizedColorData.size();
-
-    // # vertices
-    write(encCloudVertexDataSize, data, offset, sizeData);
-    if(encCloudVertexDataSize > 0){
-        write_array(encodedCloudVerticesData.data(), data, encCloudVertexDataSize, offset, sizeData);
-    }
-    // # colors
-    write(depthSizedColorWidth, data, offset, sizeData);
-    write(depthSizedColorHeight, data, offset, sizeData);
-    write(encCloudColorDataSize, data, offset, sizeData);
-    if(encCloudColorDataSize > 0){
-        write_array(encodedDepthSizedColorData.data(), data, encCloudColorDataSize, offset, sizeData);
-    }
-
-    // calibration
-    if(i->k4Calibration.has_value()){
-        write(true, data, offset, sizeData);
-        write(i->k4Calibration.value(), data, offset, sizeData);
-    }else if(i->obCalibration.has_value()){
-        write(true, data, offset, sizeData);
-        write(i->obCalibration.value(), data, offset, sizeData);
-    }else{
-        write(false, data, offset, sizeData);
-    }
-
-    // imu
-    write(imuSample.has_value(), data, offset, sizeData);
-    if(imuSample.has_value()){
-        write(imuSample.value(), data, offset, sizeData);
-    }
-
-    // audio
-    size_t nbAudioFrames    = audioFrames.size();
-    write(nbAudioFrames, data, offset, sizeData);
-    if(nbAudioFrames > 0){
-        write_array(audioFrames.data()->data(), data, nbAudioFrames*7, offset, sizeData);
-    }
-
-    // bodies
-    write(false, data, offset, sizeData);
-    // TODO: ...
-}
-
-auto DCCompressedFrame::write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
-    if(i->k4Calibration.has_value()){
-        write(i->k4Calibration.value(), data, offset, sizeData);
-    }else if(i->obCalibration.has_value()){
-        write(i->obCalibration.value(), data, offset, sizeData);
-    }
-}
-
-auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
-    if(type == DCType::AzureKinect){
-        k4a_calibration_t rCalibration;
-        read(rCalibration, data, offset, sizeData);
-        i->k4Calibration = rCalibration;
-    }else if(type == DCType::FemtoBolt){
-        k4a_calibration_t rCalibration;
-        read(rCalibration, data, offset, sizeData);
-        i->k4Calibration = rCalibration;
-    }else if(type == DCType::FemtoBolt){
-        k4a_calibration_t rCalibration;
-        read(rCalibration, data, offset, sizeData);
-        i->k4Calibration = rCalibration;
-    }
-
-    // OBCameraParam rCalibration;
-    // read(rCalibration, data, offset, sizeData);
-    // i->obCalibration = rCalibration;
-}
-
-auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
-    if(dc_get_device(mode) == DCType::AzureKinect){
-        return sizeof(k4a_calibration_t);
-    }else if(dc_get_device(mode) == DCType::FemtoBolt){
-        return sizeof(k4a_calibration_t);
-    }else if(dc_get_device(mode) == DCType::FemtoMega){
-        return sizeof(k4a_calibration_t);
-    }
-    return 0;
-
-    // return sizeof(OBCameraParam);
-}
+//     // return sizeof(OBCameraParam);
+// }
 
 auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void{
 
-    // # read info
-    read(idCapture, file);
-    read(afterCaptureTS, file);
-    receivedTS = afterCaptureTS;
+    // // # read info
+    // read(idCapture, file);
+    // read(afterCaptureTS, file);
+    // receivedTS = afterCaptureTS;
 
-    // # read cloud
-    std::int32_t validVerticesC;
-    read(validVerticesC, file);
-    validVerticesCount = validVerticesC;
-    std::int32_t cloudBufferSize;
-    read(cloudBufferSize, file);
-    encodedCloudVerticesData.resize(cloudBufferSize);
-    if(!encodedCloudVerticesData.empty()){
-        read_array(encodedCloudVerticesData.data(), file, encodedCloudVerticesData.size());
-    }
+    // // # read cloud
+    // std::int32_t validVerticesC;
+    // read(validVerticesC, file);
+    // validVerticesCount = validVerticesC;
+    // std::int32_t cloudBufferSize;
+    // read(cloudBufferSize, file);
+    // encodedCloudVerticesData.resize(cloudBufferSize);
+    // if(!encodedCloudVerticesData.empty()){
+    //     read_array(encodedCloudVerticesData.data(), file, encodedCloudVerticesData.size());
+    // }
 
-    // # read color
-    std::int16_t colorW, colorH;
-    std::int32_t colorBufferSize;
-    read(colorW, file);
-    read(colorH, file);
-    read(colorBufferSize, file);
-    colorWidth  = colorW;
-    colorHeight = colorH;
-    encodedDepthSizedColorData.resize(colorBufferSize);
-    if(!encodedDepthSizedColorData.empty()){
-        read_array(encodedDepthSizedColorData.data(), file, encodedDepthSizedColorData.size());
-    }
+    // // # read color
+    // std::int16_t colorW, colorH;
+    // std::int32_t colorBufferSize;
+    // read(colorW, file);
+    // read(colorH, file);
+    // read(colorBufferSize, file);
+    // encodedImageColor.width  = colorW;
+    // encodedImageColor.height = colorH;
+    // encodedDepthSizedColorData.resize(colorBufferSize);
+    // if(!encodedDepthSizedColorData.empty()){
+    //     read_array(encodedDepthSizedColorData.data(), file, encodedDepthSizedColorData.size());
+    // }
 
-    // # read audio
-    std::int32_t audioBufferSize;
-    read(audioBufferSize, file);
+    // // # read audio
+    // std::int32_t audioBufferSize;
+    // read(audioBufferSize, file);
 
-    audioFrames.resize(audioBufferSize);
-    if(!audioFrames.empty()){
-        read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
-    }
-    // # read imu
-    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
+    // audioFrames.resize(audioBufferSize);
+    // if(!audioFrames.empty()){
+    //     read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
+    // }
+    // // # read imu
+    // read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 }
 
 auto DCCompressedFrame::init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void{
 
-    // # read info
-    read(afterCaptureTS, file);
-    receivedTS = afterCaptureTS;
-    read(mode, file);
+    // // # read info
+    // read(afterCaptureTS, file);
+    // receivedTS = afterCaptureTS;
+    // read(mode, file);
 
-    k4a_calibration_t rCalibration;
-    read(rCalibration, file);
-    i->k4Calibration = rCalibration;
-    std::int32_t validVerticesC;
-    read(validVerticesC, file);
-    validVerticesCount = validVerticesC;
-    // # read color
-    std::int16_t colorW, colorH;
-    std::int32_t colorBufferSize;
-    read(colorW, file);
-    read(colorH, file);
-    read(colorBufferSize, file);
-    colorWidth  = colorW;
-    colorHeight = colorH;
-    encodedColorData.resize(colorBufferSize);
-    if(!encodedColorData.empty()){
-        read_array(encodedColorData.data(), file, encodedColorData.size());
-    }
-    // # read depth
-    std::int16_t depthW, depthH;
-    std::int32_t depthBufferSize;
-    read(depthW, file);
-    read(depthH, file);
-    read(depthBufferSize, file);
-    depthWidth  = depthW;
-    depthHeight = depthH;
-    encodedDepthData.resize(depthBufferSize);
-    if(!encodedDepthData.empty()){
-        read_array(encodedDepthData.data(), file, encodedDepthData.size());
-    }
-    // # read infra
-    std::int16_t infraW, infraH;
-    std::int32_t infraBufferSize;
-    read(infraW, file);
-    read(infraH, file);
-    read(infraBufferSize, file);
-    infraWidth  = infraW;
-    infraHeight = infraH;
-    encodedInfraData.resize(infraBufferSize);
-    if(!encodedInfraData.empty()){
-        read_array(encodedInfraData.data(), file, encodedInfraData.size());
-    }
+    // k4a_calibration_t rCalibration;
+    // read(rCalibration, file);
+    // i->k4Calibration = rCalibration;
+    // std::int32_t validVerticesC;
+    // read(validVerticesC, file);
+    // validVerticesCount = validVerticesC;
+    // // # read color
+    // std::int16_t colorW, colorH;
+    // std::int32_t colorBufferSize;
+    // read(colorW, file);
+    // read(colorH, file);
+    // read(colorBufferSize, file);
+    // encodedImageColor.width  = colorW;
+    // encodedImageColor.height = colorH;
+    // encodedImageColor.resize(colorBufferSize);
+    // if(!encodedImageColor.empty()){
+    //     read_array(encodedImageColor.get_data(), file, encodedImageColor.size());
+    // }
+    // // # read depth
+    // std::int16_t depthW, depthH;
+    // std::int32_t depthBufferSize;
+    // read(depthW, file);
+    // read(depthH, file);
+    // read(depthBufferSize, file);
+    // depthWidth  = depthW;
+    // depthHeight = depthH;
+    // encodedDepthData.resize(depthBufferSize);
+    // if(!encodedDepthData.empty()){
+    //     read_array(encodedDepthData.data(), file, encodedDepthData.size());
+    // }
+    // // # read infra
+    // std::int16_t infraW, infraH;
+    // std::int32_t infraBufferSize;
+    // read(infraW, file);
+    // read(infraH, file);
+    // read(infraBufferSize, file);
+    // infraWidth  = infraW;
+    // infraHeight = infraH;
+    // encodedInfraData.resize(infraBufferSize);
+    // if(!encodedInfraData.empty()){
+    //     read_array(encodedInfraData.data(), file, encodedInfraData.size());
+    // }
 
-    // # read audio
-    std::int32_t audioBufferSize;
-    read(audioBufferSize, file);
-    audioFrames.resize(audioBufferSize);
-    if(!audioFrames.empty()){
-        read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
-    }
-    // # read imu
-    read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
+    // // # read audio
+    // std::int32_t audioBufferSize;
+    // read(audioBufferSize, file);
+    // audioFrames.resize(audioBufferSize);
+    // if(!audioFrames.empty()){
+    //     read_array(reinterpret_cast<float*>(audioFrames.data()), file, audioBufferSize*7);
+    // }
+    // // # read imu
+    // read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 }
+
+
+
+// bool hasCalibration = false;
+// read(hasCalibration, data, offset, sizeData);
+// if(hasCalibration){
+//     if(dc_get_device(mode) == DCType::AzureKinect){
+//         k4a_calibration_t rCalibration;
+//         read(rCalibration, data, offset, sizeData);
+//         i->k4Calibration = rCalibration;
+//     }else if(dc_get_device(mode) == DCType::FemtoBolt){
+//         OBCameraParam rCalibration;
+//         read(rCalibration, data, offset, sizeData);
+//         i->obCalibration = rCalibration;
+//     }
+// }
+
+
+// if(i->k4Calibration.has_value()){
+//     write(true, file);
+//     write(i->k4Calibration.value(), file);
+// }else if(i->obCalibration.has_value()){
+//     write(true, file);
+//     write(i->obCalibration.value(), file);
+// }else{
+//     write(false, file);
+// }

@@ -28,7 +28,7 @@
 
 // local
 #include "vertices.hpp"
-#include "graphics/colors.hpp"
+#include "graphics/color.hpp"
 
 namespace tool::geo {
 
@@ -343,7 +343,7 @@ struct ColoredCloudData{
     }
 
     Vertices3D vertices;
-    ColorsRGB32 colors;
+    Buffer<geo::Pt3f> colors;
     Vertices3D normals;
 };
 

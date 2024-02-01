@@ -199,11 +199,11 @@ auto DCCloudsSceneDrawer::draw_color_texture_imgui_child(size_t idCloud, const s
     // check mouse inputs
     const auto &hp = cD.colorD.hoveringPixel;
     for(size_t idB = 0; idB < cD.colorD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.colorD.mouseButtonsPressed[idB]){            
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->colorWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->colorHeight) &&
-               !cD.lastFrame->imageColorData.empty()){
-                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->imageColorData[hp.y() * cD.lastFrame->colorWidth + hp.x()]);
+        if(cD.lastFrame != nullptr && cD.colorD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->colorImage.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->colorImage.height) &&
+                !cD.lastFrame->colorImage.empty()){
+                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->colorImage.buffer[hp.y() * cD.lastFrame->colorImage.width + hp.x()]);
             }
         }
     }
@@ -220,10 +220,10 @@ auto DCCloudsSceneDrawer::draw_depth_texture_imgui_child(size_t idCloud, const s
     const auto &hp = cD.depthD.hoveringPixel;
     for(size_t idB = 0; idB < cD.depthD.mouseButtonsPressed.size(); ++idB){
         if(cD.lastFrame != nullptr && cD.depthD.mouseButtonsPressed[idB]){            
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->depthWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->depthHeight) &&
-               !cD.lastFrame->imageDepthData.empty()){
-                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->imageDepthData[hp.y() * cD.lastFrame->depthWidth + hp.x()]);
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->depthImage.width)  &&
+               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->depthImage.height) &&
+               !cD.lastFrame->depthImage.empty()){
+                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->depthImage.buffer[hp.y() * cD.lastFrame->depthImage.width + hp.x()]);
             }
         }
     }
@@ -240,10 +240,10 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const s
     const auto &hp = cD.infraD.hoveringPixel;
     for(size_t idB = 0; idB < cD.infraD.mouseButtonsPressed.size(); ++idB){
         if(cD.lastFrame != nullptr && cD.infraD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->infraWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->infraHeight) &&
-               !cD.lastFrame->imageInfraData.empty()){
-                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->imageInfraData[hp.y() * cD.lastFrame->infraWidth + hp.x()]);
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->infraImage.width)  &&
+               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->infraImage.height) &&
+               !cD.lastFrame->infraImage.empty()){
+                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->infraImage.buffer[hp.y() * cD.lastFrame->infraImage.width + hp.x()]);
             }
         }
     }
@@ -267,10 +267,10 @@ auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, c
     const auto &hp = cD.colorD.hoveringPixel;
     for(size_t idB = 0; idB < cD.colorD.mouseButtonsPressed.size(); ++idB){
         if(cD.lastFrame != nullptr && cD.colorD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->colorWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->colorHeight) &&
-               !cD.lastFrame->imageColorData.empty()){
-                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->imageColorData[hp.y() * cD.lastFrame->colorWidth + hp.x()]);
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->colorImage.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->colorImage.height) &&
+                !cD.lastFrame->colorImage.empty()){
+                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->colorImage.buffer[hp.y() * cD.lastFrame->colorImage.width + hp.x()]);
             }
         }
     }
@@ -287,10 +287,10 @@ auto DCCloudsSceneDrawer::draw_depth_texture_imgui_at_position(size_t idCloud, c
     const auto &hp = cD.depthD.hoveringPixel;
     for(size_t idB = 0; idB < cD.depthD.mouseButtonsPressed.size(); ++idB){
         if(cD.lastFrame != nullptr && cD.depthD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->depthWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->depthHeight) &&
-               !cD.lastFrame->imageDepthData.empty()){
-                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->imageDepthData[hp.y() * cD.lastFrame->depthWidth + hp.x()]);
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->depthImage.width)  &&
+               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->depthImage.height) &&
+               !cD.lastFrame->depthImage.empty()){
+                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->depthImage.buffer[hp.y() * cD.lastFrame->depthImage.width + hp.x()]);
             }
         }
     }
@@ -307,10 +307,10 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_at_position(size_t idCloud, c
     const auto &hp = cD.infraD.hoveringPixel;
     for(size_t idB = 0; idB < cD.infraD.mouseButtonsPressed.size(); ++idB){
         if(cD.lastFrame != nullptr && cD.infraD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->infraWidth)  &&
-               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->infraHeight) &&
-               !cD.lastFrame->imageInfraData.empty()){
-                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->imageInfraData[hp.y() * cD.lastFrame->infraWidth + hp.x()]);
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->infraImage.width)  &&
+               hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->infraImage.height) &&
+               !cD.lastFrame->infraImage.empty()){
+                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->infraImage.buffer[hp.y() * cD.lastFrame->infraImage.width + hp.x()]);
             }
         }
     }

@@ -31,6 +31,7 @@
 
 // local
 #include "dc_compressed_frame.hpp"
+#include "dc_frame.hpp"
 #include "graphics/color.hpp"
 
 namespace tool::cam{
@@ -40,17 +41,26 @@ struct DCFrameCompressor{
     DCFrameCompressor();
     ~DCFrameCompressor();
 
-    auto add_color(size_t width,  size_t height, int numChannels, std::uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void;
-    auto add_depth_sized_color(size_t width,  size_t height, int numChannels, std::uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void;
-
-    auto add_depth(size_t width,  size_t height, std::uint16_t *data, DCCompressedFrame *cFrame) -> void;
-    auto add_infra(size_t width,  size_t height, std::uint16_t *data, DCCompressedFrame *cFrame) -> void;
-
-    auto add_cloud(std::span<std::uint16_t> depthData, std::span<ColorRGBA8> depthSizedColorData, std::span<geo::Pt3<std::int16_t>> depthCloudData, std::vector<std::uint8_t> &encodedCloudData)  -> void;
+    // auto add_cloud(std::span<std::uint16_t> depthData, std::span<ColorRGBA8> depthSizedColorData, std::span<geo::Pt3<std::int16_t>> depthCloudData, std::vector<std::uint8_t> &encodedCloudData)  -> void;
     auto add_cloud(DCMode mode, const geo::ColoredCloudData &cloud, std::vector<std::uint8_t> &encodedCloudData)  -> void;
 
     auto add_frame(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void;
     auto compress_frame(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>;
+
+    auto encode_to_jpeg(size_t width, size_t height, std::span<ColorRGBA8> image, ImageBuffer<std::uint8_t> &encodedImage, int jpegQuality) -> bool;
+    auto encode_to_jpeg(size_t width, size_t height, std::span<ColorRGB8> image,  ImageBuffer<std::uint8_t> &encodedImage, int jpegQuality) -> bool;
+    auto encode_to_jpeg(const ImageBuffer<ColorRGBA8> &image, ImageBuffer<std::uint8_t> &encodedImage, int jpegQuality) -> bool;
+    auto encode_to_jpeg(const ImageBuffer<ColorRGB8> &image,  ImageBuffer<std::uint8_t> &encodedImage, int jpegQuality) -> bool;
+
+    auto encode_to_lossless_16_bits(size_t width, size_t height, std::span<std::uint16_t> data, ImageBuffer<std::uint8_t> &encodedData) -> bool;
+    auto encode_to_lossless_16_bits(ImageBuffer<std::uint16_t> &data, ImageBuffer<std::uint8_t> &encodedData) -> bool;
+
+    auto encode_colored_cloud_to_lossless_16_bits(
+        std::span<std::uint16_t> depthData, std::span<ColorRGBA8> depthSizedColorData,
+        std::span<geo::Pt3<std::int16_t>> depthCloudData, Buffer<std::uint8_t> &encodedColoredCloudData) -> bool;
+    auto encode_colored_cloud_to_lossless_16_bits(
+        geo::ColoredCloudData &cloud,
+        Buffer<std::uint8_t> &encodedColoredCloudData) -> bool;
 
 private:
     struct Impl;

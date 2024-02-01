@@ -69,26 +69,26 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
         return false;
     }
 
-    if(!frame->depthSizedImageColorData.empty()){
+    if(!frame->depthSizedColorImage.empty()){
         colorT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->depthSizedColorWidth),
-            static_cast<GLsizei>(frame->depthSizedColorHeight), 4, reinterpret_cast<std::uint8_t*>(frame->depthSizedImageColorData.data()));
-    } else if(!frame->imageColorData.empty()){
+            static_cast<GLsizei>(frame->depthSizedColorImage.width),
+            static_cast<GLsizei>(frame->depthSizedColorImage.height), 4, frame->depthSizedColorImage.get_raw_data());
+    } else if(!frame->colorImage.empty()){
         colorT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->colorWidth),
-            static_cast<GLsizei>(frame->colorHeight), 4, reinterpret_cast<std::uint8_t*>(frame->imageColorData.data()));
+            static_cast<GLsizei>(frame->colorImage.width),
+            static_cast<GLsizei>(frame->colorImage.height), 4, frame->colorImage.get_raw_data());
     }
 
-    if(!frame->imageDepthData.empty()){
+    if(!frame->depthImage.empty()){
         depthT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->depthWidth),
-            static_cast<GLsizei>(frame->depthHeight), 3, reinterpret_cast<std::uint8_t*>(frame->imageDepthData.data()));
+            static_cast<GLsizei>(frame->depthImage.width),
+            static_cast<GLsizei>(frame->depthImage.height), 3, frame->depthImage.get_raw_data());
     }
 
-    if(!frame->imageInfraData.empty()){
+    if(!frame->infraImage.empty()){
         infraT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->infraWidth),
-            static_cast<GLsizei>(frame->infraHeight), 3, reinterpret_cast<std::uint8_t*>(frame->imageInfraData.data()));
+            static_cast<GLsizei>(frame->infraImage.width),
+            static_cast<GLsizei>(frame->infraImage.height), 3, frame->infraImage.get_raw_data());
     }
 
     if(frame->cloud.is_valid()){

@@ -28,6 +28,7 @@
 
 // std
 #include <algorithm>
+#include <span>
 
 namespace tool{
 
@@ -44,14 +45,22 @@ static auto read(ReadValueType &v, std::int8_t const * const data, size_t &offse
         data + offset,
         data + offset + nbBytes,
         reinterpret_cast<std::int8_t*>(&v)
-    );
+        );
     offset += nbBytes;
+}
+template<typename ReadValueType>
+static auto read(ReadValueType &v, std::span<const std::int8_t> data, size_t &offset) -> void {
+    read(v, data.data(), offset, data.size());
 }
 
 template<typename ReadValueType>
 static auto read(ReadValueType &v, std::int8_t const * const data, size_t &offset, size_t sizeData, ReadValueType min, ReadValueType max) -> void {
     read(v, data, offset, sizeData);
     v = std::clamp<ReadValueType>(v, min, max);
+}
+template<typename ReadValueType>
+static auto read(ReadValueType &v, std::span<const std::int8_t> data, size_t &offset, ReadValueType min, ReadValueType max) -> void {
+    read(v, data.data(), offset, data.size(), min, max);
 }
 
 template<typename ReadArrayValueType>
@@ -68,6 +77,10 @@ static auto read_array(ReadArrayValueType *a, std::int8_t const * const data, si
         reinterpret_cast<std::int8_t*>(a)
     );
     offset += nbBytes;
+}
+template<typename ReadArrayValueType>
+static auto read_array(ReadArrayValueType *a, std::span<const std::int8_t> data, size_t sizeArray, size_t &offset) -> void {
+    read_array(a, data.data(), sizeArray, offset, data.size());
 }
 
 // write
@@ -87,6 +100,11 @@ static auto write(const WriteValueType &v, std::int8_t * const data, size_t &off
     offset += nbBytes;
 }
 
+template<typename WriteValueType>
+static auto write(const WriteValueType &v, std::span<std::int8_t> data, size_t &offset) -> void {
+    write(v, data.data(), offset, data.size());
+}
+
 template<typename WriteArrayValueType>
 static auto write_array(const WriteArrayValueType *a, std::int8_t * const data, size_t sizeArray, size_t &offset, size_t sizeData) -> void {
 
@@ -102,4 +120,10 @@ static auto write_array(const WriteArrayValueType *a, std::int8_t * const data, 
     );
     offset += nbBytes;
 }
+
+template<typename WriteArrayValueType>
+static auto write_array(const WriteArrayValueType *a, std::span<std::int8_t> data, size_t sizeArray, size_t &offset) -> void {
+    write_array(a, data.data(), sizeArray, offset, data.size());
+}
+
 }

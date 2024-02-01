@@ -44,29 +44,9 @@ auto DCDeviceImpl::initialize() -> void{
 
     mInfos.initialize(settings.config.mode);
     fIndices.initialize(mInfos);
-    fData.reset();
-    
-    if(mInfos.has_depth()){
-        depthMask.resize(mInfos.depth_size());
-        filteringMask.resize(mInfos.depth_size());
-        depthFiltering.resize(mInfos.depth_size());
-        zonesId.resize(mInfos.depth_size());
-    }else{
-        depthMask.clear();
-        filteringMask.clear();
-        depthFiltering.clear();
-        zonesId.clear();
-    }
-
-    if(mInfos.has_color()){
-        convertedColorData.resize(mInfos.rgba_color_size_bytes());
-    }else{
-        convertedColorData.clear();
-    }
-
+    fData.reset(mInfos);
     initialize_device_specific();
 }
-
 
 auto DCDeviceImpl::start_reading_thread() -> void{
 
@@ -226,7 +206,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         std::copy(fData.rawColor.data(), fData.rawColor.data() + mInfos.color_size(), yuvImage.data); // copy Y plane
         std::copy(fData.rawColor.data() + mInfos.color_size(), fData.rawColor.data() + mInfos.color_size() + mInfos.color_size()/2, yuvImage.data + mInfos.color_size());
 
-        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, convertedColorData.data());
+        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, fData.convertedColorData.get_raw_data());
         cv::cvtColor(yuvImage, convMat, cv::COLOR_YUV2RGBA_NV12);
 
         Bench::stop();
@@ -234,14 +214,11 @@ auto DCDeviceImpl::convert_color_image() -> void{
     }else if(mInfos.image_format() == DCImageFormat::MJPG){
 
         Bench::start("[DCDeviceImpl::convert_color_image] MJPG");
-        auto success = fUncompressor.uncompress_jpeg_data(
-            mInfos.color_width(),
-            mInfos.color_height(),
-            DCFrameUncompressor::ColorFormat::RGBA,
-            fData.rawColor.size_bytes(),
-            reinterpret_cast<uint8_t*>(fData.rawColor.data()),
-            reinterpret_cast<uint8_t*>(convertedColorData.data())
+        auto success = fUncompressor.decode_from_jpeg(
+            mInfos.color_width(), mInfos.color_height(), fData.rawColor,
+            fData.convertedColorData
         );
+
         Bench::stop();
 
         if(!success){
@@ -253,7 +230,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         Bench::start("[DCDeviceImpl::convert_color_image] BGRA");
 
         cv::Mat rawMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, fData.rawColor.data());
-        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, convertedColorData.data()); // ?
+        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, fData.convertedColorData.get_raw_data()); // ?
         cv::cvtColor(rawMat, convMat, cv::COLOR_BGRA2RGBA);
 
         Bench::stop();
@@ -264,7 +241,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         Bench::start("[DCDeviceImpl::convert_color_image] YUY2");
 
         cv::Mat rawMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC2, fData.rawColor.data());
-        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, convertedColorData.data()); // ?
+        cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, fData.convertedColorData.get_raw_data()); // ?
         cv::cvtColor(rawMat, convMat, cv::COLOR_YUV2RGBA_YUY2);
 
         Bench::stop();
@@ -274,10 +251,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         return;
     }
 
-    fData.color =  std::span<tool::ColorRGBA8>{
-        reinterpret_cast<tool::ColorRGBA8*>(convertedColorData.data()),
-        mInfos.color_size()
-    };
+    fData.color = fData.convertedColorData.span();
 }
 
 auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void{
@@ -306,7 +280,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
     auto hsvDiffColor = Convert::to_hsv(filtersS.filterColor);
 
     // reset depth mask
-    std::fill(depthMask.begin(), depthMask.end(), 1);
+    std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
 
     // depth/width/height/mask/color/infra filtering
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const Pt3<size_t> &dIndex){
@@ -319,7 +293,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
 
         // check validity
         if(currentDepth == dc_invalid_depth_value){
-            depthMask[id] = 0;
+            fData.depthMask[id] = 0;
             return;
         }
 
@@ -327,7 +301,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
         if( (ii < minW)  || (ii > maxW)  ||   // width
             (jj < minH)  || (jj > maxH) ||   // height
             (currentDepth < minD) || (currentDepth > maxD) ){           // depth
-            depthMask[id] = 0;
+            fData.depthMask[id] = 0;
             return;
         }
 
@@ -338,7 +312,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
             if((std::abs(hsv.h()- hsvDiffColor.h()) > filtersS.maxDiffColor.x()) ||
                 (std::abs(hsv.s()- hsvDiffColor.s()) > filtersS.maxDiffColor.y()) ||
                 (std::abs(hsv.v()- hsvDiffColor.v()) > filtersS.maxDiffColor.z())){
-                depthMask[id] = 0;
+                fData.depthMask[id] = 0;
                 return;
             }
         }
@@ -365,7 +339,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
     if(filtersS.keepOnlyBiggestCluster){
         keep_only_biggest_cluster();
     }else{
-        meanBiggestZoneId = 0;
+        fData.meanBiggestZoneId = 0;
     }
 
     update_valid_depth_values();
@@ -454,14 +428,14 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> v
 auto DCDeviceImpl::update_valid_depth_values() -> void{
 
     // count valid depth values
-    validDepthValues = 0;
+    fData.validDepthValues = 0;
     std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-        if(depthMask[id] == 0){
+        if(fData.depthMask[id] == 0){
             fData.depth[id] = dc_invalid_depth_value;
             fIndices.depthVertexCorrrespondance[id] = {id, -1};
         }else{
-            fIndices.depthVertexCorrrespondance[id] = {id, validDepthValues};
-            validDepthValues++;
+            fIndices.depthVertexCorrrespondance[id] = {id, fData.validDepthValues};
+            fData.validDepthValues++;
         }
     });
 }
@@ -476,23 +450,16 @@ auto DCDeviceImpl::update_infos(DCFrame *dFrame) -> void{
 auto DCDeviceImpl::update_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
 
     if(fData.color.empty() || !dataS.generateRGBLocalFrame){
-        dFrame->colorWidth     = 0;
-        dFrame->colorHeight    = 0;
-        dFrame->imageColorData = {};
+        dFrame->colorImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_color]");
 
-    dFrame->colorWidth  = mInfos.color_width();
-    dFrame->colorHeight = mInfos.color_height();
-    dFrame->imageColorData.resize(mInfos.color_size());
-
-    std::copy(
-        reinterpret_cast<std::int8_t*>(fData.color.data()),
-        reinterpret_cast<std::int8_t*>(fData.color.data()) + fData.color.size_bytes(),
-        reinterpret_cast<std::int8_t*>(dFrame->imageColorData.data())
-    );
+    dFrame->colorImage.width  = mInfos.color_width();
+    dFrame->colorImage.height = mInfos.color_height();
+    dFrame->colorImage.resize(mInfos.color_size());
+    std::copy(fData.color.begin(), fData.color.end(), dFrame->colorImage.begin());
 
     Bench::stop();
 }
@@ -500,23 +467,17 @@ auto DCDeviceImpl::update_color(const DCDataSettings &dataS, DCFrame *dFrame) ->
 auto DCDeviceImpl::update_depth_sized_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
 
     if(fData.dephtSizedColor.empty() || !dataS.generateRGBLocalFrame){
-        dFrame->depthSizedColorWidth     = 0;
-        dFrame->depthSizedColorHeight    = 0;
-        dFrame->depthSizedImageColorData = {};
+        dFrame->depthSizedColorImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_depth_sized_color]");
 
-    dFrame->depthSizedColorWidth  = mInfos.depth_width();
-    dFrame->depthSizedColorHeight = mInfos.depth_height();
-    dFrame->depthSizedImageColorData.resize(mInfos.depth_size());
+    dFrame->depthSizedColorImage.width  = mInfos.depth_width();
+    dFrame->depthSizedColorImage.height = mInfos.depth_height();
+    dFrame->depthSizedColorImage.resize(mInfos.depth_size());
+    std::copy(fData.dephtSizedColor.begin(), fData.dephtSizedColor.end(), dFrame->depthSizedColorImage.begin());
 
-    std::copy(
-        reinterpret_cast<std::int8_t*>(fData.dephtSizedColor.data()),
-        reinterpret_cast<std::int8_t*>(fData.dephtSizedColor.data()) + fData.dephtSizedColor.size_bytes(),
-        reinterpret_cast<std::int8_t*>(dFrame->depthSizedImageColorData.data())
-    );
 
     Bench::stop();
 }
@@ -524,18 +485,15 @@ auto DCDeviceImpl::update_depth_sized_color(const DCDataSettings &dataS, DCFrame
 auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
 
     if(fData.depth.empty() || !dataS.generateDepthLocalFrame){
-        dFrame->depthWidth     = 0;
-        dFrame->depthHeight    = 0;
-        dFrame->imageDepthData = {};
+        dFrame->depthData.reset();
+        dFrame->depthImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_depth]");
 
-    dFrame->depthWidth  = mInfos.depth_width();
-    dFrame->depthHeight = mInfos.depth_height();
-    dFrame->imageDepthData.resize(mInfos.depth_size());
-
+    dFrame->depthData.width  = mInfos.depth_width();
+    dFrame->depthData.height = mInfos.depth_height();
     dFrame->depthData.resize(mInfos.depth_size());
     std::copy(fData.depth.begin(), fData.depth.end(), dFrame->depthData.begin());
 
@@ -549,10 +507,14 @@ auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) ->
         {1.f,0.f,0.f},
     };
 
+    dFrame->depthImage.width  = mInfos.depth_width();
+    dFrame->depthImage.height = mInfos.depth_height();
+    dFrame->depthImage.resize(mInfos.depth_size());
+
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
 
         if(fData.depth[id] == dc_invalid_depth_value){
-            dFrame->imageDepthData[id] = geo::Pt3<std::uint8_t>{};
+            dFrame->depthImage.buffer[id] = ColorRGB8{};
             return;
         }
 
@@ -562,7 +524,7 @@ auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) ->
         size_t idG = static_cast<size_t>(intPart);
 
         auto col = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-        dFrame->imageDepthData[id] = {
+        dFrame->depthImage.buffer[id] = ColorRGB8{
             static_cast<std::uint8_t>(255*col.x()),
             static_cast<std::uint8_t>(255*col.y()),
             static_cast<std::uint8_t>(255*col.z())
@@ -575,17 +537,21 @@ auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) ->
 auto DCDeviceImpl::update_infra(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
 
     if(fData.infra.empty() || !dataS.generateInfraLocalFrame){
-        dFrame->infraWidth     = 0;
-        dFrame->infraHeight    = 0;
-        dFrame->imageInfraData = {};
+        dFrame->infraData.reset();
+        dFrame->infraImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_infra]");
 
-    dFrame->infraWidth  = mInfos.infra_width();
-    dFrame->infraHeight = mInfos.infra_height();
-    dFrame->imageInfraData.resize(mInfos.infra_size());
+    dFrame->infraData.width  = mInfos.infra_width();
+    dFrame->infraData.height = mInfos.infra_height();
+    dFrame->infraData.resize(mInfos.infra_size());
+    std::copy(fData.infra.begin(), fData.infra.end(), dFrame->infraData.begin());
+
+    dFrame->infraImage.width  = mInfos.infra_width();
+    dFrame->infraImage.height = mInfos.infra_height();
+    dFrame->infraImage.resize(mInfos.infra_size());
 
     const float max = 2000;
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
@@ -595,7 +561,7 @@ auto DCDeviceImpl::update_infra(const DCDataSettings &dataS, DCFrame *dFrame) ->
             vF = max;
         }
         vF/=max;
-        dFrame->imageInfraData[id] = {
+        dFrame->infraImage.buffer[id] = ColorRGB8{
             static_cast<std::uint8_t>(255*vF),
             static_cast<std::uint8_t>(255*vF),
             static_cast<std::uint8_t>(255*vF)
@@ -624,9 +590,9 @@ auto DCDeviceImpl::update_cloud(const DCDataSettings &dataS, DCFrame *dFrame) ->
         {1.f,0.f,0.f},
     };
 
-    dFrame->cloud.vertices.resize(validDepthValues);
-    dFrame->cloud.colors.resize(validDepthValues);
-    dFrame->cloud.normals.resize(validDepthValues);
+    dFrame->cloud.vertices.resize(fData.validDepthValues);
+    dFrame->cloud.colors.resize(fData.validDepthValues);
+    dFrame->cloud.normals.resize(fData.validDepthValues);
 
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](auto idC){
 
@@ -743,27 +709,24 @@ auto DCDeviceImpl::update_compressed_frame_infos(DCCompressedFrame *cFrame) -> v
     cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
     cFrame->afterCaptureTS     = fTiming.get_local("after_capture"sv).count();
     cFrame->receivedTS         = cFrame->afterCaptureTS;  // default init received TS with after capture TS
-    cFrame->validVerticesCount = validDepthValues;
+    cFrame->validVerticesCount = fData.validDepthValues;
 }
 
 auto DCDeviceImpl::update_compressed_frame_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void{
 
     if(fData.color.empty() || !dataS.sendColor){
-        cFrame->colorWidth       = 0;
-        cFrame->colorHeight      = 0;
-        cFrame->encodedColorData = {};
+        cFrame->encodedColorImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_color]");
 
-    fCompressor.add_color(
+    fCompressor.encode_to_jpeg(
         mInfos.color_width(),
         mInfos.color_height(),
-        4,
-        reinterpret_cast<uint8_t*>(fData.color.data()),
-        filtersS.jpegCompressionRate,
-        cFrame
+        fData.color,
+        cFrame->encodedColorImage,
+        filtersS.jpegCompressionRate
     );
 
     Bench::stop();
@@ -772,21 +735,18 @@ auto DCDeviceImpl::update_compressed_frame_color(const DCDataSettings &dataS, co
 auto DCDeviceImpl::update_compressed_frame_depth_sized_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void{
 
     if(fData.dephtSizedColor.empty() || !dataS.sendColor){
-        cFrame->depthSizedColorWidth       = 0;
-        cFrame->depthSizedColorHeight      = 0;
-        cFrame->encodedDepthSizedColorData = {};
+        cFrame->encodedDepthSizedColorImage.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_depth_sized_color]");
 
-    fCompressor.add_depth_sized_color(
+    fCompressor.encode_to_jpeg(
         mInfos.depth_width(),
         mInfos.depth_height(),
-        4,
-        reinterpret_cast<uint8_t*>(fData.dephtSizedColor.data()),
-        filtersS.jpegCompressionRate,
-        cFrame
+        fData.dephtSizedColor,
+        cFrame->encodedDepthSizedColorImage,
+        filtersS.jpegCompressionRate
     );
 
     Bench::stop();
@@ -795,19 +755,17 @@ auto DCDeviceImpl::update_compressed_frame_depth_sized_color(const DCDataSetting
 auto DCDeviceImpl::update_compressed_frame_depth(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
 
     if(fData.depth.empty() || !dataS.sendDepth){
-        cFrame->depthWidth       = 0;
-        cFrame->depthHeight      = 0;
-        cFrame->encodedDepthData = {};
+        cFrame->encodedDepthData.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_depth]");
 
-    fCompressor.add_depth(
+    fCompressor.encode_to_lossless_16_bits(
         mInfos.depth_width(),
         mInfos.depth_height(),
-        reinterpret_cast<std::uint16_t*>(fData.depth.data()),
-        cFrame
+        fData.depth,
+        cFrame->encodedDepthData
     );
 
     Bench::stop();
@@ -816,19 +774,17 @@ auto DCDeviceImpl::update_compressed_frame_depth(const DCDataSettings &dataS, DC
 auto DCDeviceImpl::update_compressed_frame_infra(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
 
     if(fData.infra.empty() || !dataS.sendInfra){
-        cFrame->infraWidth       = 0;
-        cFrame->infraHeight      = 0;
-        cFrame->encodedInfraData = {};
+        cFrame->encodedInfraData.reset();
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_infra]");
 
-    fCompressor.add_infra(
+    fCompressor.encode_to_lossless_16_bits(
         mInfos.infra_width(),
         mInfos.infra_height(),
-        reinterpret_cast<std::uint16_t*>(fData.infra.data()),
-        cFrame
+        fData.infra,
+        cFrame->encodedInfraData
     );
 
     Bench::stop();
@@ -837,17 +793,17 @@ auto DCDeviceImpl::update_compressed_frame_infra(const DCDataSettings &dataS, DC
 auto DCDeviceImpl::update_compressed_frame_cloud(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
 
     if(fData.depthCloud.empty() || fData.depth.empty() || fData.dephtSizedColor.empty() || !dataS.sendCloud){
-        cFrame->encodedCloudVerticesData = {};
+        cFrame->encodedColoredCloudData = {};
         return;
     }
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_cloud]");
 
-    fCompressor.add_cloud(
+    fCompressor.encode_colored_cloud_to_lossless_16_bits(
         fData.depth,
         fData.dephtSizedColor,
         fData.depthCloud,
-        cFrame->encodedCloudVerticesData
+        cFrame->encodedColoredCloudData
     );
 
     Bench::stop();
@@ -877,7 +833,7 @@ auto DCDeviceImpl::update_compressed_frame_imu(const DCDataSettings &dataS, DCCo
         cFrame = {};
         return;
     }
-    cFrame->imuSample = fData.imuSample;
+    // cFrame->imuSample = fData.imuSample;
 }
 
 auto DCDeviceImpl::update_compressed_frame_bodies(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
@@ -886,23 +842,6 @@ auto DCDeviceImpl::update_compressed_frame_bodies(const DCDataSettings &dataS, D
         return;
     }
     // ...
-}
-
-#include "thirdparty/stb/stb_image_write.h"
-
-auto DCDeviceImpl::debug_save_images(std::string parentPath) -> void{
-
-    parentPath += std::format("/dev_{}_",mInfos.id_capture()%10);
-
-    if(!fData.color.empty()){
-        std::cout << std::format("write color image [{},{},{}] [{},{}]\n",mInfos.color_width(),mInfos.color_height(),mInfos.color_size(), fData.color.size(), fData.color.size_bytes()) << "\n";
-        stbi_write_png(std::format("{}_color.png", parentPath).c_str(), mInfos.color_width(), mInfos.color_height(), 4, fData.color.data(), mInfos.color_width()*4);
-    }
-
-    if(!fData.dephtSizedColor.empty()){
-        std::cout << std::format("write depth sized color image [{},{},{}] [{},{}]\n",mInfos.depth_width(),mInfos.depth_height(),mInfos.depth_size(), fData.dephtSizedColor.size(), fData.dephtSizedColor.size_bytes()) << "\n";
-        stbi_write_png(std::format("{}_depth_sized_color.png", parentPath).c_str(), mInfos.depth_width(), mInfos.depth_height(), 4, fData.dephtSizedColor.data(), mInfos.depth_width()*4);
-    }
 }
 
 auto DCDeviceImpl::stop_reading_thread() -> void{
@@ -948,11 +887,11 @@ auto DCDeviceImpl::check_data_validity() -> bool {
 
 auto DCDeviceImpl::maximum_local_depth_difference(const DCFrameIndices &ids, std::span<uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void{
 
-    std::fill(filteringMask.begin(),filteringMask.end(), 0);
+    std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
     std::for_each(std::execution::par_unseq, std::begin(ids.depths1DNoBorders), std::end(ids.depths1DNoBorders), [&](size_t id){
 
-        if(depthMask[id] == 0){
+        if(fData.depthMask[id] == 0){
             return;
         }
 
@@ -961,26 +900,25 @@ auto DCDeviceImpl::maximum_local_depth_difference(const DCFrameIndices &ids, std
         size_t count = 0;
         if(connectivity == DCConnectivity::Connectivity_4){
             for(auto cId : ids.neighbours4Depth1D[id]){
-                if(depthMask[cId] == 1){
+                if(fData.depthMask[cId] == 1){
                     meanDiff += abs(depthBuffer[cId]-currDepth);
                     ++count;
                 }
             }
         }else{
             for(auto cId : ids.neighbours8Depth1D[id]){
-                if(depthMask[cId] == 1){
+                if(fData.depthMask[cId] == 1){
                     meanDiff += abs(depthBuffer[cId]-currDepth);
                     ++count;
                 }
             }
         }
-        filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
-
+        fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
     });
 
-    for(size_t ii = 0; ii < filteringMask.size(); ++ii){
-        if(filteringMask[ii] == 0){
-            depthMask[ii] = 0;
+    for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
+        if(fData.filteringMask[ii] == 0){
+            fData.depthMask[ii] = 0;
         }
     }
 }
@@ -988,7 +926,7 @@ auto DCDeviceImpl::maximum_local_depth_difference(const DCFrameIndices &ids, std
 auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
 
     // empty zones
-    std::fill(zonesId.begin(), zonesId.end(), 0);
+    std::fill(fData.zonesId.begin(), fData.zonesId.end(), 0);
 
     size_t currentZoneId = 1;
     int biggestZone = -1;
@@ -1000,11 +938,11 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
 
     std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t pt){
 
-        if(zonesId[pt] != 0){
+        if(fData.zonesId[pt] != 0){
             return;
         }
 
-        if(depthMask[pt] == 0){
+        if(fData.depthMask[pt] == 0){
             return;
         }
 
@@ -1018,15 +956,15 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
             size_t id = ids.front();
             ids.pop();
 
-            if(zonesId[id] != 0){
+            if(fData.zonesId[id] != 0){
                 continue;
             }
 
-            if(depthMask[id] == 0){
+            if(fData.depthMask[id] == 0){
                 continue;
             }
 
-            zonesId[id] = static_cast<int>(zoneId);
+            fData.zonesId[id] = static_cast<int>(zoneId);
             count++;
 
             if(id >= 1){
@@ -1078,11 +1016,11 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
         Pt2<size_t> meanBiggestZone = {0,0};
         size_t count = 0;
         std::for_each(std::execution::unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const auto &pt){
-            if(zonesId[pt.x()] != biggestZone){
-                depthMask[pt.x()] = 0;
+            if(fData.zonesId[pt.x()] != biggestZone){
+                fData.depthMask[pt.x()] = 0;
             }
 
-            if(depthMask[pt.x()] == 1){
+            if(fData.depthMask[pt.x()] == 1){
                 meanBiggestZone.x() += pt.y();
                 meanBiggestZone.y() += pt.z();
                 ++count;
@@ -1090,7 +1028,7 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
         });
 
         meanBiggestZone /= count;
-        meanBiggestZoneId = meanBiggestZone.y() * depthWidth + meanBiggestZone.x();
+        fData.meanBiggestZoneId = meanBiggestZone.y() * depthWidth + meanBiggestZone.x();
     }
 
 }
@@ -1100,11 +1038,11 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
     for(std::uint8_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
         // reset filtering mask
-        std::fill(filteringMask.begin(),filteringMask.end(), 0);
+        std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
 
-            if(depthMask[id] == 0){
+            if(fData.depthMask[id] == 0){
                 return;
             }
 
@@ -1112,27 +1050,27 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
             if(connectivity == DCConnectivity::Connectivity_4){
                 for(auto cId : fIndices.neighbours4Depth1D[id]){
 
-                    if(depthMask[cId] == 1){
+                    if(fData.depthMask[cId] == 1){
                         ++count;
                     }
                 }
-                filteringMask[id] = count == 4 ? 1 : 0;
+                fData.filteringMask[id] = count == 4 ? 1 : 0;
             }else{
                 for(auto cId : fIndices.neighbours8Depth1D[id]){
 
-                    if(depthMask[cId] == 1){
+                    if(fData.depthMask[cId] == 1){
                         ++count;
                     }
                 }
-                filteringMask[id] = count == 8 ? 1 : 0;
+                fData.filteringMask[id] = count == 8 ? 1 : 0;
             }
 
-            filteringMask[id] = (count < nbMinNeighbours) ? 1 : 0;
+            fData.filteringMask[id] = (count < nbMinNeighbours) ? 1 : 0;
         });
 
-        for(size_t ii = 0; ii < filteringMask.size(); ++ii){
-            if(filteringMask[ii] == 1){
-                depthMask[ii] = 0;
+        for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
+            if(fData.filteringMask[ii] == 1){
+                fData.depthMask[ii] = 0;
             }
         }
     }
@@ -1140,40 +1078,39 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
 
 auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity) -> void{
 
-
     for(size_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
-        std::fill(filteringMask.begin(),filteringMask.end(), 0);
+        std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
 
-            if(depthMask[id] == 0){
+            if(fData.depthMask[id] == 0){
                 return;
             }
 
-            uint8_t count = 0;
+            std::uint8_t count = 0;
             if(connectivity == DCConnectivity::Connectivity_4){
                 for(auto cId : fIndices.neighbours4Depth1D[id]){
 
-                    if(depthMask[cId] == 1){
+                    if(fData.depthMask[cId] == 1){
                         ++count;
                     }
                 }
-                filteringMask[id] = count == 4 ? 1 : 0;
+                fData.filteringMask[id] = count == 4 ? 1 : 0;
             }else{
                 for(auto cId : fIndices.neighbours8Depth1D[id]){
 
-                    if(depthMask[cId] == 1){
+                    if(fData.depthMask[cId] == 1){
                         ++count;
                     }
                 }
-                filteringMask[id] = count == 8 ? 1 : 0;
+                fData.filteringMask[id] = count == 8 ? 1 : 0;
             }
         });
 
-        for(size_t ii = 0; ii < filteringMask.size(); ++ii){
-            if(filteringMask[ii] == 0){
-                depthMask[ii] = 0;
+        for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
+            if(fData.filteringMask[ii] == 0){
+                fData.depthMask[ii] = 0;
             }
         }
     }
@@ -1283,5 +1220,21 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 }
 
 
+// #include "thirdparty/stb/stb_image_write.h"
+
+// auto DCDeviceImpl::debug_save_images(std::string parentPath) -> void{
+
+//     parentPath += std::format("/dev_{}_",mInfos.id_capture()%10);
+
+//     if(!fData.color.empty()){
+//         std::cout << std::format("write color image [{},{},{}] [{},{}]\n",mInfos.color_width(),mInfos.color_height(),mInfos.color_size(), fData.color.size(), fData.color.size_bytes()) << "\n";
+//         stbi_write_png(std::format("{}_color.png", parentPath).c_str(), mInfos.color_width(), mInfos.color_height(), 4, fData.color.data(), mInfos.color_width()*4);
+//     }
+
+//     if(!fData.dephtSizedColor.empty()){
+//         std::cout << std::format("write depth sized color image [{},{},{}] [{},{}]\n",mInfos.depth_width(),mInfos.depth_height(),mInfos.depth_size(), fData.dephtSizedColor.size(), fData.dephtSizedColor.size_bytes()) << "\n";
+//         stbi_write_png(std::format("{}_depth_sized_color.png", parentPath).c_str(), mInfos.depth_width(), mInfos.depth_height(), 4, fData.dephtSizedColor.data(), mInfos.depth_width()*4);
+//     }
+// }
 
 

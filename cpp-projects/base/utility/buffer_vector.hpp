@@ -29,54 +29,70 @@
 // std
 #include <vector>
 #include <algorithm>
+#include <span>
 
 namespace tool {
 
 template <typename ElementType>
 struct Buffer{
 
+    Buffer() = default;
+    Buffer(const Buffer& other) = default;
+    Buffer& operator=(const Buffer& other) = default;
+    Buffer(Buffer&& other) = default;
+    Buffer& operator=(Buffer&& other) = default;
+
     // memory
-    [[nodiscard]] constexpr auto empty() const noexcept -> size_t{return values.empty();}
-    [[nodiscard]] constexpr auto size() const noexcept -> size_t{return values.size();}
-    [[nodiscard]] constexpr auto capacity() const noexcept -> size_t{return values.capacity();}
-    constexpr auto resize(size_t size) -> void{values.resize(size);}
-    constexpr auto reserve(size_t capacity) -> void{values.reserve(capacity);}
-    constexpr auto clear() noexcept -> void{values.clear();}
-    constexpr auto shrink_to_fit() -> void{values.shrink_to_fit();}
+    [[nodiscard]] constexpr auto empty()    const noexcept -> size_t {return values.empty();}
+    [[nodiscard]] constexpr auto size()     const noexcept -> size_t {return values.size();}
+    [[nodiscard]] constexpr auto capacity() const noexcept -> size_t {return values.capacity();}
+    constexpr auto resize(size_t size)                     -> void   {values.resize(size);}
+    constexpr auto reserve(size_t capacity)                -> void   {values.reserve(capacity);}
+    constexpr auto clear() noexcept                        -> void   {values.clear();}
+    constexpr auto shrink_to_fit()                         -> void   {values.shrink_to_fit();}
 
     // get
-    [[nodiscard]] constexpr auto get_data() noexcept -> ElementType* {return values.data();}
-    [[nodiscard]] constexpr auto get_data() const noexcept -> const ElementType* {return values.data();}
-    [[nodiscard]] constexpr auto operator[](size_t id) noexcept -> ElementType&{return values[id];}
-    [[nodiscard]] constexpr auto operator[](size_t id) const noexcept -> const ElementType&{return values[id];}
-    [[nodiscard]] constexpr auto at(size_t id) -> ElementType&{return values.at(id);}
-    [[nodiscard]] constexpr auto at(size_t id) const -> const ElementType&{return values.at(id);}
-    [[nodiscard]] constexpr auto back() noexcept -> ElementType&{return values.back();}
-    [[nodiscard]] constexpr auto back() const noexcept -> const ElementType&{return values.back();}
-    [[nodiscard]] constexpr auto front() noexcept -> ElementType&{return values.front();}
-    [[nodiscard]] constexpr auto front() const noexcept -> const ElementType&{return values.front();}
+    [[nodiscard]] constexpr auto get_data()                   noexcept -> ElementType*        {return values.data();}
+    [[nodiscard]] constexpr auto get_data()             const noexcept -> const ElementType*  {return values.data();}
+    [[nodiscard]] constexpr auto get_raw_data()               noexcept -> std::uint8_t*       {return reinterpret_cast<std::uint8_t*>(get_data());}
+    [[nodiscard]] constexpr auto get_raw_data()         const noexcept -> const std::uint8_t* {return reinterpret_cast<const std::uint8_t*>(get_data());}
+    [[nodiscard]] constexpr auto operator[](size_t id)        noexcept -> ElementType&        {return values[id];}
+    [[nodiscard]] constexpr auto operator[](size_t id)  const noexcept -> const ElementType&  {return values[id];}
+    [[nodiscard]] constexpr auto at(size_t id)                         -> ElementType&        {return values.at(id);}
+    [[nodiscard]] constexpr auto at(size_t id)          const          -> const ElementType&  {return values.at(id);}
+    [[nodiscard]] constexpr auto back()                       noexcept -> ElementType&        {return values.back();}
+    [[nodiscard]] constexpr auto back()                 const noexcept -> const ElementType&  {return values.back();}
+    [[nodiscard]] constexpr auto front()                      noexcept -> ElementType&        {return values.front();}
+    [[nodiscard]] constexpr auto front()                const noexcept -> const ElementType&  {return values.front();}
 
     // iterators
-    [[nodiscard]] constexpr auto begin() noexcept{return values.begin();}
-    [[nodiscard]] constexpr auto begin() const noexcept{return values.cbegin();}
-    [[nodiscard]] constexpr auto cbegin() const noexcept{return values.cbegin();}
-    [[nodiscard]] constexpr auto end() noexcept{return values.end();}
-    [[nodiscard]] constexpr auto end() const noexcept{return values.cend();}
-    [[nodiscard]] constexpr auto cend() const noexcept{return values.cend();}
-    [[nodiscard]] constexpr auto rbegin() noexcept{return values.rbegin();}
-    [[nodiscard]] constexpr auto rbegin() const noexcept{return values.rcbegin();}
-    [[nodiscard]] constexpr auto rcbegin() const noexcept{return values.rcbegin();}
-    [[nodiscard]] constexpr auto rend() noexcept{return values.rend();}
-    [[nodiscard]] constexpr auto rend() const noexcept{return values.rcend();}
-    [[nodiscard]] constexpr auto rcend() const noexcept{return values.rcend();}
+    [[nodiscard]] constexpr auto begin()          noexcept{return values.begin();}
+    [[nodiscard]] constexpr auto begin()    const noexcept{return values.cbegin();}
+    [[nodiscard]] constexpr auto cbegin()   const noexcept{return values.cbegin();}
+    [[nodiscard]] constexpr auto end()            noexcept{return values.end();}
+    [[nodiscard]] constexpr auto end()      const noexcept{return values.cend();}
+    [[nodiscard]] constexpr auto cend()     const noexcept{return values.cend();}
+    [[nodiscard]] constexpr auto rbegin()         noexcept{return values.rbegin();}
+    [[nodiscard]] constexpr auto rbegin()   const noexcept{return values.rcbegin();}
+    [[nodiscard]] constexpr auto rcbegin()  const noexcept{return values.rcbegin();}
+    [[nodiscard]] constexpr auto rend()           noexcept{return values.rend();}
+    [[nodiscard]] constexpr auto rend()     const noexcept{return values.rcend();}
+    [[nodiscard]] constexpr auto rcend()    const noexcept{return values.rcend();}
+
+    // spans
+    // spans
+    [[nodiscard]] auto raw_span()           noexcept -> std::span<std::uint8_t>         {return std::span<std::uint8_t>{get_raw_data(),static_cast<size_t>(size()*sizeof(ElementType))};}
+    [[nodiscard]] auto raw_span()   const   noexcept -> std::span<const std::uint8_t>   {return std::span<const std::uint8_t>{get_raw_data(),static_cast<size_t>(size()*sizeof(ElementType))};}
+    [[nodiscard]] auto span()               noexcept -> std::span<ElementType>          {return std::span<ElementType>{get_data(), size()};}
+    [[nodiscard]] auto span()       const   noexcept -> std::span<const ElementType>    {return std::span<const ElementType>{get_data(), size()};}
 
     // add
-    constexpr auto push_back(const ElementType &v) -> void{values.push_back(v);}
-    constexpr auto push_back(ElementType &&nValue) -> void{values.push_back(std::move(nValue));}
+    constexpr auto push_back(const ElementType &v)              -> void{values.push_back(v);}
+    constexpr auto push_back(ElementType &&nValue)              -> void{values.push_back(std::move(nValue));}
     template <typename ...ElementsType>
-    constexpr auto push_back(const ElementsType&... nValues) -> void{(push_back(std::forward(nValues)), ...);}
+    constexpr auto push_back(const ElementsType&... nValues)    -> void{(push_back(std::forward(nValues)), ...);}
     template <typename ...ElementsType>
-    constexpr auto push_back(ElementsType&&... nValue) -> void{(push_back(std::move(nValue)), ...);}
+    constexpr auto push_back(ElementsType&&... nValue)          -> void{(push_back(std::move(nValue)), ...);}
 
     constexpr auto push_front(const ElementType &v) -> void{
         values.push_back(v);
@@ -151,12 +167,22 @@ struct Buffer{
         return subSetSize;
     }
 
+    [[nodiscard]] constexpr auto copy_last_values(size_t count) const -> Buffer {
+        Buffer subBuffer;
+        copy_last_values_to(count, subBuffer, 0);
+        return subBuffer;
+    }
+
     constexpr auto copy_last_values_to(size_t count, Buffer &subBuffer, size_t subBufferStart = 0) const -> size_t {
         if(count > size()){
             count = size();
         }
         auto start = size() - count;
         return copy_subset_to(start, size(), subBuffer, subBufferStart);
+    }
+
+    constexpr auto copy(Buffer &copiedBuffer) const -> size_t {
+        return copy_subset_to(0, size(), copiedBuffer, 0);
     }
 
     // remove
@@ -205,6 +231,12 @@ struct Buffer{
             }
         }
         values.resize(cId);
+    }
+
+    constexpr auto remove_first_values_if_too_large(size_t maxSize, size_t newSize) -> void{
+        if(size() > maxSize && newSize < maxSize){
+            remove_from_to(0, size() - newSize);
+        }
     }
 
     std::vector<ElementType> values;
