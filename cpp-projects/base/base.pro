@@ -96,9 +96,11 @@ HEADERS += \
     # io
     camera/dc_compressed_frames.hpp \
     camera/dc_video.hpp \
+    camera/impl/azure_base_device.hpp \
+    camera/impl/azure_utility.hpp \
     camera/impl/femto_bolt_device_impl.hpp \
     camera/impl/femto_mega_device_impl.hpp \
-    camera/impl/orbbec_device.hpp \
+    camera/impl/orbbec_base_device.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -323,10 +325,12 @@ HEADERS += \
 SOURCES += \
     # io
     camera/dc_compressed_frames.cpp \
+    camera/dc_types.cpp \
     camera/dc_video.cpp \
+    camera/impl/azure_base_device.cpp \
     camera/impl/femto_bolt_device_impl.cpp \
     camera/impl/femto_mega_device_impl.cpp \
-    camera/impl/orbbec_device.cpp \
+    camera/impl/orbbec_base_device.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \

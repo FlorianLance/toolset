@@ -127,7 +127,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
 [[maybe_unused]] static constexpr auto is_available(ColorSettingsType sType, DCType type) -> bool{
     if(type == DCType::AzureKinect){
         return is_available(sType, k4ColorSettingsP);
-    }else if(type == DCType::FemtoBolt){
+    }else if((type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         return is_available(sType, foColorSettingsP);
     }
     return {};
@@ -136,7 +136,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
 [[maybe_unused]] static constexpr auto min_value(ColorSettingsType sType, DCType type) -> std::int32_t{
     if(type == DCType::AzureKinect){
         return min_value(sType, k4ColorSettingsP);
-    }else if(type == DCType::FemtoBolt){
+    }else if((type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         return min_value(sType, foColorSettingsP);
     }
     return {};
@@ -145,7 +145,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
 [[maybe_unused]] static constexpr auto max_value(ColorSettingsType sType, DCType type) -> std::int32_t{
     if(type == DCType::AzureKinect){
         return max_value(sType, k4ColorSettingsP);
-    }else if(type == DCType::FemtoBolt){
+    }else if((type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         return max_value(sType, foColorSettingsP);
     }
     return {};
@@ -154,7 +154,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
 [[maybe_unused]] static constexpr auto step_value(ColorSettingsType sType, DCType type) -> std::int32_t{
     if(type == DCType::AzureKinect){
         return step_value(sType, k4ColorSettingsP);
-    }else if(type == DCType::FemtoBolt){
+    }else if((type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         return step_value(sType, foColorSettingsP);
     }
     return {};
@@ -163,7 +163,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
 [[maybe_unused]] static constexpr auto default_value(ColorSettingsType sType, DCType type) -> std::int32_t{
     if(type == DCType::AzureKinect){
         return default_value(sType, k4ColorSettingsP);
-    }else if(type == DCType::FemtoBolt){
+    }else if((type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         return default_value(sType, foColorSettingsP);
     }
     return {};
@@ -180,7 +180,7 @@ struct DCColorSettings : io::BinaryFileSettings{
     std::uint8_t sharpness                  = 4;
 
     std::uint8_t gain                       = 128;
-    std::uint8_t powerlineFrequency         = 1;
+    DCPowerlineFrequency powerlineFrequency = DCPowerlineFrequency::F50;
     bool backlightCompensation              = false;
     bool autoExposureTime                   = true;
 

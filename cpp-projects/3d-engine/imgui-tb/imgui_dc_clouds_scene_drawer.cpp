@@ -249,12 +249,19 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const s
     }
 }
 
-auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void {
+
+auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::string_view text) -> void {
 
     auto &cD = cloudsD[idCloud];
 
     // draw
-    cD.colorD.draw_at_position(screenPos, sizeTexture, std::move(text));
+    cD.colorD.draw_at_position(screenPos, sizeTexture, std::string(text));//std::move(text));
+
+    // // TEST
+    // auto cursorScreenPos = ImGui::GetCursorScreenPos();
+    // ImGui::SetCursorScreenPos(to_iv2(screenPos));
+    // cD.colorD.draw_child(std::string(text), sizeTexture);
+    // ImGui::SetCursorScreenPos(cursorScreenPos);
 
     // check mouse inputs
     const auto &hp = cD.colorD.hoveringPixel;

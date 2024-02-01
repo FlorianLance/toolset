@@ -46,8 +46,8 @@ struct DCConfigSettings : io::BinaryFileSettings{
 
     // body tracking
     bool enableBodyTracking = false;
-    DCBTSensorOrientation btOrientation = DCBTSensorOrientation::k4_default_orientation;
-    DCBTProcessingMode btProcessingMode = DCBTProcessingMode::K4_GPU_DIRECTML;
+    DCBTSensorOrientation btOrientation = DCBTSensorOrientation::default_orientation;
+    DCBTProcessingMode btProcessingMode = DCBTProcessingMode::GPU_DIRECTML;
     std::int8_t btGPUId = 0;
 
     // other

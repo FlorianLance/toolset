@@ -26,8 +26,12 @@
 
 #pragma once
 
+// std
+#include <span>
+
 // local
 #include "dc_compressed_frame.hpp"
+#include "graphics/color.hpp"
 
 namespace tool::cam{
 
@@ -37,9 +41,14 @@ struct DCFrameCompressor{
     ~DCFrameCompressor();
 
     auto add_color(size_t width,  size_t height, int numChannels, std::uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void;
+    auto add_depth_sized_color(size_t width,  size_t height, int numChannels, std::uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void;
+
     auto add_depth(size_t width,  size_t height, std::uint16_t *data, DCCompressedFrame *cFrame) -> void;
     auto add_infra(size_t width,  size_t height, std::uint16_t *data, DCCompressedFrame *cFrame) -> void;
-    auto add_cloud(size_t colorWidth, size_t colorHeight, std::uint8_t *colorData, size_t depthSize, std::uint16_t *depthData, int jpegQuality, DCCompressedFrame *cFrame)  -> void;
+
+    auto add_cloud(std::span<std::uint16_t> depthData, std::span<ColorRGBA8> depthSizedColorData, std::span<geo::Pt3<std::int16_t>> depthCloudData, std::vector<std::uint8_t> &encodedCloudData)  -> void;
+    auto add_cloud(DCMode mode, const geo::ColoredCloudData &cloud, std::vector<std::uint8_t> &encodedCloudData)  -> void;
+
     auto add_frame(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void;
     auto compress_frame(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>;
 

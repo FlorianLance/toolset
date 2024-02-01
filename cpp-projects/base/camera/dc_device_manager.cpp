@@ -165,6 +165,8 @@ auto DCDeviceManager::get_duration_between_micro_s(std::string_view from, std::s
     return 0;
 }
 
+#include <iostream>
+
 auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
     const auto &newActionsS = deviceS.actionsS;
@@ -197,6 +199,13 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     if(is_reading()){
         stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
     }
+    std::cout << "########### newActionsS.openDevice " << newActionsS.openDevice << "\n";
+    std::cout << "########### cameraSettingsChanged " << cameraSettingsChanged << "\n";
+    std::cout << "########### deviceIdChanged " << deviceIdChanged << "\n";
+    std::cout << "########### deviceChanged " << deviceChanged << "\n";
+    std::cout << "########### newActionsS.startReading " << newActionsS.startReading << "\n";
+    std::cout << "########### closeDevice " << closeDevice << "\n";
+    std::cout << "########### stopReading " << stopReading << "\n";
 
     // stop / close camera
     if(is_device_initialized()){
@@ -208,7 +217,7 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
         }
     }
     if(closeDevice || stopReading){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     // generate device
@@ -218,6 +227,9 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
 
     bool openDevice  = newActionsS.openDevice    && (!i->device->is_opened());
     bool startCamera = newActionsS.startReading  && (!i->device->is_reading());
+
+    std::cout << "########### openDevice " << openDevice << "\n";
+    std::cout << "########### startCamera " << startCamera << "\n";
 
     // update device settings
     i->deviceS = deviceS;

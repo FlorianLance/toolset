@@ -53,50 +53,13 @@ enum class DCType : std::int8_t{
 
 // Camera parameters
 // # powerline frequency
-enum class PowerlineFrequency : std::int8_t{
-    UNDEFINED =0, F50=1, F60=2
+enum class DCPowerlineFrequency : std::int8_t{
+    Undefined = 0,
+    F50,
+    F60
 };
 
-// # image format
-// ## kinect4
-enum class K4ImageFormat : std::int8_t {
-    MJPEG    = 0, // K4A_IMAGE_FORMAT_COLOR_MJPG   : The buffer for each image is encoded as a JPEG and can be decoded by a JPEG decoder.
-    NV12     = 1, // K4A_IMAGE_FORMAT_COLOR_NV12   : NV12 images separate the luminance and chroma data such that all the luminance is at the beginning of the buffer, and the chroma lines follow immediately after.
-    YUY2     = 2, // K4A_IMAGE_FORMAT_COLOR_YUY2   : YUY2 stores chroma and luminance data in interleaved pixels.
-    BGRA32   = 3, // K4A_IMAGE_FORMAT_COLOR_BGRA32 : Each pixel of BGRA32 data is four bytes. The first three bytes represent Blue, Green, and Red data. The fourth byte is the alpha channel and is unused in the Azure Kinect APIs.
-    IR16     = 5, // K4A_IMAGE_FORMAT_IR16         : Each pixel of IR16 data is two bytes of little endian unsigned depth data. The value of the data represents brightness.
-    DEPTH16  = 4, // K4A_IMAGE_FORMAT_DEPTH16      : Each pixel of DEPTH16 data is two bytes of little endian unsigned depth data. The unit of the data is in millimeters from the origin of the camera.
-    CUSTOM   = 8, // K4A_IMAGE_FORMAT_CUSTOM       : Used in conjunction with user created images or images packing non-standard data.
-    CUSTOM8  = 6, // K4A_IMAGE_FORMAT_CUSTOM8      : Each pixel of CUSTOM8 is a single channel one byte of unsigned data.
-    CUSTOM16 = 7, // K4A_IMAGE_FORMAT_CUSTOM16     : Each pixel of CUSTOM16 is a single channel two bytes of little endian unsigned data.
-    // Undefined,
-    SizeEnum
-};
-// ## orbbec
-enum class OBImageFormat : std::int8_t {
-    YUYV     = 0,    /**< YUYV format */
-    YUY2     = 1,    /**< YUY2 format (the actual format is the same as YUYV) */
-    UYVY     = 2,    /**< UYVY format */
-    NV12     = 3,    /**< NV12 format */
-    NV21     = 4,    /**< NV21 format */
-    MJPG     = 5,    /**< MJPEG encoding format */
-    H264     = 6,    /**< H.264 encoding format */
-    H265     = 7,    /**< H.265 encoding format */
-    Y16      = 8,    /**< Y16 format, single channel 16-bit depth */
-    Y8       = 9,    /**< Y8 format, single channel 8-bit depth */
-    Y10      = 10,   /**< Y10 format, single channel 10-bit depth (SDK will unpack into Y16 by default) */
-    Y11      = 11,   /**< Y11 format, single channel 11-bit depth (SDK will unpack into Y16 by default) */
-    Y12      = 12,   /**< Y12 format, single channel 12-bit depth (SDK will unpack into Y16 by default) */
-    GRAY     = 13,   /**< GRAY (the actual format is the same as YUYV) */
-    HEVC     = 14,   /**< HEVC encoding format (the actual format is the same as H265) */
-    I420     = 15,   /**< I420 format */
-    RGB      = 22,   /**< RGB format (actual RGB888)  */
-    BGR      = 23,   /**< BGR format (actual BGR888) */
-    Y14      = 24,   /**< Y14 format, single channel 14-bit depth (SDK will unpack into Y16 by default) */
-    BGRA     = 25,   /**< BGRA format */
-    // Undefined,
-    SizeEnum
-};
+
 // ## all
 enum class DCImageFormat : std::int8_t {
     NV12        = 0,
@@ -104,40 +67,21 @@ enum class DCImageFormat : std::int8_t {
     MJPG        = 2,
     BGRA        = 3,
     DEPTH16     = 4,
-    // RGB         = 5,
+    INFRA16     = 5,
     SizeEnum
 };
 
-using TDCCorr = std::tuple<
-    DCImageFormat,          K4ImageFormat,                 OBImageFormat>;
-static constexpr TupleArray<DCImageFormat::SizeEnum, TDCCorr> dcDCK4Corr = {{
-    // cloud
-    TDCCorr
-    {DCImageFormat::NV12,    K4ImageFormat::NV12,       OBImageFormat::NV12},
-    {DCImageFormat::YUY2,    K4ImageFormat::YUY2,       OBImageFormat::YUY2},
-    {DCImageFormat::MJPG,    K4ImageFormat::MJPEG,      OBImageFormat::MJPG},
-    {DCImageFormat::BGRA,    K4ImageFormat::BGRA32,     OBImageFormat::BGRA},
-    {DCImageFormat::DEPTH16, K4ImageFormat::DEPTH16,    OBImageFormat::Y16},
-    // {DCImageFormat::RGB,     K4ImageFormat::Undefined,  OBImageFormat::RGB},
-}};
-
-[[maybe_unused]] static constexpr auto get_k4_image_format(DCImageFormat f) -> K4ImageFormat{
-    return dcDCK4Corr.at<0,1>(f);
-}
-[[maybe_unused]] static constexpr auto get_ob_image_format(DCImageFormat f) -> OBImageFormat{
-    return dcDCK4Corr.at<0,2>(f);
-}
-
 // # color resolution
 enum class DCColorResolution : std::int8_t {
-    OFF     = 0, // K4A_COLOR_RESOLUTION_OFF    : Color camera will be turned off with this setting
-    R720P   = 1, // K4A_COLOR_RESOLUTION_720P   : 1280 * 720  16:9
-    R1080P  = 2, // K4A_COLOR_RESOLUTION_1080P  : 1920 * 1080 16:9
-    R1440P  = 3, // K4A_COLOR_RESOLUTION_1440P  : 2560 * 1440 16:9
-    R1536P  = 4, // K4A_COLOR_RESOLUTION_1536P  : 2048 * 1536 4:3
-    R2160P  = 5, // K4A_COLOR_RESOLUTION_2160P  : 3840 * 2160 16:9
-    R3072P  = 6, // K4A_COLOR_RESOLUTION_3072P  : 4096 * 3072 4:3
-    SizeEnum
+    OFF     = 0, // Color camera will be turned off with this setting
+    R720P   = 1, // 1280 * 720  16:9
+    R1080P  = 2, // 1920 * 1080 16:9
+    R1440P  = 3, // 2560 * 1440 16:9
+    R1536P  = 4, // 2048 * 1536 4:3
+    R2160P  = 5, // 3840 * 2160 16:9
+    R3072P  = 6, // 4096 * 3072 4:3
+    R960P   = 7, // 1280 * 960  4:3
+    SizeEnum,
 };
 using TDCColRes = std::tuple<
     DCColorResolution,          int, int>;
@@ -153,76 +97,35 @@ static constexpr TupleArray<DCColorResolution::SizeEnum, TDCColRes> dcColRes = {
     {DCColorResolution::R3072P, 4096, 3072}
 }};
 
-[[maybe_unused]] static constexpr auto color_width(DCColorResolution r) -> int{
+[[maybe_unused]] static constexpr auto dc_color_width(DCColorResolution r) -> int{
     return dcColRes.at<0,1>(r);
 }
 
-[[maybe_unused]] static constexpr auto color_height(DCColorResolution r) -> int{
+[[maybe_unused]] static constexpr auto dc_color_height(DCColorResolution r) -> int{
     return dcColRes.at<0,2>(r);
 }
 
-[[maybe_unused]] static constexpr auto color_size(DCColorResolution r) -> int{
-    return color_width(r)*color_height(r);
+[[maybe_unused]] static constexpr auto dc_color_size(DCColorResolution r) -> int{
+    return dc_color_width(r)*dc_color_height(r);
 }
 
-// # color exposure time
-enum class K4ExposureTimesMicroS : std::int8_t{
-    t500,
-    t1250,
-    t2500,
-    t8330,
-    t16670,
-    t33330
-};
-// ...
+// enum class K4AExposureTimesMicroS : std::int8_t{
+//     t500,
+//     t1250,
+//     t2500,
+//     t8330,
+//     t16670,
+//     t33330
+// };
 
-// # depth mdoe
-
-enum class DCDepthResolution : std::int8_t {
-    OFF = 0,
-    R_320x288,
-    R_640x576,
-    R_512x512,
-    R_1024x1024,
-    SizeEnum,
-    // KINECT4
-    K4_OFF              = OFF,         // Depth sensor will be turned off with this setting.
-    K4_NFOV_2X2BINNED   = R_320x288,   // Depth captured at 320x288. Passive IR is also captured at 320x288.
-    K4_NFOV_UNBINNED    = R_640x576,   // Depth captured at 640x576. Passive IR is also captured at 640x576.
-    K4_WFOV_2X2BINNED   = R_512x512,   // Depth captured at 512x512. Passive IR is also captured at 512x512.
-    K4_WFOV_UNBINNED    = R_1024x1024, // Depth captured at 1024x1024. Passive IR is also captured at 1024x1024.
-};
-using TDCDepthRes = std::tuple<
-    DCDepthResolution,                 int,    int>;
-static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes = {{
-    // cloud
-    TDCDepthRes
-    {DCDepthResolution::OFF,           0,      0},
-    {DCDepthResolution::R_320x288,     320,    288},
-    {DCDepthResolution::R_640x576,     640,    576},
-    {DCDepthResolution::R_512x512,     512,    512},
-    {DCDepthResolution::R_1024x1024,   1024,   1024},
-}};
-[[maybe_unused]] static constexpr auto depth_width(DCDepthResolution r) -> int{
-    return dcDepthRes.at<0,1>(r);
-}
-
-[[maybe_unused]] static constexpr auto depth_height(DCDepthResolution r) -> int{
-    return dcDepthRes.at<0,2>(r);
-}
-
-[[maybe_unused]] static constexpr auto depth_size(DCDepthResolution r) -> int{
-    return depth_width(r)*depth_height(r);
-}
-
-
-// # framerate
 enum class DCFramerate : std::int8_t{
-    F5  = 0, // K4A_FRAMES_PER_SECOND_5  : 5 FPS
-    F15 = 1, // K4A_FRAMES_PER_SECOND_15 : 15 FPS
-    F30 = 2, // K4A_FRAMES_PER_SECOND_30 : 30 FPS
+    F5 = 0,
+    F15,
+    F30,
+    Undefined,
     SizeEnum
 };
+
 using TDCFramerate = std::tuple<
     DCFramerate, int>;
 static constexpr TupleArray<DCFramerate::SizeEnum, TDCFramerate> dcFramerates = {{
@@ -231,10 +134,59 @@ static constexpr TupleArray<DCFramerate::SizeEnum, TDCFramerate> dcFramerates = 
     {DCFramerate::F5,  5},
     {DCFramerate::F15, 15},
     {DCFramerate::F30, 30},
+    {DCFramerate::Undefined, 0},
 }};
 
-[[maybe_unused]] static constexpr auto framerate_value(DCFramerate f) -> int{
+[[maybe_unused]] static constexpr auto dc_framerate_value(DCFramerate f) -> int{
     return dcFramerates.at<0,1>(f);
+}
+
+enum class DCDepthResolution : std::int8_t {
+    OFF = 0,
+    K4A_320x288,
+    K4A_640x576,
+    K4A_512x512,
+    K4A_1024x1024,
+    SizeEnum,
+};
+
+using Range = geo::Pt2f;
+using Res   = geo::Pt2<int>;
+using MaxFPS= DCFramerate;
+using FPS   = DCFramerate;
+using DRes  = DCDepthResolution;
+using DeviceValue = int;
+
+using TDCDepthRes = std::tuple<
+    DRes,                   Res,         Range,          MaxFPS,         DeviceValue>;
+static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes = {{
+    // cloud
+    TDCDepthRes
+    {DRes::OFF,             {0,0},       {0.f,0.f},      FPS::Undefined, 0},
+    {DRes::K4A_320x288,     {320,288},   {0.5f,5.46f},   FPS::F30,       0},
+    {DRes::K4A_640x576,     {640,576},   {0.5f,3.86f},   FPS::F30,       0},
+    {DRes::K4A_512x512,     {512,512},   {0.25f,2.88f},  FPS::F30,       0},
+    {DRes::K4A_1024x1024,   {1024,1024}, {0.25f,2.21f},  FPS::F15,       0},
+}};
+
+[[maybe_unused]] static constexpr auto dc_depth_width(DCDepthResolution r) -> int{
+    return dcDepthRes.at<0,1>(r).x();
+}
+
+[[maybe_unused]] static constexpr auto dc_depth_height(DCDepthResolution r) -> int{
+    return dcDepthRes.at<0,1>(r).y();
+}
+
+[[maybe_unused]] static constexpr auto dc_depth_size(DCDepthResolution r) -> int{
+    return dc_depth_width(r)*dc_depth_height(r);
+}
+
+[[maybe_unused]] static constexpr auto dc_depth_range(DCDepthResolution r) -> Range{
+    return dcDepthRes.at<0,2>(r);
+}
+
+[[maybe_unused]] static constexpr auto dc_depth_max_fps(DCDepthResolution r) -> FPS{
+    return dcDepthRes.at<0,3>(r);
 }
 
 // camera mode
@@ -261,7 +213,6 @@ enum class DCMode : std::int8_t {
     AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,
     AK_IMG_C4096x3072_DI640x576_BGRA_F15,
     AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,
-    Merged,
     // femto bolt
     // # narrow
     FB_CLOUD_C1280x720_DI640x576_NV12_F30,
@@ -273,47 +224,59 @@ enum class DCMode : std::int8_t {
     // # no depth
     FB_IMG_C1280x720_MJPG_F30,
     // femto mega orbbec
+    FM_CLOUD_C1280x720_DI640x576_MJPG_F30,
     FM_CLOUD_C1280x720_DI512x512_MJPG_F30,
+    FM_CLOUD_C1280x720_DI1024x1024_MJPG_F15,
+    FM_IMG_C1280x720_MJPG_F30,
     // other
     Invalid,
-    SizeEnum
+    Merged,
+    SizeEnum,
 };
 
 using TMode = std::tuple<DCMode, std::string_view>;
 static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     TMode
-    {DCMode::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     "C1280_D320_NV12_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     "C1280_D640_YUY2_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     "C1280_D640_BGRA_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     "C1280_D512_NV12_F30"sv},
-    {DCMode::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   "C1280_D1024_NV12_F15"sv},
-    {DCMode::AK_IMG_C1280x720_DI320x288_MJPG_F30,       "C1280_D320_MJPG_F30"sv},
-    {DCMode::AK_IMG_C1280x720_DI640x576_MJPG_F30,       "C1280_D640_MJPG_F30"sv},
-    {DCMode::AK_IMG_C1280x720_DI512x512_MJPG_F30,       "C1280_D512_MJPG_F30"sv},
-    {DCMode::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     "C1280_D1024_MJPG_F15"sv},
-    {DCMode::AK_IMG_C1280x720_BGRA_F30,                 "C1280_BGRA_F30"sv},
-    {DCMode::AK_IMG_C1920x1080_BGRA_F30,                "C1920_BGRA_F30"sv},
-    {DCMode::AK_IMG_C2560x1440_BGRA_F30,                "C2560_BGRA_F30"sv},
-    {DCMode::AK_IMG_C2048x1536_BGRA_F30,                "C2048_BGRA_F30"sv},
-    {DCMode::AK_IMG_C3840x2160_BGRA_F15,                "C3840_BGRA_F15"sv},
-    {DCMode::AK_IMG_C4096x3072_BGRA_F15,                "C4096_BGRA_F15"sv},
-    {DCMode::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      "C2048_D640_BGRA_F15"sv},
-    {DCMode::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    "C2048_D1024_BGRA_F15"sv},
-    {DCMode::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      "C4096_D640_BGRA_F15"sv},
-    {DCMode::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    "C4096_D1024_BGRA_F15"sv},
+    // azure kinect
+    {DCMode::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     "CLOUD C-1280p D-288p  I-NV12 F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     "CLOUD C-1280p D-576p  I-MJPG F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     "CLOUD C-1280p D-576p  I-YUY2 F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     "CLOUD C-1280p D-576p  I-NV12 F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     "CLOUD C-1280p D-576p  I-BGRA F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     "CLOUD C-1280p D-512p  I-NV12 F-30"sv},
+    {DCMode::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   "CLOUD C-1280p D-1024p I-NV12 F-15"sv},
+    {DCMode::AK_IMG_C1280x720_DI320x288_MJPG_F30,       "IMAGE C-1280p D-320p  I-MJPG F-30"sv},
+    {DCMode::AK_IMG_C1280x720_DI640x576_MJPG_F30,       "IMAGE C-1280p D-640p  I-MJPG F-30"sv},
+    {DCMode::AK_IMG_C1280x720_DI512x512_MJPG_F30,       "IMAGE C-1280p D-512p  I-MJPG F-30"sv},
+    {DCMode::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     "IMAGE C-1280p D-1024p I-MJPG F-15"sv},
+    {DCMode::AK_IMG_C1280x720_BGRA_F30,                 "IMAGE C-1280p D-OFF   I-BGRA F-30"sv},
+    {DCMode::AK_IMG_C1920x1080_BGRA_F30,                "IMAGE C-1920p D-OFF   I-BGRA F-30"sv},
+    {DCMode::AK_IMG_C2560x1440_BGRA_F30,                "IMAGE C-2560p D-OFF   I-BGRA F-30"sv},
+    {DCMode::AK_IMG_C2048x1536_BGRA_F30,                "IMAGE C-2048p D-OFF   I-BGRA F-30"sv},
+    {DCMode::AK_IMG_C3840x2160_BGRA_F15,                "IMAGE C-3840p D-OFF   I-BGRA F-15"sv},
+    {DCMode::AK_IMG_C4096x3072_BGRA_F15,                "IMAGE C-4096p D-OFF   I-BGRA F-15"sv},
+    {DCMode::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      "IMAGE C-2048p D-576   I-BGRA F-15"sv},
+    {DCMode::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    "IMAGE C-2048p D-1024  I-BGRA F-15"sv},
+    {DCMode::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      "IMAGE C-4096p D-576   I-BGRA F-15"sv},
+    {DCMode::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    "IMAGE C-4096p D-1024  I-BGRA F-15"sv},
+    // femto bolt
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     "CLOUD C-1280p D-576p  I-NV12 F-30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     "CLOUD C-1280p D-576p  I-MJPG F-30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     "CLOUD C-1280p D-576p  I-BGRA F-30"sv},
+    {DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     "CLOUD C-1280p D-512p  I-MJPG F-30"sv},
+    {DCMode::FB_CLOUD_DI512x512_MJPG_F30,               "CLOUD C-OFF   D-512p  I-MJPG F-30"sv},
+    {DCMode::FB_IMG_C1280x720_MJPG_F30,                 "IMAGE C-1280p D-OFF   I-MJPG F-30"sv},
+    // femto mega    
+    {DCMode::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     "CLOUD C-720p  D-512p  I-MJPG F-30"sv},
+    {DCMode::FM_CLOUD_C1280x720_DI640x576_MJPG_F30,     "CLOUD C-720p  D-576p  I-MJPG F-30"sv},
+    {DCMode::FM_CLOUD_C1280x720_DI1024x1024_MJPG_F15,   "CLOUD C-720p  D-1024p I-MJPG F-15"sv},
+    {DCMode::FM_IMG_C1280x720_MJPG_F30,                 "IMAGE C-720p  D-OFF   I-MJPG F-30"sv},
+    // others
     {DCMode::Merged,                                    "Merged"sv},
-    {DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     "C1280_D640_NV12_F30"sv},
-    {DCMode::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     "C1280_D640_MJPG_F30"sv},
-    {DCMode::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     "C1280_D640_BGRA_F30"sv},
-    {DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     "C1280_D512_MJPG_F30"sv},
-    {DCMode::FB_CLOUD_DI512x512_MJPG_F30,               "D512x512_MJPG_F30"sv},
-    {DCMode::FB_IMG_C1280x720_MJPG_F30,                 "C1280_MJPG_F30"sv},
     {DCMode::Invalid,                                   "Invalid"sv},
 }};
 
-[[maybe_unused]] static constexpr auto mode_name(DCMode m) -> std::string_view{
+[[maybe_unused]] static constexpr auto dc_mode_name(DCMode m) -> std::string_view{
     return dcModesNames.at<0,1>(m);
 }
 
@@ -321,97 +284,100 @@ using M     = DCMode;
 using IF    = DCImageFormat;
 using CR    = DCColorResolution;
 using DR    = DCDepthResolution;
-using FPS   = DCFramerate;
 using Cloud = bool;
 using Infra = bool;
-using Range = geo::Pt2f;
-using MRes  = geo::Pt2<int>;
 using Dev   = DCType;
 
 using TDCMode = std::tuple<
-    DCMode,                                        IF,       CR,         DR,                    FPS,      Range,         MRes,          Cloud,  Infra,  Dev>;
+    DCMode,                                        IF,       CR,         DR,                FPS,      Cloud,  Infra,  Dev>;
 static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
-    {M::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_2X2BINNED, FPS::F30, {0.5f,5.46f},  {320,288},     false,  true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_NFOV_UNBINNED,  FPS::F30, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4_WFOV_2X2BINNED, FPS::F30, {0.25f,2.88f}, {512,512},     false,  true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
-    {M::AK_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::K4_OFF,            FPS::F30, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C4096x3072_BGRA_F15,                IF::BGRA, CR::R3072P, DR::K4_OFF,            FPS::F15, {0,0},         {0,0},         false,  false,  Dev::AK},
-    {M::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
-    {M::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
-    {M::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4_NFOV_UNBINNED,  FPS::F15, {0.5f,3.86f},  {640,576},     false,  true,   Dev::AK},
-    {M::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4_WFOV_UNBINNED,  FPS::F15, {0.25f,2.21f}, {1024,1024},   false,  true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::AK},
+    {M::AK_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::OFF,           FPS::F30, false,  false,  Dev::AK},
+    {M::AK_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
+    {M::AK_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
+    {M::AK_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
+    {M::AK_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::OFF,           FPS::F15, false,  false,  Dev::AK},
+    {M::AK_IMG_C4096x3072_BGRA_F15,                IF::MJPG, CR::R3072P, DR::OFF,           FPS::F15, false,  false,  Dev::AK},
+    {M::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4A_640x576,     FPS::F15, false,  true,   Dev::AK},
+    {M::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, false,  true,   Dev::AK},
+    {M::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4A_640x576,     FPS::F15, false,  true,   Dev::AK},
+    {M::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4A_1024x1024,   FPS::F15, false,  true,   Dev::AK},
     // femto bolt
-    {M::FB_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,               FPS::F30, {0,0},         {0,0},         false,  false,  Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::R_640x576,         FPS::F30, {0.5f,3.86f},  {1280,720},    true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FB},
-    {M::FB_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {0,0},         true,   true,   Dev::FB},
+    {M::FB_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,           FPS::F30, false,  false,  Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FB},
+    {M::FB_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FB},
     // femto mega
-    {M::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::R_512x512,         FPS::F30, {0.25f,2.88f}, {1280,720},    true,   true,   Dev::FB},
-    // invalid
-    {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,               FPS::F30, {0.f,0.f},     {0,0},         false,  false,  Dev::Undefined},
+    {M::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FM},
+    {M::FM_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FM},
+    {M::FM_CLOUD_C1280x720_DI1024x1024_MJPG_F15,   IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::FM},
+    {M::FM_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,           FPS::F15, false,  false,  Dev::FM},
+    // others
+    {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,           FPS::F30, false,  false,  Dev::Undefined},
+    {M::Merged,                                    IF::BGRA, CR::OFF,    DR::OFF,           FPS::F30, false,  false,  Dev::Undefined},
 }};
 
 
-[[maybe_unused]] static constexpr auto default_camera_mode(DCType type) -> DCMode{
+[[maybe_unused]] static constexpr auto dc_default_camera_mode(DCType type) -> DCMode{
     switch (type) {
     case DCType::AzureKinect:
         return DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30;
     case DCType::FemtoBolt:
         return DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30;
+    case DCType::FemtoMega:
+        return DCMode::FM_CLOUD_C1280x720_DI640x576_MJPG_F30;
     default:
         return DCMode::Invalid;
     }
 }
 
-[[maybe_unused]] static auto get_device_modes(Dev dev) -> std::vector<DCMode> {
-    return dcModes.elements_matching_columns_values<9,0>(dev);
-}
-
-[[maybe_unused]] static constexpr auto image_format(DCMode m) -> DCImageFormat{
+[[maybe_unused]] static constexpr auto dc_image_format(DCMode m) -> DCImageFormat{
     return dcModes.at<0,1>(m);
 }
-[[maybe_unused]] static constexpr auto color_resolution(DCMode m) -> DCColorResolution{
+[[maybe_unused]] static constexpr auto dc_color_resolution(DCMode m) -> DCColorResolution{
     return dcModes.at<0,2>(m);
 }
-[[maybe_unused]] static constexpr auto depth_resolution(DCMode m) -> DCDepthResolution {
+[[maybe_unused]] static constexpr auto dc_depth_resolution(DCMode m) -> DCDepthResolution {
     return dcModes.at<0,3>(m);
 }
-[[maybe_unused]] static constexpr auto framerate(DCMode m) -> DCFramerate{
+[[maybe_unused]] static constexpr auto dc_framerate(DCMode m) -> DCFramerate{
     return dcModes.at<0,4>(m);
 }
-[[maybe_unused]] static constexpr auto depth_range(DCMode m) -> Range{
+[[maybe_unused]] static constexpr auto dc_depth_range(DCMode m) -> Range{
+    return dc_depth_range(dc_depth_resolution(m));
+}
+[[maybe_unused]] static constexpr auto dc_has_color(DCMode m) -> bool{
+    return dc_color_resolution(m) != CR::OFF;
+}
+[[maybe_unused]] static constexpr auto dc_has_depth(DCMode m) -> bool{
+    return dc_depth_resolution(m) != DR::OFF;
+}
+[[maybe_unused]] static constexpr auto dc_has_cloud(DCMode m) -> bool{
     return dcModes.at<0,5>(m);
 }
-[[maybe_unused]] static constexpr auto mixed_resolution(DCMode m) -> MRes {
+[[maybe_unused]] static constexpr auto dc_has_infrared(DCMode m) -> bool{
     return dcModes.at<0,6>(m);
 }
-[[maybe_unused]] static constexpr auto has_depth(DCMode m) -> bool{
-    return depth_resolution(m) != DR::OFF;
-}
-[[maybe_unused]] static constexpr auto has_cloud(DCMode m) -> bool{
+[[maybe_unused]] static constexpr auto dc_get_device(DCMode m) -> DCType{
     return dcModes.at<0,7>(m);
 }
-[[maybe_unused]] static constexpr auto has_infrared(DCMode m) -> bool{
-    return dcModes.at<0,8>(m);
-}
-[[maybe_unused]] static constexpr auto get_device(DCMode m) -> DCType{
-    return dcModes.at<0,9>(m);
+
+[[maybe_unused]] static auto dc_get_device_modes(Dev dev) -> std::vector<DCMode> {
+    return dcModes.elements_matching_columns_values<7,0>(dev);
 }
 
 [[maybe_unused]] static constexpr std::int16_t dc_invalid_depth_value = 0;
@@ -419,9 +385,18 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
 [[maybe_unused]] static constexpr geo::Pt4<std::uint8_t> dc_invalid_color_value = {0,0,0,0};
 
 
+
+// # synch
+enum class DCSynchronisationMode : std::int8_t{
+    Standalone  = 0,
+    Main,
+    Subordinate,
+};
+
+// # body tracking
+
 // joints types
 enum class DCJointType : std::int8_t{
-    // K4 joints
     pelvis          = 0,  // K4ABT_JOINT_PELVIS,
     spine_navel     = 1,  // K4ABT_JOINT_SPINE_NAVEL,
     spine_chest     = 2,  // K4ABT_JOINT_SPINE_CHEST,
@@ -495,43 +470,33 @@ static constexpr TupleArray<DCJointType::SizeEnum,TJoint> dcJoints ={{
     {DCJointType::ear_right,        "ear_right"sv}
 }};
 
-[[maybe_unused]] static constexpr auto get_joint_name(DCJointType t) -> std::string_view{
+[[maybe_unused]] static constexpr auto dc_get_joint_name(DCJointType t) -> std::string_view{
     return dcJoints.at<0,1>(t);
 }
 
 enum class DCJointConfidenceLevel : std::int8_t{
-    None   = 0, // K4ABT_JOINT_CONFIDENCE_NONE,   /**< The joint is out of range (too far from depth camera) */
-    Low    = 1, // K4ABT_JOINT_CONFIDENCE_LOW,    /**< The joint is not observed (likely due to occlusion), predicted joint pose */
-    Medium = 2, // K4ABT_JOINT_CONFIDENCE_MEDIUM, /**< Medium confidence in joint pose. Current SDK will only provide joints up to this confidence level */
-    Hight  = 3  // K4ABT_JOINT_CONFIDENCE_HIGH,   /**< High confidence in joint pose. Placeholder for future SDK */
+    None = 0,
+    Low,
+    Medium,
+    Hight
 };
 
-// # synch
-enum class DCSynchronisationMode : std::int8_t{
-    Standalone  = 0,
-    Main        = 1,
-    Subordinate = 2,
-};
-
-// # body tracking
 enum class DCBTProcessingMode : std::int8_t{
-    // KINECT 4
-    K4_GPU             = 0, // K4ABT_TRACKER_PROCESSING_MODE_GPU,          /**< SDK will use the most appropriate GPU mode for the operating system to run the tracker. Currently this is ONNX DirectML EP for Windows and ONNX Cuda EP for Linux. ONNX TensorRT EP is experimental */
-    K4_CPU             = 1, // K4ABT_TRACKER_PROCESSING_MODE_CPU,          /**< SDK will use CPU only mode to run the tracker */
-    K4_GPU_CUDA        = 2, // K4ABT_TRACKER_PROCESSING_MODE_GPU_CUDA,     /**< SDK will use ONNX Cuda EP to run the tracker */
-    K4_GPU_TENSORRT    = 3, // K4ABT_TRACKER_PROCESSING_MODE_GPU_TENSORRT, /**< SDK will use ONNX TensorRT EP to run the tracker */
-    K4_GPU_DIRECTML    = 4, // K4ABT_TRACKER_PROCESSING_MODE_GPU_DIRECTML  /**< SDK will use ONNX DirectML EP to run the tracker (Windows only) */
+    GPU = 0,
+    CPU,
+    GPU_CUDA,
+    GPU_TENSORRT,
+    GPU_DIRECTML
 };
 
 enum class DCBTSensorOrientation : std::int8_t{
-    // KINECT 4
-    k4_default_orientation     = 0, // K4ABT_SENSOR_ORIENTATION_DEFAULT,            /**< Mount the sensor at its default orientation */
-    K4_clockwise_90            = 1, // K4ABT_SENSOR_ORIENTATION_CLOCKWISE90,        /**< Clockwisely rotate the sensor 90 degree */
-    K4_counter_clockwise_90    = 2, // K4ABT_SENSOR_ORIENTATION_COUNTERCLOCKWISE90, /**< Counter-clockwisely rotate the sensor 90 degrees */
-    K4_flip_180                = 3, // K4ABT_SENSOR_ORIENTATION_FLIP180,            /**< Mount the sensor upside-down */
+    default_orientation = 0,
+    clockwise_90,
+    counter_clockwise_90,
+    flip_180
 };
 
-enum class Connectivity : std::int8_t{
+enum class DCConnectivity : std::int8_t{
     Connectivity_4,
     Connectivity_8
 };

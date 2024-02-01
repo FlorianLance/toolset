@@ -51,6 +51,8 @@ struct DCFrameUncompressor{
     auto uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
 
 private:
+
+
     struct Impl;
     std::unique_ptr<Impl> i;
 };

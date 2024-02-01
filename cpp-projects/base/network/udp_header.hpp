@@ -82,16 +82,16 @@ struct UdpMonoPacketData{
     }
 
     template <typename T>
-    static auto generate_data_from_packet(const int8_t *dataP) -> std::shared_ptr<T>{
+    static auto generate_data_from_packet(const int8_t *dataP, int sizeData = sizeof(T)) -> std::shared_ptr<T>{
         std::shared_ptr<T> data = std::make_shared<T>();
-        std::copy(dataP, dataP + sizeof(T), reinterpret_cast<std::int8_t*>(data.get()));
+        std::copy(dataP, dataP + sizeData, reinterpret_cast<std::int8_t*>(data.get()));
         return data;
     }
 
     template <typename T>
-    static auto generate_data_from_packet_raw(const int8_t *dataP) -> T{
+    static auto generate_data_from_packet_raw(const int8_t *dataP, int sizeData = sizeof(T)) -> T{
         T data;
-        std::copy(dataP, dataP + sizeof(T), reinterpret_cast<std::int8_t*>(&data));
+        std::copy(dataP, dataP + sizeData, reinterpret_cast<std::int8_t*>(&data));
         return data;
     }
 

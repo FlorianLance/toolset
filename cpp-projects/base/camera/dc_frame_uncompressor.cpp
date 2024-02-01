@@ -157,9 +157,9 @@ struct DCFrameUncompressor::Impl{
     // ## from cloud buffer
     auto convert_to_cloud(DCVertexMeshData *vertices, std::vector<geo::Pt3<uint8_t>> &uncompressedColor, std::vector<std::uint16_t> &uncompressedDepth, geo::Pt3<int16_t> *cloudBuffer) -> void;
 
-    auto k4_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
-    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
-    auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
+    auto k4a_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+    auto k4a_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3f *colors) -> bool;
+    auto k4a_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4f *colors) -> bool;
     auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt3<std::uint8_t> *colors) -> bool;
     auto k4_uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
     auto k4_uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
@@ -296,7 +296,7 @@ auto DCFrameUncompressor::Impl::uncompress_jpeg_8_bits_data(size_t width, size_t
         TJFLAG_FASTDCT
     );
     if(decompressStatus == -1){
-        Logger::error("[DCFrameUncompressor:uncompress_jpeg_8_bits_data] Error uncompress color.\n");
+        Logger::error("[DCFrameUncompressor::uncompress_jpeg_8_bits_data] Error uncompress color.\n");
         return false;
     }
     return true;
@@ -388,7 +388,7 @@ auto DCFrameUncompressor::Impl::convert_to_depth_image(DCMode mode, size_t depth
         imageDepth.resize(imageDepthSize);
     }
     
-    const auto dRange = depth_range(mode)*1000.f;
+    const auto dRange = dc_depth_range(mode)*1000.f;
     const auto diff = dRange(1) - dRange(0);
 
     // convert data
@@ -953,7 +953,8 @@ auto DCFrameUncompressor::Impl::convert_to_cloud(
 }
 
 
-auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+
+auto DCFrameUncompressor::Impl::k4a_uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
 
     // info
     frame.idCapture      = cFrame->idCapture;
@@ -962,14 +963,16 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
     frame.mode           = cFrame->mode;
 
     // reset sizes
-    frame.colorWidth  = 0;
-    frame.colorHeight = 0;
+    frame.imageColor.reset();
+
+    // frame.colorWidth  = 0;
+    // frame.colorHeight = 0;
+    frame.depthSizedColorWidth  = 0;
+    frame.depthSizedColorHeight = 0;
     frame.depthWidth  = 0;
     frame.depthHeight = 0;
     frame.infraWidth  = 0;
     frame.infraHeight = 0;
-    frame.depthSizedColorWidth  = 0;
-    frame.depthSizedColorHeight = 0;
 
     // color
     if(!cFrame->encodedColorData.empty()){
@@ -979,6 +982,16 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
         }
         frame.colorWidth  = cFrame->colorWidth;
         frame.colorHeight = cFrame->colorHeight;
+    }
+
+    // depth sized color
+    if(!cFrame->encodedDepthSizedColorData.empty()){
+
+        if(!uncompress_jpeg_8_bits_data(cFrame->depthSizedColorWidth, cFrame->depthSizedColorHeight, ColorFormat::BGRA, cFrame->encodedDepthSizedColorData, frame.depthSizedImageColorData)){
+            return false;
+        }
+        frame.depthSizedColorWidth  = cFrame->depthSizedColorWidth;
+        frame.depthSizedColorHeight = cFrame->depthSizedColorHeight;
     }
 
     // depth
@@ -1008,26 +1021,42 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
-
-            if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
-                return false;
-            }
-
-            if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
-                return false;
-            }
-
-            convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
-
-        }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
+        if(!cFrame->encodedDepthSizedColorData.empty() && !cFrame->encodedDepthData.empty() && cFrame->has_calibration()){
 
             k4a_calibration_t calibration;
             size_t offset = 0;
             cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
             k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
-            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, k4_cloud_image_data());
+            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.depthSizedImageColorData, frame.depthData, k4_cloud_image_data());
+
+        }else if(!cFrame->encodedCloudVerticesData.empty()){
+            // from cloud data
+            // ...
+        }else if(!cFrame->encodedDepthData.empty() && cFrame->has_calibration()){
+            // from depth data only
+            // ...
         }
+
+        // if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
+
+        //     if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
+        //         return false;
+        //     }
+            
+        //     if(!uncompress_jpeg_8_bits_data(cFrame->depthSizedColorWidth, cFrame->depthSizedColorHeight, ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
+        //         return false;
+        //     }
+
+        //     convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
+
+        // }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
+
+        //     k4a_calibration_t calibration;
+        //     size_t offset = 0;
+        //     cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
+        //     k4_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData);
+        //     convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, k4_cloud_image_data());
+        // }
     }
 
     // imu
@@ -1049,15 +1078,15 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCFrame
 }
 
 
-auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
+auto DCFrameUncompressor::Impl::k4a_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
 
             // decode processed colors
-            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight,  ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight,  ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
                 return false;
             }
 
@@ -1099,15 +1128,15 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
 }
 
 
-auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
+auto DCFrameUncompressor::Impl::k4a_uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
 
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
 
             // decode processed colors
-            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
                 return false;
             }
 
@@ -1154,10 +1183,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
 
             // decode processed colors
-            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
                 return false;
             }
 
@@ -1205,10 +1234,10 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, Pt3f *v
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
 
             // decode processed colors
-            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+            if(!uncompress_jpeg_8_bits_data(cFrame->colorWidth, cFrame->colorHeight, ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
                 return false;
             }
 
@@ -1254,7 +1283,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCVerte
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
 
             // decode vertices
             if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
@@ -1262,7 +1291,7 @@ auto DCFrameUncompressor::Impl::k4_uncompress(DCCompressedFrame *cFrame, DCVerte
             }
 
             // decode processed colors
-            if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+            if(!uncompress_jpeg_8_bits_data(cFrame->depthSizedColorWidth, cFrame->depthSizedColorHeight, ColorFormat::RGB, cFrame->encodedDepthSizedColorData, decodedColorData)){
                 return -3;
             }
 
@@ -1327,6 +1356,16 @@ auto DCFrameUncompressor::Impl::ob_uncompress(DCCompressedFrame *cFrame, DCFrame
         frame.colorHeight = cFrame->colorHeight;
     }
 
+    // depth sized color
+    if(!cFrame->encodedDepthSizedColorData.empty()){
+
+        if(!uncompress_jpeg_8_bits_data(cFrame->depthSizedColorWidth, cFrame->depthSizedColorHeight, ColorFormat::BGRA, cFrame->encodedDepthSizedColorData, frame.depthSizedImageColorData)){
+            return false;
+        }
+        frame.depthSizedColorWidth  = cFrame->depthSizedColorWidth;
+        frame.depthSizedColorHeight = cFrame->depthSizedColorHeight;
+    }
+
     // depth
     if(!cFrame->encodedDepthData.empty()){
 
@@ -1354,27 +1393,57 @@ auto DCFrameUncompressor::Impl::ob_uncompress(DCCompressedFrame *cFrame, DCFrame
     // cloud
     if(cFrame->validVerticesCount > 0){
 
-        if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedCloudColorData.empty()){
+        if(!cFrame->encodedDepthSizedColorData.empty() && !cFrame->encodedDepthData.empty() && cFrame->has_calibration()){
 
-        //     if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
-        //         return false;
-        //     }
-
-        //     if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
-        //         return false;
-        //     }
-
-        //     convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
-
-        }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
-
-            OBCameraParam calibration;
+            k4a_calibration_t calibration;
             size_t offset = 0;
-            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(OBCameraParam));
-            ob_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData, frame.imageColorData);
-            convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, ob_cloud_image_data());
+            cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(k4a_calibration_t));
+
+            // ob_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData, frame.imageColorData);
+            //         OBCameraParam calibration;
+            //         size_t offset = 0;
+            //         cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(OBCameraParam));
+
+                // if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
+                //     return false;
+                // }
+
+            // from color data and depth data
+            // ...
+        }else if(!cFrame->encodedCloudVerticesData.empty()){
+            // from cloud data
+            // ...
+        }else if(!cFrame->encodedDepthData.empty() && cFrame->has_calibration()){
+            // from depth data only
+            // ...
         }
+
     }
+
+    // // cloud
+    // if(cFrame->validVerticesCount > 0){
+
+    //     if(!cFrame->encodedCloudVerticesData.empty() && !cFrame->encodedDepthSizedColorData.empty()){
+
+    //     //     if(!uncompress_lossless_16_bits_128padded_data(cFrame->validVerticesCount*3, cFrame->encodedCloudVerticesData, decodedVerticesData)){
+    //     //         return false;
+    //     //     }
+
+    //     //     if(!uncompress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, ColorFormat::RGB, cFrame->encodedCloudColorData, decodedColorData)){
+    //     //         return false;
+    //     //     }
+
+    //     //     convert_to_cloud(cFrame->mode, cFrame->validVerticesCount, frame.cloud, decodedColorData, decodedVerticesData);
+
+    //     }else if(cFrame->has_calibration() && !frame.imageColorData.empty() && !frame.depthData.empty()){
+
+    //         OBCameraParam calibration;
+    //         size_t offset = 0;
+    //         cFrame->write_calibration_content_to_data(reinterpret_cast<std::int8_t*>(&calibration), offset, sizeof(OBCameraParam));
+    //         ob_generate_cloud(cFrame->mode, cFrame->depthWidth, cFrame->depthHeight, calibration, frame.depthData, frame.imageColorData);
+    //         convert_to_cloud(cFrame->validVerticesCount, frame.cloud, frame.imageColorData, frame.depthData, ob_cloud_image_data());
+    //     }
+    // }
 
     // imu
     if(cFrame->imuSample.has_value()){
@@ -1392,45 +1461,47 @@ auto DCFrameUncompressor::uncompress_jpeg_data(size_t width, size_t height, Colo
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
-        return i->k4_uncompress(cFrame, frame);
-    }else if(get_device(cFrame->mode) == DCType::FemtoBolt){
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
+        return i->k4a_uncompress(cFrame, frame);
+    }else if((dc_get_device(cFrame->mode) == DCType::FemtoBolt) || (dc_get_device(cFrame->mode) == DCType::FemtoMega)){
         return i->ob_uncompress(cFrame, frame);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3f *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
-        return i->k4_uncompress(cFrame, vertices, colors);
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
+        return i->k4a_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4f *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
-        return i->k4_uncompress(cFrame, vertices, colors);
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
+        return i->k4a_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt3<uint8_t> *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, Pt3f *vertices, Pt4<uint8_t> *colors) -> bool{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices, colors);
     }
     return false;
 }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int{
-    if(get_device(cFrame->mode) == DCType::AzureKinect){
+    if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
         return i->k4_uncompress(cFrame, vertices);
     }
     return -1;
 }
+
+

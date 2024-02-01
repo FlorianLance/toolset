@@ -44,15 +44,15 @@ using namespace tool;
 using namespace tool::cam;
 
 struct DCFrameCompressor::Impl{
+
     tjhandle jpegCompressor = nullptr;
     unsigned char *tjCompressedImage = nullptr;
     size_t currentSizeAllocatedToJPegCompressor = 0;
 
-    std::vector<size_t> indicesValid1D;
+    std::vector<size_t> indices1D;
+    std::vector<geo::Pt2<size_t>> indicesValid1D;
     std::vector<std::uint16_t> processedCloudData;
-    std::vector<std::uint8_t> processedColorData;
-    std::vector<std::int16_t> processedAudioData;
-
+    // std::vector<std::int16_t> processedAudioData;
 
     auto compress_jpeg_8_bits_data(size_t width, size_t height, size_t dim, std::uint8_t *data, std::vector<std::uint8_t> &encodedData, int jpegQuality) -> bool;
     auto compress_lossless_16_bits_128padded_data(size_t size, std::uint16_t *data, std::vector<std::uint8_t> &encodedData) -> void;
@@ -77,7 +77,7 @@ auto DCFrameCompressor::Impl::compress_jpeg_8_bits_data(size_t width, size_t hei
         return false;
     }
 
-    auto jpegSize = width*height*dim;//cFrame->colorHeight*cFrame->colorWidth*4;
+    auto jpegSize = width*height*dim;
     if(tjCompressedImage == nullptr){
         tjCompressedImage = tjAlloc(static_cast<int>(currentSizeAllocatedToJPegCompressor = jpegSize));
     }else if(currentSizeAllocatedToJPegCompressor < jpegSize){
@@ -92,7 +92,7 @@ auto DCFrameCompressor::Impl::compress_jpeg_8_bits_data(size_t width, size_t hei
         static_cast<int>(width),
         0,
         static_cast<int>(height),
-        dim == 4 ? TJPF_BGRA : TJPF_BGR,
+        dim == 4 ? TJPF_RGBA : TJPF_RGB,
         &tjCompressedImage, &jpegColorSize, TJSAMP_444, jpegQuality, TJFLAG_NOREALLOC | TJFLAG_FASTDCT
     );
 
@@ -126,13 +126,21 @@ auto DCFrameCompressor::Impl::compress_lossless_16_bits_128padded_data(size_t si
     encodedData.resize(encodedBytesNb);
 }
 
-
 auto DCFrameCompressor::add_color(size_t width, size_t height, int numChannels, uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void{
     cFrame->colorWidth  = width;
     cFrame->colorHeight = height;
     i->compress_jpeg_8_bits_data(
         cFrame->colorWidth, cFrame->colorHeight, numChannels,
         data, cFrame->encodedColorData, jpegQuality
+    );
+}
+
+auto DCFrameCompressor::add_depth_sized_color(size_t width, size_t height, int numChannels, uint8_t *data, int jpegQuality, DCCompressedFrame *cFrame) -> void{
+    cFrame->depthSizedColorWidth  = width;
+    cFrame->depthSizedColorHeight = height;
+    i->compress_jpeg_8_bits_data(
+        cFrame->depthSizedColorWidth, cFrame->depthSizedColorHeight, numChannels,
+        data, cFrame->encodedDepthSizedColorData, jpegQuality
     );
 }
 
@@ -154,67 +162,105 @@ auto DCFrameCompressor::add_infra(size_t width, size_t height, uint16_t *data, D
     );
 }
 
-auto DCFrameCompressor::add_cloud(
-    size_t colorWidth, size_t colorHeight, uint8_t *colorData,
-    size_t depthSize, uint16_t *depthData,
-    int jpegQuality, DCCompressedFrame *cFrame) -> void{
 
-    auto cData     = reinterpret_cast<const geo::Pt4<uint8_t>*>(colorData);
+auto DCFrameCompressor::add_cloud(std::span<std::uint16_t> depthData, std::span<ColorRGBA8> depthSizedColorData, std::span<geo::Pt3<std::int16_t>> depthCloudData, std::vector<std::uint8_t> &encodedCloudData)  -> void{
 
-    // fill indices array
-    const auto idV = cFrame->validVerticesCount;
-    if(i->indicesValid1D.size() < depthSize){
-        i->indicesValid1D.resize(depthSize);
-        std::iota(std::begin(i->indicesValid1D), std::end(i->indicesValid1D), 0);
+    if(depthSizedColorData.empty() || depthCloudData.empty()){
+        tool::Logger::error("[DCFrameCompressor::add_cloud] Invalid cloud.\n");
+        return;
     }
 
-    // fill valid id
-    std::vector<size_t> validId;
-    validId.reserve(idV);
-    for_each(std::execution::unseq, std::begin(i->indicesValid1D), std::begin(i->indicesValid1D) + depthSize, [&](size_t id){
+    if(i->indicesValid1D.size() < depthData.size()){
+        i->indicesValid1D.resize(depthData.size());
+    }
+
+    size_t idV = 0;
+    for(size_t id = 0; id < depthData.size(); ++id){
         if(depthData[id] != dc_invalid_depth_value){
-            validId.push_back(id);
+            i->indicesValid1D[idV] = {idV,id};
+            ++idV;
         }
-    });
+    }
 
     // resize cloud data
-    // # vertices
-    size_t cloudVerticesBufferSize = idV*3;
+    // data mapping: XXYYZZRGB0
+    size_t cloudVerticesBufferSize              = idV*5;
+    size_t rest                                 = cloudVerticesBufferSize % 128;
+    size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
+    if(i->processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
+        i->processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
+    }
+    std::fill(i->processedCloudData.begin(), i->processedCloudData.end(), 0);
+
+    auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(i->processedCloudData.data());
+
+    // fill data
+    std::for_each(std::execution::par_unseq, std::begin(i->indicesValid1D), std::begin(i->indicesValid1D) + idV, [&](const geo::Pt2<size_t> id){
+        i->processedCloudData[id.x()]         = static_cast<std::uint16_t>(static_cast<std::int32_t>(depthCloudData[id.y()].x())+4096); // X
+        i->processedCloudData[idV   + id.x()] = static_cast<std::uint16_t>(static_cast<std::int32_t>(depthCloudData[id.y()].y())+4096); // Y
+        i->processedCloudData[2*idV + id.x()] = static_cast<std::uint16_t>(depthCloudData[id.y()].z());                                 // Z
+        processedCloudData8[6*idV + id.x()]    = depthSizedColorData[id.y()].r();
+        processedCloudData8[7*idV + id.x()]    = depthSizedColorData[id.y()].g();
+        processedCloudData8[8*idV + id.x()]    = depthSizedColorData[id.y()].b();
+    });
+
+    // compress cloud vertices data
+    i->compress_lossless_16_bits_128padded_data(paddeCloudVerticesBufferPaddedSize, i->processedCloudData.data(), encodedCloudData);
+}
+
+auto DCFrameCompressor::add_cloud(DCMode mode, const geo::ColoredCloudData &cloud, std::vector<uint8_t> &encodedCloudData) -> void{
+
+    if(!cloud.has_colors() || !cloud.has_vertices()){
+        tool::Logger::error("[DCFrameCompressor::add_cloud] Invalid cloud.\n");
+        return;
+    }
+
+    size_t validVerticesCount = cloud.size();
+    if(i->indices1D.size() < validVerticesCount){
+        i->indices1D.resize(validVerticesCount);
+    }
+
+    // resize cloud data
+    // data mapping: XXYYZZRGB0
+    size_t cloudVerticesBufferSize = validVerticesCount*5;
     size_t rest = cloudVerticesBufferSize % 128;
     size_t paddeCloudVerticesBufferPaddedSize = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
     if(i->processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
         i->processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
     }
-    std::fill(i->processedCloudData.begin(), i->processedCloudData.end(), 0);
-    // # colors
-    // color frame is always 128 padded
-    cFrame->cloudColorWidth  = colorWidth;
-    cFrame->cloudColorHeight = colorHeight;
-    const size_t colorBufferSize = cFrame->cloudColorWidth*cFrame->cloudColorHeight*3;
-    if(i->processedColorData.size() < colorBufferSize){
-        i->processedColorData.resize(colorBufferSize);
+    std::fill(i->processedCloudData.begin(), i->processedCloudData.begin() + paddeCloudVerticesBufferPaddedSize, 0);    
+
+    auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(i->processedCloudData.data());
+
+    // process cloud buffer
+    if(mode != DCMode::Merged){
+        std::for_each(std::execution::par_unseq, std::begin(i->indices1D), std::begin(i->indices1D) + validVerticesCount, [&](size_t id){
+            i->processedCloudData[id]                             = static_cast<std::uint16_t>((-cloud.vertices[id].x()*1000.f) +4096.f);
+            i->processedCloudData[validVerticesCount   + id]      = static_cast<std::uint16_t>((-cloud.vertices[id].y()*1000.f) +4096.f);
+            i->processedCloudData[2*validVerticesCount + id]      = static_cast<std::uint16_t>(cloud.vertices[id].z()*1000.f);            
+            processedCloudData8[6*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].x()*255.f);
+            processedCloudData8[7*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].y()*255.f);
+            processedCloudData8[8*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].z()*255.f);
+        });
+
+    }else{
+        std::for_each(std::execution::par_unseq, std::begin(i->indices1D), std::begin(i->indices1D) + cloud.size(), [&](size_t id){
+            i->processedCloudData[id]                             = static_cast<std::uint16_t>(cloud.vertices[id].x()*1000.f + 32768.f);
+            i->processedCloudData[validVerticesCount   + id]      = static_cast<std::uint16_t>(cloud.vertices[id].y()*1000.f + 32768.f);
+            i->processedCloudData[2*validVerticesCount + id]      = static_cast<std::uint16_t>(cloud.vertices[id].z()*1000.f + 32768.f);
+            processedCloudData8[6*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].x()*255.f);
+            processedCloudData8[7*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].y()*255.f);
+            processedCloudData8[8*validVerticesCount + id]        = static_cast<std::uint8_t>(cloud.colors[id].z()*255.f);
+        });
     }
-    std::fill(i->processedColorData.begin(), i->processedColorData.end(), 0);
 
-    // fill data
-    for_each(std::execution::par_unseq, std::begin(i->indicesValid1D), std::begin(i->indicesValid1D) + idV, [&](size_t id){
-
-        i->processedCloudData[id]         = static_cast<std::uint16_t>(static_cast<std::int32_t>(cData[validId[id]].x())+4096);
-        i->processedCloudData[idV   + id] = static_cast<std::uint16_t>(static_cast<std::int32_t>(cData[validId[id]].y())+4096);
-        i->processedCloudData[2*idV + id] = static_cast<std::uint16_t>(cData[validId[id]].z());
-
-        i->processedColorData[id*3+0]     = cData[validId[id]].x();
-        i->processedColorData[id*3+1]     = cData[validId[id]].y();
-        i->processedColorData[id*3+2]     = cData[validId[id]].z();
-    });
-
-    // compress cloud vertices data
-    i->compress_lossless_16_bits_128padded_data(paddeCloudVerticesBufferPaddedSize, i->processedCloudData.data(), cFrame->encodedCloudVerticesData);
-
-    // compress cloud color data
-    i->compress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight, 3, i->processedColorData.data(), cFrame->encodedCloudColorData, jpegQuality);
+    // compress processed cloud data
+    i->compress_lossless_16_bits_128padded_data(
+        paddeCloudVerticesBufferPaddedSize,
+        i->processedCloudData.data(),
+        encodedCloudData
+    );
 }
-
 
 auto DCFrameCompressor::add_frame(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void{
 
@@ -224,91 +270,36 @@ auto DCFrameCompressor::add_frame(DCFrame &frame, int jpegQuality, DCCompressedF
     cFrame->afterCaptureTS  = frame.afterCaptureTS;
     cFrame->receivedTS      = frame.receivedTS;
 
-    // color
-    if(!frame.imageColorData.empty()){
-        add_color(frame.colorWidth, frame.colorHeight, 3, frame.imageColorData.front().array.data(), jpegQuality, cFrame);
+    // color image
+    if(!frame.imageColorData.empty()){        
+        add_color(
+            frame.colorWidth, frame.colorHeight, 3,
+            reinterpret_cast<std::uint8_t*>(frame.imageColorData.data()), jpegQuality, cFrame
+        );
     }
 
-    // depth
+    // depth-sized color image
+    if(!frame.depthSizedImageColorData.empty()){
+        add_depth_sized_color(
+            frame.depthWidth, frame.depthWidth, 3,
+            reinterpret_cast<std::uint8_t*>(frame.depthSizedImageColorData.data()), jpegQuality, cFrame
+        );
+    }
+
+    // depth data
     if(!frame.depthData.empty()){
         add_depth(frame.depthWidth, frame.depthHeight, frame.depthData.data(), cFrame);
     }
 
-    // infra
+    // infra data
     if(!frame.infraData.empty()){
         add_depth(frame.infraWidth, frame.infraHeight, frame.infraData.data(), cFrame);
     }
 
     // cloud
     if(!frame.cloud.empty()){
-
-        const auto idV = frame.cloud.size();
-        cFrame->validVerticesCount = idV;
-
-        // fill indices array
-        if(i->indicesValid1D.size() < idV){
-            i->indicesValid1D.resize(idV);
-            std::iota(std::begin(i->indicesValid1D), std::end(i->indicesValid1D), 0);
-        }
-
-        // resize cloud data
-        // # vertices
-        size_t cloudVerticesBufferSize = idV*3;
-        size_t rest = cloudVerticesBufferSize % 128;
-        size_t paddeCloudVerticesBufferPaddedSize = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
-        if(i->processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
-            i->processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
-        }
-        std::fill(i->processedCloudData.begin(), i->processedCloudData.begin() + paddeCloudVerticesBufferPaddedSize, 0);
-        // # colors
-        // we use the same padding than for the vertices
-        if(i->processedColorData.size() < paddeCloudVerticesBufferPaddedSize){
-            i->processedColorData.resize(paddeCloudVerticesBufferPaddedSize);
-        }
-        std::fill(i->processedColorData.begin(), i->processedColorData.begin() + paddeCloudVerticesBufferPaddedSize, 0);
-
-        if(frame.mode != DCMode::Merged){
-
-            // process cloud buffer
-            for_each(std::execution::par_unseq, std::begin(i->indicesValid1D), std::begin(i->indicesValid1D) + idV, [&](size_t id){
-
-                i->processedCloudData[id]         = static_cast<std::uint16_t>((-frame.cloud.vertices[id].x()*1000.f) +4096.f);
-                i->processedCloudData[idV   + id] = static_cast<std::uint16_t>((-frame.cloud.vertices[id].y()*1000.f) +4096.f);
-                i->processedCloudData[2*idV + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].z()*1000.f);
-
-                i->processedColorData[id*3+0]     = static_cast<std::uint8_t>(frame.cloud.colors[id].z()*255.f);
-                i->processedColorData[id*3+1]     = static_cast<std::uint8_t>(frame.cloud.colors[id].y()*255.f);
-                i->processedColorData[id*3+2]     = static_cast<std::uint8_t>(frame.cloud.colors[id].x()*255.f);
-            });
-
-        }else{
-
-            // process cloud buffer
-            for_each(std::execution::par_unseq, std::begin(i->indicesValid1D), std::begin(i->indicesValid1D) + idV, [&](size_t id){
-
-                i->processedCloudData[id]         = static_cast<std::uint16_t>(frame.cloud.vertices[id].x()*1000.f + 32768.f);
-                i->processedCloudData[idV   + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].y()*1000.f + 32768.f);
-                i->processedCloudData[2*idV + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].z()*1000.f + 32768.f);
-
-                i->processedColorData[id*3+0]     = static_cast<std::uint8_t>(frame.cloud.colors[id].z()*255.f);
-                i->processedColorData[id*3+1]     = static_cast<std::uint8_t>(frame.cloud.colors[id].y()*255.f);
-                i->processedColorData[id*3+2]     = static_cast<std::uint8_t>(frame.cloud.colors[id].x()*255.f);
-            });
-        }
-
-
-        // compress processed cloud data
-        i->compress_lossless_16_bits_128padded_data(
-            paddeCloudVerticesBufferPaddedSize,
-            i->processedCloudData.data(),
-            cFrame->encodedCloudVerticesData
-        );
-
-        // compress processed color data
-        size_t cloudColorSize    = paddeCloudVerticesBufferPaddedSize/3;
-        cFrame->cloudColorWidth  = cloudColorSize/128;
-        cFrame->cloudColorHeight = 128;
-        i->compress_jpeg_8_bits_data(cFrame->cloudColorWidth, cFrame->cloudColorHeight , 3, i->processedColorData.data(), cFrame->encodedCloudColorData, jpegQuality);
+        cFrame->validVerticesCount = frame.cloud.size();
+        add_cloud(frame.mode, frame.cloud, cFrame->encodedCloudVerticesData);
     }
 
     // imu

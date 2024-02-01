@@ -61,6 +61,11 @@ auto tool::ImGuiUiDrawer::text_centered(const char* text, ...) -> void{
 }
 
 
+auto tool::ImGuiUiDrawer::text_colored(const ImVec4 &col, std::string_view text) -> void{
+    auto d = text.data();
+    ImGui::TextColored(col, d, d + text.size());
+}
+
 auto tool::ImGuiUiDrawer::text_colored(const ImVec4 &col, const std::string &text) -> void{
     auto d = text.c_str();
     ImGui::TextColored(col, d, d + text.size());

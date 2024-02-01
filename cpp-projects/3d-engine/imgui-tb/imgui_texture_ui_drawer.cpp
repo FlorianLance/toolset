@@ -42,7 +42,7 @@ void ImGuiTextureUiDrawer::init(gl::TBO *texture, bool invert){
     m_texture = texture;
 }
 
-void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f sizeWindow, std::optional<std::string> text){
+void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f sizeWindow, std::string_view topTitle, std::string_view infos){
 
     if(!m_texture){
         return;
@@ -64,9 +64,9 @@ void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
                 }else{
 
                     if(m_invert){
-                        ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
+                        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
                     }else{
-                        ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture->id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
+                        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
                     }
 
                     auto io       = ImGui::GetIO();
@@ -93,10 +93,10 @@ void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
                         }
                     }
 
-                    if(text.has_value()){
+                    if(!topTitle.empty()){
                         auto newCursorPos = ImGui::GetCursorScreenPos();
                         ImGui::SetCursorScreenPos(cursorScreenPos);
-                        ImGuiUiDrawer::text_colored(ImVec4(1,0,0,1), text.value());
+                        ImGuiUiDrawer::text_colored(ImVec4(1,0,0,1), topTitle);
                         ImGui::SetCursorScreenPos(newCursorPos);
                     }
                 }
@@ -104,9 +104,12 @@ void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
             }
             if(ImGui::BeginTabItem("Infos")){
                 auto size    = content_region_size_available();
-                ImGui::Text("pointer = %d", m_texture->id());
+                ImGui::Text("pointer = %d\n", m_texture->id());
                 ImGui::Text("original size = %d x %d", m_texture->width(), m_texture->height());
                 ImGui::Text("window size = %d x %d", static_cast<int>(size.x()), static_cast<int>(size.y()));
+                if(!infos.empty()){
+                    ImGuiUiDrawer::text(std::format("Infos:\n{}",infos));
+                }
                 ImGui::EndTabItem();
             }
 
@@ -172,6 +175,7 @@ void ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const ge
 
     ImGui::SetCursorScreenPos(to_iv2(screenPos));
 }
+
 
 
 

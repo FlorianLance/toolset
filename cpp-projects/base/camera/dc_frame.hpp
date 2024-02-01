@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -27,13 +27,74 @@
 #pragma once
 
 // std
-//#include <cstdint>
+#include <span>
+#include <chrono>
 
 // local
+#include "utility/string_unordered_map.hpp"
 #include "dc_types.hpp"
 #include "geometry/cloud.hpp"
+#include "graphics/color.hpp"
 
 namespace tool::cam{
+
+struct DCFrameData{
+
+    auto reset() -> void;
+
+    // images
+    std::span<std::int8_t> rawColor;
+    std::span<ColorRGBA8> color;
+    std::span<ColorRGBA8> dephtSizedColor;
+    std::span<std::uint16_t> depth;
+    std::span<std::uint16_t> infra;
+    std::span<geo::Pt3<std::int16_t>> depthCloud;
+    std::span<std::uint8_t> bodiesIdDepth;
+
+    // others
+    std::pair<size_t, std::span<float>> audioChannels;
+    std::optional<DCImuSample> imuSample = std::nullopt;
+    std::vector<DCBody> bodies;
+};
+
+struct DCFrameIndices{
+
+    auto initialize(const DCModeInfos &infos) -> void;
+
+    // colors
+    // # 1D
+    std::vector<size_t> colors1D;
+    // depths
+    // # 1D
+    std::vector<size_t> depths1D;
+    std::vector<size_t> depths1DNoBorders;
+    std::vector<std::array<std::int32_t,4>> neighbours4Depth1D;
+    std::vector<std::array<std::int32_t,8>> neighbours8Depth1D;
+    // # 3D
+    std::vector<geo::Pt3<size_t>> depths3D;
+    // # Correspondance
+    std::vector<std::tuple<size_t, std::int32_t>> depthVertexCorrrespondance;
+    // std::vector<std::tuple<size_t, std::int16_t>> depthsSortedCorrespondanceNoBorders;
+};
+
+struct DCFrameTiming{
+
+    auto reset() -> void;
+    auto swap_local_timestamps() -> void;
+    auto update_local(std::string_view name) -> void;
+    auto compute_capture_framerate() -> void;
+
+    auto get_local(std::string_view name) const -> std::chrono::nanoseconds;
+    auto get_duration_between_ms(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::milliseconds>;
+    auto get_duration_between_micro_s(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::microseconds>;
+
+    // profiling
+    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> timestamps;
+    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> localTimestamps;
+    float nbCapturePerSecond = 0.f;
+    std::vector<std::chrono::nanoseconds> capturesTimes;
+};
+
 
 struct Frame{
     std::int32_t idCapture      = 0;
@@ -42,15 +103,30 @@ struct Frame{
     virtual ~Frame(){}
 };
 
+
+template<typename T>
+struct DCImageBuffer{
+    size_t width = 0;
+    size_t height = 0;
+    Buffer<T> data;
+
+    auto reset() noexcept -> void{
+        width  = 0;
+        height = 0;
+        data.clear();
+    }
+};
+
 struct DCFrame : Frame{
 
     // info
     DCMode mode;
 
     // color
-    size_t colorWidth = 0;
-    size_t colorHeight = 0;
-    std::vector<geo::Pt4<std::uint8_t>> imageColorData;
+    DCImageBuffer<ColorRGBA8> imageColor;
+    // size_t colorWidth = 0;
+    // size_t colorHeight = 0;
+    // std::vector<geo::Pt4<std::uint8_t>> imageColorData;
 
     // depth sized color
     size_t depthSizedColorWidth = 0;
@@ -76,6 +152,7 @@ struct DCFrame : Frame{
     std::optional<DCImuSample> imuSample;
 
     // audio
+    // TODO: add nbChannels variables and use a simple vector
     std::vector<std::array<float, 7>> audioFrames;
 
     // bodies

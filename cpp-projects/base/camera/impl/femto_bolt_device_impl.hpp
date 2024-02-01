@@ -26,25 +26,9 @@
 
 #pragma once
 
-// // opencv
-// #include <opencv2/imgproc.hpp>
-
-// // orbbec
-// #include <libobsensor/hpp/Filter.hpp>
-// #include <libobsensor/hpp/Frame.hpp>
-// #include <libobsensor/hpp/Pipeline.hpp>
-// #include <libobsensor/hpp/Device.hpp>
-// #include <libobsensor/hpp/Context.hpp>
-
-// // kabt
-// #include <kabt/k4abt.hpp>
-
-// // local
-// #include "camera/dc_device_impl.hpp"
-
 // local
 #include "camera/dc_device_impl.hpp"
-#include "orbbec_device.hpp"
+#include "orbbec_base_device.hpp"
 
 
 namespace tool::cam {
@@ -53,85 +37,41 @@ struct FemtoBoltDeviceImpl : public DCDeviceImpl{
 
     FemtoBoltDeviceImpl();
 
-    // // device
-    // std::unique_ptr<ob::Context> context = nullptr;
-    // std::shared_ptr<ob::Device> device = nullptr;
-    // std::shared_ptr<ob::DeviceList> deviceList = nullptr;
-    // std::shared_ptr<ob::SensorList> sensorList = nullptr;
-    // std::unique_ptr<ob::Pipeline> pipe = nullptr;
-    // std::unique_ptr<ob::PointCloudFilter> pointCloud = nullptr;
-    // OBCameraParam cameraParam;
-    // OBCalibrationParam calibrationParam;
-    // k4a::calibration k4Calibration;
-    // k4a::transformation k4Transformation;
-    // std::vector<float> tableData;
-    // std::vector<std::uint8_t> pointCloudData;
-    // OBXYTables xyTables;
-    // bool ethernet = false;
-
-    // std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
-    // k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
-
-    // // images
-    // std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
-    // std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
-    // std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
-    // std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
-    // std::shared_ptr<ob::Frame> pointCloudImage = nullptr;
-    // std::optional<k4a::image> bodiesIndexImage   = std::nullopt;
-
-    // processing
-    cv::Mat colorConvBuffer;
-    // std::shared_ptr<ob::ColorFrame> convertedColorImage = nullptr;
-
     // actions
-    auto open(std::uint32_t deviceId) -> bool override;
-    auto start_reading(const DCConfigSettings &newConfigS) -> bool override;
-    auto stop_reading() -> void override;
-    auto close() -> void override;
+    auto open(std::uint32_t deviceId) -> bool override final;
+    auto start_reading(const DCConfigSettings &newConfigS) -> bool override final;
+    auto stop_reading() -> void override final;
+    auto close() -> void override final;
 
     // getters
-    auto is_opened() const noexcept -> bool override;
-    auto nb_devices() const noexcept -> std::uint32_t override;
-    auto device_name() const noexcept -> std::string override;
+    auto is_opened() const noexcept -> bool override final;
+    auto nb_devices() const noexcept -> std::uint32_t override final;
+    auto device_name() const noexcept -> std::string override final;
 
 private:
 
     // initialization
-    auto initialize_device_specific() -> void override;
-    auto update_camera_from_colors_settings() -> void override;
-
-    // get data
-    auto bodies_index_data() -> std::span<std::uint8_t> override;
+    auto initialize_device_specific() -> void override final;
+    auto update_camera_from_colors_settings() -> void override final;
 
     // read data
-    auto capture_frame(std::int32_t timeoutMs) -> bool override;
-    auto read_color_image() -> bool override;
-    auto read_depth_image() -> bool override;
-    auto read_infra_image() -> bool override;
-    auto read_bodies() -> void override;
+    auto capture_frame(std::int32_t timeoutMs) -> bool override final;
+    auto read_color_image() -> bool override final;
+    auto read_depth_image() -> bool override final;
+    auto read_infra_image() -> bool override final;
+    auto read_from_imu() -> void override final;
+    auto read_bodies() -> void override final;
 
     // process data
-    auto convert_color_image() -> void override;
-    auto resize_color_image_to_depth_size() -> void override;
-    auto generate_cloud() -> void override;
-    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override;
+    auto resize_color_image_to_depth_size() -> void override final;
+    auto generate_cloud() -> void override final;
+    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override final;
 
-    // frame generation
-    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override;
-    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override;
+    // frame generation    
+    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override final;
+    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override final;
 
-
-    static auto convert_to_k4_calibration(DCMode mode, const OBCalibrationParam &obCalibration) -> k4a::calibration;
-
-
-    std::unique_ptr<OrbbecDevice> orbbecD = nullptr;
-
-    k4a::calibration k4aCalibration;
-    k4a::transformation k4aTransformation;
-
-    k4a::image k4aDepthSizedColorImage = nullptr;
-    k4a::image k4aPointCloudImage = nullptr;
+    std::unique_ptr<OrbbecBaseDevice> orbbecD = nullptr;
 };
 }
 

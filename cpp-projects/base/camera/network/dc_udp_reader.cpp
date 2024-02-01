@@ -46,7 +46,7 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::init_network_infos:{
         Logger::message("[DCClientUdpReader] init_network_infos message received.\n");
-        init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<UdpNetworkSendingSettings>(packetData));
+        init_network_infos_signal(header, UdpMonoPacketData::generate_data_from_packet<UdpNetworkSendingSettings>(packetData, sizeof(UdpNetworkSendingSettings)));
     }break;
     case MessageType::update_device_settings:{
         Logger::message("[DCClientUdpReader] update_device_settings message received.\n");
@@ -80,7 +80,6 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     }
 }
 
-#include <iostream>
 auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
     using namespace std::chrono;
@@ -127,7 +126,7 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
             cFrame->afterCaptureTS += synchro.averageDiffNs;
 
             // send compressed frame
-            compressed_frame_signal(std::move(header), cFrame);
+            compressed_frame_signal(std::move(header), std::move(cFrame));
         }
 
     }break;  

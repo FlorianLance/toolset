@@ -33,21 +33,21 @@
 namespace tool {
 
 // vector alias
-template< class value > using std_v1 = std::vector<value>; /**< templated std vector alias */
-template< class value > using std_v2 = std::vector<std_v1<value>>; /**< templated std vector of std vector alias */
-template< class value > using std_v3 = std::vector<std_v2<value>>; /**< templated std vector of std vector of std vector alias */
-template< class value > using c_std_v1  = const std::vector<value>; /**< templated const std vector alias */
-template< class value > using c_std_v2  = const std_v2<value>; /**< templated const std vector of std vector alias*/
-template< class value > using c_std_v3  = const std_v3<value>; /**< templated const std vector of std vector of std vector alias */
+// template< class value > using std_v1 = std::vector<value>; /**< templated std vector alias */
+// template< class value > using std_v2 = std::vector<std_v1<value>>; /**< templated std vector of std vector alias */
+// template< class value > using std_v3 = std::vector<std_v2<value>>; /**< templated std vector of std vector of std vector alias */
+// template< class value > using c_std_v1  = const std::vector<value>; /**< templated const std vector alias */
+// template< class value > using c_std_v2  = const std_v2<value>; /**< templated const std vector of std vector alias*/
+// template< class value > using c_std_v3  = const std_v3<value>; /**< templated const std vector of std vector of std vector alias */
 
 template <class T>
-static inline auto erase_row(std::vector<T> &vector, size_t id) -> void{
+static inline auto erase_row(std::vector<T> &vector, size_t id) noexcept -> void{
     using difference_type = typename std::vector<T>::difference_type;
     vector.erase(vector.begin() + static_cast<difference_type>(id));
 }
 
 template <class T>
-static inline auto erase_range(std::vector<T> &vector, size_t start, size_t end) -> void{
+static inline auto erase_range(std::vector<T> &vector, size_t start, size_t end) noexcept -> void{
     vector.erase(vector.begin() + start, vector.begin() + end);
 }
 

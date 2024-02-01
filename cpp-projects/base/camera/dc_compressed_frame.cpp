@@ -1,6 +1,4 @@
 
-
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -32,8 +30,7 @@
 #include <k4a/k4atypes.h>
 
 // orbbec
-#include "libobsensor/ObSensor.hpp"
-
+#include <libobsensor/hpp/Types.hpp>
 
 // local
 #include "utility/io_data.hpp"
@@ -56,44 +53,89 @@ DCCompressedFrame::~DCCompressedFrame(){}
 
 auto DCCompressedFrame::infos_size() const noexcept -> size_t {
     return
-        sizeof(std::int32_t) + // id capture
-        sizeof(std::int64_t) + // after capture TS
-        sizeof(DCMode);
+        sizeof(idCapture) +
+        sizeof(afterCaptureTS) +
+        sizeof(receivedTS) +
+        sizeof(mode) +
+        sizeof(validVerticesCount);
 }
+
 auto DCCompressedFrame::color_size()  const noexcept -> size_t{
-    return encodedColorData.size() +
-        sizeof(size_t) * 3; // colorWidth, colorHeight, encoded size
+    return
+        encodedColorData.size() +
+        sizeof(colorWidth) + sizeof(colorHeight) +
+        sizeof(size_t); // encoded size value
+}
+
+auto DCCompressedFrame::depth_sized_color_size() const noexcept -> size_t{
+    return
+        encodedDepthSizedColorData.size() +
+        sizeof(depthSizedColorWidth) + sizeof(depthSizedColorHeight) +
+        sizeof(size_t); // encoded size value
 }
 
 auto DCCompressedFrame::depth_size()  const noexcept -> size_t{
-    return encodedDepthData.size() +
-        sizeof(size_t) * 3; // depthWidth, depthHeight, encoded size
-}
-auto DCCompressedFrame::infra_size()  const noexcept -> size_t{
-    return encodedInfraData.size() +
-        sizeof(size_t) * 3; // infraWidth, infraHeight, encoded size
+    return
+        encodedDepthData.size() +
+        sizeof(depthWidth) + sizeof(depthHeight) +
+        sizeof(size_t); // encoded size value
 }
 
-auto DCCompressedFrame::cloud_vertices_size() const noexcept -> size_t{
-    return encodedCloudVerticesData.size() +
-        sizeof(size_t)*2; // validVerticesCount, encoded size
+auto DCCompressedFrame::infra_size()  const noexcept -> size_t{
+    return
+        encodedInfraData.size() +
+        sizeof(infraWidth) + sizeof(infraHeight) +
+        sizeof(size_t); // encoded size value
 }
-auto DCCompressedFrame::cloud_color_size()  const noexcept -> size_t{
-    return encodedCloudColorData.size() +
-        sizeof(size_t) * 3; // cloudColorWidth, cloudColorHeight, encoded size
+
+auto DCCompressedFrame::cloud_size() const noexcept -> size_t{
+    return
+        encodedCloudVerticesData.size() +
+        sizeof(size_t); // encoded size value
 }
 
 auto DCCompressedFrame::calibration_size() const noexcept -> size_t{
     if(i->k4Calibration.has_value()){
-        return sizeof(k4a_calibration_t) + sizeof(bool);
+        return
+            sizeof(k4a_calibration_t) +
+            sizeof(bool); // has calibration
     }else if(i->obCalibration.has_value()){
-        return sizeof(OBCameraParam) + sizeof(bool);
+        return
+            sizeof(OBCameraParam) +
+            sizeof(bool); // has calibration
     }
-    return sizeof(bool);
+    return sizeof(bool); // has calibration
+}
+
+auto DCCompressedFrame::imu_sample_size() const noexcept -> size_t{
+    return
+        (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
+        sizeof(bool); // has IMU
+}
+
+auto DCCompressedFrame::audio_size() const noexcept -> size_t{
+    return
+        audioFrames.size()*7*sizeof(float) +
+        sizeof(size_t); // nb audio frames
+}
+
+auto DCCompressedFrame::bodies_size() const noexcept -> size_t{
+    return
+        // ...
+        sizeof(bool); // has body
+}
+
+auto DCCompressedFrame::total_data_size() const -> size_t{
+    return
+        infos_size() +
+        color_size() + depth_sized_color_size() + depth_size() + infra_size() + cloud_size() +
+        calibration_size() + imu_sample_size() + audio_size() + bodies_size();
 }
 
 auto DCCompressedFrame::has_calibration() const noexcept -> bool {
-    return i->k4Calibration.has_value() || i->obCalibration.has_value();
+    return
+        i->k4Calibration.has_value() ||
+        i->obCalibration.has_value();
 }
 
 auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
@@ -146,23 +188,23 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
         read_array(encodedCloudVerticesData.data(), file, encCloudVertexDataSize);
     }
     // # colors
-    read(cloudColorWidth, file);
-    read(cloudColorHeight, file);
+    read(depthSizedColorWidth, file);
+    read(depthSizedColorHeight, file);
     read(encCloudColorDataSize, file);
     if(encCloudColorDataSize > 0){
-        encodedCloudColorData.resize(encCloudColorDataSize);
-        read_array(encodedCloudColorData.data(), file, encCloudColorDataSize);
+        encodedDepthSizedColorData.resize(encCloudColorDataSize);
+        read_array(encodedDepthSizedColorData.data(), file, encCloudColorDataSize);
     }
 
     // calibration
     bool hasCalibration = false;
     read(hasCalibration, file);
     if(hasCalibration){
-        if(get_device(mode) == DCType::AzureKinect){
+        if(dc_get_device(mode) == DCType::AzureKinect){
             k4a_calibration_t rCalibration;
             read(rCalibration, file);
             i->k4Calibration = rCalibration;
-        }else if(get_device(mode) == DCType::FemtoBolt){
+        }else if(dc_get_device(mode) == DCType::FemtoBolt){
             OBCameraParam rCalibration;
             read(rCalibration, file);
             i->obCalibration = rCalibration;
@@ -232,7 +274,7 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     write(validVerticesCount, file);
 
     size_t encCloudVertexDataSize = encodedCloudVerticesData.size();
-    size_t encCloudColorDataSize = encodedCloudColorData.size();
+    size_t encCloudColorDataSize = encodedDepthSizedColorData.size();
 
     // # vertices
     write(encCloudVertexDataSize, file);
@@ -241,11 +283,11 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     }
 
     // # colors
-    write(cloudColorWidth, file);
-    write(cloudColorHeight, file);
+    write(depthSizedColorWidth, file);
+    write(depthSizedColorHeight, file);
     write(encCloudColorDataSize, file);
     if(encCloudColorDataSize > 0){
-        write_array(encodedCloudColorData.data(), file, encCloudColorDataSize);
+        write_array(encodedDepthSizedColorData.data(), file, encCloudColorDataSize);
     }
 
     // calibration
@@ -330,23 +372,23 @@ auto DCCompressedFrame::init_from_data(std::int8_t const * const data, size_t &o
         read_array(encodedCloudVerticesData.data(), data, encCloudVertexDataSize, offset, sizeData);
     }
     // # colors
-    read(cloudColorWidth, data, offset, sizeData);
-    read(cloudColorHeight, data, offset, sizeData);
+    read(depthSizedColorWidth, data, offset, sizeData);
+    read(depthSizedColorHeight, data, offset, sizeData);
     read(encCloudColorDataSize, data, offset, sizeData);
     if(encCloudColorDataSize > 0){
-        encodedCloudColorData.resize(encCloudColorDataSize);
-        read_array(encodedCloudColorData.data(), data, encCloudColorDataSize, offset, sizeData);
+        encodedDepthSizedColorData.resize(encCloudColorDataSize);
+        read_array(encodedDepthSizedColorData.data(), data, encCloudColorDataSize, offset, sizeData);
     }
 
     // calibration
     bool hasCalibration = false;
     read(hasCalibration, data, offset, sizeData);
     if(hasCalibration){
-        if(get_device(mode) == DCType::AzureKinect){
+        if(dc_get_device(mode) == DCType::AzureKinect){
             k4a_calibration_t rCalibration;
             read(rCalibration, data, offset, sizeData);
             i->k4Calibration = rCalibration;
-        }else if(get_device(mode) == DCType::FemtoBolt){
+        }else if(dc_get_device(mode) == DCType::FemtoBolt){
             OBCameraParam rCalibration;
             read(rCalibration, data, offset, sizeData);
             i->obCalibration = rCalibration;
@@ -417,7 +459,7 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
     write(validVerticesCount, data, offset, sizeData);
 
     size_t encCloudVertexDataSize = encodedCloudVerticesData.size();
-    size_t encCloudColorDataSize = encodedCloudColorData.size();
+    size_t encCloudColorDataSize = encodedDepthSizedColorData.size();
 
     // # vertices
     write(encCloudVertexDataSize, data, offset, sizeData);
@@ -425,11 +467,11 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
         write_array(encodedCloudVerticesData.data(), data, encCloudVertexDataSize, offset, sizeData);
     }
     // # colors
-    write(cloudColorWidth, data, offset, sizeData);
-    write(cloudColorHeight, data, offset, sizeData);
+    write(depthSizedColorWidth, data, offset, sizeData);
+    write(depthSizedColorHeight, data, offset, sizeData);
     write(encCloudColorDataSize, data, offset, sizeData);
     if(encCloudColorDataSize > 0){
-        write_array(encodedCloudColorData.data(), data, encCloudColorDataSize, offset, sizeData);
+        write_array(encodedDepthSizedColorData.data(), data, encCloudColorDataSize, offset, sizeData);
     }
 
     // calibration
@@ -459,7 +501,6 @@ auto DCCompressedFrame::write_to_data(int8_t * const data, size_t &offset, size_
     // bodies
     write(false, data, offset, sizeData);
     // TODO: ...
-
 }
 
 auto DCCompressedFrame::write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
@@ -476,33 +517,31 @@ auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t cons
         read(rCalibration, data, offset, sizeData);
         i->k4Calibration = rCalibration;
     }else if(type == DCType::FemtoBolt){
-        OBCameraParam rCalibration;
+        k4a_calibration_t rCalibration;
         read(rCalibration, data, offset, sizeData);
-        i->obCalibration = rCalibration;
+        i->k4Calibration = rCalibration;
+    }else if(type == DCType::FemtoBolt){
+        k4a_calibration_t rCalibration;
+        read(rCalibration, data, offset, sizeData);
+        i->k4Calibration = rCalibration;
     }
+
+    // OBCameraParam rCalibration;
+    // read(rCalibration, data, offset, sizeData);
+    // i->obCalibration = rCalibration;
 }
 
 auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
-    if(get_device(mode) == DCType::AzureKinect){
+    if(dc_get_device(mode) == DCType::AzureKinect){
         return sizeof(k4a_calibration_t);
-    }else if(get_device(mode) == DCType::FemtoBolt){
-        return sizeof(OBCameraParam);
+    }else if(dc_get_device(mode) == DCType::FemtoBolt){
+        return sizeof(k4a_calibration_t);
+    }else if(dc_get_device(mode) == DCType::FemtoMega){
+        return sizeof(k4a_calibration_t);
     }
     return 0;
-}
 
-auto DCCompressedFrame::imu_sample_size() const noexcept -> size_t{
-    return (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
-        sizeof(bool); // has IMU
-}
-
-auto DCCompressedFrame::audio_size() const noexcept      -> size_t{
-    return audioFrames.size()*7*sizeof(float) +
-        sizeof(size_t); // nb audio frames
-}
-
-auto DCCompressedFrame::bodies_size() const noexcept -> size_t{
-    return sizeof(bool); // has body // TODO: ...
+    // return sizeof(OBCameraParam);
 }
 
 auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void{
@@ -531,9 +570,9 @@ auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &
     read(colorBufferSize, file);
     colorWidth  = colorW;
     colorHeight = colorH;
-    encodedCloudColorData.resize(colorBufferSize);
-    if(!encodedCloudColorData.empty()){
-        read_array(encodedCloudColorData.data(), file, encodedCloudColorData.size());
+    encodedDepthSizedColorData.resize(colorBufferSize);
+    if(!encodedDepthSizedColorData.empty()){
+        read_array(encodedDepthSizedColorData.data(), file, encodedDepthSizedColorData.size());
     }
 
     // # read audio

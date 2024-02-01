@@ -26,81 +26,12 @@
 
 #pragma once
 
-// std
-#include <chrono>
-#include <span>
-
 // local
-#include "utility/string_unordered_map.hpp"
 #include "camera/dc_frame_compressor.hpp"
 #include "camera/dc_frame_uncompressor.hpp"
 #include "dc_device.hpp"
 
 namespace tool::cam {
-
-struct DCInfos{
-
-    auto initialize(DCMode mode) -> void;
-
-    size_t idCapture    = 0;
-    DCImageFormat imageFormat;
-    DCDepthResolution depthResolution;
-    DCColorResolution colorResolution;
-    DCFramerate fps;
-    std::int32_t timeoutMs;
-    // size_t colorWidth   = 0;
-    // size_t colorHeight  = 0;
-    // size_t colorSize    = 0;
-    // size_t depthWidth   = 0;
-    // size_t depthHeight  = 0;
-    // size_t depthSize    = 0;
-    // size_t infraWidth   = 0;
-    // size_t infraHeight  = 0;
-    // size_t infraSize    = 0;
-};
-
-struct DCIndices{
-
-    auto initialize(const DCInfos &infos) -> void;
-
-    // colors
-    std::vector<size_t> colors1D;
-    // infrared
-    std::vector<size_t> infras1D;
-    // depths
-    std::vector<size_t> depths1D;
-    std::vector<size_t> depths1DNoBorders;
-    std::vector<std::array<std::int32_t,4>> neighbours4Depth1D;
-    std::vector<std::array<std::int32_t,8>> neighbours8Depth1D;
-    std::vector<std::tuple<size_t, std::int32_t>> depthVertexCorrrespondance;
-    std::vector<std::tuple<size_t, std::int16_t>> depthsSortedCorrespondanceNoBorders;
-    std::vector<geo::Pt3<size_t>> depths3D;
-
-};
-
-struct DCTiming{
-
-    auto reset() -> void;
-    auto swap_local_timestamps() -> void;
-    auto update_local(std::string_view name) -> void;
-    auto compute_capture_framerate() -> void;
-
-    auto get_local(std::string_view name) const -> std::chrono::nanoseconds;
-    auto get_duration_between_ms(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::milliseconds>;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::microseconds>;
-
-    // timestamps
-    std::chrono::nanoseconds colorImageTS       = std::chrono::nanoseconds{0};
-    std::chrono::nanoseconds depthImageTS       = std::chrono::nanoseconds{0};
-    std::chrono::nanoseconds infraredImageTS    = std::chrono::nanoseconds{0};
-    std::chrono::nanoseconds bodiesTS           = std::chrono::nanoseconds{0};
-
-    // profiling
-    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> timestamps;
-    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> localTimestamps;
-    float nbCapturePerSecond = 0.f;
-    std::vector<std::chrono::nanoseconds> capturesTimes;
-};
 
 struct DCSettings{
     DCConfigSettings config;
@@ -110,10 +41,8 @@ struct DCSettings{
     DCDelaySettings delay;
 };
 
-struct DCFrames{
+struct DCFramesBuffer{
 
-    // test
-    // cFrame->afterCaptureTS = afterCompressingTS.count() - cFrame->afterCaptureTS;
     auto add_frame(std::shared_ptr<cam::DCFrame> frame) -> void;
     auto add_compressed_frame(std::shared_ptr<cam::DCCompressedFrame> cFrame) -> void;
     auto take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCFrame>;
@@ -122,37 +51,7 @@ struct DCFrames{
     // delay buffer
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<DCFrame>>> frames;
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<cam::DCCompressedFrame>>> compressedFrames;
-
-    // compression
-    DCFrameCompressor frameCompressor;
-    DCFrameUncompressor frameUncompressor;
 };
-
-
-struct DCData{
-
-    // data
-    std::vector<std::int8_t> convertedColorData;
-
-    // images
-    std::span<std::int8_t> rawColor;
-    std::span<ColorRGBA8> color;
-    std::span<ColorRGBA8> dephtSizedColor;
-    std::span<std::uint16_t> depth;
-    std::span<std::uint16_t> infra;
-
-    // imu
-    DCImuSample imuSample;
-
-    // tracking
-    std::vector<DCBody> bodies;
-};
-
-// struct DCCurrentSettings{
-//     DCFiltersSettings filters;
-//     DCColorSettings color;
-//     DCDelaySettings delay;
-// };
 
 struct DCDeviceImpl{
 
@@ -161,11 +60,13 @@ struct DCDeviceImpl{
     DCDevice *dcDevice = nullptr;
 
     DCSettings settings;
-    DCInfos infos;
-    DCIndices indices;
-    DCTiming timing;
-    DCFrames frames;
-    DCData data;
+    DCModeInfos mInfos;
+    DCFrameIndices fIndices;
+    DCFrameTiming fTiming;
+    DCFramesBuffer frames;
+    DCFrameData fData;
+    DCFrameCompressor fCompressor;
+    DCFrameUncompressor fUncompressor;
 
     // state
     std::atomic_bool readFramesFromCameras = false;
@@ -177,6 +78,8 @@ struct DCDeviceImpl{
     std::vector<int> depthMask;
     std::vector<int> zonesId;
     std::vector<std::int16_t> depthFiltering;
+
+    std::vector<std::int8_t> convertedColorData;
 
     // thread/lockers
     std::mutex parametersM; /**< mutex for reading parameters at beginning of a new frame in thread function */
@@ -214,9 +117,8 @@ protected:
     auto start_reading_thread() -> void;
     auto stop_reading_thread() -> void;
 
-    // get data
+    // state
     auto check_data_validity() -> bool;
-    virtual auto bodies_index_data() -> std::span<std::uint8_t> {return {};}
 
     // read data
     auto read_frames() -> void;
@@ -230,26 +132,47 @@ protected:
     virtual auto generate_cloud() -> void{}
 
     // process data
-    virtual auto convert_color_image() -> void{}
+    virtual auto convert_color_image() -> void;
     virtual auto resize_color_image_to_depth_size() -> void{}
-    auto filter_depth_image(const DCFiltersSettings &filtersS, std::span<std::uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<uint16_t> infraB) -> void;
-    auto filter_color_image(const DCFiltersSettings &filtersS, std::span<ColorRGBA8> colorB, std::span<std::uint16_t> depthB, std::span<uint16_t> infraB, std::span<std::uint8_t> bodiesB) -> void;
-    auto filter_infrared_image(const DCFiltersSettings &filtersS, std::span<uint16_t> infraB, std::span<std::uint16_t> depthB, std::span<ColorRGBA8> colorB, std::span<std::uint8_t> bodiesB) -> void;
-    virtual auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{}
+    auto filter_depth_image(const DCFiltersSettings &filtersS) -> void;
+    auto filter_depth_sized_color_image(const DCFiltersSettings &filtersS) -> void;
+    auto filter_infrared_image(const DCFiltersSettings &filtersS) -> void;
+    virtual auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
     auto update_valid_depth_values() -> void;
 
     // frame generation
+    // # local
+    virtual auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>{ static_cast<void>(dataS);return nullptr;}
+    auto update_infos(DCFrame *dFrame) -> void;
+    auto update_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_depth_sized_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_depth(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_infra(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_cloud(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_audio(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_imu(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_bodies(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    // # compressed
     virtual auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{
         static_cast<void>(filtersS);static_cast<void>(dataS);return nullptr;}
-    virtual auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>{
-        static_cast<void>(dataS);return nullptr;}
+    auto update_compressed_frame_infos(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_depth_sized_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_depth(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_infra(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_cloud(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_audio(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_imu(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_bodies(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+
+    auto debug_save_images(std::string parentPath) -> void;
 
 private:
 
     // depth filtering
-    auto maximum_local_depth_difference(const DCIndices &ids, std::span<std::uint16_t> depthBuffer, float max, Connectivity connectivity) -> void;
+    auto maximum_local_depth_difference(const DCFrameIndices &ids, std::span<std::uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void;
     auto keep_only_biggest_cluster() -> void;
-    auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, Connectivity connectivity) -> void;
-    auto erode(std::uint8_t nbLoops, Connectivity connectivity) -> void;
+    auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
+    auto erode(std::uint8_t nbLoops, DCConnectivity connectivity) -> void;
 };
 }

@@ -56,6 +56,7 @@ struct ImGuiUiDrawer{
 [[maybe_unused]] static auto text(const std::string &text, std::optional<tool::geo::Pt4f> color = std::nullopt) -> void;
 [[maybe_unused]] static auto text_wrapped(std::string_view text, std::optional<tool::geo::Pt4f> color = std::nullopt) -> void;
 [[maybe_unused]] static auto text_wrapped(const std::string &text, std::optional<tool::geo::Pt4f> color = std::nullopt) -> void;
+[[maybe_unused]] static auto text_colored(const ImVec4 &col, std::string_view text) -> void;
 [[maybe_unused]] static auto text_colored(const ImVec4& col, const std::string &text) -> void;
 
 [[maybe_unused]] static auto text_centered(const char* text, ...) -> void;

@@ -26,88 +26,52 @@
 
 #pragma once
 
-// k4a
-#include "thirdparty/k4a/k4astaticimageproperties.h"
-#include "thirdparty/k4a/k4amicrophonelistener.h"
-#include "thirdparty/k4a/k4aaudiomanager.h"
-// kabt
-#include <kabt/k4abt.hpp>
-
 // local
 #include "camera/dc_device_impl.hpp"
+#include "azure_base_device.hpp"
 
 namespace tool::cam {
+
 
 struct AzureKinectDeviceImpl : public DCDeviceImpl{
 
     AzureKinectDeviceImpl();
 
-    // device
-    std::unique_ptr<k4a::device> device = nullptr;
-    k4a::calibration calibration;
-    k4a::transformation transformation;
-    std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
-    k4a_device_configuration_t k4aConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
-    k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
-    std::unique_ptr<k4a::capture> capture = nullptr;
-
-    // images
-    std::optional<k4a::image> colorImage         = std::nullopt;
-    std::optional<k4a::image> depthImage         = std::nullopt;
-    std::optional<k4a::image> infraredImage      = std::nullopt;
-    std::optional<k4a::image> pointCloudImage    = std::nullopt;
-    std::optional<k4a::image> bodiesIndexImage   = std::nullopt;
-    // # processing
-    std::optional<k4a::image> convertedColorImage = std::nullopt;
-    std::optional<k4a::image> k4aDepthSizedColorImage = std::nullopt;
-
-    // audio
-    std::shared_ptr<k4a::K4AMicrophone> microphone = nullptr;
-    std::shared_ptr<k4a::K4AMicrophoneListener> audioListener = nullptr;
-    size_t lastFrameCount = 0;
-    std::vector<k4a::K4AMicrophoneFrame> audioFrames;
-
     // actions
-    auto open(std::uint32_t deviceId) -> bool override;
-    auto start_reading(const DCConfigSettings &newConfigS) -> bool override;
-    auto stop_reading() -> void override;
-    auto close() -> void override;
+    auto open(std::uint32_t deviceId) -> bool override final;
+    auto start_reading(const DCConfigSettings &newConfigS) -> bool override final;
+    auto stop_reading() -> void override final;
+    auto close() -> void override final;
 
     // getters
-    auto is_opened() const noexcept -> bool override;
-    auto nb_devices() const noexcept -> std::uint32_t override;
-    auto device_name() const noexcept -> std::string override;
+    auto is_opened() const noexcept -> bool override final;
+    auto nb_devices() const noexcept -> std::uint32_t override final;
+    auto device_name() const noexcept -> std::string override final;
 
 private:
 
     // initialization
-    auto initialize_device_specific() -> void override;
-    static auto generate_config(bool synchInConnected, bool synchOutConnected,const DCConfigSettings &config) -> k4a_device_configuration_t;
-    static auto generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t;
-    auto update_camera_from_colors_settings() -> void override;
-
-    // get data
-    auto color_rgba_data() -> std::span<ColorRGBA8> override;
-    auto bodies_index_data() -> std::span<std::uint8_t> override;
+    auto initialize_device_specific() -> void override final;
+    auto update_camera_from_colors_settings() -> void override final;
 
     // read data
-    auto capture_frame(std::int32_t timeoutMs) -> bool override;
-    auto read_color_image() -> bool override;
-    auto read_depth_image() -> bool override;
-    auto read_infra_image() -> bool override;
-    auto read_from_microphones() -> void override;
-    auto read_from_imu() -> void override;
-    auto read_bodies() -> void override;
+    auto capture_frame(std::int32_t timeoutMs) -> bool override final;
+    auto read_color_image() -> bool override final;
+    auto read_depth_image() -> bool override final;
+    auto read_infra_image() -> bool override final;
+    auto read_from_microphones() -> void override final;
+    auto read_from_imu() -> void override final;
+    auto read_bodies() -> void override final;
 
     // process data    
-    auto convert_color_image() -> void override;
-    auto resize_color_image_to_depth_size() -> void override;
-    auto generate_cloud() -> void override;
+    auto resize_color_image_to_depth_size() -> void override final;
+    auto generate_cloud() -> void override final;
 
     // frame generation
-    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override;
-    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override;
+    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override final;
+    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override final;
 
+    std::unique_ptr<AzureBaseDevice> azureD = nullptr;
 };
 
 }

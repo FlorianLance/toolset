@@ -111,7 +111,7 @@ auto DCColorSettings::set_default_values(DCType type) -> void{
     saturation              = static_cast<std::uint8_t>(default_value(ColorSettingsType::Saturation, type));
     sharpness               = static_cast<std::uint8_t>(default_value(ColorSettingsType::Sharpness, type));
     gain                    = static_cast<std::uint8_t>(default_value(ColorSettingsType::Gain, type));
-    powerlineFrequency      = static_cast<std::uint8_t>(default_value(ColorSettingsType::Power_line_frequency, type));
+    powerlineFrequency      = static_cast<DCPowerlineFrequency>(default_value(ColorSettingsType::Power_line_frequency, type));
     backlightCompensation   = static_cast<bool>(default_value(ColorSettingsType::Backlight_compensation, type));
     autoExposureTime        = static_cast<bool>(default_value(ColorSettingsType::Auto_exposure, type));
     autoWhiteBalance        = static_cast<bool>(default_value(ColorSettingsType::Auto_white_balance, type));

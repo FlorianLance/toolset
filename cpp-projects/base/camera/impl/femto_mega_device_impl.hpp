@@ -26,12 +26,9 @@
 
 #pragma once
 
-// k4a
-#include "k4a/k4a.hpp"
-
 // local
 #include "camera/dc_device_impl.hpp"
-#include "orbbec_device.hpp"
+#include "orbbec_base_device.hpp"
 
 namespace tool::cam {
 
@@ -40,49 +37,40 @@ struct FemtoMegaDeviceImpl : public DCDeviceImpl{
     FemtoMegaDeviceImpl();
 
     // actions
-    auto open(uint32_t deviceId) -> bool override;
-    auto start_reading(const DCConfigSettings &newConfigS) -> bool override;
-    auto stop_reading() -> void override;
-    auto close() -> void override;
+    auto open(uint32_t deviceId) -> bool override final;
+    auto start_reading(const DCConfigSettings &newConfigS) -> bool override final;
+    auto stop_reading() -> void override final;
+    auto close() -> void override final;
 
     // getters
-    auto is_opened() const noexcept -> bool override;
-    auto nb_devices() const noexcept -> std::uint32_t override;
-    auto device_name() const noexcept -> std::string override;
+    auto is_opened() const noexcept -> bool override final;
+    auto nb_devices() const noexcept -> std::uint32_t override final;
+    auto device_name() const noexcept -> std::string override final;
 
 private:
 
     // initialization
-    auto initialize_device_specific() -> void override;
-    auto update_camera_from_colors_settings() -> void override;
-
-    // get data
-    auto bodies_index_data() -> std::span<std::uint8_t> override{return {};} // TODO
+    auto initialize_device_specific() -> void override final;
+    auto update_camera_from_colors_settings() -> void override final;
 
     // read data
-    auto capture_frame(std::int32_t timeoutMs) -> bool override;
-    auto read_color_image() -> bool override;
-    auto read_depth_image() -> bool override;
-    auto read_infra_image() -> bool override;
-    auto read_bodies() -> void override {} // TODO
+    auto capture_frame(std::int32_t timeoutMs) -> bool override final;
+    auto read_color_image() -> bool override final;
+    auto read_depth_image() -> bool override final;
+    auto read_infra_image() -> bool override final;
+    auto read_from_imu() -> void override final {} // TODO
+    auto read_bodies() -> void override final {} // TODO
 
     // process data
-    auto convert_color_image() -> void override;
-    auto resize_color_image_to_depth_size() -> void override;
-    auto generate_cloud() -> void override;
-    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void{} // TODO
+    auto resize_color_image_to_depth_size() -> void override final;
+    auto generate_cloud() -> void override final;
+    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override final{} // TODO
 
     // frame generation
-    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override;
+    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override final;
+    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame> override final;
 
-    std::unique_ptr<OrbbecDevice> orbbecD = nullptr;
-
-    k4a::calibration k4aCalibration;
-    k4a::transformation k4aTransformation;
-
-    k4a::image k4aDepthSizedColorImage = nullptr;
-    k4a::image k4aPointCloudImage = nullptr;
-
+    std::unique_ptr<OrbbecBaseDevice> orbbecD = nullptr;
 };
 
 

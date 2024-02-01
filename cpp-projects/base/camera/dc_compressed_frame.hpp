@@ -36,12 +36,20 @@ struct DCCompressedFrame : Frame{
     DCCompressedFrame();
     ~DCCompressedFrame();
 
+    // infos
     DCMode mode;
+    size_t validVerticesCount = 0;
 
     // color
-    size_t colorWidth = 0;
-    size_t colorHeight = 0;
-    std::vector<std::uint8_t> encodedColorData;
+    DCImageBuffer<std::uint8_t> encodedImageColor;
+    // size_t colorWidth = 0;
+    // size_t colorHeight = 0;
+    // std::vector<std::uint8_t> encodedColorData;
+
+    // depth-sized color
+    size_t depthSizedColorWidth = 0;
+    size_t depthSizedColorHeight = 0;
+    std::vector<std::uint8_t> encodedDepthSizedColorData;
 
     // depth
     size_t depthWidth = 0;
@@ -54,13 +62,7 @@ struct DCCompressedFrame : Frame{
     std::vector<std::uint8_t> encodedInfraData;
 
     // cloud
-    // # vertices
-    size_t validVerticesCount = 0;
     std::vector<std::uint8_t> encodedCloudVerticesData;
-    // # colors
-    size_t cloudColorWidth = 0;
-    size_t cloudColorHeight = 0;
-    std::vector<std::uint8_t> encodedCloudColorData;
 
     // imu
     std::optional<DCImuSample> imuSample = std::nullopt;
@@ -68,26 +70,27 @@ struct DCCompressedFrame : Frame{
     // audio
     std::vector<std::array<float, 7>> audioFrames;
 
+    // bodies
+    // ...
+
+    // calibration
+    // std::vector<std::int8_t> calibrationData;
+
     // getters
     // # sizes
-    auto infos_size() const noexcept -> size_t;
-    auto color_size()  const noexcept -> size_t;
-    auto depth_size()  const noexcept -> size_t;
-    auto infra_size()  const noexcept -> size_t;
-    auto cloud_vertices_size() const noexcept -> size_t;
-    auto cloud_color_size()  const noexcept -> size_t;
-    auto imu_sample_size() const noexcept -> size_t;
-    auto audio_size() const noexcept      -> size_t;
-    auto bodies_size() const noexcept -> size_t;
-    auto calibration_size() const noexcept -> size_t;
-    auto total_data_size() const -> size_t{
-        return
-            infos_size() +
-            color_size() + cloud_color_size() + depth_size() + infra_size() + cloud_vertices_size() +
-            calibration_size() + imu_sample_size() + audio_size() + bodies_size();
-    }
+    auto infos_size()               const noexcept -> size_t;
+    auto color_size()               const noexcept -> size_t;
+    auto depth_sized_color_size()   const noexcept -> size_t;
+    auto depth_size()               const noexcept -> size_t;
+    auto infra_size()               const noexcept -> size_t;
+    auto cloud_size()               const noexcept -> size_t;
+    auto imu_sample_size()          const noexcept -> size_t;
+    auto audio_size()               const noexcept -> size_t;
+    auto bodies_size()              const noexcept -> size_t;
+    auto calibration_size()         const noexcept -> size_t;
+    auto total_data_size()          const -> size_t;
     // # has
-    auto has_calibration() const noexcept -> bool;
+    auto has_calibration()          const noexcept -> bool;
 
     // init
     auto init_from_file_stream(std::ifstream &file) -> void;

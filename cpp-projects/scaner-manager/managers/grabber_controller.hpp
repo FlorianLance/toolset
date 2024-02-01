@@ -165,8 +165,8 @@ public:
 
 
     // calibration
-    std_v2<geo::Pt3f> registeredPoints;
-    std_v2<geo::Pt3f> registeredColors;   
+    std::vector<std::vector<geo::Pt3f>> registeredPoints;
+    std::vector<std::vector<geo::Pt3f>> registeredColors;
 
     std::vector<geo::Pt3f> processedPoints;
     std::vector<geo::Pt3f> processedColors;

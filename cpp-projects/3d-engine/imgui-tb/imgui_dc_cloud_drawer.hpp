@@ -64,6 +64,7 @@ struct DCCloudDrawer{
 
     // textures
     gl::Texture2D colorT;
+    gl::Texture2D depthSizedColorT;
     gl::Texture2D depthT;
     gl::Texture2D infraT;
 

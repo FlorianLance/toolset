@@ -53,9 +53,9 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
     ImGuiUiDrawer::title2("PIXELS");
     {
         float minMaxD[2] = {filters.minDepthF, filters.maxDepthF};
-
-
-        auto dRange = (cam::depth_range(mode)*1000.f).conv<int>();
+        
+        
+        auto dRange = (cam::dc_depth_range(mode)*1000.f).conv<int>();
         auto diff   = dRange.y() - dRange.x();
 
         ImGuiUiDrawer::text(std::format("Depth (factor): min: {}mm, max: {}mm", static_cast<int>(dRange.x() + minMaxD[0]*diff),  static_cast<int>(dRange.x() + minMaxD[1]*diff)));
@@ -67,10 +67,9 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         }
         ImGui::Unindent();
 
-        auto resolution = cam::mixed_resolution(mode);
-
+        auto dRes = cam::dc_depth_resolution(mode);
         float minMaxW[2] = {filters.minWidthF, filters.maxWidthF};
-        ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*resolution.x()),  static_cast<int>(minMaxW[1]*resolution.x())));
+        ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*cam::dc_depth_width(dRes)),  static_cast<int>(minMaxW[1]*cam::dc_depth_width(dRes))));
         ImGui::Indent();
         if(ImGui::SliderFloat2("###settings_width_min_max_factors", minMaxW, 0.f, 1.f)){
             filters.minWidthF = minMaxW[0];
@@ -80,7 +79,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
         ImGui::Unindent();
 
         float minMaxH[2] = {filters.minHeightF, filters.maxHeightF};
-        ImGuiUiDrawer::text(std::format("Height (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxH[0]*resolution.y()),  static_cast<int>(minMaxH[1]*resolution.y())));
+        ImGuiUiDrawer::text(std::format("Height (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxH[0]*cam::dc_depth_height(dRes)),  static_cast<int>(minMaxH[1]*cam::dc_depth_height(dRes))));
         ImGui::Indent();
         if(ImGui::SliderFloat2("###settings_height_min_max_factors", minMaxH, 0.f, 1.f)){
             filters.minHeightF = minMaxH[0];
@@ -1002,10 +1001,13 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     // init
     if(modesNames.empty()){
         for(const auto &m : k4Modes){
-            modesNames[m] = std::string(cam::mode_name(m));
+            modesNames[m] = std::string(cam::dc_mode_name(m));
         }
-        for(const auto &m : foModes){
-            modesNames[m] = std::string(cam::mode_name(m));
+        for(const auto &m : fbModes){
+            modesNames[m] = std::string(cam::dc_mode_name(m));
+        }
+        for(const auto &m : fmModes){
+            modesNames[m] = std::string(cam::dc_mode_name(m));
         }
     }
 
@@ -1021,7 +1023,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         auto nDeviceType = static_cast<cam::DCType>(guiCurrentTypeSelection);
         if(nDeviceType != config.typeDevice){
             config.typeDevice = nDeviceType;
-            config.mode       = cam::default_camera_mode(config.typeDevice);
+            config.mode       = cam::dc_default_camera_mode(config.typeDevice);
             updateP = true;
         }
     }
@@ -1055,12 +1057,27 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::Spacing();
     ImGui::Text("Mode:");
     ImGui::Indent();
+    ImGui::SetNextItemWidth(280.f);
 
     auto currentModeName = modesNames[config.mode];
     if(config.typeDevice == cam::DCType::FemtoBolt){
         if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
-            for(const auto &m : foModes){
+            for(const auto &m : fbModes){
                 bool selected = m == config.mode;
+                if (ImGui::Selectable(modesNames[m].c_str(), selected)){
+                    config.mode = m;
+                    updateP = true;
+                }
+                if(selected){
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }else if(config.typeDevice == cam::DCType::FemtoMega){        
+        if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
+            for(const auto &m : fmModes){
+                bool selected = m == config.mode;                
                 if (ImGui::Selectable(modesNames[m].c_str(), selected)){
                     config.mode = m;
                     updateP = true;
@@ -1180,7 +1197,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         updateP = true;
     }
     
-    if(type == DCType::AzureKinect || type == DCType::FemtoBolt){
+    if((type == DCType::AzureKinect) || (type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
         ImGui::SameLine();
         if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
             updateP = true;
@@ -1382,25 +1399,52 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
     if(is_available(CST::Power_line_frequency, type)){
 
         if(ImGui::Button("D###default_Powerline frequency")){
-            colors.powerlineFrequency = default_value(CST::Power_line_frequency, type);
+            colors.powerlineFrequency = static_cast<DCPowerlineFrequency>(default_value(CST::Power_line_frequency, type));
             update = true;
         }
         ImGui::SameLine();
 
         int guiSel;
         if(type == DCType::AzureKinect){
-            guiSel = colors.powerlineFrequency-1;
+
+            if(colors.powerlineFrequency == DCPowerlineFrequency::F50){
+                guiSel = 0;
+            }else{
+                guiSel = 1;
+            }
+
             ImGui::SetNextItemWidth(100.f);
             if(ImGui::Combo("###settings_mode_combo", &guiSel, k4PowerlineFrequencyItems, IM_ARRAYSIZE(k4PowerlineFrequencyItems))){
                 update       = true;
-                colors.powerlineFrequency = guiSel + 1;
+
+                if(guiSel == 0){
+                    colors.powerlineFrequency = DCPowerlineFrequency::F50;
+                }else{
+                    colors.powerlineFrequency = DCPowerlineFrequency::F60;
+                }
             }
-        }else if(type == DCType::FemtoBolt){
-            guiSel = colors.powerlineFrequency;
+
+        }else if(type == DCType::FemtoBolt || type == DCType::FemtoMega){
+
+            if(colors.powerlineFrequency == DCPowerlineFrequency::Undefined){
+                guiSel = 0;
+            }else if(colors.powerlineFrequency == DCPowerlineFrequency::F50){
+                guiSel = 1;
+            }else{
+                guiSel = 2;
+            }
+
             ImGui::SetNextItemWidth(100.f);
             if(ImGui::Combo("###settings_mode_combo", &guiSel, obPowerlineFrequencyItems, IM_ARRAYSIZE(obPowerlineFrequencyItems))){
                 update       = true;
-                colors.powerlineFrequency = guiSel;
+
+                if(guiSel == 0){
+                    colors.powerlineFrequency = DCPowerlineFrequency::Undefined;
+                }else if(guiSel == 1){
+                    colors.powerlineFrequency = DCPowerlineFrequency::F50;
+                }else{
+                    colors.powerlineFrequency = DCPowerlineFrequency::F60;
+                }
             }
         }
         ImGui::SameLine();

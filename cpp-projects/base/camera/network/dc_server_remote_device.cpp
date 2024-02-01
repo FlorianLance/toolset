@@ -62,7 +62,6 @@ DCServerRemoteDevice::~DCServerRemoteDevice(){
     DCServerRemoteDevice::clean();
 }
 
-#include <iostream>
 auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool {
 
     // i->id    = id;
@@ -213,7 +212,7 @@ auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<ca
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
-    if(compressedFrame){        
+    if(compressedFrame){
         remote_frame_signal(std::move(compressedFrame));
     }
 }

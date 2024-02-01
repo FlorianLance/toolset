@@ -112,7 +112,7 @@ auto DCDevice::is_reading() const noexcept -> bool{
 }
 
 auto DCDevice::get_nb_capture_per_second() const noexcept -> float{
-    return i->dd->timing.nbCapturePerSecond;
+    return i->dd->fTiming.nbCapturePerSecond;
 }
 
 auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{

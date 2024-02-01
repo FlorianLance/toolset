@@ -50,7 +50,7 @@
 namespace tool::graphics {
 
 [[maybe_unused]] static constexpr const char* devicesTypes[] = {
-    "Kinect4", "Orbbecc femto"
+    "Azure kinect", "Femto bolt", "Femto mega"
 };
 
 [[maybe_unused]] static constexpr const char* synchItems[] = {
@@ -108,8 +108,9 @@ public:
 
     static inline std::vector<std::string> devicesNames = {
         "dev_0", "dev_1", "dev_2", "dev_3", "dev_4", "dev_5", "dev_6", "dev_7", "dev_8", "dev_9"};
-    static inline std::vector<cam::DCMode> k4Modes = cam::get_device_modes(cam::DCType::AzureKinect);
-    static inline std::vector<cam::DCMode> foModes = cam::get_device_modes(cam::DCType::FemtoBolt);
+    static inline std::vector<cam::DCMode> k4Modes = cam::dc_get_device_modes(cam::DCType::AzureKinect);
+    static inline std::vector<cam::DCMode> fbModes = cam::dc_get_device_modes(cam::DCType::FemtoBolt);
+    static inline std::vector<cam::DCMode> fmModes = cam::dc_get_device_modes(cam::DCType::FemtoMega);
     static inline std::map<cam::DCMode, std::string> modesNames = {};
 
     static auto udpate_device_name(size_t idDevice, const std::string &deviceName) -> void{

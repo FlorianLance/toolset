@@ -52,8 +52,8 @@ int main(){
     // test_raw_orbbec_femto();
     // test_raw_orbbec_femto();
     // test_raw_k4device();
-    // test_kinect4();
-    test_femto_mega();
+    test_kinect4();
+    // test_femto_mega();
     return 0;
 }
 

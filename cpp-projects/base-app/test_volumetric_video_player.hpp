@@ -55,7 +55,7 @@ auto test_dc_player() -> void{
         auto id = player.video()->closest_frame_id_from_time(0, time);
         if(id != -1){//.has_value()){
             if(auto frame = player.video()->get_compressed_frame(0, id/**.value()*/).lock(); frame != nullptr){
-                std::cout << "time " << time << " id " << id/**.value()*/ << " " << frame->cloud_vertices_size() <<  "\n";
+                std::cout << "time " << time << " id " << id/**.value()*/ << " " << frame->cloud_size() <<  "\n";
             }
 
         }else{

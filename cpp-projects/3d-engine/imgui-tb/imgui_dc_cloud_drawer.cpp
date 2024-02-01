@@ -84,6 +84,7 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
             static_cast<GLsizei>(frame->depthWidth),
             static_cast<GLsizei>(frame->depthHeight), 3, reinterpret_cast<std::uint8_t*>(frame->imageDepthData.data()));
     }
+
     if(!frame->imageInfraData.empty()){
         infraT.init_or_update_8ui(
             static_cast<GLsizei>(frame->infraWidth),

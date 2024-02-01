@@ -68,13 +68,13 @@ auto convert_to_k4_calibration(DCMode mode, const OBCalibrationParam &obCalibrat
         break;
     }
 
-    auto depthRes = depth_resolution(mode);
+    auto depthRes = dc_depth_resolution(mode);
 
     // depth calibration
     auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
     // # resolutions
-    cdepthCamCal.resolution_width   = depth_width(depthRes);
-    cdepthCamCal.resolution_height  = depth_height(depthRes);
+    cdepthCamCal.resolution_width   = dc_depth_width(depthRes);
+    cdepthCamCal.resolution_height  = dc_depth_height(depthRes);
     // # metric_radius
     cdepthCamCal.metric_radius = 1.7399998;
     // # intrinsics
@@ -115,14 +115,14 @@ auto convert_to_k4_calibration(DCMode mode, const OBCalibrationParam &obCalibrat
     dExtTr[0] = 0.f;
     dExtTr[1] = 0.f;
     dExtTr[2] = 0.f;
-
-    auto colorRes = color_resolution(mode);
+    
+    auto colorRes = dc_color_resolution(mode);
 
     // color calibration
     auto &cColorCamCal              = k4Calibration.color_camera_calibration;
     // # resolutions
-    cColorCamCal.resolution_width   = color_width(colorRes);
-    cColorCamCal.resolution_height  = color_height(colorRes);
+    cColorCamCal.resolution_width   = dc_color_width(colorRes);
+    cColorCamCal.resolution_height  = dc_color_height(colorRes);
     // # metric_radius
     cColorCamCal.metric_radius      = 1.7;
     // # intrinsics
@@ -178,12 +178,12 @@ auto test_raw_orbbec_femto() -> void{
 
     DCMode mode = DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30;
     // DCMode mode = DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30;
-    auto dRes = depth_resolution(mode);
-    auto cRes = color_resolution(mode);
-    size_t depthWidth  = depth_width(dRes);
-    size_t depthHeight = depth_height(dRes);
-    size_t colorWidth  = color_width(cRes);
-    size_t colorHeight = color_height(cRes);
+    auto dRes = dc_depth_resolution(mode);
+    auto cRes = dc_color_resolution(mode);
+    size_t depthWidth  = dc_depth_width(dRes);
+    size_t depthHeight = dc_depth_height(dRes);
+    size_t colorWidth  = dc_color_width(cRes);
+    size_t colorHeight = dc_color_height(cRes);
 
     std::cout << "test_raw_orbbec: " << std::endl;
     auto context = std::make_unique<ob::Context>();

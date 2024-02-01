@@ -113,6 +113,7 @@ auto DCGrabberDataProcessing::invalid_compressed_frame() -> void {
 }
 
 
+#include <iostream>
 auto DCGrabberDataProcessing::process() -> void {
 
     i->isProcessing = true;
@@ -145,10 +146,14 @@ auto DCGrabberDataProcessing::process() -> void {
         {
             if(frameToBeUncompresed != nullptr){
                 auto uncompressedFrame = std::make_shared<DCFrame>();
+
+                std::cout << "COMPRESS\n";
                 if(i->frameUncompressor->uncompress(frameToBeUncompresed.get(), *uncompressedFrame)){
                     std::lock_guard<std::mutex> guard(*i->locker);
                     i->frame = uncompressedFrame;
-                }                
+                }else{
+                    std::cout << "ERROR COMPRESS\n";
+                }
             }
         }
 

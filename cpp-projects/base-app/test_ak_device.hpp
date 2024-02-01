@@ -15,6 +15,7 @@
 #include "camera/dc_device_manager.hpp"
 #include "utility/benchmark.hpp"
 #include "geometry/point3.hpp"
+#include "io/cloud_io.hpp"
 
 
 auto test_kinect4() -> void{
@@ -22,14 +23,14 @@ auto test_kinect4() -> void{
     using namespace tool;
     using namespace tool::cam;
 
-    std::puts("### Test femto orbbec.\n");
+    std::puts("### Test Azure kinectc.\n");
 
     DCDeviceManager dManager;
 
     tool::cam::DCDeviceSettings ds;
 
     // actions
-    ds.actionsS.openDevice = true;
+    ds.actionsS.openDevice    = true;
     ds.actionsS.startReading  = true;
     // config
     ds.configS.typeDevice   = DCType::AzureKinect;
@@ -38,12 +39,46 @@ auto test_kinect4() -> void{
     ds.configS.synchMode    = DCSynchronisationMode::Standalone;
     ds.configS.mode         = DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30;
     ds.configS.delayBetweenColorAndDepthUsec = 0;
-    ds.configS.synchronizeColorAndDepth = true;
+    ds.configS.synchronizeColorAndDepth = true;    
+    // data
+    ds.dataS.generateRGBLocalFrame   = true;
+    ds.dataS.generateDepthLocalFrame = true;
+    ds.dataS.generateInfraLocalFrame = true;
+    ds.dataS.generateCloudLocal      = true;
 
     std::puts("### Open device.\n");
     dManager.update_device_settings(ds);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    int idC = 0;
+    dManager.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+        if(idC < 5){
+            std::cout << "frame " << frame->depthWidth << " " << frame->depthHeight << " " << frame->depthData.size() << " "<< frame->imageDepthData.size() << "\n";
+            std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
+            tool::io::CloudIO::save_cloud(std::format("D:/ak_cloud_{}.obj", idC++), frame->cloud);
+
+
+            // geo::ColoredCloudData c;
+            // auto &d = frame->depthData;
+
+
+            // auto dRes    = depth_resolution(ds.configS.mode);
+            // auto dWidth  = depth_width(dRes);
+            // auto dHeight = depth_height(dRes);
+
+            // // std::cout << "depth " << frame->depthData.size() << "\n";
+            // c.vertices.resize(dWidth*dHeight);
+            // size_t id = 0;
+            // for(int ii = 0; ii < dHeight; ++ii){
+            //         for(int jj = 0; jj < dWidth; ++jj){
+            //         c.vertices[id] = {ii*00.1f, jj*0.01f, d[id]*0.001f};
+            //         id++;
+            //     }
+            // }
+            // tool::io::CloudIO::save_cloud(std::format("D:/ak2_cloud_{}.obj", idC++), c);
+
+        }
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     ds.actionsS.startReading  = false;
     ds.actionsS.openDevice = false;
