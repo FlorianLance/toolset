@@ -41,11 +41,7 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
 }
 
 auto AzureKinectDeviceImpl::update_camera_from_colors_settings() -> void {
-
-    if(!is_opened()){
-        return;
-    }
-    azureD->update_camera_from_colors_settings(readFramesFromCameras, settings.color);
+    azureD->update_camera_from_colors_settings(settings.color);
 }
 
 auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {    
@@ -78,21 +74,25 @@ auto AzureKinectDeviceImpl::is_opened() const noexcept -> bool{
     return azureD->is_opened();
 }
 
-auto AzureKinectDeviceImpl::nb_devices() const noexcept -> uint32_t {
-    return azureD->nb_devices();
+auto AzureKinectDeviceImpl::nb_devices() const noexcept -> std::uint32_t {
+    return static_cast<std::uint32_t>(azureD->nb_devices());
 }
 
 auto AzureKinectDeviceImpl::device_name() const noexcept -> std::string {
     return azureD->device_name();
 }
 
+auto AzureKinectDeviceImpl::read_calibration() -> void{
+    fData.binaryCalibration = azureD->read_calibration();
+}
+
 auto AzureKinectDeviceImpl::capture_frame(std::int32_t timeoutMs) -> bool{
     return azureD->capture_frame(timeoutMs);
 }
 
-auto AzureKinectDeviceImpl::read_color_image() -> bool {
+auto AzureKinectDeviceImpl::read_color_image(bool enable) -> bool {
     
-    if(mInfos.has_color()){
+    if(enable){
         fData.rawColor = azureD->read_color_image();
     }else{
         fData.rawColor = {};
@@ -100,9 +100,9 @@ auto AzureKinectDeviceImpl::read_color_image() -> bool {
     return !fData.rawColor.empty();
 }
 
-auto AzureKinectDeviceImpl::read_depth_image() -> bool {
+auto AzureKinectDeviceImpl::read_depth_image(bool enable) -> bool {
     
-    if(mInfos.has_depth()){
+    if(enable){
         fData.depth = azureD->read_depth_image();
     }else{
         fData.depth = {};
@@ -110,9 +110,9 @@ auto AzureKinectDeviceImpl::read_depth_image() -> bool {
     return !fData.depth.empty();
 }
 
-auto AzureKinectDeviceImpl::read_infra_image() -> bool {
+auto AzureKinectDeviceImpl::read_infra_image(bool enable) -> bool {
 
-    if(dc_has_infrared(settings.config.mode)){
+    if(enable){
         fData.infra = azureD->read_infra_image();
     }else{
         fData.infra = {};
@@ -120,34 +120,38 @@ auto AzureKinectDeviceImpl::read_infra_image() -> bool {
     return !fData.infra.empty();
 }
 
-auto AzureKinectDeviceImpl::read_from_microphones() -> void{
-    if(settings.data.captureAudio){
+auto AzureKinectDeviceImpl::read_from_microphones(bool enable) -> void{
+    if(enable){
         fData.audioChannels = azureD->read_from_microphones();
     }else{
         fData.audioChannels = {0, {}};
     }
 }
 
-auto AzureKinectDeviceImpl::read_from_imu() -> void {
-    if(auto imuSample = azureD->read_from_imu(); imuSample.has_value()){
-        fData.imuSample = imuSample.value();
-        dcDevice->new_imu_sample_signal(imuSample.value());
+auto AzureKinectDeviceImpl::read_from_imu(bool enable) -> void {
+
+    if(enable){
+        fData.binaryIMU = azureD->read_from_imu();
     }else{
-        fData.imuSample = std::nullopt;
+        fData.binaryIMU = {};
     }
 }
 
-auto AzureKinectDeviceImpl::read_bodies() -> void{
-    if(mInfos.has_depth() && settings.config.enableBodyTracking){
-        fData.bodiesIdDepth = azureD->read_bodies(fData.bodies);
+auto AzureKinectDeviceImpl::read_bodies(bool enable) -> void{
+
+    if(enable){
+        auto bodiesD = azureD->read_bodies();
+        fData.bodiesIdDepth = std::get<0>(bodiesD);
+        fData.bodies        = std::get<1>(bodiesD);
     }else{
         fData.bodiesIdDepth = {};
+        fData.bodies        = {};
     }
 }
 
-auto AzureKinectDeviceImpl::generate_cloud() -> void{
+auto AzureKinectDeviceImpl::generate_cloud(bool enable) -> void{
 
-    if(dc_has_cloud(settings.config.mode) && !fData.depth.empty() && fData.validDepthValues > 0){
+    if(enable && !fData.depth.empty() && fData.validDepthValues > 0){
         fData.depthCloud = azureD->generate_cloud();
     }else{
         fData.depthCloud = {};
@@ -173,9 +177,10 @@ auto AzureKinectDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> s
     update_depth(dataS, dFrame.get());
     update_infra(dataS, dFrame.get());
     update_cloud(dataS, dFrame.get());
-    update_audio(dataS, dFrame.get());
-    update_imu(dataS, dFrame.get());
     update_bodies(dataS, dFrame.get());
+    update_calibration(dFrame.get());
+    update_imu(dataS, dFrame.get());
+    update_audio(dataS, dFrame.get());
 
     tool::Bench::stop();
 
@@ -188,11 +193,6 @@ auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
 
     auto cFrame = std::make_unique<DCCompressedFrame>();
     update_compressed_frame_infos(cFrame.get());
-
-    auto calibrationData = azureD->calibration_data();
-    cFrame->calibrationData.resize(calibrationData.size());
-    std::copy(calibrationData.begin(), calibrationData.end(), cFrame->calibrationData.begin());
-
     update_compressed_frame_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth(dataS, cFrame.get());
@@ -200,7 +200,8 @@ auto AzureKinectDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, co
     update_compressed_frame_cloud(dataS, cFrame.get());
     update_compressed_frame_audio(dataS, cFrame.get());
     update_compressed_frame_imu(dataS, cFrame.get());
-    update_compressed_frame_bodies(dataS, cFrame.get());
+    update_compressed_frame_bodies(dataS, filtersS, cFrame.get());
+    update_compressed_frame_calibration(cFrame.get());
 
     tool::Bench::stop();
 

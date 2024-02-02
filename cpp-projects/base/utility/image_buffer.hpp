@@ -26,53 +26,43 @@
 
 #pragma once
 
-// std
-#include <span>
-
 // local
-#include "buffer_vector.hpp"
+#include "buffer.hpp"
 
 namespace tool{
 
 template<typename ElementType>
-struct ImageBuffer{
+struct ImageSpan : public std::span<ElementType>{
+
+    ImageSpan(size_t width, size_t height, const std::vector<ElementType> &values) : std::span<ElementType>(values), width(width), height(height){
+    }
 
     size_t width = 0;
     size_t height = 0;
-    Buffer<ElementType> buffer;
+};
+
+template<typename ElementType>
+struct ImageBuffer : public Buffer<ElementType>{
 
     constexpr auto reset() noexcept -> void{
         width  = 0;
         height = 0;
-        buffer.clear();
+        Buffer<ElementType>::clear();
     }
-    constexpr auto resize(size_t size) -> void{buffer.resize(size);}
 
-    [[nodiscard]] constexpr auto empty()        const   noexcept -> bool                  {return buffer.empty();}
-    [[nodiscard]] constexpr auto size()         const   noexcept -> size_t                {return buffer.size();}
-    [[nodiscard]] constexpr auto get_data()             noexcept -> ElementType*          {return buffer.get_data();}
-    [[nodiscard]] constexpr auto get_data()     const   noexcept -> const ElementType*    {return buffer.get_data();}
-    [[nodiscard]] constexpr auto get_raw_data()         noexcept -> std::uint8_t*         {return buffer.get_raw_data();}
-    [[nodiscard]] constexpr auto get_raw_data() const   noexcept -> const std::uint8_t*   {return buffer.get_raw_data();}
+    constexpr auto resize(size_t size_t) noexcept -> void{
+        Buffer<ElementType>::resize(size_t);
+    }
 
-    // iterators
-    [[nodiscard]] constexpr auto begin()                noexcept {return buffer.begin();}
-    [[nodiscard]] constexpr auto begin()        const   noexcept {return buffer.cbegin();}
-    [[nodiscard]] constexpr auto cbegin()       const   noexcept {return buffer.cbegin();}
-    [[nodiscard]] constexpr auto end()                  noexcept {return buffer.end();}
-    [[nodiscard]] constexpr auto end()          const   noexcept {return buffer.cend();}
-    [[nodiscard]] constexpr auto cend()         const   noexcept {return buffer.cend();}
-    [[nodiscard]] constexpr auto rbegin()               noexcept {return buffer.rbegin();}
-    [[nodiscard]] constexpr auto rbegin()       const   noexcept {return buffer.rcbegin();}
-    [[nodiscard]] constexpr auto rcbegin()      const   noexcept {return buffer.rcbegin();}
-    [[nodiscard]] constexpr auto rend()                 noexcept {return buffer.rend();}
-    [[nodiscard]] constexpr auto rend()         const   noexcept {return buffer.rcend();}
-    [[nodiscard]] constexpr auto rcend()        const   noexcept {return buffer.rcend();}
+    constexpr auto resize(size_t width, size_t height) noexcept -> void{
+        this->width  = width;
+        this->height = height;
+        Buffer<ElementType>::resize(width*height);
+    }
 
-    // spans
-    [[nodiscard]] auto raw_span()                       noexcept -> std::span<std::uint8_t>         { return buffer.raw_span();}
-    [[nodiscard]] auto raw_span()               const   noexcept -> std::span<const std::uint8_t>   { return buffer.raw_span();}
-    [[nodiscard]] auto span()                           noexcept -> std::span<ElementType>          { return buffer.span();}
-    [[nodiscard]] auto span()                   const   noexcept -> std::span<const ElementType>    { return buffer.span();}
+    size_t width = 0;
+    size_t height = 0;
 };
+
+using BinaryImageBuffer = ImageBuffer<std::byte>;
 }

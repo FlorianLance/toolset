@@ -113,18 +113,18 @@ struct DCFrameUncompressor::Impl{
     // // std::shared_ptr<ob::Frame> obDepthBuffer = nullptr;
     // std::shared_ptr<ob::Frame> obCloud = nullptr;
 
-    auto decode_from_jpeg(size_t width, size_t height, TJPF format, size_t encodedSize, const std::uint8_t* encodedData, std::span<std::uint8_t> decodedData) -> bool{
+    auto decode_from_jpeg(size_t width, size_t height, TJPF format, ConstBinarySpan encodedImage, BinarySpan decodedImage) -> bool{
 
-        if(decodedData.size() < encodedSize){
+        if(decodedImage.size() < encodedImage.size()){
             Logger::error("[DCFrameUncompressor::decode_from_jpeg] Invalid inputs..\n");
         }
 
         // uncompress
         const int decompressStatus = tjDecompress2(
             jpegUncompressor,
-            encodedData,
-            static_cast<unsigned long>(encodedSize),
-            decodedData.data(),
+            reinterpret_cast<const unsigned char *>(encodedImage.data()),
+            static_cast<unsigned long>(encodedImage.size()),
+            reinterpret_cast<unsigned char *>(decodedImage.data()),
             static_cast<int>(width),
             0, // pitch
             static_cast<int>(height),
@@ -138,8 +138,10 @@ struct DCFrameUncompressor::Impl{
         return true;
     }
 
-    auto decode_from_jpeg(const ImageBuffer<uint8_t> &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-        if(decode_from_jpeg(encodedImage.width, encodedImage.height, TJPF_RGBA, encodedImage.size(), encodedImage.get_raw_data(), image.raw_span())){
+    auto decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
+
+        image.resize(encodedImage.width * encodedImage.height);
+        if(decode_from_jpeg(encodedImage.width, encodedImage.height, TJPF_RGBA, encodedImage.byte_span(), image.byte_span())){
             image.width  = encodedImage.width;
             image.height = encodedImage.height;
             return true;
@@ -147,8 +149,10 @@ struct DCFrameUncompressor::Impl{
         return false;
     }
 
-    auto decode_from_jpeg(const ImageBuffer<uint8_t> &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-        if(decode_from_jpeg(encodedImage.width, encodedImage.height, TJPF_RGB, encodedImage.size(), encodedImage.get_raw_data(), image.raw_span())){
+    auto decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
+
+        image.resize(encodedImage.width * encodedImage.height);
+        if(decode_from_jpeg(encodedImage.width, encodedImage.height, TJPF_RGB, encodedImage.byte_span(), image.byte_span())){
             image.width  = encodedImage.width;
             image.height = encodedImage.height;
             return true;
@@ -156,8 +160,10 @@ struct DCFrameUncompressor::Impl{
         return false;
     }
 
-    auto decode_from_jpeg(size_t width, size_t height, std::span<uint8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-        if(decode_from_jpeg(width, height, TJPF_RGBA, encodedImage.size(), encodedImage.data(), image.raw_span())){
+    auto decode_from_jpeg(size_t width, size_t height, ConstBinarySpan encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
+
+        image.resize(width * height);
+        if(decode_from_jpeg(width, height, TJPF_RGBA, encodedImage, image.byte_span())){
             image.width  = width;
             image.height = height;
             return true;
@@ -165,26 +171,10 @@ struct DCFrameUncompressor::Impl{
         return false;
     }
 
-    auto decode_from_jpeg(size_t width, size_t height, std::span<uint8_t> encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-        if(decode_from_jpeg(width, height, TJPF_RGB, encodedImage.size(), encodedImage.data(), image.raw_span())){
-            image.width  = width;
-            image.height = height;
-            return true;
-        }
-        return false;
-    }
+    auto decode_from_jpeg(size_t width, size_t height, ConstBinarySpan encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
 
-    auto decode_from_jpeg(size_t width, size_t height, std::span<int8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-        if(decode_from_jpeg(width, height, TJPF_RGBA, encodedImage.size(), reinterpret_cast<std::uint8_t*>(encodedImage.data()), image.raw_span())){
-            image.width  = width;
-            image.height = height;
-            return true;
-        }
-        return false;
-    }
-
-    auto decode_from_jpeg(size_t width, size_t height, std::span<int8_t> encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-        if(decode_from_jpeg(width, height, TJPF_RGB, encodedImage.size(), reinterpret_cast<std::uint8_t*>(encodedImage.data()), image.raw_span())){
+        image.resize(width * height);
+        if(decode_from_jpeg(width, height, TJPF_RGB, encodedImage, image.byte_span())){
             image.width  = width;
             image.height = height;
             return true;
@@ -250,6 +240,104 @@ DCFrameUncompressor::DCFrameUncompressor() : i(std::make_unique<Impl>()){}
 
 DCFrameUncompressor::~DCFrameUncompressor(){
 }
+
+
+auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, BinarySpan encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
+    return i->decode_from_jpeg(width, height, encodedImage, image);
+}
+
+auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, BinarySpan encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
+    return i->decode_from_jpeg(width, height, encodedImage, image);
+}
+
+auto DCFrameUncompressor::decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
+    return i->decode_from_jpeg(encodedImage, image);
+}
+
+auto DCFrameUncompressor::decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
+    return i->decode_from_jpeg(encodedImage, image);
+}
+
+auto DCFrameUncompressor::decode_from_lossless(const BinaryImageBuffer &encodedImage, ImageBuffer<uint16_t> &image) -> bool{
+
+    image.width  = encodedImage.width;
+    image.height = encodedImage.height;
+
+    size_t uncompressedSize = encodedImage.width * encodedImage.height;
+    size_t rest = uncompressedSize % 128;
+    size_t paddedUncompressedSize = rest == 0 ? uncompressedSize : uncompressedSize + 128-rest;
+
+    if(image.size() < paddedUncompressedSize){
+        image.resize(paddedUncompressedSize);
+    }
+
+    size_t decodedBytesNb = p4nzdec128v16(
+        reinterpret_cast<unsigned char *>(const_cast<std::byte*>(encodedImage.get_data())),
+        paddedUncompressedSize,
+        image.get_data()
+    );
+    if(decodedBytesNb == 0){
+        Logger::error("[DCFrameUncompressor::uncompress_lossless_16_bits_128padded_data] Error decoding data.\n");
+        return false;
+    }
+
+    image.resize(uncompressedSize);
+
+    return true;
+}
+
+auto DCFrameUncompressor::convert_to_depth_image(DCMode mode, const ImageBuffer<uint16_t> &depth, ImageBuffer<ColorRGB8> &rgbDepth) -> void{
+
+    rgbDepth.resize(depth.width, depth.height);
+
+    const auto dRange = dc_depth_range(mode)*1000.f;
+    const auto diff = dRange(1) - dRange(0);
+
+    // convert data
+    for(size_t id = 0; id < depth.size(); ++id){
+
+        if(depth[id] == dc_invalid_depth_value){
+            rgbDepth[id] = ColorRGB8{0,0,0};
+            continue;;
+        }
+
+        float vF = (static_cast<float>(depth[id]) - dRange(0))/diff;
+        float intPart;
+        float decPart = std::modf((vF*(i->depthGradient.size()-1)), &intPart);
+        size_t idG = static_cast<size_t>(intPart);
+
+        auto col = i->depthGradient[idG]*(1.f-decPart) + i->depthGradient[idG+1]*decPart;
+        rgbDepth[id] = ColorRGB8{
+            static_cast<uint8_t>(255*col.x()),
+            static_cast<uint8_t>(255*col.y()),
+            static_cast<uint8_t>(255*col.z())
+        };
+    }
+}
+
+auto DCFrameUncompressor::convert_to_infra_image(DCMode mode, const ImageBuffer<uint16_t> &infra, ImageBuffer<ColorRGB8> &rgbInfra) -> void{
+
+    rgbInfra.resize(infra.width, infra.height);
+
+    const float max = 2000;
+    for(size_t id = 0; id < infra.size(); ++id){
+
+        float vF = static_cast<float>(infra[id]);
+        if(vF > max){
+            vF = max;
+        }
+        vF/=max;
+
+        rgbInfra[id] = ColorRGB8{
+            static_cast<uint8_t>(255*vF),
+            static_cast<uint8_t>(255*vF),
+            static_cast<uint8_t>(255*vF)
+        };
+    }
+}
+
+
+
 
 
 // auto DCFrameUncompressor::Impl::update_id_array(size_t idV) -> void{
@@ -1548,6 +1636,45 @@ DCFrameUncompressor::~DCFrameUncompressor(){
 // }
 
 auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+
+    // frame
+    frame.idCapture      = cFrame->idCapture;
+    frame.afterCaptureTS = cFrame->afterCaptureTS;
+    frame.receivedTS     = cFrame->receivedTS;
+
+    // info
+    frame.mode = cFrame->mode;
+    size_t validVerticesCount = cFrame->validVerticesCount;
+
+    // images
+    if(!cFrame->jpegRGBA8Color.empty()){
+        if(!decode_from_jpeg(cFrame->jpegRGBA8Color, frame.rgbaColor)){
+            return false;
+        }
+    }
+    if(!cFrame->jpegRGBA8DepthSizedColor.empty()){
+        if(!decode_from_jpeg(cFrame->jpegRGBA8DepthSizedColor, frame.rgbaDepthSizedColor)){
+            return false;
+        }        
+    }
+    if(!cFrame->jpegG8BodiesId.empty()){
+        // if(!decode_from_jpeg(cFrame->jpegG8BodiesId, frame.grayBodiesId)){
+        //     return false;
+        // }
+    }        
+    if(!cFrame->ll16eDepth.empty()){
+        if(!decode_from_lossless(cFrame->ll16eDepth, frame.depth)){
+            return false;
+        }
+        convert_to_depth_image(frame.mode, frame.depth, frame.rgbDepth);
+    }
+    if(!cFrame->ll16eInfra.empty()){
+        if(!decode_from_lossless(cFrame->ll16eInfra, frame.infra)){
+            return false;
+        }
+        convert_to_infra_image(frame.mode, frame.infra, frame.rgbInfra);
+    }
+
     // if(dc_get_device(cFrame->mode) == DCType::AzureKinect){
     //     return i->k4a_uncompress(cFrame, frame);
     // }else if((dc_get_device(cFrame->mode) == DCType::FemtoBolt) || (dc_get_device(cFrame->mode) == DCType::FemtoMega)){
@@ -1555,7 +1682,7 @@ auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) 
     // }
     // return false;
 
-    return false;
+    return true;
 }
 
 
@@ -1594,32 +1721,6 @@ auto DCFrameUncompressor::uncompress(DCCompressedFrame *cFrame, DCFrame &frame) 
 //     }
 //     return -1;
 // }
-
-auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, std::span<uint8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-    return i->decode_from_jpeg(width, height, encodedImage, image);
-}
-
-auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, std::span<uint8_t> encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-    return i->decode_from_jpeg(width, height, encodedImage, image);
-}
-
-auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, std::span<int8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-    return i->decode_from_jpeg(width, height, encodedImage, image);
-}
-
-auto DCFrameUncompressor::decode_from_jpeg(size_t width, size_t height, std::span<int8_t> encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-    return i->decode_from_jpeg(width, height, encodedImage, image);
-}
-
-auto DCFrameUncompressor::decode_from_jpeg(const ImageBuffer<uint8_t> &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-    return i->decode_from_jpeg(encodedImage, image);
-}
-
-auto DCFrameUncompressor::decode_from_jpeg(const ImageBuffer<uint8_t> &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-    return i->decode_from_jpeg(encodedImage, image);
-}
-
-
 
 
 

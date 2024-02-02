@@ -51,12 +51,15 @@ struct DCFrameUncompressor{
     // auto uncompress(DCCompressedFrame *cFrame, geo::Pt3f *vertices, geo::Pt4<std::uint8_t> *colors) -> bool;
     // auto uncompress(DCCompressedFrame *cFrame, DCVertexMeshData *vertices) -> int;
 
-    auto decode_from_jpeg(size_t width, size_t height, std::span<std::int8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
-    auto decode_from_jpeg(size_t width, size_t height, std::span<std::int8_t> encodedImage,  ImageBuffer<ColorRGB8> &image) -> bool;
-    auto decode_from_jpeg(size_t width, size_t height, std::span<std::uint8_t> encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
-    auto decode_from_jpeg(size_t width, size_t height, std::span<std::uint8_t> encodedImage,  ImageBuffer<ColorRGB8> &image) -> bool;
-    auto decode_from_jpeg(const ImageBuffer<std::uint8_t> &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
-    auto decode_from_jpeg(const ImageBuffer<std::uint8_t> &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool;
+    auto decode_from_jpeg(size_t width, size_t height, BinarySpan encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
+    auto decode_from_jpeg(size_t width, size_t height, BinarySpan encodedImage,  ImageBuffer<ColorRGB8> &image) -> bool;
+    auto decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool;
+    auto decode_from_jpeg(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool;
+
+    auto decode_from_lossless(const BinaryImageBuffer &encodedImage, ImageBuffer<std::uint16_t> &image) -> bool;
+
+    auto convert_to_depth_image(DCMode mode, const ImageBuffer<std::uint16_t> &depth, ImageBuffer<ColorRGB8> &rgbDepth) -> void;
+    auto convert_to_infra_image(DCMode mode, const ImageBuffer<std::uint16_t> &infra, ImageBuffer<ColorRGB8> &rgbInfra) -> void;
 
 private:
 

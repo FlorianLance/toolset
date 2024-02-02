@@ -40,19 +40,18 @@ struct DCFrameData{
 
     auto reset(const DCModeInfos &mInfos) -> void;
 
-    // images
-    std::span<std::int8_t> rawColor;
+    // final data
+    BinarySpan rawColor;
     std::span<ColorRGBA8> color;
-    std::span<ColorRGBA8> dephtSizedColor;
+    std::span<ColorRGBA8> dephtSizedColor;    
     std::span<std::uint16_t> depth;
     std::span<std::uint16_t> infra;
+    std::span<ColorGray8> bodiesIdDepth;
     std::span<geo::Pt3<std::int16_t>> depthCloud;
-    std::span<std::uint8_t> bodiesIdDepth;
-
-    // others
-    std::pair<size_t, std::span<float>> audioChannels;
-    std::optional<DCImuSample> imuSample = std::nullopt;
-    std::vector<DCBody> bodies;
+    BinarySpan binaryCalibration;
+    BinarySpan binaryIMU;
+    std::pair<size_t, std::span<float>> audioChannels;    
+    std::span<DCBody> bodies;
 
     // processing
     ImageBuffer<ColorRGBA8> convertedColorData;

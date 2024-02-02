@@ -286,49 +286,50 @@ using CR    = DCColorResolution;
 using DR    = DCDepthResolution;
 using Cloud = bool;
 using Infra = bool;
+using Audio = bool;
 using Dev   = DCType;
 
 using TDCMode = std::tuple<
-    DCMode,                                        IF,       CR,         DR,                FPS,      Cloud,  Infra,  Dev>;
+    DCMode,                                        IF,       CR,         DR,                  FPS,      Cloud,  Infra,  Audio, Dev>;
 static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
-    {M::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::AK},
-    {M::AK_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::OFF,           FPS::F30, false,  false,  Dev::AK},
-    {M::AK_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
-    {M::AK_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
-    {M::AK_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::OFF,           FPS::F30, false,  false,  Dev::AK},
-    {M::AK_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::OFF,           FPS::F15, false,  false,  Dev::AK},
-    {M::AK_IMG_C4096x3072_BGRA_F15,                IF::MJPG, CR::R3072P, DR::OFF,           FPS::F15, false,  false,  Dev::AK},
-    {M::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4A_640x576,     FPS::F15, false,  true,   Dev::AK},
-    {M::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, false,  true,   Dev::AK},
-    {M::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4A_640x576,     FPS::F15, false,  true,   Dev::AK},
-    {M::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4A_1024x1024,   FPS::F15, false,  true,   Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI320x288_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_YUY2_F30,     IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI512x512_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_CLOUD_C1280x720_DI1024x1024_NV12_F15,   IF::NV12, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   true,  Dev::AK},
+    {M::AK_IMG_C1280x720_DI320x288_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_320x288,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_IMG_C1280x720_DI640x576_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_IMG_C1280x720_DI512x512_MJPG_F30,       IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   true,  Dev::AK},
+    {M::AK_IMG_C1280x720_DI1024x1024_MJPG_F15,     IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   true,  Dev::AK},
+    {M::AK_IMG_C1280x720_BGRA_F30,                 IF::BGRA, CR::R720P,  DR::OFF,             FPS::F30, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C1920x1080_BGRA_F30,                IF::BGRA, CR::R1080P, DR::OFF,             FPS::F30, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C2560x1440_BGRA_F30,                IF::BGRA, CR::R1440P, DR::OFF,             FPS::F30, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C2048x1536_BGRA_F30,                IF::BGRA, CR::R1536P, DR::OFF,             FPS::F30, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C3840x2160_BGRA_F15,                IF::BGRA, CR::R2160P, DR::OFF,             FPS::F15, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C4096x3072_BGRA_F15,                IF::MJPG, CR::R3072P, DR::OFF,             FPS::F15, false,  false,  true,  Dev::AK},
+    {M::AK_IMG_C2048x1536_DI640x576_BGRA_F15,      IF::BGRA, CR::R1536P, DR::K4A_640x576,     FPS::F15, false,  true,   true,  Dev::AK},
+    {M::AK_IMG_C2048x1536_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, false,  true,   true,  Dev::AK},
+    {M::AK_IMG_C4096x3072_DI640x576_BGRA_F15,      IF::BGRA, CR::R3072P, DR::K4A_640x576,     FPS::F15, false,  true,   true,  Dev::AK},
+    {M::AK_IMG_C4096x3072_DI1024x1024_BGRA_F15,    IF::BGRA, CR::R3072P, DR::K4A_1024x1024,   FPS::F15, false,  true,   true,  Dev::AK},
     // femto bolt
-    {M::FB_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,           FPS::F30, false,  false,  Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FB},
-    {M::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FB},
-    {M::FB_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FB},
+    {M::FB_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,             FPS::F30, false,  false,  false, Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_NV12_F30,     IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   false, Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   false, Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI640x576_BGRA_F30,     IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   false, Dev::FB},
+    {M::FB_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   false, Dev::FB},
+    {M::FB_CLOUD_DI512x512_MJPG_F30,               IF::MJPG, CR::OFF,    DR::K4A_512x512,     FPS::F30, true,   true,   false, Dev::FB},
     // femto mega
-    {M::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   Dev::FM},
-    {M::FM_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   Dev::FM},
-    {M::FM_CLOUD_C1280x720_DI1024x1024_MJPG_F15,   IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   Dev::FM},
-    {M::FM_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,           FPS::F15, false,  false,  Dev::FM},
+    {M::FM_CLOUD_C1280x720_DI512x512_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, true,   true,   false, Dev::FM},
+    {M::FM_CLOUD_C1280x720_DI640x576_MJPG_F30,     IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, true,   true,   false, Dev::FM},
+    {M::FM_CLOUD_C1280x720_DI1024x1024_MJPG_F15,   IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, true,   true,   false, Dev::FM},
+    {M::FM_IMG_C1280x720_MJPG_F30,                 IF::MJPG, CR::R720P,  DR::OFF,             FPS::F15, false,  false,  false, Dev::FM},
     // others
-    {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,           FPS::F30, false,  false,  Dev::Undefined},
-    {M::Merged,                                    IF::BGRA, CR::OFF,    DR::OFF,           FPS::F30, false,  false,  Dev::Undefined},
+    {M::Invalid,                                   IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, false,  false,  false, Dev::Undefined},
+    {M::Merged,                                    IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, false,  false,  false, Dev::Undefined},
 }};
 
 
@@ -372,12 +373,15 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
 [[maybe_unused]] static constexpr auto dc_has_infrared(DCMode m) -> bool{
     return dcModes.at<0,6>(m);
 }
-[[maybe_unused]] static constexpr auto dc_get_device(DCMode m) -> DCType{
+[[maybe_unused]] static constexpr auto dc_has_audio(DCMode m) -> bool{
     return dcModes.at<0,7>(m);
+}
+[[maybe_unused]] static constexpr auto dc_get_device(DCMode m) -> DCType{
+    return dcModes.at<0,8>(m);
 }
 
 [[maybe_unused]] static auto dc_get_device_modes(Dev dev) -> std::vector<DCMode> {
-    return dcModes.elements_matching_columns_values<7,0>(dev);
+    return dcModes.elements_matching_columns_values<8,0>(dev);
 }
 
 [[maybe_unused]] static constexpr std::int16_t dc_invalid_depth_value = 0;

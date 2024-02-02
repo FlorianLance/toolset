@@ -35,33 +35,35 @@ namespace tool{
 
 /**
  * @brief ColorHSV
- * h Hue: [0, 360]
- * s Saturation: [0, 1]
- * v Value: [0, 1]
+ * h Hue:        [0, 360] 4 bytes
+ * s Saturation: [0, 1] 4 bytes
+ * v Value:      [0, 1] 4 bytes
  */
 struct ColorHSV{
 
     ColorHSV() = default;
-    explicit constexpr ColorHSV(float h, float s, float v) : m_col({h,s,v}){}
+    explicit constexpr ColorHSV(float h, float s, float v) : value({h,s,v}){}
 
-    inline auto h() noexcept -> float& {return m_col.x();}
-    constexpr auto h() const noexcept -> float {return m_col.x();}
+    inline auto h() noexcept -> float& {return value.x();}
+    constexpr auto h() const noexcept -> float {return value.x();}
 
-    inline auto s() noexcept -> float& {return m_col.y();}
-    constexpr auto s() const noexcept -> float {return m_col.y();}
+    inline auto s() noexcept -> float& {return value.y();}
+    constexpr auto s() const noexcept -> float {return value.y();}
 
-    inline auto v() noexcept -> float& {return m_col.z();}
-    constexpr auto v() const noexcept -> float {return m_col.z();}
+    inline auto v() noexcept -> float& {return value.z();}
+    constexpr auto v() const noexcept -> float {return value.z();}
 
-private:
-    geo::Pt3f m_col = {0.f,0.f,0.f};
+    geo::Pt3f value = {0.f,0.f,0.f};
 };
+
+using ColorGray8  = std::uint8_t;
+using ColorGray16 = std::uint16_t;
 
 /**
  * @brief ColorRGB8
- * r Red: [0, 255]
- * g Green: [0, 255]
- * b Blue: [0, 255]
+ * r Red:   [0, 255] 1 byte
+ * g Green: [0, 255] 1 byte
+ * b Blue:  [0, 255] 1 byte
  */
 struct ColorRGB8{
 
@@ -71,30 +73,33 @@ struct ColorRGB8{
     ColorRGB8(ColorRGB8&& other) = default;
     ColorRGB8& operator=(ColorRGB8&& other) = default;
 
-    constexpr explicit ColorRGB8(std::uint8_t r, std::uint8_t g, std::uint8_t b) : m_col({r,g,b}){}
-    constexpr explicit ColorRGB8(const geo::Pt3<std::uint8_t> &rgb) : m_col(rgb){}
+    constexpr explicit ColorRGB8(std::uint8_t r, std::uint8_t g, std::uint8_t b) : value({r,g,b}){}
+    constexpr explicit ColorRGB8(const geo::Pt3<std::uint8_t> &rgb) : value(rgb){}
 
-    inline auto r() noexcept -> std::uint8_t& {return m_col.x();}
-    constexpr auto r() const noexcept -> std::uint8_t {return m_col.x();}
+    inline auto r() noexcept -> std::uint8_t& {return value.x();}
+    constexpr auto r() const noexcept -> std::uint8_t {return value.x();}
 
-    inline auto g() noexcept -> std::uint8_t& {return m_col.y();}
-    constexpr auto g() const noexcept -> std::uint8_t {return m_col.y();}
+    inline auto g() noexcept -> std::uint8_t& {return value.y();}
+    constexpr auto g() const noexcept -> std::uint8_t {return value.y();}
 
-    inline auto b() noexcept -> std::uint8_t& {return m_col.z();}
-    constexpr auto b() const noexcept -> std::uint8_t {return m_col.z();}
+    inline auto b() noexcept -> std::uint8_t& {return value.z();}
+    constexpr auto b() const noexcept -> std::uint8_t {return value.z();}
 
-    inline auto rgb() noexcept -> geo::Pt3<std::uint8_t>& {return m_col;}
-    constexpr auto rgb() const noexcept -> geo::Pt3<std::uint8_t> {return m_col;}
+    inline auto rgb() noexcept -> geo::Pt3<std::uint8_t>& {return value;}
+    constexpr auto rgb() const noexcept -> geo::Pt3<std::uint8_t> {return value;}
 
-private:
-    geo::Pt3<std::uint8_t> m_col = {0,0,0};
+    geo::Pt3<std::uint8_t> value = {0,0,0};
 };
+
+
+
+
 
 /**
  * @brief ColorRGB8
- * r Red: [0, 255]
- * g Green: [0, 255]
- * b Blue: [0, 255]
+ * r Red:   [0, 255] 1 byte
+ * g Green: [0, 255] 1 byte
+ * b Blue:  [0, 255] 1 byte
  */
 struct ColorRGBA8{
 
@@ -104,36 +109,35 @@ struct ColorRGBA8{
     ColorRGBA8(ColorRGBA8&& other) = default;
     ColorRGBA8& operator=(ColorRGBA8&& other) = default;
 
-    constexpr explicit ColorRGBA8(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a) : m_col({r,g,b, a}){}
-    constexpr explicit ColorRGBA8(const geo::Pt4<std::uint8_t> &rgba) : m_col(rgba){}
+    constexpr explicit ColorRGBA8(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a) : value({r,g,b, a}){}
+    constexpr explicit ColorRGBA8(const geo::Pt4<std::uint8_t> &rgba) : value(rgba){}
 
-    inline auto r() noexcept -> std::uint8_t& {return m_col.x();}
-    constexpr auto r() const noexcept -> std::uint8_t {return m_col.x();}
+    inline auto r() noexcept -> std::uint8_t& {return value.x();}
+    constexpr auto r() const noexcept -> std::uint8_t {return value.x();}
 
-    inline auto g() noexcept -> std::uint8_t& {return m_col.y();}
-    constexpr auto g() const noexcept -> std::uint8_t {return m_col.y();}
+    inline auto g() noexcept -> std::uint8_t& {return value.y();}
+    constexpr auto g() const noexcept -> std::uint8_t {return value.y();}
 
-    inline auto b() noexcept -> std::uint8_t& {return m_col.z();}
-    constexpr auto b() const noexcept -> std::uint8_t {return m_col.z();}
+    inline auto b() noexcept -> std::uint8_t& {return value.z();}
+    constexpr auto b() const noexcept -> std::uint8_t {return value.z();}
 
-    inline auto a() noexcept -> std::uint8_t& {return m_col.w();}
-    constexpr auto a() const noexcept -> std::uint8_t {return m_col.w();}
+    inline auto a() noexcept -> std::uint8_t& {return value.w();}
+    constexpr auto a() const noexcept -> std::uint8_t {return value.w();}
 
-    constexpr auto rgb() const noexcept -> geo::Pt3<std::uint8_t> {return m_col.xyz();}
+    constexpr auto rgb() const noexcept -> geo::Pt3<std::uint8_t> {return value.xyz();}
 
-    inline auto rgba() noexcept -> geo::Pt4<std::uint8_t>& {return m_col;}
-    constexpr auto rgba() const noexcept -> geo::Pt4<std::uint8_t> {return m_col;}
+    inline auto rgba() noexcept -> geo::Pt4<std::uint8_t>& {return value;}
+    constexpr auto rgba() const noexcept -> geo::Pt4<std::uint8_t> {return value;}
 
-private:
-    geo::Pt4<std::uint8_t> m_col = {0,0,0,0};
+    geo::Pt4<std::uint8_t> value = {0,0,0,0};
 };
 
 
 /**
  * @brief ColorRGB32
- * r Red: [0, 1]
- * g Green: [0, 1]
- * b Blue: [0, 1]
+ * r Red:   [0, 1] 4 bytes
+ * g Green: [0, 1] 4 bytes
+ * b Blue:  [0, 1] 4 bytes
  */
 struct ColorRGB32{
 
@@ -143,39 +147,38 @@ struct ColorRGB32{
     ColorRGB32(ColorRGB32&& other) = default;
     ColorRGB32& operator=(ColorRGB32&& other) = default;
 
-    constexpr explicit ColorRGB32(float r, float g, float b) : m_col({r,g,b}){}
-    constexpr explicit ColorRGB32(const geo::Pt3f &rgb) : m_col(rgb){}
+    constexpr explicit ColorRGB32(float r, float g, float b) : value({r,g,b}){}
+    constexpr explicit ColorRGB32(const geo::Pt3f &rgb) : value(rgb){}
 
-    inline auto r() noexcept -> float& {return m_col.x();}
-    constexpr auto r() const noexcept -> float {return m_col.x();}
+    inline auto r() noexcept -> float& {return value.x();}
+    constexpr auto r() const noexcept -> float {return value.x();}
 
-    inline auto g() noexcept -> float& {return m_col.y();}
-    constexpr auto g() const noexcept -> float {return m_col.y();}
+    inline auto g() noexcept -> float& {return value.y();}
+    constexpr auto g() const noexcept -> float {return value.y();}
 
-    inline auto b() noexcept -> float& {return m_col.z();}
-    constexpr auto b() const noexcept -> float {return m_col.z();}
+    inline auto b() noexcept -> float& {return value.z();}
+    constexpr auto b() const noexcept -> float {return value.z();}
 
-    inline auto rgb() noexcept -> geo::Pt3f& {return m_col;}
-    constexpr auto rgb() const noexcept -> geo::Pt3f {return m_col;}
+    inline auto rgb() noexcept -> geo::Pt3f& {return value;}
+    constexpr auto rgb() const noexcept -> geo::Pt3f {return value;}
 
     inline auto clamp(float min, float max) -> void{
-        m_col = {
-            std::clamp(m_col(0), min, max),
-            std::clamp(m_col(1), min, max),
-            std::clamp(m_col(2), min, max),
+        value = {
+            std::clamp(value(0), min, max),
+            std::clamp(value(1), min, max),
+            std::clamp(value(2), min, max),
         };
     }
 
-private:
-    geo::Pt3f m_col = {0.f,0.f,0.f};
+    geo::Pt3f value = {0.f,0.f,0.f};
 };
 
 /**
  * @brief ColorRGB32
- * r Red: [0, 1]
- * g Green: [0, 1]
- * b Blue: [0, 1]
- * a Transparency: [0, 1]
+ * r Red:           [0, 1] 4 bytes
+ * g Green:         [0, 1] 4 bytes
+ * b Blue:          [0, 1] 4 bytes
+ * a Transparency:  [0, 1] 4 bytes
  */
 struct ColorRGBA32{
 
@@ -185,28 +188,27 @@ struct ColorRGBA32{
     ColorRGBA32(ColorRGBA32&& other) = default;
     ColorRGBA32& operator=(ColorRGBA32&& other) = default;
 
-    constexpr explicit ColorRGBA32(float r, float g, float b, float a) : m_col({r,g,b, a}){}
-    constexpr explicit ColorRGBA32(const geo::Pt4f &rgba) : m_col(rgba){}
+    constexpr explicit ColorRGBA32(float r, float g, float b, float a) : value({r,g,b, a}){}
+    constexpr explicit ColorRGBA32(const geo::Pt4f &rgba) : value(rgba){}
 
-    inline auto r() noexcept -> float& {return m_col.x();}
-    constexpr auto r() const noexcept -> float {return m_col.x();}
+    inline auto r() noexcept -> float& {return value.x();}
+    constexpr auto r() const noexcept -> float {return value.x();}
 
-    inline auto g() noexcept -> float& {return m_col.y();}
-    constexpr auto g() const noexcept -> float {return m_col.y();}
+    inline auto g() noexcept -> float& {return value.y();}
+    constexpr auto g() const noexcept -> float {return value.y();}
 
-    inline auto b() noexcept -> float& {return m_col.z();}
-    constexpr auto b() const noexcept -> float {return m_col.z();}
+    inline auto b() noexcept -> float& {return value.z();}
+    constexpr auto b() const noexcept -> float {return value.z();}
 
-    inline auto a() noexcept -> float& {return m_col.w();}
-    constexpr auto a() const noexcept -> float {return m_col.w();}
+    inline auto a() noexcept -> float& {return value.w();}
+    constexpr auto a() const noexcept -> float {return value.w();}
 
-    constexpr auto rgb() const noexcept -> geo::Pt3f {return m_col.xyz();}
+    constexpr auto rgb() const noexcept -> geo::Pt3f {return value.xyz();}
 
-    inline auto rgba() noexcept -> geo::Pt4f& {return m_col;}
-    constexpr auto rgba() const noexcept -> geo::Pt4f {return m_col;}
+    inline auto rgba() noexcept -> geo::Pt4f& {return value;}
+    constexpr auto rgba() const noexcept -> geo::Pt4f {return value;}
 
-private:
-    geo::Pt4f m_col = {0.f,0.f,0.f, 0.f};
+    geo::Pt4f value = {0.f,0.f,0.f, 0.f};
 };
 
 struct Convert{

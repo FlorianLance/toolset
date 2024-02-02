@@ -116,14 +116,15 @@ protected:
 
     // read data
     auto read_frames() -> void;
+    virtual auto read_calibration() -> void{}
     virtual auto capture_frame(std::int32_t timeoutMs) -> bool{static_cast<void>(timeoutMs);return false;}
-    virtual auto read_color_image() -> bool{return false;}
-    virtual auto read_depth_image() -> bool{return false;}
-    virtual auto read_infra_image() -> bool{return false;}
-    virtual auto read_from_microphones() -> void{}
-    virtual auto read_from_imu() -> void{}
-    virtual auto read_bodies() -> void{}
-    virtual auto generate_cloud() -> void{}
+    virtual auto read_color_image(bool enable)      -> bool{static_cast<void>(enable); return false;}
+    virtual auto read_depth_image(bool enable)      -> bool{static_cast<void>(enable); return false;}
+    virtual auto read_infra_image(bool enable)      -> bool{static_cast<void>(enable); return false;}
+    virtual auto read_from_microphones(bool enable) -> void{static_cast<void>(enable);}
+    virtual auto read_from_imu(bool enable)         -> void{static_cast<void>(enable);}
+    virtual auto read_bodies(bool enable)           -> void{static_cast<void>(enable);}
+    virtual auto generate_cloud(bool enable)        -> void{static_cast<void>(enable);}
 
     // process data
     virtual auto convert_color_image() -> void;
@@ -146,6 +147,7 @@ protected:
     auto update_audio(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
     auto update_imu(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
     auto update_bodies(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_calibration(DCFrame *dFrame) -> void;
     // # compressed
     virtual auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{
         static_cast<void>(filtersS);static_cast<void>(dataS);return nullptr;}
@@ -157,7 +159,8 @@ protected:
     auto update_compressed_frame_cloud(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
     auto update_compressed_frame_audio(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
     auto update_compressed_frame_imu(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_bodies(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_bodies(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_calibration(DCCompressedFrame *cFrame) -> void;
 
     // auto debug_save_images(std::string parentPath) -> void;
 

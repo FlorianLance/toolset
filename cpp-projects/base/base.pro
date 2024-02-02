@@ -233,7 +233,7 @@ HEADERS += \
     utility/array.hpp \
     utility/benchmark.hpp \
     utility/bit_mask.hpp \
-    utility/buffer_vector.hpp \
+    utility/buffer.hpp \
     utility/cmd_args.hpp \
     utility/constants.hpp \
     utility/decimal.hpp \

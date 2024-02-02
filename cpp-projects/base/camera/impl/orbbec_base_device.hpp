@@ -43,6 +43,7 @@
 #include "camera/settings/dc_color_settings.hpp"
 #include "camera/settings/dc_config_settings.hpp"
 #include "graphics/color.hpp"
+#include "utility/buffer.hpp"
 #include "camera/dc_types.hpp"
 
 namespace tool::cam {
@@ -50,6 +51,7 @@ namespace tool::cam {
 struct OrbbecBaseDevice{
 
     OrbbecBaseDevice();
+    ~OrbbecBaseDevice();
 
     // initialization
     auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
@@ -59,7 +61,6 @@ struct OrbbecBaseDevice{
     // actions
     auto open_device(uint32_t deviceId) -> bool;
     auto start_pipeline(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
-    // auto stop_pipe() -> void;
     auto close_device() -> void;
 
     // getters
@@ -69,48 +70,21 @@ struct OrbbecBaseDevice{
 
     // read data
     auto capture_frame(int32_t timeoutMs) -> bool;
-    auto read_color_image() -> std::span<std::int8_t>;
+    auto read_calibration() -> BinarySpan;
+    auto read_color_image() -> BinarySpan;
     auto read_depth_image() -> std::span<std::uint16_t>;
     auto read_infra_image() -> std::span<std::uint16_t>;
+    auto read_bodies()      -> std::tuple<std::span<uint8_t>, std::span<DCBody>>;
+    auto read_from_imu()    -> BinarySpan;
 
     // process data
-    auto k4a_resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<std::uint16_t> depthData) -> std::span<ColorRGBA8>;
-    auto k4a_generate_cloud(const DCModeInfos &mInfos, std::span<std::uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>>;
-
-    auto k4a_calibration_data() -> std::span<std::int8_t>{
-        return std::span<std::int8_t>{
-            reinterpret_cast<std::int8_t*>(&k4aCalibration),
-            static_cast<size_t>(sizeof(k4a_calibration_t))
-        };
-    }
+    auto resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<std::uint16_t> depthData) -> std::span<ColorRGBA8>;
+    auto generate_cloud(const DCModeInfos &mInfos, std::span<std::uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>>;
 
 private:
 
-    // misc
-    auto set_property_value(OBPropertyID pId, bool value) -> void;
-    auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
-    auto k4a_convert_calibration(const DCModeInfos &mInfos) -> k4a::calibration;
-
-    // device
-    std::unique_ptr<ob::Context> context        = nullptr;
-    std::shared_ptr<ob::Device> device          = nullptr;
-    std::vector<std::shared_ptr<ob::Device>> deviceList;
-    std::shared_ptr<ob::SensorList> sensorList  = nullptr;
-    std::unique_ptr<ob::Pipeline> pipe          = nullptr;
-    OBCameraParam cameraParam;
-    OBCalibrationParam calibrationParam;
-    k4a::calibration k4aCalibration;
-    k4a::transformation k4aTransformation;
-
-    // frames data
-    std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
-    std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
-    std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
-    std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
-
-    // processing data
-    std::vector<std::int8_t> depthSizedColorData;
-    std::vector<std::int8_t> cloudData;
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 
 }

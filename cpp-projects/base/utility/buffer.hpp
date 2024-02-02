@@ -33,8 +33,13 @@
 
 namespace tool {
 
+using BinarySpan        = std::span<std::byte>;
+using ConstBinarySpan   = std::span<const std::byte>;
+
 template <typename ElementType>
 struct Buffer{
+
+    using Elem = ElementType;
 
     Buffer() = default;
     Buffer(const Buffer& other) = default;
@@ -43,72 +48,73 @@ struct Buffer{
     Buffer& operator=(Buffer&& other) = default;
 
     // memory
-    [[nodiscard]] constexpr auto empty()    const noexcept -> size_t {return values.empty();}
-    [[nodiscard]] constexpr auto size()     const noexcept -> size_t {return values.size();}
-    [[nodiscard]] constexpr auto capacity() const noexcept -> size_t {return values.capacity();}
-    constexpr auto resize(size_t size)                     -> void   {values.resize(size);}
-    constexpr auto reserve(size_t capacity)                -> void   {values.reserve(capacity);}
-    constexpr auto clear() noexcept                        -> void   {values.clear();}
-    constexpr auto shrink_to_fit()                         -> void   {values.shrink_to_fit();}
+    [[nodiscard]] constexpr auto empty()                const noexcept  -> size_t               {return values.empty();}
+    [[nodiscard]] constexpr auto size()                 const noexcept  -> size_t               {return values.size();}
+    [[nodiscard]] constexpr auto element_bytes_size()   const noexcept  -> size_t               {return sizeof(Elem);}
+    [[nodiscard]] constexpr auto bytes_size()           const noexcept  -> size_t               {return size()*element_bytes_size();}
+    [[nodiscard]] constexpr auto capacity()             const noexcept  -> size_t               {return values.capacity();}
+    constexpr auto resize(size_t size)                                  -> void                 {values.resize(size);}
+    constexpr auto reserve(size_t capacity)                             -> void                 {values.reserve(capacity);}
+    constexpr auto clear() noexcept                                     -> void                 {values.clear();}
+    constexpr auto shrink_to_fit()                                      -> void                 {values.shrink_to_fit();}
 
     // get
-    [[nodiscard]] constexpr auto get_data()                   noexcept -> ElementType*        {return values.data();}
-    [[nodiscard]] constexpr auto get_data()             const noexcept -> const ElementType*  {return values.data();}
-    [[nodiscard]] constexpr auto get_raw_data()               noexcept -> std::uint8_t*       {return reinterpret_cast<std::uint8_t*>(get_data());}
-    [[nodiscard]] constexpr auto get_raw_data()         const noexcept -> const std::uint8_t* {return reinterpret_cast<const std::uint8_t*>(get_data());}
-    [[nodiscard]] constexpr auto operator[](size_t id)        noexcept -> ElementType&        {return values[id];}
-    [[nodiscard]] constexpr auto operator[](size_t id)  const noexcept -> const ElementType&  {return values[id];}
-    [[nodiscard]] constexpr auto at(size_t id)                         -> ElementType&        {return values.at(id);}
-    [[nodiscard]] constexpr auto at(size_t id)          const          -> const ElementType&  {return values.at(id);}
-    [[nodiscard]] constexpr auto back()                       noexcept -> ElementType&        {return values.back();}
-    [[nodiscard]] constexpr auto back()                 const noexcept -> const ElementType&  {return values.back();}
-    [[nodiscard]] constexpr auto front()                      noexcept -> ElementType&        {return values.front();}
-    [[nodiscard]] constexpr auto front()                const noexcept -> const ElementType&  {return values.front();}
+    [[nodiscard]] constexpr auto get_data()                   noexcept  -> Elem*                {return values.data();}
+    [[nodiscard]] constexpr auto get_data()             const noexcept  -> const Elem*          {return values.data();}
+    [[nodiscard]] constexpr auto get_byte_data()              noexcept  -> std::byte*           {return reinterpret_cast<std::byte*>(get_data());}
+    [[nodiscard]] constexpr auto get_byte_data()        const noexcept  -> const std::byte*     {return reinterpret_cast<const std::byte*>(get_data());}
+    [[nodiscard]] constexpr auto operator[](size_t id)        noexcept  -> Elem&                {return values[id];}
+    [[nodiscard]] constexpr auto operator[](size_t id)  const noexcept  -> const Elem&          {return values[id];}
+    [[nodiscard]] constexpr auto at(size_t id)                          -> Elem&                {return values.at(id);}
+    [[nodiscard]] constexpr auto at(size_t id)          const           -> const Elem&          {return values.at(id);}
+    [[nodiscard]] constexpr auto back()                       noexcept  -> Elem&                {return values.back();}
+    [[nodiscard]] constexpr auto back()                 const noexcept  -> const Elem&          {return values.back();}
+    [[nodiscard]] constexpr auto front()                      noexcept  -> Elem&                {return values.front();}
+    [[nodiscard]] constexpr auto front()                const noexcept  -> const Elem&          {return values.front();}
 
     // iterators
-    [[nodiscard]] constexpr auto begin()          noexcept{return values.begin();}
-    [[nodiscard]] constexpr auto begin()    const noexcept{return values.cbegin();}
-    [[nodiscard]] constexpr auto cbegin()   const noexcept{return values.cbegin();}
-    [[nodiscard]] constexpr auto end()            noexcept{return values.end();}
-    [[nodiscard]] constexpr auto end()      const noexcept{return values.cend();}
-    [[nodiscard]] constexpr auto cend()     const noexcept{return values.cend();}
-    [[nodiscard]] constexpr auto rbegin()         noexcept{return values.rbegin();}
-    [[nodiscard]] constexpr auto rbegin()   const noexcept{return values.rcbegin();}
-    [[nodiscard]] constexpr auto rcbegin()  const noexcept{return values.rcbegin();}
-    [[nodiscard]] constexpr auto rend()           noexcept{return values.rend();}
-    [[nodiscard]] constexpr auto rend()     const noexcept{return values.rcend();}
-    [[nodiscard]] constexpr auto rcend()    const noexcept{return values.rcend();}
+    [[nodiscard]] constexpr auto begin()                        noexcept                        {return values.begin();}
+    [[nodiscard]] constexpr auto begin()                const   noexcept                        {return values.cbegin();}
+    [[nodiscard]] constexpr auto cbegin()               const   noexcept                        {return values.cbegin();}
+    [[nodiscard]] constexpr auto end()                          noexcept                        {return values.end();}
+    [[nodiscard]] constexpr auto end()                  const   noexcept                        {return values.cend();}
+    [[nodiscard]] constexpr auto cend()                 const   noexcept                        {return values.cend();}
+    [[nodiscard]] constexpr auto rbegin()                       noexcept                        {return values.rbegin();}
+    [[nodiscard]] constexpr auto rbegin()               const   noexcept                        {return values.rcbegin();}
+    [[nodiscard]] constexpr auto rcbegin()              const   noexcept                        {return values.rcbegin();}
+    [[nodiscard]] constexpr auto rend()                         noexcept                        {return values.rend();}
+    [[nodiscard]] constexpr auto rend()                 const   noexcept                        {return values.rcend();}
+    [[nodiscard]] constexpr auto rcend()                const   noexcept                        {return values.rcend();}
 
     // spans
-    // spans
-    [[nodiscard]] auto raw_span()           noexcept -> std::span<std::uint8_t>         {return std::span<std::uint8_t>{get_raw_data(),static_cast<size_t>(size()*sizeof(ElementType))};}
-    [[nodiscard]] auto raw_span()   const   noexcept -> std::span<const std::uint8_t>   {return std::span<const std::uint8_t>{get_raw_data(),static_cast<size_t>(size()*sizeof(ElementType))};}
-    [[nodiscard]] auto span()               noexcept -> std::span<ElementType>          {return std::span<ElementType>{get_data(), size()};}
-    [[nodiscard]] auto span()       const   noexcept -> std::span<const ElementType>    {return std::span<const ElementType>{get_data(), size()};}
+    [[nodiscard]] auto byte_span()                              noexcept -> BinarySpan          {return BinarySpan{get_byte_data(),static_cast<size_t>(size()*sizeof(Elem))};}
+    [[nodiscard]] auto byte_span()                      const   noexcept -> ConstBinarySpan     {return ConstBinarySpan{get_byte_data(),static_cast<size_t>(size()*sizeof(Elem))};}
+    [[nodiscard]] auto span()                                   noexcept -> std::span<Elem>     {return std::span<Elem>{get_data(), size()};}
+    [[nodiscard]] auto span()                           const   noexcept -> std::span<const Elem>{return std::span<const Elem>{get_data(), size()};}
 
     // add
-    constexpr auto push_back(const ElementType &v)              -> void{values.push_back(v);}
-    constexpr auto push_back(ElementType &&nValue)              -> void{values.push_back(std::move(nValue));}
+    constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}
+    constexpr auto push_back(Elem &&nValue)                     -> void {values.push_back(std::move(nValue));}
     template <typename ...ElementsType>
-    constexpr auto push_back(const ElementsType&... nValues)    -> void{(push_back(std::forward(nValues)), ...);}
+    constexpr auto push_back(const ElementsType&... nValues)    -> void {(push_back(std::forward(nValues)), ...);}
     template <typename ...ElementsType>
-    constexpr auto push_back(ElementsType&&... nValue)          -> void{(push_back(std::move(nValue)), ...);}
+    constexpr auto push_back(ElementsType&&... nValue)          -> void {(push_back(std::move(nValue)), ...);}
 
-    constexpr auto push_front(const ElementType &v) -> void{
+    constexpr auto push_front(const Elem &v) -> void{
         values.push_back(v);
         std::rotate(rbegin(), rbegin() + 1, rend());
     }
-    constexpr auto push_front(ElementType &&nValue) -> void{
+    constexpr auto push_front(Elem &&nValue) -> void{
         values.push_back(std::move(nValue));
         std::rotate(rbegin(), rbegin() + 1, rend());
     }
 
-    auto insert_at(size_t id, const ElementType &nValue) noexcept -> void{
+    auto insert_at(size_t id, const Elem &nValue) noexcept -> void{
         if(id <= values.size()){
             values.insert(values.begin() + id, nValue);
         }
     }
-    auto insert_at(size_t id, ElementType &&nValue) noexcept -> void{
+    auto insert_at(size_t id, Elem &&nValue) noexcept -> void{
         if(id <= values.size()){
             values.insert(begin() + id, std::move(nValue));
         }
@@ -136,7 +142,7 @@ struct Buffer{
         std::move(valuesToMerge.begin(), valuesToMerge.end(), begin() + currentSize);
     }
 
-    auto fill(const ElementType &value) noexcept -> void{
+    auto fill(const Elem &value) noexcept -> void{
         if(size() > 0){
             std::fill(begin(), end(), value);
         }
@@ -239,6 +245,9 @@ struct Buffer{
         }
     }
 
-    std::vector<ElementType> values;
+    std::vector<Elem> values;
 };
+
+using BinaryBuffer = Buffer<std::byte>;
+
 }

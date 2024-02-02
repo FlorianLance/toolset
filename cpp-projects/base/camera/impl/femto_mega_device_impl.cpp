@@ -51,10 +51,6 @@ auto FemtoMegaDeviceImpl::initialize_device_specific() -> void{
 }
 
 auto FemtoMegaDeviceImpl::update_camera_from_colors_settings() -> void{
-
-    if(!is_opened()){
-        return;
-    }
     orbbecD->update_camera_from_colors_settings(readFramesFromCameras, settings.color);
 }
 
@@ -95,13 +91,17 @@ auto FemtoMegaDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();
 }
 
+auto FemtoMegaDeviceImpl::read_calibration() -> void{
+    fData.binaryCalibration = orbbecD->read_calibration();
+}
+
 auto FemtoMegaDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{
     return orbbecD->capture_frame(timeoutMs);
 }
 
-auto FemtoMegaDeviceImpl::read_color_image() -> bool{
+auto FemtoMegaDeviceImpl::read_color_image(bool enable) -> bool{
 
-    if(mInfos.has_color()){
+    if(enable){
         fData.rawColor = orbbecD->read_color_image();
     }else{
         fData.rawColor = {};
@@ -109,9 +109,9 @@ auto FemtoMegaDeviceImpl::read_color_image() -> bool{
     return !fData.rawColor.empty();
 }
 
-auto FemtoMegaDeviceImpl::read_depth_image() -> bool{
+auto FemtoMegaDeviceImpl::read_depth_image(bool enable) -> bool{
 
-    if(mInfos.has_depth()){
+    if(enable){
         fData.depth = orbbecD->read_depth_image();
     }else{
         fData.depth = {};
@@ -119,9 +119,9 @@ auto FemtoMegaDeviceImpl::read_depth_image() -> bool{
     return !fData.depth.empty();
 }
 
-auto FemtoMegaDeviceImpl::read_infra_image() -> bool{
+auto FemtoMegaDeviceImpl::read_infra_image(bool enable) -> bool{
 
-    if(dc_has_infrared(settings.config.mode)){
+    if(enable){
         fData.infra = orbbecD->read_infra_image();
     }else{
         fData.infra = {};
@@ -129,19 +129,40 @@ auto FemtoMegaDeviceImpl::read_infra_image() -> bool{
     return !fData.infra.empty();
 }
 
+auto FemtoMegaDeviceImpl::read_from_imu(bool enable) -> void {
+
+    if(enable){
+        fData.binaryIMU = orbbecD->read_from_imu();
+    }else{
+        fData.binaryIMU = {};
+    }
+}
+
+auto FemtoMegaDeviceImpl::read_bodies(bool enable) -> void{
+
+    if(enable){
+        auto bodiesD = orbbecD->read_bodies();
+        fData.bodiesIdDepth = std::get<0>(bodiesD);
+        fData.bodies        = std::get<1>(bodiesD);
+    }else{
+        fData.bodiesIdDepth = {};
+        fData.bodies        = {};
+    }
+}
+
 auto FemtoMegaDeviceImpl::resize_color_image_to_depth_size() -> void {
 
     if(!fData.color.empty() && !fData.depth.empty()){
-        fData.dephtSizedColor = orbbecD->k4a_resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
+        fData.dephtSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
     }else{
         fData.dephtSizedColor = {};
     }
 }
 
-auto FemtoMegaDeviceImpl::generate_cloud() -> void{
+auto FemtoMegaDeviceImpl::generate_cloud(bool enable) -> void{
     
-    if(dc_has_cloud(settings.config.mode) && !fData.depth.empty() && fData.validDepthValues > 0){
-        fData.depthCloud = orbbecD->k4a_generate_cloud(mInfos, fData.depth);
+    if(enable && !fData.depth.empty() && fData.validDepthValues > 0){
+        fData.depthCloud = orbbecD->generate_cloud(mInfos, fData.depth);
     }else{
         fData.depthCloud = {};
     }
@@ -158,8 +179,9 @@ auto FemtoMegaDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> std
     update_depth(dataS, dFrame.get());
     update_infra(dataS, dFrame.get());
     update_cloud(dataS, dFrame.get());
-    update_imu(dataS, dFrame.get());
     update_bodies(dataS, dFrame.get());
+    update_calibration(dFrame.get());
+    update_imu(dataS, dFrame.get());
 
     tool::Bench::stop();
 
@@ -171,19 +193,16 @@ auto FemtoMegaDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, cons
     tool::Bench::start("[FemtoMegaDeviceImpl::compress_frame]");
 
     auto cFrame = std::make_unique<DCCompressedFrame>();
+
     update_compressed_frame_infos(cFrame.get());
-
-    auto calibrationData = orbbecD->k4a_calibration_data();
-    cFrame->calibrationData.resize(calibrationData.size());
-    std::copy(calibrationData.begin(), calibrationData.end(), cFrame->calibrationData.begin());
-
     update_compressed_frame_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth(dataS, cFrame.get());
     update_compressed_frame_infra(dataS, cFrame.get());
     update_compressed_frame_cloud(dataS, cFrame.get());
     update_compressed_frame_imu(dataS, cFrame.get());
-    update_compressed_frame_bodies(dataS, cFrame.get());
+    update_compressed_frame_bodies(dataS, filtersS, cFrame.get());
+    update_compressed_frame_calibration(cFrame.get());
 
     tool::Bench::stop();
 

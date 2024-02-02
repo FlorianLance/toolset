@@ -54,17 +54,19 @@ private:
     auto update_camera_from_colors_settings() -> void override final;
 
     // read data
+    auto read_calibration() -> void override final;
     auto capture_frame(std::int32_t timeoutMs) -> bool override final;
-    auto read_color_image() -> bool override final;
-    auto read_depth_image() -> bool override final;
-    auto read_infra_image() -> bool override final;
-    auto read_from_imu() -> void override final {} // TODO
-    auto read_bodies() -> void override final {} // TODO
+    auto read_color_image(bool enable) -> bool override final;
+    auto read_depth_image(bool enable) -> bool override final;
+    auto read_infra_image(bool enable) -> bool override final;
+    auto read_from_microphones(bool enable) -> void override final {/** NO AUDIO SENSOR */}
+    auto read_from_imu(bool enable) -> void override final;
+    auto read_bodies(bool enable) -> void override final;
 
     // process data
     auto resize_color_image_to_depth_size() -> void override final;
-    auto generate_cloud() -> void override final;
-    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override final{} // TODO
+    auto generate_cloud(bool enable) -> void override final;
+    // auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void override final;
 
     // frame generation
     auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame> override final;

@@ -31,17 +31,20 @@ using namespace tool::cam;
 
 auto DCFrameData::reset(const DCModeInfos &mInfos) -> void{
 
-    rawColor        = {};
-    color           = {};
-    dephtSizedColor = {};
-    depth           = {};
-    infra           = {};
-    depthCloud      = {};
-    bodiesIdDepth   = {};
-    audioChannels   = {0,{}};
-    imuSample       = std::nullopt;
-    bodies.clear();
+    // final data
+    rawColor            = {};
+    color               = {};
+    dephtSizedColor     = {};
+    depth               = {};
+    infra               = {};
+    bodiesIdDepth       = {};
+    depthCloud          = {};
+    binaryCalibration   = {};
+    binaryIMU           = {};    
+    audioChannels       = {0,{}};
+    bodies              = {};
 
+    // processsing
     if(mInfos.has_depth()){
         depthMask.resize(mInfos.depth_size());
         filteringMask.resize(mInfos.depth_size());

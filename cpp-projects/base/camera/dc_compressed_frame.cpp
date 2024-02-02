@@ -36,33 +36,21 @@
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
 
+using namespace tool;
 using namespace tool::cam;
 
-
-// struct DCCompressedFrame::Impl{
-//     // kinect4 types
-//     std::optional<k4a_calibration_t> k4Calibration = std::nullopt;
-//     // orbbec types
-//     std::optional<OBCameraParam> obCalibration = std::nullopt;
-// };
-
-// DCCompressedFrame::DCCompressedFrame() : i(std::make_unique<Impl>()){
-// }
-
-// DCCompressedFrame::~DCCompressedFrame(){}
-
-auto encoded_buffer_image_bytes_size(const tool::ImageBuffer<std::uint8_t> &iBuffer) -> size_t{
+auto buffer_bytes_size(const BinaryImageBuffer &iBuffer) -> size_t{
     return
         sizeof(size_t) + iBuffer.size() +
         sizeof(iBuffer.width) + sizeof(iBuffer.height) ;
 }
 
-auto encoded_buffer_bytes_size(const tool::Buffer<std::uint8_t> &iBuffer) -> size_t{
+auto buffer_bytes_size(const BinaryBuffer &iBuffer) -> size_t{
     return
         sizeof(size_t) + iBuffer.size();
 }
 
-auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
+auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
 
     using namespace tool;
     read(iBuffer.width, data, offset);
@@ -75,7 +63,7 @@ auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, const s
     }
 }
 
-auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
+auto read_buffer(BinaryBuffer &buffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
 
     using namespace tool;
     size_t encodedDataSize = 0;
@@ -86,7 +74,7 @@ auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, const std::span<con
     }
 }
 
-auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, std::ifstream &file) -> void{
+auto read_buffer(BinaryImageBuffer &iBuffer, std::ifstream &file) -> void{
 
     using namespace tool;
     read(iBuffer.width, file);
@@ -99,7 +87,7 @@ auto read_encoded_image_buffer(tool::ImageBuffer<std::uint8_t> &iBuffer, std::if
     }
 }
 
-auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, std::ifstream &file) -> void{
+auto read_buffer(BinaryBuffer &buffer, std::ifstream &file) -> void{
 
     using namespace tool;
     size_t encodedDataSize = 0;
@@ -110,7 +98,7 @@ auto read_encoded_buffer(tool::Buffer<std::uint8_t> &buffer, std::ifstream &file
     }
 }
 
-auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, std::span<int8_t> data, size_t &offset) -> void{
+auto write_buffer(const BinaryImageBuffer &iBuffer, std::span<int8_t> data, size_t &offset) -> void{
 
     using namespace tool;
     write(iBuffer.width,  data, offset);
@@ -121,7 +109,7 @@ auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, 
     }
 }
 
-auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::span<int8_t> data, size_t &offset) -> void{
+auto write_buffer(const BinaryBuffer &buffer, std::span<int8_t> data, size_t &offset) -> void{
 
     using namespace tool;
     write(buffer.size(), data, offset);
@@ -131,7 +119,7 @@ auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::span<in
 }
 
 
-auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, std::ofstream &file) -> void{
+auto write_buffer(const BinaryImageBuffer &iBuffer, std::ofstream &file) -> void{
 
     using namespace tool;
     write(iBuffer.width,  file);
@@ -142,7 +130,7 @@ auto write_encoded_image_buffer(const tool::ImageBuffer<std::uint8_t> &iBuffer, 
     }
 }
 
-auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::ofstream &file) -> void{
+auto write_buffer(const BinaryBuffer &buffer, std::ofstream &file) -> void{
 
     using namespace tool;
     write(buffer.size(), file);
@@ -151,6 +139,7 @@ auto write_encoded_buffer(const tool::Buffer<std::uint8_t> &buffer, std::ofstrea
     }
 }
 
+
 auto DCCompressedFrame::data_size() const noexcept -> size_t {
     return
         // frame
@@ -158,18 +147,17 @@ auto DCCompressedFrame::data_size() const noexcept -> size_t {
         // infos
         sizeof(mode) +
         sizeof(validVerticesCount) +
-        // images
-        encoded_buffer_image_bytes_size(encodedColorImage) +
-        encoded_buffer_image_bytes_size(encodedDepthSizedColorImage) +
-        // data
-        encoded_buffer_image_bytes_size(encodedDepthData) +
-        encoded_buffer_image_bytes_size(encodedInfraData) +
-        encoded_buffer_bytes_size(encodedColoredCloudData) +
-        // calibration
-        encoded_buffer_bytes_size(calibrationData);// +
-        // // imu
-        // sizeof(bool); + // has IMU
-        // (imuSample.has_value() ? sizeof(DCImuSample) : 0) +
+        // jpeg encoding
+        buffer_bytes_size(jpegRGBA8Color) +
+        buffer_bytes_size(jpegRGBA8DepthSizedColor) +
+        buffer_bytes_size(jpegG8BodiesId) +
+        // lossless std::uint16_t encoding
+        buffer_bytes_size(ll16eDepth) +
+        buffer_bytes_size(ll16eInfra) +
+        buffer_bytes_size(ll16eColoredCloud) +
+        // binary encoding
+        buffer_bytes_size(calibration) +
+        buffer_bytes_size(imu);
         // // audio
         // sizeof(size_t) + // nb audio frames
         // audioFrames.size()*7*sizeof(float) +
@@ -177,10 +165,6 @@ auto DCCompressedFrame::data_size() const noexcept -> size_t {
         // sizeof(bool); // has body
         // ...
 }
-
-// auto DCCompressedFrame::has_calibration() const noexcept -> bool {
-//     return !calibrationData.empty();
-// }
 
 auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
 
@@ -190,27 +174,17 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     // infos
     read(mode, file);
     read(validVerticesCount, file);
-
-    // images
-    read_encoded_image_buffer(encodedColorImage, file);
-    read_encoded_image_buffer(encodedDepthSizedColorImage, file);
-
-    // data
-    read_encoded_image_buffer(encodedDepthData, file);
-    read_encoded_image_buffer(encodedInfraData, file);
-    read_encoded_buffer(encodedColoredCloudData, file);
-
-    // calibration
-    read_encoded_buffer(calibrationData, file);
-
-    // // imu
-    // bool hasIMU = false;
-    // read(hasIMU, file);
-    // if(hasIMU){
-    //     DCImuSample rImuSample;
-    //     read(rImuSample, file);
-    //     imuSample = rImuSample;
-    // }
+    // jpeg encoding
+    read_buffer(jpegRGBA8Color, file);
+    read_buffer(jpegRGBA8DepthSizedColor, file);
+    read_buffer(jpegG8BodiesId, file);
+    // lossless std::uint16_t encoding
+    read_buffer(ll16eDepth, file);
+    read_buffer(ll16eInfra, file);
+    read_buffer(ll16eColoredCloud, file);
+    // binary encoding
+    read_buffer(calibration, file);
+    read_buffer(imu, file);
 
     // // audio
     // size_t nbAudioFrames = 0;
@@ -233,31 +207,20 @@ auto DCCompressedFrame::init_from_data(std::span<const std::int8_t> data, size_t
 
     // frame
     Frame::init_from_data( data, offset);
-
     // infos
     read(mode, data,  offset);
     read(validVerticesCount, data, offset);
-
-    // images
-    read_encoded_image_buffer(encodedColorImage, data, offset);
-    read_encoded_image_buffer(encodedDepthSizedColorImage, data, offset);
-
-    // data
-    read_encoded_image_buffer(encodedDepthData, data, offset);
-    read_encoded_image_buffer(encodedInfraData, data, offset);
-    read_encoded_buffer(encodedColoredCloudData, data, offset);
-
-    // calibration
-    read_encoded_buffer(calibrationData, data, offset);
-
-    // // imu
-    // bool hasIMU = false;
-    // read(hasIMU, data, offset);
-    // if(hasIMU){
-    //     DCImuSample rImuSample;
-    //     read(rImuSample, data, offset);
-    //     imuSample = rImuSample;
-    // }
+    // jpeg encoding
+    read_buffer(jpegRGBA8Color, data, offset);
+    read_buffer(jpegRGBA8DepthSizedColor, data, offset);
+    read_buffer(jpegG8BodiesId, data, offset);
+    // lossless std::uint16_t encoding
+    read_buffer(ll16eDepth, data, offset);
+    read_buffer(ll16eInfra, data, offset);
+    read_buffer(ll16eColoredCloud, data, offset);
+    // binary encoding
+    read_buffer(calibration, data, offset);
+    read_buffer(imu, data, offset);
 
     // // audio
     // size_t nbAudioFrames    = 0;
@@ -281,22 +244,20 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
 
     // frame
     Frame::write_to_file_stream(file);
-
     // infos
     write(mode, file);
     write(validVerticesCount, file);
-
-    // images
-    write_encoded_image_buffer(encodedColorImage, file);
-    write_encoded_image_buffer(encodedDepthSizedColorImage, file);
-
-    // data
-    write_encoded_image_buffer(encodedDepthData, file);
-    write_encoded_image_buffer(encodedInfraData, file);
-    write_encoded_buffer(encodedColoredCloudData, file);
-
-    // calibration
-    write_encoded_buffer(calibrationData, file);
+    // jpeg encoding
+    write_buffer(jpegRGBA8Color, file);
+    write_buffer(jpegRGBA8DepthSizedColor, file);
+    write_buffer(jpegG8BodiesId, file);
+    // lossless std::uint16_t encoding
+    write_buffer(ll16eDepth, file);
+    write_buffer(ll16eInfra, file);
+    write_buffer(ll16eColoredCloud, file);
+    // binary encoding
+    write_buffer(calibration, file);
+    write_buffer(imu, file);
 
     // // imu
     // write(imuSample.has_value(), file);
@@ -319,33 +280,27 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     // }
 }
 
-
 auto DCCompressedFrame::write_to_data(std::span<int8_t> data, size_t &offset) -> void{
 
     // frame
     Frame::write_to_data(data, offset);
-
     // infos
     write(mode, data, offset);
     write(validVerticesCount, data, offset);
+    // jpeg encoding
+    write_buffer(jpegRGBA8Color, data, offset);
+    write_buffer(jpegRGBA8DepthSizedColor, data, offset);
+    write_buffer(jpegG8BodiesId, data, offset);
+    // lossless std::uint16_t encoding
+    write_buffer(ll16eDepth, data, offset);
+    write_buffer(ll16eInfra, data, offset);
+    write_buffer(ll16eColoredCloud, data, offset);
+    // binary encoding
+    write_buffer(calibration, data, offset);
+    write_buffer(imu, data, offset);
 
-    // images
-    write_encoded_image_buffer(encodedColorImage, data, offset);
-    write_encoded_image_buffer(encodedDepthSizedColorImage, data, offset);
-
-    // data
-    write_encoded_image_buffer(encodedDepthData, data, offset);
-    write_encoded_image_buffer(encodedInfraData, data, offset);
-    write_encoded_buffer(encodedColoredCloudData, data, offset);
-
-    // calibration
-    write_encoded_buffer(calibrationData, data, offset);
-
-    // // imu
-    // write(imuSample.has_value(), data, offset, sizeData);
-    // if(imuSample.has_value()){
-    //     write(imuSample.value(), data, offset, sizeData);
-    // }
+    // no encoding
+    // sizeof(DCBody);
 
     // // audio
     // size_t nbAudioFrames    = audioFrames.size();
@@ -353,52 +308,7 @@ auto DCCompressedFrame::write_to_data(std::span<int8_t> data, size_t &offset) ->
     // if(nbAudioFrames > 0){
     //     write_array(audioFrames.data()->data(), data, nbAudioFrames*7, offset, sizeData);
     // }
-
-    // // bodies
-    // write(false, data, offset, sizeData);
-    // // TODO: ...
 }
-
-// auto DCCompressedFrame::write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void{
-//     if(i->k4Calibration.has_value()){
-//         write(i->k4Calibration.value(), data, offset, sizeData);
-//     }else if(i->obCalibration.has_value()){
-//         write(i->obCalibration.value(), data, offset, sizeData);
-//     }
-// }
-
-// auto DCCompressedFrame::init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
-//     if(type == DCType::AzureKinect){
-//         k4a_calibration_t rCalibration;
-//         read(rCalibration, data, offset, sizeData);
-//         i->k4Calibration = rCalibration;
-//     }else if(type == DCType::FemtoBolt){
-//         k4a_calibration_t rCalibration;
-//         read(rCalibration, data, offset, sizeData);
-//         i->k4Calibration = rCalibration;
-//     }else if(type == DCType::FemtoBolt){
-//         k4a_calibration_t rCalibration;
-//         read(rCalibration, data, offset, sizeData);
-//         i->k4Calibration = rCalibration;
-//     }
-
-//     // OBCameraParam rCalibration;
-//     // read(rCalibration, data, offset, sizeData);
-//     // i->obCalibration = rCalibration;
-// }
-
-// auto DCCompressedFrame::calibration_data_size() const noexcept -> size_t{
-//     if(dc_get_device(mode) == DCType::AzureKinect){
-//         return sizeof(k4a_calibration_t);
-//     }else if(dc_get_device(mode) == DCType::FemtoBolt){
-//         return sizeof(k4a_calibration_t);
-//     }else if(dc_get_device(mode) == DCType::FemtoMega){
-//         return sizeof(k4a_calibration_t);
-//     }
-//     return 0;
-
-//     // return sizeof(OBCameraParam);
-// }
 
 auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void{
 

@@ -421,11 +421,11 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
         final.afterCaptureTS  = c0Frame->afterCaptureTS;
         final.receivedTS      = c0Frame->receivedTS;
 
-        final.colorImage.reset();
-        final.depthImage.reset();
-        final.infraImage.reset();
-        final.depthData.reset();
-        final.infraData.reset();
+        final.rgbaColor.reset();
+        final.rgbDepth.reset();
+        final.rgbInfra.reset();
+        final.depth.reset();
+        final.infra.reset();
 
         geo::VoxelGrid grid(voxelSize, minBound, maxBound);        
         grid.add_cloud(final.cloud, m_camerasTransforms.front().conv<float>());
@@ -450,7 +450,7 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
         grid.convert_to_cloud(final.cloud);
 
         // compress frame
-        m_camerasCompressedFrames.front().frames[idF] = compressor.compress_frame(final, 90);
+        m_camerasCompressedFrames.front().frames[idF] = compressor.encode_frame(final, 90);
     }
 
     m_camerasTransforms.front() = geo::Mat4d::identity();
@@ -496,9 +496,10 @@ auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f 
             frame.idCapture      = uFrame.idCapture;
             frame.afterCaptureTS = uFrame.afterCaptureTS;
             frame.receivedTS     = uFrame.receivedTS;
-            frame.imuSample      = uFrame.imuSample;
-            frame.audioFrames    = uFrame.audioFrames;
-            frame.bodies         = uFrame.bodies;
+
+            frame.imu        = uFrame.imu; // merge imu ?
+            frame.audioFrames    = uFrame.audioFrames; // merge audio ?
+            frame.bodies         = uFrame.bodies; // merge bodies ?
         }
     }
     grid.compute_grid();

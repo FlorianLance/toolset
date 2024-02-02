@@ -149,6 +149,7 @@ struct DCModeInfos{
     auto force_image_format(DCImageFormat imageFormat)    noexcept -> void                  {m_imageFormat = imageFormat;}
 
     [[nodiscard]] constexpr auto mode()             const noexcept -> DCMode                {return m_mode;}
+    [[nodiscard]] constexpr auto device()           const noexcept -> DCType                {return dc_get_device(mode());}
     [[nodiscard]] constexpr auto id_capture()       const noexcept -> size_t                {return m_idCapture;}
 
     [[nodiscard]] constexpr auto image_format()     const noexcept -> DCImageFormat         {return m_imageFormat;}
@@ -162,6 +163,7 @@ struct DCModeInfos{
     [[nodiscard]] constexpr auto has_depth()        const noexcept -> bool                  {return m_hasDepth;}
     [[nodiscard]] constexpr auto has_infra()        const noexcept -> bool                  {return m_hasInfra;}
     [[nodiscard]] constexpr auto has_cloud()        const noexcept -> bool                  {return dc_has_cloud(mode());}
+    [[nodiscard]] constexpr auto has_audio()        const noexcept -> bool                  {return dc_has_audio(mode());}
 
     [[nodiscard]] constexpr auto color_width()      const noexcept -> size_t                {return m_colorWidth;}
     [[nodiscard]] constexpr auto color_height()     const noexcept -> size_t                {return m_colorHeight;}

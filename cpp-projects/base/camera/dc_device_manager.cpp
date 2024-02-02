@@ -199,13 +199,6 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     if(is_reading()){
         stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
     }
-    std::cout << "########### newActionsS.openDevice " << newActionsS.openDevice << "\n";
-    std::cout << "########### cameraSettingsChanged " << cameraSettingsChanged << "\n";
-    std::cout << "########### deviceIdChanged " << deviceIdChanged << "\n";
-    std::cout << "########### deviceChanged " << deviceChanged << "\n";
-    std::cout << "########### newActionsS.startReading " << newActionsS.startReading << "\n";
-    std::cout << "########### closeDevice " << closeDevice << "\n";
-    std::cout << "########### stopReading " << stopReading << "\n";
 
     // stop / close camera
     if(is_device_initialized()){
@@ -228,9 +221,6 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
     bool openDevice  = newActionsS.openDevice    && (!i->device->is_opened());
     bool startCamera = newActionsS.startReading  && (!i->device->is_reading());
 
-    std::cout << "########### openDevice " << openDevice << "\n";
-    std::cout << "########### startCamera " << startCamera << "\n";
-
     // update device settings
     i->deviceS = deviceS;
 
@@ -248,15 +238,21 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
                 i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
                 color_settings_reset_signal(i->colorsS);
             }
+
+            std::cout << "1\n";
             i->device->set_color_settings(i->colorsS);
-            i->device->set_delay_settings(i->delayS);                        
+            std::cout << "2\n";
+            i->device->set_delay_settings(i->delayS);
+            std::cout << "3\n";
             update_device_name_signal(idDevice, std::format("Id:{} Num:{}", idDevice, i->device->device_name()));
         }
     }
 
     // start device camera
     if(startCamera){
+        std::cout << "4\n";
         i->device->start_reading(i->deviceS.configS);
+        std::cout << "5\n";
     }
 }
 

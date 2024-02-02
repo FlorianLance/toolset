@@ -30,7 +30,6 @@
 // std
 #include <chrono>
 #include <iostream>
-#include <stack>
 #include <unordered_set>
 #include <shared_mutex>
 #include <algorithm>
@@ -47,8 +46,8 @@ struct TimesInfo{
     size_t callsCount = 0;
     bool started = false;
     int level = 0;
-    std::vector<steady_clock::time_point> startTime;
-    std::vector<steady_clock::time_point> stopTime;
+    std::vector<system_clock::time_point> startTime;
+    std::vector<system_clock::time_point> stopTime;
 };
 
 struct ThreadInfos{
@@ -176,7 +175,7 @@ void Bench::start(BenchId id, bool display, OTID otId){
 
     d.times[*idV].started = true;
     d.times[*idV].callsCount++;
-    d.times[*idV].startTime.emplace_back(high_resolution_clock::now());
+    d.times[*idV].startTime.emplace_back(system_clock::now());
     d.times[*idV].level = d.currentLevel;
     d.stack.push_back(*idV);
     ++d.currentLevel;
@@ -209,7 +208,7 @@ void Bench::stop(BenchId id, OTID otId){
         return;
     }
 
-    d.times[id].stopTime.emplace_back(high_resolution_clock::now());
+    d.times[id].stopTime.emplace_back(system_clock::now());
     d.times[id].started = false;
 
     if(d.currentLevel > 0){
@@ -306,7 +305,6 @@ std::string Bench::to_string(BenchUnit unit, int64_t minTime, bool sort, OTID ot
 
     auto &d = Impl::tData[Impl::check_thread_id(otId)];
 
-
     auto totalTimes = all_total_times(unit, minTime, sort);
     std::ostringstream flux;
     if(totalTimes.size() > 0){
@@ -342,11 +340,9 @@ size_t Bench::calls_count(BenchId id, OTID otId){
 }
 
 BenchGuard::BenchGuard(BenchId id, bool display){
-//    this->id =
     Bench::start(id, display);
 }
 
 BenchGuard::~BenchGuard(){
-//    Bench::stop(id);
     Bench::stop();
 }

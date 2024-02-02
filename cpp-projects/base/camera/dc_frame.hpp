@@ -34,33 +34,31 @@
 
 namespace tool::cam{
 
-
 struct DCFrame : Frame{
 
     // info
     DCMode mode;
 
     // images
-    ImageBuffer<ColorRGBA8> colorImage;
-    ImageBuffer<ColorRGBA8> depthSizedColorImage;
-    ImageBuffer<ColorRGB8> depthImage;
-    ImageBuffer<ColorRGB8> infraImage;
+    ImageBuffer<ColorRGBA8> rgbaColor;          // color-sized
+    ImageBuffer<ColorRGBA8> rgbaDepthSizedColor;// depth-sized
+    ImageBuffer<ColorRGB8>  rgbDepth;           // depth-sized
+    ImageBuffer<ColorRGB8>  rgbInfra;           // depth-sized
+    ImageBuffer<ColorGray8> grayBodiesId;       // depth-sized
+    ImageBuffer<std::uint16_t> depth;           // depth-sized
+    ImageBuffer<std::uint16_t> infra;           // depth-sized
 
-    // data
-    ImageBuffer<std::uint16_t> depthData;
-    ImageBuffer<std::uint16_t> infraData;
+    geo::ColoredCloudData cloud;                // valid-vertices sized
 
-    // cloud
-    geo::ColoredCloudData cloud;
-
-    // imu
-    std::optional<DCImuSample> imuSample;
+    // binary encoding
+    BinaryBuffer calibration;
+    BinaryBuffer imu;
 
     // audio
     // TODO: add nbChannels variables and use a simple vector
     std::vector<std::array<float, 7>> audioFrames;
 
     // bodies
-    std::vector<DCBody> bodies;
+    Buffer<DCBody> bodies;
 };
 }

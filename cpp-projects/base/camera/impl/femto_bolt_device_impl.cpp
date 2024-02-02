@@ -42,19 +42,10 @@ FemtoBoltDeviceImpl::FemtoBoltDeviceImpl(){
 }
 
 auto FemtoBoltDeviceImpl::initialize_device_specific() -> void{
-
     orbbecD->initialize(mInfos);
-
-    // k4aBtConfig.gpu_device_id       = settings.config.btGPUId;
-    // k4aBtConfig.processing_mode     = static_cast<k4abt_tracker_processing_mode_t>(settings.config.btProcessingMode);
-    // k4aBtConfig.sensor_orientation  = static_cast<k4abt_sensor_orientation_t>(settings.config.btOrientation);
-    // k4aBtConfig.model_path          = nullptr;
 }
 
 auto FemtoBoltDeviceImpl::update_camera_from_colors_settings() -> void{
-    if(!is_opened()){
-        return;
-    }
     orbbecD->update_camera_from_colors_settings(readFramesFromCameras, settings.color);
 }
 
@@ -95,13 +86,17 @@ auto FemtoBoltDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();
 }
 
+auto FemtoBoltDeviceImpl::read_calibration() -> void{
+    fData.binaryCalibration = orbbecD->read_calibration();
+}
+
 auto FemtoBoltDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{
     return orbbecD->capture_frame(timeoutMs);
 }
 
-auto FemtoBoltDeviceImpl::read_color_image() -> bool{
+auto FemtoBoltDeviceImpl::read_color_image(bool enable) -> bool{
     
-    if(mInfos.has_color()){
+    if(enable){
         fData.rawColor = orbbecD->read_color_image();
     }else{
         fData.rawColor = {};
@@ -109,9 +104,9 @@ auto FemtoBoltDeviceImpl::read_color_image() -> bool{
     return !fData.rawColor.empty();
 }
 
-auto FemtoBoltDeviceImpl::read_depth_image() -> bool{
+auto FemtoBoltDeviceImpl::read_depth_image(bool enable) -> bool{
     
-    if(mInfos.has_depth()){
+    if(enable){
         fData.depth = orbbecD->read_depth_image();
     }else{
         fData.depth = {};
@@ -119,9 +114,9 @@ auto FemtoBoltDeviceImpl::read_depth_image() -> bool{
     return !fData.depth.empty();
 }
 
-auto FemtoBoltDeviceImpl::read_infra_image() -> bool{
+auto FemtoBoltDeviceImpl::read_infra_image(bool enable) -> bool{
 
-    if(dc_has_infrared(settings.config.mode)){
+    if(enable){
         fData.infra = orbbecD->read_infra_image();
     }else{
         fData.infra = {};
@@ -129,149 +124,45 @@ auto FemtoBoltDeviceImpl::read_infra_image() -> bool{
     return !fData.infra.empty();
 }
 
-auto FemtoBoltDeviceImpl::read_from_imu() -> void {
-    // ...
+auto FemtoBoltDeviceImpl::read_from_imu(bool enable) -> void {
+
+    if(enable){
+        fData.binaryIMU = orbbecD->read_from_imu();
+    }else{
+        fData.binaryIMU = {};
+    }
 }
 
+auto FemtoBoltDeviceImpl::read_bodies(bool enable) -> void{
 
-auto FemtoBoltDeviceImpl::read_bodies() -> void{
-
-    // if(!depthImage || ! infraredImage){
-    //     return;
-    // }
-
-    // if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking && (bodyTracker != nullptr)){
-
-
-    //     try{
-
-    //         k4a_capture_t captureH = nullptr;
-    //         k4a_capture_create(&captureH);
-    //         k4a::capture capture(captureH);
-
-    //         // std::cout << "create d image\n";
-    //         // std::cout << depthImage->width() << " " << depthImage->height() << " "<< depthImage->width()*depthImage->height() << " " << depthImage->dataSize() << "\n";
-    //         k4a::image k4DepthImage = k4a::image::create_from_buffer(
-    //             K4A_IMAGE_FORMAT_DEPTH16,
-    //             depthImage->width(),
-    //             depthImage->height(),
-    //             depthImage->width()*sizeof(std::uint16_t),
-    //             reinterpret_cast<std::uint8_t*>(depthImage.get()->data()),
-    //             depthImage->dataSize(),
-    //             nullptr,
-    //             nullptr
-    //         );
-
-    //         // std::cout << "create ir image\n";
-    //         // std::cout << infraredImage->width() << " " << infraredImage->height() << " "<< infraredImage->width()*infraredImage->height() << " " << infraredImage->dataSize() << "\n";
-    //         k4a::image k4IRImage = k4a::image::create_from_buffer(
-    //             K4A_IMAGE_FORMAT_DEPTH16,
-    //             infraredImage->width(),
-    //             infraredImage->height(),
-    //             infraredImage->width()*sizeof(std::uint16_t),
-    //             reinterpret_cast<std::uint8_t*>(infraredImage.get()->data()),
-    //             infraredImage->dataSize(),
-    //             nullptr,
-    //             nullptr
-    //         );
-
-    //         // std::cout << "set depth image\n";
-    //         capture.set_depth_image(k4DepthImage);
-
-    //         // std::cout << "set ir image\n";
-    //         capture.set_ir_image(k4IRImage);
-
-
-    //         // std::cout << "enqueue capture\n";
-    //         if(bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
-    //             if(k4abt::frame bodyFrame = bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
-    //                 auto bodiesCount = bodyFrame.get_num_bodies();
-    //                 if(data.bodies.size() < bodiesCount){
-    //                     data.bodies.resize(bodiesCount);
-    //                 }
-    //                 // std::cout << "bodiesCount " << bodiesCount << "\n";
-    //                 for(size_t ii = 0; ii < bodiesCount; ++ii){
-    //                     update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
-    //                 }
-    //                 timing.bodiesTS = bodyFrame.get_system_timestamp();
-    //                 bodiesIndexImage = bodyFrame.get_body_index_map();
-    //             }
-    //         }
-
-    //     }  catch (k4a::error error) {
-    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
-    //     }  catch (std::runtime_error error) {
-    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
-    //     }
-
-    // }
+    if(enable){
+        auto bodiesD = orbbecD->read_bodies();
+        fData.bodiesIdDepth = std::get<0>(bodiesD);
+        fData.bodies        = std::get<1>(bodiesD);
+    }else{
+        fData.bodiesIdDepth = {};
+        fData.bodies        = {};
+    }
 }
-
 
 auto FemtoBoltDeviceImpl::resize_color_image_to_depth_size() -> void{
     
     if(!fData.color.empty() && !fData.depth.empty()){
-        fData.dephtSizedColor = orbbecD->k4a_resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
+        fData.dephtSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
     }else{
         fData.dephtSizedColor = {};
     }
 }
 
-auto FemtoBoltDeviceImpl::generate_cloud() -> void{
+auto FemtoBoltDeviceImpl::generate_cloud(bool enable) -> void{
     
-    if(mInfos.has_cloud() && !fData.depth.empty() && fData.validDepthValues > 0){
-        fData.depthCloud = orbbecD->k4a_generate_cloud(mInfos, fData.depth);
+    if(enable && !fData.depth.empty() && fData.validDepthValues > 0){
+        fData.depthCloud = orbbecD->generate_cloud(mInfos, fData.depth);
     }else{
         fData.depthCloud = {};
     }
 }
 
-auto FemtoBoltDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS) -> void{
-
-    // if((pointCloudImage == nullptr) || (depthImage == nullptr)){
-    //     return;
-    // }
-
-    // if(filtersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
-
-    //     auto p1     = filtersS.p1A;
-    //     auto p2     = filtersS.p1B;
-    //     auto p3     = filtersS.p1C;
-    //     auto meanPt = (p1+p2+p3)/3.f;
-    //     auto AB = vec(p2,p1);
-    //     auto AC = vec(p3,p1);
-    //     auto normalV = cross(AB,AC);
-    //     normalV = normalize(normalV);
-
-    //     auto depthBuffer  = reinterpret_cast<const uint16_t*>(depthImage->data());
-    //     bool rgbCloud = colorImage != nullptr;
-    //     auto cloudData = reinterpret_cast<float*>(pointCloudImage->data());
-    //     int dataSize = rgbCloud ? 6 : 3;
-
-    //     std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
-
-    //         auto idD = std::get<0>(idC);
-    //         if(depthBuffer[idD] == dc_invalid_depth_value){
-    //             return;
-    //         }
-
-    //         float *cloudPoint = &cloudData[idD*dataSize];
-    //         if(dot(normalV,vec(meanPt,geo::Pt3f{-cloudPoint[0], -cloudPoint[1], cloudPoint[2]})) < 0){
-    //             if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
-    //                 depthMask[idD] = 0;
-    //                 return;
-    //             }
-    //         }else{
-    //             if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
-    //                 depthMask[idD] = 0;
-    //                 return;
-    //             }
-    //         }
-    //     });
-    // }
-
-    // update_valid_depth_values();
-}
 
 auto FemtoBoltDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>{
 
@@ -284,8 +175,9 @@ auto FemtoBoltDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> std
     update_depth(dataS, dFrame.get());
     update_infra(dataS, dFrame.get());
     update_cloud(dataS, dFrame.get());
-    update_imu(dataS, dFrame.get());
     update_bodies(dataS, dFrame.get());
+    update_calibration(dFrame.get());
+    update_imu(dataS, dFrame.get());
 
     tool::Bench::stop();
 
@@ -297,19 +189,16 @@ auto FemtoBoltDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, cons
     tool::Bench::start("[FemtoBoltDeviceImpl::compress_frame]");
 
     auto cFrame = std::make_unique<DCCompressedFrame>();
+
     update_compressed_frame_infos(cFrame.get());
-
-    auto calibrationData = orbbecD->k4a_calibration_data();    
-    cFrame->calibrationData.resize(calibrationData.size());
-    std::copy(calibrationData.begin(), calibrationData.end(), cFrame->calibrationData.begin());
-
     update_compressed_frame_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());
     update_compressed_frame_depth(dataS, cFrame.get());
     update_compressed_frame_infra(dataS, cFrame.get());
     update_compressed_frame_cloud(dataS, cFrame.get());
     update_compressed_frame_imu(dataS, cFrame.get());
-    update_compressed_frame_bodies(dataS, cFrame.get());
+    update_compressed_frame_bodies(dataS, filtersS, cFrame.get());
+    update_compressed_frame_calibration(cFrame.get());
 
     tool::Bench::stop();
 
@@ -318,6 +207,52 @@ auto FemtoBoltDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, cons
 
 
 
+// auto FemtoBoltDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS) -> void{
+
+//     // if((pointCloudImage == nullptr) || (depthImage == nullptr)){
+//     //     return;
+//     // }
+
+//     // if(filtersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
+
+//     //     auto p1     = filtersS.p1A;
+//     //     auto p2     = filtersS.p1B;
+//     //     auto p3     = filtersS.p1C;
+//     //     auto meanPt = (p1+p2+p3)/3.f;
+//     //     auto AB = vec(p2,p1);
+//     //     auto AC = vec(p3,p1);
+//     //     auto normalV = cross(AB,AC);
+//     //     normalV = normalize(normalV);
+
+//     //     auto depthBuffer  = reinterpret_cast<const uint16_t*>(depthImage->data());
+//     //     bool rgbCloud = colorImage != nullptr;
+//     //     auto cloudData = reinterpret_cast<float*>(pointCloudImage->data());
+//     //     int dataSize = rgbCloud ? 6 : 3;
+
+//     //     std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::end(indices.depthVertexCorrrespondance), [&](auto idC){
+
+//     //         auto idD = std::get<0>(idC);
+//     //         if(depthBuffer[idD] == dc_invalid_depth_value){
+//     //             return;
+//     //         }
+
+//     //         float *cloudPoint = &cloudData[idD*dataSize];
+//     //         if(dot(normalV,vec(meanPt,geo::Pt3f{-cloudPoint[0], -cloudPoint[1], cloudPoint[2]})) < 0){
+//     //             if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
+//     //                 depthMask[idD] = 0;
+//     //                 return;
+//     //             }
+//     //         }else{
+//     //             if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
+//     //                 depthMask[idD] = 0;
+//     //                 return;
+//     //             }
+//     //         }
+//     //     });
+//     // }
+
+//     // update_valid_depth_values();
+// }
 
 
 

@@ -31,7 +31,7 @@
 #include "sphere.hpp"
 #include "aabb3.hpp"
 #include "matrix4.hpp"
-#include "utility/buffer_vector.hpp"
+#include "utility/buffer.hpp"
 
 namespace tool::geo {
 

@@ -70,133 +70,71 @@ using namespace tool::cam;
     }
 }
 
-OrbbecBaseDevice::OrbbecBaseDevice(){
-    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-    context = std::make_unique<ob::Context>();
-}
+struct OrbbecBaseDevice::Impl{
 
-auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
-    context->enableNetDeviceEnumeration(ethernet);
+    // device
+    DCType deviceType;
+    std::unique_ptr<ob::Context> context        = nullptr;
+    std::shared_ptr<ob::Device> device          = nullptr;
+    std::vector<std::shared_ptr<ob::Device>> deviceList;
+    std::shared_ptr<ob::SensorList> sensorList  = nullptr;
+    std::unique_ptr<ob::Pipeline> pipe          = nullptr;
 
-    auto devicesFound = context->queryDeviceList();
+    OBCameraParam cameraParam;
+    OBCalibrationParam calibrationParam;
+    k4a::calibration k4aCalibration;
+    k4a::transformation k4aTransformation;
 
-    deviceList.clear();
-    for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
-        auto dev = devicesFound->getDevice(idDev);
-        if(dev->getDeviceInfo()->name() == deviceTypeName){
-            deviceList.push_back(std::move(dev));
-        }
+    // frames data
+    std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
+    std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
+    std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
+    std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
+
+    // processing data
+    std::vector<std::int8_t> depthSizedColorData;
+    std::vector<std::int8_t> cloudData;
+
+    auto set_property_value(OBPropertyID pId, bool value) -> void;
+    auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
+    static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration;
+};
+
+auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, bool value) -> void{
+
+    auto dev = device.get();
+    if(!dev->isPropertySupported(pId, OB_PERMISSION_READ_WRITE)){
+        return;
     }
-    Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n", deviceList.size(), deviceTypeName));
-}
-
-auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos) -> void{
-
-    frameSet      = nullptr;
-    colorImage    = nullptr;
-    depthImage    = nullptr;
-    infraredImage = nullptr;   
-
-    if(mInfos.has_color() && dc_has_depth(mInfos.mode())){
-        depthSizedColorData.resize(mInfos.depth_size() * 4);
-    }else{
-        depthSizedColorData.clear();
-    }
-
-    if(mInfos.has_depth() && mInfos.has_cloud()){
-        cloudData.resize(mInfos.depth_size() * 3 * sizeof(int16_t));
-    }else{
-        cloudData.clear();
+    if(dev->getBoolProperty(pId) != value){
+        dev->setBoolProperty(pId, value);
     }
 }
 
-auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
-    return device != nullptr;
-}
+auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, int32_t value) -> void{
 
-auto OrbbecBaseDevice::nb_devices() const noexcept -> size_t {
-    return deviceList.size();
-}
-
-auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
-    if(is_opened()){
-        return device->getDeviceInfo()->name();
-    }
-    return "unknow_device"s;
-}
-
-auto OrbbecBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
-
-    if(pipe != nullptr){
-        Bench::start("[OrbbecDevice::capture_frame]");
-        try{
-            frameSet = pipe->waitForFrames(timeoutMs);
-        }catch(ob::Error &e) {
-            Logger::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
-        }
-
-        Bench::stop();
-        return frameSet != nullptr;
-    }
-    return false;
-}
-
-auto OrbbecBaseDevice::read_color_image() -> std::span<std::int8_t>{
-
-    if(frameSet != nullptr){
-
-        Bench::start("[OrbbecDevice::read_color_image]");
-        colorImage = frameSet->colorFrame();
-        Bench::stop();
-
-        if(colorImage != nullptr){
-            return std::span<std::int8_t>{
-                reinterpret_cast<std::int8_t*>(colorImage->data()),
-                colorImage->width()*colorImage->height()*4
-            };
-        }
-    }
-    return {};
-}
-
-auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
-
-    if(frameSet != nullptr){
-
-        Bench::start("[OrbbecDevice::read_depth_image]");
-        depthImage = frameSet->depthFrame();
-        Bench::stop();
-
-        if(depthImage != nullptr){
-            return  std::span<std::uint16_t>{
-                reinterpret_cast<std::uint16_t*>(depthImage->data()),
-                depthImage->width()*depthImage->height()
-            };
-        }
-    }
-    return {};
-}
-
-auto OrbbecBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
-
-    if(frameSet != nullptr){
-
-        Bench::start("[OrbbecDevice::read_infra_image]");
-        infraredImage = frameSet->irFrame();
-        Bench::stop();
-
-        if(infraredImage != nullptr){
-            return  std::span<std::uint16_t>{
-                reinterpret_cast<std::uint16_t*>(infraredImage->data()),
-                infraredImage->width()*infraredImage->height()
-            };
-        }
+    auto dev = device.get();
+    if(!dev->isPropertySupported(pId, OB_PERMISSION_READ_WRITE)){
+        return;
     }
 
-    return {};
+    auto range = dev->getIntPropertyRange(pId);
+    if(value < range.min){
+        value = range.min;
+    }
+    value += (value - range.min)%range.step;
+
+    if(value > range.max){
+        value = range.max;
+    }
+
+    if(range.cur != value){
+        dev->setIntProperty(pId, value);
+    }
 }
 
-auto OrbbecBaseDevice::k4a_convert_calibration(const DCModeInfos &mInfos) -> k4a::calibration{
+
+auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration{
 
     const auto &obDepthIntrinsics = calibrationParam.intrinsics[OB_SENSOR_DEPTH];
     const auto &obDepthDistorsion = calibrationParam.distortion[OB_SENSOR_DEPTH];
@@ -311,7 +249,230 @@ auto OrbbecBaseDevice::k4a_convert_calibration(const DCModeInfos &mInfos) -> k4a
     return k4Calibration;
 }
 
-auto OrbbecBaseDevice::k4a_resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
+
+
+OrbbecBaseDevice::OrbbecBaseDevice() : i(std::make_unique<Impl>()){
+    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+    i->context = std::make_unique<ob::Context>();
+}
+
+OrbbecBaseDevice::~OrbbecBaseDevice(){
+}
+
+auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
+
+    i->context->enableNetDeviceEnumeration(ethernet);
+
+    auto devicesFound = i->context->queryDeviceList();
+
+    i->deviceList.clear();
+    for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
+        auto dev = devicesFound->getDevice(idDev);
+        if(dev->getDeviceInfo()->name() == deviceTypeName){
+            i->deviceList.push_back(std::move(dev));
+        }
+    }
+    Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n", i->deviceList.size(), deviceTypeName));
+}
+
+auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos) -> void{
+
+    i->frameSet      = nullptr;
+    i->colorImage    = nullptr;
+    i->depthImage    = nullptr;
+    i->infraredImage = nullptr;
+
+    if(mInfos.has_color() && dc_has_depth(mInfos.mode())){
+        i->depthSizedColorData.resize(mInfos.depth_size() * 4);
+    }else{
+        i->depthSizedColorData.clear();
+    }
+
+    if(mInfos.has_depth() && mInfos.has_cloud()){
+        i->cloudData.resize(mInfos.depth_size() * 3 * sizeof(int16_t));
+    }else{
+        i->cloudData.clear();
+    }
+}
+
+auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
+    return i->device != nullptr;
+}
+
+auto OrbbecBaseDevice::nb_devices() const noexcept -> size_t {
+    return i->deviceList.size();
+}
+
+auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
+    if(is_opened()){
+        return i->device->getDeviceInfo()->name();
+    }
+    return "unknow_device"s;
+}
+
+auto OrbbecBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
+
+    if(i->pipe != nullptr){
+        Bench::start("[OrbbecDevice::capture_frame]");
+        try{
+            i->frameSet = i->pipe->waitForFrames(timeoutMs);
+        }catch(ob::Error &e) {
+            Logger::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
+        }
+
+        Bench::stop();
+        return i->frameSet != nullptr;
+    }
+    return false;
+}
+
+auto OrbbecBaseDevice::read_calibration() -> BinarySpan{
+    return BinarySpan{
+        reinterpret_cast<std::byte*>(&i->k4aCalibration),
+        static_cast<size_t>(sizeof(k4a_calibration_t))
+    };
+}
+
+auto OrbbecBaseDevice::read_color_image() -> BinarySpan{
+
+    if(i->frameSet != nullptr){
+
+        Bench::start("[OrbbecDevice::read_color_image]");
+        i->colorImage = i->frameSet->colorFrame();
+        Bench::stop();
+
+        if(i->colorImage != nullptr){
+            return BinarySpan{
+                reinterpret_cast<std::byte*>(i->colorImage->data()),
+                i->colorImage->width()*i->colorImage->height()*4
+            };
+        }
+    }
+    return {};
+}
+
+auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
+
+    if(i->frameSet != nullptr){
+
+        Bench::start("[OrbbecDevice::read_depth_image]");
+        i->depthImage = i->frameSet->depthFrame();
+        Bench::stop();
+
+        if(i->depthImage != nullptr){
+            return  std::span<std::uint16_t>{
+                reinterpret_cast<std::uint16_t*>(i->depthImage->data()),
+                i->depthImage->width()*i->depthImage->height()
+            };
+        }
+    }
+    return {};
+}
+
+auto OrbbecBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
+
+    if(i->frameSet != nullptr){
+
+        Bench::start("[OrbbecDevice::read_infra_image]");
+        i->infraredImage = i->frameSet->irFrame();
+        Bench::stop();
+
+        if(i->infraredImage != nullptr){
+            return  std::span<std::uint16_t>{
+                reinterpret_cast<std::uint16_t*>(i->infraredImage->data()),
+                i->infraredImage->width()*i->infraredImage->height()
+            };
+        }
+    }
+
+    return {};
+}
+
+auto OrbbecBaseDevice::read_bodies() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
+
+    // k4aBtConfig.gpu_device_id       = settings.config.btGPUId;
+    // k4aBtConfig.processing_mode     = static_cast<k4abt_tracker_processing_mode_t>(settings.config.btProcessingMode);
+    // k4aBtConfig.sensor_orientation  = static_cast<k4abt_sensor_orientation_t>(settings.config.btOrientation);
+    // k4aBtConfig.model_path          = nullptr;
+    // if(!depthImage || ! infraredImage){
+    //     return;
+    // }
+
+    // if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking && (bodyTracker != nullptr)){
+
+
+    //     try{
+
+    //         k4a_capture_t captureH = nullptr;
+    //         k4a_capture_create(&captureH);
+    //         k4a::capture capture(captureH);
+
+    //         // std::cout << "create d image\n";
+    //         // std::cout << depthImage->width() << " " << depthImage->height() << " "<< depthImage->width()*depthImage->height() << " " << depthImage->dataSize() << "\n";
+    //         k4a::image k4DepthImage = k4a::image::create_from_buffer(
+    //             K4A_IMAGE_FORMAT_DEPTH16,
+    //             depthImage->width(),
+    //             depthImage->height(),
+    //             depthImage->width()*sizeof(std::uint16_t),
+    //             reinterpret_cast<std::uint8_t*>(depthImage.get()->data()),
+    //             depthImage->dataSize(),
+    //             nullptr,
+    //             nullptr
+    //         );
+
+    //         // std::cout << "create ir image\n";
+    //         // std::cout << infraredImage->width() << " " << infraredImage->height() << " "<< infraredImage->width()*infraredImage->height() << " " << infraredImage->dataSize() << "\n";
+    //         k4a::image k4IRImage = k4a::image::create_from_buffer(
+    //             K4A_IMAGE_FORMAT_DEPTH16,
+    //             infraredImage->width(),
+    //             infraredImage->height(),
+    //             infraredImage->width()*sizeof(std::uint16_t),
+    //             reinterpret_cast<std::uint8_t*>(infraredImage.get()->data()),
+    //             infraredImage->dataSize(),
+    //             nullptr,
+    //             nullptr
+    //         );
+
+    //         // std::cout << "set depth image\n";
+    //         capture.set_depth_image(k4DepthImage);
+
+    //         // std::cout << "set ir image\n";
+    //         capture.set_ir_image(k4IRImage);
+
+
+    //         // std::cout << "enqueue capture\n";
+    //         if(bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
+    //             if(k4abt::frame bodyFrame = bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+    //                 auto bodiesCount = bodyFrame.get_num_bodies();
+    //                 if(data.bodies.size() < bodiesCount){
+    //                     data.bodies.resize(bodiesCount);
+    //                 }
+    //                 // std::cout << "bodiesCount " << bodiesCount << "\n";
+    //                 for(size_t ii = 0; ii < bodiesCount; ++ii){
+    //                     update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
+    //                 }
+    //                 timing.bodiesTS = bodyFrame.get_system_timestamp();
+    //                 bodiesIndexImage = bodyFrame.get_body_index_map();
+    //             }
+    //         }
+
+    //     }  catch (k4a::error error) {
+    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
+    //     }  catch (std::runtime_error error) {
+    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
+    //     }
+
+    // }
+
+    return {};
+}
+
+auto OrbbecBaseDevice::read_from_imu() -> tool::BinarySpan{
+    return {};
+}
+
+
+auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
     
     auto colorStride     = mInfos.color_width() * 4 * sizeof(std::uint8_t);
     auto colorSizeBytes  = colorStride * mInfos.color_height();
@@ -323,7 +484,7 @@ auto OrbbecBaseDevice::k4a_resize_color_image_to_depth_size(const DCModeInfos &m
 
     auto depthSizedColorStride    = mInfos.depth_width() * 4 * sizeof(std::uint8_t);
     auto depthSizedColorSizeBytes = depthSizedColorStride * mInfos.depth_height();
-    auto depthSizedColorDataBuffer= reinterpret_cast<std::uint8_t*>(depthSizedColorData.data());
+    auto depthSizedColorDataBuffer= reinterpret_cast<std::uint8_t*>(i->depthSizedColorData.data());
 
     auto k4aColorImage = k4a::image::create_from_buffer(
         K4A_IMAGE_FORMAT_COLOR_BGRA32,
@@ -346,7 +507,7 @@ auto OrbbecBaseDevice::k4a_resize_color_image_to_depth_size(const DCModeInfos &m
     try{
         Bench::start("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size]");
 
-        k4aTransformation.color_image_to_depth_camera(
+        i->k4aTransformation.color_image_to_depth_camera(
             k4aDepthImage,
             k4aColorImage,
             &k4aDepthSizedColorImage
@@ -360,12 +521,12 @@ auto OrbbecBaseDevice::k4a_resize_color_image_to_depth_size(const DCModeInfos &m
     }
 
     return std::span<tool::ColorRGBA8>{
-        reinterpret_cast<tool::ColorRGBA8*>(depthSizedColorData.data()),
+        reinterpret_cast<tool::ColorRGBA8*>(i->depthSizedColorData.data()),
         static_cast<size_t>(mInfos.depth_width() * mInfos.depth_height())
     };
 }
 
-auto OrbbecBaseDevice::k4a_generate_cloud(const DCModeInfos &mInfos, std::span<uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>> {
+auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>> {
 
     auto depthStride     = mInfos.depth_width() * 1 * sizeof(std::uint16_t);
     auto depthSizeBytes  = depthStride * mInfos.depth_height();
@@ -373,7 +534,7 @@ auto OrbbecBaseDevice::k4a_generate_cloud(const DCModeInfos &mInfos, std::span<u
 
     auto cloudStride     = mInfos.depth_width() * 3 * sizeof(std::uint16_t);
     auto cloudSizeBytes  = cloudStride * mInfos.depth_height();
-    auto cloudDataBuffer = reinterpret_cast<std::uint8_t*>(cloudData.data());
+    auto cloudDataBuffer = reinterpret_cast<std::uint8_t*>(i->cloudData.data());
 
     auto k4aDepthImage = k4a::image::create_from_buffer(
         K4A_IMAGE_FORMAT_DEPTH16,
@@ -390,7 +551,7 @@ auto OrbbecBaseDevice::k4a_generate_cloud(const DCModeInfos &mInfos, std::span<u
     try{
         Bench::start("[OrbbecBaseDevice::k4a_generate_cloud]");
 
-        k4aTransformation.depth_image_to_point_cloud(
+        i->k4aTransformation.depth_image_to_point_cloud(
             k4aDepthImage,
             K4A_CALIBRATION_TYPE_DEPTH,
             &k4aPointCloudImage
@@ -403,55 +564,15 @@ auto OrbbecBaseDevice::k4a_generate_cloud(const DCModeInfos &mInfos, std::span<u
     }
 
     return std::span<geo::Pt3<std::int16_t>>{
-        reinterpret_cast<geo::Pt3<std::int16_t>*>(cloudData.data()),
+        reinterpret_cast<geo::Pt3<std::int16_t>*>(i->cloudData.data()),
         mInfos.depth_width() * mInfos.depth_height()
     };
 }
 
-auto OrbbecBaseDevice::set_property_value(OBPropertyID pId, bool value) -> void{
-
-    if(!is_opened()){
-        return;
-    }
-
-    auto dev = device.get();
-    if(!dev->isPropertySupported(pId, OB_PERMISSION_READ_WRITE)){
-        return;
-    }
-    if(dev->getBoolProperty(pId) != value){
-        dev->setBoolProperty(pId, value);
-    }
-}
-
-auto OrbbecBaseDevice::set_property_value(OBPropertyID pId, int32_t value) -> void{
-
-    if(!is_opened()){
-        return;
-    }
-
-    auto dev = device.get();
-    if(!dev->isPropertySupported(pId, OB_PERMISSION_READ_WRITE)){
-        return;
-    }
-
-    auto range = dev->getIntPropertyRange(pId);
-    if(value < range.min){
-        value = range.min;
-    }
-    value += (value - range.min)%range.step;
-
-    if(value > range.max){
-        value = range.max;
-    }
-
-    if(range.cur != value){
-        dev->setIntProperty(pId, value);
-    }
-}
 
 auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
 
-    if(deviceId >= deviceList.size()){
+    if(deviceId >= i->deviceList.size()){
         Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
         return false;
     }
@@ -459,11 +580,11 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
     try {
 
         // retrieve device
-        device     = deviceList[deviceId];
-        sensorList = device->getSensorList();
+        i->device     = i->deviceList[deviceId];
+        i->sensorList = i->device->getSensorList();
 
-        for(uint32_t idS = 0; idS < sensorList->count(); idS++) {
-            auto sensor = sensorList->getSensor(idS);
+        for(uint32_t idS = 0; idS < i->sensorList->count(); idS++) {
+            auto sensor = i->sensorList->getSensor(idS);
             switch(sensor->type()) {
             case OB_SENSOR_COLOR:
                 Logger::message("[OrbbecDevice] Color sensor found.\n"sv);
@@ -491,7 +612,7 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
             }
         }
 
-        auto dInfos     = device->getDeviceInfo();
+        auto dInfos     = i->device->getDeviceInfo();
         Logger::message("[OrbbecDevice] Device opened:\n");
         Logger::message(std::format("  Name: {}\n", dInfos->name()));
         Logger::message(std::format("  Chip type: {}\n", dInfos->asicName()));
@@ -526,27 +647,30 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
 
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice] Open error: {}\nsv", e.getMessage()));
-        device = nullptr;
+        i->device = nullptr;
         return false;
     }
+
     return true;
 }
 
 auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
 
+    i->deviceType = mInfos.device();
+
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
     try {
 
-        if(pipe != nullptr){
-            pipe->stop();
-            pipe = nullptr;
+        if(i->pipe != nullptr){
+            i->pipe->stop();
+            i->pipe = nullptr;
         }
-        pipe = std::make_unique<ob::Pipeline>(device);
+        i->pipe = std::make_unique<ob::Pipeline>(i->device);
 
         // retrieve color profile
-        if(sensorList->getSensor(OBSensorType::OB_SENSOR_COLOR) && mInfos.has_color()){
-            if(auto colorStreamProfileList = pipe->getStreamProfileList(OB_SENSOR_COLOR); colorStreamProfileList != nullptr){
+        if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_COLOR) && mInfos.has_color()){
+            if(auto colorStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_COLOR); colorStreamProfileList != nullptr){
                 std::shared_ptr<ob::StreamProfile> colorProfile = nullptr;
                 try {
                     colorProfile = colorStreamProfileList->getVideoStreamProfile(
@@ -563,8 +687,8 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         }
 
         // retrieve depth profile
-        if(sensorList->getSensor(OBSensorType::OB_SENSOR_DEPTH) && mInfos.has_depth()){
-            if(auto depthStreamProfileList = pipe->getStreamProfileList(OB_SENSOR_DEPTH); depthStreamProfileList != nullptr){
+        if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_DEPTH) && mInfos.has_depth()){
+            if(auto depthStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_DEPTH); depthStreamProfileList != nullptr){
                 std::shared_ptr<ob::StreamProfile> depthProfile = nullptr;
                 try {
                     depthProfile = depthStreamProfileList->getVideoStreamProfile(
@@ -581,8 +705,8 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         }
 
         // retrieve infrared profile
-        if(sensorList->getSensor(OBSensorType::OB_SENSOR_IR) && mInfos.has_infra()){
-            if(auto infraStreamProfileList = pipe->getStreamProfileList(OB_SENSOR_IR); infraStreamProfileList != nullptr){
+        if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_IR) && mInfos.has_infra()){
+            if(auto infraStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_IR); infraStreamProfileList != nullptr){
                 std::shared_ptr<ob::StreamProfile> infraProfile = nullptr;
                 try {
                     infraProfile = infraStreamProfileList->getVideoStreamProfile(
@@ -601,8 +725,8 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         }
 
         // accel
-        if(sensorList->getSensor(OBSensorType::OB_SENSOR_ACCEL)){
-            if(auto accelStreamProfileList = pipe->getStreamProfileList(OB_SENSOR_ACCEL); accelStreamProfileList != nullptr){
+        if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_ACCEL)){
+            if(auto accelStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_ACCEL); accelStreamProfileList != nullptr){
                 OBAccelFullScaleRange fullScaleRange    = OB_ACCEL_FS_2g;
                 OBAccelSampleRate sampleRate            = OB_SAMPLE_RATE_50_HZ;
                 auto accelProfile = accelStreamProfileList->getAccelStreamProfile(fullScaleRange, sampleRate);
@@ -611,8 +735,8 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         }
 
         // gyro
-        if(sensorList->getSensor(OBSensorType::OB_SENSOR_GYRO)){
-            if(auto gyroStreamProfileList = pipe->getStreamProfileList(OB_SENSOR_GYRO); gyroStreamProfileList != nullptr){
+        if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_GYRO)){
+            if(auto gyroStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_GYRO); gyroStreamProfileList != nullptr){
                 OBGyroFullScaleRange fullScaleRange = OB_GYRO_FS_250dps;
                 OBGyroSampleRate sampleRate         = OB_SAMPLE_RATE_50_HZ;
                 auto gyraProfile = gyroStreamProfileList->getGyroStreamProfile(fullScaleRange, sampleRate);
@@ -621,7 +745,7 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         }
 
         // Update the configuration items of the configuration file, and keep the original configuration for other items
-        auto currSynchConfig = device->getMultiDeviceSyncConfig();
+        auto currSynchConfig = i->device->getMultiDeviceSyncConfig();
 
         switch (configS.synchMode) {
         case DCSynchronisationMode::Standalone:
@@ -667,94 +791,77 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
 
         // frame synch
         if(configS.synchronizeColorAndDepth){
-            pipe->enableFrameSync();
+            i->pipe->enableFrameSync();
         }else{
-            pipe->disableFrameSync();
+            i->pipe->disableFrameSync();
         }
 
         // other
-        set_property_value(OB_PROP_INDICATOR_LIGHT_BOOL, !configS.disableLED);
+        i->set_property_value(OB_PROP_INDICATOR_LIGHT_BOOL, !configS.disableLED);
 
         // start pipe with current config
-        pipe->start(config);
+        i->pipe->start(config);
 
         // get camera intrinsic and extrinsic parameters form pipeline and set to point cloud filter
-        cameraParam         = pipe->getCameraParam();
+        i->cameraParam         = i->pipe->getCameraParam();
         // get calibration parameters
-        calibrationParam    = pipe->getCalibrationParam(config);
+        i->calibrationParam    = i->pipe->getCalibrationParam(config);
 
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
-        device = nullptr;
+        i->device = nullptr;
         return false;
     }
 
-    k4aCalibration    = k4a_convert_calibration(mInfos);
-    k4aTransformation = k4a::transformation(k4aCalibration);
+    i->k4aCalibration    = i->k4a_convert_calibration(mInfos, i->calibrationParam);
+    i->k4aTransformation = k4a::transformation(i->k4aCalibration);
 
     return true;
 }
 
-// auto OrbbecBaseDevice::stop_pipe() -> void{
-
-//     if(pipe != nullptr){
-//         try{
-
-//             // std::cout << "STOP ALL SENSORS\n";
-//             // for(size_t idS = 0; idS < sensorList->count(); ++idS){
-//             //     sensorList->getSensor(idS)->stop();
-//             // }
-//             // pipe->stop();
-//             // pipe = nullptr;
-
-//             // sensorList->getSensor(OBSensorType::OB_SENSOR_COLOR)->stop();
-//             // std::cout << "STOP\n";
-//             // sensorList->getSensor(OBSensorType::OB_SENSOR_DEPTH)->stop();
-//             // std::cout << "STOP PIPE\n";
-//             // pipe->stop();
-//             // std::cout << "END STOP\n";
-//         }catch(ob::Error &e) {
-//             Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
-//         }
-//     }
-// }
-
 auto OrbbecBaseDevice::close_device() -> void{
 
-    if(pipe != nullptr){
-        pipe->stop();
-        pipe = nullptr;
+    if(i->pipe != nullptr){
+        i->pipe->stop();
+        i->pipe = nullptr;
     }
 
-    sensorList = nullptr;
-    device     = nullptr;
+    i->sensorList = nullptr;
+    i->device     = nullptr;
 }
 
 auto OrbbecBaseDevice::update_camera_from_colors_settings(bool isCameraReading, const DCColorSettings &colorS) -> void{
 
+    if(!is_opened()){
+        return;
+    }
+
     try{
-        set_property_value(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL,           colorS.autoExposureTime);
-        set_property_value(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,      colorS.autoWhiteBalance);
-        set_property_value(OB_PROP_COLOR_EXPOSURE_INT,                 colorS.exposureTime);
-        set_property_value(OB_PROP_COLOR_WHITE_BALANCE_INT,            colorS.whiteBalance);
-        set_property_value(OB_PROP_COLOR_BRIGHTNESS_INT,               colorS.brightness);
-        set_property_value(OB_PROP_COLOR_CONTRAST_INT,                 colorS.contrast);
-        set_property_value(OB_PROP_COLOR_SHARPNESS_INT,                colorS.sharpness);
-        set_property_value(OB_PROP_COLOR_SATURATION_INT,               colorS.saturation);
-        set_property_value(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,   colorS.backlightCompensation ? 1 : 0); // NOT AVAILABLE
-        set_property_value(OB_PROP_COLOR_GAIN_INT,                     colorS.gain);
-        set_property_value(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,     static_cast<int>(colorS.powerlineFrequency));
+        i->set_property_value(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL,           colorS.autoExposureTime);
+        i->set_property_value(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,      colorS.autoWhiteBalance);
+        i->set_property_value(OB_PROP_COLOR_EXPOSURE_INT,                 colorS.exposureTime);
+        i->set_property_value(OB_PROP_COLOR_WHITE_BALANCE_INT,            colorS.whiteBalance);
+        i->set_property_value(OB_PROP_COLOR_BRIGHTNESS_INT,               colorS.brightness);
+        i->set_property_value(OB_PROP_COLOR_CONTRAST_INT,                 colorS.contrast);
+        i->set_property_value(OB_PROP_COLOR_SHARPNESS_INT,                colorS.sharpness);
+        i->set_property_value(OB_PROP_COLOR_SATURATION_INT,               colorS.saturation);
+        i->set_property_value(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,   colorS.backlightCompensation ? 1 : 0); // NOT AVAILABLE
+        i->set_property_value(OB_PROP_COLOR_GAIN_INT,                     colorS.gain);
+        i->set_property_value(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,     static_cast<int>(colorS.powerlineFrequency));
 
         // color HDR
-        auto currHDR = device->getBoolProperty(OB_PROP_COLOR_HDR_BOOL);
+        auto currHDR = i->device->getBoolProperty(OB_PROP_COLOR_HDR_BOOL);
         if(currHDR != colorS.hdr){
             if(!isCameraReading){
-                set_property_value(OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
+                i->set_property_value(OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
             }else{
                 Logger::warning("[OrbbecDevice] Reading must be stopped before changing HDR settings.\n");
             }
         }
+
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
     }
 }
+
+

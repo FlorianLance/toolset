@@ -27,43 +27,35 @@
 #pragma once
 
 // local
+#include "dc_types.hpp"
 #include "frame.hpp"
-#include "dc_enums.hpp"
 #include "utility/image_buffer.hpp"
 
 namespace tool::cam{
 
 struct DCCompressedFrame : Frame{
 
-    // DCCompressedFrame();
-    // ~DCCompressedFrame();
-
     // infos
     DCMode mode;
     size_t validVerticesCount = 0;
 
-    // images (jpeg encoding)
-    ImageBuffer<std::uint8_t> encodedColorImage;
-    ImageBuffer<std::uint8_t> encodedDepthSizedColorImage;
+    // jpeg encoding
+    BinaryImageBuffer jpegRGBA8Color;
+    BinaryImageBuffer jpegRGBA8DepthSizedColor;
+    BinaryImageBuffer jpegG8BodiesId;
 
-    // data (lossless std::uint16_t encoding)
-    ImageBuffer<std::uint8_t> encodedDepthData;
-    ImageBuffer<std::uint8_t> encodedInfraData;
-    Buffer<std::uint8_t> encodedColoredCloudData;
+    // lossless std::uint16_t encoding
+    BinaryImageBuffer ll16eDepth;
+    BinaryImageBuffer ll16eInfra;
+    BinaryBuffer ll16eColoredCloud;
 
-    // calibration
-    Buffer<std::uint8_t> calibrationData;
+    // binary encoding
+    BinaryBuffer calibration;
+    BinaryBuffer imu;
 
-    // // imu
-    // // Buffer<std::uint8_t> imuData; // TODO
-    // std::optional<DCImuSample> imuSample = std::nullopt;
-
-    // // audio
-    // // Buffer<Buffer<float>> audioData; // TODO
+    // no encoding
+    Buffer<DCBody> bodies;
     std::vector<std::array<float, 7>> audioFrames;
-
-    // // bodies
-    // // ...
 
     // getters
     auto data_size() const noexcept -> size_t override;
@@ -75,18 +67,8 @@ struct DCCompressedFrame : Frame{
     auto write_to_file_stream(std::ofstream &file) -> void override;
     auto write_to_data(std::span<int8_t> data, size_t &offset) -> void override;
 
-    // // # calibration
-    // auto write_calibration_content_to_data(int8_t * const data, size_t &offset, size_t sizeData) -> void;
-    // auto init_calibration_from_data(DCType type, std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
-    // auto calibration_data_size() const noexcept -> size_t;
-
     // # legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
-
-// private:
-
-//     struct Impl;
-//     std::unique_ptr<Impl> i;
 };
 }

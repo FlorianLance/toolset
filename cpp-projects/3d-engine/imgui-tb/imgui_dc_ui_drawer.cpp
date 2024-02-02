@@ -977,9 +977,9 @@ auto DCUIDrawer::draw_dc_device_settings_tab_item(
     }
     bool update = false;
     
-    draw_dc_config(device.configS, updateDeviceList, update);
-    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);
     draw_dc_actions_settings(device.actionsS, update);
+    draw_dc_config(device.configS, updateDeviceList, update);
+    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);    
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -1264,11 +1264,14 @@ auto DCUIDrawer::draw_dc_actions_settings(cam::DCActionsSettings &actions, bool 
     ImGuiUiDrawer::title2("ACTIONS TO DO");
     ImGui::Spacing();
     
-    if(ImGui::Checkbox("Start device###settings_start_device", &actions.openDevice)){
+    if(ImGui::Checkbox("Open device###settings_open_device", &actions.openDevice)){
         updateP = true;
+        if(!actions.openDevice){
+            actions.startReading = false;
+        }
     }
     ImGui::SameLine();
-    if(ImGui::Checkbox("Open camera###settings_open_camera", &actions.startReading)){
+    if(ImGui::Checkbox("Start reading###settings_open_camera", &actions.startReading)){
         updateP = true;
     }
 
