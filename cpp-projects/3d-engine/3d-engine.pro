@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -55,37 +57,10 @@ DESTDIR     = $$3D_ENGINE_DEST
 ####################################### CONFIG
 CONFIG -= qt
 
-####################################### INCLUDES
-INCLUDEPATH += \
-    # tool
-    $$BASE_INCLUDES\
-    $$OPENGL_UTILITY_INCLUDES\
-    # local
-    $$3D_ENGINE_INCLUDES"/imgui"\
-    # thirdparty
-    $$GLEW_INCLUDES\
-    $$SFML_INCLUDES\
-    $$ASSIMP_INCLUDES\
-    $$KINECT4_INCLUDES \
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-
-LIBS +=\
-    # tool
-    $$BASE_LIB\
-    $$OPENGL_UTILITY_LIB \    
-    # thirdparty
-    $$WINDOWS_LIBS \
-    $$GLEW_LIBS \
-    $$SFML_LIBS \
-    $$ASSIMP_LIBS\
-    $$KINECT4_LIBS \
-    $$ORBBEC_LIBS \
+####################################### DEPS
+INCLUDEPATH += $$3D_ENGINE_DEP_INCLUDEPATH
+PRE_TARGETDEPS += $$3D_ENGINE_PRE_TARGETDEPS
+LIBS += $$3D_ENGINE_DEP_LIBS
 
 ####################################### PROJECT FILES
 

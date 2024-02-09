@@ -28,12 +28,13 @@
 
 // Qt
 #include <QCoreApplication>
+#include <QPair>
 
 // turbo-jpeg
 #include <turbojpeg.h>
 
 // base
-#include "data/integers_encoder.hpp"
+#include "data/fastpfor_encoding.hpp"
 
 using namespace std::chrono;
 using namespace tool::ui;
@@ -93,7 +94,7 @@ struct ProcessDataWorker::Impl{
 
     // decompressors
     tjhandle jpegDecompressor;
-    data::IntegersEncoder depthDecompressor;
+    data::FastPForEncoder depthDecompressor;
 
     // data received
     cam::K2UdpHeader header;
@@ -169,11 +170,11 @@ void ProcessDataWorker::process_compressed_color_512x424(){
 
 void ProcessDataWorker::process_compressed_color_cloud(){
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     // copy joints
     m_p->bodiesData = m_p->frame->bodiesData;
@@ -247,11 +248,11 @@ void ProcessDataWorker::process_compressed_color_cloud(){
 
 void ProcessDataWorker::process_compressed_color_mesh(){
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     // copy joints
     m_p->bodiesData = m_p->frame->bodiesData;

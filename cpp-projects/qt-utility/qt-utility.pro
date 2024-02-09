@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -60,37 +62,10 @@ CONFIG += qt
 QT += core gui opengl widgets printsupport network
 DEFINES += QWT_DLL
 
-####################################### INCLUDES
-INCLUDEPATH += \    
-    # local
-    $$QT_UTILITY_MOC \
-    # base
-    $$BASE_INCLUDES \
-    # opengl-utility
-    $$OPENGL_UTILITY_INCLUDES \
-    # thirdparty
-    $$SFML_INCLUDES \
-    $$GLEW_INCLUDES \
-    $$GLM_INCLUDES \
-    $$QWT_INCLUDES \
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB\
-    $$OPENGL_UTILITY_LIB \
-    # third party
-    $$WINDOWS_LIBS \
-    $$SFML_LIBS \
-    $$GLEW_LIBS \
-    $$QWT_LIBS \
-    $$GLM_LIBS\
+####################################### DEPS
+INCLUDEPATH += $$QT_UTILITY_DEP_INCLUDEPATH
+LIBS += $$QT_UTILITY_DEP_LIBS
+PRE_TARGETDEPS += $$QT_UTILITY_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

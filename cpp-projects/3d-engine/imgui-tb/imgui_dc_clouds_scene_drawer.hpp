@@ -86,7 +86,7 @@ struct DCCloudsSceneDrawer{
 
     // test
     std::unique_ptr<gl::TriangleLineDrawer> plane1D = nullptr;
-    std::array<std::unique_ptr<gl::CubeDrawer>,3> plane1PointsD = {nullptr, nullptr, nullptr};
+    std::unique_ptr<gl::SphereDrawer> plane1PointsD = nullptr;
 
     geo::Matrix<float,4,4> plane1Tr = geo::Mat4f::identity();
 

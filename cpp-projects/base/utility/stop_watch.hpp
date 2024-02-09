@@ -69,7 +69,7 @@ public:
         m_isStarted = false;
     }
 
-    auto set_current_time(double timeMs) -> void{
+    auto set_current_time(double timeMs) noexcept -> void{
 
         using namespace std::chrono;
         auto currentTime = Time::nanoseconds_since_epoch();

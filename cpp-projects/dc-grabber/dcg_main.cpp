@@ -33,7 +33,180 @@
 
 using namespace tool;
 
+#include "thirdparty/taskflow/taskflow.hpp"
+
+auto create_read_data_taskflow() -> tf::Taskflow{
+
+    tf::Taskflow readDataTF;
+    auto captureCT         = readDataTF.emplace([&](){return rand()%2;}).name("capture_frame");
+    auto captureFailureT   = readDataTF.emplace([&](){std::cout << "capture_failure\n";}).name("capture_failure");
+    auto captureSuccessT   = readDataTF.emplace([&](){std::cout << "capture_success\n";}).name("capture_success");
+    auto readColorImageT   = readDataTF.emplace([&](){std::cout << "read_color_image\n";}).name("read_color_image");
+    auto readDepthImageT   = readDataTF.emplace([&](){}).name("read_depth_image");
+    auto readInfraImageT   = readDataTF.emplace([&](){}).name("read_infra_image");
+    auto readBodytrackingT = readDataTF.emplace([&](){}).name("read_body_tracking");
+    auto readAudio         = readDataTF.emplace([&](){}).name("read_audio");
+    auto readIMU           = readDataTF.emplace([&](){}).name("read_imu");
+    auto waitForDataCheckT = readDataTF.emplace([&](){}).name("wait_for_data");
+    captureCT.precede(captureFailureT, captureSuccessT);
+    captureSuccessT.precede(
+        readColorImageT, readDepthImageT, readInfraImageT,
+        readBodytrackingT, readAudio, readIMU
+    );
+    waitForDataCheckT.succeed(
+        readColorImageT, readDepthImageT, readInfraImageT,
+        readBodytrackingT, readAudio, readIMU
+    );
+    return readDataTF;
+}
+
+auto process_data_taskflow() -> tf::Taskflow{
+
+    tf::Taskflow processDataTF;
+
+    auto startProcessingDataT             = processDataTF.emplace([&](){}).name("start_processing_data");
+    auto convertColorImageT               = processDataTF.emplace([&](){}).name("convert_color_image");
+    auto resizeColorImageT                = processDataTF.emplace([&](){}).name("resize_color_image");
+
+    auto generateCloudT                   = processDataTF.emplace([&](){}).name("generate_cloud");
+
+    auto preprocessColorImageT            = processDataTF.emplace([&](){}).name("preprocess_color_image");
+    auto preprocessDepthSizedColorImageT  = processDataTF.emplace([&](){}).name("preprocess_depth_sized_color_image");
+    auto preprocessDepthImageT            = processDataTF.emplace([&](){}).name("preprocess_depth_image");
+    auto preprocessInfraImageT            = processDataTF.emplace([&](){}).name("preprocess_infra_image");
+    auto preprocessCloudImageT            = processDataTF.emplace([&](){}).name("preprocess_cloud_image");
+    auto preprocessBodytrackingImageT     = processDataTF.emplace([&](){}).name("preprocess_body_tracking_image");
+
+    startProcessingDataT.precede(
+        convertColorImageT, generateCloudT,
+        preprocessColorImageT,preprocessDepthImageT,
+        preprocessInfraImageT,preprocessBodytrackingImageT
+    );
+
+    convertColorImageT.precede(resizeColorImageT);
+    resizeColorImageT.precede(preprocessDepthSizedColorImageT);
+    generateCloudT.precede(preprocessCloudImageT);
+
+    auto filterDepthBasicT                  = processDataTF.emplace([&](){}).name("filter_depth_basic");
+    auto filterDepthFromDepthSizedColorT    = processDataTF.emplace([&](){}).name("filter_depth_from_depth_sized_color");
+    auto filterDepthFromInfraT              = processDataTF.emplace([&](){}).name("filter_depth_from_infra");
+    auto filterDepthFromBodyTrackingT       = processDataTF.emplace([&](){}).name("filter_depth_from_body_tracking");
+    auto filterDepthFromCloudT              = processDataTF.emplace([&](){}).name("filter_depth_from_cloud");
+    auto filterDepthComplexT                = processDataTF.emplace([&](){}).name("filter_depth_complex");
+
+    preprocessDepthImageT.precede(filterDepthBasicT);
+    filterDepthFromBodyTrackingT.succeed(filterDepthBasicT,         preprocessBodytrackingImageT);
+    filterDepthFromInfraT.succeed(filterDepthFromBodyTrackingT,     preprocessInfraImageT);
+    filterDepthFromCloudT.succeed(filterDepthFromInfraT,            preprocessCloudImageT);
+    filterDepthFromDepthSizedColorT.succeed(filterDepthFromCloudT,  preprocessDepthSizedColorImageT);
+    filterDepthComplexT.succeed(filterDepthFromDepthSizedColorT);
+
+    auto filterDepthSizedColorFromDepthT     = processDataTF.emplace([&](){}).name("filter_depth_sized_color_from_depth");
+    auto filterInfraFromDepthT               = processDataTF.emplace([&](){}).name("filter_infra_from_depth");
+    auto mixDepthSizedColorWithBodyTrackingT = processDataTF.emplace([&](){}).name("mix_depth_sized_color_with_body_tracking");
+    auto mixInfraWithBodyTrackingT           = processDataTF.emplace([&](){}).name("mix_infra_with_body_tracking");
+
+    filterDepthSizedColorFromDepthT.succeed(filterDepthComplexT);
+    filterDepthSizedColorFromDepthT.precede(mixDepthSizedColorWithBodyTrackingT);
+
+    filterInfraFromDepthT.succeed(filterDepthComplexT);
+    filterInfraFromDepthT.precede(mixInfraWithBodyTrackingT);
+
+    tf::Task updateCompressedFrameColor = processDataTF.emplace([&](){}).name("update_compressed_frame_color");
+    tf::Task updateCompressedFrameDepthSizedColor = processDataTF.emplace([&](){}).name("update_compressed_frame_depth_sized_color");
+    tf::Task updateCompressedFrameDepth = processDataTF.emplace([&](){}).name("update_compressed_frame_depth");
+    tf::Task updateCompressedFrameInfra = processDataTF.emplace([&](){}).name("update_compressed_frame_infra");
+    tf::Task updateCompressedFrameCloud = processDataTF.emplace([&](){}).name("update_compressed_frame_cloud");
+    tf::Task updateCompressedFrameAudio = processDataTF.emplace([&](){}).name("update_compressed_frame_audio");
+    tf::Task updateCompressedFrameIMU = processDataTF.emplace([&](){}).name("update_compressed_frame_imu");
+    tf::Task updateCompressedFrameBodies = processDataTF.emplace([&](){}).name("update_compressed_frame_bodies");
+    tf::Task updateCompressedFrameCalibration = processDataTF.emplace([&](){}).name("update_compressed_frame_calibration");
+    tf::Task finalizeCompressionT = processDataTF.emplace([&](){}).name("finalize_compression");
+
+    updateCompressedFrameColor.succeed(convertColorImageT);
+    updateCompressedFrameDepthSizedColor.succeed(mixDepthSizedColorWithBodyTrackingT);
+    updateCompressedFrameDepth.succeed(filterDepthComplexT);
+    updateCompressedFrameInfra.succeed(mixInfraWithBodyTrackingT);
+    updateCompressedFrameCloud.succeed(filterDepthComplexT);
+
+    updateCompressedFrameAudio.succeed(startProcessingDataT);
+    updateCompressedFrameCalibration.succeed(startProcessingDataT);
+    updateCompressedFrameIMU.succeed(startProcessingDataT);
+    updateCompressedFrameBodies.succeed(preprocessBodytrackingImageT);
+
+    finalizeCompressionT.succeed(
+        updateCompressedFrameColor, updateCompressedFrameDepthSizedColor, updateCompressedFrameDepth,
+        updateCompressedFrameInfra,  updateCompressedFrameCloud, updateCompressedFrameCalibration,
+        updateCompressedFrameAudio, updateCompressedFrameIMU, updateCompressedFrameBodies
+    );
+
+    return processDataTF;
+}
+
+auto create_process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> tf::Taskflow{
+
+    tf::Taskflow processFrameTF;
+    auto startProcessingFrameT       = processFrameTF.emplace([&](){std::cout << "start_processing_frame\n";}).name("start_processing_frame");
+    auto updateSettingsT             = processFrameTF.emplace([&](){}).name("update_settings");
+    auto readingDataModuleT          = processFrameTF.composed_of(readDataTF).name("reading_data_module");
+    auto checkDataCT                 = processFrameTF.emplace([&](){return rand()%2;}).name("check_data");
+    auto successDataT                = processFrameTF.emplace([&](){std::cout << "success_data\n";}).name("success_data");
+    auto failureDataT                = processFrameTF.emplace([&](){std::cout << "failure_data\n";}).name("failure_data");
+    auto startProcessingDataModuleT  = processFrameTF.composed_of(processDataTF).name("processing_data_module");
+
+    startProcessingFrameT.precede(updateSettingsT);
+    updateSettingsT.precede(readingDataModuleT);
+    readingDataModuleT.precede(checkDataCT);
+
+    checkDataCT.precede(failureDataT, successDataT);
+    successDataT.precede(startProcessingDataModuleT);
+
+    return processFrameTF;
+}
+
+auto gen_grabbing_task_flow() -> void{
+
+    tf::Executor executor(1);
+    tf::Taskflow mainLoopTF;
+    bool doLoop = true;
+
+    size_t loopCounter = 0;
+
+    auto startLoopT = mainLoopTF.emplace([&](){}).name("start_loop");
+    auto endLoopT = mainLoopTF.emplace([&](){}).name("end_loop");
+    auto doLoopCT = mainLoopTF.emplace([&](){
+        doLoop = loopCounter < 10;
+        std::cout << "LOOP ID : " << loopCounter << "\n";
+        ++loopCounter;
+        return doLoop ? 1 : 0;
+    }).name("do_loop");
+
+    auto startIterationLoopT = mainLoopTF.emplace([&](){
+    }).name("start_iteration_loop");
+
+    auto endIterationLoopT = mainLoopTF.emplace([&](){return 0;
+    }).name("end_iteration_loop");
+
+    // main loop
+    auto readDataTF     = create_read_data_taskflow();
+    auto proccessDataTF = process_data_taskflow();
+    auto processFrameTF = create_process_frame_taskflow(readDataTF, proccessDataTF);
+    auto processFrameT  = mainLoopTF.composed_of(processFrameTF).name("process_frame_module");
+
+    startLoopT.precede(doLoopCT);
+    doLoopCT.precede(endLoopT, startIterationLoopT);
+    startIterationLoopT.precede(processFrameT);
+    processFrameT.precede(endIterationLoopT);
+    endIterationLoopT.precede(doLoopCT);
+    mainLoopTF.dump(std::cout);
+    // executor.run(mainLoopTF).wait();
+}
+
+
 int main(int argc, char *argv[]){
+
+
+    gen_grabbing_task_flow();
 
     // init paths
     Paths::initialize(argv);

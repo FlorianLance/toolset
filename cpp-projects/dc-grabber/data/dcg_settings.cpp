@@ -171,9 +171,7 @@ auto DCGSettings::update_device_settings(std::shared_ptr<net::UdpMonoPacketMessa
     triggers_device_settings();
 }
 
-#include <iostream>
 auto DCGSettings::update_color_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCColorSettings>> colorS) -> void{
-    std::cout << "DCGSettings::update_color_settings\n";
     this->colorS = std::move(colorS->data);
     triggers_color_settings();
 }
@@ -235,11 +233,11 @@ auto DCGSettings::triggers_display_settings() -> void {
 }
 
 auto DCGSettings::triggers_model() -> void {
-    DCGSignals::get()->update_model_signal(0, modelS);
+    DCGSignals::get()->update_model_settings_signal(0, modelS);
 }
 
 auto DCGSettings::triggers_delay_settings() -> void {
-    DCGSignals::get()->update_delay_signal(delayS);
+    DCGSignals::get()->update_delay_settings_signal(delayS);
 }
 
 auto DCGSettings::disconnect() -> void{

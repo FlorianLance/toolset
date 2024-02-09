@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -54,46 +56,10 @@ DESTDIR     = $$BASE_DEST
 ####################################### CONFIG
 CONFIG -= qt
 
-####################################### INCLUDES
-INCLUDEPATH += \
-    # base
-    $$BASE_INCLUDES\
-    # thirdparty
-    $$GLEW_INCLUDES\
-    $$GLFW_INCLUDES\
-    $$SFML_INCLUDES\
-    $$ASSIMP_INCLUDES\
-    $$GLM_INCLUDES\
-    $$KINECT4_INCLUDES\
-    $$TURBOJPG_INCLUDES\
-    $$FASTPFOR_INCLUDES\
-    $$OPEN3D_INCLUDES \
-    $$LIBSOUNDIO_INCLUDES \
-    $$TURBOPFOR_INCLUDES \
-    $$ORBBEC_INCLUDES \
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP\
-
-LIBS +=\
-    # tool
-    $$BASE_LIB\
-    # thirdparty
-    $$GLEW_LIBS \
-    $$GLFW_LIBS \
-    $$SFML_LIBS \
-    $$ASSIMP_LIBS\
-    $$GLM_LIBS\
-    $$KINECT4_LIBS \
-    $$TURBOJPG_LIBS\
-    $$FASTPFOR_LIBS\
-    $$OPEN3D_LIBS \
-    $$LIBSOUNDIO_LIBS \
-    $$TURBOPFOR_LIBS \
-    $$ORBBEC_LIBS \
+####################################### DEPS
+INCLUDEPATH += $$BASE_TEST_DEP_INCLUDEPATH
+LIBS += $$BASE_TEST_DEP_LIBS
+PRE_TARGETDEPS += $$BASE_TEST_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

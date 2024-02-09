@@ -33,6 +33,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -57,61 +59,10 @@ DESTDIR     = $$DC_MONITORING_DEST
 ####################################### CONFIG
 QT  += core gui network concurrent widgets opengl multimedia
 
-####################################### INCLUDES
-
-INCLUDEPATH += \
-    # tool
-    $$BASE_INCLUDES \
-    $$OPENGL_UTILITY_INCLUDES \
-    $$QT_UTILITY_INCLUDES \
-    # third party
-    $$KINECT4_INCLUDES \
-    $$OPENCV_INCLUDES \
-    $$GLEW_INCLUDES \
-    $$BOOST_INCLUDES \
-    $$TURBOJPG_INCLUDES \
-    $$FASTPFOR_INCLUDES \
-    $$ASSIMP_INCLUDES \
-    $$GLM_INCLUDES \
-    $$LIBSOUNDIO_INCLUDES \
-    $$LIBUSB_INCLUDES \
-    $$EIGEN_INCLUDES \
-    $$OPEN3D_INCLUDES \
-    $$TURBOPFOR_INCLUDES \
-    $$GLFW_INCLUDES \
-    $$FFMEPG_INCLUDES \
-    "avcpp"\
-
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-    $$QT_UTILITY_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB \
-    $$OPENGL_UTILITY_LIB \
-    $$QT_UTILITY_LIB \
-    # thirdparty
-    $$GLEW_LIBS \
-    $$SFML_LIBS \
-    $$ASSIMP_LIBS \
-    $$TURBOJPG_LIBS \
-    $$OPENCV_LIBS \
-    $$FASTPFOR_LIBS \
-    $$KINECT4_LIBS \
-    $$BOOST_LIBS \
-    $$LIBSOUNDIO_LIBS \
-    $$LIBUSB_LIBS \
-    $$EIGEN_LIBS \
-    $$OPEN3D_LIBS \
-    $$TURBOPFOR_LIBS \
-    $$WINDOWS_LIBS \
-    $$FFMEPG_LIBS \
+####################################### DEPS
+INCLUDEPATH += $$DC_MONITORING_DEP_INCLUDEPATH
+LIBS +=  $$DC_MONITORING_DEP_LIBS
+PRE_TARGETDEPS += $$DC_MONITORING_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

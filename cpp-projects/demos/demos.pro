@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -54,43 +56,10 @@ DESTDIR     = $$DEMOS_DEST
 ####################################### CONFIG
 CONFIG -= qt
 
-####################################### INCLUDES
-INCLUDEPATH += \
-    # base
-    $$BASE_INCLUDES\
-    # opengl-utility
-    $$OPENGL_UTILITY_INCLUDES\
-    # 3d-engine
-    $$3D_ENGINE_INCLUDES\
-    # thirdparty
-    $$GLEW_INCLUDES\
-    $$GLFW_INCLUDES\
-    $$SFML_INCLUDES\
-    $$ASSIMP_INCLUDES\
-    $$GLM_INCLUDES\    
-    $$BIOPAC_INCLUDES\
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-    $$3D_ENGINE_LIB_DEP \
-
-LIBS +=\
-    # tool
-    $$BASE_LIB\
-    $$OPENGL_UTILITY_LIB \
-    $$3D_ENGINE_LIB \
-    # thirdparty
-    $$WINDOWS_LIBS \
-    $$GLEW_LIBS \
-    $$GLFW_LIBS \
-    $$SFML_LIBS \
-    $$ASSIMP_LIBS\    
-    $$GLM_LIBS\
-    $$BIOPAC_LIBS\
+####################################### DEPS
+INCLUDEPATH += $$DEMOS_APP_DEP_INCLUDEPATH
+LIBS += $$DEMOS_APP_DEP_LIBS
+PRE_TARGETDEPS += $$DEMOS_APP_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

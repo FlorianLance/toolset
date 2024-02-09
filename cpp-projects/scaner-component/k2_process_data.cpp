@@ -14,7 +14,7 @@
 #include <turbojpeg.h>
 
 // base
-#include "data/integers_encoder.hpp"
+#include "data/fastpfor_encoding.hpp"
 
 using namespace std::chrono;
 using namespace tool;
@@ -53,7 +53,7 @@ struct K2ProcessData::Impl{
 
     // decompressors
     tjhandle jpegDecompressor;
-    data::IntegersEncoder depthDecompressor;
+    data::FastPForEncoder depthDecompressor;
 
     // data received
     K2UdpHeader header;
@@ -204,11 +204,11 @@ auto K2ProcessData::process_compressed_color_cloud() -> void {
 
     stack_trace_message_signal("dll_process_compressed_color_cloud_1");
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     stack_trace_message_signal("dll_process_compressed_color_cloud_2");
 
@@ -287,11 +287,11 @@ auto K2ProcessData::process_compressed_color_cloud() -> void {
 
 auto K2ProcessData::process_compressed_color_mesh() -> void {
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->frame->compressedDepthData.data()), m_p->frame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     // uncompress color
     tjDecompress2(m_p->jpegDecompressor, m_p->frame->compressedImage.data(), m_p->frame->jpegColorSize,

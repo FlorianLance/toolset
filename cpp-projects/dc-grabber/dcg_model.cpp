@@ -26,14 +26,13 @@
 
 #include "dcg_model.hpp"
 
-// base
-#include "utility/logger.hpp"
 
 using namespace tool;
 
 auto DCGModel::initialize() -> bool{
 
     connection.init_connections();
+    recorder.initialize(1);
 
     // load settings files
     if(!settings.initialize()){
@@ -52,6 +51,7 @@ auto DCGModel::update() -> void{
     connection.update();
     settings.networkS.lastFrameIdSent = connection.last_frame_id_sent();
     settings.networkS.lastFrameSentTS = connection.last_frame_sent_timestamp_nanosecond();
+    recorder.update();
 }
 
 auto DCGModel::clean() -> void{
@@ -61,7 +61,7 @@ auto DCGModel::clean() -> void{
 auto DCGModel::trigger_settings() -> void{
     // triggers data to init ui
     settings.triggers_filters_settings();
-    settings.triggers_display_settings();    
+    settings.triggers_display_settings();
     settings.triggers_color_settings();
     settings.triggers_delay_settings();
     settings.triggers_model();

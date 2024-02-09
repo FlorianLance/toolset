@@ -40,9 +40,9 @@ auto test_dc_player() -> void{
     player.load_from_file("D:/_debug/adriel2.kvid");
 
     player.set_current_time(1000);
-    player.update_time();
+    player.update();
     player.remove_until_current_frame();
-    player.update_time();
+    player.update();
 
     player.merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
     player.save_to_file("D:/--.kvid");

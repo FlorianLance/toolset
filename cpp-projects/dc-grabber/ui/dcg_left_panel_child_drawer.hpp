@@ -35,6 +35,7 @@
 
 // local
 #include "data/dcg_settings.hpp"
+#include "data/dcg_states.hpp"
 
 namespace tool::graphics {
 
@@ -42,7 +43,7 @@ class DCGLeftPanelChildDrawer{
 
 public:
 
-    auto draw(geo::Pt2f size, int windowFlags, DCGSettings &settings) -> void;
+    auto draw(geo::Pt2f size, int windowFlags, DCGSettings &settings, DCGStates &states) -> void;
     auto append_log(const std::string &log) -> void;
 
     bool settingsPaneDisplayed = false;

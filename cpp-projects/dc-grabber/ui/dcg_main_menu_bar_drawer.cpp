@@ -109,10 +109,6 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
         if (ImGui::BeginMenu("Recordings")){
 
-            if(ImGui::MenuItem("Save recording to file")){
-                ImGuiFileDialog::Instance()->OpenDialog("Save recording", "Choose file to save", ".kvid", ".");
-            }
-
             if(ImGui::MenuItem("Save current cloud file")){
                 ImGuiFileDialog::Instance()->OpenDialog("Save cloud", "Choose file to save", ".obj", ".");
             }
@@ -164,14 +160,6 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
 
     // dialogs
-    // # save
-    if (ImGuiFileDialog::Instance()->Display("Save recording")) {
-        if (ImGuiFileDialog::Instance()->IsOk()){
-            DCGSignals::get()->save_recording_to_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-        }
-        ImGuiFileDialog::Instance()->Close();
-    }
-
     if (ImGuiFileDialog::Instance()->Display("Save cloud")) {
         if (ImGuiFileDialog::Instance()->IsOk()){
             Logger::message("save_cloud_to_file_signal\n");

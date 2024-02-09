@@ -471,7 +471,7 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettin
     int delay = static_cast<int>(grabberS.delay.delayMs);
     if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
         grabberS.delay.delayMs = delay;
-        DCMSignals::get()->update_delay_signal(grabberS.id, grabberS.delay);
+        DCMSignals::get()->update_delay_settings_signal(grabberS.id, grabberS.delay);
     }
     ImGui::Indent();
 

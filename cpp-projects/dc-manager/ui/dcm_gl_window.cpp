@@ -38,12 +38,15 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 #include "engine/managers.hpp"
+#include "imgui-tb/imgui_dc_ui_drawer.hpp"
 
 using namespace tool::gl;
 using namespace tool::graphics;
 
 DCMGlWindow::DCMGlWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) :
-      BaseSfmlGlWindow(title, screen, context) {
+    BaseSfmlGlWindow(title, screen, context) {
+
+    DCUIDrawer::set_manager_mode(true);
 }
 
 auto DCMGlWindow::init_shaders() -> bool{

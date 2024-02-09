@@ -32,17 +32,25 @@ namespace tool{
 
 struct Time{
 
-    [[maybe_unused]] static auto nanoseconds_since_epoch() -> std::chrono::nanoseconds{
+    [[nodiscard]] [[maybe_unused]] static auto nanoseconds_since_epoch() noexcept -> std::chrono::nanoseconds{
         using namespace std::chrono;
-        return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());// + offsetNano;
+        return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
     }
 
-    [[maybe_unused]] static auto milliseconds_since_epoch() -> std::chrono::milliseconds{
+    [[nodiscard]] [[maybe_unused]] static auto milliseconds_since_epoch() noexcept -> std::chrono::milliseconds{
         using namespace std::chrono;
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     }
 
-    // static inline std::chrono::nanoseconds offsetNano = std::chrono::nanoseconds(0);
+    [[nodiscard]] [[maybe_unused]] static auto difference_ms(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::milliseconds{
+        using namespace std::chrono;
+        return duration_cast<milliseconds>((tEnd-tStart));
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto difference_micro_s(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::microseconds{
+        using namespace std::chrono;
+        return duration_cast<microseconds>((tEnd-tStart));
+    }
 };
 
 }

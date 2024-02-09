@@ -99,14 +99,14 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
             !frame->cloud.normals.empty() ? frame->cloud.normals.get_data() : nullptr
         );
     }
-
-    nbBodies = frame->bodies.size();
+    
+    nbBodies = frame->bodyTracking.size();
     if(jointsModels.size() < nbBodies){
         jointsModels.resize(nbBodies);
     }
     for(size_t ii = 0; ii < nbBodies; ++ii){
-        for(size_t jj = 0; jj < frame->bodies[ii].skeleton.joints.size(); ++jj){
-            const auto &j = frame->bodies[ii].skeleton.joints[jj];
+        for(size_t jj = 0; jj < frame->bodyTracking[ii].skeleton.joints.size(); ++jj){
+            const auto &j = frame->bodyTracking[ii].skeleton.joints[jj];
             jointsModels[ii][jj] = std::make_tuple(j.good_confidence(),
                 geo::transform(
                     {{1.f,1.f,1.f}},

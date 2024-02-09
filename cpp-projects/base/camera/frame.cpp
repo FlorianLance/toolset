@@ -34,30 +34,35 @@ using namespace tool::cam;
 
 auto Frame::data_size() const noexcept -> size_t{
     return
+        sizeof(idDevice) +
         sizeof(idCapture) +
         sizeof(afterCaptureTS) +
         sizeof(receivedTS);
 }
 
 auto Frame::init_from_file_stream(std::ifstream &file) -> void{
+    read(idDevice,        file);
     read(idCapture,       file);
     read(afterCaptureTS,  file);
     read(receivedTS,      file);
 }
 
 auto Frame::init_from_data(std::span<const int8_t> data, size_t &offset) -> void{
+    read(idDevice,       data, offset);
     read(idCapture,       data, offset);
     read(afterCaptureTS,  data, offset);
     read(receivedTS,      data, offset);
 }
 
 auto Frame::write_to_file_stream(std::ofstream &file) -> void{
+    write(idDevice,       file);
     write(idCapture,       file);
     write(afterCaptureTS,  file);
     write(receivedTS,      file);
 }
 
 auto Frame::write_to_data(std::span<int8_t> data, size_t &offset) -> void{
+    write(idDevice,       data, offset);
     write(idCapture,       data, offset);
     write(afterCaptureTS,  data, offset);
     write(receivedTS,      data, offset);

@@ -37,14 +37,14 @@ auto test_kinect4() -> void{
     ds.configS.idDevice     = 0;
     ds.configS.disableLED   = false;
     ds.configS.synchMode    = DCSynchronisationMode::Standalone;
-    ds.configS.mode         = DCMode::AK_CLOUD_C1280x720_DI640x576_NV12_F30;
+    ds.configS.mode         = DCMode::AK_C1280x720_DI640x576_NV12_F30;
     ds.configS.delayBetweenColorAndDepthUsec = 0;
     ds.configS.synchronizeColorAndDepth = true;    
     // data
-    ds.dataS.generateRGBLocalFrame   = true;
-    ds.dataS.generateDepthLocalFrame = true;
-    ds.dataS.generateInfraLocalFrame = true;
-    ds.dataS.generateCloudLocal      = true;
+    // ds.dataS.generateRGBLocalFrame   = true;
+    // ds.dataS.generateDepthLocalFrame = true;
+    // ds.dataS.generateInfraLocalFrame = true;
+    // ds.dataS.generateCloudLocal      = true;
 
     std::puts("### Open device.\n");
     dManager.update_device_settings(ds);

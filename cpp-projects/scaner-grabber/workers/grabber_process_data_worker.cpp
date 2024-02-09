@@ -38,7 +38,7 @@
 #include <QElapsedTimer>
 
 // base
-#include "data/integers_encoder.hpp"
+#include "data/fastpfor_encoding.hpp"
 #include "camera/impl/k2_config_files.hpp"
 
 using namespace std::chrono;
@@ -97,7 +97,7 @@ struct ProcessDataWorker::Impl{
 
     // decompressor
     tjhandle jpegDecompressor;
-    data::IntegersEncoder depthDecompressor;
+    data::FastPForEncoder depthDecompressor;
 
     std::shared_ptr<K2Frame> lastFrame = nullptr;
 };
@@ -256,13 +256,13 @@ void ProcessDataWorker::process_infra_512x424(){
     emit update_infra_signal(std::move(infraImage));
 }
 
-void ProcessDataWorker::process_compress_color_cloud(){   
+void ProcessDataWorker::process_compress_color_cloud(){
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->lastFrame->compressedDepthData.data()), m_p->lastFrame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->lastFrame->compressedDepthData.data()), m_p->lastFrame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     // copy joints
     m_p->bodiesData = m_p->lastFrame->bodiesData;
@@ -332,11 +332,11 @@ void ProcessDataWorker::process_compress_color_cloud(){
 
 void ProcessDataWorker::process_compress_color_mesh(){
 
-    // uncompress depth data
-    m_p->depthDecompressor.decode(
-        reinterpret_cast<std::uint32_t*>(m_p->lastFrame->compressedDepthData.data()), m_p->lastFrame->compressedDepthSize,
-        reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
-    );
+    // // uncompress depth data
+    // m_p->depthDecompressor.decode(
+    //     reinterpret_cast<std::uint32_t*>(m_p->lastFrame->compressedDepthData.data()), m_p->lastFrame->compressedDepthSize,
+    //     reinterpret_cast<std::uint32_t*>(m_p->decodedDepth.data()), k2_depth_count/2
+    // );
 
     // copy joints
     m_p->bodiesData = m_p->lastFrame->bodiesData;

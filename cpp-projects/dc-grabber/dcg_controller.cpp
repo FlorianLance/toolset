@@ -55,9 +55,10 @@ auto DCGController::initialize(size_t idLocalGrabber) -> bool{
     // setup benchmark
     Bench::disable_display();
 
-    view  = std::make_unique<DCGView>();
+    view  = std::make_unique<DCGView>(idLocalGrabber);
     model = std::make_unique<DCGModel>();
     model->settings.idLocalGrabber = idLocalGrabber;
+
 
     // connections
     set_connections();
@@ -68,6 +69,7 @@ auto DCGController::initialize(size_t idLocalGrabber) -> bool{
         Logger::error("Invalid initialization.\n");
         return false;
     }
+
     // # view
     view->initialize();
 
@@ -79,21 +81,26 @@ auto DCGController::initialize(size_t idLocalGrabber) -> bool{
 auto DCGController::set_connections() -> void{
 
     // aliases
-    using Sett  = DCGSettings;
-    using CCo   = net::DCClientConnection;
-    using Rec   = cam::DCRecorder;
-    using RecD  = graphics::DCRecorderDrawer;
-    using DevD  = graphics::DCDeviceDrawer;
-    using DevM  = cam::DCDeviceManager;
+    using Sett   = DCGSettings;
+    using CCo    = net::DCClientConnection;
+    using Rec    = cam::DCRecorder;
+    using RecD   = graphics::DCRecorderDrawer;
+    using DevD   = graphics::DCDeviceDrawer;
+    using DevM   = cam::DCDeviceManager;
+
+    using States = DCGStates;
 
     // pointers
     auto s    = DCGSignals::get();
-    auto sett = &model->settings;
-    auto dev  = &model->device;
-    auto rec  = &model->recorder;
-    auto con  = &model->connection;
+    // # drawers
     auto devD = &view->mainW.deviceD;
     auto recD = &view->mainW.recorderD;
+    // # model
+    auto sett   = &model->settings;
+    auto dev    = &model->device;
+    auto rec    = &model->recorder;
+    auto con    = &model->connection;
+    auto states = &model->states;
 
     // from logger
     Logger::get()->message_signal.connect([&](std::string message){
@@ -149,15 +156,23 @@ auto DCGController::set_connections() -> void{
     s->load_current_hostname_color_settings_file_signal.connect(     &Sett::load_current_hostname_color_settings_file,      sett);
     dev->color_settings_reset_signal.connect(                        &Sett::update_color_settings_from_device_manager,      sett);
     // # device
-    // CCo::update_device_list_signal.connect(                          &DevM::update_device_list,                             dev);
     s->update_device_settings_signal.connect(                        &DevM::update_device_settings,                         dev);
     s->update_filters_signal.connect(                                &DevM::update_filters_settings,                        dev);
     s->update_color_settings_signal.connect(                         &DevM::update_color_settings,                          dev);
-    s->update_delay_signal.connect(                                  &DevM::update_delay_settings,                          dev);
+    s->update_delay_settings_signal.connect(                         &DevM::update_delay_settings,                          dev);
+
+    // # states
+    rec->states_updated_signal.connect(                              &States::update_recorder_states,                       states);
+
     // # recorder
-    s->save_recording_to_file_signal.connect(                        &Rec::save_to_file,                                    rec);
     s->update_recorder_settings_signal.connect(                      &Rec::update_settings,                                 rec);
+    s->update_model_settings_signal.connect(                         &Rec::update_model,                                    rec);
     dev->new_compressed_frame_signal.connect(                        &Rec::add_compressed_frame_to_default_camera,          rec);
+    s->start_recorder_signal.connect(                                &Rec::start_recording,                                 rec);
+    s->stop_recorder_signal.connect(                                 &Rec::stop_recording,                                  rec);
+    s->reset_recorder_signal.connect(                                &Rec::reset_recording,                                 rec);
+    s->set_recorder_time_signal.connect(                             &Rec::set_time,                                        rec);
+    s->save_recorder_signal.connect(                                 &Rec::save_to_file,                                    rec);
 
     // to drawers
     // # device
@@ -165,11 +180,13 @@ auto DCGController::set_connections() -> void{
     s->save_cloud_to_file_signal.connect(                            &DevD::save_cloud,                                     devD);
     s->update_scene_display_settings_signal.connect(                 &DevD::update_scene_display_settings,                  devD);
     s->update_cloud_display_settings_signal.connect(                 &DevD::update_cloud_display_settings,                  devD);
-    s->update_model_signal.connect(                                  &graphics::DCCloudsSceneDrawer::update_model,          devD);
+    s->update_model_settings_signal.connect(                         &graphics::DCCloudsSceneDrawer::update_model,          devD);
     s->update_filters_signal.connect(                                &DevD::update_filters_settings,                        devD);
     // # recorder
     s->update_scene_display_settings_signal.connect(                 &RecD::update_scene_display_settings,                  recD);
     s->update_cloud_display_settings_signal.connect(                 &RecD::update_cloud_display_settings,                  recD);
+    s->update_model_settings_signal.connect(                         &RecD::update_model,                                   recD);
+    rec->new_frame_signal.connect(                                   &RecD::set_frame,                                      recD);
 
     // to controller
     view->gl()->update_signal.connect(&DCGController::update, this);

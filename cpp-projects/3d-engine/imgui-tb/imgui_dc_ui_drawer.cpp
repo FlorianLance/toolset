@@ -1015,7 +1015,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::Spacing();
 
     ImGui::Text("Device type:");
-    ImGui::Indent();
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
 
     int guiCurrentTypeSelection = static_cast<int>(config.typeDevice);
@@ -1023,15 +1023,15 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         auto nDeviceType = static_cast<cam::DCType>(guiCurrentTypeSelection);
         if(nDeviceType != config.typeDevice){
             config.typeDevice = nDeviceType;
-            config.mode       = cam::dc_default_camera_mode(config.typeDevice);
+            config.mode       = cam::dc_default_mode(config.typeDevice);
             updateP = true;
         }
     }
-    updateDeviceList = ImGui::Button("Refresh devices list");
-    ImGui::Unindent();
+    // updateDeviceList = ImGui::Button("Refresh devices list");
+    // ImGui::Unindent();
 
     ImGui::Text("Device id:");
-    ImGui::Indent();
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
 
     if(devicesNames.size() != 0){
@@ -1052,12 +1052,11 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         ImGui::Text("No device found.");
     }
 
-    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Text("Mode:");
-    ImGui::Indent();
-    ImGui::SetNextItemWidth(280.f);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(230.f);
 
     auto currentModeName = modesNames[config.mode];
     if(config.typeDevice == cam::DCType::FemtoBolt){
@@ -1104,27 +1103,25 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         }
     }
 
-    ImGui::Unindent();
     ImGui::Spacing();
     ImGui::Separator();
 
     ImGui::Text("Synch mode:");
-    ImGui::Indent();
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(100.f);
     int guiCurrentSynchModeSelection = static_cast<int>(config.synchMode);
     if(ImGui::Combo("###settings_synch_mode_combo", &guiCurrentSynchModeSelection, synchItems, IM_ARRAYSIZE(synchItems))){
         updateP          = true;
         config.synchMode = static_cast<cam::DCSynchronisationMode>(guiCurrentSynchModeSelection);
     }
-    ImGui::Unindent();
 
     ImGui::Text("Subordinate delay (usec):");
     ImGui::SetNextItemWidth(80.f);
-    ImGui::Indent();
+    ImGui::SameLine();
     if(ImGui::DragInt("###subordinate_delay_usec", &config.subordinateDelayUsec, 1.0f, 0, 100000)){
         updateP          = true;
     }
-    ImGui::Unindent();
+
     ImGui::Spacing();
 
     if(ImGui::Checkbox("Synch color and depth images", &config.synchronizeColorAndDepth)){
@@ -1132,12 +1129,11 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     }
 
     ImGui::Text("Delay between color and depth (usec)");
-    ImGui::SetNextItemWidth(80.f);
-    ImGui::Indent();
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(80.f);    
     if(ImGui::DragInt("###delayt_between_color_and_depth_usec", &config.delayBetweenColorAndDepthUsec, 1.0f, 100000, 100000)){
         updateP          = true;
     }
-    ImGui::Unindent();
     ImGui::Spacing();
 
     ImGui::Separator();
@@ -1147,28 +1143,25 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::BeginDisabled(!config.enableBodyTracking);
 
     ImGui::Text("Processing mode:");
-    ImGui::Indent();
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
     int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
     if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
         config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
         updateP = true;
     }
-    ImGui::Unindent();
 
     // add gpu id
     // ...
 
     ImGui::Text("Orientation:");
-    ImGui::Indent();
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
     int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
     if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
         config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
         updateP = true;
     }
-    ImGui::Unindent();
-
     ImGui::EndDisabled();
 
     ImGui::Spacing();
@@ -1180,83 +1173,145 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::Spacing();
 }
 
+[[maybe_unused]] static constexpr const char* clientDataActionItems[] = {
+    "None", "Process", "Process-send", "Process-display", "Process-send-display"
+};
+
+auto client_data_action_combo(std::string_view label, const char* id, ClientDataAction &cda, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(cda);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(170.f);
+    if(ImGui::Combo(id, &guiSelection, clientDataActionItems, IM_ARRAYSIZE(clientDataActionItems))){
+        auto nCDA = static_cast<ClientDataAction>(guiSelection);
+        if(nCDA != cda){
+            cda = nCDA;
+            updateP = true;
+        }
+    }
+}
+
+[[maybe_unused]] static constexpr const char* serverDataActionItems[] = {
+    "None", "Process", "Process-display"
+};
+
+auto server_data_action_combo(std::string_view label, const char* id, ServerDataAction &sda, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(sda);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120.f);
+    if(ImGui::Combo(id, &guiSelection, serverDataActionItems, IM_ARRAYSIZE(serverDataActionItems))){
+        auto nSDA = static_cast<ServerDataAction>(guiSelection);
+        if(nSDA != sda){
+            sda = nSDA;
+            updateP = true;
+        }
+    }
+}
+
+[[maybe_unused]] static constexpr const char* cloudColorModeItems[] = {
+    "From depth data", "From depth-sized color image"
+};
+
+auto cloud_color_mode_combo(std::string_view label, const char* id, CloudColorMode &ccm, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(ccm);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(230.f);
+    if(ImGui::Combo(id, &guiSelection, cloudColorModeItems, IM_ARRAYSIZE(cloudColorModeItems))){
+        auto nCCM = static_cast<CloudColorMode>(guiSelection);
+        if(nCCM != ccm){
+            ccm = nCCM;
+            updateP = true;
+        }
+    }
+}
+
+[[maybe_unused]] static constexpr const char* cloudGenerationModeItems[] = {
+    "From depth", "From decoded cloud"
+};
+
+auto cloud_generation_mode_combo(std::string_view label, const char* id, CloudGenerationMode &cgm, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(cgm);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(130.f);
+    if(ImGui::Combo(id, &guiSelection, cloudGenerationModeItems, IM_ARRAYSIZE(cloudGenerationModeItems))){
+        auto nCGM = static_cast<CloudGenerationMode>(guiSelection);
+        if(nCGM != cgm){
+            cgm = nCGM;
+            updateP = true;
+        }
+    }
+}
+
+
 auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void{
 
     ImGuiUiDrawer::title2("DATA");
-    ImGui::Spacing();
-
-    ImGui::Text("Capture:");
-
-    if(type == DCType::AzureKinect){
-        if(ImGui::Checkbox("audio###settings_capture_audio", &data.captureAudio)){
-            updateP = true;
-        }
-        ImGui::SameLine();
-    }
-    if(ImGui::Checkbox("IMU###settings_capture_imu", &data.captureIMU)){
-        updateP = true;
-    }
-    
-    if((type == DCType::AzureKinect) || (type == DCType::FemtoBolt) || (type == DCType::FemtoMega)){
-        ImGui::SameLine();
-        if(ImGui::Checkbox("bodies (GPU-heavy)###settings_capture_bodies", &data.captureBodies)){
-            updateP = true;
-        }
-    }
 
     ImGui::Spacing();
-    ImGui::Text("Send:");
-    if(ImGui::Checkbox("RGB###settings_send_rgb", &data.sendColor)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Depth###settings_send_depth", &data.sendDepth)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Infra###settings_send_infra", &data.sendInfra)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Cloud###settings_send_cloud", &data.sendCloud)){
-        updateP = true;
-    }
+    ImGui::Text("Grabber actions:");
+    ImGui::Indent();
+    {
+        client_data_action_combo("[color]"sv, "###settings_client_action_color", data.client.color, updateP);
+        client_data_action_combo("[depth]"sv, "###settings_client_action_depth", data.client.depth, updateP);
+        client_data_action_combo("[depth sized color]"sv, "###settings_client_action_depth_sized_color", data.client.depthSizedColor, updateP);
 
-    if(ImGui::Checkbox("IMU###settings_send_imu", &data.sendIMU)){
-        updateP = true;
-    }
+        ImGui::Spacing();
 
-    if(type == DCType::AzureKinect){
-        ImGui::SameLine();
-        if(ImGui::Checkbox("Audio###settings_send_audio", &data.sendAudio)){
-            updateP = true;
-        }
-    }
-    
-    if(type == DCType::AzureKinect || type == DCType::FemtoBolt){
-        ImGui::SameLine();
-        if(ImGui::Checkbox("Bodies###settings_send_bodies", &data.sendBodies)){
-            updateP = true;
-        }
-    }
+        ImGui::BeginDisabled(!dc_has_infra(type));
+        client_data_action_combo("infra"sv, "###settings_client_action_infra", data.client.infra, updateP);
+        ImGui::EndDisabled();
 
+        client_data_action_combo("cloud"sv, "###settings_client_action_cloud", data.client.cloud, updateP);
+        cloud_color_mode_combo("Cloud color mode"sv, "###settings_client_cloud_coloir_mode", data.client.cloudColorMode, updateP);
+
+        ImGui::BeginDisabled(!dc_has_audio(type));
+        client_data_action_combo("audio"sv, "###settings_client_action_audio", data.client.audio, updateP);
+        ImGui::EndDisabled();
+        client_data_action_combo("IMU"sv, "###settings_client_action_imu", data.client.IMU, updateP);
+
+        ImGui::BeginDisabled(!dc_has_body_tracking(type));
+        client_data_action_combo("bodies id map"sv, "###settings_client_action_bodies_id_map", data.client.bodiesIdMap, updateP);
+        client_data_action_combo("body tracking"sv, "###settings_client_action_body_tracking", data.client.bodyTracking, updateP);
+        ImGui::EndDisabled();
+
+    }
+    ImGui::Unindent();
+
+    if(!m_isManager){
+        return;
+    }
     ImGui::Spacing();
-    ImGui::Text("Display locally on grabber (disable for efficiency):");
-    if(ImGui::Checkbox("RGB###settings_display_rgb", &data.generateRGBLocalFrame)){
-        updateP = true;
+    ImGui::Text("Manager actions:");
+    ImGui::Indent();
+    {
+        server_data_action_combo("[color]"sv, "###settings_server_action_color", data.server.color, updateP);
+        server_data_action_combo("[depth]"sv, "###settings_server_action_depth", data.server.depth, updateP);
+        server_data_action_combo("[depth sized color]"sv, "###settings_server_action_depth_sized_color", data.server.depthSizedColor, updateP);
+        server_data_action_combo("[cloud]"sv, "###settings_server_action_cloud", data.server.cloud, updateP);
+        cloud_color_mode_combo("Cloud color mode"sv, "###settings_server_cloud_coloir_mode", data.server.cloudColorMode, updateP);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###settings_server_cloud_gen_mode", data.server.cloudGenMode, updateP);
+
+        ImGui::Spacing();
+
+        ImGui::BeginDisabled(!dc_has_infra(type));
+        server_data_action_combo("infra"sv, "###settings_server_action_infra", data.server.infra, updateP);
+        ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(!dc_has_audio(type));
+        server_data_action_combo("audio"sv, "###settings_server_action_audio", data.server.audio, updateP);
+        ImGui::EndDisabled();
+        server_data_action_combo("IMU"sv, "###settings_server_action_imu", data.server.IMU, updateP);
+
+        ImGui::BeginDisabled(!dc_has_body_tracking(type));
+        server_data_action_combo("bodies id map"sv, "###settings_server_action_bodies_id_map", data.server.bodiesIdMap, updateP);
+        server_data_action_combo("body tracking"sv, "###settings_server_action_body_tracking", data.server.bodyTracking, updateP);
+        ImGui::EndDisabled();
     }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Depth###settings_display_depth", &data.generateDepthLocalFrame)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Infra###settings_display_infra", &data.generateInfraLocalFrame)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Cloud###settings_display_cloud", &data.generateCloudLocal)){
-        updateP = true;
-    }
+    ImGui::Unindent();
+
 }
 
 auto DCUIDrawer::draw_dc_actions_settings(cam::DCActionsSettings &actions, bool &updateP) -> void{
@@ -1266,9 +1321,6 @@ auto DCUIDrawer::draw_dc_actions_settings(cam::DCActionsSettings &actions, bool 
     
     if(ImGui::Checkbox("Open device###settings_open_device", &actions.openDevice)){
         updateP = true;
-        if(!actions.openDevice){
-            actions.startReading = false;
-        }
     }
     ImGui::SameLine();
     if(ImGui::Checkbox("Start reading###settings_open_camera", &actions.startReading)){

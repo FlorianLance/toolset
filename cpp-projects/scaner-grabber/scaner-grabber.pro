@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -58,48 +60,10 @@ DESTDIR     = $$SCANER_GRABBER_DEST
 CONFIG += opengl
 QT  += core gui widgets network
 
-####################################### INCLUDES
-
-INCLUDEPATH += \
-    # tool
-    $$BASE_INCLUDES\
-    $$OPENGL_UTILITY_INCLUDES\
-    $$QT_UTILITY_INCLUDES \
-    $$QT_UTILITY_UI \
-    # third party
-    $$KINECT2_INCLUDES\
-    $$OPENCV_INCLUDES\
-    $$SFML_INCLUDES\
-    $$GLEW_INCLUDES\
-    $$BOOST_INCLUDES\
-    $$TURBOJPG_INCLUDES\
-    $$FASTPFOR_INCLUDES\
-    $$ASSIMP_INCLUDES\
-    $$GLM_INCLUDES\
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-    $$QT_UTILITY_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB\
-    $$OPENGL_UTILITY_LIB\
-    $$QT_UTILITY_LIB\
-    # thirdparty
-    $$BOOST_LIBS\
-    $$KINECT2_LIBS\
-    $$GLEW_LIBS\
-    $$OPENCV_LIBS\
-    $$SFML_LIBS\
-    $$TURBOJPG_LIBS\
-    $$FASTPFOR_LIBS\
-    $$ASSIMP_LIBS\
-    -lopengl32\
+####################################### DEPS
+INCLUDEPATH += $$SCANER_GRABBER_DEP_INCLUDEPATH
+LIBS +=  $$SCANER_GRABBER_APP_DEP_LIBS
+PRE_TARGETDEPS += $$SCANER_GRABBER_APP_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

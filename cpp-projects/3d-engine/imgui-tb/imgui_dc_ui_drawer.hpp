@@ -76,9 +76,15 @@ namespace tool::graphics {
     "Default", "Clockwise 90°", "Counter clockwise 90", "Flip 180°"
 };
 
+
+
 class DCUIDrawer{
 
 public:
+
+    static auto set_manager_mode(bool state) -> void{
+        m_isManager = true;
+    }
 
     static auto draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
     static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void;
@@ -119,6 +125,8 @@ public:
         }
         devicesNames[idDevice] = deviceName;
     }
+
+    static inline bool m_isManager = false;
 };
 
 

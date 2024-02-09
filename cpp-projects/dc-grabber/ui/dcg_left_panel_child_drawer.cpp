@@ -44,7 +44,7 @@ using namespace tool;
 using namespace tool::graphics;
 using namespace tool::cam;
 
-auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings &settings) -> void {
+auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings &settings, DCGStates &states) -> void {
 
     settings.displayS.settingsFiltersSubPanelDisplayed = false;
 
@@ -65,7 +65,7 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings 
                 ImGui::EndTabBar();
             }
 
-            draw_recording_tab_item(settings.recorderStates, settings.recorderS);
+            draw_recording_tab_item(states.recorder, settings.recorderS);
             // draw_audio_tab_item();
             draw_logs_tab_item();
             ImGui::EndTabBar();
@@ -163,7 +163,7 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
     int delay = settings.delayS.delayMs;
     if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
         settings.delayS.delayMs = delay;
-        DCGSignals::get()->update_delay_signal(settings.delayS);
+        DCGSignals::get()->update_delay_settings_signal(settings.delayS);
     }
     ImGui::Unindent();
     ImGui::Spacing();
@@ -212,9 +212,6 @@ auto DCGLeftPanelChildDrawer::draw_device_tab_item(
         m_autoUpdate
     );
 
-    if(updateDeviceList){
-        signals->update_device_list_signal();
-    }
 
     if(update){
         signals->update_device_settings_signal(device);
@@ -262,7 +259,7 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
     }
 
     if(update){
-        DCGSignals::get()->update_ui_settings_signal(&dcDisplaySettings);
+        DCGSignals::get()->update_grabber_display_settings_signal(&dcDisplaySettings);
     }
 
     ImGui::EndTabItem();
@@ -297,7 +294,7 @@ auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCRecorderStates &rec
 auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &model) -> void {
 
     if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model, m_autoUpdate)){
-        DCGSignals::get()->update_model_signal(0, model);
+        DCGSignals::get()->update_model_settings_signal(0, model);
     }
 }
 

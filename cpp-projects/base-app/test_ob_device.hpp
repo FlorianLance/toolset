@@ -28,155 +28,155 @@
 using namespace tool::geo;
 using namespace tool::cam;
 
-auto convert_to_k4_calibration(DCMode mode, const OBCalibrationParam &obCalibration) -> k4a::calibration{
+// auto convert_to_k4_calibration(DCMode mode, const OBCalibrationParam &obCalibration) -> k4a::calibration{
 
-    const auto &obDepthIntrinsics = obCalibration.intrinsics[OB_SENSOR_DEPTH];
-    const auto &obDepthDistorsion = obCalibration.distortion[OB_SENSOR_DEPTH];
-    const auto &obDepthExtrinsics = obCalibration.extrinsics[OB_SENSOR_DEPTH];
+//     const auto &obDepthIntrinsics = obCalibration.intrinsics[OB_SENSOR_DEPTH];
+//     const auto &obDepthDistorsion = obCalibration.distortion[OB_SENSOR_DEPTH];
+//     const auto &obDepthExtrinsics = obCalibration.extrinsics[OB_SENSOR_DEPTH];
 
-    const auto &obColorIntrinsics = obCalibration.intrinsics[OB_SENSOR_COLOR];
-    const auto &obColorDistorsion = obCalibration.distortion[OB_SENSOR_COLOR];
-    const auto &obColorExtrinsics = obCalibration.extrinsics[OB_SENSOR_COLOR];
+//     const auto &obColorIntrinsics = obCalibration.intrinsics[OB_SENSOR_COLOR];
+//     const auto &obColorDistorsion = obCalibration.distortion[OB_SENSOR_COLOR];
+//     const auto &obColorExtrinsics = obCalibration.extrinsics[OB_SENSOR_COLOR];
 
-    k4a::calibration k4Calibration;
-    switch (mode) {
-    case DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
-        break;
-    case DCMode::FB_CLOUD_C1280x720_DI640x576_MJPG_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
-        break;
-    case DCMode::FB_CLOUD_C1280x720_DI640x576_BGRA_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
-        break;
-    case DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_WFOV_2X2BINNED;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
-        break;
-    case DCMode::FB_CLOUD_DI512x512_MJPG_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_WFOV_2X2BINNED;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_OFF;
-        break;
-    case DCMode::FB_IMG_C1280x720_MJPG_F30:
-        k4Calibration.depth_mode          = K4A_DEPTH_MODE_OFF;
-        k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
-        break;
-    default:
-        break;
-    }
+//     k4a::calibration k4Calibration;
+//     switch (mode) {
+//     case DCMode::FB_CLOUD_C1280x720_DI640x576_NV12_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
+//         break;
+//     case DCMode::FB_CLOUD_C1280x720_DI640x576_MJPG_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
+//         break;
+//     case DCMode::FB_CLOUD_C1280x720_DI640x576_BGRA_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_NFOV_UNBINNED;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
+//         break;
+//     case DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
+//         break;
+//     case DCMode::FB_CLOUD_DI512x512_MJPG_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_OFF;
+//         break;
+//     case DCMode::FB_IMG_C1280x720_MJPG_F30:
+//         k4Calibration.depth_mode          = K4A_DEPTH_MODE_OFF;
+//         k4Calibration.color_resolution    = K4A_COLOR_RESOLUTION_720P;
+//         break;
+//     default:
+//         break;
+//     }
 
-    auto depthRes = dc_depth_resolution(mode);
+//     auto depthRes = dc_depth_resolution(mode);
 
-    // depth calibration
-    auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
-    // # resolutions
-    cdepthCamCal.resolution_width   = dc_depth_width(depthRes);
-    cdepthCamCal.resolution_height  = dc_depth_height(depthRes);
-    // # metric_radius
-    cdepthCamCal.metric_radius = 1.7399998;
-    // # intrinsics
-    // ## type
-    cdepthCamCal.intrinsics.type = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
-    // ## parameters
-    auto &dIntrincisP           = cdepthCamCal.intrinsics.parameters.param;
-    dIntrincisP.cx              = obDepthIntrinsics.cx; /**< Principal point in image, x */
-    dIntrincisP.cy              = obDepthIntrinsics.cy; /**< Principal point in image, y */
-    dIntrincisP.fx              = obDepthIntrinsics.fx; /**< Focal length x */
-    dIntrincisP.fy              = obDepthIntrinsics.fy; /**< Focal length y */
-    dIntrincisP.k1              = obDepthDistorsion.k1; /**< k1 radial distortion coefficient */
-    dIntrincisP.k2              = obDepthDistorsion.k2; /**< k2 radial distortion coefficient */
-    dIntrincisP.k3              = obDepthDistorsion.k3; /**< k3 radial distortion coefficient */
-    dIntrincisP.k4              = obDepthDistorsion.k4; /**< k4 radial distortion coefficient */
-    dIntrincisP.k5              = obDepthDistorsion.k5; /**< k5 radial distortion coefficient */
-    dIntrincisP.k6              = obDepthDistorsion.k6; /**< k6 radial distortion coefficient */
-    // dIntrincisP.codx; // UNUSED                      /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
-    // dIntrincisP.cody; // UNUSED                      /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
-    dIntrincisP.p1              = obDepthDistorsion.p1; /**< Tangential distortion coefficient 2 */
-    dIntrincisP.p2              = obDepthDistorsion.p2; /**< Tangential distortion coefficient 1 */
-    dIntrincisP.metric_radius   = 0; /**< Metric radius */
-    cdepthCamCal.intrinsics.parameter_count = 15;
-    // # extrinsics
-    // ## rotation
-    auto &dExtRot = cdepthCamCal.extrinsics.rotation;
-    dExtRot[0] = 1.f;
-    dExtRot[1] = 0.f;
-    dExtRot[2] = 0.f;
-    dExtRot[3] = 0.f;
-    dExtRot[4] = 1.f;
-    dExtRot[5] = 0.f;
-    dExtRot[6] = 0.f;
-    dExtRot[7] = 0.f;
-    dExtRot[8] = 1.f;
-    // ## translation
-    auto &dExtTr = cdepthCamCal.extrinsics.translation;
-    dExtTr[0] = 0.f;
-    dExtTr[1] = 0.f;
-    dExtTr[2] = 0.f;
+//     // depth calibration
+//     auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
+//     // # resolutions
+//     cdepthCamCal.resolution_width   = dc_depth_width(depthRes);
+//     cdepthCamCal.resolution_height  = dc_depth_height(depthRes);
+//     // # metric_radius
+//     cdepthCamCal.metric_radius = 1.7399998;
+//     // # intrinsics
+//     // ## type
+//     cdepthCamCal.intrinsics.type = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+//     // ## parameters
+//     auto &dIntrincisP           = cdepthCamCal.intrinsics.parameters.param;
+//     dIntrincisP.cx              = obDepthIntrinsics.cx; /**< Principal point in image, x */
+//     dIntrincisP.cy              = obDepthIntrinsics.cy; /**< Principal point in image, y */
+//     dIntrincisP.fx              = obDepthIntrinsics.fx; /**< Focal length x */
+//     dIntrincisP.fy              = obDepthIntrinsics.fy; /**< Focal length y */
+//     dIntrincisP.k1              = obDepthDistorsion.k1; /**< k1 radial distortion coefficient */
+//     dIntrincisP.k2              = obDepthDistorsion.k2; /**< k2 radial distortion coefficient */
+//     dIntrincisP.k3              = obDepthDistorsion.k3; /**< k3 radial distortion coefficient */
+//     dIntrincisP.k4              = obDepthDistorsion.k4; /**< k4 radial distortion coefficient */
+//     dIntrincisP.k5              = obDepthDistorsion.k5; /**< k5 radial distortion coefficient */
+//     dIntrincisP.k6              = obDepthDistorsion.k6; /**< k6 radial distortion coefficient */
+//     // dIntrincisP.codx; // UNUSED                      /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
+//     // dIntrincisP.cody; // UNUSED                      /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
+//     dIntrincisP.p1              = obDepthDistorsion.p1; /**< Tangential distortion coefficient 2 */
+//     dIntrincisP.p2              = obDepthDistorsion.p2; /**< Tangential distortion coefficient 1 */
+//     dIntrincisP.metric_radius   = 0; /**< Metric radius */
+//     cdepthCamCal.intrinsics.parameter_count = 15;
+//     // # extrinsics
+//     // ## rotation
+//     auto &dExtRot = cdepthCamCal.extrinsics.rotation;
+//     dExtRot[0] = 1.f;
+//     dExtRot[1] = 0.f;
+//     dExtRot[2] = 0.f;
+//     dExtRot[3] = 0.f;
+//     dExtRot[4] = 1.f;
+//     dExtRot[5] = 0.f;
+//     dExtRot[6] = 0.f;
+//     dExtRot[7] = 0.f;
+//     dExtRot[8] = 1.f;
+//     // ## translation
+//     auto &dExtTr = cdepthCamCal.extrinsics.translation;
+//     dExtTr[0] = 0.f;
+//     dExtTr[1] = 0.f;
+//     dExtTr[2] = 0.f;
     
-    auto colorRes = dc_color_resolution(mode);
+//     auto colorRes = dc_color_resolution(mode);
 
-    // color calibration
-    auto &cColorCamCal              = k4Calibration.color_camera_calibration;
-    // # resolutions
-    cColorCamCal.resolution_width   = dc_color_width(colorRes);
-    cColorCamCal.resolution_height  = dc_color_height(colorRes);
-    // # metric_radius
-    cColorCamCal.metric_radius      = 1.7;
-    // # intrinsics
-    // ## type
-    cColorCamCal.intrinsics.type    = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
-    // ## parameters
-    auto &cIntrincisP               = cColorCamCal.intrinsics.parameters.param;
-    cIntrincisP.cx                  = obColorIntrinsics.cx; /**< Principal point in image, x */
-    cIntrincisP.cy                  = obColorIntrinsics.cy; /**< Principal point in image, y */
-    cIntrincisP.fx                  = obColorIntrinsics.fx; /**< Focal length x */
-    cIntrincisP.fy                  = obColorIntrinsics.fy; /**< Focal length y */
-    cIntrincisP.k1                  = obColorDistorsion.k1; /**< k1 radial distortion coefficient */
-    cIntrincisP.k2                  = obColorDistorsion.k2; /**< k2 radial distortion coefficient */
-    cIntrincisP.k3                  = obColorDistorsion.k3; /**< k3 radial distortion coefficient */
-    cIntrincisP.k4                  = obColorDistorsion.k4; /**< k4 radial distortion coefficient */
-    cIntrincisP.k5                  = obColorDistorsion.k5; /**< k5 radial distortion coefficient */
-    cIntrincisP.k6                  = obColorDistorsion.k6; /**< k6 radial distortion coefficient */
-    // cIntrincisP.codx; // UNUSED                          /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
-    // cIntrincisP.cody; // UNUSED                          /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
-    cIntrincisP.p1                  = obColorDistorsion.p1; /**< Tangential distortion coefficient 2 */
-    cIntrincisP.p2                  = obColorDistorsion.p2; /**< Tangential distortion coefficient 1 */
-    cIntrincisP.metric_radius       = 0; /**< Metric radius */
-    cColorCamCal.intrinsics.parameter_count = 15;
-    // # extrinsics
-    // ## rotation
-    auto &cExtRot = cColorCamCal.extrinsics.rotation;
-    cExtRot[0] = 1.f;
-    cExtRot[1] = 0.f;
-    cExtRot[2] = 0.f;
-    cExtRot[3] = 0.f;
-    cExtRot[4] = 1.f;
-    cExtRot[5] = 0.f;
-    cExtRot[6] = 0.f;
-    cExtRot[7] = 0.f;
-    cExtRot[8] = 1.f;
-    // ## translation
-    auto &cExtTr = cColorCamCal.extrinsics.translation;
-    cExtTr[0] = 0.f;
-    cExtTr[1] = 0.f;
-    cExtTr[2] = 0.f;
+//     // color calibration
+//     auto &cColorCamCal              = k4Calibration.color_camera_calibration;
+//     // # resolutions
+//     cColorCamCal.resolution_width   = dc_color_width(colorRes);
+//     cColorCamCal.resolution_height  = dc_color_height(colorRes);
+//     // # metric_radius
+//     cColorCamCal.metric_radius      = 1.7;
+//     // # intrinsics
+//     // ## type
+//     cColorCamCal.intrinsics.type    = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+//     // ## parameters
+//     auto &cIntrincisP               = cColorCamCal.intrinsics.parameters.param;
+//     cIntrincisP.cx                  = obColorIntrinsics.cx; /**< Principal point in image, x */
+//     cIntrincisP.cy                  = obColorIntrinsics.cy; /**< Principal point in image, y */
+//     cIntrincisP.fx                  = obColorIntrinsics.fx; /**< Focal length x */
+//     cIntrincisP.fy                  = obColorIntrinsics.fy; /**< Focal length y */
+//     cIntrincisP.k1                  = obColorDistorsion.k1; /**< k1 radial distortion coefficient */
+//     cIntrincisP.k2                  = obColorDistorsion.k2; /**< k2 radial distortion coefficient */
+//     cIntrincisP.k3                  = obColorDistorsion.k3; /**< k3 radial distortion coefficient */
+//     cIntrincisP.k4                  = obColorDistorsion.k4; /**< k4 radial distortion coefficient */
+//     cIntrincisP.k5                  = obColorDistorsion.k5; /**< k5 radial distortion coefficient */
+//     cIntrincisP.k6                  = obColorDistorsion.k6; /**< k6 radial distortion coefficient */
+//     // cIntrincisP.codx; // UNUSED                          /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
+//     // cIntrincisP.cody; // UNUSED                          /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
+//     cIntrincisP.p1                  = obColorDistorsion.p1; /**< Tangential distortion coefficient 2 */
+//     cIntrincisP.p2                  = obColorDistorsion.p2; /**< Tangential distortion coefficient 1 */
+//     cIntrincisP.metric_radius       = 0; /**< Metric radius */
+//     cColorCamCal.intrinsics.parameter_count = 15;
+//     // # extrinsics
+//     // ## rotation
+//     auto &cExtRot = cColorCamCal.extrinsics.rotation;
+//     cExtRot[0] = 1.f;
+//     cExtRot[1] = 0.f;
+//     cExtRot[2] = 0.f;
+//     cExtRot[3] = 0.f;
+//     cExtRot[4] = 1.f;
+//     cExtRot[5] = 0.f;
+//     cExtRot[6] = 0.f;
+//     cExtRot[7] = 0.f;
+//     cExtRot[8] = 1.f;
+//     // ## translation
+//     auto &cExtTr = cColorCamCal.extrinsics.translation;
+//     cExtTr[0] = 0.f;
+//     cExtTr[1] = 0.f;
+//     cExtTr[2] = 0.f;
 
-    // extrinsics
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].rotation);
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation);
-    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].rotation);
-    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].translation);
+//     // extrinsics
+//     std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].rotation);
+//     std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation);
+//     std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].rotation);
+//     std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].translation);
 
-    return k4Calibration;
-}
+//     return k4Calibration;
+// }
 
 
 auto test_raw_orbbec_femto() -> void{
 
-    DCMode mode = DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30;
+    DCMode mode = DCMode::FB_C1280x720_DI512x512_MJPG_F30;
     // DCMode mode = DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30;
     auto dRes = dc_depth_resolution(mode);
     auto cRes = dc_color_resolution(mode);
@@ -325,11 +325,11 @@ auto test_raw_orbbec_femto() -> void{
     // } OBCalibrationParam, ob_calibration_param;
 
 
-    auto cameraParam      = pipe.getCameraParam();
-    auto calibrationParam = pipe.getCalibrationParam(config);
+    // auto cameraParam      = pipe.getCameraParam();
+    // auto calibrationParam = pipe.getCalibrationParam(config);
 
-    auto k4Cali = convert_to_k4_calibration(mode, calibrationParam);
-    k4a::transformation k4Transformation(k4Cali);
+    // auto k4Cali = convert_to_k4_calibration(mode, calibrationParam);
+    // k4a::transformation k4Transformation(k4Cali);
 
     auto colorImage = k4a::image::create(
         K4A_IMAGE_FORMAT_COLOR_BGRA32,
@@ -413,11 +413,11 @@ auto test_raw_orbbec_femto() -> void{
             }
 
             std::cout << "resize color to depth\n";
-            k4Transformation.color_image_to_depth_camera(
-                k4aDepthImage,
-                colorImage,
-                &depthSizedColorImage
-            );
+            // k4Transformation.color_image_to_depth_camera(
+            //     k4aDepthImage,
+            //     colorImage,
+            //     &depthSizedColorImage
+            // );
 
 
             // write resized color map
@@ -428,12 +428,12 @@ auto test_raw_orbbec_femto() -> void{
             }
 
             std::cout << "gen point cloud from depth\n";
-            k4Transformation.depth_image_to_point_cloud(
-                k4aDepthImage,
-                K4A_CALIBRATION_TYPE_DEPTH,
-                &pci
-            );
-            std::cout << "end transform\n";
+            // k4Transformation.depth_image_to_point_cloud(
+            //     k4aDepthImage,
+            //     K4A_CALIBRATION_TYPE_DEPTH,
+            //     &pci
+            // );
+            // std::cout << "end transform\n";
 
             auto cloudBuffer = reinterpret_cast<Pt3<int16_t>*>(pci.get_buffer());
             auto colorBuffer = reinterpret_cast<const Pt4<uint8_t>*>(depthSizedColorImage.get_buffer());
@@ -642,14 +642,14 @@ auto test_orbbec_femto() -> void {
     ds.configS.idDevice                         = 0;
     ds.configS.disableLED                       = false;
     ds.configS.synchMode                        = DCSynchronisationMode::Standalone;
-    ds.configS.mode                             = DCMode::FB_CLOUD_C1280x720_DI512x512_MJPG_F30;
+    ds.configS.mode                             = DCMode::FB_C1280x720_DI512x512_MJPG_F30;
     ds.configS.delayBetweenColorAndDepthUsec    = 0;
     ds.configS.synchronizeColorAndDepth         = true;
     // data
-    ds.dataS.generateRGBLocalFrame   = true;
-    ds.dataS.generateDepthLocalFrame = true;
-    ds.dataS.generateInfraLocalFrame = true;
-    ds.dataS.generateCloudLocal      = true;
+    // ds.dataS.generateRGBLocalFrame   = true;
+    // ds.dataS.generateDepthLocalFrame = true;
+    // ds.dataS.generateInfraLocalFrame = true;
+    // ds.dataS.generateCloudLocal      = true;
 
     std::puts("### Open device.\n");
     dManager.update_device_settings(ds);
@@ -690,22 +690,22 @@ auto test_femto_mega() -> void{
     ds.configS.idDevice                         = 0;
     ds.configS.disableLED                       = false;
     ds.configS.synchMode                        = DCSynchronisationMode::Standalone;
-    ds.configS.mode                             = DCMode::FM_CLOUD_C1280x720_DI512x512_MJPG_F30;
+    ds.configS.mode                             = DCMode::FM_C1280x720_DI512x512_MJPG_F30;
     ds.configS.delayBetweenColorAndDepthUsec    = 0;
     ds.configS.synchronizeColorAndDepth         = true;
     // data
-    ds.dataS.generateRGBLocalFrame   = true;
-    ds.dataS.generateDepthLocalFrame = true;
-    ds.dataS.generateInfraLocalFrame = true;
-    ds.dataS.generateCloudLocal      = true;
+    // ds.dataS.generateRGBLocalFrame   = true;
+    // ds.dataS.generateDepthLocalFrame = true;
+    // ds.dataS.generateInfraLocalFrame = true;
+    // ds.dataS.generateCloudLocal      = true;
 
-    ds.dataS.sendCloud = false;
-    ds.dataS.sendBodies= false;
-    ds.dataS.sendAudio= false;
-    ds.dataS.sendIMU= false;
-    ds.dataS.sendInfra= false;
-    ds.dataS.sendColor= false;
-    ds.dataS.sendDepth= false;
+    // ds.dataS.sendCloud = false;
+    // ds.dataS.sendBodies= false;
+    // ds.dataS.sendAudio= false;
+    // ds.dataS.sendIMU= false;
+    // ds.dataS.sendInfra= false;
+    // ds.dataS.sendColor= false;
+    // ds.dataS.sendDepth= false;
 
     std::puts("### Open device.\n");
     dManager.update_device_settings(ds);

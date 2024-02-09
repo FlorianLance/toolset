@@ -53,9 +53,8 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
     gridD = std::make_unique<gl::GridDrawer>();
 
 
-    plane1PointsD[0] = std::make_unique<gl::CubeDrawer>(0.1f);
-    plane1PointsD[1] = std::make_unique<gl::CubeDrawer>(0.1f);
-    plane1PointsD[2] = std::make_unique<gl::CubeDrawer>(0.1f);
+    plane1PointsD = std::make_unique<gl::SphereDrawer>(0.05f);
+
     plane1D = std::make_unique<gl::TriangleLineDrawer>();
 }
 
@@ -140,40 +139,53 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             shader->set_uniform("projection", fboD.camera()->projection().conv<float>());
             shader->set_uniform("enable_unicolor", true);
 
+            // body tracking
             for(size_t ii = 0; ii < cloudD.nbBodies; ++ii){
                 shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
                 for(size_t jj = 0; jj < cloudD.jointsModels[ii].size(); ++jj){
                     const auto &jm = cloudD.jointsModels[ii][jj];
                     if(std::get<0>(jm)){
-                        shader->set_uniform("model", cloudD.model * std::get<1>(jm));
+                        shader->set_uniform("model", std::get<1>(jm) * cloudD.model);
                         cloudD.spD.draw();
                     }
                 }
             }
 
+            // filtering planes
             if(cloudD.filters.p1FMode != tool::cam::DCFiltersSettings::PlaneFilteringMode::None && plane1D){
 
                 auto p1 = cloudD.filters.p1A;
                 auto p2 = cloudD.filters.p1B;
                 auto p3 = cloudD.filters.p1C;
+                geo::Pt3f meanPt    = (p1+p2+p3)/3.f;
 
-                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p1));
+                shader->set_uniform("model",  geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p1) * cloudD.model);
                 shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,0.f, 1.f});
-                plane1PointsD[0]->draw(shader);
+                plane1PointsD->draw(shader);
 
-                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p2));
+                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p2) * cloudD.model);
                 shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
-                plane1PointsD[1]->draw(shader);
+                plane1PointsD->draw(shader);
 
-                shader->set_uniform("model",  cloudD.model * geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p3));
+                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p3) * cloudD.model);
                 shader->set_uniform("unicolor", geo::Pt4f{0.f,0.f,1.f, 1.f});
-                plane1PointsD[2]->draw(shader);
+                plane1PointsD->draw(shader);
 
-                plane1D->init(p1,p2,p3);
+                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, meanPt) * cloudD.model);
+                shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,1.f, 1.f});
+                plane1PointsD->draw(shader);
 
-                shader->set_uniform("model",  cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,0.f, 1.f});
-                plane1D->draw(shader);
+                shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
+                shader->set_uniform("model", cloudD.model);
+
+                auto v1 = vec(meanPt,p1);
+                auto v2 = vec(meanPt,p2);
+                auto v3 = vec(meanPt,p3);
+                for(int ii = 0; ii < 40; ++ii){
+                    auto f = (-20+ii)*0.05f;
+                    plane1D->init(f*v1 + p1, f*v2 + p2, f*v3 + p3);
+                    plane1D->draw(shader);
+                }
             }
 
 //            auto id = geo::Mat4f::identity();

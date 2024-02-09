@@ -43,6 +43,7 @@ auto DCRecorderDrawer::initialize(size_t nbGrabbers) -> void {
 
 auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void{
 
+    std::cout << "DCRecorderDrawer::set_frame " << idC << " " << frame->idCapture << "\n";
     if(idC >= m_currentFrames.size()){
         return;
     }
@@ -50,6 +51,7 @@ auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame
     m_currentFrames[idC] = frame;
 
     if(update_from_frame(idC, m_currentFrames[idC])){
+        std::cout << "REDRAW\n";
         m_redrawClouds = true;
     }
 }

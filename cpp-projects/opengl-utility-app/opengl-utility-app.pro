@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -55,37 +57,9 @@ DESTDIR     = $$OPENGL_UTILITY_DEST
 CONFIG -= qt
 
 ####################################### INCLUDES
-INCLUDEPATH += \
-    # base
-    $$BASE_INCLUDES \
-    # opengl-utility
-    $$OPENGL_UTILITY_INCLUDES\
-    # glew
-    $$GLEW_INCLUDES\
-    # glfw
-    $$GLFW_INCLUDES\
-    # assimp
-    $$ASSIMP_INCLUDES\
-    # glm
-    $$GLM_INCLUDES\
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-
-LIBS += \
-    # tool
-    $$BASE_LIB \
-    $$OPENGL_UTILITY_LIB \
-    # thirdparty
-    $$WINDOWS_LIBS \
-    $$GLEW_LIBS\
-    $$GLFW_LIBS \
-    $$ASSIMP_LIBS \
-    $$GLM_LIBS\
+INCLUDEPATH += $$OPENGL_UTILITY_APP_DEP_INCLUDEPATH
+LIBS += $$OPENGL_UTILITY_APP_DEP_LIBS
+PRE_TARGETDEPS += $$OPENGL_UTILITY_APP_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

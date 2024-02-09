@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -60,62 +62,12 @@ DESTDIR     = $$NODES_DEST
 CONFIG += qt
 QT += core gui opengl widgets printsupport
 
-####################################### INCLUDES
-
-INCLUDEPATH += \
-    # base
-    $$BASE_INCLUDES \
-    # local
-    nodes\
-    nodes/internal\   
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB\
+####################################### DEPS
+INCLUDEPATH += $$NODES_DEP_INCLUDEPATH
+LIBS += $$NODES_DEP_LIBS
+PRE_TARGETDEPS += $$NODES_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
-
-SOURCES += \
-    nodes/Connection.cpp \
-    nodes/ConnectionBlurEffect.cpp \
-    nodes/ConnectionGeometry.cpp \
-    nodes/ConnectionGraphicsObject.cpp \
-    nodes/ConnectionPainter.cpp \
-    nodes/ConnectionState.cpp \
-    nodes/ConnectionStyle.cpp \
-    nodes/DataModelRegistry.cpp \
-    nodes/FlowScene.cpp \
-    nodes/FlowView.cpp \
-    nodes/FlowViewStyle.cpp \
-    nodes/Node.cpp \
-    nodes/NodeConnectionInteraction.cpp \
-    nodes/NodeDataModel.cpp \
-    nodes/NodeGeometry.cpp \
-    nodes/NodeGraphicsObject.cpp \
-    nodes/NodePainter.cpp \
-    nodes/NodeState.cpp \
-    nodes/NodeStyle.cpp \
-    nodes/Properties.cpp \
-    nodes/StyleCollection.cpp \
-    sample_main.cpp \
-    samples/calculator/Converters.cpp \
-    samples/calculator/MathOperationDataModel.cpp \
-    samples/calculator/ModuloModel.cpp \
-    samples/calculator/NumberDisplayDataModel.cpp \
-    samples/calculator/NumberSourceDataModel.cpp \
-    samples/connection_colors/connections_colors_models.cpp \
-    samples/example2/TextDisplayDataModel.cpp \
-    samples/example2/TextSourceDataModel.cpp \
-    samples/images/ImageLoaderModel.cpp \
-    samples/images/ImageShowModel.cpp \
-    samples/styles/styles_models.cpp
-
 
 HEADERS += \
     nodes/ConnectionBlurEffect.hpp \
@@ -174,6 +126,40 @@ HEADERS += \
     samples/styles/styles.hpp \
     samples/styles/styles_models.hpp
 
+SOURCES += \
+    nodes/Connection.cpp \
+    nodes/ConnectionBlurEffect.cpp \
+    nodes/ConnectionGeometry.cpp \
+    nodes/ConnectionGraphicsObject.cpp \
+    nodes/ConnectionPainter.cpp \
+    nodes/ConnectionState.cpp \
+    nodes/ConnectionStyle.cpp \
+    nodes/DataModelRegistry.cpp \
+    nodes/FlowScene.cpp \
+    nodes/FlowView.cpp \
+    nodes/FlowViewStyle.cpp \
+    nodes/Node.cpp \
+    nodes/NodeConnectionInteraction.cpp \
+    nodes/NodeDataModel.cpp \
+    nodes/NodeGeometry.cpp \
+    nodes/NodeGraphicsObject.cpp \
+    nodes/NodePainter.cpp \
+    nodes/NodeState.cpp \
+    nodes/NodeStyle.cpp \
+    nodes/Properties.cpp \
+    nodes/StyleCollection.cpp \
+    sample_main.cpp \
+    samples/calculator/Converters.cpp \
+    samples/calculator/MathOperationDataModel.cpp \
+    samples/calculator/ModuloModel.cpp \
+    samples/calculator/NumberDisplayDataModel.cpp \
+    samples/calculator/NumberSourceDataModel.cpp \
+    samples/connection_colors/connections_colors_models.cpp \
+    samples/example2/TextDisplayDataModel.cpp \
+    samples/example2/TextSourceDataModel.cpp \
+    samples/images/ImageLoaderModel.cpp \
+    samples/images/ImageShowModel.cpp \
+    samples/styles/styles_models.cpp
 
 RESOURCES += \
     resources/nodes_resource.qrc \

@@ -123,6 +123,19 @@ auto DCMModel::update_calibration_filters(size_t id, const cam::DCFiltersSetting
     }
 }
 
+auto DCMModel::update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void {
+    sNetwork->update_device_settings(idG, deviceS);
+    sData.update_device_settings(idG, deviceS);
+}
+
+auto DCMModel::update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void{
+    sNetwork->update_color_settings(idG, colorS);
+}
+
+auto DCMModel::update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void{
+    sNetwork->update_delay_settings(idG, delayS);
+}
+
 auto DCMModel::read_feedbacks() -> void{
 
     if(readMessagesL.try_lock()){
@@ -144,10 +157,6 @@ auto DCMModel::read_feedbacks() -> void{
 }
 
 auto DCMModel::update() -> void{
-
-    // update time
-    player.update_time();
-    calibration.update_time();
 
     // read messages from network
     read_feedbacks();
@@ -184,6 +193,7 @@ auto DCMModel::update() -> void{
     }
 
     // update
-    player.update_frames();
-    recorder.update_frames();
+    calibration.update();
+    player.update();
+    recorder.update();
 }

@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -55,29 +57,10 @@ DESTDIR     = $$SCANER_COMPONENT_DEST
 ####################################### CONFIG
 CONFIG -= qt
 
-####################################### INCLUDES
-INCLUDEPATH += \
-    # base
-    $$BASE_INCLUDES \
-    # thirdparty
-    $$KINECT2_INCLUDES \
-    $$BOOST_INCLUDES \
-    $$TURBOJPG_INCLUDES \
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB\
-    # third party
-    $$KINECT2_LIBS \
-    $$BOOST_LIBS \
-    $$TURBOJPG_LIBS\
-    $$FASTPFOR_LIBS\
+####################################### DEPS
+INCLUDEPATH += $$SCANER_COMPONENT_DEP_INCLUDEPATH
+LIBS +=  $$SCANER_COMPONENT_DEP_LIBS
+PRE_TARGETDEPS += $$SCANER_COMPONENT_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

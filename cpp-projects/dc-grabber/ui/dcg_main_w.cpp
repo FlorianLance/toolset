@@ -62,7 +62,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
     if (ImGui::Begin("UI###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)){
 
         // settings
-        leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model->settings);
+        leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model->settings, model->states);
 
         ImGui::SameLine();
 
@@ -72,6 +72,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             std::int64_t procD = model->device.get_processing_duration_ms();
             std::int64_t convertImageD = model->device.get_duration_between_micro_s("after_get_images"sv, "after_color_convert"sv);
             std::int64_t compT = model->device.get_compressing_duration_ms();
+            // std::int64_t sendT = model->device.get_duration_between_ms("after_compressing"sv, "after_compressed_frame_sending"sv);
             captD = std::clamp<int>(captD, 0, 1000);
             procD = std::clamp<int>(procD, 0, 1000);
             compT = std::clamp<int>(compT, 0, 1000);
@@ -90,7 +91,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             ImGui::SameLine();
             ImGuiUiDrawer::text(std::format("Compressing: {:3}", compT));
             ImGui::SameLine();
-            ImGuiUiDrawer::text(std::format("Sending: {:5.3f}", (0.001*model->connection.last_frame_sending_duration_micros_s())));
+            ImGuiUiDrawer::text(std::format("Sending: {:5.3f}",(0.001*model->connection.last_frame_sending_duration_micros_s())));
 
 
             if(ImGui::BeginTabBar("Main###MainTabBar")){
@@ -99,7 +100,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
                     deviceD.draw(model->settings.displayS.focusWindow);
                     ImGui::EndTabItem();
                 }
-                if(ImGui::BeginTabItem("Recorder###recorder_tabitem")){
+                if(ImGui::BeginTabItem("Recorder###recorder_tabitem")){;
                     recorderD.draw();
                     ImGui::EndTabItem();
                 }

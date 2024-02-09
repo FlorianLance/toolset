@@ -71,14 +71,17 @@ defineTest(generate_variables) {
     # lib
     equals(CFG, "debug"){
         eval($${2}_LIB = "-L"$${1}/_build/bin/$${3} "-l"$${4})        
-        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${4}".lib")
+        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${4}".lib") # TODO: remove
+        eval($${2}_LIB_FILE = $${1}/_build/bin/$${3}/$${4}".lib")
     }
     equals(CFG, "release"){
         eval($${2}_LIB = "-L"$${1}/_build/bin/$${3} "-l"$${3})
-        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${3}".lib")
+        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${3}".lib") # TODO: remove
+        eval($${2}_LIB_FILE = $${1}/_build/bin/$${3}/$${3}".lib")
     }
-    eval(export($${2}_LIB))
+    eval(export($${2}_LIB))    
     eval(export($${2}_LIB_DEP))
+    eval(export($${2}_LIB_FILE))
 }
 
 # sub dir
@@ -90,3 +93,4 @@ TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
 for(project_dir, TOOLSET_CPP_PROJECTS):{
     generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$section(project_dir, :, 0, 0), $$section(project_dir, :, 1, 1), $$section(project_dir, :, 2, 2))
 }
+

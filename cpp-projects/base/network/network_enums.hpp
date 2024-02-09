@@ -115,7 +115,6 @@ enum class Command : std::int8_t{
     Quit = 0,
     Shutdown,
     Restart,
-    Disconnect,
-    UpdateDeviceList
+    Disconnect
 };
 }

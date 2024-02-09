@@ -28,7 +28,6 @@
 
 // std
 #include <memory>
-#include <filesystem>
 
 // base
 #include "camera/settings/dc_device_settings.hpp"
@@ -39,7 +38,6 @@
 #include "camera/settings/dc_filters_settings.hpp"
 #include "camera/dc_types.hpp"
 
-#include "camera/states/dc_recorder_states.hpp"
 
 #include "network/udp_client_network_settings.hpp"
 #include "network/udp_header.hpp"
@@ -113,8 +111,6 @@ struct DCGSettings{
     cam::DCRecorderSettings recorderS;
     ui::DCGDisplaySettingsSettings displayS;
 
-    // states
-    cam::DCRecorderStates recorderStates;
     std::optional<cam::DCImuSample> imuSample;
 
     // files settings paths

@@ -120,12 +120,14 @@ ORBBEC_INCLUDES = \
 equals(COMPILER, "vs"){
 
 ########################################################## WINDOWS LIBS
-WINDOWS_LIBS = \
-    -luser32\
-    -lopengl32\
-    -lgdi32\
-    -lshell32\
-    -lws2_32\
+    WINDOWS_LIBS = \
+        -luser32\
+        -lopengl32\
+        -lgdi32\
+        -lshell32\
+        -lws2_32\
+
+    OS_LIBS = $$WINDOWS_LIBS\
 
 ########################################################## DEBUG LIBS
     equals(CFG, "debug"){

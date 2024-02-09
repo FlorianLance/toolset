@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -55,40 +57,9 @@ DESTDIR     = $$BASE_DEST
 ####################################### CONFIG
 CONFIG -= qt
 
-####################################### INCLUDES
-INCLUDEPATH += \
-    # thirdparty
-    $$ASSIMP_INCLUDES \
-    $$TURBOJPG_INCLUDES \
-    $$FASTPFOR_INCLUDES \
-    $$OPENCV_INCLUDES \
-    $$KINECT2_INCLUDES \
-    $$KINECT4_INCLUDES \
-    $$BOOST_INCLUDES \
-    $$LIBSOUNDIO_INCLUDES \
-    $$LIBUSB_INCLUDES \
-    $$EIGEN_INCLUDES \
-    $$OPEN3D_INCLUDES \
-    $$TURBOPFOR_INCLUDES \
-    $$ORBBEC_INCLUDES \
-
-####################################### LIBRAIRIES
-LIBS += \
-    # thirdparty
-    $$ASSIMP_LIBS \
-    $$TURBOJPG_LIBS \
-    $$FASTPFOR_LIBS \
-    $$OPENCV_LIBS \
-    $$KINECT2_LIBS \
-    $$KINECT4_LIBS \
-    $$BOOST_LIBS \
-    $$LIBSOUNDIO_LIBS \
-    $$LIBUSB_LIBS \
-    $$EIGEN_LIBS\
-    $$OPEN3D_LIBS \
-    $$TURBOPFOR_LIBS \
-    $$WINDOWS_LIBS \
-    $$ORBBEC_LIBS \
+####################################### DEPS
+INCLUDEPATH += $$BASE_DEP_INCLUDEPATH
+LIBS += $$BASE_DEP_LIBS
 
 ####################################### PROJECT FILES
 
@@ -105,6 +76,8 @@ HEADERS += \
     camera/impl/femto_bolt_device_impl.hpp \
     camera/impl/femto_mega_device_impl.hpp \
     camera/impl/orbbec_base_device.hpp \
+    data/fastpfor_encoding.hpp \
+    data/jpeg_encoding.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -245,6 +218,7 @@ HEADERS += \
     utility/io_fstream.hpp \
     utility/math.hpp \
     utility/paths.hpp \
+    utility/safe_queue.hpp \
     utility/stop_watch.hpp \
     utility/string.hpp \
     utility/string_geo.hpp \
@@ -263,7 +237,6 @@ HEADERS += \
     algorithms/marching_cube.hpp \
     # data
     data/FastDifferentialCoding/fastdelta.h \
-    data/integers_encoder.hpp \
     # tests
     tests/marching_cube_test.hpp \
     # thirdparty
@@ -340,6 +313,8 @@ SOURCES += \
     camera/impl/femto_bolt_device_impl.cpp \
     camera/impl/femto_mega_device_impl.cpp \
     camera/impl/orbbec_base_device.cpp \
+    data/fastpfor_encoding.cpp \
+    data/jpeg_encoding.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -417,7 +392,6 @@ SOURCES += \
     exvr/ex_resource.cpp \
     # data
     data/FastDifferentialCoding/fastdelta.c \
-    data/integers_encoder.cpp \
     # thirdparty
     ## nanobench
     thirdparty/nanobench/nanobench.cpp \
@@ -487,8 +461,4 @@ SOURCES += \
     thirdparty/libyuv/scale_uv.cc \
     thirdparty/libyuv/scale_win.cc \
     thirdparty/libyuv/video_common.cc \
-
-
-
-#DISTFILES += \
 

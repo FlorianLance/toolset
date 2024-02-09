@@ -34,6 +34,8 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 # defines thirdparty includes and libs
 include(../ts-thirdparty.pri)
+# defines dependencies
+include(../ts-dependencies.pri)
 
 ####################################### TARGET
 equals(CFG, "debug"){
@@ -57,53 +59,10 @@ DESTDIR     = $$SCANER_MANAGER_DEST
 ####################################### CONFIG
 QT  += core gui network widgets
 
-####################################### INCLUDES
-
-INCLUDEPATH += \
-    # tool
-    $$BASE_INCLUDES \
-    $$OPENGL_UTILITY_INCLUDES \
-    $$QT_UTILITY_INCLUDES \
-    $$QT_UTILITY_UI \
-    # local
-    $$SCANER_MANAGER_MOC\
-    $$SCANER_MANAGER_INCLUDES\
-    # third party
-    $$SFML_INCLUDES\
-    $$GLEW_INCLUDES\
-    $$BOOST_INCLUDES\
-    $$EIGEN_INCLUDES\
-    $$TURBOJPG_INCLUDES\
-    $$FASTPFOR_INCLUDES\
-    $$OPEN3D_INCLUDES\
-    $$GLM_INCLUDES\
-    $$ASSIMP_INCLUDES\
-    $$GLFW_INCLUDES\
-
-####################################### LIBRAIRIES
-
-PRE_TARGETDEPS += \
-    # tool
-    $$BASE_LIB_DEP \
-    $$OPENGL_UTILITY_LIB_DEP \
-    $$QT_UTILITY_LIB_DEP \
-
-LIBS +=  \
-    # tool
-    $$BASE_LIB \
-    $$OPENGL_UTILITY_LIB \
-    $$QT_UTILITY_LIB \
-    # third party
-    $$WINDOWS_LIBS \
-    $$SFML_LIBS\
-    $$GLEW_LIBS\
-    $$BOOST_LIBS\
-    $$CLAPACK_LIBS\
-    $$FLANN_LIBS\
-    $$TURBOJPG_LIBS\
-    $$FASTPFOR_LIBS\
-    $$OPEN3D_LIBS\
-    $$ASSIMP_LIBS\
+####################################### DEPS
+INCLUDEPATH += $$SCANER_MANAGER_DEP_INCLUDEPATH
+LIBS +=  $$SCANER_MANAGER_APP_DEP_LIBS
+PRE_TARGETDEPS += $$SCANER_MANAGER_APP_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 

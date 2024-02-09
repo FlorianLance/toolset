@@ -28,8 +28,7 @@
 
 using namespace tool;
 
-DCGView::DCGView(){
-
+DCGView::DCGView(size_t idGrabber){
     // init main window
     // # screen
     graphics::Screen screen(1920, 1080, 0,0);
@@ -43,8 +42,9 @@ DCGView::DCGView(){
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
     const std::string numVersion = "1.6";
-    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber v{}", numVersion), screen,context);
+    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id{} v{}", idGrabber, numVersion), screen,context);
     m_glW->init();
+
 }
 
 auto DCGView::initialize() -> void{

@@ -30,6 +30,7 @@
 #include "camera/network/dc_client_connection.hpp"
 #include "camera/dc_device_manager.hpp"
 #include "camera/dc_recorder.hpp"
+#include "data/dcg_states.hpp"
 
 // local
 #include "data/dcg_settings.hpp"
@@ -44,8 +45,10 @@ struct DCGModel{
     auto trigger_settings() -> void;    
 
     DCGSettings settings;
+    DCGStates states;
+
     net::DCClientConnection connection;
     cam::DCDeviceManager device;
-    cam::DCRecorder recorder;
+    cam::DCRecorder recorder;    
 };
 }

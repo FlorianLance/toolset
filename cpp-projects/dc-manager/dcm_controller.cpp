@@ -92,7 +92,6 @@ auto DCMController::set_connections() -> void{
     // # drawers
     auto middleD        = &view->mainW.m_middlePanelD;
     auto leftD          = &view->mainW.m_leftPanelD;
-
     auto directD        = &middleD->directD;
     auto recorderD      = &middleD->recorderD;
     auto playerD        = &middleD->playerD;
@@ -125,6 +124,10 @@ auto DCMController::set_connections() -> void{
     s->update_filters_settings_signal.connect(              &DCMModel::update_filters,                      model.get());
     s->update_calibration_filters_settings_signal.connect(  &DCMModel::update_calibration_filters,          model.get());
     s->update_filtering_mode_signal.connect(                &DCMModel::update_filtering_mode,               model.get());
+    s->update_device_settings_signal.connect(               &DCMModel::update_device_settings,              model.get());
+    s->update_color_settings_signal.connect(                &DCMModel::update_color_settings,              model.get());
+    s->update_delay_settings_signal.connect(                &DCMModel::update_delay_settings,              model.get());
+
     serverNet->remote_synchro_signal.connect(               &DCMModel::update_synchro,                      model.get());
     serverNet->remote_feedback_signal.connect(              &DCMModel::add_feedback,                        model.get());
     s->reset_network_signal.connect(                        &DCMModel::reset_network,                       model.get());
@@ -132,9 +135,6 @@ auto DCMController::set_connections() -> void{
     // # server network
     s->init_connection_signal.connect(                      &ServerNet::init_connection,                    serverNet);
     s->command_signal.connect(                              &ServerNet::apply_command,                      serverNet);
-    s->update_device_settings_signal.connect(               &ServerNet::update_device_settings,             serverNet);
-    s->update_color_settings_signal.connect(                &ServerNet::update_color_settings,              serverNet);
-    s->update_delay_signal.connect(                         &ServerNet::update_delay_settings,              serverNet);
 
     // # server data
     serverNet->remote_frame_signal.connect(                 &ServerData::new_compressed_frame,              serverData);
