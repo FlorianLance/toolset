@@ -83,7 +83,7 @@ auto DCGController::set_connections() -> void{
     // aliases
     using Sett   = DCGSettings;
     using CCo    = net::DCClientConnection;
-    using Rec    = cam::DCRecorder;
+    using Rec    = cam::DCVideoRecorder;
     using RecD   = graphics::DCRecorderDrawer;
     using DevD   = graphics::DCDeviceDrawer;
     using DevM   = cam::DCDeviceManager;

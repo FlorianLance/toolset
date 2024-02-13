@@ -31,7 +31,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "camera/dc_compressed_frame.hpp"
+#include "depth-camera/dc_compressed_frame.hpp"
 
 // local
 #include "data/dcm_types.hpp"
@@ -66,7 +66,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const cam::DCRecorderSettings&> update_recorder_settings_signal;
+    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
 
     // player
     SSS<> start_player_signal;
@@ -80,7 +80,7 @@ public:
     SSS<std::string> save_cloud_player_signal;
     SSS<std::string> save_video_player_signal;
     SSS<std::string> load_video_player_signal;
-    SSS<const cam::DCPlayerSettings&> update_player_settings_signal;
+    SSS<const cam::DCVideoPlayerSettings&> update_player_settings_signal;
 
     // calibration
     SSS<> reset_calibration_registering_signal;

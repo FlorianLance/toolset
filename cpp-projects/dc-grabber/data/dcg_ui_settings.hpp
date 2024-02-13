@@ -27,7 +27,7 @@
 ********************************************************************************/
 
 // base
-#include "camera/settings/dc_display_settings.hpp"
+#include "depth-camera/settings/dc_display_settings.hpp"
 
 namespace tool::ui {
 

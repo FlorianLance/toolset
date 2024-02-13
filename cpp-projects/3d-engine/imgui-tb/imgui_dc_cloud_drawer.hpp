@@ -27,9 +27,9 @@
 #pragma once
 
 // base
-#include "camera/settings/dc_display_settings.hpp"
-#include "camera/settings/dc_filters_settings.hpp"
-#include "camera/dc_frame.hpp"
+#include "depth-camera/settings/dc_display_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/dc_frame.hpp"
 
 // opengl
 #include "opengl/gl_texture.hpp"

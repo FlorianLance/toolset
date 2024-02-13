@@ -5,15 +5,15 @@
 #include <iostream>
 
 // base
-#include "camera/dc_player.hpp"
+#include "depth-camera/dc_video_player.hpp"
 
 auto test_dc_player() -> void{
 
     using namespace tool;
     using namespace tool::cam;
     using namespace std::chrono;
-
-    DCPlayer player;
+    
+    DCVideoPlayer player;
     player.load_from_file("D:/kvidtest.kvid");
 
 

@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "camera/settings/dc_calibrator_settings.hpp"
+#include "depth-camera/settings/dc_calibrator_settings.hpp"
 
 // local
 #include "imgui_dc_clouds_scene_drawer.hpp"

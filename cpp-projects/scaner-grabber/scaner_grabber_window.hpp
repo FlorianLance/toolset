@@ -41,7 +41,7 @@
 #include "gui/widgets/image_viewer.hpp"
 
 // local
-#include "camera/impl/k2_manager.hpp"
+#include "depth-camera/impl/k2_manager.hpp"
 // # ui
 #include "ui_GrabberW.h"
 // # network

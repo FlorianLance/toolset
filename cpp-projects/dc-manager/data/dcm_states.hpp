@@ -26,26 +26,26 @@
 
 #pragma once
 
-#include "camera/states/dc_recorder_states.hpp"
-#include "camera/states/dc_player_states.hpp"
-#include "camera/states/dc_calibrator_states.hpp"
+#include "depth-camera/states/dc_video_recorder_states.hpp"
+#include "depth-camera/states/dc_video_player_states.hpp"
+#include "depth-camera/states/dc_calibrator_states.hpp"
 
 namespace tool{
 
 struct DCMStates{
 
-    auto update_recorder_states(cam::DCRecorderStates recorderS) -> void{
+    auto update_recorder_states(cam::DCVideoRecorderStates recorderS) -> void{
         recorder = std::move(recorderS);
     }
-    auto update_player_states(cam::DCPlayerStates playerS) -> void{
+    auto update_player_states(cam::DCVideoPlayerStates playerS) -> void{
         player = std::move(playerS);
     }
     auto update_calibrator_states(cam::DCCalibratorStates calibratorS) -> void{
         calibrator = std::move(calibratorS);
     }
 
-    cam::DCRecorderStates recorder;
-    cam::DCPlayerStates player;
+    cam::DCVideoRecorderStates recorder;
+    cam::DCVideoPlayerStates player;
     cam::DCCalibratorStates calibrator;
 };
 }

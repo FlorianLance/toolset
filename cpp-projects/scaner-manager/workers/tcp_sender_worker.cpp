@@ -41,7 +41,7 @@
 #include <boost/asio.hpp>
 
 // base
-#include "camera/impl/k2_network.hpp"
+#include "depth-camera/impl/k2_network.hpp"
 #include "network/network_enums.hpp"
 #include "utility/types.hpp"
 

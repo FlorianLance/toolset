@@ -30,7 +30,7 @@
 #include <QObject>
 
 // base
-#include "camera/impl/k2_network.hpp"
+#include "depth-camera/impl/k2_network.hpp"
 
 namespace tool::net{
 

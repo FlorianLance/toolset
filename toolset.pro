@@ -30,7 +30,7 @@ PROJECT_NAME = toolset
 TEMPLATE = subdirs
 
 SUBDIRS =\
-    base base-app base-test \
+    base base-app base-test base-export base-export-app\
     opengl-utility opengl-utility-app \
     3d-engine \
     qt-utility qt-utility-app \
@@ -44,6 +44,8 @@ SUBDIRS =\
 base.subdir                     = cpp-projects/base
 base-app.subdir                 = cpp-projects/base-app
 base-test.subdir                = cpp-projects/base-test
+base-export.subdir              = toolset/cpp-projects/base-export
+base-export-app.subdir          = toolset/cpp-projects/base-export-app
 ### opengl-utility
 opengl-utility.subdir           = cpp-projects/opengl-utility
 opengl-utility-app.subdir       = cpp-projects/opengl-utility-app
@@ -69,6 +71,8 @@ dc-monitoring.subdir            = cpp-projects/dc-monitoring
 ### base
 base-app.depends                = base
 base-test.depends               = base
+base-export.depends             = base
+base-export-app.depends         = base-export
 ### opengl-utility
 opengl-utility.depends          = base
 opengl-utility-app.depends      = opengl-utility

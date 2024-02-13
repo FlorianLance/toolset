@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "camera/dc_frame.hpp"
+#include "depth-camera/dc_frame.hpp"
 
 // local
 #include "imgui_dc_clouds_scene_drawer.hpp"

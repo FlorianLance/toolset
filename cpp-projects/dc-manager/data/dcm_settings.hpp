@@ -28,10 +28,10 @@
 
 // base
 #include "network/udp_server_network_settings.hpp"
-#include "camera/settings/dc_calibrator_settings.hpp"
-#include "camera/settings/dc_player_settings.hpp"
-#include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/settings/dc_grabber_settings.hpp"
+#include "depth-camera/settings/dc_calibrator_settings.hpp"
+#include "depth-camera/settings/dc_video_player_settings.hpp"
+#include "depth-camera/settings/dc_video_recorder_settings.hpp"
+#include "depth-camera/settings/dc_grabber_settings.hpp"
 
 // local
 #include "dcm_ui_settings.hpp"
@@ -64,8 +64,8 @@ struct DCMSettings{
     DCMUiSettings uiS;    
     // camera
     DCSceneDisplaySettings sceneDisplayS;
-    cam::DCRecorderSettings recorderS;
-    cam::DCPlayerSettings playerS;
+    cam::DCVideoRecorderSettings recorderS;
+    cam::DCVideoPlayerSettings playerS;
     cam::DCCalibratorSettings calibratorS;
     std::vector<cam::DCMGrabberSettings> grabbersS;
     // net

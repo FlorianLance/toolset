@@ -11,7 +11,7 @@
 #include <opencv2/imgcodecs.hpp>
 
 // base
-#include "camera/dc_device_manager.hpp"
+#include "depth-camera/dc_device_manager.hpp"
 #include "utility/benchmark.hpp"
 
 // local
@@ -19,8 +19,8 @@
 #include "io/cloud_io.hpp"
 
 #include "k4a/k4a.hpp"
-#include "camera/dc_enums.hpp"
-#include "camera/dc_frame_uncompressor.hpp"
+#include "depth-camera/dc_enums.hpp"
+#include "depth-camera/dc_frame_uncompressor.hpp"
 
 #include "geometry/point3.hpp"
 #include "io/cloud_io.hpp"

@@ -27,19 +27,20 @@
 # projects list
 TOOLSET_CPP_PROJECTS +=\
     BASE:base:based \
+    BASE_EXPORT:base-export:base-exportd \
     OPENGL_UTILITY:opengl-utility:opengl-utilityd \
     3D_ENGINE:3d-engine:3d-engined \
     DEMOS:demos:demosd \
+    DC_GRABBER:dc-grabber \
+    DC_MANAGER:dc-manager \
+    DC_MONITORING:dc-monitoring \
     QT_UTILITY:qt-utility:qt-utilityd \
     NODES:nodes:nodesd \
-    TOOL_TEST:tool-test:tool-testd \
     SCANER_COMPONENT:scaner-component \
     SCANER_GRABBER:scaner-grabber \
     SCANER_MANAGER:scaner-manager \
     GUARDIAN:guardian \
-    DC_GRABBER:dc-grabber \
-    DC_MANAGER:dc-manager \
-    DC_MONITORING:dc-monitoring \
+
 
 # define functions
 defineTest(generate_variables) {

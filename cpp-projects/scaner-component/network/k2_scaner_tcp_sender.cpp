@@ -12,7 +12,7 @@
 
 // base
 #include "utility/types.hpp"
-#include "camera/impl/k2_network.hpp"
+#include "depth-camera/impl/k2_network.hpp"
 
 using namespace std::chrono_literals;
 using namespace std::chrono;

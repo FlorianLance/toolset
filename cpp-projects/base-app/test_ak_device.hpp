@@ -12,7 +12,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 
 // base
-#include "camera/dc_device_manager.hpp"
+#include "depth-camera/dc_device_manager.hpp"
 #include "utility/benchmark.hpp"
 #include "geometry/point3.hpp"
 #include "io/cloud_io.hpp"

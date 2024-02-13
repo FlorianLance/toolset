@@ -35,7 +35,7 @@
 #include "utility/logger.hpp"
 #include "utility/string.hpp"
 #include "utility/format.hpp"
-#include "camera/settings/dc_settings_paths.hpp"
+#include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcm_signals.hpp"

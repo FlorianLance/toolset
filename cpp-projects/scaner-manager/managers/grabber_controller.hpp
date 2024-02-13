@@ -37,7 +37,7 @@
 // base
 #include "utility/vector.hpp"
 #include "network/network_enums.hpp"
-#include "camera/impl/k2_config_files.hpp"
+#include "depth-camera/impl/k2_config_files.hpp"
 
 // local
 #include "managers/udp_reader_manager.hpp"

@@ -265,7 +265,7 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
     ImGui::EndTabItem();
 }
 
-auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCRecorderStates &recStates, cam::DCRecorderSettings &recSetings) -> void {
+auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void {
     if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
         DCGSignals::get()->update_recorder_settings_signal(recSetings);
     }

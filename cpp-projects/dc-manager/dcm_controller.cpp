@@ -30,7 +30,7 @@
 #include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
-#include "camera/settings/dc_settings_paths.hpp"
+#include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcm_signals.hpp"
@@ -79,8 +79,8 @@ auto DCMController::set_connections() -> void{
     using PlayerD       = graphics::DCPlayerDrawer;
     using CalibD        = graphics::DCCalibratorDrawer;
     // # model
-    using Rec           = cam::DCRecorder;
-    using Player        = cam::DCPlayer;
+    using Rec           = cam::DCVideoRecorder;
+    using Player        = cam::DCVideoPlayer;
     using Calib         = cam::DCCalibrator;
     using ServerData    = cam::DCServerData;
     using ServerNet     = net::DCServerNetwork;

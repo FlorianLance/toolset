@@ -65,19 +65,12 @@ LIBS += $$BASE_DEP_LIBS
 
 HEADERS += \
     # io
-    camera/dc_compressed_frames.hpp \
-    camera/dc_frame_data.hpp \
-    camera/dc_frame_indices.hpp \
-    camera/dc_frame_timing.hpp \
-    camera/dc_video.hpp \
-    camera/frame.hpp \
-    camera/impl/azure_base_device.hpp \
-    camera/impl/azure_utility.hpp \
-    camera/impl/femto_bolt_device_impl.hpp \
-    camera/impl/femto_mega_device_impl.hpp \
-    camera/impl/orbbec_base_device.hpp \
-    data/fastpfor_encoding.hpp \
-    data/jpeg_encoding.hpp \
+    depth-camera/dc_video_player.hpp \
+    depth-camera/dc_video_recorder.hpp \
+    depth-camera/settings/dc_video_player_settings.hpp \
+    depth-camera/settings/dc_video_recorder_settings.hpp \
+    depth-camera/states/dc_video_player_states.hpp \
+    depth-camera/states/dc_video_recorder_states.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -143,59 +136,65 @@ HEADERS += \
     network/udp_reader.hpp \
     network/udp_sender.hpp \
     # camera
-    camera/dc_compressed_frame.hpp \
-    camera/dc_frame_compressor.hpp \
-    camera/dc_frame_uncompressor.hpp \
-    camera/dc_grabber_data_processing.hpp \
-    camera/dc_device_manager.hpp \
-    camera/dc_server_data.hpp \
-    camera/dc_recorder.hpp \
-    camera/dc_player.hpp \
-    camera/dc_device.hpp \
-    camera/dc_enums.hpp \
-    camera/dc_frame.hpp \
-    camera/dc_packed_data.hpp \
-    camera/dc_types.hpp \
-    camera/dc_player_settings.hpp \
-    camera/dc_calibrator.hpp \
-    camera/dc_device_impl.hpp \
-    camera/network/dc_server_device.hpp \
-    camera/network/dc_server_local_device.hpp \
-    camera/network/dc_server_remote_device.hpp \
+    camera/frame.hpp \
+    # depth-camera
+    depth-camera/dc_compressed_frame.hpp \
+    depth-camera/dc_frame_compressor.hpp \
+    depth-camera/dc_frame_uncompressor.hpp \
+    depth-camera/dc_grabber_data_processing.hpp \
+    depth-camera/dc_device_manager.hpp \
+    depth-camera/dc_server_data.hpp \
+    depth-camera/dc_device.hpp \
+    depth-camera/dc_enums.hpp \
+    depth-camera/dc_frame.hpp \
+    depth-camera/dc_packed_data.hpp \
+    depth-camera/dc_types.hpp \
+    depth-camera/dc_player_settings.hpp \
+    depth-camera/dc_calibrator.hpp \
+    depth-camera/dc_device_impl.hpp \
+    depth-camera/dc_compressed_frames.hpp \
+    depth-camera/dc_frame_data.hpp \
+    depth-camera/dc_frame_indices.hpp \
+    depth-camera/dc_frame_timing.hpp \
+    depth-camera/dc_video.hpp \
     ## states
-    camera/states/dc_calibrator_states.hpp \
-    camera/states/dc_player_states.hpp \
-    camera/states/dc_recorder_states.hpp \
+    depth-camera/states/dc_calibrator_states.hpp \
     ## settings
-    camera/settings/dc_grabber_network_settings.hpp \
-    camera/settings/dc_grabber_settings.hpp \
-    camera/settings/dc_player_settings.hpp \
-    camera/settings/dc_settings_paths.hpp \
-    camera/settings/dc_device_settings.hpp \
-    camera/settings/dc_data_settings.hpp \
-    camera/settings/dc_recorder_settings.hpp \
-    camera/settings/dc_color_settings.hpp \
-    camera/settings/dc_delay_settings.hpp \
-    camera/settings/dc_actions_settings.hpp \
-    camera/settings/dc_display_settings.hpp \
-    camera/settings/dc_calibrator_settings.hpp \
-    camera/settings/dc_config_settings.hpp \
-    camera/settings/dc_filters_settings.hpp \
-    camera/settings/dc_model_settings.hpp \
+    depth-camera/settings/dc_grabber_network_settings.hpp \
+    depth-camera/settings/dc_grabber_settings.hpp \
+    depth-camera/settings/dc_settings_paths.hpp \
+    depth-camera/settings/dc_device_settings.hpp \
+    depth-camera/settings/dc_data_settings.hpp \
+    depth-camera/settings/dc_color_settings.hpp \
+    depth-camera/settings/dc_delay_settings.hpp \
+    depth-camera/settings/dc_actions_settings.hpp \
+    depth-camera/settings/dc_display_settings.hpp \
+    depth-camera/settings/dc_calibrator_settings.hpp \
+    depth-camera/settings/dc_config_settings.hpp \
+    depth-camera/settings/dc_filters_settings.hpp \
+    depth-camera/settings/dc_model_settings.hpp \
     ## network
-    camera/network/dc_client_connection.hpp \
-    camera/network/dc_server_network.hpp \
-    camera/network/dc_udp_reader.hpp \
-    camera/network/dc_udp_sender.hpp \
+    depth-camera/network/dc_client_connection.hpp \
+    depth-camera/network/dc_server_network.hpp \
+    depth-camera/network/dc_udp_reader.hpp \
+    depth-camera/network/dc_udp_sender.hpp \
+    depth-camera/network/dc_server_device.hpp \
+    depth-camera/network/dc_server_local_device.hpp \
+    depth-camera/network/dc_server_remote_device.hpp \
     ## impl
-    camera/impl/k2_config_files.hpp \
-    camera/impl/k2_device.hpp \
-    camera/impl/k2_manager.hpp \
-    camera/impl/k2_network.hpp \
-    camera/impl/k2_types.hpp \
-    camera/impl/k2_enums.hpp \
-    camera/impl/azure_kinect_device_impl.hpp \
-    camera/impl/playback_device_impl.hpp \
+    depth-camera/impl/k2_config_files.hpp \
+    depth-camera/impl/k2_device.hpp \
+    depth-camera/impl/k2_manager.hpp \
+    depth-camera/impl/k2_network.hpp \
+    depth-camera/impl/k2_types.hpp \
+    depth-camera/impl/k2_enums.hpp \
+    depth-camera/impl/azure_kinect_device_impl.hpp \
+    depth-camera/impl/playback_device_impl.hpp \
+    depth-camera/impl/azure_base_device.hpp \
+    depth-camera/impl/azure_utility.hpp \
+    depth-camera/impl/femto_bolt_device_impl.hpp \
+    depth-camera/impl/femto_mega_device_impl.hpp \
+    depth-camera/impl/orbbec_base_device.hpp \
     # exvr
     exvr/ex_element.hpp \
     exvr/ex_experiment.hpp \
@@ -236,6 +235,8 @@ HEADERS += \
     # algorithms
     algorithms/marching_cube.hpp \
     # data
+    data/fastpfor_encoding.hpp \
+    data/jpeg_encoding.hpp \
     data/FastDifferentialCoding/fastdelta.h \
     # tests
     tests/marching_cube_test.hpp \
@@ -302,19 +303,8 @@ HEADERS += \
 
 SOURCES += \
     # io
-    camera/dc_compressed_frames.cpp \
-    camera/dc_frame_data.cpp \
-    camera/dc_frame_indices.cpp \
-    camera/dc_frame_timing.cpp \
-    camera/dc_types.cpp \
-    camera/dc_video.cpp \
-    camera/frame.cpp \
-    camera/impl/azure_base_device.cpp \
-    camera/impl/femto_bolt_device_impl.cpp \
-    camera/impl/femto_mega_device_impl.cpp \
-    camera/impl/orbbec_base_device.cpp \
-    data/fastpfor_encoding.cpp \
-    data/jpeg_encoding.cpp \
+    depth-camera/dc_video_player.cpp \
+    depth-camera/dc_video_recorder.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -347,50 +337,62 @@ SOURCES += \
     network/udp_reader.cpp \
     network/udp_sender.cpp \
     # camera
-    camera/dc_compressed_frame.cpp \
-    camera/dc_frame_compressor.cpp \
-    camera/dc_frame_uncompressor.cpp \
-    camera/dc_grabber_data_processing.cpp \
-    camera/dc_device_manager.cpp \
-    camera/dc_server_data.cpp \
-    camera/dc_recorder.cpp \
-    camera/dc_player.cpp \
-    camera/dc_frame.cpp \
-    camera/dc_packed_data.cpp \
-    camera/dc_calibrator.cpp \
-    camera/dc_device.cpp \
-    camera/dc_device_impl.cpp \
+    camera/frame.cpp \
+    # depth-camera
+    depth-camera/dc_compressed_frame.cpp \
+    depth-camera/dc_frame_compressor.cpp \
+    depth-camera/dc_frame_uncompressor.cpp \
+    depth-camera/dc_grabber_data_processing.cpp \
+    depth-camera/dc_device_manager.cpp \
+    depth-camera/dc_server_data.cpp \
+    depth-camera/dc_frame.cpp \
+    depth-camera/dc_packed_data.cpp \
+    depth-camera/dc_calibrator.cpp \
+    depth-camera/dc_device.cpp \
+    depth-camera/dc_device_impl.cpp \
+    depth-camera/dc_compressed_frames.cpp \
+    depth-camera/dc_frame_data.cpp \
+    depth-camera/dc_frame_indices.cpp \
+    depth-camera/dc_frame_timing.cpp \
+    depth-camera/dc_types.cpp \
+    depth-camera/dc_video.cpp \
     ## network
-    camera/network/dc_client_connection.cpp \
-    camera/network/dc_server_network.cpp \
-    camera/network/dc_udp_reader.cpp \
-    camera/network/dc_udp_sender.cpp \
-    camera/network/dc_server_local_device.cpp \
-    camera/network/dc_server_remote_device.cpp \
+    depth-camera/network/dc_client_connection.cpp \
+    depth-camera/network/dc_server_network.cpp \
+    depth-camera/network/dc_udp_reader.cpp \
+    depth-camera/network/dc_udp_sender.cpp \
+    depth-camera/network/dc_server_local_device.cpp \
+    depth-camera/network/dc_server_remote_device.cpp \
     ## settings
-    camera/settings/dc_filters_settings.cpp \
-    camera/settings/dc_model_settings.cpp \
-    camera/settings/dc_config_settings.cpp \
-    camera/settings/dc_color_settings.cpp \
-    camera/settings/dc_actions_settings.cpp \
-    camera/settings/dc_display_settings.cpp \
-    camera/settings/dc_delay_settings.cpp \
-    camera/settings/dc_data_settings.cpp \
-    camera/settings/dc_device_settings.cpp \
-    camera/settings/dc_grabber_settings.cpp \
-    camera/settings/dc_settings_paths.cpp \
+    depth-camera/settings/dc_filters_settings.cpp \
+    depth-camera/settings/dc_model_settings.cpp \
+    depth-camera/settings/dc_config_settings.cpp \
+    depth-camera/settings/dc_color_settings.cpp \
+    depth-camera/settings/dc_actions_settings.cpp \
+    depth-camera/settings/dc_display_settings.cpp \
+    depth-camera/settings/dc_delay_settings.cpp \
+    depth-camera/settings/dc_data_settings.cpp \
+    depth-camera/settings/dc_device_settings.cpp \
+    depth-camera/settings/dc_grabber_settings.cpp \
+    depth-camera/settings/dc_settings_paths.cpp \
     ## impl
-    camera/impl/k2_config_files.cpp \
-    camera/impl/k2_device.cpp \
-    camera/impl/k2_manager.cpp \
-    camera/impl/k2_types.cpp \
-    camera/impl/azure_kinect_device_impl.cpp \
+    depth-camera/impl/k2_config_files.cpp \
+    depth-camera/impl/k2_device.cpp \
+    depth-camera/impl/k2_manager.cpp \
+    depth-camera/impl/k2_types.cpp \
+    depth-camera/impl/azure_kinect_device_impl.cpp \
+    depth-camera/impl/azure_base_device.cpp \
+    depth-camera/impl/femto_bolt_device_impl.cpp \
+    depth-camera/impl/femto_mega_device_impl.cpp \
+    depth-camera/impl/orbbec_base_device.cpp \
     # exvr
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \
     exvr/ex_experiment.cpp \
     exvr/ex_resource.cpp \
     # data
+    data/fastpfor_encoding.cpp \
+    data/jpeg_encoding.cpp \
     data/FastDifferentialCoding/fastdelta.c \
     # thirdparty
     ## nanobench

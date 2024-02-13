@@ -30,11 +30,11 @@
 #include <deque>
 
 // base
-#include "camera/network/dc_server_network.hpp"
-#include "camera/dc_server_data.hpp"
-#include "camera/dc_recorder.hpp"
-#include "camera/dc_player.hpp"
-#include "camera/dc_calibrator.hpp"
+#include "depth-camera/network/dc_server_network.hpp"
+#include "depth-camera/dc_server_data.hpp"
+#include "depth-camera/dc_video_recorder.hpp"
+#include "depth-camera/dc_video_player.hpp"
+#include "depth-camera/dc_calibrator.hpp"
 
 // local
 #include "data/dcm_settings.hpp"
@@ -76,8 +76,8 @@ struct DCMModel{
 
     std::unique_ptr<net::DCServerNetwork> sNetwork = nullptr;
     cam::DCServerData sData;
-    cam::DCRecorder recorder;
-    cam::DCPlayer player;
+    cam::DCVideoRecorder recorder;
+    cam::DCVideoPlayer player;
     cam::DCCalibrator calibration;
 
 private:

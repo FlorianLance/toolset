@@ -152,7 +152,7 @@ auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMSettings &settings) -> v
 }
 
 
-auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCRecorderStates &rStates, cam::DCRecorderSettings &rSettings) -> void {
+auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> void {
 
     if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings, autoUpdate)){
         DCMSignals::get()->update_recorder_settings_signal(rSettings);
@@ -181,7 +181,7 @@ auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCRecorderStates &rSta
     rStates.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCPlayerStates &pStates, cam::DCPlayerSettings &pSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> void{
 
     if(DCUIDrawer::draw_dc_player_tab_item("Player###settings_player_tabitem", pStates, pSettings, autoUpdate)){
         DCMSignals::get()->update_player_settings_signal(pSettings);

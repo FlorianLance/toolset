@@ -31,7 +31,7 @@
 
 // base
 #include "network/network_types.hpp"
-#include "camera/impl/k2_types.hpp"
+#include "depth-camera/impl/k2_types.hpp"
 
 namespace tool::net{
 

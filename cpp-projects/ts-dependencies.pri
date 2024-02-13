@@ -80,6 +80,30 @@ BASE_TEST_DEP_LIBS =\
 BASE_TEST_PRE_TARGETDEPS =\
     $$BASE_LIB_FILE\
 
+########################################################### BASE-EXPORT
+BASE_EXPORT_DEP_INCLUDEPATH =\
+    $$BASE_DEP_INCLUDEPATH\
+    $$BASE_INCLUDES\
+
+BASE_EXPORT_DEP_LIBS =\
+    $$BASE_DEP_LIBS\
+    $$BASE_LIB\
+
+BASE_EXPORT_PRE_TARGETDEPS =\
+    $$BASE_LIB_FILE\
+
+########################################################### BASE-EXPORT-APP
+BASE_EXPORT_APP_DEP_INCLUDEPATH =\
+    $$BASE_EXPORT_DEP_INCLUDEPATH\
+    $$BASE_EXPORT_INCLUDES\
+
+BASE_EXPORT_APP_DEP_LIBS =\
+    $$BASE_EXPORT_DEP_LIBS\
+    $$BASE_EXPORT_OBJ"\*.obj"\
+
+BASE_EXPORT_APP_PRE_TARGETDEPS =\
+    $$BASE_EXPORT_PRE_TARGETDEPS\
+
 ########################################################### OPENGL_UTILITY
 OPENGL_UTILITY_DEP_INCLUDEPATH =\
     # thirdparty

@@ -26,17 +26,17 @@
 
 #pragma once
 
-#include "camera/states/dc_recorder_states.hpp"
+#include "depth-camera/states/dc_video_recorder_states.hpp"
 
 namespace tool{
 
 struct DCGStates{
 
-    auto update_recorder_states(cam::DCRecorderStates recorderS) -> void{
+    auto update_recorder_states(cam::DCVideoRecorderStates recorderS) -> void{
         recorder = std::move(recorderS);
     }
 
-    cam::DCRecorderStates recorder;
+    cam::DCVideoRecorderStates recorder;
 };
 }
 

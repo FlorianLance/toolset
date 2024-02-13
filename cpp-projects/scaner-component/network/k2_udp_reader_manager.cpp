@@ -20,7 +20,7 @@
 
 // base
 #include "utility/time.hpp"
-//#include "camera/kinect2/k2_network.hpp"
+//#include "depth-camera/kinect2/k2_network.hpp"
 
 // scaner-lib
 #include "k2_scaner_udp_reader.hpp"

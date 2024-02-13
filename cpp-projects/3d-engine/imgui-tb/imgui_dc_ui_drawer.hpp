@@ -27,18 +27,18 @@
 #pragma once
 
 // base
-#include "camera/settings/dc_device_settings.hpp"
-#include "camera/settings/dc_calibrator_settings.hpp"
-#include "camera/settings/dc_display_settings.hpp"
-#include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/settings/dc_player_settings.hpp"
-#include "camera/settings/dc_color_settings.hpp"
-#include "camera/settings/dc_model_settings.hpp"
-#include "camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/settings/dc_calibrator_settings.hpp"
+#include "depth-camera/settings/dc_display_settings.hpp"
+#include "depth-camera/settings/dc_video_recorder_settings.hpp"
+#include "depth-camera/settings/dc_video_player_settings.hpp"
+#include "depth-camera/settings/dc_color_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
 
-#include "camera/states/dc_player_states.hpp"
-#include "camera/states/dc_recorder_states.hpp"
-#include "camera/states/dc_calibrator_states.hpp"
+#include "depth-camera/states/dc_video_player_states.hpp"
+#include "depth-camera/states/dc_video_recorder_states.hpp"
+#include "depth-camera/states/dc_calibrator_states.hpp"
 
 
 // opengl
@@ -101,8 +101,8 @@ public:
     static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
     static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
     static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model, bool &autoUpdate) -> bool;
-    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCRecorderStates &rStates, cam::DCRecorderSettings &rSettings, bool &autoUpdate) -> bool;
-    static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCPlayerStates &pStates, cam::DCPlayerSettings &pSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings, bool &autoUpdate) -> bool;
     static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};

@@ -31,13 +31,13 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "camera/settings/dc_device_settings.hpp"
-#include "camera/settings/dc_display_settings.hpp"
-#include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/settings/dc_delay_settings.hpp"
-#include "camera/settings/dc_color_settings.hpp"
-#include "camera/settings/dc_model_settings.hpp"
-#include "camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/settings/dc_display_settings.hpp"
+#include "depth-camera/settings/dc_video_recorder_settings.hpp"
+#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_color_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
 #include "network/udp_client_network_settings.hpp"
 
 // local
@@ -67,7 +67,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const cam::DCRecorderSettings&> update_recorder_settings_signal;
+    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
 
     // settings
     SSS<const cam::DCDeviceSettings&> update_device_settings_signal;

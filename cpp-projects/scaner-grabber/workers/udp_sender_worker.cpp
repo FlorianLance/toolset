@@ -42,7 +42,7 @@
 #include <QDateTime>
 
 // base
-#include "camera/impl/k2_network.hpp"
+#include "depth-camera/impl/k2_network.hpp"
 #include "utility/types.hpp"
 
 // qt-utility

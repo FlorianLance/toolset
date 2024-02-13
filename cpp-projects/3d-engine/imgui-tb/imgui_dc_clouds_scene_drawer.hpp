@@ -29,8 +29,8 @@
 #include "thirdparty/sigslot/signal.hpp"
 
 // local
-#include "camera/settings/dc_model_settings.hpp"
-#include "camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
 #include "imgui_dc_cloud_drawer.hpp"
 #include "imgui_fbo_ui_drawer.hpp"
 

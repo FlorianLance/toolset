@@ -27,9 +27,9 @@
 #pragma once
 
 // base
-#include "camera/network/dc_client_connection.hpp"
-#include "camera/dc_device_manager.hpp"
-#include "camera/dc_recorder.hpp"
+#include "depth-camera/network/dc_client_connection.hpp"
+#include "depth-camera/dc_device_manager.hpp"
+#include "depth-camera/dc_video_recorder.hpp"
 #include "data/dcg_states.hpp"
 
 // local
@@ -49,6 +49,6 @@ struct DCGModel{
 
     net::DCClientConnection connection;
     cam::DCDeviceManager device;
-    cam::DCRecorder recorder;    
+    cam::DCVideoRecorder recorder;    
 };
 }

@@ -31,7 +31,7 @@
 #include <QImage>
 
 // local
-#include "camera/impl/k2_types.hpp"
+#include "depth-camera/impl/k2_types.hpp"
 
 namespace tool::ui{
 

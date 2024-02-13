@@ -39,7 +39,7 @@
 
 // base
 #include "data/fastpfor_encoding.hpp"
-#include "camera/impl/k2_config_files.hpp"
+#include "depth-camera/impl/k2_config_files.hpp"
 
 using namespace std::chrono;
 using namespace tool::ui;

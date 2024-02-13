@@ -68,7 +68,7 @@ private:
     auto draw_display_tab_item(ui::DCGDisplaySettingsSettings &ui)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
-    auto draw_recording_tab_item(cam::DCRecorderStates &recStates, cam::DCRecorderSettings &recSetings) -> void;
+    auto draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;
     auto draw_model_tab_item(cam::DCModelSettings &model)-> void;
 
     ImguiLogs m_logs;

@@ -30,13 +30,13 @@
 #include <memory>
 
 // base
-#include "camera/settings/dc_device_settings.hpp"
-#include "camera/settings/dc_recorder_settings.hpp"
-#include "camera/settings/dc_color_settings.hpp"
-#include "camera/settings/dc_delay_settings.hpp"
-#include "camera/settings/dc_model_settings.hpp"
-#include "camera/settings/dc_filters_settings.hpp"
-#include "camera/dc_types.hpp"
+#include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/settings/dc_video_recorder_settings.hpp"
+#include "depth-camera/settings/dc_color_settings.hpp"
+#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/dc_types.hpp"
 
 
 #include "network/udp_client_network_settings.hpp"
@@ -108,7 +108,7 @@ struct DCGSettings{
     cam::DCColorSettings colorS;
     cam::DCModelSettings modelS;
     cam::DCDelaySettings delayS;
-    cam::DCRecorderSettings recorderS;
+    cam::DCVideoRecorderSettings recorderS;
     ui::DCGDisplaySettingsSettings displayS;
 
     std::optional<cam::DCImuSample> imuSample;

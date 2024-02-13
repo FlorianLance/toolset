@@ -68,8 +68,8 @@ private:
     auto draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
     auto draw_calibration_tab_item( std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
     auto draw_color_tab_item(std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
-    auto draw_recorder_tab_item(cam::DCRecorderStates &rStates, cam::DCRecorderSettings &rSettings) -> void;
-    auto draw_player_tab_item(cam::DCPlayerStates &pStates, cam::DCPlayerSettings &pSettings) -> void;
+    auto draw_recorder_tab_item(cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> void;
+    auto draw_player_tab_item(cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> void;
     auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
 
     // ui

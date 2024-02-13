@@ -501,8 +501,8 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
 
 auto DCUIDrawer::draw_dc_recorder_tab_item(
     const std::string &tabItemName,
-    cam::DCRecorderStates &rStates,
-    cam::DCRecorderSettings &rSettings,
+    cam::DCVideoRecorderStates &rStates,
+    cam::DCVideoRecorderSettings &rSettings,
     bool &autoUpdate) -> bool{
 
 
@@ -597,8 +597,8 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
 
 auto DCUIDrawer::draw_dc_player_tab_item(
     const std::string &tabItemName,
-    cam::DCPlayerStates &pStates,
-    cam::DCPlayerSettings &pSettings,
+    cam::DCVideoPlayerStates &pStates,
+    cam::DCVideoPlayerSettings &pSettings,
     bool &autoUpdate) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
