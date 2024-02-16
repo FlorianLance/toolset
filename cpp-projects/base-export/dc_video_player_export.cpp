@@ -102,26 +102,22 @@ void update__dc_video_player(DCVideoPlayer *dcPlayer){
     dcPlayer->update();
 }
 
+int get_current_compressed_frame_valid_vertices_count__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera){
+    return dcPlayer->current_compressed_frame_cloud_size(idCamera);
+}
+
 int get_current_frame_valid_vertices_count__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera){
     return dcPlayer->current_frame_cloud_size(idCamera);
 }
 
-int copy_camera_cloud__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, DCVertexMeshData *vertices, int verticesCount){
+int get_current_frames_total_cloud_size__dc_video_player(DCVideoPlayer *dcPlayer){
+    return dcPlayer->current_frames_total_cloud_size();
+}
 
-    if(auto frame = dcPlayer->current_frame(idCamera); frame != nullptr){
-        auto verticesCountToCopy = std::min(static_cast<int>(frame->cloud.size()), verticesCount);
-        std::vector<size_t> ids(verticesCountToCopy);
-        std::iota(std::begin(ids), std::end(ids), 0);
-        std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t id){
-            vertices[id].pos = frame->cloud.vertices[id];
-            vertices[id].col = Pt4<std::uint8_t>{
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
-                255
-            };
-        });
-        return verticesCountToCopy;
-    }
-    return -1;
+int copy_camera_cloud__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
+    return dcPlayer->copy_current_cloud(idCamera, std::span<DCVertexMeshData>(vertices, verticesCount), applyModelTransform == 1);
+}
+
+int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
+    return dcPlayer->copy_all_current_clouds(std::span<DCVertexMeshData>(vertices, verticesCount), applyModelTransform == 1);
 }

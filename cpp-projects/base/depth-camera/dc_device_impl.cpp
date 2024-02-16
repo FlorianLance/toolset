@@ -41,11 +41,15 @@
 // local
 #include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
+
 
 using namespace tool::geo;
 using namespace tool::cam;
 
-auto DCDeviceImpl::initialize() -> void{
+auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
+
+    settings.config = newConfigS;
 
     mInfos.initialize(settings.config.mode);
     fIndices.initialize(mInfos);
@@ -55,15 +59,12 @@ auto DCDeviceImpl::initialize() -> void{
 
 auto DCDeviceImpl::start_reading_thread() -> void{
 
-    update_camera_from_colors_settings();
+    update_from_colors_settings();
 
     // start thread
     Logger::message("[DCDeviceImpl::start_reading] Start reading frames.\n");
     frameReaderT = std::make_unique<std::thread>(&DCDeviceImpl::read_frames, this);
 }
-
-#include "utility/time.hpp"
-
 
 struct TimeM{
 
@@ -146,20 +147,22 @@ auto DCDeviceImpl::read_frames() -> void {
 
         tf::Executor executor(1);
 
-
         tf::Taskflow mainTaskFlow;
-        DCFiltersSettings localFilters;
-        DCDataSettings localData;
-        DCDelaySettings localDelay;
         std::unique_ptr<DCFrame> nFrame = nullptr;
         std::unique_ptr<DCCompressedFrame> nCompressedFrame = nullptr;
 
         tf::Task updateSettingsT =mainTaskFlow.emplace([&](){
-            parametersM.lock();
-            localFilters = settings.filters;
-            localData    = settings.data;
-            localDelay   = settings.delay;
-            parametersM.unlock();
+           parametersM.lock();
+           // update current settings
+           cFiltersS = settings.filters;
+           cDataS    = settings.data;
+           cDelayS   = settings.delay;
+           // reset timestamps
+           fTiming.swap_local_timestamps();
+           parametersM.unlock();
+
+           update_from_data_settings();
+
         }).name("update_settings");
 
         tf::Task captureCT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "C"sv);
@@ -173,30 +176,30 @@ auto DCDeviceImpl::read_frames() -> void {
         }).name("capture_success");
 
         tf::Task readAudioT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RA"sv);
-                                              read_audio(localData.client.capture_audio() && mInfos.has_audio());
+            read_audio(cDataS.capture_audio() && mInfos.has_audio());
         }).name("read_audio");
         readAudioT.priority(tf::TaskPriority::LOW);
 
         tf::Task readImuT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RI"sv);
-                                            read_IMU(localData.client.capture_imu());
+            read_IMU(cDataS.capture_imu());
         }).name("read_imu");
         readImuT.priority(tf::TaskPriority::LOW);
 
         tf::Task readBodiesT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RB"sv);
-                                               read_body_tracking(localData.client.capture_body_tracking() && settings.config.enableBodyTracking && mInfos.has_depth()); // TODO add other bodi
+            read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth()); // TODO add other bodi
         }).name("read_bodies");
         readBodiesT.priority(tf::TaskPriority::LOW);
 
         tf::Task readColorImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RCI"sv);
-            read_color_image(mInfos.has_color() && localData.client.capture_color());
+            read_color_image(mInfos.has_color() && cDataS.capture_color());
         }).name("read_color_image");        
 
         tf::Task readDepthImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RDI"sv);
-            read_depth_image(mInfos.has_depth() && localData.client.capture_depth());
+            read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
         }).name("read_depth_image");
 
         tf::Task readInfraImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RIM"sv);
-            read_infra_image(mInfos.has_infra() && localData.client.capture_infra());
+            read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
         }).name("read_infra_image");
 
         tf::Task readDataCheckCT  = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "RDC"sv);
@@ -220,59 +223,59 @@ auto DCDeviceImpl::read_frames() -> void {
         }).name("resize_color_image_to_depth_size");
 
         tf::Task generateCloudT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "GC"sv);
-            generate_cloud(localData.client.generate_cloud());
+            generate_cloud(true);
             fTiming.update_local("after_cloud_generation"sv);
         }).name("generate_cloud");
 
         tf::Task filterDepthImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "FDI"sv);
-            filter_depth_image(localFilters);
+            filter_depth_image();
             fTiming.update_local("after_depth_filter"sv);
         }).name("filter_depth_image");
 
         tf::Task filterDepthSizedColorImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "FDSCI"sv);
-            filter_depth_sized_color_image(localFilters);
+            filter_depth_sized_color_image();
             fTiming.update_local("after_color_filter"sv);
         }).name("filter_depth_sized_color_image");
         filterDepthSizedColorImageT.priority(tf::TaskPriority::LOW);
 
         tf::Task filterInfraImageT = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "FII"sv);
-            filter_infrared_image(localFilters);
+            filter_infrared_image();
             fTiming.update_local("after_infrared_filter"sv);
         }).name("filter_infrared_image");
         filterInfraImageT.priority(tf::TaskPriority::LOW);
 
         tf::Task filterCloudImage = mainTaskFlow.emplace([&](){ auto t = TimeF(timeM, "FCI"sv);
-            filter_cloud_image(localFilters);
+            filter_cloud_image();
             fTiming.update_local("after_cloud_filtering"sv);
         }).name("filter_cloud_image");
 
         tf::Task updateCompressedFrameColor = mainTaskFlow.emplace([&](){
-            update_compressed_frame_color(localData, localFilters, nCompressedFrame.get());
+            update_compressed_frame_color(nCompressedFrame.get());
         }).name("update_compressed_frame_color");
         tf::Task updateCompressedFrameDepthSizedColor = mainTaskFlow.emplace([&](){
-            update_compressed_frame_depth_sized_color(localData, localFilters, nCompressedFrame.get());
+            update_compressed_frame_depth_sized_color(nCompressedFrame.get());
         }).name("update_compressed_frame_depth_sized_color");
         tf::Task updateCompressedFrameDepth = mainTaskFlow.emplace([&](){
             update_compressed_frame_infos(nCompressedFrame.get());
-            update_compressed_frame_depth(localData, nCompressedFrame.get());
+            update_compressed_frame_depth(nCompressedFrame.get());
         }).name("update_compressed_frame_depth");
         tf::Task updateCompressedFrameInfra = mainTaskFlow.emplace([&](){
-            update_compressed_frame_infra(localData, nCompressedFrame.get());
+            update_compressed_frame_infra(nCompressedFrame.get());
         }).name("update_compressed_frame_infra");
         tf::Task updateCompressedFrameCloud = mainTaskFlow.emplace([&](){
-            update_compressed_frame_cloud(localData, nCompressedFrame.get());
+            update_compressed_frame_cloud(nCompressedFrame.get());
         }).name("update_compressed_frame_cloud");
         tf::Task updateCompressedFrameAudio = mainTaskFlow.emplace([&](){
-            update_compressed_frame_audio(localData, nCompressedFrame.get());
+            update_compressed_frame_audio(nCompressedFrame.get());
         }).name("update_compressed_frame_audio");
         tf::Task updateCompressedFrameIMU = mainTaskFlow.emplace([&](){
-            update_compressed_frame_imu(localData, nCompressedFrame.get());
+            update_compressed_frame_imu(nCompressedFrame.get());
         }).name("update_compressed_frame_imu");
         tf::Task updateCompressedFrameBodies = mainTaskFlow.emplace([&](){
-            update_compressed_frame_bodies(localData, localFilters, nCompressedFrame.get());
+            update_compressed_frame_bodies(nCompressedFrame.get());
         }).name("update_compressed_frame_bodies");
         tf::Task updateCompressedFrameCalibration = mainTaskFlow.emplace([&](){
-            update_compressed_frame_calibration(localData, nCompressedFrame.get());
+            update_compressed_frame_calibration(nCompressedFrame.get());
         }).name("update_compressed_frame_calibration");
 
         tf::Task finalizeCompressionT = mainTaskFlow.emplace([&](){
@@ -284,7 +287,7 @@ auto DCDeviceImpl::read_frames() -> void {
         tf::Task sendCompressedFrameT = mainTaskFlow.emplace([&](){
 
             // send with delay
-            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(fTiming.get_local("after_capture"sv), localDelay.delayMs)){
+            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(fTiming.get_local("after_capture"sv), cDelayS.delayMs)){
                 dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
                 fTiming.update_local("after_compressed_frame_sending"sv);
             }
@@ -292,33 +295,33 @@ auto DCDeviceImpl::read_frames() -> void {
 
 
         tf::Task updateFrameColor = mainTaskFlow.emplace([&](){
-            update_color(localData, nFrame.get());
+            update_color(nFrame.get());
         }).name("update_frame_color");
         updateFrameColor.priority(tf::TaskPriority::NORMAL);
         tf::Task updateFrameDepth = mainTaskFlow.emplace([&](){
-            update_depth(localData, nFrame.get());
+            update_depth(nFrame.get());
         }).name("update_depth");
         updateFrameDepth.priority(tf::TaskPriority::NORMAL);
         tf::Task updateFrameInfra = mainTaskFlow.emplace([&](){
-            update_infra(localData, nFrame.get());
+            update_infra(nFrame.get());
         }).name("update_infra");
         tf::Task updateFrameDepthSizedColor = mainTaskFlow.emplace([&](){
-            update_depth_sized_color(localData, nFrame.get());
+            update_depth_sized_color(nFrame.get());
         }).name("update_depth_sized_color");
         // tf::Task updateFrameCloud = mainTaskFlow.emplace([&](){
         //     update_cloud(localData, nFrame.get());
         // }).name("update_cloud");
         tf::Task updateFrameCalibration = mainTaskFlow.emplace([&](){
-            update_calibration(localData, nFrame.get());
+            update_calibration(nFrame.get());
         }).name("update_calibration");
         tf::Task updateFrameAudio = mainTaskFlow.emplace([&](){
-            update_audio(localData, nFrame.get());
+            update_audio(nFrame.get());
         }).name("update_audio");
         tf::Task updateFrameBodies = mainTaskFlow.emplace([&](){
-            update_bodies(localData, nFrame.get());
+            update_bodies(nFrame.get());
         }).name("update_bodies");
         tf::Task updateFrameIMU = mainTaskFlow.emplace([&](){
-            update_imu(localData, nFrame.get());
+            update_imu(nFrame.get());
         }).name("update_imu");
 
 
@@ -328,7 +331,7 @@ auto DCDeviceImpl::read_frames() -> void {
             fTiming.update_local("after_local_frame_creation"sv);
         }).name("finalize_local");
         tf::Task sendFrameT = mainTaskFlow.emplace([&](){
-            if(auto frameToSend = frames.take_frame_with_delay(fTiming.get_local("after_capture"sv), localDelay.delayMs)){
+            if(auto frameToSend = frames.take_frame_with_delay(fTiming.get_local("after_capture"sv), cDelayS.delayMs)){
                 dcDevice->new_frame_signal(std::move(frameToSend));
                 fTiming.update_local("after_frame_sending"sv);
             }
@@ -416,11 +419,15 @@ auto DCDeviceImpl::read_frames() -> void {
     while(readFramesFromCameras){
 
         parametersM.lock();
-        auto cFiltersS = settings.filters;
-        auto cDataS    = settings.data;
-        auto cDelayS   = settings.delay;
+        // update current settings
+        cFiltersS = settings.filters;
+        cDataS    = settings.data;
+        cDelayS   = settings.delay;
+        // reset timestamps
         fTiming.swap_local_timestamps();
         parametersM.unlock();
+
+        update_from_data_settings();
 
         // capture frame
         try {
@@ -441,13 +448,13 @@ auto DCDeviceImpl::read_frames() -> void {
         }
 
         // read data
-        read_audio(cDataS.client.capture_audio() && mInfos.has_audio());
-        read_IMU(cDataS.client.capture_imu());
-        read_body_tracking(cDataS.client.capture_body_tracking() && settings.config.enableBodyTracking && mInfos.has_depth());
+        read_audio(cDataS.capture_audio() && mInfos.has_audio());
+        read_IMU(cDataS.capture_imu());
+        read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
 
-        read_color_image(mInfos.has_color() && cDataS.client.capture_color());
-        read_depth_image(mInfos.has_depth() && cDataS.client.capture_depth());
-        read_infra_image(mInfos.has_infra() && cDataS.client.capture_infra());
+        read_color_image(mInfos.has_color() && cDataS.capture_color());
+        read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
+        read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
 
         fTiming.update_local("after_get_images"sv);
 
@@ -464,19 +471,19 @@ auto DCDeviceImpl::read_frames() -> void {
         resize_color_image_to_depth_size();
         fTiming.update_local("after_color_resize"sv);
 
-        filter_depth_image(cFiltersS);
+        filter_depth_image();
         fTiming.update_local("after_depth_filter"sv);
 
-        filter_depth_sized_color_image(cFiltersS);
+        filter_depth_sized_color_image();
         fTiming.update_local("after_color_filter"sv);
 
-        filter_infrared_image(cFiltersS);
+        filter_infrared_image();
         fTiming.update_local("after_infrared_filter"sv);
 
-        generate_cloud(cDataS.client.generate_cloud() || cFiltersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None);
+        generate_cloud(true);//cDataS.generate_cloud_from_client() || cFiltersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None);
         fTiming.update_local("after_cloud_generation"sv);
 
-        filter_cloud_image(cFiltersS); // TODO !!!!
+        filter_cloud_image(); // TODO !!!!
         fTiming.update_local("after_cloud_filtering"sv);
 
         fTiming.update_local("after_processing"sv);
@@ -486,11 +493,11 @@ auto DCDeviceImpl::read_frames() -> void {
         }
 
         // compressed frame
-        if(sendData && cDataS.client.has_data_to_send()){
+        if(sendData && cDataS.client.compression.has_data_to_compress()){
 
             // generate
             fTiming.update_local("before_compressing"sv);
-            auto compressedFrame = compress_frame(cFiltersS,cDataS);            
+            auto compressedFrame = compress_frame();
             frames.add_compressed_frame(std::move(compressedFrame));
             fTiming.update_local("after_compressing"sv);
 
@@ -502,11 +509,11 @@ auto DCDeviceImpl::read_frames() -> void {
         }
 
         // local frame
-        if(cDataS.client.has_data_to_display()){
+        if(cDataS.client.generation.has_data_to_generate()){
 
             // generate
             fTiming.update_local("before_local_frame_creation"sv);
-            auto dFrame = create_local_frame(cDataS);            
+            auto dFrame = create_local_frame();
             frames.add_frame(std::move(dFrame));
             fTiming.update_local("after_local_frame_creation"sv);
 
@@ -586,7 +593,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
     fData.color = fData.convertedColorData.span();
 }
 
-auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_depth_image() -> void{
 
     if(fData.depth.empty()){
         return;
@@ -601,15 +608,15 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
     Bench::start("[DCDeviceData::filter_depth_image]");
 
     auto dRange = mInfos.depth_range_mm();
-    auto minW   = mInfos.depth_width()  * filtersS.minWidthF;
-    auto maxW   = mInfos.depth_width()  * filtersS.maxWidthF;
-    auto minH   = mInfos.depth_height() * filtersS.minHeightF;
-    auto maxH   = mInfos.depth_height() * filtersS.maxHeightF;
+    auto minW   = mInfos.depth_width()  * cFiltersS.minWidthF;
+    auto maxW   = mInfos.depth_width()  * cFiltersS.maxWidthF;
+    auto minH   = mInfos.depth_height() * cFiltersS.minHeightF;
+    auto maxH   = mInfos.depth_height() * cFiltersS.maxHeightF;
 
     auto diffRange = dRange.y()-dRange.x();
-    auto minD = dRange.x() + filtersS.minDepthF * diffRange;
-    auto maxD = dRange.x() + filtersS.maxDepthF * diffRange;
-    auto hsvDiffColor = Convert::to_hsv(filtersS.filterColor);
+    auto minD = dRange.x() + cFiltersS.minDepthF * diffRange;
+    auto maxD = dRange.x() + cFiltersS.maxDepthF * diffRange;
+    auto hsvDiffColor = Convert::to_hsv(cFiltersS.filterColor);
 
     // reset depth mask
     std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
@@ -638,43 +645,111 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
         }
 
         // color filtering
-        if(!fData.dephtSizedColor.empty() && filtersS.filterDepthWithColor){
+        if(!fData.dephtSizedColor.empty() && cFiltersS.filterDepthWithColor){
 
             auto hsv = Convert::to_hsv(fData.dephtSizedColor[id]);
-            if((std::abs(hsv.h()- hsvDiffColor.h()) > filtersS.maxDiffColor.x()) ||
-                (std::abs(hsv.s()- hsvDiffColor.s()) > filtersS.maxDiffColor.y()) ||
-                (std::abs(hsv.v()- hsvDiffColor.v()) > filtersS.maxDiffColor.z())){
+            if((std::abs(hsv.h()- hsvDiffColor.h()) > cFiltersS.maxDiffColor.x()) ||
+                (std::abs(hsv.s()- hsvDiffColor.s()) > cFiltersS.maxDiffColor.y()) ||
+                (std::abs(hsv.v()- hsvDiffColor.v()) > cFiltersS.maxDiffColor.z())){
                 fData.depthMask[id] = 0;
                 return;
             }
         }
 
         // infrared filtering
-        // ...
+        if(!fData.infra.empty() && cFiltersS.filterDepthWithInfra){
+            // ...
+        }
+
+        // body tracking filtering
+        if(!fData.bodiesIdMap.empty() && cFiltersS.filterDepthWithBodyTracking){
+            // ...
+        }
+
+        // NFOV sans compartimentation 	640 x 576 	75°x°65 	0, 5, 15, 30 	0,5 - 3,86 m 	12,8 ms
+        // NFOV 2x2 avec compartimentation (SW) 	320 x 288 	75°x°65 	0, 5, 15, 30 	0,5 - 5,46 m 	12,8 ms
+        // WFOV 2x2 avec compartimentation 	512 x 512 	120°x°120 	0, 5, 15, 30 	0,25 - 2,88 m 	12,8 ms
+        // WFOV sans compartimentation 	1024 x 1024 	120°x°120 	0, 5, 15 	0,25 - 2,21 m 	20,3 ms
+        // Infrarouge passif 	1024 x 1024 	N/A 	0, 5, 15, 30 	N/A 	1,6 ms
+
+        float vfow = 50.f;
+        // deg_2_rad()
+
+//         def is_point_in_fov(camera_position, camera_orientation, vfov, hfov, point):
+// # Calculate direction vectors
+//             top_left = np.array([np.tan(hfov/2), np.tan(vfov/2), -1])
+//                        top_right = np.array([-np.tan(hfov/2), np.tan(vfov/2), -1])
+//               bottom_left = np.array([np.tan(hfov/2), -np.tan(vfov/2), -1])
+//               bottom_right = np.array([-np.tan(hfov/2), -np.tan(vfov/2), -1])
+
+// # Transform direction vectors
+//               rotation_matrix = get_rotation_matrix(camera_orientation)
+//             top_left = np.dot(rotation_matrix, top_left)
+//               top_right = np.dot(rotation_matrix, top_right)
+//               bottom_left = np.dot(rotation_matrix, bottom_left)
+//               bottom_right = np.dot(rotation_matrix, bottom_right)
+
+// # Calculate dot products
+//               dot_top_left = np.dot(top_left, point - camera_position)
+//               dot_top_right = np.dot(top_right, point - camera_position)
+//               dot_bottom_left = np.dot(bottom_left, point - camera_position)
+//               dot_bottom_right = np.dot(bottom_right, point - camera_position)
+
+// # Check if point is within FOV
+//                   if dot_top_left > 0 and dot_top_right > 0 and dot_bottom_left > 0 and dot_bottom_right > 0:
+//                                                                                        return True
+//                                                                                        else:
+//                                                                                               return False
+
+
     });
 
-    if(filtersS.doLocalDiffFiltering){
-        maximum_local_depth_difference(fIndices, fData.depth, filtersS.maxLocalDiff, DCConnectivity::Connectivity_2H);
+    if(cFiltersS.doLocalDiffFiltering){
+        maximum_local_depth_difference(fIndices, fData.depth, cFiltersS.maxLocalDiff, DCConnectivity::Connectivity_2H);
     }
 
     // minimum neighbours filtering
-    if(filtersS.doMinNeighboursFiltering){
-        mininum_neighbours(filtersS.minNeighboursLoops, filtersS.nbMinNeighbours, DCConnectivity::Connectivity_4);
+    if(cFiltersS.doMinNeighboursFiltering){
+        mininum_neighbours(cFiltersS.minNeighboursLoops, cFiltersS.nbMinNeighbours, DCConnectivity::Connectivity_4);
     }
 
     // erosion
-    if(filtersS.doErosion){
-        erode(filtersS.erosionLoops, DCConnectivity::Connectivity_8);
+    if(cFiltersS.doErosion){
+        erode(cFiltersS.erosionLoops, DCConnectivity::Connectivity_8);
     }
 
     // keep only biggest cluster
-    if(filtersS.keepOnlyBiggestCluster){
+    if(cFiltersS.keepOnlyBiggestCluster){
         keep_only_biggest_cluster();
     }else{
         fData.meanBiggestZoneId = 0;
     }
 
-    // d m1 m2
+
+    if(cFiltersS.removeAfterClosestPoint){
+
+        std::uint16_t minDist = std::numeric_limits<std::uint16_t>::max();
+        std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+            if(fData.depthMask[id] != 0){
+                if(minDist > fData.depth[id]){
+                    minDist = fData.depth[id];
+                }
+            }
+        });
+
+        std::uint16_t maxDist = minDist + static_cast<std::uint16_t>(1000.f * cFiltersS.maxDistanceAfterClosestPoint);
+        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+            if(fData.depthMask[id] == 0){
+                return;
+            }
+
+            if(fData.depth[id] > maxDist){
+                fData.depthMask[id] = 0;
+            }
+        });
+    }
+
+
     update_valid_depth_values();
 
     // for(auto &d : fData.depth){
@@ -692,7 +767,7 @@ auto DCDeviceImpl::filter_depth_image(const DCFiltersSettings &filtersS) -> void
 
 }
 
-auto DCDeviceImpl::filter_depth_sized_color_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_depth_sized_color_image() -> void{
 
     if(fData.dephtSizedColor.empty()){
         return;
@@ -713,11 +788,11 @@ auto DCDeviceImpl::filter_depth_sized_color_image(const DCFiltersSettings &filte
     if(!fData.depth.empty()){
 
         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-            if(filtersS.invalidateColorFromDepth){
+            if(cFiltersS.invalidateColorFromDepth){
                 if(fData.depth[id] == dc_invalid_depth_value){
                     fData.dephtSizedColor[id] = ColorRGBA8{dc_invalid_color_value};
                 }else{
-                    if(filtersS.keepOnlyBiggestCluster){
+                    if(cFiltersS.keepOnlyBiggestCluster){
                         // colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};// TODO ?
                     }                                       
                 }                                
@@ -735,7 +810,7 @@ auto DCDeviceImpl::filter_depth_sized_color_image(const DCFiltersSettings &filte
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_infrared_image() -> void{
 
     if(fData.infra.empty()){
         return;
@@ -754,7 +829,7 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> v
     Bench::start("[DCDeviceData::filter_infrared_image]");
     if(!fData.depth.empty()){
         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-            if(filtersS.invalidateInfraFromDepth){
+            if(cFiltersS.invalidateInfraFromDepth){
                 if(fData.depth[id] == dc_invalid_depth_value){
                     fData.infra[id] = dc_invalid_infra_value;
                 }
@@ -770,17 +845,17 @@ auto DCDeviceImpl::filter_infrared_image(const DCFiltersSettings &filtersS) -> v
     Bench::stop();
 }
 
-auto DCDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS) -> void{
+auto DCDeviceImpl::filter_cloud_image() -> void{
 
-    if(fData.depthCloud.empty() || fData.depth.empty()){
+    if(fData.depthCloud.empty() || fData.depth.empty() || !cFiltersS.filterDepthWithCloud){
         return;
     }
 
-    if(filtersS.p1FMode != DCFiltersSettings::PlaneFilteringMode::None){
+    if(cFiltersS.p1FMode != PlaneFilteringMode::None){
 
-        auto p1             = filtersS.p1A*1000.f;
-        auto p2             = filtersS.p1B*1000.f;
-        auto p3             = filtersS.p1C*1000.f;
+        auto p1             = cFiltersS.p1A*1000.f;
+        auto p2             = cFiltersS.p1B*1000.f;
+        auto p3             = cFiltersS.p1C*1000.f;
         geo::Pt3f meanPt    = (p1+p2+p3)/3.f;
         auto AB             = vec(p2,p1);
         auto AC             = vec(p3,p1);
@@ -795,12 +870,12 @@ auto DCDeviceImpl::filter_cloud_image(const DCFiltersSettings &filtersS) -> void
             }
 
             if(dot(normalV,vec(meanPt, fData.depthCloud[idD].template conv<float>())) < 0){
-                if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Above){
+                if(cFiltersS.p1FMode == PlaneFilteringMode::Above){
                     fData.depthMask[idD] = 0;
                     return;
                 }
             }else{
-                if(filtersS.p1FMode == DCFiltersSettings::PlaneFilteringMode::Below){
+                if(cFiltersS.p1FMode == PlaneFilteringMode::Below){
                     fData.depthMask[idD] = 0;
                     return;
                 }
@@ -826,21 +901,21 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
     });
 }
 
-auto DCDeviceImpl::create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>{
+auto DCDeviceImpl::create_local_frame() -> std::unique_ptr<DCFrame>{
 
     tool::Bench::start("[DCDeviceImpl::create_local_frame]");
 
     auto dFrame  = std::make_unique<DCFrame>();
     update_infos(dFrame.get());
-    update_color(dataS, dFrame.get());
-    update_depth_sized_color(dataS, dFrame.get());
-    update_depth(dataS, dFrame.get());
-    update_infra(dataS, dFrame.get());
-    update_cloud(dataS, dFrame.get());
-    update_bodies(dataS, dFrame.get());
-    update_calibration(dataS, dFrame.get());
-    update_imu(dataS, dFrame.get());
-    update_audio(dataS, dFrame.get());
+    update_color(dFrame.get());
+    update_depth_sized_color(dFrame.get());
+    update_depth(dFrame.get());
+    update_infra(dFrame.get());
+    update_cloud(dFrame.get());
+    update_bodies(dFrame.get());
+    update_calibration(dFrame.get());
+    update_imu(dFrame.get());
+    update_audio(dFrame.get());
 
     tool::Bench::stop();
 
@@ -854,61 +929,150 @@ auto DCDeviceImpl::update_infos(DCFrame *dFrame) -> void{
     dFrame->mode            = settings.config.mode;
 }
 
-auto DCDeviceImpl::update_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.color.empty() || !do_process(dataS.client.color)){
-        dFrame->rgbaColor.reset();
-        return;
-    }
+auto DCDeviceImpl::update_color(DCFrame *dFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_color]");
 
-    dFrame->rgbaColor.width  = mInfos.color_width();
-    dFrame->rgbaColor.height = mInfos.color_height();
-    dFrame->rgbaColor.resize(mInfos.color_size());
-    std::copy(fData.color.begin(), fData.color.end(), dFrame->rgbaColor.begin());
+    if(!fData.color.empty() && cDataS.client.generation.colorImage){
+        dFrame->rgbaColor.width  = mInfos.color_width();
+        dFrame->rgbaColor.height = mInfos.color_height();
+        dFrame->rgbaColor.resize(mInfos.color_size());
+        std::copy(fData.color.begin(), fData.color.end(), dFrame->rgbaColor.begin());
+    }else{
+        dFrame->rgbaColor.reset();
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_depth_sized_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.dephtSizedColor.empty() || !do_process(dataS.client.depthSizedColor)){
-        dFrame->rgbaDepthSizedColor.reset();
-        return;
-    }
+auto DCDeviceImpl::update_depth_sized_color(DCFrame *dFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_depth_sized_color]");
 
-    dFrame->rgbaDepthSizedColor.width  = mInfos.depth_width();
-    dFrame->rgbaDepthSizedColor.height = mInfos.depth_height();
-    dFrame->rgbaDepthSizedColor.resize(mInfos.depth_size());
-    std::copy(fData.dephtSizedColor.begin(), fData.dephtSizedColor.end(), dFrame->rgbaDepthSizedColor.begin());
+    if(!fData.dephtSizedColor.empty() && cDataS.client.generation.depthSizedColorImage){
+        dFrame->rgbaDepthSizedColor.width  = mInfos.depth_width();
+        dFrame->rgbaDepthSizedColor.height = mInfos.depth_height();
+        dFrame->rgbaDepthSizedColor.resize(mInfos.depth_size());
+        std::copy(fData.dephtSizedColor.begin(), fData.dephtSizedColor.end(), dFrame->rgbaDepthSizedColor.begin());
+    }else{
+        dFrame->rgbaDepthSizedColor.reset();
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.depth.empty()){
-        dFrame->depth.reset();
-        dFrame->rgbDepth.reset();
-        return;
-    }
+auto DCDeviceImpl::update_depth(DCFrame *dFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_depth]");
 
-    if(do_process(dataS.client.depth)){
+    if(!fData.depth.empty() && cDataS.client.generation.depth){
+
         dFrame->depth.width  = mInfos.depth_width();
         dFrame->depth.height = mInfos.depth_height();
         dFrame->depth.resize(mInfos.depth_size());
         std::copy(fData.depth.begin(), fData.depth.end(), dFrame->depth.begin());
+
+        if(cDataS.client.generation.depthImage){
+
+            const auto dRange = mInfos.depth_range_mm();
+            const auto diff   = dRange.y() - dRange.x();
+            static constexpr std::array<Pt3f,5> depthGradient ={
+                Pt3f{0.f,0.f,1.f},
+                {0.f,1.f,1.f},
+                {0.f,1.f,0.f},
+                {1.f,1.f,0.f},
+                {1.f,0.f,0.f},
+            };
+
+            dFrame->rgbDepth.width  = mInfos.depth_width();
+            dFrame->rgbDepth.height = mInfos.depth_height();
+            dFrame->rgbDepth.resize(mInfos.depth_size());
+
+            std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+
+                if(fData.depth[id] == dc_invalid_depth_value){
+                    dFrame->rgbDepth[id] = ColorRGB8{};
+                    return;
+                }
+
+                float vF = (static_cast<float>(fData.depth[id]) - dRange.x())/diff;
+                float intPart;
+                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                size_t idG = static_cast<size_t>(intPart);
+
+                auto col = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+                dFrame->rgbDepth[id] = ColorRGB8{
+                    static_cast<std::uint8_t>(255*col.x()),
+                    static_cast<std::uint8_t>(255*col.y()),
+                    static_cast<std::uint8_t>(255*col.z())
+                };
+            });
+        }else{
+            dFrame->rgbDepth.reset();
+        }
+
     }else{
         dFrame->depth.reset();
+        dFrame->rgbDepth.reset();
     }
 
-    if(do_display(dataS.client.depth)){
+    Bench::stop();
+}
 
+auto DCDeviceImpl::update_infra(DCFrame *dFrame) -> void{
+
+    Bench::start("[DCDeviceImpl::update_infra]");
+
+    if(!fData.infra.empty() && cDataS.client.generation.infra){
+
+        dFrame->infra.width  = mInfos.infra_width();
+        dFrame->infra.height = mInfos.infra_height();
+        dFrame->infra.resize(mInfos.infra_size());
+        std::copy(fData.infra.begin(), fData.infra.end(), dFrame->infra.begin());
+
+        if(cDataS.client.generation.infraImage){
+
+            dFrame->rgbInfra.width  = mInfos.infra_width();
+            dFrame->rgbInfra.height = mInfos.infra_height();
+            dFrame->rgbInfra.resize(mInfos.infra_size());
+
+            const float max = 2000;
+            std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+
+                float vF = static_cast<float>(fData.infra[id]);
+                if(vF > max){
+                    vF = max;
+                }
+                vF/=max;
+                dFrame->rgbInfra[id] = ColorRGB8{
+                    static_cast<std::uint8_t>(255*vF),
+                    static_cast<std::uint8_t>(255*vF),
+                    static_cast<std::uint8_t>(255*vF)
+                };
+            });
+        }else{
+            dFrame->rgbInfra.reset();
+        }
+
+    }else{
+        dFrame->infra.reset();
+        dFrame->rgbInfra.reset();
+    }
+
+    Bench::stop();
+}
+
+auto DCDeviceImpl::update_cloud(DCFrame *dFrame) -> void{
+
+    Bench::start("[DCDeviceImpl::update_cloud]");
+
+    if(!fData.depth.empty() && !fData.depthCloud.empty() && cDataS.client.generation.cloud){
+
+        dFrame->cloud.vertices.resize(fData.validDepthValues);
+        dFrame->cloud.colors.resize(fData.validDepthValues);
+        dFrame->cloud.normals.resize(fData.validDepthValues);
+
+        bool addColors = !fData.dephtSizedColor.empty() && cDataS.client.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
         static constexpr std::array<Pt3f,5> depthGradient ={
@@ -919,209 +1083,106 @@ auto DCDeviceImpl::update_depth(const DCDataSettings &dataS, DCFrame *dFrame) ->
             {1.f,0.f,0.f},
         };
 
-        dFrame->rgbDepth.width  = mInfos.depth_width();
-        dFrame->rgbDepth.height = mInfos.depth_height();
-        dFrame->rgbDepth.resize(mInfos.depth_size());
+        std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](auto idC){
 
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-
-            if(fData.depth[id] == dc_invalid_depth_value){
-                dFrame->rgbDepth[id] = ColorRGB8{};
+            auto idD = std::get<0>(idC);
+            if(fData.depth[idD] == dc_invalid_depth_value){
                 return;
             }
 
-            float vF = (static_cast<float>(fData.depth[id]) - dRange.x())/diff;
-            float intPart;
-            float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-            size_t idG = static_cast<size_t>(intPart);
+            auto idV = std::get<1>(idC);
+            dFrame->cloud.vertices[idV] = fData.depthCloud[idD].template conv<float>()*0.001f;
 
-            auto col = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-            dFrame->rgbDepth[id] = ColorRGB8{
-                static_cast<std::uint8_t>(255*col.x()),
-                static_cast<std::uint8_t>(255*col.y()),
-                static_cast<std::uint8_t>(255*col.z())
-            };
+            if(addColors){
+                dFrame->cloud.colors[idV] = geo::Pt3f{
+                    static_cast<float>(fData.dephtSizedColor[idD].r()),
+                    static_cast<float>(fData.dephtSizedColor[idD].g()),
+                    static_cast<float>(fData.dephtSizedColor[idD].b())
+                }/255.f;
+            }else{
+
+                float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
+                float intPart;
+                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                size_t idG = static_cast<size_t>(intPart);
+                dFrame->cloud.colors[idV] = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+            }
+
+            // A B C
+            // D I E
+            // F G H
+            const auto &idN   = fIndices.neighbours8Depth1D[idD];
+            const auto &idDVC = fIndices.depthVertexCorrrespondance;
+            const auto &v     = dFrame->cloud.vertices;
+            Vec3f normal{};
+
+            const auto &vId = v[idV];
+            if(idN[0] != -1 && std::get<1>(idDVC[idN[0]]) != -1){
+                if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vId x vIA
+                    normal += cross(v[std::get<1>(idDVC[idN[3]])] - vId, v[std::get<1>(idDVC[idN[0]])] - vId);
+                }
+                if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIA x vIB
+                    normal += cross(v[std::get<1>(idDVC[idN[0]])] - vId, v[std::get<1>(idDVC[idN[1]])] - vId);
+                }
+            }
+            if(idN[2] != -1 && std::get<1>(idDVC[idN[2]]) != -1){
+                if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIB x vIC
+                    normal += cross(v[std::get<1>(idDVC[idN[1]])] - vId, v[std::get<1>(idDVC[idN[2]])] - vId);
+                }
+                if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIC x vIE
+                    normal += cross(v[std::get<1>(idDVC[idN[2]])] - vId, v[std::get<1>(idDVC[idN[4]])] - vId);
+                }
+            }
+            if(idN[7] != -1 && std::get<1>(idDVC[idN[7]]) != -1){
+                if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIE x vIH
+                    normal += cross(v[std::get<1>(idDVC[idN[4]])] - vId, v[std::get<1>(idDVC[idN[7]])] - vId);
+                }
+                if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIH x vIG
+                    normal += cross(v[std::get<1>(idDVC[idN[7]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
+                }
+            }
+            if(idN[5] != -1 && std::get<1>(idDVC[idN[5]]) != -1){
+                if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIG x vIF
+                    normal += cross(v[std::get<1>(idDVC[idN[5]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
+                }
+                if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vIF x vID
+                    normal += cross(v[std::get<1>(idDVC[idN[6]])] - vId, v[std::get<1>(idDVC[idN[3]])] - vId);
+                }
+            }
+            dFrame->cloud.normals[idV] = normalize(normal);
         });
+
     }else{
-        dFrame->rgbDepth.reset();
-    }
-
-    Bench::stop();
-}
-
-auto DCDeviceImpl::update_infra(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.infra.empty()){
-        dFrame->infra.reset();
-        dFrame->rgbInfra.reset();
-        return;
-    }
-
-    Bench::start("[DCDeviceImpl::update_infra]");
-
-    if(do_process(dataS.client.infra)){
-        dFrame->infra.width  = mInfos.infra_width();
-        dFrame->infra.height = mInfos.infra_height();
-        dFrame->infra.resize(mInfos.infra_size());
-        std::copy(fData.infra.begin(), fData.infra.end(), dFrame->infra.begin());
-    }else{
-        dFrame->infra.reset();
-    }
-
-    if(do_display(dataS.client.infra)){
-
-        dFrame->rgbInfra.width  = mInfos.infra_width();
-        dFrame->rgbInfra.height = mInfos.infra_height();
-        dFrame->rgbInfra.resize(mInfos.infra_size());
-
-        const float max = 2000;
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-
-            float vF = static_cast<float>(fData.infra[id]);
-            if(vF > max){
-                vF = max;
-            }
-            vF/=max;
-            dFrame->rgbInfra[id] = ColorRGB8{
-                static_cast<std::uint8_t>(255*vF),
-                static_cast<std::uint8_t>(255*vF),
-                static_cast<std::uint8_t>(255*vF)
-            };
-        });
-    }else{
-        dFrame->rgbInfra.reset();
-    }
-
-    Bench::stop();
-}
-
-auto DCDeviceImpl::update_cloud(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.depth.empty() || fData.depthCloud.empty()){
         dFrame->cloud.clear();
-        return;
     }
-
-    if(!do_process(dataS.client.cloud)){
-        dFrame->cloud.clear();
-        return;
-    }
-
-    bool addColors = !fData.dephtSizedColor.empty() && dataS.client.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
-
-    Bench::start("[DCDeviceImpl::update_cloud]");
-
-    const auto dRange = mInfos.depth_range_mm();
-    const auto diff   = dRange.y() - dRange.x();
-    static constexpr std::array<Pt3f,5> depthGradient ={
-        Pt3f{0.f,0.f,1.f},
-        {0.f,1.f,1.f},
-        {0.f,1.f,0.f},
-        {1.f,1.f,0.f},
-        {1.f,0.f,0.f},
-    };
-
-    dFrame->cloud.vertices.resize(fData.validDepthValues);
-    dFrame->cloud.colors.resize(fData.validDepthValues);
-    dFrame->cloud.normals.resize(fData.validDepthValues);
-
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](auto idC){
-
-        auto idD = std::get<0>(idC);
-        if(fData.depth[idD] == dc_invalid_depth_value){
-            return;
-        }
-
-        auto idV = std::get<1>(idC);
-        dFrame->cloud.vertices[idV] = fData.depthCloud[idD].template conv<float>()*0.001f;
-
-        if(addColors){
-            dFrame->cloud.colors[idV] = geo::Pt3f{
-                static_cast<float>(fData.dephtSizedColor[idD].r()),
-                static_cast<float>(fData.dephtSizedColor[idD].g()),
-                static_cast<float>(fData.dephtSizedColor[idD].b())
-            }/255.f;
-        }else{
-
-            float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
-            float intPart;
-            float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-            size_t idG = static_cast<size_t>(intPart);
-            dFrame->cloud.colors[idV] = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-        }
-
-        // A B C
-        // D I E
-        // F G H
-        const auto &idN   = fIndices.neighbours8Depth1D[idD];
-        const auto &idDVC = fIndices.depthVertexCorrrespondance;
-        const auto &v     = dFrame->cloud.vertices;
-        Vec3f normal{};
-
-        const auto &vId = v[idV];
-        if(idN[0] != -1 && std::get<1>(idDVC[idN[0]]) != -1){
-            if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vId x vIA
-                normal += cross(v[std::get<1>(idDVC[idN[3]])] - vId, v[std::get<1>(idDVC[idN[0]])] - vId);
-            }
-            if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIA x vIB
-                normal += cross(v[std::get<1>(idDVC[idN[0]])] - vId, v[std::get<1>(idDVC[idN[1]])] - vId);
-            }
-        }
-        if(idN[2] != -1 && std::get<1>(idDVC[idN[2]]) != -1){
-            if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIB x vIC
-                normal += cross(v[std::get<1>(idDVC[idN[1]])] - vId, v[std::get<1>(idDVC[idN[2]])] - vId);
-            }
-            if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIC x vIE
-                normal += cross(v[std::get<1>(idDVC[idN[2]])] - vId, v[std::get<1>(idDVC[idN[4]])] - vId);
-            }
-        }
-        if(idN[7] != -1 && std::get<1>(idDVC[idN[7]]) != -1){
-            if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIE x vIH
-                normal += cross(v[std::get<1>(idDVC[idN[4]])] - vId, v[std::get<1>(idDVC[idN[7]])] - vId);
-            }
-            if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIH x vIG
-                normal += cross(v[std::get<1>(idDVC[idN[7]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
-            }
-        }
-        if(idN[5] != -1 && std::get<1>(idDVC[idN[5]]) != -1){
-            if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIG x vIF
-                normal += cross(v[std::get<1>(idDVC[idN[5]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
-            }
-            if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vIF x vID
-                normal += cross(v[std::get<1>(idDVC[idN[6]])] - vId, v[std::get<1>(idDVC[idN[3]])] - vId);
-            }
-        }
-        dFrame->cloud.normals[idV] = normalize(normal);
-    });
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_imu(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
+auto DCDeviceImpl::update_imu(DCFrame *dFrame) -> void{
 
-    if(fData.binaryIMU.empty() || !do_process(dataS.client.IMU)){
+    if(!fData.binaryIMU.empty() && cDataS.client.generation.imu){
+        dFrame->imu.resize(fData.binaryIMU.size());
+        std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), dFrame->imu.begin());
+    }else{
         dFrame->imu.clear();
-        return;
     }
-
-    dFrame->imu.resize(fData.binaryIMU.size());
-    std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), dFrame->imu.begin());
 }
 
-auto DCDeviceImpl::update_bodies(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
+auto DCDeviceImpl::update_bodies(DCFrame *dFrame) -> void{
 
-    Bench::start("[DCDeviceImpl::update_bodies]");        
+    Bench::start("[DCDeviceImpl::update_bodies]");
 
-    // body tracking
-    if(!fData.bodies.empty() && do_process(dataS.client.bodyTracking)){
+    if(!fData.bodies.empty() && cDataS.client.generation.bodyTracking){
         dFrame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), dFrame->bodyTracking.begin());
-    }else {
+    }else{
         dFrame->bodyTracking.clear();
     }
 
+
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && do_process(dataS.client.bodiesIdMap)){
+    if(!fData.bodiesIdMap.empty() && cDataS.client.generation.bodyIdMapImage){
         dFrame->grayBodiesIdMap.width  = mInfos.depth_width();
         dFrame->grayBodiesIdMap.height = mInfos.depth_height();
         dFrame->grayBodiesIdMap.resize(mInfos.depth_size());
@@ -1133,55 +1194,53 @@ auto DCDeviceImpl::update_bodies(const DCDataSettings &dataS, DCFrame *dFrame) -
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_calibration(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(fData.binaryCalibration.empty()){
-        dFrame->calibration.clear();
-        return;
-    }
+auto DCDeviceImpl::update_calibration(DCFrame *dFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_calibration]");
 
-    dFrame->calibration.resize(fData.binaryCalibration.size());
-    std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), dFrame->calibration.begin());
+    if(!fData.binaryCalibration.empty() && cDataS.client.generation.calibration){
+        dFrame->calibration.resize(fData.binaryCalibration.size());
+        std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), dFrame->calibration.begin());
+    }else{
+        dFrame->calibration.clear();
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>{
+auto DCDeviceImpl::compress_frame() -> std::unique_ptr<DCCompressedFrame>{
 
     tool::Bench::start("[DCDeviceImpl::compress_frame]");
 
     auto cFrame = std::make_unique<DCCompressedFrame>();
     update_compressed_frame_infos(cFrame.get());
-    update_compressed_frame_color(dataS, filtersS, cFrame.get());
-    update_compressed_frame_depth_sized_color(dataS, filtersS, cFrame.get());
-    update_compressed_frame_depth(dataS, cFrame.get());
-    update_compressed_frame_infra(dataS, cFrame.get());
-    update_compressed_frame_cloud(dataS, cFrame.get());
-    update_compressed_frame_audio(dataS, cFrame.get());
-    update_compressed_frame_imu(dataS, cFrame.get());
-    update_compressed_frame_bodies(dataS, filtersS, cFrame.get());
-    update_compressed_frame_calibration(dataS, cFrame.get());
+    update_compressed_frame_color(cFrame.get());
+    update_compressed_frame_depth_sized_color(cFrame.get());
+    update_compressed_frame_depth(cFrame.get());
+    update_compressed_frame_infra(cFrame.get());
+    update_compressed_frame_cloud(cFrame.get());
+    update_compressed_frame_audio(cFrame.get());
+    update_compressed_frame_imu(cFrame.get());
+    update_compressed_frame_bodies(cFrame.get());
+    update_compressed_frame_calibration(cFrame.get());
 
     tool::Bench::stop();
 
     return cFrame;
 }
 
-auto DCDeviceImpl::update_audio(const DCDataSettings &dataS, DCFrame *dFrame) -> void{
-
-    if(!do_process(dataS.client.audio) || (fData.audioChannels.first == 0) || fData.audioChannels.second.empty()){
-        dFrame->audioFrames.clear();
-        return;
-    }
+auto DCDeviceImpl::update_audio(DCFrame *dFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_audio]");
 
-    size_t nbFrames = fData.audioChannels.second.size() / fData.audioChannels.first;
-    dFrame->audioFrames.resize(nbFrames);
-    auto audioFrom = fData.audioChannels.second.data();
-    std::copy(audioFrom, audioFrom + fData.audioChannels.second.size(), reinterpret_cast<float*>(dFrame->audioFrames.data()));
+    if(cDataS.client.generation.audio && (fData.audioChannels.first != 0) && !fData.audioChannels.second.empty()){
+        size_t nbFrames = fData.audioChannels.second.size() / fData.audioChannels.first;
+        dFrame->audioFrames.resize(nbFrames);
+        auto audioFrom = fData.audioChannels.second.data();
+        std::copy(audioFrom, audioFrom + fData.audioChannels.second.size(), reinterpret_cast<float*>(dFrame->audioFrames.data()));
+    }else{
+        dFrame->audioFrames.clear();
+    }
 
     Bench::stop();
 }
@@ -1195,99 +1254,98 @@ auto DCDeviceImpl::update_compressed_frame_infos(DCCompressedFrame *cFrame) -> v
     cFrame->validVerticesCount = fData.validDepthValues;
 }
 
-auto DCDeviceImpl::update_compressed_frame_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.color.empty() || !do_send(dataS.client.color)){
-        cFrame->jpegRGBA8Color.reset();
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_color(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_color]");
-
-    if(!jpegColorEncoder.encode(
-        mInfos.color_width(),
-        mInfos.color_height(),
-        fData.color,
-        cFrame->jpegRGBA8Color,
-        filtersS.jpegCompressionRate
-    )){
+    if(!fData.color.empty() && cDataS.client.compression.color){
+        if(!jpegColorEncoder.encode(
+                mInfos.color_width(),
+                mInfos.color_height(),
+                fData.color,
+                cFrame->jpegRGBA8Color,
+                cDataS.client.compression.jpegCompressionRate
+            )){
+            cFrame->jpegRGBA8Color.reset();
+        }
+    }else{
         cFrame->jpegRGBA8Color.reset();
     }
-
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_depth_sized_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.dephtSizedColor.empty() || !do_send(dataS.client.depthSizedColor)){
-        cFrame->jpegRGBA8DepthSizedColor.reset();
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_depth_sized_color(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_depth_sized_color]");
 
-    if(!jpegDepthSizedColorEncoder.encode(
-        mInfos.depth_width(),
-        mInfos.depth_height(),
-        fData.dephtSizedColor,
-        cFrame->jpegRGBA8DepthSizedColor,
-        filtersS.jpegCompressionRate
-    )){
+    if(!fData.dephtSizedColor.empty() && cDataS.client.compression.depthSizedColor){
+
+        if(!jpegDepthSizedColorEncoder.encode(
+                mInfos.depth_width(),
+                mInfos.depth_height(),
+                fData.dephtSizedColor,
+                cFrame->jpegRGBA8DepthSizedColor,
+                cDataS.client.compression.jpegCompressionRate
+            )){
+            cFrame->jpegRGBA8DepthSizedColor.reset();
+        }
+
+    }else{
         cFrame->jpegRGBA8DepthSizedColor.reset();
     }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_depth(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.depth.empty() || !do_send(dataS.client.depth)){
-        cFrame->fpfDepth.reset();
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_depth(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_depth]");
 
-    fastPForDepthEncoder.encode(
-        mInfos.depth_width(),
-        mInfos.depth_height(),
-        fData.depth,
-        cFrame->fpfDepth
-    );
+    if(!fData.depth.empty() && cDataS.client.compression.depth){
+
+        fastPForDepthEncoder.encode(
+            mInfos.depth_width(),
+            mInfos.depth_height(),
+            fData.depth,
+            cFrame->fpfDepth
+        );
+
+    }else{
+        cFrame->fpfDepth.reset();
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_infra(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.infra.empty() || !do_send(dataS.client.infra)){
-        cFrame->fpfInfra.reset();
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_infra(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_infra]");
 
-    fastPForInfraEncoder.encode(
-        mInfos.infra_width(),
-        mInfos.infra_height(),
-        fData.infra,
-        cFrame->fpfInfra
-    );
+    if(!fData.infra.empty() && cDataS.client.compression.infra){
+
+        fastPForInfraEncoder.encode(
+            mInfos.infra_width(),
+            mInfos.infra_height(),
+            fData.infra,
+            cFrame->fpfInfra
+        );
+
+    }else{
+        cFrame->fpfInfra.reset();
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_calibration(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.binaryCalibration.empty()){
-        cFrame->calibration.clear();
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_calibration(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_calibration]");
 
-    cFrame->calibration.resize(fData.binaryCalibration.size());
-    std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
+    if(!fData.binaryCalibration.empty() && cDataS.client.compression.calibration){
+        cFrame->calibration.resize(fData.binaryCalibration.size());
+        std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
+    }else{
+        cFrame->calibration.clear();
+    }
 
     Bench::stop();
 }
@@ -1339,133 +1397,126 @@ auto DCDeviceImpl::read_frames2() -> void {
 }
 
 
-auto DCDeviceImpl::update_compressed_frame_cloud(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
-
-    if(fData.depthCloud.empty() || fData.depth.empty()){
-        cFrame->fpfColoredCloud = {};
-        return;
-    }
-
-    if(!do_send(dataS.client.cloud)){
-        cFrame->fpfColoredCloud = {};
-        return;
-    }
-
-    bool addColors = !fData.dephtSizedColor.empty() && dataS.client.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+auto DCDeviceImpl::update_compressed_frame_cloud(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_cloud]");
 
-    Buffer<std::uint16_t> processedCloudData;
+    if(!fData.depthCloud.empty() && !fData.depth.empty() && cDataS.client.compression.cloud){
 
-    // resize cloud data
-    // data mapping: XXYYZZRGB0
-    size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
-    size_t rest                                 = cloudVerticesBufferSize % 128;
-    size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
-    if(processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
-        processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
-    }
-    std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
+        Buffer<std::uint16_t> processedCloudData;
 
-    auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
-
-    const auto dRange = mInfos.depth_range_mm();
-    const auto diff   = dRange.y() - dRange.x();
-    static constexpr std::array<Pt3f,5> depthGradient ={
-        Pt3f{0.f,0.f,1.f},
-        {0.f,1.f,1.f},
-        {0.f,1.f,0.f},
-        {1.f,1.f,0.f},
-        {1.f,0.f,0.f},
-    };
-
-    // fill data
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
-
-        auto idD = std::get<0>(idC);
-        if(fData.depth[idD] == dc_invalid_depth_value){
-            return;
+        // resize cloud data
+        // data mapping: XXYYZZRGB0
+        size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
+        size_t rest                                 = cloudVerticesBufferSize % 128;
+        size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
+        if(processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
+            processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
         }
-        auto idV = std::get<1>(idC);
+        std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
 
-        processedCloudData[idV]                             = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].x())+4096); // X
-        processedCloudData[fData.validDepthValues   + idV]  = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].y())+4096); // Y
-        processedCloudData[2*fData.validDepthValues + idV]  = static_cast<std::uint16_t>(fData.depthCloud[idV].z());                                 // Z
-        if(addColors){
-            processedCloudData8[6*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].r();
-            processedCloudData8[7*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].g();
-            processedCloudData8[8*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].b();
-        }else{
-            float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
-            float intPart;
-            float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-            size_t idG = static_cast<size_t>(intPart);
-            auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-            processedCloudData8[6*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.x());
-            processedCloudData8[7*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.y());
-            processedCloudData8[8*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.z());
+        auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
+
+        bool addColors = !fData.dephtSizedColor.empty() && cDataS.client.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+
+        const auto dRange = mInfos.depth_range_mm();
+        const auto diff   = dRange.y() - dRange.x();
+        static constexpr std::array<Pt3f,5> depthGradient ={
+            Pt3f{0.f,0.f,1.f},
+            {0.f,1.f,1.f},
+            {0.f,1.f,0.f},
+            {1.f,1.f,0.f},
+            {1.f,0.f,0.f},
+        };
+
+        // fill data
+        std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
+
+            auto idD = std::get<0>(idC);
+            if(fData.depth[idD] == dc_invalid_depth_value){
+                return;
+            }
+            auto idV = std::get<1>(idC);
+
+            processedCloudData[idV]                             = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].x())+4096); // X
+            processedCloudData[fData.validDepthValues   + idV]  = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].y())+4096); // Y
+            processedCloudData[2*fData.validDepthValues + idV]  = static_cast<std::uint16_t>(fData.depthCloud[idV].z());                                 // Z
+            if(addColors){
+                processedCloudData8[6*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].r();
+                processedCloudData8[7*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].g();
+                processedCloudData8[8*fData.validDepthValues + idV] = fData.dephtSizedColor[idV].b();
+            }else{
+                float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
+                float intPart;
+                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                size_t idG = static_cast<size_t>(intPart);
+                auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+                processedCloudData8[6*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.x());
+                processedCloudData8[7*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.y());
+                processedCloudData8[8*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.z());
+            }
+        });
+
+        if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), cFrame->fpfColoredCloud)){
+            cFrame->fpfColoredCloud = {};
         }
-    });
 
-    if(!fastPForCloudEncoder.encode(
-            processedCloudData.byte_span(), cFrame->fpfColoredCloud
-        )){
+    }else{
         cFrame->fpfColoredCloud = {};
     }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_audio(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
-
-    if((fData.audioChannels.first == 0) || fData.audioChannels.second.empty() || !do_send(dataS.client.audio)){
-        cFrame->audioFrames = {};
-        return;
-    }
+auto DCDeviceImpl::update_compressed_frame_audio(DCCompressedFrame *cFrame) -> void{
 
     Bench::start("[DCDeviceImpl::update_compressed_frame_audio]");
 
-    size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
-    cFrame->audioFrames.resize(audioSize);
-    std::copy(
-        fData.audioChannels.second.begin(), fData.audioChannels.second.end(),
-        reinterpret_cast<float*>(cFrame->audioFrames.data())
-    );
+    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && cDataS.client.compression.audio){
+
+        size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
+        cFrame->audioFrames.resize(audioSize);
+        std::copy(
+            fData.audioChannels.second.begin(), fData.audioChannels.second.end(),
+            reinterpret_cast<float*>(cFrame->audioFrames.data())
+        );
+
+    }else{
+        cFrame->audioFrames = {};
+    }
 
     Bench::stop();
 }
 
-auto DCDeviceImpl::update_compressed_frame_imu(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void{
+auto DCDeviceImpl::update_compressed_frame_imu(DCCompressedFrame *cFrame) -> void{
 
-    if(fData.binaryIMU.empty() || !do_send(dataS.client.IMU)){
+    if(!fData.binaryIMU.empty() && cDataS.client.compression.imu){
+        cFrame->imu.resize(fData.binaryIMU.size());
+        std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
+    }else{
         cFrame->imu.clear();
-        return;
     }
-
-    cFrame->imu.resize(fData.binaryIMU.size());
-    std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
 }
 
-auto DCDeviceImpl::update_compressed_frame_bodies(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void{
+auto DCDeviceImpl::update_compressed_frame_bodies(DCCompressedFrame *cFrame) -> void{
 
     // body tracking
-    if(!fData.bodies.empty() && do_send(dataS.client.bodyTracking)){
+    if(!fData.bodies.empty() && cDataS.client.compression.bodyTracking){
         cFrame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
     }else{
         cFrame->bodyTracking.clear();
     }
 
-
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && do_send(dataS.client.bodiesIdMap)){
+    if(!fData.bodiesIdMap.empty() && cDataS.client.compression.bodyIdMap){
 
         if(!jpegBodiesIdEncoder.encode(
             mInfos.depth_width(),
             mInfos.depth_height(),
-                fData.bodiesIdMap,
-                cFrame->jpegG8BodiesIdMap,
-            filtersS.jpegCompressionRate
+            fData.bodiesIdMap,
+            cFrame->jpegG8BodiesIdMap,
+            cDataS.client.compression.jpegCompressionRate
         )){
             cFrame->jpegG8BodiesIdMap.reset();
         }
@@ -1493,19 +1544,19 @@ auto DCDeviceImpl::stop_reading_thread() -> void{
 
 auto DCDeviceImpl::check_data_validity() -> bool {
 
-    if(mInfos.has_color() && settings.data.client.capture_color()){
+    if(mInfos.has_color() && settings.data.capture_color()){
         if(fData.rawColor.empty()){
             return false;
         }
     }
 
-    if(mInfos.has_depth() && settings.data.client.capture_depth()){
+    if(mInfos.has_depth() && settings.data.capture_depth()){
         if(fData.depth.empty()){
             return false;
         }
     }
 
-    if(mInfos.has_infra() && settings.data.client.capture_infra()){
+    if(mInfos.has_infra() && settings.data.capture_infra()){
         if(fData.infra.empty()){
             return false;
         }
@@ -1722,8 +1773,6 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
 
 auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity) -> void{
 
-
-
     for(size_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
         std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
@@ -1776,7 +1825,7 @@ auto DCDeviceImpl::set_filters_settings(const DCFiltersSettings &filtersS) -> vo
 
 auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
     settings.color = colorS;
-    update_camera_from_colors_settings();
+    update_from_colors_settings();
 }
 
 auto DCDeviceImpl::set_delay_settings(const DCDelaySettings &delayS) -> void{

@@ -66,8 +66,4 @@ struct DCFrame : Frame{
     auto compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void;
 };
 
-struct DCDisplayFrame : Frame{
-
-};
-
 }

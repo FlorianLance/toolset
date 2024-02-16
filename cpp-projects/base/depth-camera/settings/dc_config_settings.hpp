@@ -33,6 +33,10 @@ namespace tool::cam {
 
 struct DCConfigSettings : io::BinaryFileSettings{
     
+    // actions
+    bool openDevice   = true;
+    bool startReading    = true;
+
     // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
@@ -45,13 +49,12 @@ struct DCConfigSettings : io::BinaryFileSettings{
     int subordinateDelayUsec = 0;
 
     // body tracking
-    bool enableBodyTracking = false; // TODO: remove
+    bool btEnabled = false;
     DCBTSensorOrientation btOrientation = DCBTSensorOrientation::default_orientation;
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::GPU_DIRECTML;
-    std::int8_t btGPUId = 0;
-    float btTemporalSmoothing = 0.f;
+    std::int8_t btGPUId = 0;    
 
-    // other
+    // misc
     bool disableLED = false;
 
     static auto default_init_for_grabber() -> DCConfigSettings;

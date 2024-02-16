@@ -48,6 +48,7 @@ struct DCVideoRecorder::Impl{
     DCVideoRecorderStates states;
     DCVideoRecorderSettings settings;
     DCVideo videoResource;
+
 };
 
 DCVideoRecorder::DCVideoRecorder(): i(std::make_unique<Impl>()){
@@ -56,7 +57,6 @@ DCVideoRecorder::DCVideoRecorder(): i(std::make_unique<Impl>()){
 DCVideoRecorder::~DCVideoRecorder(){
 }
 
-#include <iostream>
 
 auto DCVideoRecorder::initialize(size_t nbDevices) -> void{
 
@@ -75,8 +75,6 @@ auto DCVideoRecorder::initialize(size_t nbDevices) -> void{
     states_updated_signal(i->states);
 }
 
-
-
 auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
 
     if(idCamera >= i->currentFrames.size()){
@@ -91,7 +89,7 @@ auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
         return false;
     }
 
-    return i->videoResource.uncompress_frame(idCamera, i->currentCompressedFrames[idCamera].get(), frame);
+    return i->videoResource.uncompress_frame(i->settings.generation, idCamera, i->currentCompressedFrames[idCamera].get(), frame);
 }
 
 auto DCVideoRecorder::add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> frame) -> void{
@@ -204,8 +202,10 @@ auto DCVideoRecorder::reset_recording() -> void {
     std::fill(std::begin(i->states.currentFrames),      std::end(i->states.currentFrames), 0);
 }
 
+#include <iostream>
 auto DCVideoRecorder::update_settings(DCVideoRecorderSettings recordingsS) noexcept -> void{
     i->settings = recordingsS;
+    std::cout << "update recording\n";
 }
 
 auto DCVideoRecorder::update_model(size_t id, const DCModelSettings &model) -> void{

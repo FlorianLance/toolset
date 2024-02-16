@@ -62,6 +62,9 @@ auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &of
     }
 
     BaseSettings::init_from_data(data, offset, sizeData);
+    // actions
+    read(openDevice, data, offset, sizeData);
+    read(startReading, data, offset, sizeData);
     // device
     read(typeDevice, data, offset, sizeData);
     read(idDevice, data, offset, sizeData);
@@ -72,7 +75,7 @@ auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &of
     read(synchMode, data, offset, sizeData);
     read(subordinateDelayUsec, data, offset, sizeData);
     // body tracking
-    read(enableBodyTracking, data, offset, sizeData);
+    read(btEnabled, data, offset, sizeData);
     read(btOrientation, data, offset, sizeData);
     read(btProcessingMode, data, offset, sizeData);
     read(btGPUId, data, offset, sizeData);
@@ -88,6 +91,9 @@ auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, s
     }
 
     BaseSettings::write_to_data(data, offset, sizeData);
+    // actions
+    write(openDevice, data, offset, sizeData);
+    write(startReading, data, offset, sizeData);
     // device
     write(typeDevice, data, offset, sizeData);
     write(idDevice, data, offset, sizeData);
@@ -98,7 +104,7 @@ auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, s
     write(synchMode, data, offset, sizeData);
     write(subordinateDelayUsec, data, offset, sizeData);
     // body tracking
-    write(enableBodyTracking, data, offset, sizeData);
+    write(btEnabled, data, offset, sizeData);
     write(btOrientation, data, offset, sizeData);
     write(btProcessingMode, data, offset, sizeData);
     write(btGPUId, data, offset, sizeData);
@@ -109,6 +115,9 @@ auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, s
 auto DCConfigSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
+        // actions
+        sizeof(openDevice) +
+        sizeof(startReading) +
         // device
         sizeof(typeDevice) +
         sizeof(idDevice) +
@@ -119,7 +128,7 @@ auto DCConfigSettings::total_data_size() const noexcept -> size_t{
         sizeof(synchMode) +
         sizeof(subordinateDelayUsec) +
         // body tracking
-        sizeof(enableBodyTracking) +
+           sizeof(btEnabled) +
         sizeof(btOrientation) +
         sizeof(btProcessingMode) +
         sizeof(btGPUId) +

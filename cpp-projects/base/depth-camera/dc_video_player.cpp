@@ -13,11 +13,12 @@ using namespace tool::cam;
 
 struct DCPlayerData{
 
-
     DCVideo video;
     std::vector<size_t> camerasFrameId;
     std::vector<std::shared_ptr<DCCompressedFrame>> camerasCompressedFrame;
     std::vector<std::shared_ptr<DCFrame>> camerasFrame;
+
+    std::vector<size_t> ids;
 
     auto initialize(const DCVideo &nVideo) -> void{
 
@@ -125,7 +126,7 @@ struct DCPlayerData{
         }
     }
 
-    auto uncompress_frame(size_t idCamera) -> bool{
+    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera) -> bool{
         if(idCamera < camerasFrameId.size()){
             if(camerasCompressedFrame[idCamera] != nullptr){
 
@@ -134,7 +135,7 @@ struct DCPlayerData{
                 }
 
                 if(camerasCompressedFrame[idCamera]->idCapture != camerasFrame[idCamera]->idCapture){
-                    return video.uncompress_frame(idCamera, camerasCompressedFrame[idCamera].get(), *camerasFrame[idCamera]);
+                    return video.uncompress_frame(gSettings, idCamera, camerasCompressedFrame[idCamera].get(), *camerasFrame[idCamera]);
                 }
             }
         }
@@ -221,7 +222,7 @@ private:
 struct DCVideoPlayer::Impl{
     DCPlayerData data;
     DCVideoPlayerStates states;
-    DCVideoPlayerSettings settings;
+    DCVideoPlayerSettings settings;    
 };
 
 DCVideoPlayer::DCVideoPlayer(): i(std::make_unique<Impl>()){
@@ -326,13 +327,20 @@ auto DCVideoPlayer::update() -> void{
     std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t id){
         if(video()->nb_frames(id) != 0){
             if(i->data.current_frame_id(id) == 0 || (i->data.current_frame_id(id) != currentCamerasFrameId[id])){
-                uncompressResults[id] = i->data.uncompress_frame(id);
+                uncompressResults[id] = i->data.uncompress_frame(i->settings.generation, id);
             }
         }
     });
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
+
         if(uncompressResults[idC]){
+            auto cloudSize = i->data.camerasFrame[idC]->cloud.size();
+            if(i->data.ids.size() < cloudSize){
+                i->data.ids.resize(cloudSize);
+                std::iota(std::begin(i->data.ids), std::end(i->data.ids), 0);
+            }
+
             new_frame_signal(idC, i->data.camerasFrame[idC]);
         }
     }
@@ -370,7 +378,7 @@ auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, too
         return;
     }
 
-    i->data.video.merge_all_cameras(voxelSize, minBound, maxBound);
+    i->data.video.merge_all_cameras(i->settings.generation, voxelSize, minBound, maxBound);
     i->data.camerasCompressedFrame = {nullptr};
     i->data.camerasFrame = {nullptr};
 
@@ -390,12 +398,11 @@ auto DCVideoPlayer::update_settings(const DCVideoPlayerSettings &playerS) noexce
     i->settings = playerS;
 }
 
-
 auto DCVideoPlayer::current_frame_id(size_t idCamera) const -> size_t{
     return i->data.current_frame_id(idCamera);
 }
 
-auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
+auto DCVideoPlayer::current_compressed_frame_cloud_size(size_t idCamera) -> size_t{
 
     if(idCamera < i->data.camerasCompressedFrame.size()){
         if(i->data.camerasCompressedFrame[idCamera] != nullptr){
@@ -405,11 +412,110 @@ auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
     return 0;
 }
 
+auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
+
+    if(idCamera < i->data.camerasFrame.size()){
+        if(i->data.camerasFrame[idCamera] != nullptr){
+            return i->data.camerasFrame[idCamera]->cloud.size();
+        }
+    }
+    return 0;
+}
+
+
 auto DCVideoPlayer::current_frame(size_t idCamera) -> std::shared_ptr<DCFrame>{
     if(idCamera < i->data.camerasFrame.size()){
         return i->data.camerasFrame[idCamera];
     }
     return nullptr;
+}
+
+auto DCVideoPlayer::current_frames_total_cloud_size() -> size_t{
+    size_t totalNbVertices = 0;
+    for(size_t idD = 0; idD < video()->nb_cameras(); ++idD){
+        totalNbVertices += current_frame_cloud_size(idD);
+    }
+    return totalNbVertices;
+}
+
+auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
+    if(auto frame = current_frame(idCamera); frame != nullptr){
+        auto verticesCountToCopy = std::min(frame->cloud.size(), vertices.size());
+
+        auto tr = video()->get_transform(idCamera).conv<float>();
+
+        if(applyModelTransform){
+            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];
+                vertices[id].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
+                vertices[id].col = geo::Pt4<std::uint8_t>{
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
+                    255
+                };
+            });
+        }else{
+            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+                vertices[id].pos = frame->cloud.vertices[id];
+                vertices[id].col = geo::Pt4<std::uint8_t>{
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
+                    255
+                };
+            });
+        }
+        return verticesCountToCopy;
+    }
+    return 0;
+}
+
+auto DCVideoPlayer::copy_all_current_clouds(std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
+
+    std::vector<size_t> startId;
+    size_t totalNbVertices = 0;
+    for(size_t idD = 0; idD < video()->nb_cameras(); ++idD){
+        if(startId.empty()){
+            startId.push_back(0);
+        }else{
+            startId.push_back(current_frame_cloud_size(idD-1));
+        }
+        totalNbVertices += current_frame_cloud_size(idD);
+    }
+
+    if(vertices.size() < totalNbVertices){
+        return 0;
+    }
+
+    for(size_t idD = 0; idD < video()->nb_cameras(); ++idD){
+        auto start = startId[idD];
+        auto tr = video()->get_transform(idD).conv<float>();
+        auto frame = current_frame(idD);
+
+        if(i->data.ids.size() < frame->cloud.size()){
+            i->data.ids.resize(frame->cloud.size());
+            std::iota(std::begin(i->data.ids), std::end(i->data.ids), 0);
+        }
+
+        std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + frame->cloud.size(), [&](size_t idV){
+
+            const auto &pt = frame->cloud.vertices[idV];
+            if(applyModelTransform){
+                vertices[start + idV].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
+            }else{
+                vertices[start + idV].pos = pt;
+            }
+            vertices[start + idV].col = geo::Pt4<std::uint8_t>{
+                static_cast<std::uint8_t>(255.f*frame->cloud.colors[idV].x()),
+                static_cast<std::uint8_t>(255.f*frame->cloud.colors[idV].y()),
+                static_cast<std::uint8_t>(255.f*frame->cloud.colors[idV].z()),
+                255
+            };
+        });
+    }
+
+    return totalNbVertices;
 }
 
 auto DCVideoPlayer::is_playing() const noexcept -> bool{

@@ -49,8 +49,12 @@ public:
 
     // frames
     auto current_frame_id(size_t idCamera) const -> size_t;
+    auto current_compressed_frame_cloud_size(size_t idCamera) -> size_t;
     auto current_frame_cloud_size(size_t idCamera) -> size_t;
     auto current_frame(size_t idCamera) -> std::shared_ptr<DCFrame>;
+    auto current_frames_total_cloud_size() -> size_t;
+    auto copy_current_cloud(size_t idCamera, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
+    auto copy_all_current_clouds(std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
 
     // navigation
     auto is_playing() const noexcept -> bool;

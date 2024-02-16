@@ -259,12 +259,6 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     write_buffer(calibration, file);
     write_buffer(imu, file);
 
-    // // imu
-    // write(imuSample.has_value(), file);
-    // if(imuSample.has_value()){
-    //     write(imuSample.value(), file);
-    // }
-
     // // audio
     // size_t nbAudioFrames    = audioFrames.size();
     // write(nbAudioFrames, file);

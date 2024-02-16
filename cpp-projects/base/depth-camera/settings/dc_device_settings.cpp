@@ -38,14 +38,12 @@ using namespace tool::cam;
 auto DCDeviceSettings::default_init_for_grabber() -> DCDeviceSettings{
     DCDeviceSettings device;
     device.configS  = DCConfigSettings::default_init_for_grabber();
-    device.actionsS = DCActionsSettings::default_init_for_grabber();
     return device;
 }
 
 auto DCDeviceSettings::default_init_for_manager() -> DCDeviceSettings{
     DCDeviceSettings device;
     device.configS  = DCConfigSettings::default_init_for_manager();
-    device.actionsS = DCActionsSettings::default_init_for_manager();
     return device;
 }
 
@@ -64,7 +62,6 @@ auto DCDeviceSettings::init_from_data(std::int8_t const * const data, size_t &of
     BaseSettings::init_from_data(data, offset, sizeData);
     configS.init_from_data(data, offset, sizeData);
     dataS.init_from_data(data, offset, sizeData);
-    actionsS.init_from_data(data, offset, sizeData);
 }
 
 auto DCDeviceSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
@@ -77,14 +74,12 @@ auto DCDeviceSettings::write_to_data(std::int8_t * const data, size_t &offset, s
     BaseSettings::write_to_data(data, offset, sizeData);
     configS.write_to_data(data, offset, sizeData);
     dataS.write_to_data(data, offset, sizeData);
-    actionsS.write_to_data(data, offset, sizeData);
 }
 
 auto DCDeviceSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
         configS.total_data_size() +
-        dataS.total_data_size() +
-        actionsS.total_data_size();
+        dataS.total_data_size();
 }
 

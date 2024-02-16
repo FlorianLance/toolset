@@ -68,16 +68,17 @@ auto dc_video_player_export_test() -> void{
         for(int idC = 0; idC < nbCameras; ++idC){
             int sizeCloud = get_current_frame_valid_vertices_count__dc_video_player(dcPlayer, idC);
             cloudsData[idC].resize(sizeCloud);
+            std::puts(std::format("size cloud {}\n", sizeCloud).c_str());
         }
 
         for(int idC = 0; idC < nbCameras; ++idC){
-            cloudsResSize[idC] = copy_camera_cloud__dc_video_player(dcPlayer, idC, cloudsData[idC].data(), static_cast<int>(cloudsData[idC].size()));
+            cloudsResSize[idC] = copy_camera_cloud__dc_video_player(dcPlayer, idC, cloudsData[idC].data(), static_cast<int>(cloudsData[idC].size()), true);
         }
 
-        std::puts(std::format("\tCurrent time: {}ms\n",current_time_ms__dc_video_player(dcPlayer)).c_str());
-        for(int idC = 0; idC < nbCameras; ++idC){
-            std::puts(std::format("\t\tCam: {}, size cloud {}\n", idC, cloudsResSize[idC]).c_str());
-        }
+        // std::puts(std::format("\tCurrent time: {}ms\n",current_time_ms__dc_video_player(dcPlayer)).c_str());
+        // for(int idC = 0; idC < nbCameras; ++idC){
+        //     std::puts(std::format("\t\tCam: {}, size cloud {}\n", idC, cloudsResSize[idC]).c_str());
+        // }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.0/60.0/2.0)));
 
@@ -186,8 +187,8 @@ auto dc_network_direct_player_export_test() -> void{
 
 int main(int, char *[]){
 
-    // dc_video_player_export_test();
-    dc_network_direct_player_export_test();
+    dc_video_player_export_test();
+    // dc_network_direct_player_export_test();
 
     return 0;
 }

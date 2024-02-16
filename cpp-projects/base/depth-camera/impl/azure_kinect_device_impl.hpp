@@ -52,7 +52,8 @@ private:
 
     // initialization
     auto initialize_device_specific() -> void override final;
-    auto update_camera_from_colors_settings() -> void override final;
+    auto update_from_colors_settings() -> void override final;
+    auto update_from_data_settings() -> void override final;
 
     // read data
     auto read_calibration() -> void override final;

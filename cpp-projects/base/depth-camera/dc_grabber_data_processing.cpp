@@ -152,7 +152,7 @@ auto DCGrabberDataProcessing::process() -> void {
             if(frameToBeUncompresed != nullptr){
                 auto uncompressedFrame = std::make_shared<DCFrame>();
 
-                if(i->frameUncompressor->uncompress(i->sActions, frameToBeUncompresed.get(), *uncompressedFrame)){
+                if(i->frameUncompressor->uncompress(i->sActions.generation, frameToBeUncompresed.get(), *uncompressedFrame)){
                     std::lock_guard<std::mutex> guard(*i->locker);
                     i->frame = uncompressedFrame;
                 }

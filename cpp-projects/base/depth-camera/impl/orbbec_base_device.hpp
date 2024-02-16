@@ -43,7 +43,7 @@ struct OrbbecBaseDevice{
     // initialization
     auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
     auto initialize(const DCModeInfos &mInfos, const DCColorSettings &colorS) -> void;
-    auto update_camera_from_colors_settings(const DCColorSettings &colorS) ->void;
+    auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
 
     // actions
     auto open_device(uint32_t deviceId) -> bool;

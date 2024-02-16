@@ -39,6 +39,94 @@
 using namespace tool::graphics;
 using namespace tool::cam;
 
+// [[maybe_unused]] static constexpr const char* clientDataActionItems[] = {
+//     "None", "Process", "Process-send", "Process-display", "Process-send-display"
+// };
+
+// auto client_data_action_combo(std::string_view label, const char* id, ClientDataAction &cda, bool &updateP) -> void{
+//     int guiSelection = static_cast<int>(cda);
+//     tool::ImGuiUiDrawer::text(label);
+//     ImGui::SameLine();
+//     ImGui::SetNextItemWidth(170.f);
+//     if(ImGui::Combo(id, &guiSelection, clientDataActionItems, IM_ARRAYSIZE(clientDataActionItems))){
+//         auto nCDA = static_cast<ClientDataAction>(guiSelection);
+//         if(nCDA != cda){
+//             cda = nCDA;
+//             updateP = true;
+//         }
+//     }
+// }
+
+// [[maybe_unused]] static constexpr const char* serverDataActionItems[] = {
+//     "None", "Process", "Process-display"
+// };
+
+// auto server_data_action_combo(std::string_view label, const char* id, ServerDataAction &sda, bool &updateP) -> void{
+//     int guiSelection = static_cast<int>(sda);
+//     tool::ImGuiUiDrawer::text(label);
+//     ImGui::SameLine();
+//     ImGui::SetNextItemWidth(120.f);
+//     if(ImGui::Combo(id, &guiSelection, serverDataActionItems, IM_ARRAYSIZE(serverDataActionItems))){
+//         auto nSDA = static_cast<ServerDataAction>(guiSelection);
+//         if(nSDA != sda){
+//             sda = nSDA;
+//             updateP = true;
+//         }
+//     }
+// }
+
+// auto recorder_data_action_combo(std::string_view label, const char* id, ServerDataAction &sda, bool &updateP) -> void{
+//     int guiSelection = static_cast<int>(sda);
+//     tool::ImGuiUiDrawer::text(label);
+//     ImGui::SameLine();
+//     ImGui::SetNextItemWidth(120.f);
+//     if(ImGui::Combo(id, &guiSelection, serverDataActionItems, IM_ARRAYSIZE(serverDataActionItems)-1)){
+//         auto nSDA = static_cast<ServerDataAction>(guiSelection);
+//         if(nSDA != sda){
+//             sda = nSDA;
+//             updateP = true;
+//         }
+//     }
+// }
+
+
+[[maybe_unused]] static constexpr const char* cloudColorModeItems[] = {
+    "Depth colormap", "Depth-sized color image"
+};
+
+auto cloud_color_mode_combo(std::string_view label, const char* id, CloudColorMode &ccm, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(ccm);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.f);
+    if(ImGui::Combo(id, &guiSelection, cloudColorModeItems, IM_ARRAYSIZE(cloudColorModeItems))){
+        auto nCCM = static_cast<CloudColorMode>(guiSelection);
+        if(nCCM != ccm){
+            ccm = nCCM;
+            updateP = true;
+        }
+    }
+}
+
+[[maybe_unused]] static constexpr const char* cloudGenerationModeItems[] = {
+    "From depth", "From decoded cloud"
+};
+
+auto cloud_generation_mode_combo(std::string_view label, const char* id, CloudGenerationMode &cgm, bool &updateP) -> void{
+    int guiSelection = static_cast<int>(cgm);
+    tool::ImGuiUiDrawer::text(label);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(130.f);
+    if(ImGui::Combo(id, &guiSelection, cloudGenerationModeItems, IM_ARRAYSIZE(cloudGenerationModeItems))){
+        auto nCGM = static_cast<CloudGenerationMode>(guiSelection);
+        if(nCGM != cgm){
+            cgm = nCGM;
+            updateP = true;
+        }
+    }
+}
+
+
 
 auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
 
@@ -50,224 +138,251 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
 
     bool update = false;
 
-    ImGuiUiDrawer::title2("PIXELS");
+    ImGuiUiDrawer::title2("DEPTH FILTERING");
     {
-        float minMaxD[2] = {filters.minDepthF, filters.maxDepthF};
-        
-        
-        auto dRange = (cam::dc_depth_range(mode)*1000.f).conv<int>();
-        auto diff   = dRange.y() - dRange.x();
-
-        ImGuiUiDrawer::text(std::format("Depth (factor): min: {}mm, max: {}mm", static_cast<int>(dRange.x() + minMaxD[0]*diff),  static_cast<int>(dRange.x() + minMaxD[1]*diff)));
+        ImGui::Text("Basic filtering:");
         ImGui::Indent();
-        if(ImGui::SliderFloat2("###settings_depth_min_max_factors", minMaxD, 0.f, 1.f)){
-            filters.minDepthF = minMaxD[0];
-            filters.maxDepthF = minMaxD[1];
-            update = true;
-        }
-        ImGui::Unindent();
+        {
+            float minMaxD[2] = {filters.minDepthF, filters.maxDepthF};
+            auto dRange = (cam::dc_depth_range(mode)*1000.f).conv<int>();
+            auto diff   = dRange.y() - dRange.x();
 
-        auto dRes = cam::dc_depth_resolution(mode);
-        float minMaxW[2] = {filters.minWidthF, filters.maxWidthF};
-        ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*cam::dc_depth_width(dRes)),  static_cast<int>(minMaxW[1]*cam::dc_depth_width(dRes))));
-        ImGui::Indent();
-        if(ImGui::SliderFloat2("###settings_width_min_max_factors", minMaxW, 0.f, 1.f)){
-            filters.minWidthF = minMaxW[0];
-            filters.maxWidthF = minMaxW[1];
-            update = true;
-        }
-        ImGui::Unindent();
-
-        float minMaxH[2] = {filters.minHeightF, filters.maxHeightF};
-        ImGuiUiDrawer::text(std::format("Height (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxH[0]*cam::dc_depth_height(dRes)),  static_cast<int>(minMaxH[1]*cam::dc_depth_height(dRes))));
-        ImGui::Indent();
-        if(ImGui::SliderFloat2("###settings_height_min_max_factors", minMaxH, 0.f, 1.f)){
-            filters.minHeightF = minMaxH[0];
-            filters.maxHeightF = minMaxH[1];
-            update = true;
-        }
-        ImGui::Unindent();
-
-
-        ImGui::Text("Plane filtering:");
-        ImGui::Indent();
-
-        int mode = static_cast<int>(filters.p1FMode);
-        if(ImGui::RadioButton("None###mode_none_plane1", &mode,0)){
-            update = true;
-            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::None;
-        }
-        ImGui::SameLine();
-        if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
-            update = true;
-            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::Above;
-        }
-        ImGui::SameLine();
-        if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
-            update = true;
-            filters.p1FMode = cam::DCFiltersSettings::PlaneFilteringMode::Below;
-        }
-        if(filters.p1FMode != cam::DCFiltersSettings::PlaneFilteringMode::None){
-
-            ImGui::Text("Point A (mm):");
-            auto p1APtr = filters.p1A.array.data();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pA_x", p1APtr, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pA_y", p1APtr+1, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pA_z", p1APtr+2, modelTrFs, modelTrDs)){
-                update = true;
-            }
-
-            ImGui::Text("Point B (mm):");
-            auto p1BPtr = filters.p1B.array.data();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pB_x", p1BPtr, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pB_y", p1BPtr+1, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pB_z", p1BPtr+2, modelTrFs, modelTrDs)){
-                update = true;
-            }
-
-            ImGui::Text("Point C (mm):");
-            auto p1CPtr = filters.p1C.array.data();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pC_x", p1CPtr, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pC_y", p1CPtr+1, modelTrFs, modelTrDs)){
-                update = true;
-            }
-            ImGui::SameLine();
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pC_z", p1CPtr+2, modelTrFs, modelTrDs)){
-                update = true;
-            }
-        }
-
-        ImGui::Unindent();
-    }
-
-    ImGuiUiDrawer::title2("COLOR");
-    {
-        ImGui::Text("JPEG compression rate");        
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(75.f);
-        int compressionRate = filters.jpegCompressionRate;
-        if(ImGui::SliderInt("###compression_rate", &compressionRate, 5, 100)){
-            filters.jpegCompressionRate = compressionRate;
-            update = true;
-        }
-
-        if(ImGui::Checkbox("Filter depth with color###settings_filter_depth_with_color_checkbox", &filters.filterDepthWithColor)){
-            update = true;
-        }
-
-        if(filters.filterDepthWithColor){
-
+            ImGuiUiDrawer::text(std::format("Depth (factor): min: {}mm, max: {}mm", static_cast<int>(dRange.x() + minMaxD[0]*diff),  static_cast<int>(dRange.x() + minMaxD[1]*diff)));
             ImGui::Indent();
-
-            ImGui::Text("Filtered color");
-            ImGui::Indent();
-            if(ImGui::ColorEdit3("###settings_filtered_color_coloredit3", filters.filterColor.rgb().array.data())){
-                filters.filterColor.clamp(0.f,1.f);
+            if(ImGui::SliderFloat2("###settings_depth_min_max_factors", minMaxD, 0.f, 1.f)){
+                filters.minDepthF = minMaxD[0];
+                filters.maxDepthF = minMaxD[1];
                 update = true;
             }
             ImGui::Unindent();
 
-
-            ImGui::Text("Max diff color");
+            auto dRes = cam::dc_depth_resolution(mode);
+            float minMaxW[2] = {filters.minWidthF, filters.maxWidthF};
+            ImGuiUiDrawer::text(std::format("Width (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxW[0]*cam::dc_depth_width(dRes)),  static_cast<int>(minMaxW[1]*cam::dc_depth_width(dRes))));
             ImGui::Indent();
-            auto mdcd = filters.maxDiffColor.array.data();
+            if(ImGui::SliderFloat2("###settings_width_min_max_factors", minMaxW, 0.f, 1.f)){
+                filters.minWidthF = minMaxW[0];
+                filters.maxWidthF = minMaxW[1];
+                update = true;
+            }
+            ImGui::Unindent();
 
-//            static tool::gl::Texture2D tex;
-//            static std::vector<std::uint8_t> tData;
-//            if(tData.size() != 100*25*3){
-//               tData.resize(100*25*3);
-//            }
+            float minMaxH[2] = {filters.minHeightF, filters.maxHeightF};
+            ImGuiUiDrawer::text(std::format("Height (factor): min: {}pix, max: {}pix", static_cast<int>(minMaxH[0]*cam::dc_depth_height(dRes)),  static_cast<int>(minMaxH[1]*cam::dc_depth_height(dRes))));
+            ImGui::Indent();
+            if(ImGui::SliderFloat2("###settings_height_min_max_factors", minMaxH, 0.f, 1.f)){
+                filters.minHeightF = minMaxH[0];
+                filters.maxHeightF = minMaxH[1];
+                update = true;
+            }
+            ImGui::Unindent();
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("From depth-sized color:");
+        ImGui::Indent();
+        {
+            if(ImGui::Checkbox("Enable color filtering###settings_filter_enable_color_filtering_checkbox", &filters.filterDepthWithColor)){
+                update = true;
+            }
+            if(filters.filterDepthWithColor){
+
+                ImGui::Indent();
+
+                ImGui::Text("Filtered color");
+                ImGui::Indent();
+                if(ImGui::ColorEdit3("###settings_filtered_color_coloredit3", filters.filterColor.rgb().array.data())){
+                    filters.filterColor.clamp(0.f,1.f);
+                    update = true;
+                }
+                ImGui::Unindent();
+
+
+                ImGui::Text("Max diff color");
+                ImGui::Indent();
+                auto mdcd = filters.maxDiffColor.array.data();
+
+                //            static tool::gl::Texture2D tex;
+                //            static std::vector<std::uint8_t> tData;
+                //            if(tData.size() != 100*25*3){
+                //               tData.resize(100*25*3);
+                //            }
+
+                ImGuiFloatS fs;
+                fs.defaultValue = 0.f;
+                fs.min = 0.f;
+                fs.max = 360.f;
+                fs.speedDrag = 0.1f;
+                fs.speedInc = 1.f;
+                fs.format = "%.1f";
+
+                ImGuiDragS ds;
+                ds.widthDrag = 60.f;
+                ds.defaultButton = false;
+                ds.decButton = true;
+                ds.incButton = true;
+                ds.displayText = true;
+                ds.displayTextLeft = true;
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Hue","hue", mdcd, fs, ds)){
+                    update = true;
+                }
+
+                fs.speedDrag = 0.001f;
+                fs.speedInc = 0.01f;
+                fs.max = 1.f;
+                fs.format = "%.3f";
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Saturation","saturation", mdcd+1, fs, ds)){
+                    update = true;
+                }
+
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Value","value", mdcd+2, fs, ds)){
+                    update = true;
+                }
+
+                ImGui::Unindent();
+            }
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("From infra:");
+        ImGui::Indent();
+        {
+            ImGui::BeginDisabled(true);
+            if(ImGui::Checkbox("Enable infra filtering###settings_filter_enable_infra_filtering_checkbox", &filters.filterDepthWithInfra)){
+                update = true;
+            }
+            ImGui::EndDisabled();
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("From cloud:");
+        ImGui::Indent();
+        {
+            if(ImGui::Checkbox("Enable cloud filtering###settings_filter_enable_cloud_filtering_checkbox", &filters.filterDepthWithCloud)){
+                update = true;
+            }
+            if(filters.filterDepthWithCloud){
+                ImGui::Text("Plane filtering:");
+                ImGui::Indent();
+
+                int mode = static_cast<int>(filters.p1FMode);
+                if(ImGui::RadioButton("None###mode_none_plane1", &mode,0)){
+                    update = true;
+                    filters.p1FMode = cam::PlaneFilteringMode::None;
+                }
+                ImGui::SameLine();
+                if(ImGui::RadioButton("Remove above###mode_above_plane1", &mode,1)){
+                    update = true;
+                    filters.p1FMode = cam::PlaneFilteringMode::Above;
+                }
+                ImGui::SameLine();
+                if(ImGui::RadioButton("Remove below###mode_below_plane1", &mode,2)){
+                    update = true;
+                    filters.p1FMode = cam::PlaneFilteringMode::Below;
+                }
+                if(filters.p1FMode != cam::PlaneFilteringMode::None){
+
+                    ImGui::Text("Point A (mm):");
+                    auto p1APtr = filters.p1A.array.data();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pA_x", p1APtr, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pA_y", p1APtr+1, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pA_z", p1APtr+2, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+
+                    ImGui::Text("Point B (mm):");
+                    auto p1BPtr = filters.p1B.array.data();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pB_x", p1BPtr, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pB_y", p1BPtr+1, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pB_z", p1BPtr+2, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+
+                    ImGui::Text("Point C (mm):");
+                    auto p1CPtr = filters.p1C.array.data();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pC_x", p1CPtr, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pC_y", p1CPtr+1, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                    ImGui::SameLine();
+                    if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pC_z", p1CPtr+2, modelTrFs, modelTrDs)){
+                        update = true;
+                    }
+                }
+                ImGui::Unindent();
+            }
+
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("From body-tracking:");
+        ImGui::Indent();
+        {
+            ImGui::BeginDisabled(true);
+            if(ImGui::Checkbox("Enable body tracking filtering###settings_filter_enable_body_tracking_filtering_checkbox", &filters.filterDepthWithBodyTracking)){
+                update = true;
+            }
+            ImGui::EndDisabled();
+        }
+        ImGui::Unindent();
+
+        ImGui::Separator();
+
+        ImGui::Text("Complex:");
+        ImGui::Indent();{
+
+            ImGuiIntS is;
+            is.defaultValue = 1;
+            is.min = 1;
+            is.max = 8;
+            is.speedInc =1;
+            is.speedDrag = 1;
 
             ImGuiFloatS fs;
-            fs.defaultValue = 0.f;
+            fs.defaultValue = 10.f;
             fs.min = 0.f;
-            fs.max = 360.f;
-            fs.speedDrag = 0.1f;
+            fs.max = 100.f;
             fs.speedInc = 1.f;
+            fs.speedDrag = 0.1f;
             fs.format = "%.1f";
 
             ImGuiDragS ds;
             ds.widthDrag = 60.f;
-            ds.defaultButton = false;
             ds.decButton = true;
             ds.incButton = true;
             ds.displayText = true;
             ds.displayTextLeft = true;
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("Hue","hue", mdcd, fs, ds)){
+            ds.defaultButton = false;
+
+            if(ImGui::Checkbox("Do local depth difference filtering", &filters.doLocalDiffFiltering)){
                 update = true;
             }
 
-            fs.speedDrag = 0.001f;
-            fs.speedInc = 0.01f;
-            fs.max = 1.f;
-            fs.format = "%.3f";
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("Saturation","saturation", mdcd+1, fs, ds)){
-                update = true;
-            }
-
-            if(ImGuiUiDrawer::draw_drag_float_with_buttons("Value","value", mdcd+2, fs, ds)){
-                update = true;
-            }
-
-            ImGui::Unindent();
-        }
-    }
-
-    ImGuiUiDrawer::title2("GEOMETRY");
-    {
-
-        ImGuiIntS is;
-        is.defaultValue = 1;
-        is.min = 1;
-        is.max = 8;
-        is.speedInc =1;
-        is.speedDrag = 1;
-
-        ImGuiFloatS fs;
-        fs.defaultValue = 10.f;
-        fs.min = 0.f;
-        fs.max = 100.f;
-        fs.speedInc = 1.f;
-        fs.speedDrag = 0.1f;
-        fs.format = "%.1f";
-
-        ImGuiDragS ds;
-        ds.widthDrag = 60.f;
-        ds.decButton = true;
-        ds.incButton = true;
-        ds.displayText = true;
-        ds.displayTextLeft = true;
-        ds.defaultButton = false;
-
-        if(ImGui::Checkbox("Do local depth difference filtering", &filters.doLocalDiffFiltering)){
-            update = true;
-        }
-
-        ImGui::Indent();
+            ImGui::Indent();
             if(ImGuiUiDrawer::draw_drag_float_with_buttons("Max value:","settings_local_diff_dragfloat", &filters.maxLocalDiff, fs, ds)){
                 update = true;
             }
-        ImGui::Unindent();
+            ImGui::Unindent();
 
-        if(ImGui::Checkbox("Do minimum neighbours filtering", &filters.doMinNeighboursFiltering)){
-            update = true;
-        }
-        ImGui::Indent();
+            if(ImGui::Checkbox("Do minimum neighbours filtering", &filters.doMinNeighboursFiltering)){
+                update = true;
+            }
+            ImGui::Indent();
             ds.widthDrag = 40.f;
             int nbMinN = filters.nbMinNeighbours;
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Min nb of neighbours","settings_nb_min_neighbours", &nbMinN, is, ds)){
@@ -279,37 +394,54 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
             int nbMinL = filters.minNeighboursLoops;
              if(ImGuiUiDrawer::draw_drag_int_with_buttons("Loops:","settings_min_neighbours_nb_loop", &nbMinL, is, ds)){
                  filters.minNeighboursLoops = nbMinL;
-                update = true;                
-            }
-        ImGui::Unindent();
-
-
-        if(ImGui::Checkbox("Do erosion", &filters.doErosion)){
-            update = true;
-        }
-        ImGui::Indent();
-            int nbErosionL = filters.erosionLoops;
-            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Loops:","settings_erosion_nb_loop", &nbErosionL, is, ds)){
-                filters.erosionLoops = nbErosionL;
                 update = true;
             }
-        ImGui::Unindent();
+            ImGui::Unindent();
 
-        if(ImGui::Checkbox("Keep only bigger cluster###settings_keep_only_biggest_cluster_checkbox", &filters.keepOnlyBiggestCluster)){
-            update = true;
+            if(ImGui::Checkbox("Do erosion", &filters.doErosion)){
+                update = true;
+            }
+            ImGui::Indent();
+                int nbErosionL = filters.erosionLoops;
+                if(ImGuiUiDrawer::draw_drag_int_with_buttons("Loops:","settings_erosion_nb_loop", &nbErosionL, is, ds)){
+                    filters.erosionLoops = nbErosionL;
+                    update = true;
+                }
+            ImGui::Unindent();
+
+            if(ImGui::Checkbox("Keep only bigger cluster###settings_keep_only_biggest_cluster_checkbox", &filters.keepOnlyBiggestCluster)){
+                update = true;
+            }
+
+            if(ImGui::Checkbox("Remove after closest point###settings_remove_after_closest_point_checkbox", &filters.removeAfterClosestPoint)){
+                update = true;
+            }
+            ImGui::Indent();
+            if(ImGuiUiDrawer::draw_drag_float_with_buttons("max distance after closest point:","settings_max_distance_after_closest_point_dragfloat",
+                &filters.maxDistanceAfterClosestPoint, fs, ds)){
+                update = true;
+            }
+            ImGui::Unindent();
         }
+        ImGui::Unindent();
     }
 
-    ImGuiUiDrawer::title2("INVALIDATE");
+    ImGuiUiDrawer::title2("DEPTH-SIZED COLOR FILTERING");
     {
-        if(ImGui::Checkbox("Color from depth###settings_invalidate_color_from_depth_checkbox", &filters.invalidateColorFromDepth)){
+        ImGui::Indent();
+        if(ImGui::Checkbox("Invalidate color from depth###settings_invalidate_color_from_depth_checkbox", &filters.invalidateColorFromDepth)){
             update = true;
         }
+        ImGui::Unindent();
+    }
 
-        ImGui::SameLine();
-        if(ImGui::Checkbox("Infra from depth###settings_invalidate_infra_from_depth_checkbox", &filters.invalidateInfraFromDepth)){
+    ImGuiUiDrawer::title2("INFRA FILTERING");
+    {
+        ImGui::Indent();
+        if(ImGui::Checkbox("Invalidate infra from depth###settings_invalidate_infra_from_depth_checkbox", &filters.invalidateInfraFromDepth)){
             update = true;
         }
+        ImGui::Unindent();
     }
 
     ImGui::EndTabItem();
@@ -561,23 +693,76 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     }
 
     ImGuiUiDrawer::title2("SETTINGS");
-    bool update = false;        
+    bool update = false;
+    ImGui::Text("Max number of frames per camera:");
+    ImGui::SameLine();
     ImGui::SetNextItemWidth(50.f);
-    if(ImGui::DragInt("Max number of frames per camera", &rSettings.cameraMaxFramesToRecord, 1.0f, 1, 100000)){
+    if(ImGui::DragInt("###recorder_max_frames", &rSettings.cameraMaxFramesToRecord, 1.0f, 1, 100000)){
         update = true;
     }
 
-//    double maxDurationS = 500.;
-//    // output
-//    std::vector<bool> camerasToRecord;
-//    bool recordAllData = true;
-//    bool recordColor   = true;
-//    bool recordDepth   = true;
-//    bool recordInfra   = true;
-//    bool recordCloud   = true;
-//    bool recordIMU     = true;
-//    bool recordAudio   = true;
-//    bool recordBodies  = true;
+    ImGui::Text("Frame generation:");
+    ImGui::Indent();
+    {
+        ImGui::Text("Data:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("calibration###recorder_gen_calibration", &rSettings.generation.calibration)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###recorder_gen_depth", &rSettings.generation.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###recorder_gen_infra", &rSettings.generation.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("cloud###recorder_gen_cloud", &rSettings.generation.cloud)){
+            update = true;
+        }
+        cloud_color_mode_combo("Cloud color mode"sv, "###recorder_cloud_color_mode", rSettings.generation.cloudColorMode, update);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###recorder_cloud_gen_mode", rSettings.generation.cloudGenMode, update);
+
+
+        if(ImGui::Checkbox("body tracking###recorder_gen_body_tracking", &rSettings.generation.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###recorder_gen_imu", &rSettings.generation.imu)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###recorder_gen_audio", &rSettings.generation.audio)){
+            update = true;
+        }
+
+        ImGui::Unindent();
+
+        ImGui::Text("Images:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("color###recorder_gen_color_image", &rSettings.generation.colorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth sized color###recorder_gen_depth_sized_color_image", &rSettings.generation.depthSizedColorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###recorder_gen_depth_image", &rSettings.generation.depthImage)){
+            update = true;
+        }
+
+        if(ImGui::Checkbox("infra###recorder_gen_infra_image", &rSettings.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id map###recorder_gen_bodies_id_map_image", &rSettings.generation.bodyIdMapImage)){
+            update = true;
+        }
+        ImGui::Unindent();
+    }
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -954,16 +1139,9 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
         }
     }
 
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###calibration_update_button")){
-        manualUpdate = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###calibration_auto_update_cb", &autoUpdate)){}
-
     ImGui::EndTabItem();
 
-    return (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
 auto DCUIDrawer::draw_dc_device_settings_tab_item(
@@ -975,28 +1153,32 @@ auto DCUIDrawer::draw_dc_device_settings_tab_item(
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
     }
+
     bool update = false;
-    
-    draw_dc_actions_settings(device.actionsS, update);
     draw_dc_config(device.configS, updateDeviceList, update);
-    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);    
-
-    ImGui::Spacing();
-    ImGui::Separator();
-
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###settings_update_button")){
-        manualUpdate = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###settings_auto_update_cb", &autoUpdate)){}
-
+    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);
     ImGui::EndTabItem();
 
-    return  (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
-auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &update) -> void{
+
+    ImGuiUiDrawer::title2("CONFIG");
+    ImGui::Spacing();
+
+    ImGui::Text("Device:");
+    ImGui::Indent();
+
+    if(ImGui::Checkbox("Open###settings_open_device", &config.openDevice)){
+        update = true;
+    }
+    ImGui::SameLine();
+    if(ImGui::Checkbox("Start reading###settings_open_camera", &config.startReading)){
+        update = true;
+    }
+
+    ImGui::Spacing();
 
     // init
     if(modesNames.empty()){
@@ -1011,10 +1193,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         }
     }
 
-    ImGuiUiDrawer::title2("CONFIG");
-    ImGui::Spacing();
-
-    ImGui::Text("Device type:");
+    ImGui::Text("Type:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(150.f);
 
@@ -1024,7 +1203,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
         if(nDeviceType != config.typeDevice){
             config.typeDevice = nDeviceType;
             config.mode       = cam::dc_default_mode(config.typeDevice);
-            updateP = true;
+            update = true;
         }
     }
     // updateDeviceList = ImGui::Button("Refresh devices list");
@@ -1040,7 +1219,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
                 bool selected = ii == config.idDevice;
                 if (ImGui::Selectable(devicesNames[ii].c_str(),selected)){
                     config.idDevice = static_cast<std::uint32_t>(ii);
-                    updateP = true;
+                    update = true;
                 }
                 if(selected){
                     ImGui::SetItemDefaultFocus();
@@ -1065,7 +1244,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
                 bool selected = m == config.mode;
                 if (ImGui::Selectable(modesNames[m].c_str(), selected)){
                     config.mode = m;
-                    updateP = true;
+                    update = true;
                 }
                 if(selected){
                     ImGui::SetItemDefaultFocus();
@@ -1079,7 +1258,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
                 bool selected = m == config.mode;                
                 if (ImGui::Selectable(modesNames[m].c_str(), selected)){
                     config.mode = m;
-                    updateP = true;
+                    update = true;
                 }
                 if(selected){
                     ImGui::SetItemDefaultFocus();
@@ -1093,7 +1272,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
                 bool selected = m == config.mode;
                 if (ImGui::Selectable(modesNames[m].c_str(), selected)){
                     config.mode = m;
-                    updateP = true;
+                    update = true;
                 }
                 if(selected){
                     ImGui::SetItemDefaultFocus();
@@ -1102,16 +1281,20 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
             ImGui::EndCombo();
         }
     }
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
 
-    ImGui::Text("Synch mode:");
+    ImGui::Text("Synch:");
+    ImGui::Indent();
+
+    ImGui::Text("Mode:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.f);
     int guiCurrentSynchModeSelection = static_cast<int>(config.synchMode);
     if(ImGui::Combo("###settings_synch_mode_combo", &guiCurrentSynchModeSelection, synchItems, IM_ARRAYSIZE(synchItems))){
-        updateP          = true;
+        update          = true;
         config.synchMode = static_cast<cam::DCSynchronisationMode>(guiCurrentSynchModeSelection);
     }
 
@@ -1119,28 +1302,34 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     ImGui::SetNextItemWidth(80.f);
     ImGui::SameLine();
     if(ImGui::DragInt("###subordinate_delay_usec", &config.subordinateDelayUsec, 1.0f, 0, 100000)){
-        updateP          = true;
+        update          = true;
     }
 
     ImGui::Spacing();
 
     if(ImGui::Checkbox("Synch color and depth images", &config.synchronizeColorAndDepth)){
-        updateP          = true;
+        update          = true;
     }
 
     ImGui::Text("Delay between color and depth (usec)");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(80.f);    
-    if(ImGui::DragInt("###delayt_between_color_and_depth_usec", &config.delayBetweenColorAndDepthUsec, 1.0f, 100000, 100000)){
-        updateP          = true;
+    if(ImGui::DragInt("###delay_between_color_and_depth_usec", &config.delayBetweenColorAndDepthUsec, 1.0f, 100000, 100000)){
+        update          = true;
     }
-    ImGui::Spacing();
+    ImGui::Unindent();
 
+
+    ImGui::Spacing();
     ImGui::Separator();
-    if(ImGui::Checkbox("Enable body tracking (perfomance costly)", &config.enableBodyTracking)){
-        updateP          = true;
+    ImGui::Text("Body tracking: (SOON)");
+    ImGui::Indent();
+    ImGui::BeginDisabled(true);
+
+    if(ImGui::Checkbox("Enable (perfomance costly)", &config.btEnabled)){
+        update = true;
     }
-    ImGui::BeginDisabled(!config.enableBodyTracking);
+    ImGui::BeginDisabled(!config.btEnabled);
 
     ImGui::Text("Processing mode:");
     ImGui::SameLine();
@@ -1148,7 +1337,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
     if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
         config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
-        updateP = true;
+        update = true;
     }
 
     // add gpu id
@@ -1160,174 +1349,263 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
     int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
     if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
         config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
-        updateP = true;
+        update = true;
     }
     ImGui::EndDisabled();
+    ImGui::EndDisabled();
+
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
+    ImGui::Text("Misc:");
+    ImGui::Indent();
+
     if(ImGui::Checkbox("Disable LED", &config.disableLED)){
-        updateP          = true;
+        update = true;
     }
 
+    ImGui::Unindent();
     ImGui::Spacing();
 }
 
-[[maybe_unused]] static constexpr const char* clientDataActionItems[] = {
-    "None", "Process", "Process-send", "Process-display", "Process-send-display"
-};
-
-auto client_data_action_combo(std::string_view label, const char* id, ClientDataAction &cda, bool &updateP) -> void{
-    int guiSelection = static_cast<int>(cda);
-    tool::ImGuiUiDrawer::text(label);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(170.f);
-    if(ImGui::Combo(id, &guiSelection, clientDataActionItems, IM_ARRAYSIZE(clientDataActionItems))){
-        auto nCDA = static_cast<ClientDataAction>(guiSelection);
-        if(nCDA != cda){
-            cda = nCDA;
-            updateP = true;
-        }
-    }
-}
-
-[[maybe_unused]] static constexpr const char* serverDataActionItems[] = {
-    "None", "Process", "Process-display"
-};
-
-auto server_data_action_combo(std::string_view label, const char* id, ServerDataAction &sda, bool &updateP) -> void{
-    int guiSelection = static_cast<int>(sda);
-    tool::ImGuiUiDrawer::text(label);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(120.f);
-    if(ImGui::Combo(id, &guiSelection, serverDataActionItems, IM_ARRAYSIZE(serverDataActionItems))){
-        auto nSDA = static_cast<ServerDataAction>(guiSelection);
-        if(nSDA != sda){
-            sda = nSDA;
-            updateP = true;
-        }
-    }
-}
-
-[[maybe_unused]] static constexpr const char* cloudColorModeItems[] = {
-    "From depth data", "From depth-sized color image"
-};
-
-auto cloud_color_mode_combo(std::string_view label, const char* id, CloudColorMode &ccm, bool &updateP) -> void{
-    int guiSelection = static_cast<int>(ccm);
-    tool::ImGuiUiDrawer::text(label);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(230.f);
-    if(ImGui::Combo(id, &guiSelection, cloudColorModeItems, IM_ARRAYSIZE(cloudColorModeItems))){
-        auto nCCM = static_cast<CloudColorMode>(guiSelection);
-        if(nCCM != ccm){
-            ccm = nCCM;
-            updateP = true;
-        }
-    }
-}
-
-[[maybe_unused]] static constexpr const char* cloudGenerationModeItems[] = {
-    "From depth", "From decoded cloud"
-};
-
-auto cloud_generation_mode_combo(std::string_view label, const char* id, CloudGenerationMode &cgm, bool &updateP) -> void{
-    int guiSelection = static_cast<int>(cgm);
-    tool::ImGuiUiDrawer::text(label);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(130.f);
-    if(ImGui::Combo(id, &guiSelection, cloudGenerationModeItems, IM_ARRAYSIZE(cloudGenerationModeItems))){
-        auto nCGM = static_cast<CloudGenerationMode>(guiSelection);
-        if(nCGM != cgm){
-            cgm = nCGM;
-            updateP = true;
-        }
-    }
-}
 
 
-auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void{
+auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &update) -> void{
 
     ImGuiUiDrawer::title2("DATA");
 
-    ImGui::Spacing();
-    ImGui::Text("Grabber actions:");
+    ImGui::Text("Capture:");
     ImGui::Indent();
     {
-        client_data_action_combo("[color]"sv, "###settings_client_action_color", data.client.color, updateP);
-        client_data_action_combo("[depth]"sv, "###settings_client_action_depth", data.client.depth, updateP);
-        client_data_action_combo("[depth sized color]"sv, "###settings_client_action_depth_sized_color", data.client.depthSizedColor, updateP);
+        if(ImGui::Checkbox("color###cap_color", &data.client.capture.color)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###cap_depth", &data.client.capture.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###cap_infra", &data.client.capture.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###cap_audio", &data.client.capture.audio)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###cap_imu", &data.client.capture.imu)){
+            update = true;
+        }
 
-        ImGui::Spacing();
-
-        ImGui::BeginDisabled(!dc_has_infra(type));
-        client_data_action_combo("infra"sv, "###settings_client_action_infra", data.client.infra, updateP);
-        ImGui::EndDisabled();
-
-        client_data_action_combo("cloud"sv, "###settings_client_action_cloud", data.client.cloud, updateP);
-        cloud_color_mode_combo("Cloud color mode"sv, "###settings_client_cloud_coloir_mode", data.client.cloudColorMode, updateP);
-
-        ImGui::BeginDisabled(!dc_has_audio(type));
-        client_data_action_combo("audio"sv, "###settings_client_action_audio", data.client.audio, updateP);
-        ImGui::EndDisabled();
-        client_data_action_combo("IMU"sv, "###settings_client_action_imu", data.client.IMU, updateP);
-
-        ImGui::BeginDisabled(!dc_has_body_tracking(type));
-        client_data_action_combo("bodies id map"sv, "###settings_client_action_bodies_id_map", data.client.bodiesIdMap, updateP);
-        client_data_action_combo("body tracking"sv, "###settings_client_action_body_tracking", data.client.bodyTracking, updateP);
-        ImGui::EndDisabled();
-
+        if(ImGui::Checkbox("body tracking###cap_body_tracking", &data.client.capture.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        ImGui::Text("| temporal smoothing: ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::SliderFloat("###cap_temp_smoothing", &data.client.capture.btTemporalSmoothing, 0.f, 1.f)){
+            update = true;
+        }
     }
     ImGui::Unindent();
+
+
+    ImGui::Spacing();
+
+    ImGui::Text("Frame compression:");
+    ImGui::Indent();
+    {
+        ImGui::Text("JPEG quality: ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(75.f);
+        int compressionRate = data.client.compression.jpegCompressionRate;
+        if(ImGui::SliderInt("###com_jpeg_compression_rate", &compressionRate, 5, 100)){
+            data.client.compression.jpegCompressionRate = compressionRate;
+            update = true;
+        }
+
+        if(ImGui::Checkbox("calibration###com_calibration", &data.client.compression.calibration)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###com_depth", &data.client.compression.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth sized color###com_depthSizedColor", &data.client.compression.depthSizedColor)){
+            update = true;
+        }
+
+        if(ImGui::Checkbox("color###com_color", &data.client.compression.color)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###com_infra", &data.client.compression.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id map###com_bodies_id_map", &data.client.compression.bodyIdMap)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("cloud###com_cloud", &data.client.compression.cloud)){
+            update = true;
+        }
+        cloud_color_mode_combo("Cloud color mode"sv, "###com_cloud_color_mode", data.client.compression.cloudColorMode, update);
+
+        if(ImGui::Checkbox("body tracking###com_body_tracking", &data.client.compression.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###com_audio", &data.client.compression.audio)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###com_imu", &data.client.compression.imu)){
+            update = true;
+        }
+    }
+    ImGui::Unindent();
+    ImGui::Spacing();
+
+    if(m_isManager){
+        ImGui::Text("Frame generation (grabber):");
+    }else{
+        ImGui::Text("Frame generation:");
+    }
+
+    ImGui::Indent();
+    {
+        ImGui::Text("Data:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("calibration###gen_client_calibration", &data.client.generation.calibration)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###gen_client_depth", &data.client.generation.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###gen_client_infra", &data.client.generation.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("cloud###gen_client_gen_cloud", &data.client.generation.cloud)){
+            update = true;
+        }
+        cloud_color_mode_combo("Cloud color mode"sv, "###gen_client_cloud_color_mode", data.client.generation.cloudColorMode, update);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_client_cloud_gen_mode", data.client.generation.cloudGenMode, update);
+
+
+        if(ImGui::Checkbox("body tracking###gen_client_body_tracking", &data.client.generation.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###recorder_gen_client_imu", &data.client.generation.imu)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###recorder_gen_client_audio", &data.client.generation.audio)){
+            update = true;
+        }
+
+        ImGui::Unindent();
+
+        ImGui::Text("Images:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("color###recorder_gen_client_color_image", &data.client.generation.colorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth sized color###recorder_gen_client_depth_sized_color_image", &data.client.generation.depthSizedColorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###recorder_gen_client_depth_image", &data.client.generation.depthImage)){
+            update = true;
+        }
+
+        if(ImGui::Checkbox("infra###recorder_gen_client_infra_image", &data.client.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id map###recorder_gen_client_bodies_id_map_image", &data.client.generation.bodyIdMapImage)){
+            update = true;
+        }
+        ImGui::Unindent();
+    }
+    ImGui::Unindent();
+
 
     if(!m_isManager){
         return;
     }
-    ImGui::Spacing();
-    ImGui::Text("Manager actions:");
+
+    ImGui::Text("Frame generation (manager):");
     ImGui::Indent();
     {
-        server_data_action_combo("[color]"sv, "###settings_server_action_color", data.server.color, updateP);
-        server_data_action_combo("[depth]"sv, "###settings_server_action_depth", data.server.depth, updateP);
-        server_data_action_combo("[depth sized color]"sv, "###settings_server_action_depth_sized_color", data.server.depthSizedColor, updateP);
-        server_data_action_combo("[cloud]"sv, "###settings_server_action_cloud", data.server.cloud, updateP);
-        cloud_color_mode_combo("Cloud color mode"sv, "###settings_server_cloud_coloir_mode", data.server.cloudColorMode, updateP);
-        cloud_generation_mode_combo("Cloud generation mode"sv, "###settings_server_cloud_gen_mode", data.server.cloudGenMode, updateP);
+        ImGui::Text("Data:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("calibration###gen_server_calibration", &data.server.generation.calibration)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###gen_server_depth", &data.server.generation.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###gen_server_infra", &data.server.generation.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("cloud###gen_server_gen_cloud", &data.server.generation.cloud)){
+            update = true;
+        }
+        cloud_color_mode_combo("Cloud color mode"sv, "###gen_server_cloud_color_mode", data.server.generation.cloudColorMode, update);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_server_cloud_gen_mode", data.server.generation.cloudGenMode, update);
 
-        ImGui::Spacing();
 
-        ImGui::BeginDisabled(!dc_has_infra(type));
-        server_data_action_combo("infra"sv, "###settings_server_action_infra", data.server.infra, updateP);
-        ImGui::EndDisabled();
+        if(ImGui::Checkbox("body tracking###gen_server_gen_body_tracking", &data.server.generation.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###gen_server_gen_imu", &data.server.generation.imu)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###gen_server_gen_audio", &data.server.generation.audio)){
+            update = true;
+        }
 
-        ImGui::BeginDisabled(!dc_has_audio(type));
-        server_data_action_combo("audio"sv, "###settings_server_action_audio", data.server.audio, updateP);
-        ImGui::EndDisabled();
-        server_data_action_combo("IMU"sv, "###settings_server_action_imu", data.server.IMU, updateP);
+        ImGui::Unindent();
 
-        ImGui::BeginDisabled(!dc_has_body_tracking(type));
-        server_data_action_combo("bodies id map"sv, "###settings_server_action_bodies_id_map", data.server.bodiesIdMap, updateP);
-        server_data_action_combo("body tracking"sv, "###settings_server_action_body_tracking", data.server.bodyTracking, updateP);
-        ImGui::EndDisabled();
+        ImGui::Text("Images:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("color###gen_server_gen_color_image", &data.server.generation.colorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth sized color###gen_server_gen_depth_sized_color_image", &data.server.generation.depthSizedColorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###gen_server_gen_depth_image", &data.server.generation.depthImage)){
+            update = true;
+        }
+
+        if(ImGui::Checkbox("infra###gen_server_gen_infra_image", &data.server.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id map###gen_server_gen_bodies_id_map_image", &data.server.generation.bodyIdMapImage)){
+            update = true;
+        }
+        ImGui::Unindent();
     }
     ImGui::Unindent();
 
-}
-
-auto DCUIDrawer::draw_dc_actions_settings(cam::DCActionsSettings &actions, bool &updateP) -> void{
-
-    ImGuiUiDrawer::title2("ACTIONS TO DO");
-    ImGui::Spacing();
-    
-    if(ImGui::Checkbox("Open device###settings_open_device", &actions.openDevice)){
-        updateP = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Start reading###settings_open_camera", &actions.startReading)){
-        updateP = true;
-    }
-
-    ImGui::Spacing();
 }
 
 auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIntS{

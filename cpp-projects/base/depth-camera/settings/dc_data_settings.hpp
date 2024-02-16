@@ -31,20 +31,6 @@
 
 namespace tool::cam {
 
-enum class ClientDataAction : std::int8_t{
-    None = 0,               // do not capture/generate
-    Process,                // capture/generate
-    ProcessSend,            // same as Process + send to server
-    ProcessDisplay,         // same as Process + generate displayable data
-    ProcessSendDisplay      // same as ProcessSend + generate displayable data
-};
-
-enum class ServerDataAction : std::int8_t{
-    None = 0,               // received data will be ignored
-    Process,                // data will be decoded/copied
-    ProcessDisplay          // same as Process + generate displayable data
-};
-
 enum class CloudColorMode : std::int8_t{
     FromDepthData = 0,          // use a gradient level to generate colors corresponding to depth
     FromDepthSizedColorImage    // use colors from deph-sized color image
@@ -55,78 +41,76 @@ enum class CloudGenerationMode : std::int8_t{
     FromDecodedCloud
 };
 
-[[nodiscard]] static constexpr auto do_process(ClientDataAction cdA) noexcept -> bool{
-    return (cdA != ClientDataAction::None);
-}
+struct DCCaptureDataSettings{
+    bool color          = true;
+    bool depth          = true;
+    bool infra          = false;
+    bool bodyTracking   = false;
+    float btTemporalSmoothing = 0.f;
+    bool audio          = false;
+    bool imu            = false;    
+};
 
-[[nodiscard]] static constexpr auto do_send(ClientDataAction cdA) noexcept -> bool{
-    return (cdA == ClientDataAction::ProcessSend) || (cdA == ClientDataAction::ProcessSendDisplay);
-}
+struct DCFrameCompressionSettings{
+    std::uint8_t jpegCompressionRate = 80;
+    bool calibration        = true;
+    bool depth              = true;
+    bool depthSizedColor    = true;
+    bool color              = false;
+    bool infra              = false;
+    bool bodyIdMap          = false;
+    bool cloud              = false;
+    bool bodyTracking       = false;
+    bool audio              = false;
+    bool imu                = false;
+    CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
 
-[[nodiscard]] static constexpr auto do_display(ClientDataAction cdA) noexcept -> bool{
-    return (cdA == ClientDataAction::ProcessDisplay) || (cdA == ClientDataAction::ProcessSendDisplay);
-}
+    [[nodiscard]] constexpr auto has_data_to_compress() const noexcept -> bool{
+        return  calibration || color || depth || depthSizedColor || infra || bodyTracking || audio || imu || cloud;
+    }
+};
 
-[[nodiscard]] [[maybe_unused]] static constexpr auto do_process(ServerDataAction sdA) noexcept -> bool{
-    return (sdA != ServerDataAction::None);
-}
+struct DCFrameGenerationSettings{
 
-[[nodiscard]] [[maybe_unused]] static constexpr auto do_display(ServerDataAction cdA) noexcept -> bool{
-    return (cdA == ServerDataAction::ProcessDisplay);
-}
+    bool calibration          = true;
+    bool depth                = true;
+    bool depthSizedColorImage = true;
+    bool cloud                = true;
+    bool infra                = false;
+    bool colorImage           = false;
+    bool depthImage           = false;
+    bool infraImage           = false;
+    bool bodyIdMapImage       = false;
+    bool bodyTracking         = false;
+    bool imu                  = false;
+    bool audio                = false;
+    CloudGenerationMode cloudGenMode = CloudGenerationMode::FromDepth;
+    CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
+
+    [[nodiscard]] constexpr auto has_data_to_generate() const noexcept -> bool{
+        return  calibration || depth || infra || colorImage || depthSizedColorImage || depthImage || infraImage || cloud || imu || bodyTracking || audio;
+    }
+};
 
 struct DCClientDataActions{
-
-    ClientDataAction color             = ClientDataAction::Process;
-    ClientDataAction depth             = ClientDataAction::ProcessSend;
-    ClientDataAction infra             = ClientDataAction::None;
-    ClientDataAction bodiesIdMap       = ClientDataAction::None;
-    ClientDataAction audio             = ClientDataAction::None;
-    ClientDataAction IMU               = ClientDataAction::None;
-    ClientDataAction bodyTracking      = ClientDataAction::None;
-    ClientDataAction depthSizedColor   = ClientDataAction::None;
-    ClientDataAction cloud             = ClientDataAction::None;
-
-    CloudColorMode cloudColorMode       = CloudColorMode::FromDepthSizedColorImage;
-
-    [[nodiscard]] constexpr auto capture_color()                const noexcept -> bool{return do_process(color);}
-    [[nodiscard]] constexpr auto capture_depth()                const noexcept -> bool{return do_process(depth);}
-    [[nodiscard]] constexpr auto capture_infra()                const noexcept -> bool{return do_process(infra);}
-    [[nodiscard]] constexpr auto capture_bodies_id_map()        const noexcept -> bool{return do_process(bodiesIdMap);}
-    [[nodiscard]] constexpr auto capture_audio()                const noexcept -> bool{return do_process(audio);}
-    [[nodiscard]] constexpr auto capture_imu()                  const noexcept -> bool{return do_process(IMU);}
-    [[nodiscard]] constexpr auto capture_body_tracking()        const noexcept -> bool{return do_process(bodyTracking);}
-    [[nodiscard]] constexpr auto generate_depth_size_color()    const noexcept -> bool{return do_process(depthSizedColor);}
-    [[nodiscard]] constexpr auto generate_cloud()               const noexcept -> bool{return do_process(cloud);}
-
-    [[nodiscard]] constexpr auto has_data_to_send() const noexcept -> bool{
-        return  do_send(color)        || do_send(depth)             || do_send(infra) ||
-                do_send(bodiesIdMap)  || do_send(audio)             || do_send(IMU)   ||
-                do_send(bodyTracking) || do_send(depthSizedColor)   || do_send(cloud);
-    }
-
-    [[nodiscard]] constexpr auto has_data_to_display() const noexcept -> bool{
-        return  do_display(color)         || do_display(depth)             || do_display(infra) ||
-                do_display(bodiesIdMap)   || do_display(depthSizedColor)   || do_display(cloud);
-    }
+    DCCaptureDataSettings capture;
+    DCFrameGenerationSettings generation;
+    DCFrameCompressionSettings compression;
 };
 
 struct DCServerDataActions{
-    ServerDataAction color            = ServerDataAction::None;
-    ServerDataAction depthSizedColor  = ServerDataAction::Process;
-    ServerDataAction bodiesIdMap      = ServerDataAction::None;
-    ServerDataAction infra            = ServerDataAction::None;
-    ServerDataAction depth            = ServerDataAction::Process;
-    ServerDataAction cloud            = ServerDataAction::None;
-    ServerDataAction audio            = ServerDataAction::None;
-    ServerDataAction IMU              = ServerDataAction::None;
-    ServerDataAction bodyTracking     = ServerDataAction::None;
-
-    CloudGenerationMode cloudGenMode  = CloudGenerationMode::FromDepth;
-    CloudColorMode cloudColorMode     = CloudColorMode::FromDepthSizedColorImage;
+    DCFrameGenerationSettings generation;
 };
 
 struct DCDataSettings : io::BinaryFileSettings{
+
+    [[nodiscard]] constexpr auto capture_color()              const noexcept -> bool{return client.capture.color;}
+    [[nodiscard]] constexpr auto capture_depth()              const noexcept -> bool{return client.capture.depth;}
+    [[nodiscard]] constexpr auto capture_infra()              const noexcept -> bool{return client.capture.infra;}
+    [[nodiscard]] constexpr auto capture_body_tracking()      const noexcept -> bool{return client.capture.bodyTracking;}
+    [[nodiscard]] constexpr auto capture_audio()              const noexcept -> bool{return client.capture.audio;}
+    [[nodiscard]] constexpr auto capture_imu()                const noexcept -> bool{return client.capture.imu;}
+    [[nodiscard]] constexpr auto generate_cloud_from_client() const noexcept             -> bool{return capture_depth() &&  (client.generation.cloud || client.compression.cloud);}
 
     DCClientDataActions client;
     DCServerDataActions server;

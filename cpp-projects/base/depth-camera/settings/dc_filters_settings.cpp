@@ -60,24 +60,31 @@ auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &o
     read(maxHeightF, data, offset, sizeData);
     read(minDepthF, data, offset, sizeData);
     read(maxDepthF, data, offset, sizeData);
-    read(filterDepthWithColor, data, offset, sizeData);    
+    read(filterDepthWithColor, data, offset, sizeData);
     read(filterColor, data, offset, sizeData);
     read(maxDiffColor, data, offset, sizeData);
-    read(jpegCompressionRate, data, offset, sizeData);
-    read(doLocalDiffFiltering, data, offset, sizeData);
-    read(maxLocalDiff, data, offset, sizeData);    
-    read(doMinNeighboursFiltering, data, offset, sizeData);
-    read(nbMinNeighbours, data, offset, sizeData);    
-    read(minNeighboursLoops, data, offset, sizeData);
-    read(doErosion, data, offset, sizeData);
-    read(erosionLoops, data, offset, sizeData);
-    read(keepOnlyBiggestCluster, data, offset, sizeData);    
-    read(invalidateColorFromDepth, data, offset, sizeData);
-    read(invalidateInfraFromDepth, data, offset, sizeData);    
+    read(filterDepthWithInfra, data, offset, sizeData);
+    read(filterDepthWithBodyTracking, data, offset, sizeData);
+    read(filterDepthWithCloud, data, offset, sizeData);
     read(p1FMode, data, offset, sizeData);
     read(p1A, data, offset, sizeData);
     read(p1B, data, offset, sizeData);
     read(p1C, data, offset, sizeData);
+    read(doLocalDiffFiltering, data, offset, sizeData);
+    read(maxLocalDiff, data, offset, sizeData);
+    read(localDiffConnectivity, data, offset, sizeData);
+    read(doMinNeighboursFiltering, data, offset, sizeData);
+    read(nbMinNeighbours, data, offset, sizeData);
+    read(minNeighboursLoops, data, offset, sizeData);
+    read(minNeighboursConnectivity, data, offset, sizeData);
+    read(doErosion, data, offset, sizeData);
+    read(erosionLoops, data, offset, sizeData);
+    read(erosionConnectivity, data, offset, sizeData);
+    read(keepOnlyBiggestCluster, data, offset, sizeData);
+    read(removeAfterClosestPoint, data, offset, sizeData);
+    read(maxDistanceAfterClosestPoint, data, offset, sizeData);
+    read(invalidateColorFromDepth, data, offset, sizeData);
+    read(invalidateInfraFromDepth, data, offset, sizeData);
 }
 
 auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
@@ -97,21 +104,28 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
     write(filterDepthWithColor, data, offset, sizeData);
     write(filterColor, data, offset, sizeData);
     write(maxDiffColor, data, offset, sizeData);
-    write(jpegCompressionRate, data, offset, sizeData);
-    write(doLocalDiffFiltering, data, offset, sizeData);
-    write(maxLocalDiff, data, offset, sizeData);
-    write(doMinNeighboursFiltering, data, offset, sizeData);
-    write(nbMinNeighbours, data, offset, sizeData);
-    write(minNeighboursLoops, data, offset, sizeData);
-    write(doErosion, data, offset, sizeData);
-    write(erosionLoops, data, offset, sizeData);
-    write(keepOnlyBiggestCluster, data, offset, sizeData);
-    write(invalidateColorFromDepth, data, offset, sizeData);
-    write(invalidateInfraFromDepth, data, offset, sizeData);
+    write(filterDepthWithInfra, data, offset, sizeData);
+    write(filterDepthWithBodyTracking, data, offset, sizeData);
+    write(filterDepthWithCloud, data, offset, sizeData);
     write(p1FMode, data, offset, sizeData);
     write(p1A, data, offset, sizeData);
     write(p1B, data, offset, sizeData);
     write(p1C, data, offset, sizeData);
+    write(doLocalDiffFiltering, data, offset, sizeData);
+    write(maxLocalDiff, data, offset, sizeData);
+    write(localDiffConnectivity, data, offset, sizeData);
+    write(doMinNeighboursFiltering, data, offset, sizeData);
+    write(nbMinNeighbours, data, offset, sizeData);
+    write(minNeighboursLoops, data, offset, sizeData);
+    write(minNeighboursConnectivity, data, offset, sizeData);
+    write(doErosion, data, offset, sizeData);
+    write(erosionLoops, data, offset, sizeData);
+    write(erosionConnectivity, data, offset, sizeData);
+    write(keepOnlyBiggestCluster, data, offset, sizeData);
+    write(removeAfterClosestPoint, data, offset, sizeData);
+    write(maxDistanceAfterClosestPoint, data, offset, sizeData);
+    write(invalidateColorFromDepth, data, offset, sizeData);
+    write(invalidateInfraFromDepth, data, offset, sizeData);
 }
 
 auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
@@ -126,19 +140,26 @@ auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
         sizeof(filterDepthWithColor) +
         sizeof(filterColor) +
         sizeof(maxDiffColor) +
-        sizeof(jpegCompressionRate) +
-        sizeof(doLocalDiffFiltering) +
-        sizeof(maxLocalDiff) +
-        sizeof(doMinNeighboursFiltering) +
-        sizeof(nbMinNeighbours) +
-        sizeof(minNeighboursLoops) +
-        sizeof(doErosion) +
-        sizeof(erosionLoops) +
-        sizeof(keepOnlyBiggestCluster) +
-        sizeof(invalidateColorFromDepth) +
-        sizeof(invalidateInfraFromDepth) +
+        sizeof(filterDepthWithInfra) +
+        sizeof(filterDepthWithBodyTracking) +
+        sizeof(filterDepthWithCloud) +
         sizeof(p1FMode) +
         sizeof(p1A) +
         sizeof(p1B) +
-        sizeof(p1C);
+        sizeof(p1C) +
+        sizeof(doLocalDiffFiltering) +
+        sizeof(maxLocalDiff) +
+        sizeof(localDiffConnectivity) +
+        sizeof(doMinNeighboursFiltering) +
+        sizeof(nbMinNeighbours) +
+        sizeof(minNeighboursLoops) +
+        sizeof(minNeighboursConnectivity) +
+        sizeof(doErosion) +
+        sizeof(erosionLoops) +
+        sizeof(erosionConnectivity) +
+        sizeof(keepOnlyBiggestCluster) +
+        sizeof(removeAfterClosestPoint) +
+           sizeof(maxDistanceAfterClosestPoint) +
+        sizeof(invalidateColorFromDepth) +
+        sizeof(invalidateInfraFromDepth);
 }

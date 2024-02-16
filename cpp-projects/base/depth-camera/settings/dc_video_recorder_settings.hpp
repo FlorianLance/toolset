@@ -27,25 +27,18 @@
 #pragma once
 
 // std
-#include <vector>
+// #include <vector>
 
 // local
 //#include "io/binary_settings.hpp"
+#include "dc_data_settings.hpp"
 
 namespace tool::cam {
 
 struct DCVideoRecorderSettings{
     int cameraMaxFramesToRecord = 10000;
     double maxDurationS = 500.;
-    // output
-    std::vector<bool> camerasToRecord;
-    bool recordAllData = true;
-    bool recordColor   = true;
-    bool recordDepth   = true;
-    bool recordInfra   = true;
-    bool recordCloud   = true;
-    bool recordIMU     = true;
-    bool recordAudio   = true;
-    bool recordBodies  = true;
+    DCFrameGenerationSettings generation;
+    // std::vector<bool> camerasToRecord;
 };
 }

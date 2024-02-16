@@ -29,7 +29,6 @@
 // local
 #include "dc_config_settings.hpp"
 #include "dc_data_settings.hpp"
-#include "dc_actions_settings.hpp"
 
 namespace tool::cam {
 
@@ -37,7 +36,6 @@ namespace tool::cam {
 
         DCConfigSettings configS;
         DCDataSettings dataS;
-        DCActionsSettings actionsS;
 
         static auto default_init_for_grabber() -> DCDeviceSettings;
         static auto default_init_for_manager() -> DCDeviceSettings;

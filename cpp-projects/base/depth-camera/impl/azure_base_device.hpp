@@ -30,6 +30,7 @@
 #include "depth-camera/dc_types.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_config_settings.hpp"
+#include "depth-camera/settings/dc_data_settings.hpp"
 #include "graphics/color.hpp"
 #include "utility/buffer.hpp"
 
@@ -42,7 +43,8 @@ struct AzureBaseDevice{
 
     // initialization
     auto initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> void;
-    auto update_camera_from_colors_settings(const DCColorSettings &colorS) ->void;
+    auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
+    auto update_from_data_settings(const DCDataSettings &dataS) -> void;
 
     // actions
     auto open_device(uint32_t deviceId) -> bool;

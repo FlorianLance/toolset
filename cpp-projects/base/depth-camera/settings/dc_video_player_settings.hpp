@@ -29,10 +29,12 @@
 
 // local
 //#include "files/binary_settings.hpp"
+#include "dc_data_settings.hpp"
 
 namespace tool::cam {
 
 struct DCVideoPlayerSettings{
     bool doLoop = true;
+    DCFrameGenerationSettings generation;
 };
 }

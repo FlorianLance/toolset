@@ -51,6 +51,11 @@ DECL_EXPORT void set_current_time__dc_video_player(tool::cam::DCVideoPlayer *dcP
 DECL_EXPORT float current_time_ms__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
 DECL_EXPORT void update__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
 
+DECL_EXPORT int get_current_compressed_frame_valid_vertices_count__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera);
 DECL_EXPORT int get_current_frame_valid_vertices_count__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera);
-DECL_EXPORT int copy_camera_cloud__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::cam::DCVertexMeshData *vertices, int verticesCount);
+DECL_EXPORT int get_current_frames_total_cloud_size__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
+
+DECL_EXPORT int copy_camera_cloud__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
+DECL_EXPORT int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
+
 }

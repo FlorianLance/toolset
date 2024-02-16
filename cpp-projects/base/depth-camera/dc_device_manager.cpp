@@ -200,7 +200,6 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
 
     i->locker.lock();
 
-    const auto &newActionsS = deviceS.actionsS;
     const auto &newConfigS  = deviceS.configS;
     const auto &currConfigS = i->deviceS.configS;
 
@@ -215,7 +214,7 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
         (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
         (newConfigS.synchMode                       != currConfigS.synchMode) ||
         // body tracking
-        (newConfigS.enableBodyTracking              != currConfigS.enableBodyTracking) ||
+        (newConfigS.btEnabled              != currConfigS.btEnabled) ||
         (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
         (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
         (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
@@ -225,10 +224,10 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
     bool closeDevice = false;
     bool stopReading = false;
     if(i->is_opened()){
-        closeDevice = deviceChanged || deviceIdChanged || !newActionsS.openDevice;
+        closeDevice = deviceChanged || deviceIdChanged || !newConfigS.openDevice;
     }
     if(i->is_reading()){
-        stopReading = closeDevice || !newActionsS.startReading || cameraSettingsChanged;
+        stopReading = closeDevice || !newConfigS.startReading || cameraSettingsChanged;
     }
 
     // stop / close camera
@@ -253,8 +252,8 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
         i->isDeviceInitialized = true;
     }
 
-    bool openDevice  = newActionsS.openDevice    && (!i->device->is_opened());
-    bool startCamera = newActionsS.startReading  && (!i->device->is_reading());
+    bool openDevice  = newConfigS.openDevice    && (!i->device->is_opened());
+    bool startCamera = newConfigS.startReading  && (!i->device->is_reading());
 
     // update device settings
     i->deviceS = deviceS;

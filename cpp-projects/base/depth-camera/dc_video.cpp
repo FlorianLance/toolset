@@ -86,29 +86,18 @@ auto DCVideo::count_frames_from_all_cameras() const noexcept -> size_t{
     return count;
 }
 
-auto DCVideo::uncompress_frame(size_t idCamera, size_t idFrame, DCFrame &frame) -> bool{
+auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, size_t idFrame, DCFrame &frame) -> bool{
     if(const auto camD = get_compressed_frames_ptr(idCamera)){
         if(auto cFrame = camD->get_frame_ptr(idFrame)){
-            return uncompress_frame(idCamera, cFrame, frame);
+            return uncompress_frame(gSettings, idCamera, cFrame, frame);
         }
     }
     return false;
 }
 
-auto DCVideo::uncompress_frame(size_t idCamera, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
     if(auto unc = uncompressor(idCamera); unc != nullptr){
-
-        DCServerDataActions dActions;
-        dActions.depthSizedColor = ServerDataAction::ProcessDisplay;
-        dActions.depth           = ServerDataAction::ProcessDisplay;
-        dActions.infra           = ServerDataAction::ProcessDisplay;
-        dActions.color           = ServerDataAction::ProcessDisplay;
-        dActions.cloud           = ServerDataAction::ProcessDisplay;
-        dActions.cloudGenMode    = CloudGenerationMode::FromDepth;
-        dActions.cloudColorMode  = CloudColorMode::FromDepthSizedColorImage;
-        dActions.bodiesIdMap     = ServerDataAction::ProcessDisplay;
-
-        return unc->uncompress(dActions, cFrame, frame);
+        return unc->uncompress(gSettings, cFrame, frame);
     }
     return false;
 }
@@ -391,7 +380,7 @@ auto DCVideo::uncompressor(size_t idCamera) noexcept -> DCFrameUncompressor*{
     return nullptr;
 }
 
-auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
+auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
 
     if(m_camerasCompressedFrames.empty()){
         return;
@@ -425,7 +414,7 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
         auto c0TimeMs= std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(c0Time - c0FirstFrameTS));
 
         DCFrame final;
-        if(!uncompress_frame(0, idF, final)){
+        if(!uncompress_frame(gSettings, 0, idF, final)){
             continue;
         }
 
@@ -453,7 +442,7 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
             }
 
             DCFrame current;
-            if(!uncompress_frame(jj, idF, current)){
+            if(!uncompress_frame(gSettings, jj, idF, current)){
                 continue;
             }
 
@@ -472,7 +461,7 @@ auto DCVideo::merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool:
     m_camerasUncompressors.resize(1);
 }
 
-auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void{
+auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void{
 
     if(idFrame >= min_nb_frames()){
         // ...
@@ -483,14 +472,14 @@ auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f 
 
     DCFrame frame;
     for(size_t ii = 0; ii < nb_cameras(); ++ii){        
-        uncompress_frame(ii, idFrame, frame);
+        uncompress_frame(gSettings, ii, idFrame, frame);
         grid.add_cloud(frame.cloud, get_transform(ii).conv<float>());
     }
     grid.compute_grid();
     grid.convert_to_cloud(cloud);
 }
 
-auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
+auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
 
     frame = DCFrame();
     if(idFrame >= min_nb_frames()){
@@ -501,7 +490,7 @@ auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f 
     geo::VoxelGrid grid(sizeVoxel, minBound, maxBound);
     for(size_t ii = 0; ii < nb_cameras(); ++ii){
         DCFrame uFrame;
-        uncompress_frame(ii, idFrame, uFrame);
+        uncompress_frame(gSettings, ii, idFrame, uFrame);
         grid.add_cloud(uFrame.cloud, get_transform(ii).conv<float>());
 
         if(ii == 0){
@@ -516,7 +505,7 @@ auto DCVideo::merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f 
         }
     }
     grid.compute_grid();
-    merge_cameras_frame_id(idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
+    merge_cameras_frame_id(gSettings, idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
 }
 
 
@@ -592,14 +581,14 @@ auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<float>
     }
 }
 
-//#include <iostream>
+#include <iostream>
 auto DCVideo::read_file(std::ifstream &file) -> bool{
 
     // read mode
     std::int8_t videoType;
     read(videoType, file);
 
-//    std::cout << "VIDEO TYPE" << (int)videoType << "\n";
+    std::cout << "VIDEO TYPE" << (int)videoType << "\n";
     if(videoType == 0){
         read_legacy_full_video_file(file);
         return true;

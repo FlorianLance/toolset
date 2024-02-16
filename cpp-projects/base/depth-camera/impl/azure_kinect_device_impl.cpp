@@ -40,8 +40,13 @@ auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
     azureD->initialize(mInfos, settings.config);
 }
 
-auto AzureKinectDeviceImpl::update_camera_from_colors_settings() -> void {
-    azureD->update_camera_from_colors_settings(settings.color);
+auto AzureKinectDeviceImpl::update_from_data_settings() -> void{
+    azureD->update_from_data_settings(cDataS);
+    // btTemporalSmoothing
+}
+
+auto AzureKinectDeviceImpl::update_from_colors_settings() -> void {
+    azureD->update_from_colors_settings(settings.color);
 }
 
 auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {    
@@ -50,8 +55,7 @@ auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {
 
 auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool {
 
-    settings.config = newConfigS;
-    initialize();
+    initialize(newConfigS);
 
     if(azureD->start_device(settings.config)){
         start_reading_thread();

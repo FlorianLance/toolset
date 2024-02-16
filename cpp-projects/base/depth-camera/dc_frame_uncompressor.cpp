@@ -75,13 +75,12 @@ struct DCFrameUncompressor::Impl{
     Buffer<geo::Pt3<std::int16_t>> pointCloud;
     Buffer<geo::Pt2<int>> depthVertexCorrrespondance;
     tf::Taskflow taskFlow;
-
     tf::Executor executor;
 
     // local task data
     DCCompressedFrame *cFrame = nullptr;
     DCFrame *frame = nullptr;
-    DCServerDataActions sActions;
+    DCFrameGenerationSettings gSettings;
 
     Impl(){
 
@@ -94,14 +93,14 @@ struct DCFrameUncompressor::Impl{
         auto cInfraDataT                = taskFlow.emplace([&](){compute_infra_data();}).name("compute_infra_data");
         auto cInfraImageT               = taskFlow.emplace([&](){compute_infra_image();}).name("compute_infra_image");
         auto cCloudT                    = taskFlow.emplace([&](){
-            if(sActions.cloudGenMode == CloudGenerationMode::FromDepth){
-                compute_cloud();
+            if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
+                                       compute_cloud_from_depth();
             }else{
                 // ...
             }
         }).name("compute_cloud");
         auto cCreateColoredCloudT       = taskFlow.emplace([&](){
-            if(sActions.cloudGenMode == CloudGenerationMode::FromDepth){
+            if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
                 create_colored_cloud();
             }else{
                 // ...
@@ -136,7 +135,7 @@ struct DCFrameUncompressor::Impl{
 
     }
 
-    auto do_work_task(DCServerDataActions sActions, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
+    auto do_work_task(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
 
         // frame
         frame.idCapture      = cFrame->idCapture;
@@ -147,7 +146,7 @@ struct DCFrameUncompressor::Impl{
         frame.mode = cFrame->mode;
 
         // set data
-        this->sActions  = std::move(sActions);
+        this->gSettings  = gSettings;
         this->cFrame    = cFrame;
         this->frame     = &frame;
 
@@ -195,7 +194,7 @@ struct DCFrameUncompressor::Impl{
         compute_depth_image();
         compute_infra_data();
         compute_infra_image();
-        compute_cloud();
+        compute_cloud_from_depth();
         create_colored_cloud();
 
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
@@ -251,8 +250,8 @@ private:
     }
 
     auto compute_color_image() -> void{
-        auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->jpegRGBA8Color.empty() && do_process(sActions.color)){
+        auto tStart = Time::nanoseconds_since_epoch();                
+        if(!cFrame->jpegRGBA8Color.empty() && gSettings.colorImage){
             colorDecoder.decode(
                 cFrame->jpegRGBA8Color, frame->rgbaColor
             );
@@ -263,7 +262,7 @@ private:
     auto compute_depth_sized_color_image() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
 
-        if(!cFrame->jpegRGBA8DepthSizedColor.empty() && do_process(sActions.depthSizedColor)){
+        if(!cFrame->jpegRGBA8DepthSizedColor.empty() && gSettings.depthSizedColorImage){
             depthSizedColorDecoder.decode(
                 cFrame->jpegRGBA8DepthSizedColor, frame->rgbaDepthSizedColor
             );
@@ -273,7 +272,7 @@ private:
 
     auto compute_bodies_id_map_image() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->jpegG8BodiesIdMap.empty() && do_process(sActions.bodiesIdMap)){
+        if(!cFrame->jpegG8BodiesIdMap.empty() && gSettings.bodyTracking){
             bodiesIdDecoder.decode(
                 cFrame->jpegG8BodiesIdMap, frame->grayBodiesIdMap
             );
@@ -283,7 +282,7 @@ private:
 
     auto compute_depth_data() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->fpfDepth.empty() && do_process(sActions.depth)){
+        if(!cFrame->fpfDepth.empty() && gSettings.depth){
             depthDecoder.decode(
                 cFrame->fpfDepth, frame->depth
             );            
@@ -293,7 +292,7 @@ private:
 
     auto compute_depth_image() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!frame->depth.empty() && do_display(sActions.depth)){
+        if(!frame->depth.empty() && gSettings.depthImage){
             frame->compute_rgb_depth_image(frame->rgbDepth);            
         }
         tComputeDepthImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
@@ -301,7 +300,7 @@ private:
 
     auto compute_infra_data() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->fpfInfra.empty() && do_process(sActions.infra)){
+        if(!cFrame->fpfInfra.empty() && gSettings.infra){
             infraDecoder.decode(
                 cFrame->fpfInfra, frame->infra
             );
@@ -311,16 +310,16 @@ private:
 
     auto compute_infra_image() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!frame->infra.empty() && do_display(sActions.infra)){
+        if(!frame->infra.empty() && gSettings.infraImage){
             frame->compute_rgb_infra_image(frame->rgbInfra);
         }
         tComputeInfraImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
 
-    auto compute_cloud() -> void{
+    auto compute_cloud_from_depth() -> void{
 
-        if(cFrame->calibration.empty() || frame->depth.empty() || !do_process(sActions.cloud)){
+        if(cFrame->calibration.empty() || frame->depth.empty() || !gSettings.cloud){
             return;
         }
 
@@ -372,13 +371,18 @@ private:
         tComputeCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
+    auto compute_cloud_from_decoded_data() -> void{
+
+
+    }
+
     auto create_colored_cloud() -> void{        
 
-        if(frame->cloud.empty() || frame->depth.empty() || !do_process(sActions.cloud)){
+        if(frame->cloud.empty() || frame->depth.empty() || !gSettings.cloud){
             return;
         }
 
-        auto useColors = !frame->rgbaDepthSizedColor.empty() && (sActions.cloudColorMode == CloudColorMode::FromDepthSizedColorImage);
+        auto useColors = !frame->rgbaDepthSizedColor.empty() && (gSettings.cloudColorMode == CloudColorMode::FromDepthSizedColorImage);
 
         static constexpr std::array<Pt3f, 5> depthGradient ={
             Pt3f{0.f,0.f,1.f},
@@ -440,9 +444,9 @@ DCFrameUncompressor::DCFrameUncompressor() : i(std::make_unique<Impl>()){}
 DCFrameUncompressor::~DCFrameUncompressor(){
 }
 
-auto DCFrameUncompressor::uncompress(DCServerDataActions sActions, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+auto DCFrameUncompressor::uncompress(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
     // i->do_work(cFrame,frame);
-    i->do_work_task(sActions, cFrame,frame);
+    i->do_work_task(gSettings,cFrame,frame);
     return true;
 }
 

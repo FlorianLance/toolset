@@ -50,8 +50,8 @@ auto FemtoMegaDeviceImpl::initialize_device_specific() -> void{
     orbbecD->initialize(mInfos, settings.color);
 }
 
-auto FemtoMegaDeviceImpl::update_camera_from_colors_settings() -> void{
-    orbbecD->update_camera_from_colors_settings(settings.color);
+auto FemtoMegaDeviceImpl::update_from_colors_settings() -> void{
+    orbbecD->update_from_colors_settings(settings.color);
 }
 
 auto FemtoMegaDeviceImpl::open(uint32_t deviceId) -> bool{
@@ -60,8 +60,7 @@ auto FemtoMegaDeviceImpl::open(uint32_t deviceId) -> bool{
 
 auto FemtoMegaDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool{
 
-    settings.config = newConfigS;
-    initialize();
+    initialize(newConfigS);
 
     if(orbbecD->start_pipeline(mInfos, settings.config)){
         start_reading_thread();

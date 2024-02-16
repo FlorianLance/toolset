@@ -41,6 +41,10 @@
 #include <libobsensor/hpp/Error.hpp>
 #include <libobsensor/hpp/StreamProfile.hpp>
 
+// opencv
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+
 // local
 #include "utility/logger.hpp"
 #include "utility/benchmark.hpp"
@@ -101,6 +105,8 @@ struct OrbbecBaseDevice::Impl{
     // processing data
     std::vector<std::int8_t> depthSizedColorData;
     std::vector<std::int8_t> cloudData;
+
+    // std::vector<ColorRGBA8> resizedColorImageFromDepthTransformation;
 
     auto set_property_value(OBPropertyID pId, bool value) -> void;
     auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
@@ -267,7 +273,11 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
 
     k4a::calibration k4Calibration;
     k4Calibration.depth_mode       = convert_to_k4a_depth_mode(mInfos.depth_resolution());
-    k4Calibration.color_resolution = convert_to_k4a_color_resolution(mInfos.color_resolution());
+    // if(mInfos.color_resolution() == DCColorResolution::R960P){
+    //     k4Calibration.color_resolution = convert_to_k4a_color_resolution(DCColorResolution::R1536P);
+    // }else{
+        k4Calibration.color_resolution = convert_to_k4a_color_resolution(mInfos.color_resolution());
+    // }
 
     // depth calibration
     auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
@@ -318,8 +328,14 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     // color calibration
     auto &cColorCamCal              = k4Calibration.color_camera_calibration;
     // # resolutions
-    cColorCamCal.resolution_width   = static_cast<int>(mInfos.color_width());
-    cColorCamCal.resolution_height  = static_cast<int>(mInfos.color_height());
+    // if(mInfos.color_resolution() == DCColorResolution::R960P){
+    //     cColorCamCal.resolution_width   = 2048;
+    //     cColorCamCal.resolution_height  = 1536;
+    // }else{
+        cColorCamCal.resolution_width   = static_cast<int>(mInfos.color_width());
+        cColorCamCal.resolution_height  = static_cast<int>(mInfos.color_height());
+    // }
+
     // # metric_radius
     cColorCamCal.metric_radius      = 1.7f;
     // # intrinsics
@@ -773,7 +789,7 @@ auto OrbbecBaseDevice::close_device() -> void{
     i->device     = nullptr;
 }
 
-auto OrbbecBaseDevice::update_camera_from_colors_settings(const DCColorSettings &colorS) -> void{
+auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
 
     if(!is_opened()){
         return;
@@ -973,14 +989,46 @@ auto OrbbecBaseDevice::read_from_imu() -> tool::BinarySpan{
     return {};
 }
 
-
 auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
     
+    size_t colorWidth;
+    size_t colorHeight;
+    size_t colorStride;
+    size_t colorSizeBytes;
+    std::uint8_t* colorDataBuffer;
+
+    // if(mInfos.color_resolution() == DCColorResolution::R960P){
+
+    //     int newWidth = 2048;
+    //     int newHeight = 1536;
+    //     int newColorStride = newWidth *4 * sizeof(std::uint8_t);
+
+    //     if(i->resizedColorImageFromDepthTransformation.size() != newWidth*newHeight){
+    //         i->resizedColorImageFromDepthTransformation.resize(newWidth*newHeight);
+    //     }
+
+    //     cv::Mat output(newHeight, newWidth, CV_8UC4, i->resizedColorImageFromDepthTransformation.data());
+    //     cv::Mat input(mInfos.color_height(), mInfos.color_width(), CV_8UC4, colorData.data());
+    //     cv::resize(input, output, output.size(),0.0,0.0, cv::InterpolationFlags::INTER_NEAREST);
+
+    //     cv::imwrite("D:/input.png", input);
+    //     cv::imwrite("D:/output.png", output);
 
 
-    auto colorStride     = mInfos.color_width() * 4 * sizeof(std::uint8_t);
-    auto colorSizeBytes  = colorStride * mInfos.color_height();
-    auto colorDataBuffer = reinterpret_cast<std::uint8_t*>(colorData.data());
+    //     colorWidth      = newWidth;
+    //     colorHeight     = newHeight;
+    //     colorStride     = newColorStride;
+    //     colorSizeBytes  = colorStride * colorHeight;
+    //     colorDataBuffer = reinterpret_cast<std::uint8_t*>(output.data);
+
+    // }else{
+
+    // }
+    colorWidth      = mInfos.color_width();
+    colorHeight     = mInfos.color_height();
+    colorStride     = colorWidth * 4 * sizeof(std::uint8_t);
+    colorSizeBytes  = colorStride * colorHeight;
+    colorDataBuffer = reinterpret_cast<std::uint8_t*>(colorData.data());
 
     auto depthStride     = mInfos.depth_width() * 1 * sizeof(std::uint16_t);
     auto depthSizeBytes  = depthStride * mInfos.depth_height();
@@ -992,7 +1040,7 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
 
     auto k4aColorImage = k4a::image::create_from_buffer(
         K4A_IMAGE_FORMAT_COLOR_BGRA32,
-        static_cast<int>(mInfos.color_width()), static_cast<int>(mInfos.color_height()), static_cast<int>(colorStride), colorDataBuffer, colorSizeBytes,
+        static_cast<int>(colorWidth), static_cast<int>(colorHeight), static_cast<int>(colorStride), colorDataBuffer, colorSizeBytes,
         nullptr, nullptr
     );
 
@@ -1017,18 +1065,21 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
             &k4aDepthSizedColorImage
         );
 
-        std::int64_t count1=0;
-        std::int64_t count2=0;
-        std::int64_t count3=0;
-        for(const auto &d : depthData){
-            count1 += d;
-        }
-        for(const auto &d : colorData){
-            count2 += d.r();
-        }
-        for(const auto &d : i->depthSizedColorData){
-            count3 += d;
-        }
+        // cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
+        // cv::imwrite("D:/output2.png", output2);
+
+        // std::int64_t count1=0;
+        // std::int64_t count2=0;
+        // std::int64_t count3=0;
+        // for(const auto &d : depthData){
+        //     count1 += d;
+        // }
+        // for(const auto &d : colorData){
+        //     count2 += d.r();
+        // }
+        // for(const auto &d : i->depthSizedColorData){
+        //     count3 += d;
+        // }
         // std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
 
         Bench::stop();

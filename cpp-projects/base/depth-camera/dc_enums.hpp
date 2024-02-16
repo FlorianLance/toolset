@@ -68,28 +68,30 @@ enum class DCImageFormat : std::int8_t {
     BGRA        = 3,
     DEPTH16     = 4,
     INFRA16     = 5,
+    NA          = 6,
     SizeEnum
 };
 
 // # color resolution
 enum class DCColorResolution : std::int8_t {
-    OFF     = 0, // Color camera will be turned off with this setting
-    R720P   = 1, // 1280 * 720  16:9
-    R1080P  = 2, // 1920 * 1080 16:9
-    R1440P  = 3, // 2560 * 1440 16:9
-    R1536P  = 4, // 2048 * 1536 4:3
-    R2160P  = 5, // 3840 * 2160 16:9
-    R3072P  = 6, // 4096 * 3072 4:3
-    R960P   = 7, // 1280 * 960  4:3
+    OFF = 0, // Color camera will be turned off with this setting
+    R720P,   // 1280 * 720  16:9
+    R960P,   // 1280 * 960  4:3
+    R1080P,  // 1920 * 1080 16:9
+    R1440P,  // 2560 * 1440 16:9
+    R1536P,  // 2048 * 1536 4:3
+    R2160P,  // 3840 * 2160 16:9
+    R3072P,  // 4096 * 3072 4:3
     SizeEnum,
 };
+
 using TDCColRes = std::tuple<
     DCColorResolution,          int, int>;
 static constexpr TupleArray<DCColorResolution::SizeEnum, TDCColRes> dcColRes = {{
-    // cloud
     TDCColRes
     {DCColorResolution::OFF,    0,    0},
     {DCColorResolution::R720P,  1280, 720},
+    {DCColorResolution::R960P,  1280, 960},
     {DCColorResolution::R1080P, 1920, 1080},
     {DCColorResolution::R1440P, 2560, 1440},
     {DCColorResolution::R1536P, 2048, 1536},
@@ -190,39 +192,80 @@ static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes
 }
 
 // camera mode
-enum class DCMode : std::int8_t {
+enum class DCMode : std::int8_t {    
     // azure kinect
-    AK_C1280x720_DI640x576_NV12_F30,
-    AK_C1280x720_DI640x576_MJPG_F30,
-    AK_C1280x720_DI640x576_YUY2_F30,
-    AK_C1280x720_DI640x576_BGRA_F30,
-    AK_C1280x720_DI320x288_NV12_F30,
-    AK_C1280x720_DI512x512_NV12_F30,
-    AK_C1280x720_DI1024x1024_NV12_F15,
-    AK_C1280x720_BGRA_F30,
-    AK_C1920x1080_BGRA_F30,
-    AK_C2560x1440_BGRA_F30,
-    AK_C2048x1536_BGRA_F30,
-    AK_C3840x2160_BGRA_F15,
-    AK_C4096x3072_BGRA_F15,
-    AK_C2048x1536_DI640x576_BGRA_F15,
-    AK_C2048x1536_DI1024x1024_BGRA_F15,
-    AK_C4096x3072_DI640x576_BGRA_F15,
-    AK_C4096x3072_DI1024x1024_BGRA_F15,
-    // femto bolt
     // # narrow
-    FB_C1280x720_DI640x576_NV12_F30,
-    FB_C1280x720_DI640x576_MJPG_F30,
-    FB_C1280x720_DI640x576_BGRA_F30,
+    // ## 4:3 color
+    AK_C2048x1536_DI640x576_MJPG_F30,
+    AK_C4096x3072_DI640x576_MJPG_F15,
+    // ## 16:9 color
+    AK_C1280x720_DI320x288_NV12_F30,
+    AK_C1280x720_DI640x576_NV12_F30,
+    AK_C1280x720_DI640x576_YUY2_F30,
+    AK_C1280x720_DI640x576_MJPG_F30,
     // # wide
-    FB_C1280x720_DI512x512_MJPG_F30,
-    FB_DI512x512_MJPG_F30,
+    // ## 4:3 color
+    AK_C2048x1536_DI512x512_MJPG_F30,
+    AK_C2048x1536_DI1024x1024_MJPG_F30,
+    // ## 16:9 color
+    AK_C1280x720_DI512x512_NV12_F30,
+    AK_C1280x720_DI512x512_YUY2_F30,
+    AK_C1280x720_DI512x512_MJPG_F30,
+    AK_C1280x720_DI1024x1024_NV12_F15,
+    AK_C1280x720_DI1024x1024_YUY2_F15,
+    AK_C1280x720_DI1024x1024_MJPG_F15,
     // # no depth
+    // ## 4:3 color
+    AK_C2048x1536_MJPG_F30,
+    AK_C4096x3072_MJPG_F15,
+    // ## 19:9 color
+    AK_C1280x720_NV12_F30,
+    AK_C1920x1080_MJPG_F30,
+    AK_C2560x1440_MJPG_F30,
+    AK_C3840x2160_MJPG_F15,
+
+    // femto bolt orbbec
+    // # narrow
+    // ## 4:3 color
+    FB_C2048x1536_DI640x576_MJPG_F30,
+    FB_C4096x3072_DI640x576_MJPG_F15,
+    // ## 16:9 color
+    FB_C1280x720_DI320x288_NV12_F30,
+    FB_C1280x720_DI640x576_NV12_F30,      
+    // # wide
+    // ## 4:3 color
+    FB_C2048x1536_DI512x512_MJPG_F30,
+    // ## 16:9 color
+    FB_C1280x720_DI512x512_NV12_F30,
+    // ## no color
+    FB_DI512x512_F30,
+    // # no depth
+    // ## 4:3 color
+    // ## 16:9 color
     FB_C1280x720_MJPG_F30,
+
     // femto mega orbbec
+    // # narrow
+    // ## 4:3 color
+    // FM_C1280x960_DI640x576_MJPG_F30,
+    // FM_C2048x1536_DI640x576_MJPG_F30,
+    // FM_C4096x3072_DI640x576_MJPG_F15,
+    // ## 16:9 color
+    // FM_C1280x720_DI320x288_MJPG_F30,
     FM_C1280x720_DI640x576_MJPG_F30,
+    // # wide
+    // ## 4:3 color
+    FM_C1280x960_DI512x512_MJPG_F30,
+    // FM_C2048x1536_DI512x512_MJPG_F30,
+    // ## 16:9 color
     FM_C1280x720_DI512x512_MJPG_F30,
-    FM_C1280x720_DI1024x1024_MJPG_F15,
+    // ## no color
+    FM_DI512x512_F30,
+    // # no depth
+    // ## 4:3 color
+    // FM_C1280x960_MJPG_F30,
+    // FM_C2048x1536_MJPG_F30,
+    // ## 16:9 color
     FM_C1280x720_MJPG_F30,
     // other
     Invalid,
@@ -235,35 +278,81 @@ using TMode = std::tuple<
 static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     TMode
     // azure kinect
-    {DCMode::AK_C1280x720_DI640x576_NV12_F30,       "C-1280p D-576p  I-NV12 F-30"sv},
-    {DCMode::AK_C1280x720_DI640x576_MJPG_F30,       "C-1280p D-576p  I-MJPG F-30"sv},
-    {DCMode::AK_C1280x720_DI640x576_YUY2_F30,       "C-1280p D-576p  I-YUY2 F-30"sv},
-    {DCMode::AK_C1280x720_DI640x576_BGRA_F30,       "C-1280p D-576p  I-BGRA F-30"sv},
-    {DCMode::AK_C1280x720_DI320x288_NV12_F30,       "C-1280p D-288p  I-NV12 F-30"sv},
-    {DCMode::AK_C1280x720_DI512x512_NV12_F30,       "C-1280p D-512p  I-NV12 F-30"sv},
-    {DCMode::AK_C1280x720_DI1024x1024_NV12_F15,     "C-1280p D-1024p I-NV12 F-15"sv},
-    {DCMode::AK_C1280x720_BGRA_F30,                 "C-1280p D-OFF   I-BGRA F-30"sv},
-    {DCMode::AK_C1920x1080_BGRA_F30,                "C-1920p D-OFF   I-BGRA F-30"sv},
-    {DCMode::AK_C2560x1440_BGRA_F30,                "C-2560p D-OFF   I-BGRA F-30"sv},
-    {DCMode::AK_C2048x1536_BGRA_F30,                "C-2048p D-OFF   I-BGRA F-30"sv},
-    {DCMode::AK_C3840x2160_BGRA_F15,                "C-3840p D-OFF   I-BGRA F-15"sv},
-    {DCMode::AK_C4096x3072_BGRA_F15,                "C-4096p D-OFF   I-BGRA F-15"sv},
-    {DCMode::AK_C2048x1536_DI640x576_BGRA_F15,      "C-2048p D-576   I-BGRA F-15"sv},
-    {DCMode::AK_C2048x1536_DI1024x1024_BGRA_F15,    "C-2048p D-1024  I-BGRA F-15"sv},
-    {DCMode::AK_C4096x3072_DI640x576_BGRA_F15,      "C-4096p D-576   I-BGRA F-15"sv},
-    {DCMode::AK_C4096x3072_DI1024x1024_BGRA_F15,    "C-4096p D-1024  I-BGRA F-15"sv},
-    // femto bolt
-    {DCMode::FB_C1280x720_DI640x576_NV12_F30,       "C-1280p D-576p  I-NV12 F-30"sv},
-    {DCMode::FB_C1280x720_DI640x576_MJPG_F30,       "C-1280p D-576p  I-MJPG F-30"sv},
-    {DCMode::FB_C1280x720_DI640x576_BGRA_F30,       "C-1280p D-576p  I-BGRA F-30"sv},
-    {DCMode::FB_C1280x720_DI512x512_MJPG_F30,       "C-1280p D-512p  I-MJPG F-30"sv},
-    {DCMode::FB_DI512x512_MJPG_F30,                 "C-OFF   D-512p  I-MJPG F-30"sv},
-    {DCMode::FB_C1280x720_MJPG_F30,                 "C-1280p D-OFF   I-MJPG F-30"sv},
-    // femto mega    
-    {DCMode::FM_C1280x720_DI512x512_MJPG_F30,       "C-720p  D-512p  I-MJPG F-30"sv},
+    // # narrow
+    // ## 4:3 color
+    {DCMode::AK_C2048x1536_DI640x576_MJPG_F30,      "C-1536p D-576p  I-MJPG F-30"sv},
+    {DCMode::AK_C4096x3072_DI640x576_MJPG_F15,      "C-3072p D-576p  I-MJPG F-15"sv},
+    // ## 16:9 color
+    {DCMode::AK_C1280x720_DI320x288_NV12_F30,       "C-720p  D-288p  I-NV12 F-30"sv},
+    {DCMode::AK_C1280x720_DI640x576_NV12_F30,       "C-720p  D-576p  I-NV12 F-30"sv},
+    {DCMode::AK_C1280x720_DI640x576_YUY2_F30,       "C-720p  D-576p  I-YUY2 F-30"sv},
+    {DCMode::AK_C1280x720_DI640x576_MJPG_F30,       "C-720p  D-576p  I-MJPG F-30"sv},
+    // # wide
+    // ## 4:3 color
+    {DCMode::AK_C2048x1536_DI512x512_MJPG_F30,      "C-1536p D-512p  I-MJPG F-30"sv},
+    {DCMode::AK_C2048x1536_DI1024x1024_MJPG_F30,    "C-1536p D-1024p I-MJPG F-15"sv},
+    // ## 16:9 color
+    {DCMode::AK_C1280x720_DI512x512_NV12_F30,       "C-720p  D-512p  I-NV12 F-30"sv},
+    {DCMode::AK_C1280x720_DI512x512_YUY2_F30,       "C-720p  D-512p  I-YUY2 F-30"sv},
+    {DCMode::AK_C1280x720_DI512x512_MJPG_F30,       "C-720p  D-512p  I-MJPG F-30"sv},
+    {DCMode::AK_C1280x720_DI1024x1024_NV12_F15,     "C-720p  D-1024p I-NV12 F-15"sv},
+    {DCMode::AK_C1280x720_DI1024x1024_YUY2_F15,     "C-720p  D-1024p I-YUY2 F-15"sv},
+    {DCMode::AK_C1280x720_DI1024x1024_MJPG_F15,     "C-720p  D-1024p I-MJPG F-15"sv},
+    // # no depth
+    // ## 4:3 color
+    {DCMode::AK_C2048x1536_MJPG_F30,                "C-1536p D-OFF   I-MJPG F-30"sv},
+    {DCMode::AK_C4096x3072_MJPG_F15,                "C-3072p D-OFF   I-MJPG F-15"sv},
+    // ## 19:9 color
+    {DCMode::AK_C1280x720_NV12_F30,                 "C-720p  D-OFF   I-NV12 F-30"sv},
+    {DCMode::AK_C1920x1080_MJPG_F30,                "C-1080p D-OFF   I-MJPG F-30"sv},
+    {DCMode::AK_C2560x1440_MJPG_F30,                "C-1440p D-OFF   I-MJPG F-30"sv},
+    {DCMode::AK_C3840x2160_MJPG_F15,                "C-2160p D-OFF   I-MJPG F-15"sv},
+
+    // femto bolt orbbec
+    // # narrow
+    // ## 4:3 color
+    {DCMode::FB_C2048x1536_DI640x576_MJPG_F30,      "C-1536p D-576p  I-MJPG F-30"sv},
+    {DCMode::FB_C4096x3072_DI640x576_MJPG_F15,      "C-3072p D-576p  I-MJPG F-15"sv},
+    // ## 16:9 color
+    {DCMode::FB_C1280x720_DI320x288_NV12_F30,       "C-720p D-288p  I-NV12 F-30"sv},
+    {DCMode::FB_C1280x720_DI640x576_NV12_F30,       "C-720p D-576p  I-NV12 F-30"sv},
+    // # wide
+    // ## 4:3 color
+    {DCMode::FB_C2048x1536_DI512x512_MJPG_F30,      "C-1536p D-512p   I-MJPG F-30"sv},
+    // ## 16:9 color
+    {DCMode::FB_C1280x720_DI512x512_NV12_F30,       "C-720p  D-512p   I-NV12 F-30"sv},
+    // ## no color
+    {DCMode::FB_DI512x512_F30,                      "C-OFF   D-512p   I-NA   F-30"sv},
+    // # no depth
+    // ## 4:3 color
+    // ## 16:9 color
+    {DCMode::FB_C1280x720_MJPG_F30,                 "C-720p  D-OFF    I-MJPG F-30"sv},
+
+    // femto mega orbbec
+    // # narrow
+    // ## 4:3 color
+    // {DCMode::FM_C1280x960_DI640x576_MJPG_F30,       "C-960p D-576p  I-MJPG F-30"sv},
+    // {DCMode::FM_C2048x1536_DI640x576_MJPG_F30,      "C-1536p D-576p  I-MJPG F-30"sv},
+    // {DCMode::FM_C4096x3072_DI640x576_MJPG_F15,      "C-3072p D-576p  I-MJPG F-15"sv},
+    // ## 16:9 color
+    // {DCMode::FM_C1280x720_DI320x288_MJPG_F30,       "C-1280p D-288p  I-MJPG F-30"sv},
     {DCMode::FM_C1280x720_DI640x576_MJPG_F30,       "C-720p  D-576p  I-MJPG F-30"sv},
-    {DCMode::FM_C1280x720_DI1024x1024_MJPG_F15,     "C-720p  D-1024p I-MJPG F-15"sv},
-    {DCMode::FM_C1280x720_MJPG_F30,                 "C-720p  D-OFF   I-MJPG F-30"sv},
+    // # wide
+    // ## 4:3 color    
+    {DCMode::FM_C1280x960_DI512x512_MJPG_F30,       "C-960p   D-512p  I-MJPG F-30"sv},
+    // {DCMode::FM_C2048x1536_DI512x512_MJPG_F30,      "C-1536p D-512p   I-MJPG F-30"sv},
+    // ## 16:9 color
+    {DCMode::FM_C1280x720_DI512x512_MJPG_F30,       "C-720p D-512p   I-MJPG F-30"sv},
+    // ## no color
+    {DCMode::FM_DI512x512_F30,                      "C-OFF    D-512p  I-NA   F-30"sv},
+    // # no depth
+    // ## 4:3 color
+    // {DCMode::FM_C1280x960_MJPG_F30,                 "C-960p   D-OFF   I-MJPG F-30"sv},
+    // {DCMode::FM_C2048x1536_MJPG_F30,                "C-1536p  D-OFF   I-MJPG F-30"sv},
+    // ## 16:9 color
+    // {DCMode::FM_C1280x720_MJPG_F30,                 "C-720p D-OFF    I-MJPG F-30"sv},
+
+
     // others
     {DCMode::Merged,                                "Merged"sv},
     {DCMode::Invalid,                               "Invalid"sv},
@@ -284,35 +373,81 @@ using TDCMode = std::tuple<
 static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
-    {M::AK_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
-    {M::AK_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
-    {M::AK_C1280x720_DI640x576_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
-    {M::AK_C1280x720_DI640x576_BGRA_F30,    IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
+    // azure kinect
+    // # narrow
+    // ## 4:3 color
+    {M::AK_C2048x1536_DI640x576_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_640x576,     FPS::F30, Dev::AK},
+    {M::AK_C4096x3072_DI640x576_MJPG_F15,   IF::MJPG, CR::R3072P, DR::K4A_640x576,     FPS::F15, Dev::AK},
+    // ## 16:9 color
     {M::AK_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::AK},
+    {M::AK_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
+    {M::AK_C1280x720_DI640x576_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
+    {M::AK_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK},
+    // # wide
+    // ## 4:3 color
+    {M::AK_C2048x1536_DI512x512_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_512x512,     FPS::F30, Dev::AK},
+    {M::AK_C2048x1536_DI1024x1024_MJPG_F30, IF::MJPG, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, Dev::AK},
+    // ## 16:9 color
     {M::AK_C1280x720_DI512x512_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK},
+    {M::AK_C1280x720_DI512x512_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK},
+    {M::AK_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK},
     {M::AK_C1280x720_DI1024x1024_NV12_F15,  IF::NV12, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK},
-    {M::AK_C1280x720_BGRA_F30,              IF::BGRA, CR::R720P,  DR::OFF,             FPS::F30, Dev::AK},
-    {M::AK_C1920x1080_BGRA_F30,             IF::BGRA, CR::R1080P, DR::OFF,             FPS::F30, Dev::AK},
-    {M::AK_C2560x1440_BGRA_F30,             IF::BGRA, CR::R1440P, DR::OFF,             FPS::F30, Dev::AK},
-    {M::AK_C2048x1536_BGRA_F30,             IF::BGRA, CR::R1536P, DR::OFF,             FPS::F30, Dev::AK},
-    {M::AK_C3840x2160_BGRA_F15,             IF::BGRA, CR::R2160P, DR::OFF,             FPS::F15, Dev::AK},
-    {M::AK_C4096x3072_BGRA_F15,             IF::MJPG, CR::R3072P, DR::OFF,             FPS::F15, Dev::AK},
-    {M::AK_C2048x1536_DI640x576_BGRA_F15,   IF::BGRA, CR::R1536P, DR::K4A_640x576,     FPS::F15, Dev::AK},
-    {M::AK_C2048x1536_DI1024x1024_BGRA_F15, IF::BGRA, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, Dev::AK},
-    {M::AK_C4096x3072_DI640x576_BGRA_F15,   IF::BGRA, CR::R3072P, DR::K4A_640x576,     FPS::F15, Dev::AK},
-    {M::AK_C4096x3072_DI1024x1024_BGRA_F15, IF::BGRA, CR::R3072P, DR::K4A_1024x1024,   FPS::F15, Dev::AK},
-    // femto bolt
-    {M::FB_C1280x720_MJPG_F30,              IF::MJPG, CR::R720P,  DR::OFF,             FPS::F30, Dev::FB},
+    {M::AK_C1280x720_DI1024x1024_YUY2_F15,  IF::YUY2, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK},
+    {M::AK_C1280x720_DI1024x1024_MJPG_F15,  IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK},
+    // # no depth
+    // ## 4:3 color
+    {M::AK_C2048x1536_MJPG_F30,             IF::MJPG, CR::R1536P, DR::OFF,             FPS::F30, Dev::AK},
+    {M::AK_C4096x3072_MJPG_F15,             IF::MJPG, CR::R3072P, DR::OFF,             FPS::F15, Dev::AK},
+    // ## 19:9 color
+    {M::AK_C1280x720_NV12_F30,              IF::NV12, CR::R720P,  DR::OFF,             FPS::F30, Dev::AK},
+    {M::AK_C1920x1080_MJPG_F30,             IF::MJPG, CR::R1080P, DR::OFF,             FPS::F30, Dev::AK},
+    {M::AK_C2560x1440_MJPG_F30,             IF::MJPG, CR::R1440P, DR::OFF,             FPS::F30, Dev::AK},
+    {M::AK_C3840x2160_MJPG_F15,             IF::MJPG, CR::R2160P, DR::OFF,             FPS::F15, Dev::AK},
+
+    // femto bolt orbbec
+    // # narrow
+    // ## 4:3 color
+    {M::FB_C2048x1536_DI640x576_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_640x576,     FPS::F30, Dev::FB},
+    {M::FB_C4096x3072_DI640x576_MJPG_F15,   IF::MJPG, CR::R3072P, DR::K4A_640x576,     FPS::F15, Dev::FB},
+    // ## 16:9 color
+    {M::FB_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::FB},
     {M::FB_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FB},
-    {M::FB_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FB},
-    {M::FB_C1280x720_DI640x576_BGRA_F30,    IF::BGRA, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FB},
-    {M::FB_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FB},
-    {M::FB_DI512x512_MJPG_F30,              IF::MJPG, CR::OFF,    DR::K4A_512x512,     FPS::F30, Dev::FB},
-    // femto mega
-    {M::FM_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FM},
+    // # wide
+    // ## 4:3 color
+    {M::FB_C2048x1536_DI512x512_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_512x512,     FPS::F30, Dev::FB},
+    // ## 16:9 color
+    {M::FB_C1280x720_DI512x512_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FB},
+    // ## no color
+    {M::FB_DI512x512_F30,                   IF::NA,   CR::OFF,    DR::K4A_512x512,     FPS::F30, Dev::FB},
+    // # no depth
+    // ## 4:3 color
+    // ## 16:9 color
+    {M::FB_C1280x720_MJPG_F30,              IF::MJPG, CR::R720P,  DR::OFF,             FPS::F30, Dev::FB},
+
+    // femto mega orbbec
+    // # narrow
+    // ## 4:3 color    
+    // {M::FM_C1280x960_DI640x576_MJPG_F30,    IF::MJPG, CR::R960P, DR::K4A_640x576,    FPS::F30, Dev::FM},
+    // {M::FM_C2048x1536_DI640x576_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_640x576,    FPS::F30, Dev::FM},
+    // {M::FM_C4096x3072_DI640x576_MJPG_F15,   IF::MJPG, CR::R3072P, DR::K4A_640x576,    FPS::F15, Dev::FM},
+    // ## 16:9 color
+    // {M::FM_C1280x720_DI320x288_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_320x288,    FPS::F30, Dev::FM},
     {M::FM_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FM},
-    {M::FM_C1280x720_DI1024x1024_MJPG_F15,  IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::FM},
-    {M::FM_C1280x720_MJPG_F30,              IF::MJPG, CR::R720P,  DR::OFF,             FPS::F15, Dev::FM},
+    // # wide
+    // ## 4:3 color    
+    {M::FM_C1280x960_DI512x512_MJPG_F30,    IF::MJPG, CR::R960P, DR::K4A_512x512,      FPS::F30, Dev::FM},
+    // {M::FM_C2048x1536_DI512x512_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_512x512,    FPS::F30, Dev::FM},
+    // ## 16:9 color
+    {M::FM_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,    FPS::F30, Dev::FM},
+    // ## no color
+    {M::FM_DI512x512_F30,                   IF::NA,   CR::OFF,    DR::K4A_512x512,     FPS::F30, Dev::FM},
+    // # no depth
+    // ## 4:3 color
+    // {M::FM_C1280x960_MJPG_F30,              IF::MJPG, CR::R960P,  DR::OFF,             FPS::F30, Dev::FM},
+    // {M::FM_C2048x1536_MJPG_F30,             IF::MJPG, CR::R1536P,  DR::OFF,            FPS::F30, Dev::FM},
+    // ## 16:9 color
+    // {M::FM_C1280x720_MJPG_F30,              IF::MJPG, CR::R720P,  DR::OFF,             FPS::F30, Dev::FM},
+
     // others
     {M::Invalid,                            IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::Undefined},
     {M::Merged,                             IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::Undefined},

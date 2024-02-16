@@ -28,11 +28,9 @@ auto test_kinect4() -> void{
     DCDeviceManager dManager;
 
     tool::cam::DCDeviceSettings ds;
-
-    // actions
-    ds.actionsS.openDevice    = true;
-    ds.actionsS.startReading  = true;
     // config
+    ds.configS.openDevice    = true;
+    ds.configS.startReading  = true;
     ds.configS.typeDevice   = DCType::AzureKinect;
     ds.configS.idDevice     = 0;
     ds.configS.disableLED   = false;
@@ -80,8 +78,8 @@ auto test_kinect4() -> void{
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    ds.actionsS.startReading  = false;
-    ds.actionsS.openDevice = false;
+    ds.configS.startReading  = false;
+    ds.configS.openDevice = false;
 
     std::puts("### Close device.\n");
     dManager.update_device_settings(ds);

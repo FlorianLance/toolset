@@ -111,16 +111,14 @@ struct DCDeviceImpl{
 protected:
 
     // initialization
-    auto initialize() -> void;
+    auto initialize(const DCConfigSettings &newConfig) -> void;
     virtual auto initialize_device_specific() -> void{}
-    virtual auto update_camera_from_colors_settings() -> void{}
+    virtual auto update_from_colors_settings() -> void{}
+    virtual auto update_from_data_settings() -> void{}
 
     // thread
     auto start_reading_thread() -> void;
     auto stop_reading_thread() -> void;
-
-    // state
-
 
     // read data
     virtual auto read_calibration() -> void{}
@@ -133,7 +131,6 @@ protected:
     virtual auto read_IMU(bool enable)                  -> void{static_cast<void>(enable);}
     virtual auto read_body_tracking(bool enable)        -> void{static_cast<void>(enable);}
     auto check_data_validity() -> bool;
-
 
     virtual auto generate_cloud(bool enable)            -> void{static_cast<void>(enable);}
 
@@ -150,37 +147,37 @@ protected:
     // process data
     virtual auto resize_color_image_to_depth_size() -> void{}
     auto convert_color_image() -> void;
-    auto filter_depth_image(const DCFiltersSettings &filtersS) -> void;
-    auto filter_depth_sized_color_image(const DCFiltersSettings &filtersS) -> void;
-    auto filter_infrared_image(const DCFiltersSettings &filtersS) -> void;
-    auto filter_cloud_image(const DCFiltersSettings &filtersS) -> void;
+    auto filter_depth_image() -> void;
+    auto filter_depth_sized_color_image() -> void;
+    auto filter_infrared_image() -> void;
+    auto filter_cloud_image() -> void;
     auto update_valid_depth_values() -> void;
 
     // frame generation
     // # local
-    auto create_local_frame(const DCDataSettings &dataS) -> std::unique_ptr<DCFrame>;
+    auto create_local_frame() -> std::unique_ptr<DCFrame>;
     auto update_infos(DCFrame *dFrame) -> void;
-    auto update_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_depth_sized_color(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_depth(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_infra(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_cloud(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_audio(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_imu(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_bodies(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
-    auto update_calibration(const DCDataSettings &dataS, DCFrame *dFrame) -> void;
+    auto update_color(DCFrame *dFrame) -> void;
+    auto update_depth_sized_color(DCFrame *dFrame) -> void;
+    auto update_depth(DCFrame *dFrame) -> void;
+    auto update_infra(DCFrame *dFrame) -> void;
+    auto update_cloud(DCFrame *dFrame) -> void;
+    auto update_audio(DCFrame *dFrame) -> void;
+    auto update_imu(DCFrame *dFrame) -> void;
+    auto update_bodies(DCFrame *dFrame) -> void;
+    auto update_calibration(DCFrame *dFrame) -> void;
     // # compressed
-    auto compress_frame(const DCFiltersSettings &filtersS, const DCDataSettings &dataS) -> std::unique_ptr<DCCompressedFrame>;
+    auto compress_frame() -> std::unique_ptr<DCCompressedFrame>;
     auto update_compressed_frame_infos(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_depth_sized_color(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_depth(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_infra(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_cloud(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_audio(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_imu(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_bodies(const DCDataSettings &dataS, const DCFiltersSettings &filtersS, DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_calibration(const DCDataSettings &dataS, DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_color(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_depth_sized_color(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_depth(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_infra(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_cloud(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_audio(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_imu(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_bodies(DCCompressedFrame *cFrame) -> void;
+    auto update_compressed_frame_calibration(DCCompressedFrame *cFrame) -> void;
 
     // auto debug_save_images(std::string parentPath) -> void;
 
@@ -207,6 +204,10 @@ protected:
         //  -> bigger cluster
     }
 
+    // current settings
+    DCFiltersSettings cFiltersS;
+    DCDataSettings cDataS;
+    DCDelaySettings cDelayS;
 
 private:
 

@@ -176,7 +176,7 @@ using namespace tool::cam;
 
 auto test_raw_orbbec_femto() -> void{
 
-    DCMode mode = DCMode::FB_C1280x720_DI512x512_MJPG_F30;
+    DCMode mode = DCMode::FB_C2048x1536_DI512x512_MJPG_F30;
     // DCMode mode = DCMode::FO_CLOUD_C1280x720_DI640x576_MJPG_F30;
     auto dRes = dc_depth_resolution(mode);
     auto cRes = dc_color_resolution(mode);
@@ -634,15 +634,14 @@ auto test_orbbec_femto() -> void {
 
     tool::cam::DCDeviceSettings ds;
 
-    // actions
-    ds.actionsS.openDevice                      = true;
-    ds.actionsS.startReading                    = true;
     // config
+    ds.configS.openDevice                      = true;
+    ds.configS.startReading                    = true;
     ds.configS.typeDevice                       = DCType::FemtoBolt;
     ds.configS.idDevice                         = 0;
     ds.configS.disableLED                       = false;
     ds.configS.synchMode                        = DCSynchronisationMode::Standalone;
-    ds.configS.mode                             = DCMode::FB_C1280x720_DI512x512_MJPG_F30;
+    ds.configS.mode                             = DCMode::FB_C2048x1536_DI640x576_MJPG_F30;
     ds.configS.delayBetweenColorAndDepthUsec    = 0;
     ds.configS.synchronizeColorAndDepth         = true;
     // data
@@ -661,8 +660,8 @@ auto test_orbbec_femto() -> void {
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-    ds.actionsS.startReading  = false;
-    ds.actionsS.openDevice = false;
+    ds.configS.startReading  = false;
+    ds.configS.openDevice = false;
 
     std::puts("### Close device.\n");
     dManager.update_device_settings(ds);
@@ -682,15 +681,14 @@ auto test_femto_mega() -> void{
 
     tool::cam::DCDeviceSettings ds;
 
-    // actions
-    ds.actionsS.openDevice                      = true;
-    ds.actionsS.startReading                    = true;
     // config
+    ds.configS.openDevice                      = true;
+    ds.configS.startReading                    = true;
     ds.configS.typeDevice                       = DCType::FemtoMega;
     ds.configS.idDevice                         = 0;
     ds.configS.disableLED                       = false;
     ds.configS.synchMode                        = DCSynchronisationMode::Standalone;
-    ds.configS.mode                             = DCMode::FM_C1280x720_DI512x512_MJPG_F30;
+    ds.configS.mode                             = DCMode::FM_C1280x720_DI640x576_MJPG_F30;
     ds.configS.delayBetweenColorAndDepthUsec    = 0;
     ds.configS.synchronizeColorAndDepth         = true;
     // data
@@ -717,8 +715,8 @@ auto test_femto_mega() -> void{
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
 
-    ds.actionsS.startReading  = false;
-    ds.actionsS.openDevice = false;
+    ds.configS.startReading  = false;
+    ds.configS.openDevice = false;
 
     std::puts("### Close device.\n");
     dManager.update_device_settings(ds);

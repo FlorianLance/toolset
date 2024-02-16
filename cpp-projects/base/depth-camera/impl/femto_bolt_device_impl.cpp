@@ -45,8 +45,8 @@ auto FemtoBoltDeviceImpl::initialize_device_specific() -> void{
     orbbecD->initialize(mInfos, settings.color);
 }
 
-auto FemtoBoltDeviceImpl::update_camera_from_colors_settings() -> void{
-    orbbecD->update_camera_from_colors_settings(settings.color);
+auto FemtoBoltDeviceImpl::update_from_colors_settings() -> void{
+    orbbecD->update_from_colors_settings(settings.color);
 }
 
 auto FemtoBoltDeviceImpl::open(uint32_t deviceId) -> bool{
@@ -55,8 +55,7 @@ auto FemtoBoltDeviceImpl::open(uint32_t deviceId) -> bool{
 
 auto FemtoBoltDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool{
 
-    settings.config = newConfigS;
-    initialize();
+    initialize(newConfigS);
 
     if(orbbecD->start_pipeline(mInfos, settings.config)){
         start_reading_thread();

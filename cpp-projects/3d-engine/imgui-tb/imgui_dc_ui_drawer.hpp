@@ -88,7 +88,6 @@ public:
 
     static auto draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &updateP) -> void;
     static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void;
-    static auto draw_dc_actions_settings(cam::DCActionsSettings &actions,  bool &updateP) -> void;
     static auto draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
         cam::DCDeviceSettings &device,

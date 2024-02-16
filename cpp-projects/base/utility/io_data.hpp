@@ -45,7 +45,7 @@ static auto read(ReadValueType &v, std::int8_t const * const data, size_t &offse
         data + offset,
         data + offset + nbBytes,
         reinterpret_cast<std::int8_t*>(&v)
-        );
+    );
     offset += nbBytes;
 }
 template<typename ReadValueType>

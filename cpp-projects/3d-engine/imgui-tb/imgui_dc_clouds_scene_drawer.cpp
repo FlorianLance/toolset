@@ -152,7 +152,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
             // filtering planes
-            if(cloudD.filters.p1FMode != tool::cam::DCFiltersSettings::PlaneFilteringMode::None && plane1D){
+            if(cloudD.filters.p1FMode != tool::cam::PlaneFilteringMode::None && plane1D){
 
                 auto p1 = cloudD.filters.p1A;
                 auto p2 = cloudD.filters.p1B;

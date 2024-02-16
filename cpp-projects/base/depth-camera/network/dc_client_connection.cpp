@@ -250,8 +250,8 @@ auto DCClientConnection::dummy_device_trigger() -> void {
 
     Header header;
     DCDeviceSettings settings;
-    settings.actionsS.startReading  = true;
-    settings.actionsS.openDevice = true;
+    settings.configS.startReading  = true;
+    settings.configS.openDevice = true;
     settings.configS.typeDevice   = DCType::AzureKinect;
     settings.configS.synchMode    = DCSynchronisationMode::Standalone;
 

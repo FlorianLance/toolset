@@ -64,27 +64,32 @@ public:
     auto closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t;
     auto get_compressed_frame(size_t idCamera, size_t idFrame) -> std::weak_ptr<DCCompressedFrame>;
     auto get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrames*;
-    auto merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
-    auto merge_cameras_frame_id(size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void;
     auto uncompressor(size_t idCamera) noexcept -> DCFrameUncompressor*;
     // # audio
     auto total_audio_frames_size(size_t idCamera) const -> size_t;
     auto get_audio_samples_all_channels(size_t idCamera, std::vector<std::vector<float>> &audioBuffer) -> void;
     auto get_audio_samples_all_channels(size_t idCamera, std::vector<float> &audioBuffer) -> void;
 
+    // uncomress
+    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, size_t idFrame, DCFrame &frame) -> bool;
+    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+
     // modify
-    // # cameras
+    // # remove cameras/frames
     auto keep_only_one_camera(size_t idCamera) -> void;
     auto keep_only_cameras_from_id(const std::vector<size_t> &ids) -> void;
-    auto merge_all_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
     auto remove_all_cameras_compressed_frames() noexcept -> void;
-    // # frames
-    auto add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void;    
-    auto uncompress_frame(size_t idCamera, size_t idFrame, DCFrame &frame) -> bool;
-    auto uncompress_frame(size_t idCamera, DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+    // # modify cameras/frames
+    auto merge_all_cameras(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
+    auto merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
+    auto merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void;
+    // # add/remove
+    auto add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void;
     auto remove_compressed_frames_until(size_t idCamera, size_t idFrame) -> void;
     auto remove_compressed_frames_after(size_t idCamera, size_t idFrame) -> void;
     auto remove_all_compressed_frames(size_t idCamera) noexcept -> void;
+
+
     // # calibration
     auto set_transform(size_t idCamera, geo::Mat4d tr) -> void;
 

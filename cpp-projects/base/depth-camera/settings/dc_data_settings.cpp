@@ -67,7 +67,7 @@ auto DCDataSettings::write_to_data(std::int8_t * const data, size_t &offset, siz
 auto DCDataSettings::total_data_size() const noexcept -> size_t{
     return
         BaseSettings::total_data_size() +
-        sizeof(client)  +
+        sizeof(client) +
         sizeof(server);
 }
 
