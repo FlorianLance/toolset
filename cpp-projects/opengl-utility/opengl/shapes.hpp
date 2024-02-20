@@ -104,6 +104,12 @@ public:
     TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3);
 };
 
+class CircleLines : public BaseShape{
+public:
+
+    CircleLines(float radius);
+};
+
 class Plane : public BaseShape{
 public:
     Plane(GLfloat xsize, GLfloat zsize, size_t xdivs, size_t zdivs, GLfloat smax = 1.0f, GLfloat tmax = 1.0f);

@@ -111,40 +111,30 @@ auto DCDevice::is_reading() const noexcept -> bool{
     return i->dd->readFramesFromCameras;
 }
 
-auto DCDevice::get_nb_capture_per_second() const noexcept -> float{
-    return i->dd->fTiming.nbCapturePerSecond;
-}
 
 auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{
-    if(auto duration = i->dd->get_duration_between_ms("before_capture"sv, "after_capture"sv); duration.has_value()){
+    if(auto duration = i->dd->get_duration_ms("CAPTURE_FRAME"sv); duration.has_value()){
         return duration.value().count();
     }
     return -1;
 }
 
 auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
-    if(auto duration = i->dd->get_duration_between_ms("after_capture"sv, "after_processing"sv); duration.has_value()){
+    if(auto duration = i->dd->get_duration_ms("PROCESSING_DATA"sv); duration.has_value()){
         return duration.value().count();
     }
     return -1;
 }
 
-auto DCDevice::get_compressing_duration_ms() noexcept -> int64_t{
-    if(auto duration = i->dd->get_duration_between_ms("after_processing"sv, "after_compressing"sv); duration.has_value()){
+auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
+    if(auto duration = i->dd->get_duration_ms(id); duration.has_value()){
         return duration.value().count();
     }
     return -1;
 }
 
-auto DCDevice::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> int64_t{
-    if(auto duration = i->dd->get_duration_between_ms(from, to); duration.has_value()){
-        return duration.value().count();
-    }
-    return -1;
-}
-
-auto DCDevice::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> int64_t{
-    if(auto duration = i->dd->get_duration_between_micro_s(from, to); duration.has_value()){
+auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
+    if(auto duration = i->dd->get_duration_micro_s(id); duration.has_value()){
         return duration.value().count();
     }
     return -1;
@@ -176,10 +166,6 @@ auto DCDevice::set_data_settings(const DCDataSettings &dataS) -> void{
 
 auto DCDevice::set_filters_settings(const DCFiltersSettings &filtersS) -> void{
     i->dd->set_filters_settings(filtersS);
-}
-
-auto DCDevice::send_data_state(bool state) -> void{
-    i->dd->sendData = state;
 }
 
 auto DCDevice::set_delay_settings(const DCDelaySettings &delayS) -> void{

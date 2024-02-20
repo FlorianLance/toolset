@@ -70,6 +70,9 @@ auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &o
     read(p1A, data, offset, sizeData);
     read(p1B, data, offset, sizeData);
     read(p1C, data, offset, sizeData);
+    read(removeFromPointDistance, data, offset, sizeData);
+    read(pSphere, data, offset, sizeData);
+    read(maxSphereDistance, data, offset, sizeData);
     read(doLocalDiffFiltering, data, offset, sizeData);
     read(maxLocalDiff, data, offset, sizeData);
     read(localDiffConnectivity, data, offset, sizeData);
@@ -111,6 +114,9 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
     write(p1A, data, offset, sizeData);
     write(p1B, data, offset, sizeData);
     write(p1C, data, offset, sizeData);
+    write(removeFromPointDistance, data, offset, sizeData);
+    write(pSphere, data, offset, sizeData);
+    write(maxSphereDistance, data, offset, sizeData);
     write(doLocalDiffFiltering, data, offset, sizeData);
     write(maxLocalDiff, data, offset, sizeData);
     write(localDiffConnectivity, data, offset, sizeData);
@@ -147,6 +153,9 @@ auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
         sizeof(p1A) +
         sizeof(p1B) +
         sizeof(p1C) +
+        sizeof(removeFromPointDistance) +
+        sizeof(pSphere) +
+        sizeof(maxSphereDistance) +
         sizeof(doLocalDiffFiltering) +
         sizeof(maxLocalDiff) +
         sizeof(localDiffConnectivity) +
@@ -159,7 +168,7 @@ auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
         sizeof(erosionConnectivity) +
         sizeof(keepOnlyBiggestCluster) +
         sizeof(removeAfterClosestPoint) +
-           sizeof(maxDistanceAfterClosestPoint) +
+        sizeof(maxDistanceAfterClosestPoint) +
         sizeof(invalidateColorFromDepth) +
         sizeof(invalidateInfraFromDepth);
 }

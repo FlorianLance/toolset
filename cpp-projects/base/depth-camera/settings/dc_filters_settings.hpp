@@ -62,9 +62,12 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     // # from cloud
     bool filterDepthWithCloud = false;
     PlaneFilteringMode p1FMode = PlaneFilteringMode::None;
-    geo::Pt3f p1A;
-    geo::Pt3f p1B;
-    geo::Pt3f p1C;
+    geo::Pt3f p1A = {1.f,1.f,0.f};
+    geo::Pt3f p1B = {1.f,0.f,1.f};
+    geo::Pt3f p1C = {1.f,0.f,0.f};
+    bool removeFromPointDistance = false;
+    geo::Pt3f pSphere = {0.f,0.f,1.f};
+    float maxSphereDistance = 1000.0f;
     // # complex
     bool doLocalDiffFiltering = true;
     float maxLocalDiff = 10.f;

@@ -28,9 +28,6 @@
 
 #include "femto_bolt_device_impl.hpp"
 
-// local
-#include "utility/benchmark.hpp"
-
 using namespace tool;
 using namespace tool::geo;
 using namespace tool::cam;
@@ -141,9 +138,9 @@ auto FemtoBoltDeviceImpl::read_body_tracking(bool enable) -> void{
 auto FemtoBoltDeviceImpl::resize_color_image_to_depth_size() -> void{
     
     if(!fData.color.empty() && !fData.depth.empty()){
-        fData.dephtSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
+        fData.depthSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
     }else{
-        fData.dephtSizedColor = {};
+        fData.depthSizedColor = {};
     }
 }
 

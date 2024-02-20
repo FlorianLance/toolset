@@ -126,6 +126,25 @@ TriangleLines::TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo
     data = std::move(lmd);
 }
 
+
+CircleLines::CircleLines(float radius){
+
+    // Bottom cap
+    // int sideCounter = 0;
+    // while (vert < nbVerticesCap) {
+    //     sideCounter = sideCounter == nbSides ? 0 : sideCounter;
+
+    //     float r1 = (float)(sideCounter++) / nbSides * _2pi;
+    //     float cos = Mathf.Cos(r1);
+    //     float sin = Mathf.Sin(r1);
+    //     vertices[vert] = new Vector3(cos * (bottomRadius - bottomThickness * .5f), 0f, sin * (bottomRadius - bottomThickness * .5f));
+    //     vertices[vert + 1] = new Vector3(cos * (bottomRadius + bottomThickness * .5f), 0f, sin * (bottomRadius + bottomThickness * .5f));
+    //     vert += 2;
+    // }
+
+}
+
+
 Skybox::Skybox(GLfloat size){
 
     GLfloat side2 = size * 0.5f;
@@ -1003,4 +1022,5 @@ Voxels::Voxels(size_t size, geo::Pt3<int> *voxels, Pt3f *colors){
     pmd->init_buffers(static_cast<GLuint>(size), voxels, colors);
     data = std::move(pmd);
 }
+
 

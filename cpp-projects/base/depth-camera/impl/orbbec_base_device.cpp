@@ -47,7 +47,6 @@
 
 // local
 #include "utility/logger.hpp"
-#include "utility/benchmark.hpp"
 #include "azure_utility.hpp"
 
 // debug
@@ -831,14 +830,13 @@ auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
 auto OrbbecBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     if(i->pipe != nullptr){
-        Bench::start("[OrbbecDevice::capture_frame]");
+
         try{
             i->frameSet = i->pipe->waitForFrames(timeoutMs);
         }catch(ob::Error &e) {
             Logger::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
         }
 
-        Bench::stop();
         return i->frameSet != nullptr;
     }
     return false;
@@ -855,9 +853,7 @@ auto OrbbecBaseDevice::read_color_image() -> BinarySpan{
 
     if(i->frameSet != nullptr){
 
-        Bench::start("[OrbbecDevice::read_color_image]");
         i->colorImage = i->frameSet->colorFrame();
-        Bench::stop();
 
         if(i->colorImage != nullptr){
             return BinarySpan{
@@ -873,9 +869,7 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
 
     if(i->frameSet != nullptr){
 
-        Bench::start("[OrbbecDevice::read_depth_image]");
         i->depthImage = i->frameSet->depthFrame();
-        Bench::stop();
 
         if(i->depthImage != nullptr){
             return  std::span<std::uint16_t>{
@@ -891,9 +885,7 @@ auto OrbbecBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
 
     if(i->frameSet != nullptr){
 
-        Bench::start("[OrbbecDevice::read_infra_image]");
         i->infraredImage = i->frameSet->irFrame();
-        Bench::stop();
 
         if(i->infraredImage != nullptr){
             return  std::span<std::uint16_t>{
@@ -1057,7 +1049,6 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
     );
 
     try{
-        Bench::start("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size]");
 
         i->k4aTransformation.color_image_to_depth_camera(
             k4aDepthImage,
@@ -1081,8 +1072,6 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
         //     count3 += d;
         // }
         // std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
-
-        Bench::stop();
 
     }catch(const std::runtime_error &error){
         Logger::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));
@@ -1118,14 +1107,12 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
     );
 
     try{
-        Bench::start("[OrbbecBaseDevice::k4a_generate_cloud]");
 
         i->k4aTransformation.depth_image_to_point_cloud(
             k4aDepthImage,
             K4A_CALIBRATION_TYPE_DEPTH,
             &k4aPointCloudImage
         );
-        Bench::stop();
 
     }catch(const std::runtime_error &error){
         Logger::error(std::format("[OrbbecBaseDevice::k4a_generate_cloud] Runtime error: {}", error.what()));

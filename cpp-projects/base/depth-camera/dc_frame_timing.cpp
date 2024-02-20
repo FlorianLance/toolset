@@ -26,6 +26,10 @@
 
 #include "dc_frame_timing.hpp"
 
+// std
+#include <iostream>
+#include <algorithm>
+
 // local
 #include "utility/time.hpp"
 #include "utility/vector.hpp"
@@ -33,80 +37,163 @@
 using namespace tool::cam;
 using namespace std::literals::string_view_literals;
 
-auto DCFrameTiming::reset() -> void{
-    capturesTimes.clear();
-    timestamps.clear();
-    localTimestamps.clear();
-}
 
-auto DCFrameTiming::swap_local_timestamps() -> void{
-    for(auto &ts : localTimestamps){
-        timestamps[ts.first]    = ts.second;
-        ts.second               = std::nullopt;
+auto TimeM::start(std::string_view id) -> void{
+    auto sTime = tool::Time::nanoseconds_since_epoch();    
+    if(!times.contains(id)){
+        locker.lock();
+        times[id] = {sTime, std::chrono::nanoseconds{0}, std::chrono::nanoseconds{0}};
+        locker.unlock();
+    }else{
+        times[id].start = sTime;
     }
 }
 
-auto DCFrameTiming::update_local(std::string_view name, std::chrono::nanoseconds timeNs) -> void{
-    localTimestamps[name] = timeNs;
+auto TimeM::end(std::string_view id) -> void{
+    auto eTime = tool::Time::nanoseconds_since_epoch();
+    if(times.contains(id)){
+        times[id].end = eTime;
+        times[id].lastDiff = eTime - times[id].start;
+    }
 }
 
-auto DCFrameTiming::update_local(std::string_view name) -> void{
-    localTimestamps[name] = Time::nanoseconds_since_epoch();
-}
-
-auto DCFrameTiming::get_local(std::string_view name) const -> std::chrono::nanoseconds{
-    if(localTimestamps.contains(name)){
-        if(localTimestamps.at(name).has_value()){
-            return localTimestamps.at(name).value();
-        }
+auto TimeM::get_start(std::string_view id) -> std::chrono::nanoseconds{
+    if(times.contains(id)){
+        return times[id].start;
     }
     return std::chrono::nanoseconds{0};
 }
 
-auto DCFrameTiming::compute_capture_framerate() -> void{
-
-    // if(!localTimestamps.contains("after_capture"sv)){
-    if(!localTimestamps.contains("after_get_images"sv)){
-        return;
+auto TimeM::get_end(std::string_view id) -> std::chrono::nanoseconds{
+    if(times.contains(id)){
+        return times[id].end;
     }
-
-    // auto aftertCatpureTs = localTimestamps["after_capture"sv].value();
-    auto captureTs = localTimestamps["after_get_images"sv].value();
-    capturesTimes.push_back(captureTs);
-    bool foundT = false;
-    size_t idT = 0;
-    for(size_t ii = 0; ii < capturesTimes.size(); ++ii){
-        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(captureTs - capturesTimes[ii]);
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() > 5000){
-            foundT = true;
-            idT = ii;
-        }else{
-            break;
-        }
-    }
-    if(foundT){
-        tool::erase_range(capturesTimes, 0, idT + 1);
-    }
-    nbCapturePerSecond = capturesTimes.size()/5.f;
+    return std::chrono::nanoseconds{0};
 }
 
-auto DCFrameTiming::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::milliseconds>{
-    if(timestamps.contains(from) && timestamps.contains(to)){
-        if(timestamps.at(from).has_value() && timestamps.at(to).has_value()){
-            return std::chrono::duration_cast<std::chrono::milliseconds>(timestamps.at(to).value()-timestamps.at(from).value());
-        }
-        return std::nullopt;
+auto TimeM::get_duration_ms(std::string_view id) -> std::chrono::milliseconds{
+    if(times.contains(id)){
+        return tool::Time::to_ms(times[id].lastDiff);
     }
-    return std::nullopt;
+    return std::chrono::milliseconds{0};
 }
 
-auto DCFrameTiming::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::microseconds>{
-    if(timestamps.contains(from) && timestamps.contains(to)){
-        if(timestamps.at(from).has_value() && timestamps.at(to).has_value()){
-            return std::chrono::duration_cast<std::chrono::microseconds>(timestamps.at(to).value()-timestamps.at(from).value());
-        }
-        return std::nullopt;
+auto TimeM::get_duration_micro_s(std::string_view id) -> std::chrono::microseconds{
+    if(times.contains(id)){
+        return tool::Time::to_micro_s(times[id].lastDiff);
     }
-    return std::nullopt;
+    return std::chrono::microseconds{0};
 }
+
+auto TimeM::display() -> void{
+
+    // using namespace std::chrono;
+
+    // std::vector<std::pair<std::string_view, microseconds>> durations;
+    // locker.lock();
+    // for(const auto &time : times){
+    //     durations.push_back({time.first, tool::Time::difference_micro_s(std::get<0>(time.second), std::get<1>(time.second))});
+    // }
+    // locker.unlock();
+
+    // std::sort(std::begin(durations), std::end(durations), [&](const std::pair<std::string_view, microseconds> &c1,  const std::pair<std::string_view, microseconds> &c2){
+    //     return c1.second > c2.second;
+    // });
+
+    // std::cout << "DURATIONS:\n";
+    // for(const auto &duration : durations){
+    //     if(duration.second.count() > 0){
+    //         std::cout << std::format("[{}:{}] ", duration.first, duration.second.count());
+    //     }
+    // }
+    // std::cout << "\n";
+}
+
+TimeF::TimeF(TimeM &t, std::string_view id) : m_id(id){
+    // std::cout << "[" << id << "] ";
+    m_t = &t;
+    m_t->start(m_id);
+}
+
+TimeF::~TimeF(){
+    // std::cout << "[/" << m_id << "] ";
+    m_t->end(m_id);
+}
+
+// auto DCFrameTiming::reset() -> void{
+//     capturesTimes.clear();
+//     timestamps.clear();
+//     localTimestamps.clear();
+// }
+
+// auto DCFrameTiming::swap_local_timestamps() -> void{
+//     for(auto &ts : localTimestamps){
+//         timestamps[ts.first]    = ts.second;
+//         ts.second               = std::nullopt;
+//     }
+// }
+
+// auto DCFrameTiming::update_local(std::string_view name, std::chrono::nanoseconds timeNs) -> void{
+//     localTimestamps[name] = timeNs;
+// }
+
+// auto DCFrameTiming::update_local(std::string_view name) -> void{
+//     localTimestamps[name] = Time::nanoseconds_since_epoch();
+// }
+
+// auto DCFrameTiming::get_local(std::string_view name) const -> std::chrono::nanoseconds{
+//     if(localTimestamps.contains(name)){
+//         if(localTimestamps.at(name).has_value()){
+//             return localTimestamps.at(name).value();
+//         }
+//     }
+//     return std::chrono::nanoseconds{0};
+// }
+
+// auto DCFrameTiming::compute_capture_framerate() -> void{
+
+//     // if(!localTimestamps.contains("after_capture"sv)){
+//     if(!localTimestamps.contains("after_get_images"sv)){
+//         return;
+//     }
+
+//     // auto aftertCatpureTs = localTimestamps["after_capture"sv].value();
+//     auto captureTs = localTimestamps["after_get_images"sv].value();
+//     capturesTimes.push_back(captureTs);
+//     bool foundT = false;
+//     size_t idT = 0;
+//     for(size_t ii = 0; ii < capturesTimes.size(); ++ii){
+//         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(captureTs - capturesTimes[ii]);
+//         if(std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() > 5000){
+//             foundT = true;
+//             idT = ii;
+//         }else{
+//             break;
+//         }
+//     }
+//     if(foundT){
+//         tool::erase_range(capturesTimes, 0, idT + 1);
+//     }
+//     nbCapturePerSecond = capturesTimes.size()/5.f;
+// }
+
+// auto DCFrameTiming::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::milliseconds>{
+//     if(timestamps.contains(from) && timestamps.contains(to)){
+//         if(timestamps.at(from).has_value() && timestamps.at(to).has_value()){
+//             return std::chrono::duration_cast<std::chrono::milliseconds>(timestamps.at(to).value()-timestamps.at(from).value());
+//         }
+//         return std::nullopt;
+//     }
+//     return std::nullopt;
+// }
+
+// auto DCFrameTiming::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::microseconds>{
+//     if(timestamps.contains(from) && timestamps.contains(to)){
+//         if(timestamps.at(from).has_value() && timestamps.at(to).has_value()){
+//             return std::chrono::duration_cast<std::chrono::microseconds>(timestamps.at(to).value()-timestamps.at(from).value());
+//         }
+//         return std::nullopt;
+//     }
+//     return std::nullopt;
+// }
 

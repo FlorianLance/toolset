@@ -42,14 +42,22 @@ struct Time{
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     }
 
-    [[nodiscard]] [[maybe_unused]] static auto difference_ms(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::milliseconds{
+    [[nodiscard]] [[maybe_unused]] static auto to_ms(std::chrono::nanoseconds t) noexcept -> std::chrono::milliseconds{
         using namespace std::chrono;
-        return duration_cast<milliseconds>((tEnd-tStart));
+        return duration_cast<milliseconds>(t);
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto to_micro_s(std::chrono::nanoseconds t) noexcept -> std::chrono::microseconds{
+        using namespace std::chrono;
+        return duration_cast<microseconds>(t);
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto difference_ms(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::milliseconds{
+        return to_ms(tEnd-tStart);
     }
 
     [[nodiscard]] [[maybe_unused]] static auto difference_micro_s(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::microseconds{
-        using namespace std::chrono;
-        return duration_cast<microseconds>((tEnd-tStart));
+        return to_micro_s(tEnd-tStart);
     }
 };
 

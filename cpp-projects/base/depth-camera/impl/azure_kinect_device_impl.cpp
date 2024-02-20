@@ -26,9 +26,6 @@
 
 #include "azure_kinect_device_impl.hpp"
 
-// local
-#include "utility/benchmark.hpp"
-
 using namespace tool::geo;
 using namespace tool::cam;
 
@@ -158,9 +155,9 @@ auto AzureKinectDeviceImpl::generate_cloud(bool enable) -> void{
 
 auto AzureKinectDeviceImpl::resize_color_image_to_depth_size() -> void{
     if(!fData.color.empty() && !fData.depth.empty()){
-        fData.dephtSizedColor = azureD->resize_color_image_to_depth_size(mInfos, fData.color);
+        fData.depthSizedColor = azureD->resize_color_image_to_depth_size(mInfos, fData.color);
     }else{
-        fData.dephtSizedColor = {};
+        fData.depthSizedColor = {};
     }
 }
 

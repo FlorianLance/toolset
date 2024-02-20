@@ -29,20 +29,23 @@
 
 using namespace tool::cam;
 
-auto DCFrameData::reset(const DCModeInfos &mInfos) -> void{
-
-    // final data
+auto DCFrameData::reset_spans() -> void{
     rawColor            = {};
     color               = {};
-    dephtSizedColor     = {};
+    depthSizedColor     = {};
     depth               = {};
     infra               = {};
-    bodiesIdMap       = {};
-    depthCloud          = {};
-    binaryCalibration   = {};
-    binaryIMU           = {};    
+    bodiesIdMap         = {};
+    depthCloud          = {};    
+    binaryIMU           = {};
     audioChannels       = {0,{}};
     bodies              = {};
+}
+
+auto DCFrameData::reset(const DCModeInfos &mInfos) -> void{
+
+    binaryCalibration   = {};
+    reset_spans();
 
     // processsing
     if(mInfos.has_depth()){
@@ -65,3 +68,4 @@ auto DCFrameData::reset(const DCModeInfos &mInfos) -> void{
         convertedColorData.reset();
     }
 }
+

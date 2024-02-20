@@ -325,6 +325,50 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
                     }
                 }
                 ImGui::Unindent();
+
+
+                ImGui::Text("Point distance filtering:");
+                ImGui::Indent();
+
+                if(ImGui::Checkbox("Enable###settings_point_distance_filtering_checkbox", &filters.removeFromPointDistance)){
+                    update = true;
+                }
+
+                ImGui::Text("Point (mm):");
+                auto pPtr = filters.pSphere.array.data();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","pS_x", pPtr, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","pS_y", pPtr+1, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","pS_z", pPtr+2, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+
+                ImGuiDragS ds;
+                ds.widthDrag = 60.f;
+                ds.decButton = true;
+                ds.incButton = true;
+                ds.displayText = true;
+                ds.displayTextLeft = true;
+                ds.defaultButton = false;
+
+                ImGuiFloatS fs;
+                fs.defaultValue = 1000.f;
+                fs.min = 1.f;
+                fs.max = 10000.f;
+                fs.speedInc = 10.f;
+                fs.speedDrag = 1.0f;
+                fs.format = "%.1f";
+
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Max distance:","settings_max_distance_from_point_dragfloat", &filters.maxSphereDistance, fs, ds)){
+                    update = true;
+                }
+
+                ImGui::Unindent();
             }
 
         }

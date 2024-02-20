@@ -371,3 +371,20 @@ auto TriangleLineDrawer::init(const geo::Pt3f &p1, const geo::Pt3f &p2, const ge
     clean();
     drawableObject = std::make_unique<TriangleLines>(p1,p2,p3);
 }
+
+CircleLinesDrawer::CircleLinesDrawer(float radius){
+
+}
+
+auto CircleLinesDrawer::init(float radius) -> void{}
+
+
+
+CylinderDrawer::CylinderDrawer(geo::Pt3f a, geo::Pt3f b, float radius){
+
+}
+
+auto CylinderDrawer::init(geo::Pt3f a, geo::Pt3f b, float radius) -> void{
+
+}
+

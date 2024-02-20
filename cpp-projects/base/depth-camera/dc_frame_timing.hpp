@@ -36,22 +36,48 @@
 
 namespace tool::cam{
 
-struct DCFrameTiming{
-
-    auto reset() -> void;
-    auto swap_local_timestamps() -> void;
-    auto update_local(std::string_view name, std::chrono::nanoseconds timeNs) -> void;
-    auto update_local(std::string_view name) -> void;
-    auto compute_capture_framerate() -> void;
-
-    auto get_local(std::string_view name) const -> std::chrono::nanoseconds;
-    auto get_duration_between_ms(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::milliseconds>;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::microseconds>;
-
-    // profiling
-    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> timestamps;
-    s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> localTimestamps;
-    float nbCapturePerSecond = 0.f;
-    std::vector<std::chrono::nanoseconds> capturesTimes;
+struct TimeElem{
+    std::chrono::nanoseconds start      = std::chrono::nanoseconds{0};
+    std::chrono::nanoseconds end        = std::chrono::nanoseconds{0};
+    std::chrono::nanoseconds lastDiff   = std::chrono::nanoseconds{0};
 };
+
+struct TimeM{
+    auto start(std::string_view id) -> void;
+    auto end(std::string_view id) -> void;
+    auto get_start(std::string_view id) -> std::chrono::nanoseconds;
+    auto get_end(std::string_view id) -> std::chrono::nanoseconds;
+    auto get_duration_ms(std::string_view id) -> std::chrono::milliseconds;
+    auto get_duration_micro_s(std::string_view id) -> std::chrono::microseconds;
+    auto display() -> void;
+    tool::s_umap<std::string_view, TimeElem> times;
+    std::mutex locker;
+};
+
+struct TimeF{
+    TimeF(TimeM &t, std::string_view id);
+    ~TimeF();
+    std::string_view m_id;
+    TimeM *m_t = nullptr;
+};
+
+
+// struct DCFrameTiming{
+
+//     auto reset() -> void;
+//     auto swap_local_timestamps() -> void;
+//     auto update_local(std::string_view name, std::chrono::nanoseconds timeNs) -> void;
+//     auto update_local(std::string_view name) -> void;
+//     auto compute_capture_framerate() -> void;
+
+//     auto get_local(std::string_view name) const -> std::chrono::nanoseconds;
+//     auto get_duration_between_ms(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::milliseconds>;
+//     auto get_duration_between_micro_s(std::string_view from, std::string_view to)  noexcept -> std::optional<std::chrono::microseconds>;
+
+//     // profiling
+//     s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> timestamps;
+//     s_umap<std::string_view, std::optional<std::chrono::nanoseconds>> localTimestamps;
+//     float nbCapturePerSecond = 0.f;
+//     std::vector<std::chrono::nanoseconds> capturesTimes;
+// };
 }

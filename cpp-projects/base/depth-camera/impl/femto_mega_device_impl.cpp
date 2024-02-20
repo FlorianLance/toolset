@@ -26,10 +26,8 @@
 
 #include "femto_mega_device_impl.hpp"
 
-
 // local
 #include "utility/logger.hpp"
-#include "utility/benchmark.hpp"
 
 using namespace  std::string_literals;
 using namespace tool;
@@ -145,9 +143,9 @@ auto FemtoMegaDeviceImpl::read_body_tracking(bool enable) -> void{
 auto FemtoMegaDeviceImpl::resize_color_image_to_depth_size() -> void {
 
     if(!fData.color.empty() && !fData.depth.empty()){
-        fData.dephtSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
+        fData.depthSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
     }else{
-        fData.dephtSizedColor = {};
+        fData.depthSizedColor = {};
     }
 }
 

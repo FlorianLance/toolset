@@ -147,6 +147,11 @@ public:
     auto init(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3) -> void;
 };
 
+class CircleLinesDrawer : public Drawer{
+    CircleLinesDrawer(float radius);
+    auto init(float radius) -> void;
+};
+
 class GridDrawer : public Drawer{
 public:
     GridDrawer(float width = 0.2f, float height = 0.2f, int nbX = 100.f, int nbY = 100.f);
@@ -204,6 +209,12 @@ class TeapotDrawer : public Drawer{
 public:
     TeapotDrawer(int grid = 14, std::vector<TextureName> textures = {});
     auto init(int grid, std::vector<TextureName> textures) -> void;
+};
+
+class CylinderDrawer : public Drawer{
+public:
+    CylinderDrawer(geo::Pt3f a, geo::Pt3f b, float radius);
+    auto init(geo::Pt3f a, geo::Pt3f b, float radius) -> void;
 };
 
 // loaded geometry

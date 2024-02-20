@@ -147,13 +147,6 @@ auto DCDeviceManager::get_capture_duration_ms() -> int64_t{
     return 0;
 }
 
-auto DCDeviceManager::get_nb_capture_per_second() -> float{
-    if(is_device_initialized()){
-        return i->device->get_nb_capture_per_second();
-    }
-    return 0;
-}
-
 auto DCDeviceManager::get_processing_duration_ms() -> int64_t{
     if(is_device_initialized()){
         return i->device->get_processing_duration_ms();
@@ -161,23 +154,16 @@ auto DCDeviceManager::get_processing_duration_ms() -> int64_t{
     return 0;
 }
 
-auto DCDeviceManager::get_compressing_duration_ms() -> int64_t{
+auto DCDeviceManager::get_duration_ms(std::string_view id) noexcept -> int64_t{
     if(is_device_initialized()){
-        return i->device->get_compressing_duration_ms();
+        return i->device->get_duration_ms(id);
     }
     return 0;
 }
 
-auto DCDeviceManager::get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> int64_t{
+auto DCDeviceManager::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
     if(is_device_initialized()){
-        return i->device->get_duration_between_ms(from, to);
-    }
-    return 0;
-}
-
-auto DCDeviceManager::get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> int64_t{    
-    if(is_device_initialized()){
-        return i->device->get_duration_between_micro_s(from, to);
+        return i->device->get_duration_micro_s(id);
     }
     return 0;
 }

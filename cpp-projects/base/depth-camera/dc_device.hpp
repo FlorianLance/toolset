@@ -61,7 +61,6 @@ public:
     auto set_color_settings(const DCColorSettings &colorS) -> void;
     auto set_data_settings(const DCDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
-    auto send_data_state(bool state) -> void;
     auto set_delay_settings(const DCDelaySettings &delayS) -> void;
 
     // getters
@@ -69,12 +68,10 @@ public:
     auto device_name() const noexcept -> std::string;
     auto is_opened() const noexcept -> bool;
     auto is_reading() const noexcept -> bool;
-    auto get_nb_capture_per_second() const noexcept -> float;
     auto get_capture_duration_ms() noexcept -> std::int64_t;
     auto get_processing_duration_ms() noexcept -> std::int64_t;
-    auto get_compressing_duration_ms() noexcept -> std::int64_t;
-    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t;
+    auto get_duration_ms(std::string_view id) noexcept -> std::int64_t;
+    auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;

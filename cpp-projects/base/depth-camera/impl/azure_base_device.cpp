@@ -34,7 +34,6 @@
 
 // local
 #include "utility/logger.hpp"
-#include "utility/benchmark.hpp"
 
 using namespace  std::string_literals;
 using namespace tool::cam;
@@ -460,25 +459,20 @@ auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
         return false;
     }
 
-    Bench::start("[AzureBaseDevice::capture_frame]");
     bool success = false;
     try{
         success = i->device->get_capture(i->capture.get(), std::chrono::milliseconds(timeoutMs));
     }catch(const std::runtime_error &e){
         Logger::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
     }
-    Bench::stop();
     return success;
-
 }
 
 auto AzureBaseDevice::read_color_image() -> BinarySpan{
 
     if(i->capture->is_valid()){
 
-        Bench::start("[AzureBaseDevice::read_color_image]");
         i->colorImage = i->capture->get_color_image();
-        Bench::stop();
 
         if (i->colorImage.is_valid()){
             return BinarySpan{
@@ -494,9 +488,7 @@ auto AzureBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
 
     if(i->capture->is_valid()){
 
-        Bench::start("[AzureBaseDevice::read_depth_image]");
         i->depthImage = i->capture->get_depth_image();
-        Bench::stop();
 
         if (i->depthImage.is_valid()){
             return std::span<std::uint16_t>{
@@ -512,9 +504,7 @@ auto AzureBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
 
     if(i->capture->is_valid()){
 
-        Bench::start("[AzureBaseDevice::read_infra_image]");
         i->infraredImage = i->capture->get_ir_image();
-        Bench::stop();
 
         if (i->infraredImage.is_valid()){
             return std::span<std::uint16_t>{
@@ -646,13 +636,12 @@ auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos
     );
 
     try{
-        Bench::start("[AzureKinectDeviceImpl::resize_color_to_fit_depth]");
+
         i->transformation.color_image_to_depth_camera(
             i->depthImage,
             k4aColorImage,
             &i->depthSizedColorImage
         );
-        Bench::stop();
 
     }catch(const std::runtime_error &error){
         Logger::error(std::format("[AzureBaseDevice::resize_color_image_to_depth_size] Error: {}\n", error.what()));
@@ -668,13 +657,12 @@ auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos
 auto AzureBaseDevice::generate_cloud() -> std::span<geo::Pt3<std::int16_t>>{
 
     try{
-        Bench::start("[AzureBaseDevice::generate_cloud]");
+
         i->transformation.depth_image_to_point_cloud(
             i->depthImage,
             K4A_CALIBRATION_TYPE_DEPTH,
             &i->pointCloudImage
         );
-        Bench::stop();
 
     }catch(const std::runtime_error &error){
         // ...

@@ -26,6 +26,9 @@
 
 #pragma once
 
+// taskflow
+#include "thirdparty/taskflow/taskflow.hpp"
+
 // local
 #include "dc_frame_indices.hpp"
 #include "dc_frame_data.hpp"
@@ -36,6 +39,7 @@
 #include "data/jpeg_encoding.hpp"
 
 namespace tool::cam {
+
 
 struct DCSettings{
     DCConfigSettings config;
@@ -59,33 +63,8 @@ struct DCFramesBuffer{
 
 struct DCDeviceImpl{
 
+    DCDeviceImpl();
     virtual ~DCDeviceImpl(){}
-
-    DCDevice *dcDevice = nullptr;
-    DCSettings settings;
-    DCModeInfos mInfos;
-    DCFrameIndices fIndices;
-    DCFrameTiming fTiming;
-    DCFramesBuffer frames;
-    DCFrameData fData;
-
-    // encoders
-    data::JpegEncoder jpegColorEncoder;
-    data::JpegEncoder jpegDepthSizedColorEncoder;
-    data::JpegEncoder jpegBodiesIdEncoder;
-    data::FastPForEncoder fastPForDepthEncoder;
-    data::FastPForEncoder fastPForInfraEncoder;
-    data::FastPForEncoder fastPForCloudEncoder;
-    // decoders
-    data::JpegDecoder jpegColorDecoder;
-        
-    // state
-    std::atomic_bool readFramesFromCameras = false;
-    std::atomic_bool sendData = true;
-
-    // thread/lockers
-    std::mutex parametersM; /**< mutex for reading parameters at beginning of a new frame in thread function */
-    std::unique_ptr<std::thread> frameReaderT = nullptr;
 
     // actions
     virtual auto open(std::uint32_t deviceId) -> bool = 0;
@@ -105,8 +84,11 @@ struct DCDeviceImpl{
     virtual auto device_name() const noexcept -> std::string = 0;
 
     // profiling
-    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::milliseconds>;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::optional<std::chrono::microseconds>;
+    auto get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>;
+    auto get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>;
+
+    DCDevice *dcDevice = nullptr;
+    std::atomic_bool readFramesFromCameras = false;
 
 protected:
 
@@ -122,7 +104,6 @@ protected:
 
     // read data
     virtual auto read_calibration() -> void{}
-    auto read_frames() -> void;        
     virtual auto capture_frame(std::int32_t timeoutMs)  -> bool{static_cast<void>(timeoutMs);return false;}
     virtual auto read_color_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
     virtual auto read_depth_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
@@ -132,82 +113,96 @@ protected:
     virtual auto read_body_tracking(bool enable)        -> void{static_cast<void>(enable);}
     auto check_data_validity() -> bool;
 
-    virtual auto generate_cloud(bool enable)            -> void{static_cast<void>(enable);}
-
-
-    // depth sized color processing
-    auto filter_depth_sized_color_from_depth() -> void{}
-    auto mix_depth_sized_color_with_body_tracking() -> void{}
-
-    // infra processing
-    auto filter_infra_from_depth() -> void{}
-    auto mix_infra_with_body_tracking() -> void{}
-
-
     // process data
     virtual auto resize_color_image_to_depth_size() -> void{}
     auto convert_color_image() -> void;
-    auto filter_depth_image() -> void;
-    auto filter_depth_sized_color_image() -> void;
-    auto filter_infrared_image() -> void;
-    auto filter_cloud_image() -> void;
-    auto update_valid_depth_values() -> void;
+    virtual auto generate_cloud(bool enable) -> void{static_cast<void>(enable);}
 
-    // frame generation
-    // # local
-    auto create_local_frame() -> std::unique_ptr<DCFrame>;
-    auto update_infos(DCFrame *dFrame) -> void;
-    auto update_color(DCFrame *dFrame) -> void;
-    auto update_depth_sized_color(DCFrame *dFrame) -> void;
-    auto update_depth(DCFrame *dFrame) -> void;
-    auto update_infra(DCFrame *dFrame) -> void;
-    auto update_cloud(DCFrame *dFrame) -> void;
-    auto update_audio(DCFrame *dFrame) -> void;
-    auto update_imu(DCFrame *dFrame) -> void;
-    auto update_bodies(DCFrame *dFrame) -> void;
-    auto update_calibration(DCFrame *dFrame) -> void;
-    // # compressed
-    auto compress_frame() -> std::unique_ptr<DCCompressedFrame>;
-    auto update_compressed_frame_infos(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_color(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_depth_sized_color(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_depth(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_infra(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_cloud(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_audio(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_imu(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_bodies(DCCompressedFrame *cFrame) -> void;
-    auto update_compressed_frame_calibration(DCCompressedFrame *cFrame) -> void;
-
-    // auto debug_save_images(std::string parentPath) -> void;
-
-    // TODO:
-    auto read_frames2() -> void;
-    // images preprocessing
+    // # images preprocessing
     auto preprocess_color_image() -> void{}
     auto preprocess_depth_sized_color_image() -> void{}
     auto preprocess_depth_image() -> void{}
     auto preprocess_infra_image() -> void{}
+    auto preprocess_cloud_image() -> void{}
     auto preprocess_body_tracking_image() -> void{}
 
-    // depth processing
-    auto filter_depth_basic()                   -> void{ /** depth / width / height */}
-    auto filter_depth_from_depth_sized_color()  -> void{ /** invalidate depth from depth-sized color */}
-    auto filter_depth_from_infra()              -> void{ /** invalidate depth from infra */}
-    auto filter_depth_from_cloud()              -> void{ /** invalidate depth from cloud geometry */}
-    auto filter_depth_from_body_tracking()      -> void{ /** invalidate depth from body tracking */}
-    auto filter_depth_complex()                 -> void{
-        //  -> local diff filtering
-        //  -> min neighbours
-        //  -> erode
-        //  -> dilate
-        //  -> bigger cluster
-    }
+    // # depth processing
+    auto filter_depth_basic()                   -> void;
+    auto filter_depth_from_depth_sized_color()  -> void;
+    auto filter_depth_from_infra()              -> void;
+    auto filter_depth_from_cloud()              -> void;
+    auto filter_depth_from_body_tracking()      -> void;
+    auto filter_depth_complex()                 -> void;
+    auto update_valid_depth_values() -> void;
+
+    // # depth sized color processing
+    auto filter_depth_sized_color_from_depth() -> void;
+    auto mix_depth_sized_color_with_body_tracking() -> void{}
+
+    // # infra processing
+    auto filter_infra_from_depth() -> void;
+    auto mix_infra_with_body_tracking() -> void{}
+
+    // frame generation
+    // # local
+    auto update_frame_color() -> void;
+    auto update_frame_depth_sized_color() -> void;
+    auto update_frame_depth() -> void;
+    auto update_frame_infra() -> void;
+    auto update_frame_cloud() -> void;
+    auto update_frame_audio() -> void;
+    auto update_frame_imu() -> void;
+    auto update_frame_bodies() -> void;
+    auto update_frame_calibration() -> void;
+    // # compressed
+    auto update_compressed_frame_color() -> void;
+    auto update_compressed_frame_depth_sized_color() -> void;
+    auto update_compressed_frame_depth() -> void;
+    auto update_compressed_frame_infra() -> void;
+    auto update_compressed_frame_cloud() -> void;
+    auto update_compressed_frame_audio() -> void;
+    auto update_compressed_frame_imu() -> void;
+    auto update_compressed_frame_bodies() -> void;
+    auto update_compressed_frame_calibration() -> void;
+
+    // states
+    DCSettings settings;
+    DCModeInfos mInfos;
+    DCFrameIndices fIndices;
+    DCFramesBuffer frames;
+    DCFrameData fData;
+    tool::s_umap<std::string_view, TimeElem> times;
+    bool captureSuccess = false;
+    bool dataIsValid = false;
+    std::shared_ptr<DCFrame> frame = nullptr;
+    std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
+    std::mutex parametersM;
 
     // current settings
     DCFiltersSettings cFiltersS;
     DCDataSettings cDataS;
     DCDelaySettings cDelayS;
+
+    // profiling
+    TimeM timeM;
+
+    // encoders
+    data::JpegEncoder jpegColorEncoder;
+    data::JpegEncoder jpegDepthSizedColorEncoder;
+    data::JpegEncoder jpegBodiesIdEncoder;
+    data::FastPForEncoder fastPForDepthEncoder;
+    data::FastPForEncoder fastPForInfraEncoder;
+    data::FastPForEncoder fastPForCloudEncoder;
+    // decoders
+    data::JpegDecoder jpegColorDecoder;
+
+    // tasks
+    std::unique_ptr<tf::Executor> executor = nullptr;
+    std::unique_ptr<tf::Taskflow> mainLoopTF = nullptr;
+    std::unique_ptr<tf::Taskflow> readDataTF = nullptr;
+    std::unique_ptr<tf::Taskflow> processDataTF = nullptr;
+    std::unique_ptr<tf::Taskflow> processFrameTF = nullptr;
+    tf::Future<void> loopFuture;
 
 private:
 
@@ -216,5 +211,11 @@ private:
     auto keep_only_biggest_cluster() -> void;
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
     auto erode(std::uint8_t nbLoops, DCConnectivity connectivity) -> void;
+
+    // tasks
+    auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+    auto process_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+    auto process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> std::unique_ptr<tf::Taskflow>;
 };
 }
+

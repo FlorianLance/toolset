@@ -152,7 +152,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
             // filtering planes
-            if(cloudD.filters.p1FMode != tool::cam::PlaneFilteringMode::None && plane1D){
+            if(cloudD.filters.filterDepthWithCloud){
 
                 auto p1 = cloudD.filters.p1A;
                 auto p2 = cloudD.filters.p1B;
@@ -173,6 +173,11 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
                 shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, meanPt) * cloudD.model);
                 shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,1.f, 1.f});
+                plane1PointsD->draw(shader);
+
+                auto sp = cloudD.filters.pSphere;
+                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, sp) * cloudD.model);
+                shader->set_uniform("unicolor", geo::Pt4f{0.5f,0.5f,1.f, 1.f});
                 plane1PointsD->draw(shader);
 
                 shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});

@@ -57,10 +57,8 @@ public:
 
     auto get_capture_duration_ms() -> std::int64_t;
     auto get_processing_duration_ms() -> std::int64_t;
-    auto get_compressing_duration_ms() -> std::int64_t;
-    auto get_duration_between_ms(std::string_view from, std::string_view to) noexcept -> std::int64_t;
-    auto get_duration_between_micro_s(std::string_view from, std::string_view to) noexcept -> std::int64_t;
-    auto get_nb_capture_per_second() -> float;        
+    auto get_duration_ms(std::string_view id) noexcept -> std::int64_t;
+    auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
 
     SSS<std::shared_ptr<DCFrame>> new_frame_signal;
     SSS<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;

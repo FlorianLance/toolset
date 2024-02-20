@@ -316,7 +316,6 @@ private:
         tComputeInfraImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
-
     auto compute_cloud_from_depth() -> void{
 
         if(cFrame->calibration.empty() || frame->depth.empty() || !gSettings.cloud){
@@ -372,8 +371,7 @@ private:
     }
 
     auto compute_cloud_from_decoded_data() -> void{
-
-
+        // ...
     }
 
     auto create_colored_cloud() -> void{        

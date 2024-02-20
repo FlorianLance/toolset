@@ -110,7 +110,7 @@ struct DCDataSettings : io::BinaryFileSettings{
     [[nodiscard]] constexpr auto capture_body_tracking()      const noexcept -> bool{return client.capture.bodyTracking;}
     [[nodiscard]] constexpr auto capture_audio()              const noexcept -> bool{return client.capture.audio;}
     [[nodiscard]] constexpr auto capture_imu()                const noexcept -> bool{return client.capture.imu;}
-    [[nodiscard]] constexpr auto generate_cloud_from_client() const noexcept             -> bool{return capture_depth() &&  (client.generation.cloud || client.compression.cloud);}
+    [[nodiscard]] constexpr auto generate_cloud_from_client() const noexcept -> bool{return capture_depth() &&  (client.generation.cloud || client.compression.cloud);}
 
     DCClientDataActions client;
     DCServerDataActions server;
