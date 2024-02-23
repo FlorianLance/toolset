@@ -218,6 +218,7 @@ static auto display_calibration(const k4a::calibration &calibration) -> void{
     std::cout << "resolution_width: " << color.resolution_width << "\n";
     std::cout << "metric_radius: " << color.metric_radius << "\n";
     std::cout << "###### INTRINSIC:\n";
+    std::cout << "type: " << (int)color.intrinsics.type << "\n";
     const auto &ci = color.intrinsics.parameters.param;
     std::cout
               << "cx: "     <<ci.cx << " "
@@ -257,7 +258,8 @@ static auto display_calibration(const k4a::calibration &calibration) -> void{
     std::cout << "resolution_width: " << depth.resolution_width << "\n";
     std::cout << "metric_radius: " << depth.metric_radius << "\n";
     std::cout << "###### INTRINSIC:\n";
-    const auto &di = depth.intrinsics.parameters.param;
+    std::cout << "type: " << (int)depth.intrinsics.type << "\n";
+    const auto &di = depth.intrinsics.parameters.param;    
     std::cout
         << "cx: "     <<di.cx << " "
         << "cy: "     <<di.cy << " "

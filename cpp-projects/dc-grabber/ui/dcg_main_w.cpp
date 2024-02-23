@@ -28,7 +28,6 @@
 
 // base
 #include "utility/logger.hpp"
-#include "utility/benchmark.hpp"
 
 // 3d-engine
 #include "imgui-tb/imgui_convert.hpp"
@@ -40,10 +39,10 @@ using namespace tool::net;
 
 auto DCGMainW::initialize() -> bool{
 
+    Logger::log("DCGMainW::initialize\n");
+
     // init drawers
-    Logger::message("Init device drawers\n");
     deviceD.initialize();
-    Logger::message("Init record drawers\n");
     recorderD.initialize(1);
 
     return true;
@@ -52,8 +51,6 @@ auto DCGMainW::initialize() -> bool{
 auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
 
     menuD.draw();
-
-    BenchGuard g("update_imgui");
 
     geo::Pt2f settingsSize = {400.f, size.y()-50.f};
     geo::Pt2f displaySize  = {size.x()-400.f, size.y()-50.f};
@@ -75,7 +72,12 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             std::int64_t filterDepthD   = model->device.get_duration_micro_s("FILTER_DEPTH"sv);
             std::int64_t totalD         = captD+procD;
 
-            ImGuiUiDrawer::text(std::format("Images/s: {:5.2} ", 1000.f/totalD));
+            auto framesS = 1000.f/totalD;
+            if(framesS > 100){
+                framesS = 0;
+            }
+            ImGuiUiDrawer::text(std::format("Images/s: {:5.2} ", framesS));
+
             ImGui::SameLine();
             ImGuiUiDrawer::text(std::format("Times (ms): Total: {:3} ", captD+procD));
             ImGui::SameLine();
@@ -108,10 +110,5 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
         ImGui::EndChild();
     }
     ImGui::End();
-
-
-    Bench::display();
-    Bench::reset();
-
 }
 

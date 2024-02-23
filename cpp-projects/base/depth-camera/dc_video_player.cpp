@@ -422,7 +422,6 @@ auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
     return 0;
 }
 
-
 auto DCVideoPlayer::current_frame(size_t idCamera) -> std::shared_ptr<DCFrame>{
     if(idCamera < i->data.camerasFrame.size()){
         return i->data.camerasFrame[idCamera];

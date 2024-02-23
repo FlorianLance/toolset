@@ -339,7 +339,15 @@ auto DCNetworkDirectPlayer::update() -> void{
 
     // update current frames
     for(auto &deviceD : devicesD){
-        deviceD.lastFrame = serverData.get_frame(deviceD.id);  
+        deviceD.lastFrame = serverData.get_frame(deviceD.id);
+
+        if(deviceD.lastFrame != nullptr){
+            auto cloudSize = deviceD.lastFrame->cloud.size();
+            if(ids.size() < cloudSize){
+                ids.resize(cloudSize);
+                std::iota(std::begin(ids), std::end(ids), 0);
+            }
+        }
     }
 }
 
@@ -375,30 +383,39 @@ auto DCNetworkDirectPlayer::device_model(size_t idD) -> Mat4f{
     return Mat4f::identity();
 }
 
-auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<DCVertexMeshData> vertices) -> size_t{
+auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
 
     if(auto frame = current_frame(idD); frame != nullptr){
         size_t verticesCountToCopy = std::min(frame->cloud.size(), vertices.size());
 
-        if(ids.size() < verticesCountToCopy){
-            ids.resize(verticesCountToCopy);
-            std::iota(std::begin(ids), std::end(ids), 0);
-        }
+        auto tr = device_model(idD);
 
-        std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
-            vertices[id].pos = frame->cloud.vertices[id];
-            vertices[id].col = geo::Pt4<std::uint8_t>{
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
-                static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
-                255
-            };
-        });
+        if(applyModelTransform){
+            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];
+                vertices[id].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
+                vertices[id].col = geo::Pt4<std::uint8_t>{
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
+                    255
+                };
+            });
+        }else{
+            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                vertices[id].pos = frame->cloud.vertices[id];
+                vertices[id].col = geo::Pt4<std::uint8_t>{
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
+                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
+                    255
+                };
+            });
+        }
         return verticesCountToCopy;
     }
     return 0;
 }
-
 
 DCNetworkDirectPlayer* create__dc_network_direct_player(){
     return new DCNetworkDirectPlayer();
@@ -469,6 +486,6 @@ int current_frame_cloud_size__dc_network_direct_player(DCNetworkDirectPlayer *dc
     return static_cast<int>(dcNetworkDirectPlayer->current_frame_cloud_size(idD));
 }
 
-int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, DCVertexMeshData *vertices, int verticesCount){
-    return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(idD, {vertices, static_cast<size_t>(verticesCount)}));
+int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
+    return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(idD, {vertices, static_cast<size_t>(verticesCount)}, applyModelTransform == 1));
 }

@@ -38,7 +38,6 @@
 #include "imgui/imgui.h"
 
 // base
-#include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 
 // opengl-utility
@@ -48,6 +47,7 @@
 using namespace tool::gl;
 using namespace tool::geo;
 using namespace tool::graphics;
+using namespace std::string_view_literals;
 
 BaseSfmlGlWindow::BaseSfmlGlWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) ://, std::optional<sf::Style> style) :
       m_title(title), m_screen(screen), m_camera(&m_screen, {0,0,0}, {0,0,1}) {
@@ -99,6 +99,7 @@ auto BaseSfmlGlWindow::init() -> bool{
 
 auto BaseSfmlGlWindow::start() -> void{
 
+    auto lg = LogGuard("BaseSfmlGlWindow::start"sv);
     if(!m_glInitialized){
         return;
     }
@@ -113,8 +114,6 @@ auto BaseSfmlGlWindow::start() -> void{
         const auto &io = ImGui::GetIO();
         imguiMouse    = io.WantCaptureMouse;
         imguiKeyboard = io.WantCaptureKeyboard;
-
-        Bench::start("main_loop");
 
         currentFrame = std::chrono::high_resolution_clock::now();
 
@@ -232,8 +231,6 @@ auto BaseSfmlGlWindow::start() -> void{
         if((timePerFrame-frameDuration).count() > 0){
             std::this_thread::sleep_for(timePerFrame-frameDuration);
         }
-        Bench::stop();
-        // Bench::display();
     }
 
     clean();
@@ -244,6 +241,7 @@ auto BaseSfmlGlWindow::start() -> void{
 
 auto BaseSfmlGlWindow::init_sfml_window() -> bool{
 
+    auto lg = LogGuard("BaseSfmlGlWindow::init_sfml_window"sv);
     // close previously opened window
     if(m_scene.isOpen()){
         m_scene.close();
@@ -258,6 +256,8 @@ auto BaseSfmlGlWindow::init_sfml_window() -> bool{
 }
 
 auto BaseSfmlGlWindow::base_resize_windows(sf::Event::SizeEvent size) -> void{
+
+    auto lg = LogGuard("BaseSfmlGlWindow::base_resize_windows"sv);
     m_screen = graphics::Screen{size.width,size.height};
     m_camera.update_projection();
     glViewport(0, 0, static_cast<GLsizei>(m_screen.width()), static_cast<GLsizei>(m_screen.height()));

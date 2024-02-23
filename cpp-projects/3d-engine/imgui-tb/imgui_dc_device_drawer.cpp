@@ -41,6 +41,7 @@
 using namespace tool::graphics;
 
 auto DCDeviceDrawer::initialize() -> void{
+    Logger::log("DCDeviceDrawer::initialize\n");
     DCCloudsSceneDrawer::initialize(1);
 }
 
@@ -74,7 +75,7 @@ auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
 
 auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
 
-    Logger::message("DCDeviceDrawer::save_cloud\n");
+    Logger::log("DCDeviceDrawer::save_cloud\n");
 
     std::shared_ptr<cam::DCFrame> frame = nullptr;
     locker.lock();

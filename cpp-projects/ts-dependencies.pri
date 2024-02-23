@@ -50,6 +50,7 @@ BASE_DEP_LIBS =\
     $$LIBSOUNDIO_LIBS $$LIBUSB_LIBS\
     $$KINECT2_LIBS $$KINECT4_LIBS $$ORBBEC_LIBS\
 
+
 ########################################################### BASE_APP
 BASE_APP_DEP_INCLUDEPATH =\
     $$BASE_DEP_INCLUDEPATH\
@@ -102,7 +103,7 @@ BASE_EXPORT_APP_DEP_LIBS =\
     $$BASE_EXPORT_OBJ"\*.obj"\
 
 BASE_EXPORT_APP_PRE_TARGETDEPS =\
-    $$BASE_EXPORT_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
 
 ########################################################### OPENGL_UTILITY
 OPENGL_UTILITY_DEP_INCLUDEPATH =\
@@ -132,7 +133,7 @@ OPENGL_UTILITY_APP_DEP_LIBS =\
     $$OPENGL_UTILITY_LIB\
 
 OPENGL_UTILITY_APP_PRE_TARGETDEPS =\
-    $$OPENGL_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
     $$OPENGL_UTILITY_LIB_FILE\
 
 ########################################################### 3D_ENGINE
@@ -152,7 +153,7 @@ OPENGL_UTILITY_APP_PRE_TARGETDEPS =\
     $$OPENGL_UTILITY_LIB\
 
 3D_ENGINE_PRE_TARGETDEPS =\
-    $$OPENGL_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
     $$OPENGL_UTILITY_LIB_FILE\
 
 ########################################################### QT_UTILITY
@@ -172,7 +173,7 @@ QT_UTILITY_DEP_LIBS =\
     $$OPENGL_UTILITY_LIB\
 
 QT_UTILITY_PRE_TARGETDEPS =\
-    $$OPENGL_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
     $$OPENGL_UTILITY_LIB_FILE\
 
 ########################################################### QT_UTILITY_APP
@@ -185,7 +186,8 @@ QT_UTILITY_APP_DEP_LIBS =\
     $$QT_UTILITY_LIB\
 
 QT_UTILITY_APP_PRE_TARGETDEPS =\
-    $$QT_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$QT_UTILITY_LIB_FILE\
 
 ########################################################### NODES
@@ -203,22 +205,23 @@ NODES_PRE_TARGETDEPS =\
     $$BASE_LIB_FILE\
 
 ########################################################### DEMOS
-DEMOS_APP_DEP_INCLUDEPATH =\
+DEMOS_DEP_INCLUDEPATH =\
     # thirdparty
     $$BIOPAC_INCLUDES\
     # local
     $$3D_ENGINE_DEP_INCLUDEPATH\
     $$3D_ENGINE_INCLUDES\
 
-DEMOS_APP_DEP_LIBS =\
+DEMOS_DEP_LIBS =\
     # thirdparty
     $$BIOPAC_LIBS\
     # local
     $$3D_ENGINE_DEP_LIBS\
     $$3D_ENGINE_LIB\
 
-DEMOS_APP_PRE_TARGETDEPS =\
-    $$3D_ENGINE_PRE_TARGETDEPS\
+DEMOS_PRE_TARGETDEPS =\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$3D_ENGINE_LIB_FILE\
 
 ########################################################### DC-GRABBER
@@ -231,7 +234,8 @@ DC_GRABBER_DEP_LIBS =\
     $$3D_ENGINE_LIB\
 
 DC_GRABBER_PRE_TARGETDEPS =\
-    $$3D_ENGINE_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$3D_ENGINE_LIB_FILE\
 
 ########################################################### DC-MANAGER
@@ -244,7 +248,8 @@ DC_MANAGER_DEP_LIBS =\
     $$3D_ENGINE_LIB\
 
 DC_MANAGER_PRE_TARGETDEPS =\
-    $$3D_ENGINE_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$3D_ENGINE_LIB_FILE\
 
 ########################################################### DC-MONITORING
@@ -264,7 +269,8 @@ DC_MONITORING_DEP_LIBS =\
     $$3D_ENGINE_LIB\
 
 DC_MONITORING_PRE_TARGETDEPS =\
-    $$3D_ENGINE_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$3D_ENGINE_LIB_FILE\
 
 ########################################################### SCANER-COMPONENT [LEGACY]
@@ -290,7 +296,8 @@ SCANER_GRABBER_APP_DEP_LIBS =\
     $$QT_UTILITY_LIB\
 
 SCANER_GRABBER_APP_PRE_TARGETDEPS =\
-    $$QT_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$QT_UTILITY_LIB_FILE\
 
 ########################################################### SCANER-MANAGER [LEGACY]
@@ -304,6 +311,24 @@ SCANER_MANAGER_APP_DEP_LIBS =\
     $$QT_UTILITY_LIB\
 
 SCANER_MANAGER_APP_PRE_TARGETDEPS =\
-    $$QT_UTILITY_PRE_TARGETDEPS\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
     $$QT_UTILITY_LIB_FILE\
+
+# generate projects variables
+for(project, TOOLSET_CPP_PROJECTS):{
+
+    ## deps files
+    TLOW = $$lower($$TARGET)
+    equals(TLOW, $$project){
+
+        UPT = $$upper($$project)
+        UPT = $$replace(UPT, "-", "_")
+
+        INCLUDEPATH     += $$eval($$UPT"_DEP_INCLUDEPATH")
+        LIBS            += $$eval($$UPT"_DEP_LIBS")
+        PRE_TARGETDEPS  += $$eval($$UPT"_PRE_TARGETDEPS")
+    }
+}
+
 

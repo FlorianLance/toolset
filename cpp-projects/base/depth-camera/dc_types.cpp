@@ -42,16 +42,16 @@ auto DCModeInfos::initialize(DCMode mode) -> void{
     m_timeoutMs        = 0;
     switch (m_fps) {
     case DCFramerate::F30:
-        m_timeoutMs = 40;
+        m_timeoutMs = 100;//40;
         break;
     case DCFramerate::F15:
-        m_timeoutMs = 70;
+        m_timeoutMs = 200;//70;
         break;
     case DCFramerate::F5:
-        m_timeoutMs = 250;
+        m_timeoutMs = 500;//250;
         break;
     default:
-        m_timeoutMs = 40;
+        m_timeoutMs = 100;//40;
         break;
     }
     m_imageFormat       = dc_image_format(mode);

@@ -91,26 +91,26 @@ auto DCFrameIndices::initialize(const DCModeInfos &infos) -> void{
                 if(notOnLeft){
                     idD = id - 1;
                     if(notOnTop){
-                        idA = id - infos.depth_width()-1;
+                        idA = id - static_cast<int>(infos.depth_width())-1;
                     }
                     if(notOnBottom){
-                        idF = id + infos.depth_width()-1;
+                        idF = id + static_cast<int>(infos.depth_width())-1;
                     }
                 }
                 if(notOnRight){
                     idE = id + 1;
                     if(notOnTop){
-                        idC = id - infos.depth_width() + 1;
+                        idC = id - static_cast<int>(infos.depth_width()) + 1;
                     }
                     if(notOnBottom){
-                        idH = id + infos.depth_width() + 1;
+                        idH = id + static_cast<int>(infos.depth_width()) + 1;
                     }
                 }
                 if(notOnTop){
-                    idB = id - infos.depth_width();
+                    idB = id - static_cast<int>(infos.depth_width());
                 }
                 if(notOnBottom){
-                    idG = id + infos.depth_width();
+                    idG = id + static_cast<int>(infos.depth_width());
                 }
 
                 neighbours2HDepth1D.push_back({idD,idE});

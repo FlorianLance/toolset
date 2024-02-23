@@ -40,6 +40,10 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;
 
+    auto update_filters_settings(size_t id, const cam::DCFiltersSettings &filters) -> void {
+        DCCloudsSceneDrawer::update_filters_settings(id, filters);
+    }
+
 private:
 
     auto redraw_clouds_to_fbo() -> void;

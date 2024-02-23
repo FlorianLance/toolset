@@ -24,44 +24,24 @@
 # **                                                                            **
 # ********************************************************************************/
 
-####################################### repo
+####################################### REPOSITORY
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = base-testd
-}
-equals(CFG, "release"){
-    TARGET = base-test
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = base-test
 TEMPLATE = app
 CONFIG += console
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$BASE_OBJ
-DESTDIR     = $$BASE_DEST
-
-####################################### CONFIG
 CONFIG -= qt
 
-####################################### DEPS
-INCLUDEPATH += $$BASE_TEST_DEP_INCLUDEPATH
-LIBS += $$BASE_TEST_DEP_LIBS
-PRE_TARGETDEPS += $$BASE_TEST_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
+HEADERS += \
+    glm_utility.hpp
 
 SOURCES += \
 #    camera_tests.cpp \
@@ -70,8 +50,6 @@ SOURCES += \
     main.cpp \       
     geometry_tests.cpp \
 
-HEADERS += \
-    glm_utility.hpp
 
 DISTFILES += \
     CREDITS.md \

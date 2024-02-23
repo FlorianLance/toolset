@@ -26,46 +26,20 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = dc-monitoringd
-}
-equals(CFG, "release"){
-    TARGET = dc-monitoring
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = dc-monitoring
 TEMPLATE = app
 CONFIG += console
 CONFIG += qt
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$DC_MONITORING_OBJ
-MOC_DIR     = $$DC_MONITORING_MOC
-RCC_DIR     = $$DC_MONITORING_RCC
-UI_DIR      = $$DC_MONITORING_UI
-DESTDIR     = $$DC_MONITORING_DEST
-
-####################################### CONFIG
 QT  += core gui network concurrent widgets opengl multimedia
 
-####################################### DEPS
-INCLUDEPATH += $$DC_MONITORING_DEP_INCLUDEPATH
-LIBS +=  $$DC_MONITORING_DEP_LIBS
-PRE_TARGETDEPS += $$DC_MONITORING_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
 
 SOURCES += \

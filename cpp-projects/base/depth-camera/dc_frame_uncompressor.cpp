@@ -155,18 +155,18 @@ struct DCFrameUncompressor::Impl{
         executor.run(taskFlow).wait();
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
 
-        std::cout << "TIMES: "
-                  << "rc [" << tResetCalibration.count() << "] "
-                  << "cci [" << tComputeColorImage.count() << "] "
-                  << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
-                  << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
-                  << "cdd [" << tComputeDepthData.count() << "] "
-                  << "cdi [" << tComputeDepthImage.count() << "] "
-                  << "cid [" << tComputeInfraData.count() << "] "
-                  << "cii [" << tComputeInfraImage.count() << "] "
-                  << "cc [" << tComputeCloud.count() << "] "
-                  << "ccc [" << tComputeColoredCloud.count() << "] "
-                  << "tot [" << tTotal.count() << "]\n";
+        // std::cout << "TIMES: "
+        //           << "rc [" << tResetCalibration.count() << "] "
+        //           << "cci [" << tComputeColorImage.count() << "] "
+        //           << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
+        //           << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
+        //           << "cdd [" << tComputeDepthData.count() << "] "
+        //           << "cdi [" << tComputeDepthImage.count() << "] "
+        //           << "cid [" << tComputeInfraData.count() << "] "
+        //           << "cii [" << tComputeInfraImage.count() << "] "
+        //           << "cc [" << tComputeCloud.count() << "] "
+        //           << "ccc [" << tComputeColoredCloud.count() << "] "
+        //           << "tot [" << tTotal.count() << "]\n";
     }
 
     auto do_work(DCCompressedFrame *ncFrame, DCFrame &nFrame) -> void{
@@ -199,18 +199,18 @@ struct DCFrameUncompressor::Impl{
 
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
 
-        std::cout << "TIMES: "
-                  << "rc [" << tResetCalibration.count() << "] "
-                  << "cci [" << tComputeColorImage.count() << "] "
-                  << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
-                  << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
-                  << "cdd [" << tComputeDepthData.count() << "] "
-                  << "cdi [" << tComputeDepthImage.count() << "] "
-                  << "cid [" << tComputeInfraData.count() << "] "
-                  << "cii [" << tComputeInfraImage.count() << "] "
-                  << "cc [" << tComputeCloud.count() << "] "
-                  << "ccc [" << tComputeColoredCloud.count() << "] "
-                  << "tot [" << tTotal.count() << "]\n";
+        // std::cout << "TIMES: "
+        //           << "rc [" << tResetCalibration.count() << "] "
+        //           << "cci [" << tComputeColorImage.count() << "] "
+        //           << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
+        //           << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
+        //           << "cdd [" << tComputeDepthData.count() << "] "
+        //           << "cdi [" << tComputeDepthImage.count() << "] "
+        //           << "cid [" << tComputeInfraData.count() << "] "
+        //           << "cii [" << tComputeInfraImage.count() << "] "
+        //           << "cc [" << tComputeCloud.count() << "] "
+        //           << "ccc [" << tComputeColoredCloud.count() << "] "
+        //           << "tot [" << tTotal.count() << "]\n";
     }
 
     std::chrono::microseconds tResetCalibration;
@@ -235,7 +235,6 @@ private:
         if(!cFrame->calibration.empty()){
 
             frame->calibration = cFrame->calibration;
-            std::cout << "size frame->calibration " << frame->calibration.size() << "\n";
 
             if((cFrame->idDevice != lastidDevice) || (cFrame->mode != lastMode) || (k4aTransformation == nullptr)){
 
@@ -325,8 +324,8 @@ private:
         auto tStart = Time::nanoseconds_since_epoch();
         auto k4aDepthImage = k4a::image::create_from_buffer(
             K4A_IMAGE_FORMAT_DEPTH16,
-            frame->depth.width, frame->depth.height,
-            frame->depth.width * frame->depth.element_bytes_size(),
+            static_cast<int>(frame->depth.width), static_cast<int>(frame->depth.height),
+            static_cast<int>(frame->depth.width * frame->depth.element_bytes_size()),
             reinterpret_cast<std::uint8_t*>(frame->depth.get_data()),
             frame->depth.bytes_size(),
             nullptr,nullptr

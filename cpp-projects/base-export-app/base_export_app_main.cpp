@@ -102,7 +102,6 @@ auto dc_network_direct_player_export_test() -> void{
     std::puts("Create DCNetworkDirectPlayer\n");
     auto dcNetworkDirectPlayer = create__dc_network_direct_player();
 
-
     std::puts("Initialize\n");
     if(initialize__dc_network_direct_player(dcNetworkDirectPlayer,networkSettingsFilePath.c_str()) == 1){
         std::puts("Initialization successful\n");
@@ -151,7 +150,7 @@ auto dc_network_direct_player_export_test() -> void{
             if(data[idC].size() < sizeVertices){
                 data[idC].resize(sizeVertices);
             }
-            auto verticesCopied = copy_current_frame_vertices__dc_network_direct_player(dcNetworkDirectPlayer, idC, data[idC].data(), sizeVertices);
+            auto verticesCopied = copy_current_frame_vertices__dc_network_direct_player(dcNetworkDirectPlayer, idC, data[idC].data(), sizeVertices, true);
             std::puts(std::format("\t{} -> {} -> {} -> {}\n",
                 idC, current_frame_id__dc_network_direct_player(dcNetworkDirectPlayer, idC), sizeVertices, verticesCopied).c_str());
         }
@@ -187,8 +186,8 @@ auto dc_network_direct_player_export_test() -> void{
 
 int main(int, char *[]){
 
-    dc_video_player_export_test();
-    // dc_network_direct_player_export_test();
+    // dc_video_player_export_test();
+    dc_network_direct_player_export_test();
 
     return 0;
 }

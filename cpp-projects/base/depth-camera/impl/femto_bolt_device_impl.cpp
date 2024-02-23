@@ -584,8 +584,6 @@ auto FemtoBoltDeviceImpl::generate_cloud(bool enable) -> void{
 // // cloud
 // if(dataS.generateCloudLocal && (pointCloudImage != nullptr) && (depthImage != nullptr)){
 
-//     tool::Bench::start("[OrbbecDevice::create_local_frame] cloud");
-
 //     dFrame->cloud.vertices.resize(validDepthValues);
 //     dFrame->cloud.colors.resize(validDepthValues);
 //     // dFrame->cloud.normals.resize(validDepthValues);
@@ -716,6 +714,4 @@ auto FemtoBoltDeviceImpl::generate_cloud(bool enable) -> void{
 
 //     }
 
-
-//     tool::Bench::stop();
 // }

@@ -199,8 +199,6 @@ bool DrawSampleWindow::init_models(){
     std::string mesh = Paths::resourcesDir.value() + "/meshes";
     bool loaded = true;
     {
-//        Bench::start("models");
-
         Logger::message("Add models.\n");
         loaded &= Managers::models->add({
                 {"crysis",  mesh + "/crysis-nano-suit-2/scene.fbx"},
@@ -216,16 +214,11 @@ bool DrawSampleWindow::init_models(){
                 {"storm",   mesh + "/storm/source/Storm_Ani.fbx"},
                 {"building",mesh + "/building.obj"},
             });
-
-//        Bench::stop();
-//        Bench::display();
     }
-
 
     if(auto dragon = Managers::models->get("dragon").lock()){
         dragon->display_hierarchy();
     }
-
 
     // loaded = loaded && modelsM.add_model("fox",     mesh + "low-poly-fox-by-pixelmannen-animated/source/animations.FBX");
     // loaded = loaded && modelsM.add_model("bob",     mesh + "bob/boblampclean.md5mesh");

@@ -27,48 +27,21 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = nodesd
-}
-equals(CFG, "release"){
-    TARGET = nodes
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = nodes
 TEMPLATE = lib
 CONFIG += staticlib
 CONFIG -= console
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$NODES_OBJ
-MOC_DIR     = $$NODES_MOC
-RCC_DIR     = $$NODES_RCC
-UI_DIR      = $$NODES_UI
-DESTDIR     = $$NODES_DEST
-
-####################################### CONFIG
-
 CONFIG += qt
 QT += core gui opengl widgets printsupport
 
-####################################### DEPS
-INCLUDEPATH += $$NODES_DEP_INCLUDEPATH
-LIBS += $$NODES_DEP_LIBS
-PRE_TARGETDEPS += $$NODES_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
     nodes/ConnectionBlurEffect.hpp \
     nodes/ConnectionPainter.hpp \

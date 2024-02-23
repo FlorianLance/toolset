@@ -27,7 +27,6 @@
 #include "dcg_controller.hpp"
 
 // base
-#include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 
@@ -39,7 +38,7 @@
 #include "data/dcg_paths.hpp"
 
 using namespace tool;
-
+using namespace std::string_view_literals;
 
 DCGController::~DCGController(){
     model->clean();
@@ -47,20 +46,18 @@ DCGController::~DCGController(){
 
 auto DCGController::initialize(size_t idLocalGrabber) -> bool{
 
+    auto lg = LogGuard("DCGController::initialize"sv);
+
     // init paths
     DCGPaths::initialize(idLocalGrabber, tool::Paths::applicationDir, DCGSettings::host_name());
     // init logger
     Logger::init(Paths::logsDir, DCGPaths::logName);
 
-    // setup benchmark
-    Bench::disable_display();
-
     view  = std::make_unique<DCGView>(idLocalGrabber);
+
     model = std::make_unique<DCGModel>();
     model->settings.idLocalGrabber = idLocalGrabber;
 
-
-    // connections
     set_connections();
 
     // initialize
@@ -79,6 +76,8 @@ auto DCGController::initialize(size_t idLocalGrabber) -> bool{
 }
 
 auto DCGController::set_connections() -> void{
+
+    auto lg = LogGuard("DCGController::set_connections"sv);
 
     // aliases
     using Sett   = DCGSettings;
@@ -180,12 +179,12 @@ auto DCGController::set_connections() -> void{
     s->save_cloud_to_file_signal.connect(                            &DevD::save_cloud,                                     devD);
     s->update_scene_display_settings_signal.connect(                 &DevD::update_scene_display_settings,                  devD);
     s->update_cloud_display_settings_signal.connect(                 &DevD::update_cloud_display_settings,                  devD);
-    s->update_model_settings_signal.connect(                         &graphics::DCCloudsSceneDrawer::update_model,          devD);
+    s->update_model_settings_signal.connect(                         &graphics::DCCloudsSceneDrawer::update_model_settings,          devD);
     s->update_filters_signal.connect(                                &DevD::update_filters_settings,                        devD);
     // # recorder
     s->update_scene_display_settings_signal.connect(                 &RecD::update_scene_display_settings,                  recD);
     s->update_cloud_display_settings_signal.connect(                 &RecD::update_cloud_display_settings,                  recD);
-    s->update_model_settings_signal.connect(                         &RecD::update_model,                                   recD);
+    s->update_model_settings_signal.connect(                         &RecD::update_model_settings,                                   recD);
     rec->new_frame_signal.connect(                                   &RecD::set_frame,                                      recD);
 
     // to controller
@@ -194,6 +193,7 @@ auto DCGController::set_connections() -> void{
 }
 
 auto DCGController::start() -> void{
+    auto lg = LogGuard("DCGController::start"sv);
     view->start();
 }
 

@@ -60,7 +60,7 @@ private:
     auto read_color_image(bool enable) -> bool override final;
     auto read_depth_image(bool enable) -> bool override final;
     auto read_infra_image(bool enable) -> bool override final;
-    auto read_audio(bool enable) -> void override final {/** NO AUDIO SENSOR */}
+    // auto read_audio(bool enable) -> void override final {/** NO AUDIO SENSOR */}
     auto read_IMU(bool enable) -> void override final;
     auto read_body_tracking(bool enable) -> void override final;
 

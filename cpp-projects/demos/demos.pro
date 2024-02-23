@@ -27,42 +27,19 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = demosd
-}
-equals(CFG, "release"){
-    TARGET = demos
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = demos
 TEMPLATE = app
 CONFIG += console
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$DEMOS_OBJ
-DESTDIR     = $$DEMOS_DEST
-
-####################################### CONFIG
 CONFIG -= qt
 
-####################################### DEPS
-INCLUDEPATH += $$DEMOS_APP_DEP_INCLUDEPATH
-LIBS += $$DEMOS_APP_DEP_LIBS
-PRE_TARGETDEPS += $$DEMOS_APP_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
     ## samples    
     tests/samples/draw_samples_window.hpp \

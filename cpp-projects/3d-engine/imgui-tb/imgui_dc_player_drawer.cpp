@@ -39,7 +39,7 @@ auto DCPlayerDrawer::initialize(const std::vector<cam::DCModelSettings> &models)
 
     DCCloudsSceneDrawer::initialize(models.size());
     for(size_t ii = 0; ii < models.size(); ++ii){
-        update_model(ii, models[ii]);
+        update_model_settings(ii, models[ii]);
         std::cout << models[ii].transformation << "\n";
     }
 

@@ -27,7 +27,6 @@
 #include "dcm_controller.hpp"
 
 // base
-#include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 #include "depth-camera/settings/dc_settings_paths.hpp"
@@ -46,8 +45,6 @@ auto DCMController::initialize() -> bool{
     // init logger
     Logger::init(Paths::logsDir, DCSettingsPaths::logName);
 
-    // setup benchmark
-    Bench::disable_display();
 
     view  = std::make_unique<DCMView>();
     model = std::make_unique<DCMModel>();
@@ -194,14 +191,15 @@ auto DCMController::set_connections() -> void{
     // # direct drawer
     s->update_scene_display_settings_signal.connect(     &DirectD::update_scene_display_settings,    directD);
     s->update_cloud_display_settings_signal.connect(     &DirectD::update_cloud_display_settings,    directD);
-    s->update_model_settings_signal.connect(             &DirectD::update_model,                     directD);
-    calibration->validated_calibration_signal.connect(   &DirectD::update_model,                     directD);
+    s->update_model_settings_signal.connect(             &DirectD::update_model_settings,            directD);
+    calibration->validated_calibration_signal.connect(   &DirectD::update_model_settings,            directD);
     s->new_frame_signal.connect(                         &DirectD::set_frame,                        directD);
+    s->update_filters_settings_signal.connect(           &DirectD::update_filters_settings,          directD);
     // # recorder drawer
     s->update_scene_display_settings_signal.connect(     &RecD::update_scene_display_settings,       recorderD);
     s->update_cloud_display_settings_signal.connect(     &RecD::update_cloud_display_settings,       recorderD);
-    s->update_model_settings_signal.connect(             &RecD::update_model,                        recorderD);
-    calibration->validated_calibration_signal.connect(   &RecD::update_model,                        recorderD);
+    s->update_model_settings_signal.connect(             &RecD::update_model_settings,               recorderD);
+    calibration->validated_calibration_signal.connect(   &RecD::update_model_settings,               recorderD);
     recorder->new_frame_signal.connect(                  &RecD::set_frame,                           recorderD);
     // # player drawer
     s->update_scene_display_settings_signal.connect(     &PlayerD::update_scene_display_settings,    playerD);

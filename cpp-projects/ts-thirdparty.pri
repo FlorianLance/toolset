@@ -130,34 +130,29 @@ equals(COMPILER, "vs"){
     OS_LIBS = $$WINDOWS_LIBS\
 
 ########################################################## DEBUG LIBS
-    equals(CFG, "debug"){
+    # equals(CFG, "debug"){
 
-        BOOST_LIBS =\
-            -L$$BOOST_DIR"/lib64-msvc-14.1" \
-#            -llibboost_program_options-vc141-mt-gd-x64-1_68 \
-            -llibboost_date_time-vc141-mt-gd-x64-1_68 \
-            -llibboost_system-vc141-mt-gd-x64-1_68 \
-            -llibboost_chrono-vc141-mt-gd-x64-1_68 \
-            -llibboost_python37-vc141-mt-gd-x64-1_68 \
-            -llibboost_system-vc141-mt-gd-x64-1_68 \
-            -llibboost_filesystem-vc141-mt-gd-x64-1_68 \
-            -llibboost_iostreams-vc141-mt-gd-x64-1_68 \
+    # BOOST_LIBS =\
+    #     -L$$BOOST_DIR"/lib64-msvc-14.1" \
+    #     -llibboost_date_time-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_system-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_chrono-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_python37-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_system-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_filesystem-vc141-mt-gd-x64-1_68 \
+    #     -llibboost_iostreams-vc141-mt-gd-x64-1_68 \
 
-        GLM_LIBS = \
-            -L$$GLM_DIR"/lib/Debug" \
-            -lglm_static \
+    # GLFW_LIBS =\
+    #     -L$$GLFW_DIR"/lib/Debug" \
+    #     -lglfw3dll \
 
-        GLFW_LIBS =\
-            -L$$GLFW_DIR"/lib/Debug" \
-            -lglfw3dll \
-
-        QWT_LIBS =\
-            -L$$QWT_DIR"/lib/debug" \
-            -lqwtd\
-    }
+    # GLM_LIBS = \
+    #     -L$$GLM_DIR"/lib/Debug" \
+    #     -lglm_static \
+    # }
 
 ########################################################## RELEASE LIBS
-    equals(CFG, "release"){
+    # equals(CFG, "release"){
 
         TURBOPFOR_LIBS =\
             -L$$TURBOPFOR_DIR"/lib" \
@@ -170,7 +165,6 @@ equals(COMPILER, "vs"){
         BOOST_LIBS =\
             -L$$BOOST_DIR"/lib64-msvc-14.1" \
             -llibboost_date_time-vc141-mt-x64-1_68 \
-#            -llibboost_program_options-vc141-mt-x64-1_68 \
             -llibboost_system-vc141-mt-x64-1_68 \
             -llibboost_chrono-vc141-mt-x64-1_68 \
             -llibboost_python37-vc141-mt-x64-1_68 \
@@ -224,9 +218,17 @@ equals(COMPILER, "vs"){
             -lturbojpeg \
             -ljpeg \
 
-        FASTPFOR_LIBS =\
-            -L$$FASTPFOR_DIR"/msvc/x64/Release" \
-            -lFastPFor \
+        ### FASTPFOR
+        equals(CFG, "debug"){
+            FASTPFOR_LIBS =\
+                -L$$FASTPFOR_DIR"/msvc/x64/Debug" \
+                -lFastPFor \
+        }
+        equals(CFG, "release"){
+            FASTPFOR_LIBS =\
+                -L$$FASTPFOR_DIR"/msvc/x64/Release" \
+                -lFastPFor \
+        }
 
         QWT_LIBS =\
             -L$$QWT_DIR"/lib/release" \
@@ -268,6 +270,6 @@ equals(COMPILER, "vs"){
         ORBBEC_LIBS =\
             -L$$ORBBEC_DIR"/lib" \
             -lOrbbecSDK \
-    }
+    # }
 }
 

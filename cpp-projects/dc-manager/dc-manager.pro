@@ -26,41 +26,20 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = dc-managerd
-}
-equals(CFG, "release"){
-    TARGET = dc-manager
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = dc-manager
 TEMPLATE = app
 CONFIG += console
 CONFIG += opengl
 CONFIG -= qt
 
-####################################### BUILD FILES
-OBJECTS_DIR = $$DC_MANAGER_OBJ
-DESTDIR     = $$DC_MANAGER_DEST
-
-####################################### DEPS
-INCLUDEPATH += $$DC_MANAGER_DEP_INCLUDEPATH
-LIBS +=  $$DC_MANAGER_DEP_LIBS
-PRE_TARGETDEPS += $$DC_MANAGER_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
     data/dcm_states.hpp \
     dcm_view.hpp \

@@ -84,15 +84,16 @@ DCDeviceManager::~DCDeviceManager(){
 
 auto DCDeviceManager::clean() -> void{
 
+    auto lg = LogGuard("DCDeviceManager::clean"sv);
     if(is_device_initialized()){
         i->device->clean();
         i->device = nullptr;
     }
 }
 
-auto DCDeviceManager::initialize_device(DCType typeDevice) -> void {   
+auto DCDeviceManager::initialize_device(DCType typeDevice) -> void {
 
-    // init device    
+    auto lg = LogGuard("DCDeviceManager::initialize_device"sv);
     i->device = std::make_unique<DCDevice>(typeDevice);
 
     // set connections
@@ -170,8 +171,9 @@ auto DCDeviceManager::get_duration_micro_s(std::string_view id) noexcept -> int6
 
 auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
+    auto lg = LogGuard("DCDeviceManager::update_device_settings"sv);
     bool deviceChanged  = i->deviceS.configS.typeDevice != deviceS.configS.typeDevice;
-    if(deviceChanged){
+    if(deviceChanged && i->device != nullptr){
         for(size_t ii = 0; ii < i->device->nb_devices(); ++ii){
             update_device_name_signal(static_cast<int>(ii), std::format("Cam {}", ii));
         }
@@ -184,6 +186,7 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
 
 auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &deviceS) -> void{
 
+    auto lg = LogGuard("DCDeviceManager::update_device_settings_async"sv);
     i->locker.lock();
 
     const auto &newConfigS  = deviceS.configS;

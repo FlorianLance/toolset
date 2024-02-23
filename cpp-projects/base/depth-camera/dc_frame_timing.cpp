@@ -26,19 +26,16 @@
 
 #include "dc_frame_timing.hpp"
 
-// std
-#include <iostream>
-#include <algorithm>
-
 // local
 #include "utility/time.hpp"
-#include "utility/vector.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::cam;
 using namespace std::literals::string_view_literals;
 
 
-auto TimeM::start(std::string_view id) -> void{
+auto TimeDiffManager::start(std::string_view id) -> void{
+    // Logger::log(std::format("[Start::{}] "sv, id));
     auto sTime = tool::Time::nanoseconds_since_epoch();    
     if(!times.contains(id)){
         locker.lock();
@@ -46,46 +43,47 @@ auto TimeM::start(std::string_view id) -> void{
         locker.unlock();
     }else{
         times[id].start = sTime;
-    }
+    }    
 }
 
-auto TimeM::end(std::string_view id) -> void{
+auto TimeDiffManager::end(std::string_view id) -> void{
+    // Logger::log(std::format("[End::{}] "sv, id));
     auto eTime = tool::Time::nanoseconds_since_epoch();
     if(times.contains(id)){
         times[id].end = eTime;
-        times[id].lastDiff = eTime - times[id].start;
+        times[id].lastDiff = eTime - times[id].start;        
     }
 }
 
-auto TimeM::get_start(std::string_view id) -> std::chrono::nanoseconds{
+auto TimeDiffManager::get_start(std::string_view id) -> std::chrono::nanoseconds{
     if(times.contains(id)){
         return times[id].start;
     }
     return std::chrono::nanoseconds{0};
 }
 
-auto TimeM::get_end(std::string_view id) -> std::chrono::nanoseconds{
+auto TimeDiffManager::get_end(std::string_view id) -> std::chrono::nanoseconds{
     if(times.contains(id)){
         return times[id].end;
     }
     return std::chrono::nanoseconds{0};
 }
 
-auto TimeM::get_duration_ms(std::string_view id) -> std::chrono::milliseconds{
+auto TimeDiffManager::get_duration_ms(std::string_view id) -> std::chrono::milliseconds{
     if(times.contains(id)){
         return tool::Time::to_ms(times[id].lastDiff);
     }
     return std::chrono::milliseconds{0};
 }
 
-auto TimeM::get_duration_micro_s(std::string_view id) -> std::chrono::microseconds{
+auto TimeDiffManager::get_duration_micro_s(std::string_view id) -> std::chrono::microseconds{
     if(times.contains(id)){
         return tool::Time::to_micro_s(times[id].lastDiff);
     }
     return std::chrono::microseconds{0};
 }
 
-auto TimeM::display() -> void{
+auto TimeDiffManager::display() -> void{
 
     // using namespace std::chrono;
 
@@ -109,14 +107,12 @@ auto TimeM::display() -> void{
     // std::cout << "\n";
 }
 
-TimeF::TimeF(TimeM &t, std::string_view id) : m_id(id){
-    // std::cout << "[" << id << "] ";
+TimeDiffGuard::TimeDiffGuard(TimeDiffManager &t, std::string_view id) : m_id(id){
     m_t = &t;
     m_t->start(m_id);
 }
 
-TimeF::~TimeF(){
-    // std::cout << "[/" << m_id << "] ";
+TimeDiffGuard::~TimeDiffGuard(){
     m_t->end(m_id);
 }
 

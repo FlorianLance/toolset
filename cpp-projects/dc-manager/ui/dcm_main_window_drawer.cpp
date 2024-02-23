@@ -30,7 +30,6 @@
 // base
 #include "utility/logger.hpp"
 #include "utility/format.hpp"
-#include "utility/benchmark.hpp"
 
 #include "utility/io_file.hpp"
 #include "utility/string.hpp"
@@ -56,8 +55,6 @@ auto DCMMainWindowDrawer::initialize(size_t nbGrabbers) -> bool{
 }
 
 auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMSettings &settings, DCMStates &states) -> void{
-
-    BenchGuard g("update_imgui");
 
     // menu
     draw_menu();
@@ -85,9 +82,6 @@ auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMSettings &settings, DCMStates 
         m_middlePanelD.draw({sw-450.f,sh-50.f}, settings.uiS);
     }
     ImGui::End();
-
-    Bench::display();
-    Bench::reset();
 }
 
 auto DCMMainWindowDrawer::draw_menu() -> void{

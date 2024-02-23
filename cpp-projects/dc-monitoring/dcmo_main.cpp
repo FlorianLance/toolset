@@ -1230,7 +1230,7 @@ int main(int argc, char *argv[]){
 ////    }
 
 ////    std::puts("End tests.\n");
-////    tool::Bench::display();
+
 //    std::puts("End tests.\n");
 //}
 

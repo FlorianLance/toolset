@@ -207,6 +207,8 @@ AzureBaseDevice::~AzureBaseDevice(){
 
 auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> void{
 
+    auto lg = LogGuard("AzureBaseDevice::initialize"sv);
+
     // reset images
     i->colorImage           = nullptr;
     i->depthImage           = nullptr;
@@ -268,9 +270,21 @@ auto AzureBaseDevice::update_from_data_settings(const DCDataSettings &dataS) -> 
 
 auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
 
+    auto lg = LogGuard("AzureBaseDevice::open_device"sv);
+
     try {
+        if(i->device != nullptr){
+            Logger::message("Destroy device.\n");
+            i->device = nullptr;
+            Logger::message("Device destroyed.\n");
+        }
+
+        Logger::message("Create device.\n");
         i->device     = std::make_unique<k4a::device>(k4a::device::open(deviceId));
+        Logger::message("Device created.\n");
+
         i->deviceName = i->device->get_serialnum();
+        Logger::message(std::format("Device with name {} created.\n",i->deviceName));
 
         const auto version  = i->device->get_version();
         const auto fb       = version.firmware_build;
@@ -305,13 +319,18 @@ auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
 
     }  catch (std::runtime_error error) {
         Logger::error(std::format("[AzureBaseDevice::open_device] open error: {}\n", error.what()));
+        i->device = nullptr;
         return false;
     }
 
+
+    Logger::message("Retrieve audio instance.\n");
     auto audioM = k4a::K4AAudioManager::get_instance();
+
+    Logger::message("Refresh audio device list.\n");
     audioM->refresh_devices();
     size_t nbDevices = audioM->get_devices_count();
-    Logger::message(std::format("[AzureBaseDevice::open_device] Audio devices count: {}\n", nbDevices));
+    Logger::message(std::format("Audio devices count: {}\n", nbDevices));
 
     for(size_t ii = 0; ii < nbDevices; ++ii){
         std::string deviceName = audioM->get_device_name(ii);
@@ -352,6 +371,9 @@ auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
 
 auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
 
+    auto lg = LogGuard("AzureBaseDevice::start_device"sv);
+
+    Logger::message("Start device.\n");
     i->capture = std::make_unique<k4a::capture>();
 
     try {
@@ -398,13 +420,18 @@ auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
         return false;
     }
 
+    Logger::message("Device started.\n");
+
     return true;
 }
 
 auto AzureBaseDevice::stop_device() -> void{
 
+    auto lg = LogGuard("AzureBaseDevice::stop_device"sv);
+
+    Logger::message("Stop device.\n");
     if(i->bodyTracker != nullptr){
-        Logger::message("[AzureBaseDevice::stop_device] Stop body tracker\n");
+        Logger::message("Stop body tracker\n");
         i->bodyTracker->shutdown();
         i->bodyTracker = nullptr;
     }
@@ -416,9 +443,14 @@ auto AzureBaseDevice::stop_device() -> void{
         i->device->stop_cameras();
     }
 
+    Logger::message("Device stopped.\n");
 }
 
 auto AzureBaseDevice::close_device() -> void{
+
+    auto lg = LogGuard("AzureBaseDevice::close_device"sv);
+
+    Logger::message("Close device.\n");
 
     if(i->microphone != nullptr){
         if(i->microphone->IsStarted()){
@@ -431,7 +463,8 @@ auto AzureBaseDevice::close_device() -> void{
     if(is_opened()){
         i->device->close();
         i->device = nullptr;
-    }    
+    }
+    Logger::message("Device closed.\n");
 }
 
 auto AzureBaseDevice::is_opened() const noexcept -> bool{
@@ -465,6 +498,7 @@ auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
     }catch(const std::runtime_error &e){
         Logger::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
     }
+
     return success;
 }
 
@@ -665,7 +699,7 @@ auto AzureBaseDevice::generate_cloud() -> std::span<geo::Pt3<std::int16_t>>{
         );
 
     }catch(const std::runtime_error &error){
-        // ...
+        Logger::error(std::format("[AzureBaseDevice::generate_cloud] Error: {}\n", error.what()));
         return {};
     }
 

@@ -27,41 +27,20 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = dc-grabberd
-}
-equals(CFG, "release"){
-    TARGET = dc-grabber
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = dc-grabber
 TEMPLATE = app
 CONFIG += console
 CONFIG += opengl
 CONFIG -= qt
 
-####################################### BUILD FILES
-OBJECTS_DIR = $$DC_GRABBER_OBJ
-DESTDIR     = $$DC_GRABBER_DEST
-
-####################################### DEPS
-INCLUDEPATH += $$DC_GRABBER_DEP_INCLUDEPATH
-LIBS +=  $$DC_GRABBER_DEP_LIBS
-PRE_TARGETDEPS += $$DC_GRABBER_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
     data/dcg_states.hpp \
     dcg_model.hpp \

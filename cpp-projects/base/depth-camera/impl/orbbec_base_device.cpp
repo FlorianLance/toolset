@@ -93,7 +93,7 @@ struct OrbbecBaseDevice::Impl{
     OBCameraParam cameraParam;
     OBCalibrationParam calibrationParam;
     k4a::calibration k4aCalibration;
-    k4a::transformation k4aTransformation;
+    std::unique_ptr<k4a::transformation> k4aTransformation = nullptr;
 
     // frames data
     std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
@@ -148,6 +148,8 @@ auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, int32_t value)
 
 auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration{
 
+    auto lg = LogGuard("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
+
     const auto &obDepthIntrinsics = cameraParam.depthIntrinsic;
     const auto &obDepthDistorsion = cameraParam.depthDistortion;
 
@@ -161,8 +163,8 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     // depth calibration
     auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
     // # resolutions
-    cdepthCamCal.resolution_width   = mInfos.depth_width();
-    cdepthCamCal.resolution_height  = mInfos.depth_height();
+    cdepthCamCal.resolution_width   = static_cast<int>(mInfos.depth_width());
+    cdepthCamCal.resolution_height  = static_cast<int>(mInfos.depth_height());
     // # metric_radius
     cdepthCamCal.metric_radius = 1.7399998f;
     // # intrinsics
@@ -262,6 +264,14 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
 
 auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration{
 
+    k4a_calibration_camera_t depth_camera_calibration; /**< Depth camera calibration. */
+    // k4a_calibration_camera_t color_camera_calibration; /**< Color camera calibration. */
+    // k4a_calibration_extrinsics_t extrinsics[K4A_CALIBRATION_TYPE_NUM][K4A_CALIBRATION_TYPE_NUM];
+    // k4a_depth_mode_t depth_mode;             /**< Depth camera mode for which calibration was obtained. */
+    // k4a_color_resolution_t color_resolution; /**< Color camera resolution for which calibration was obtained. */
+
+    auto lg = LogGuard("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
+
     const auto &obDepthIntrinsics = calibrationParam.intrinsics[OB_SENSOR_DEPTH];
     const auto &obDepthDistorsion = calibrationParam.distortion[OB_SENSOR_DEPTH];
     const auto &obDepthExtrinsics = calibrationParam.extrinsics[OB_SENSOR_DEPTH];
@@ -270,94 +280,77 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     const auto &obColorDistorsion = calibrationParam.distortion[OB_SENSOR_COLOR];
     const auto &obColorExtrinsics = calibrationParam.extrinsics[OB_SENSOR_COLOR];
 
-    k4a::calibration k4Calibration;
-    k4Calibration.depth_mode       = convert_to_k4a_depth_mode(mInfos.depth_resolution());
-    // if(mInfos.color_resolution() == DCColorResolution::R960P){
-    //     k4Calibration.color_resolution = convert_to_k4a_color_resolution(DCColorResolution::R1536P);
-    // }else{
-        k4Calibration.color_resolution = convert_to_k4a_color_resolution(mInfos.color_resolution());
-    // }
+    k4a::calibration k4C;
+    k4C.depth_mode                                                          = convert_to_k4a_depth_mode(mInfos.depth_resolution());
+    k4C.color_resolution                                                    = convert_to_k4a_color_resolution(mInfos.color_resolution());
 
     // depth calibration
-    auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
     // # resolutions
-    cdepthCamCal.resolution_width   = static_cast<int>(mInfos.depth_width());
-    cdepthCamCal.resolution_height  = static_cast<int>(mInfos.depth_height());
+    k4C.depth_camera_calibration.resolution_width                           = static_cast<int>(mInfos.depth_width());
+    k4C.depth_camera_calibration.resolution_height                          = static_cast<int>(mInfos.depth_height());
     // # metric_radius
-    cdepthCamCal.metric_radius = 1.7399998f;
+    k4C.depth_camera_calibration.metric_radius                              = 1.7399998f;
     // # intrinsics
     // ## type
-    cdepthCamCal.intrinsics.type = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+    k4C.depth_camera_calibration.intrinsics.type                            = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
     // ## parameters
-    auto &dIntrincisP           = cdepthCamCal.intrinsics.parameters.param;
-    dIntrincisP.cx              = obDepthIntrinsics.cx; /**< Principal point in image, x */
-    dIntrincisP.cy              = obDepthIntrinsics.cy; /**< Principal point in image, y */
-    dIntrincisP.fx              = obDepthIntrinsics.fx; /**< Focal length x */
-    dIntrincisP.fy              = obDepthIntrinsics.fy; /**< Focal length y */
-    dIntrincisP.k1              = obDepthDistorsion.k1; /**< k1 radial distortion coefficient */
-    dIntrincisP.k2              = obDepthDistorsion.k2; /**< k2 radial distortion coefficient */
-    dIntrincisP.k3              = obDepthDistorsion.k3; /**< k3 radial distortion coefficient */
-    dIntrincisP.k4              = obDepthDistorsion.k4; /**< k4 radial distortion coefficient */
-    dIntrincisP.k5              = obDepthDistorsion.k5; /**< k5 radial distortion coefficient */
-    dIntrincisP.k6              = obDepthDistorsion.k6; /**< k6 radial distortion coefficient */
-    // dIntrincisP.codx; // UNUSED                      /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
-    // dIntrincisP.cody; // UNUSED                      /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
-    dIntrincisP.p1              = obDepthDistorsion.p1; /**< Tangential distortion coefficient 2 */
-    dIntrincisP.p2              = obDepthDistorsion.p2; /**< Tangential distortion coefficient 1 */
-    dIntrincisP.metric_radius   = 0; /**< Metric radius */
-    cdepthCamCal.intrinsics.parameter_count = 15;
+    k4C.depth_camera_calibration.intrinsics.parameters.param.cx             = obDepthIntrinsics.cx; /**< Principal point in image, x */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.cy             = obDepthIntrinsics.cy; /**< Principal point in image, y */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.fx             = obDepthIntrinsics.fx; /**< Focal length x */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.fy             = obDepthIntrinsics.fy; /**< Focal length y */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k1             = obDepthDistorsion.k1; /**< k1 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k2             = obDepthDistorsion.k2; /**< k2 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k3             = obDepthDistorsion.k3; /**< k3 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k4             = obDepthDistorsion.k4; /**< k4 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k5             = obDepthDistorsion.k5; /**< k5 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.k6             = obDepthDistorsion.k6; /**< k6 radial distortion coefficient */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.codx           = 0; // UNUSED          /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.cody           = 0; // UNUSED          /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.p1             = obDepthDistorsion.p1; /**< Tangential distortion coefficient 2 */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.p2             = obDepthDistorsion.p2; /**< Tangential distortion coefficient 1 */
+    k4C.depth_camera_calibration.intrinsics.parameters.param.metric_radius  = 0;                    /**< Metric radius */
+    k4C.depth_camera_calibration.intrinsics.parameter_count = 15;
     // # extrinsics
     // ## rotation
-    auto &dExtRot = cdepthCamCal.extrinsics.rotation;
-    dExtRot[0] = 1.f;
-    dExtRot[1] = 0.f;
-    dExtRot[2] = 0.f;
-    dExtRot[3] = 0.f;
-    dExtRot[4] = 1.f;
-    dExtRot[5] = 0.f;
-    dExtRot[6] = 0.f;
-    dExtRot[7] = 0.f;
-    dExtRot[8] = 1.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[0] = 1.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[1] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[2] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[3] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[4] = 1.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[5] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[6] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[7] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.rotation[8] = 1.f;
     // ## translation
-    auto &dExtTr = cdepthCamCal.extrinsics.translation;
-    dExtTr[0] = 0.f;
-    dExtTr[1] = 0.f;
-    dExtTr[2] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.translation[0] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.translation[1] = 0.f;
+    k4C.depth_camera_calibration.extrinsics.translation[2] = 0.f;
 
     // color calibration
-    auto &cColorCamCal              = k4Calibration.color_camera_calibration;
-    // # resolutions
-    // if(mInfos.color_resolution() == DCColorResolution::R960P){
-    //     cColorCamCal.resolution_width   = 2048;
-    //     cColorCamCal.resolution_height  = 1536;
-    // }else{
-        cColorCamCal.resolution_width   = static_cast<int>(mInfos.color_width());
-        cColorCamCal.resolution_height  = static_cast<int>(mInfos.color_height());
-    // }
-
+    k4C.color_camera_calibration.resolution_width                           = static_cast<int>(mInfos.color_width());
+    k4C.color_camera_calibration.resolution_height                          = static_cast<int>(mInfos.color_height());
     // # metric_radius
-    cColorCamCal.metric_radius      = 1.7f;
+    k4C.color_camera_calibration.metric_radius                              = 1.7f;
     // # intrinsics
     // ## type
-    cColorCamCal.intrinsics.type    = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
+    k4C.color_camera_calibration.intrinsics.type                            = K4A_CALIBRATION_LENS_DISTORTION_MODEL_BROWN_CONRADY;
     // ## parameters
-    auto &cIntrincisP               = cColorCamCal.intrinsics.parameters.param;
-    cIntrincisP.cx                  = obColorIntrinsics.cx; /**< Principal point in image, x */
-    cIntrincisP.cy                  = obColorIntrinsics.cy; /**< Principal point in image, y */
-    cIntrincisP.fx                  = obColorIntrinsics.fx; /**< Focal length x */
-    cIntrincisP.fy                  = obColorIntrinsics.fy; /**< Focal length y */
-    cIntrincisP.k1                  = obColorDistorsion.k1; /**< k1 radial distortion coefficient */
-    cIntrincisP.k2                  = obColorDistorsion.k2; /**< k2 radial distortion coefficient */
-    cIntrincisP.k3                  = obColorDistorsion.k3; /**< k3 radial distortion coefficient */
-    cIntrincisP.k4                  = obColorDistorsion.k4; /**< k4 radial distortion coefficient */
-    cIntrincisP.k5                  = obColorDistorsion.k5; /**< k5 radial distortion coefficient */
-    cIntrincisP.k6                  = obColorDistorsion.k6; /**< k6 radial distortion coefficient */
-    cIntrincisP.codx                = 0.f; // UNUSED   /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
-    cIntrincisP.cody                = 0.f; // UNUSED   /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
-    cIntrincisP.p1                  = obColorDistorsion.p1; /**< Tangential distortion coefficient 2 */
-    cIntrincisP.p2                  = obColorDistorsion.p2; /**< Tangential distortion coefficient 1 */
-    cIntrincisP.metric_radius       = 0; /**< Metric radius */
-    cColorCamCal.intrinsics.parameter_count = 15;
+    k4C.color_camera_calibration.intrinsics.parameters.param.cx             = obColorIntrinsics.cx; /**< Principal point in image, x */
+    k4C.color_camera_calibration.intrinsics.parameters.param.cy             = obColorIntrinsics.cy; /**< Principal point in image, y */
+    k4C.color_camera_calibration.intrinsics.parameters.param.fx             = obColorIntrinsics.fx; /**< Focal length x */
+    k4C.color_camera_calibration.intrinsics.parameters.param.fy             = obColorIntrinsics.fy; /**< Focal length y */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k1             = obColorDistorsion.k1; /**< k1 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k2             = obColorDistorsion.k2; /**< k2 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k3             = obColorDistorsion.k3; /**< k3 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k4             = obColorDistorsion.k4; /**< k4 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k5             = obColorDistorsion.k5; /**< k5 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.k6             = obColorDistorsion.k6; /**< k6 radial distortion coefficient */
+    k4C.color_camera_calibration.intrinsics.parameters.param.codx           = 0.f; // UNUSED   /**< Center of distortion in Z=1 plane, x (only used for Rational6KT) */
+    k4C.color_camera_calibration.intrinsics.parameters.param.cody           = 0.f; // UNUSED   /**< Center of distortion in Z=1 plane, y (only used for Rational6KT) */
+    k4C.color_camera_calibration.intrinsics.parameters.param.p1             = obColorDistorsion.p1; /**< Tangential distortion coefficient 2 */
+    k4C.color_camera_calibration.intrinsics.parameters.param.p2             = obColorDistorsion.p2; /**< Tangential distortion coefficient 1 */
+    k4C.color_camera_calibration.intrinsics.parameters.param.metric_radius  = 0; /**< Metric radius */
+    k4C.color_camera_calibration.intrinsics.parameter_count = 15;
     // # extrinsics
     // ## rotation
     // auto &cExtRot = cColorCamCal.extrinsics.rotation;
@@ -375,23 +368,22 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     // cExtTr[0] = 0.f;
     // cExtTr[1] = 0.f;
     // cExtTr[2] = 0.f;
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   cColorCamCal.extrinsics.translation);
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     cColorCamCal.extrinsics.rotation);
-
+    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4C.color_camera_calibration.extrinsics.translation);
+    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4C.color_camera_calibration.extrinsics.rotation);
 
     // extrinsics
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].rotation);
-    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation);
-    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].rotation);
-    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].translation);
+    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].rot,   obDepthExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4C.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].rotation);
+    std::copy(obDepthExtrinsics[OB_SENSOR_COLOR].trans, obDepthExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4C.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation);
+    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].rotation);
+    std::copy(obColorExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_DEPTH].translation);
 
-    std::copy(obDepthExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_DEPTH].rotation);
-    std::copy(obDepthExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_DEPTH].translation);
-    std::copy(obColorExtrinsics[OB_SENSOR_COLOR].rot,   obColorExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].rotation);
-    std::copy(obColorExtrinsics[OB_SENSOR_COLOR].trans, obColorExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4Calibration.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].translation);
+    std::copy(obDepthExtrinsics[OB_SENSOR_DEPTH].rot,   obDepthExtrinsics[OB_SENSOR_DEPTH].rot + 9,     k4C.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_DEPTH].rotation);
+    std::copy(obDepthExtrinsics[OB_SENSOR_DEPTH].trans, obDepthExtrinsics[OB_SENSOR_DEPTH].trans + 3,   k4C.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_DEPTH].translation);
+    std::copy(obColorExtrinsics[OB_SENSOR_COLOR].rot,   obColorExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].rotation);
+    std::copy(obColorExtrinsics[OB_SENSOR_COLOR].trans, obColorExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].translation);
 
 
-    return k4Calibration;
+    return k4C;
 }
 
 OrbbecBaseDevice::OrbbecBaseDevice() : i(std::make_unique<Impl>()){
@@ -404,11 +396,13 @@ OrbbecBaseDevice::~OrbbecBaseDevice(){
 
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
 
+    auto lg = LogGuard("OrbbecBaseDevice::query_devices"sv);
+
     i->context->enableNetDeviceEnumeration(ethernet);
 
     auto devicesFound = i->context->queryDeviceList();
-
     i->deviceList.clear();
+
     for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
         auto dev = devicesFound->getDevice(idDev);
         if(dev->getDeviceInfo()->name() == deviceTypeName){
@@ -420,6 +414,9 @@ auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ether
 
 auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettings &colorS) -> void{
 
+    auto lg = LogGuard("OrbbecBaseDevice::initialize"sv);
+
+    Logger::message("[OrbbecDevice] Initialize.\n");
 
     i->frameSet      = nullptr;
     i->colorImage    = nullptr;
@@ -445,6 +442,11 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettin
 
 auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
 
+    auto lg = LogGuard("OrbbecBaseDevice::open_device"sv);
+
+    Logger::message("### Open device ###\n");
+
+    Logger::message(std::format("Open device with id [{}]\n", deviceId));
     if(deviceId >= i->deviceList.size()){
         Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
         return false;
@@ -453,32 +455,37 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
     try {
 
         // retrieve device
+        Logger::message("Retrieve from devices list.\n");
         i->device     = i->deviceList[deviceId];
+
+        Logger::message("Retrieve sensor list.\n");
         i->sensorList = i->device->getSensorList();
+
+        Logger::message(std::format("[{}] sensors found.\n", i->sensorList->count()));
 
         for(uint32_t idS = 0; idS < i->sensorList->count(); idS++) {
             auto sensor = i->sensorList->getSensor(idS);
             switch(sensor->type()) {
             case OB_SENSOR_COLOR:
-                Logger::message("[OrbbecDevice] Color sensor found.\n"sv);
+                Logger::message("   Color sensor found.\n"sv);
                 break;
             case OB_SENSOR_DEPTH:
-                Logger::message("[OrbbecDevice] Depth sensor found.\n"sv);
+                Logger::message("   Depth sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR:
-                Logger::message("[OrbbecDevice] Infrared sensor found.\n"sv);
+                Logger::message("   Infrared sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR_LEFT:
-                Logger::message("[OrbbecDevice] Infrared left sensor found.\n"sv);
+                Logger::message("   Infrared left sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR_RIGHT:
-                Logger::message("[OrbbecDevice] Infrared right sensor found.\n"sv);
+                Logger::message("   Infrared right sensor found.\n"sv);
                 break;
             case OB_SENSOR_GYRO:
-                Logger::message("[OrbbecDevice] Gyro sensor found.\n"sv);
+                Logger::message("   Gyro sensor found.\n"sv);
                 break;
             case OB_SENSOR_ACCEL:
-                Logger::message("[OrbbecDevice] Accel sensor found.\n"sv);
+                Logger::message("   Accel sensor found.\n"sv);
                 break;
             default:
                 break;
@@ -486,7 +493,7 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
         }
 
         auto dInfos     = i->device->getDeviceInfo();
-        Logger::message("[OrbbecDevice] Device opened:\n");
+        Logger::message("Device infos:\n");
         Logger::message(std::format("  Name: {}\n", dInfos->name()));
         Logger::message(std::format("  Chip type: {}\n", dInfos->asicName()));
         Logger::message(std::format("  Serialnum: {}\n", dInfos->serialNumber()));
@@ -519,35 +526,48 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
         }
 
     }catch(const ob::Error &e) {
-        Logger::error(std::format("[OrbbecDevice] Open error: {}\nsv", e.getMessage()));
+        Logger::error(std::format("Open error: {}\nsv", e.getMessage()));
         i->device = nullptr;
         return false;
     }catch(const std::exception &e){
-        Logger::error(std::format("[OrbbecDevice] Error: {}\nsv", e.what()));
+        Logger::error(std::format("Error: {}\nsv", e.what()));
         i->device = nullptr;
         return false;
     }
+
+    Logger::message("### Device opened ###\n");
 
     return true;
 }
 
 auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
 
+    auto lg = LogGuard("OrbbecBaseDevice::start_pipeline"sv);
+
     i->deviceType = mInfos.device();
 
+    Logger::message("### Start pipeline ###.\n");
+    Logger::message("Create config.\n");
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
     try {
 
         if(i->pipe != nullptr){
+            Logger::message("Close pipeline.\n");
             i->pipe->stop();
+            Logger::message("Destroy pipeline.\n");
             i->pipe = nullptr;
         }
+        Logger::message("Create new pipeline.\n");
         i->pipe = std::make_unique<ob::Pipeline>(i->device);
 
+        Logger::message("Retrieve sensors.\n");
         bool hasColorSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_COLOR) != nullptr;
+        Logger::message(std::format("   Color sensor found [{}].\n", hasColorSensor));
         bool hasDepthSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_DEPTH) != nullptr;
+        Logger::message(std::format("   Depth sensor found [{}].\n", hasDepthSensor));
         bool hasInfraSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_IR)    != nullptr;
+        Logger::message(std::format("   Infra sensor found [{}].\n", hasInfraSensor));
 
         // retrieve color profile
         if(hasColorSensor && mInfos.has_color()){
@@ -560,6 +580,7 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
                         convert_to_ob_image_format(mInfos.image_format()),
                         mInfos.framerate_value()
                     );
+                    Logger::message("Color profile found.\n");
                 }catch(...) {
                     colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -580,6 +601,7 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
                     );
+                    Logger::message("Depth profile found.\n");
                 }catch(...) {
                     depthProfile = depthStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -601,6 +623,7 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
                     );
+                    Logger::message("Infra profile found.\n");
                 }catch(...) {
                     infraProfile = infraStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -674,12 +697,15 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         currSynchConfig.depthDelayUs = 0;
 
         // disable align mode
+        Logger::message("Disable align mode.\n");
         config->setAlignMode(ALIGN_DISABLE);
 
-        // frame synch
+        // frame synch        
         if(configS.synchronizeColorAndDepth){
+            Logger::message("Enable frame synch.\n");
             i->pipe->enableFrameSync();
         }else{
+            Logger::message("Disable frame synch.\n");
             i->pipe->disableFrameSync();
         }
 
@@ -687,14 +713,18 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         i->set_property_value(OB_PROP_INDICATOR_LIGHT_BOOL, !configS.disableLED);
 
         // start pipe with current config
+        Logger::message("Start pipeline with new config.\n");
         i->pipe->start(config);
 
         // get camera intrinsic and extrinsic parameters form pipeline and set to point cloud filter
-        i->cameraParam         = i->pipe->getCameraParam();
+        Logger::message("Retrieve camera parameters.\n");
+        i->cameraParam   = i->pipe->getCameraParam();
         // get calibration parameters
-        i->calibrationParam    = i->pipe->getCalibrationParam(config);
+        Logger::message("Retrieve calibration parameters.\n");
+        i->calibrationParam = i->pipe->getCalibrationParam(config);
 
-        i->k4aCalibration      = i->k4a_convert_calibration(mInfos, i->calibrationParam);
+        Logger::message("Generate k4a calibration.\n");
+        i->k4aCalibration = i->k4a_convert_calibration(mInfos, i->calibrationParam);
 
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
@@ -704,80 +734,25 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         Logger::error(std::format("[OrbbecDevice::start_reading] Error: {}\nsv", e.what()));
         i->device = nullptr;
         return false;
+    }catch(...){
+        Logger::error("[OrbbecDevice::start_reading] Unknow error\n");
+        i->device = nullptr;
+        return false;
     }
-
-
-
-
 
     display_calibration(i->k4aCalibration);
 
-    // auto &cccI = i->k4aCalibration.color_camera_calibration.intrinsics.parameters;
-    // std::cout << "cci -> "
-    //     << "cx: " <<cccI.param.cx << " "
-    //     << "cy: " <<cccI.param.cy << " "
-    //     << "fx: " <<cccI.param.fx << " "
-    //     << "fy: " <<cccI.param.fy << " "
-    //     << "k1: " <<cccI.param.k1 << " "
-    //     << "k2: " <<cccI.param.k2 << " "
-    //     << "k3: " <<cccI.param.k3 << " "
-    //     << "k4: " <<cccI.param.k4 << " "
-    //     << "k5: " <<cccI.param.k5 << " "
-    //     << "k6: " <<cccI.param.k6 << " "
-    //     << "codx: " <<cccI.param.codx << " "
-    //     << "cody: " <<cccI.param.cody << " "
-    //     << "p1: " <<cccI.param.p1 << " "
-    //     << "p2: " <<cccI.param.p2 << " "
-    //     << "metric_radius: " <<cccI.param.metric_radius << "\n";
+    Logger::message("Generate k4a transformation.\n");
+    i->k4aTransformation = std::make_unique<k4a::transformation>(i->k4aCalibration);
 
-    // auto &dccI = i->k4aCalibration.depth_camera_calibration.intrinsics.parameters;
-    // std::cout << "dccI -> "
-    //     << "cx: " <<dccI.param.cx << " "
-    //     << "cy: " <<dccI.param.cy << " "
-    //     << "fx: " <<dccI.param.fx << " "
-    //     << "fy: " <<dccI.param.fy << " "
-    //     << "k1: " <<dccI.param.k1 << " "
-    //     << "k2: " <<dccI.param.k2 << " "
-    //     << "k3: " <<dccI.param.k3 << " "
-    //     << "k4: " <<dccI.param.k4 << " "
-    //     << "k5: " <<dccI.param.k5 << " "
-    //     << "k6: " <<dccI.param.k6 << " "
-    //     << "codx: " <<dccI.param.codx << " "
-    //     << "cody: " <<dccI.param.cody << " "
-    //     << "p1: " <<dccI.param.p1 << " "
-    //     << "p2: " <<dccI.param.p2 << " "
-    //     << "metric_radius: " <<dccI.param.metric_radius << "\n";
-
-    // std::cout << "COLOR RES: " <<(int)i->k4aCalibration.color_resolution << "\n";
-    // std::cout << "DEPTH MODE: " <<(int)i->k4aCalibration.depth_mode << "\n";
-    // std::cout << "COL HEIGHT " << i->k4aCalibration.color_camera_calibration.resolution_height<< "\n";
-    // std::cout << "COL WIDTH " << i->k4aCalibration.color_camera_calibration.resolution_width<< "\n";
-    // std::cout << "COL MRAD " << i->k4aCalibration.color_camera_calibration.metric_radius<< "\n";
-
-    // std::cout << "DEP HEIGHT " << i->k4aCalibration.depth_camera_calibration.resolution_height<< "\n";
-    // std::cout << "DEP WIDTH " << i->k4aCalibration.depth_camera_calibration.resolution_width<< "\n";
-    // std::cout << "DEP MRAD " << i->k4aCalibration.depth_camera_calibration.metric_radius<< "\n";
-
-    // auto &oci = i->calibrationParam.intrinsics[OB_SENSOR_COLOR];
-    // std::cout << "ob color intrinsics cx: " << oci.cx << " cy: " << oci.cy << " fx: " << oci.fx << " fy: " << oci.fy << " h: " << oci.height << " w: " << oci.width << "\n";
-    // auto &ocd = i->calibrationParam.intrinsics[OB_SENSOR_DEPTH];
-    // std::cout << "ob depth intrinsics cx: " << ocd.cx << " cy: " << ocd.cy << " fx: " << ocd.fx << " fy: " << ocd.fy << " h: " << ocd.height << " w: " << ocd.width << "\n";
-
-    // auto &v3 = i->calibrationParam.distortion[OB_SENSOR_COLOR];
-    // std::cout << "ob color distorsions k1 : " << v3.k1 << " k2: " << v3.k2 << " k3: " << v3.k3 << " k4: " << v3.k4 << " k5 " << v3.k5 << " k6 " << v3.k6 << " p1 " << v3.p1 <<" p2 " << v3.p2 << "\n";
-
-    // auto &v4 = i->calibrationParam.distortion[OB_SENSOR_DEPTH];
-    // std::cout << "ob depth distorsions k1 : " << v4.k1 << " k2: " << v4.k2 << " k3: " << v4.k3 << " k4: " << v4.k4 << " k5 " << v4.k5 << " k6 " << v4.k6 << " p1 " << v4.p1 <<" p2 " << v4.p2 << "\n";
-
-
-    i->k4aTransformation = k4a::transformation(i->k4aCalibration);
-
-    std::cout << "end start_pipeline\n";
+    Logger::message("### Pipeline started ###.\n");
 
     return true;
 }
 
 auto OrbbecBaseDevice::close_device() -> void{
+
+    Logger::message("### Close device ###\n");
 
     if(i->pipe != nullptr){
         i->pipe->stop();
@@ -786,6 +761,8 @@ auto OrbbecBaseDevice::close_device() -> void{
 
     i->sensorList = nullptr;
     i->device     = nullptr;
+
+    Logger::message("### Device closed ###\n");
 }
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
@@ -793,6 +770,8 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
     if(!is_opened()){
         return;
     }
+
+    std::cout << "[uc";
 
     try{
         i->set_property_value(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL,           colorS.autoExposureTime);
@@ -810,6 +789,8 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
     }
+
+    std::cout << "uc]";
 }
 
 auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
@@ -830,7 +811,6 @@ auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
 auto OrbbecBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     if(i->pipe != nullptr){
-
         try{
             i->frameSet = i->pipe->waitForFrames(timeoutMs);
         }catch(ob::Error &e) {
@@ -862,6 +842,7 @@ auto OrbbecBaseDevice::read_color_image() -> BinarySpan{
             };
         }
     }
+    Logger::message("invalid color.\n");
     return {};
 }
 
@@ -878,6 +859,7 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
             };
         }
     }
+    Logger::message("invalid depth.\n");
     return {};
 }
 
@@ -982,40 +964,13 @@ auto OrbbecBaseDevice::read_from_imu() -> tool::BinarySpan{
 }
 
 auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
-    
+
     size_t colorWidth;
     size_t colorHeight;
     size_t colorStride;
     size_t colorSizeBytes;
     std::uint8_t* colorDataBuffer;
 
-    // if(mInfos.color_resolution() == DCColorResolution::R960P){
-
-    //     int newWidth = 2048;
-    //     int newHeight = 1536;
-    //     int newColorStride = newWidth *4 * sizeof(std::uint8_t);
-
-    //     if(i->resizedColorImageFromDepthTransformation.size() != newWidth*newHeight){
-    //         i->resizedColorImageFromDepthTransformation.resize(newWidth*newHeight);
-    //     }
-
-    //     cv::Mat output(newHeight, newWidth, CV_8UC4, i->resizedColorImageFromDepthTransformation.data());
-    //     cv::Mat input(mInfos.color_height(), mInfos.color_width(), CV_8UC4, colorData.data());
-    //     cv::resize(input, output, output.size(),0.0,0.0, cv::InterpolationFlags::INTER_NEAREST);
-
-    //     cv::imwrite("D:/input.png", input);
-    //     cv::imwrite("D:/output.png", output);
-
-
-    //     colorWidth      = newWidth;
-    //     colorHeight     = newHeight;
-    //     colorStride     = newColorStride;
-    //     colorSizeBytes  = colorStride * colorHeight;
-    //     colorDataBuffer = reinterpret_cast<std::uint8_t*>(output.data);
-
-    // }else{
-
-    // }
     colorWidth      = mInfos.color_width();
     colorHeight     = mInfos.color_height();
     colorStride     = colorWidth * 4 * sizeof(std::uint8_t);
@@ -1049,29 +1004,28 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
     );
 
     try{
-
-        i->k4aTransformation.color_image_to_depth_camera(
+        i->k4aTransformation->color_image_to_depth_camera(
             k4aDepthImage,
             k4aColorImage,
             &k4aDepthSizedColorImage
         );
 
-        // cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
-        // cv::imwrite("D:/output2.png", output2);
+        cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
+        cv::imwrite("D:/output2.png", output2);
 
-        // std::int64_t count1=0;
-        // std::int64_t count2=0;
-        // std::int64_t count3=0;
-        // for(const auto &d : depthData){
-        //     count1 += d;
-        // }
-        // for(const auto &d : colorData){
-        //     count2 += d.r();
-        // }
-        // for(const auto &d : i->depthSizedColorData){
-        //     count3 += d;
-        // }
-        // std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
+        std::int64_t count1=0;
+        std::int64_t count2=0;
+        std::int64_t count3=0;
+        for(const auto &d : depthData){
+            count1 += d;
+        }
+        for(const auto &d : colorData){
+            count2 += d.r();
+        }
+        for(const auto &d : i->depthSizedColorData){
+            count3 += d;
+        }
+        std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
 
     }catch(const std::runtime_error &error){
         Logger::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));
@@ -1096,19 +1050,19 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
 
     auto k4aDepthImage = k4a::image::create_from_buffer(
         K4A_IMAGE_FORMAT_DEPTH16,
-        mInfos.depth_width(), mInfos.depth_height(), depthStride, depthDataBuffer, depthSizeBytes,
+        static_cast<int>(mInfos.depth_width()), static_cast<int>(mInfos.depth_height()), static_cast<int>(depthStride), depthDataBuffer, depthSizeBytes,
         nullptr,nullptr
     );
 
     auto k4aPointCloudImage = k4a::image::create_from_buffer(
         K4A_IMAGE_FORMAT_CUSTOM,
-        mInfos.depth_width(), mInfos.depth_height(), cloudStride, cloudDataBuffer, cloudSizeBytes,
+        static_cast<int>(mInfos.depth_width()), static_cast<int>(mInfos.depth_height()), static_cast<int>(cloudStride), cloudDataBuffer, cloudSizeBytes,
         nullptr, nullptr
     );
 
     try{
 
-        i->k4aTransformation.depth_image_to_point_cloud(
+        i->k4aTransformation->depth_image_to_point_cloud(
             k4aDepthImage,
             K4A_CALIBRATION_TYPE_DEPTH,
             &k4aPointCloudImage

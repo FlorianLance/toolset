@@ -232,6 +232,7 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
 
 int main(){
 
+    std::cout << "start\n";
     Logger::init("./");
     Logger::get()->message_signal.connect([&](std::string message){
         std::cout << message;
@@ -280,7 +281,7 @@ int main(){
     // test_raw_orbbec_femto();
     // test_raw_k4device();
     // test_kinect4();
-    // test_femto_mega();
+    test_femto_mega();
     return 0;
 }
 

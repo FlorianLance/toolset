@@ -27,7 +27,6 @@
 #include "dcm_gl_window.hpp"
 
 // base
-#include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 
@@ -129,8 +128,6 @@ auto DCMGlWindow::initialize_imgui() -> void{
 }
 
 auto DCMGlWindow::draw_gl() -> void{
-
-    BenchGuard g("update_gl");
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);

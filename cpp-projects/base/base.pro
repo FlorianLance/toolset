@@ -24,45 +24,23 @@
 # **                                                                            **
 # ********************************************************************************/
 
-####################################### repo
+####################################### REPOSITORY
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = based
-}
-equals(CFG, "release"){
-    TARGET = base
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = base
 TEMPLATE = lib
 CONFIG += staticlib
 CONFIG -= console
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$BASE_OBJ
-DESTDIR     = $$BASE_DEST
-
-####################################### CONFIG
 CONFIG -= qt
 
-####################################### DEPS
-INCLUDEPATH += $$BASE_DEP_INCLUDEPATH
-LIBS += $$BASE_DEP_LIBS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
-
 HEADERS += \
     # io
     depth-camera/dc_video_player.hpp \

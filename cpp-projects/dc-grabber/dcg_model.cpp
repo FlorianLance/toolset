@@ -26,10 +26,15 @@
 
 #include "dcg_model.hpp"
 
+// base
+#include "utility/logger.hpp"
 
 using namespace tool;
+using namespace std::string_view_literals;
 
 auto DCGModel::initialize() -> bool{
+
+    auto lg = LogGuard("DCGModel::initialize"sv);
 
     connection.init_connections();
     recorder.initialize(1);
@@ -55,16 +60,25 @@ auto DCGModel::update() -> void{
 }
 
 auto DCGModel::clean() -> void{
+    auto lg = LogGuard("DCGModel::clean"sv);
     connection.clean();
 }
 
 auto DCGModel::trigger_settings() -> void{
+
+    auto lg = LogGuard("DCGModel::trigger_settings"sv);
     // triggers data to init ui
+    Logger::log("### filters\n");
     settings.triggers_filters_settings();
+    Logger::log("### display\n");
     settings.triggers_display_settings();
+    Logger::log("### color\n");
     settings.triggers_color_settings();
+    Logger::log("### delay\n");
     settings.triggers_delay_settings();
+    Logger::log("### model\n");
     settings.triggers_model();
+    Logger::log("### device\n");
     settings.triggers_device_settings();
 }
 

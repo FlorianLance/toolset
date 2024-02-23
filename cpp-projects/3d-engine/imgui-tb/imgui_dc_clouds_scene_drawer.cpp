@@ -495,7 +495,7 @@ auto DCCloudsSceneDrawer::update_scene_display_settings(const DCSceneDisplaySett
     m_redrawClouds = true;
 }
 
-auto DCCloudsSceneDrawer::update_model(size_t idCloud, const cam::DCModelSettings &model) -> void{
+auto DCCloudsSceneDrawer::update_model_settings(size_t idCloud, const cam::DCModelSettings &model) -> void{
     cloudsD[idCloud].model = model.compute_full_transformation();
     m_redrawClouds = true;
 }

@@ -3,7 +3,7 @@
 CFG = ""
 CONFIG(debug, debug|release){
     CFG = "debug"
-    $$TARGET = $$TARGET"-d"
+    TARGET = $$TARGET"d"
 }
 
 CONFIG(release, debug|release){
@@ -30,9 +30,11 @@ unix:!macx{
     EXT_O = ".o"
 }
 
-equals(QT_MAJOR_VERSION, 6){
-    CONFIG+=c++20
-}
+# equals(QT_MAJOR_VERSION, 6){
+# CONFIG+=c++23
+# CONFIG += c++20
+CONFIG += c++latest
+# }
 
 # ARCH
 equals(COMPILER, "gcc"){ # GCC (TODO)
@@ -40,21 +42,25 @@ equals(COMPILER, "gcc"){ # GCC (TODO)
     QMAKE_CXXFLAGS += -fopenmp -O3
     QMAKE_LFLAGS   += -fopenmp
 }
+
 equals(COMPILER, "vs"){ # Visual studio
 
+    # QMAKE_CXXFLAG *= -std:c++latest
+
     # set cl flags
-    equals(QT_MAJOR_VERSION, 5){
-        QMAKE_CXXFLAGS *= -std:c++20    # The latest draft C++ standard preview features.
-    }
+    # equals(QT_MAJOR_VERSION, 5){
+    #     QMAKE_CXXFLAGS *= -std:c++20    # The latest draft C++ standard preview features.
+    # }
 
     QMAKE_CXXFLAGS *= -MP               # Build with Multiple Processes
+
     # warnings levels
     QMAKE_CXXFLAGS -= -W0
     QMAKE_CXXFLAGS -= -W1
     QMAKE_CXXFLAGS -= -W2
     QMAKE_CXXFLAGS *= -W3
-#    QMAKE_CXXFLAGS *= -W4
-#    QMAKE_CXXFLAGS *= -WX
+    # QMAKE_CXXFLAGS *= -W4
+    # QMAKE_CXXFLAGS *= -WX
     # optimization
     QMAKE_CXXFLAGS -= -O1               # Creates small code.
     QMAKE_CXXFLAGS *= -O2               # Creates fast code.

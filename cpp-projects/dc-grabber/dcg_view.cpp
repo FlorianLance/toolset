@@ -26,9 +26,15 @@
 
 #include "dcg_view.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 using namespace tool;
+using namespace std::string_view_literals;
 
 DCGView::DCGView(size_t idGrabber){
+
+    auto lg = LogGuard("DCGView::DCGView"sv);
     // init main window
     // # screen
     graphics::Screen screen(1920, 1080, 0,0);
@@ -44,14 +50,15 @@ DCGView::DCGView(size_t idGrabber){
     const std::string numVersion = "1.6";
     m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id{} v{}", idGrabber, numVersion), screen,context);
     m_glW->init();
-
 }
 
 auto DCGView::initialize() -> void{
+    auto lg = LogGuard("DCGView::initialize"sv);
     mainW.initialize();
 }
 
 auto DCGView::start() -> void{
+    auto lg = LogGuard("DCGView::start"sv);
     m_glW->start();
 }
 
@@ -64,5 +71,6 @@ auto DCGView::draw(geo::Pt2f size, DCGModel *model) -> void{
 }
 
 auto DCGView::exit() -> void{
+    auto lg = LogGuard("DCGView::exit"sv);
     m_glW->quit();
 }

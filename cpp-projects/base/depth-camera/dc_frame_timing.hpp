@@ -28,7 +28,6 @@
 
 // std
 #include <string_view>
-#include <optional>
 #include <chrono>
 
 // local
@@ -42,7 +41,7 @@ struct TimeElem{
     std::chrono::nanoseconds lastDiff   = std::chrono::nanoseconds{0};
 };
 
-struct TimeM{
+struct TimeDiffManager{
     auto start(std::string_view id) -> void;
     auto end(std::string_view id) -> void;
     auto get_start(std::string_view id) -> std::chrono::nanoseconds;
@@ -54,11 +53,11 @@ struct TimeM{
     std::mutex locker;
 };
 
-struct TimeF{
-    TimeF(TimeM &t, std::string_view id);
-    ~TimeF();
+struct TimeDiffGuard{
+    TimeDiffGuard(TimeDiffManager &t, std::string_view id);
+    ~TimeDiffGuard();
     std::string_view m_id;
-    TimeM *m_t = nullptr;
+    TimeDiffManager *m_t = nullptr;
 };
 
 

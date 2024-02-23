@@ -184,7 +184,7 @@ protected:
     DCDelaySettings cDelayS;
 
     // profiling
-    TimeM timeM;
+    TimeDiffManager timeM;
 
     // encoders
     data::JpegEncoder jpegColorEncoder;

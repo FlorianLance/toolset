@@ -435,7 +435,7 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
         for(size_t jj = 1; jj < nb_cameras(); ++jj){
 
             size_t idF = 0;
-            if(auto id = closest_frame_id_from_time(jj, c0TimeMs.count()); id != -1){
+            if(auto id = closest_frame_id_from_time(jj, static_cast<double>(c0TimeMs.count())); id != -1){
                 idF = id;
             }else{
                 continue;

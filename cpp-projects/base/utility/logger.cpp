@@ -37,6 +37,8 @@
 #include "utility/time.hpp"
 
 using namespace tool;
+using namespace std::string_view_literals;
+
 namespace fs = std::filesystem;
 
 struct Global{
@@ -45,23 +47,25 @@ struct Global{
 };
 
 class Logger::Impl{
-public:
+public:    
+
     std::unique_ptr<std::ofstream> outStream = nullptr;
     std::mutex locker;
     std::chrono::nanoseconds epochStart;
     bool doFormat = false;
 
-    static inline constexpr std::string_view braces4                   = "{}{}{}{}";
-    static inline constexpr std::string_view braces6                   = "{}{}{}{}{}{}";
-    static inline constexpr std::string_view startHtmlBalise           = "<p>";
-    static inline constexpr std::string_view startTimestampHtmlBalise  = "<p> [";
-    static inline constexpr std::string_view midTimestampHtmlBalise    = "] ";
-    static inline constexpr std::string_view endHtmlBalise             = "</font></p>\n";
-    static inline constexpr std::string_view htmlDarkBlueColorBalise   = "<font color=\"DarkBlue\">";
-    static inline constexpr std::string_view htmlDarkOrangeColorBalise = "<font color=\"Orange\">";
-    static inline constexpr std::string_view htmlDarkRedColorBalise    = "<font color=\"DarkRed\">";
-    static inline constexpr std::string_view htmlLightGreyColorBalise  = "<font color=\"LightGrey\">";
-    static inline constexpr std::string_view htmlDarkBlackColorBalise  = "<font color=\"Black\">";
+    static inline constexpr std::string_view braces4                   = "{}{}{}{}"sv;
+    static inline constexpr std::string_view braces6                   = "{}{}{}{}{}{}"sv;
+    static inline constexpr std::string_view startHtmlBalise           = "<p>"sv;
+    static inline constexpr std::string_view startTimestampHtmlBalise  = "<p> ["sv;
+    static inline constexpr std::string_view midTimestampHtmlBalise    = "] "sv;
+    static inline constexpr std::string_view endHtmlBalise             = "</font></p>\n"sv;
+    static inline constexpr std::string_view htmlDarkBlueColorBalise   = "<font color=\"DarkBlue\">"sv;
+    static inline constexpr std::string_view htmlDarkOrangeColorBalise = "<font color=\"Orange\">"sv;
+    static inline constexpr std::string_view htmlDarkRedColorBalise    = "<font color=\"DarkRed\">"sv;
+    static inline constexpr std::string_view htmlDarkGreenColorBalise  = "<font color=\"DarkGreen\">"sv;
+    static inline constexpr std::string_view htmlLightGreyColorBalise  = "<font color=\"LightGrey\">"sv;
+    static inline constexpr std::string_view htmlDarkBlackColorBalise  = "<font color=\"Black\">"sv;
 };
 
 Logger::Logger() : i(std::make_unique<tool::Logger::Impl>()){}
@@ -203,7 +207,7 @@ auto Logger::log(std::string_view log, bool htmlFormat, bool triggersSignal, boo
     }
 
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
-        insert_line_to_log_file(MessageT::warning, log);
+        insert_line_to_log_file(MessageT::log, log);
     }
 }
 
@@ -360,7 +364,7 @@ auto Logger::to_html_line(MessageT type, std::string_view text, bool addTimestam
         colorCode = Logger::Impl::htmlDarkRedColorBalise;
         break;
     case MessageT::log:
-        colorCode = Logger::Impl::htmlDarkRedColorBalise;
+        colorCode = Logger::Impl::htmlDarkGreenColorBalise;
         break;
     case MessageT::unknow:
         colorCode = Logger::Impl::htmlDarkBlackColorBalise;

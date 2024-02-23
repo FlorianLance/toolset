@@ -40,6 +40,8 @@ struct DCDevice::Impl{
 };
 
 DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
+
+    auto lg = LogGuard("DCDevice::DCDevice"sv);
     if(type == DCType::AzureKinect){
         i->dd = std::make_unique<AzureKinectDeviceImpl>();
         i->dd->dcDevice = this;
@@ -58,6 +60,7 @@ DCDevice::~DCDevice(){
 
 auto DCDevice::open(std::uint32_t deviceId) -> bool{
 
+    auto lg = LogGuard("DCDevice::open"sv);
     if(is_opened()){
         return false;
     }
@@ -79,6 +82,7 @@ auto DCDevice::open(std::uint32_t deviceId) -> bool{
 
 auto DCDevice::close() -> void{
 
+    auto lg = LogGuard("DCDevice::close"sv);
     if(!is_opened()){
         return;
     }
@@ -91,6 +95,8 @@ auto DCDevice::close() -> void{
 }
 
 auto DCDevice::clean() -> void{
+
+    auto lg = LogGuard("DCDevice::clean"sv);
     stop_reading();
     close();
 }
@@ -142,6 +148,7 @@ auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
 
 auto DCDevice::start_reading(const DCConfigSettings &configS) -> bool{
 
+    auto lg = LogGuard("DCDevice::start_reading"sv);
     if(is_reading() || !is_opened()){
         return false;
     }
@@ -150,25 +157,30 @@ auto DCDevice::start_reading(const DCConfigSettings &configS) -> bool{
 
 auto DCDevice::stop_reading() -> void{
 
+    auto lg = LogGuard("DCDevice::stop_reading"sv);
     if(!is_reading() || !is_opened()){
         return;
     }
     i->dd->stop_reading();
 }
 
-auto DCDevice::set_color_settings(const DCColorSettings &colorS) -> void{
+auto DCDevice::set_color_settings(const DCColorSettings &colorS) -> void{    
+    auto lg = LogGuard("DCDevice::set_color_settings"sv);
     i->dd->set_color_settings(colorS);
 }
 
 auto DCDevice::set_data_settings(const DCDataSettings &dataS) -> void{
+    auto lg = LogGuard("DCDevice::set_data_settings"sv);
     i->dd->set_data_settings(dataS);
 }
 
 auto DCDevice::set_filters_settings(const DCFiltersSettings &filtersS) -> void{
+    auto lg = LogGuard("DCDevice::set_filters_settings"sv);
     i->dd->set_filters_settings(filtersS);
 }
 
 auto DCDevice::set_delay_settings(const DCDelaySettings &delayS) -> void{
+    auto lg = LogGuard("DCDevice::set_delay_settings"sv);
     i->dd->set_delay_settings(delayS);
 }
 

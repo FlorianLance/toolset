@@ -33,7 +33,6 @@
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 #include "utility/cmd_args.hpp"
-#include "utility/benchmark.hpp"
 
 // opengl-utilityh
 #include "opengl/buffer/framebuffer_object.hpp"
@@ -51,6 +50,8 @@ DCGGlWindow::DCGGlWindow(std::string_view title, graphics::Screen screen, std::o
 }
 
 auto DCGGlWindow::init_shaders() -> bool{
+
+    Logger::log("DCGGlWindow::init_shaders\n");
 
     const std::vector<Shader::Type> VS_FS         = {Shader::Type::vertex,Shader::Type::fragment};
     const std::vector<Shader::Type> VS_FS_GS      = {Shader::Type::vertex,Shader::Type::fragment, Shader::Type::geometry};
@@ -91,7 +92,7 @@ auto DCGGlWindow::init_shaders() -> bool{
 
 auto DCGGlWindow::initialize_gl() -> bool{
 
-    Logger::message("K4ScanerGrabberWindow::initialize_gl\n");
+    Logger::log("DCGGlWindow::initialize_gl\n");
 
     // flags
     glEnable(GL_MULTISAMPLE); // msaa
@@ -101,13 +102,11 @@ auto DCGGlWindow::initialize_gl() -> bool{
     Managers::initialize();
 
     // shaders
-    Logger::message("Init shaders\n");
     if(!init_shaders()){
         return m_glInitialized = false;
     }
 
     // camera
-    Logger::message("Init camera\n");
     m_camera.set_direction(0.,0.,0.);
 
     VAO::unbind();
@@ -116,8 +115,6 @@ auto DCGGlWindow::initialize_gl() -> bool{
 }
 
 auto DCGGlWindow::draw_gl() -> void{
-
-    BenchGuard g("update_gl");
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);

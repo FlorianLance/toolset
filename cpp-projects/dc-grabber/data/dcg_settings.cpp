@@ -39,6 +39,8 @@ using namespace tool::net;
 
 auto DCGSettings::initialize() -> bool{
 
+    auto lg = LogGuard("DCGSettings::initialize"sv);
+
     // init pencils
     pencils.resize(3);
     int ray = 10;
@@ -156,31 +158,37 @@ auto DCGSettings::initialize() -> bool{
     return true;
 }
 
-auto DCGSettings::init_network_sending_settings(std::shared_ptr<net::UdpNetworkSendingSettings> networkSendingS) -> void{    
+auto DCGSettings::init_network_sending_settings(std::shared_ptr<net::UdpNetworkSendingSettings> networkSendingS) -> void{
+    auto lg = LogGuard("DCGSettings::init_network_sending_settings"sv);
     networkS.init_sending_settings(*networkSendingS);
     triggers_init_network_sending_settings();
 }
 
 auto DCGSettings::update_filters(std::shared_ptr<cam::DCFiltersSettings> filtersS) -> void {
+    auto lg = LogGuard("DCGSettings::update_filters"sv);
     this->filtersS = *filtersS;
     triggers_filters_settings();
 }
 
 auto DCGSettings::update_device_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCDeviceSettings>> deviceS) -> void {
+    auto lg = LogGuard("DCGSettings::update_device_settings"sv);
     this->deviceS = std::move(deviceS->data);
     triggers_device_settings();
 }
 
 auto DCGSettings::update_color_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCColorSettings>> colorS) -> void{
+    auto lg = LogGuard("DCGSettings::update_color_settings"sv);
     this->colorS = std::move(colorS->data);
     triggers_color_settings();
 }
 
 auto DCGSettings::update_color_settings_from_device_manager(const cam::DCColorSettings &colorS) -> void{
+    auto lg = LogGuard("DCGSettings::update_color_settings_from_device_manager"sv);
     this->colorS = colorS;
 }
 
 auto DCGSettings::update_delay(net::UdpMonoPacketMessage<cam::DCDelaySettings> delayS) -> void{
+    auto lg = LogGuard("DCGSettings::update_delay"sv);
     this->delayS = std::move(delayS.data);
     triggers_delay_settings();
 }
@@ -213,51 +221,63 @@ auto DCGSettings::update_imu_sample(cam::DCImuSample imuSample) -> void{
 }
 
 auto DCGSettings::triggers_init_network_sending_settings() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_init_network_sending_settings"sv);
     DCGSignals::get()->init_network_sending_settings_signal(&networkS);
 }
 
 auto DCGSettings::triggers_filters_settings() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_filters_settings");
     DCGSignals::get()->update_filters_signal(filtersS);
 }
 
 auto DCGSettings::triggers_device_settings() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_device_settings");
     DCGSignals::get()->update_device_settings_signal(deviceS);
 }
 
 auto DCGSettings::triggers_color_settings() -> void{
+    auto lg = LogGuard("DCGSettings::triggers_color_settings");
     DCGSignals::get()->update_color_settings_signal(colorS);
 }
 
 auto DCGSettings::triggers_display_settings() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_display_settings");
     DCGSignals::get()->update_cloud_display_settings_signal(0, displayS.cloudDisplay);
 }
 
 auto DCGSettings::triggers_model() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_model");
     DCGSignals::get()->update_model_settings_signal(0, modelS);
 }
 
 auto DCGSettings::triggers_delay_settings() -> void {
+    auto lg = LogGuard("DCGSettings::triggers_delay_settings");
     DCGSignals::get()->update_delay_settings_signal(delayS);
 }
 
 auto DCGSettings::disconnect() -> void{
+    auto lg = LogGuard("DCGSettings::disconnect");
     networkS.disconnect_from_manager();
 }
 
 auto DCGSettings::reset_device_settings() -> void{
+    auto lg = LogGuard("DCGSettings::reset_device_settings");
     deviceS = cam::DCDeviceSettings::default_init_for_grabber();
     triggers_device_settings();
 }
 
 auto DCGSettings::save_device_settings_to_default_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_device_settings_to_default_file");
     return deviceS.save_to_file(DCGPaths::defaultDevice.string());
 }
 
 auto DCGSettings::save_device_settings_to_current_hostname_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_device_settings_to_current_hostname_file");
     return deviceS.save_to_file(DCGPaths::hostDevice.string());
 }
 
 auto DCGSettings::load_default_device_settings_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_default_device_settings_file");
     if(deviceS.init_from_file(DCGPaths::defaultDevice.string())){
         triggers_device_settings();
         return true;
@@ -266,6 +286,7 @@ auto DCGSettings::load_default_device_settings_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_current_hostname_device_settings_file");
     if(deviceS.init_from_file(DCGPaths::hostDevice.string())){
         triggers_device_settings();
         return true;
@@ -274,19 +295,23 @@ auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_filters() -> void{
+    auto lg = LogGuard("DCGSettings::reset_filters");
     filtersS = cam::DCFiltersSettings();
     triggers_device_settings();
 }
 
 auto DCGSettings::save_filters_to_default_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_filters_to_default_file");
     return filtersS.save_to_file(DCGPaths::defaultFilters.string());
 }
 
 auto DCGSettings::save_filters_to_current_hostname_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_filters_to_current_hostname_file");
     return filtersS.save_to_file(DCGPaths::hostFilters.string());
 }
 
 auto DCGSettings::load_default_filters_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_default_filters_file");
     if(filtersS.init_from_file(DCGPaths::defaultFilters.string())){
         triggers_filters_settings();
         return true;
@@ -295,6 +320,7 @@ auto DCGSettings::load_default_filters_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_filters_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_current_hostname_filters_file");
     if(filtersS.init_from_file(DCGPaths::hostFilters.string())){
         triggers_filters_settings();
         return true;
@@ -303,19 +329,23 @@ auto DCGSettings::load_current_hostname_filters_file() -> bool{
 }
 
 auto DCGSettings::reset_color_settings() -> void{
+    auto lg = LogGuard("DCGSettings::reset_color_settings");
     colorS = cam::DCColorSettings();
     triggers_color_settings();
 }
 
 auto DCGSettings::save_color_settings_to_default_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_color_settings_to_default_file");
     return colorS.save_to_file(DCGPaths::defaultColor.string());
 }
 
 auto DCGSettings::save_color_settings_to_current_hostname_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_color_settings_to_current_hostname_file");
     return colorS.save_to_file(DCGPaths::hostColor.string());
 }
 
 auto DCGSettings::load_default_settings_color_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_default_settings_color_file");
     if(colorS.init_from_file(DCGPaths::defaultColor.string())){
         triggers_color_settings();
         return true;
@@ -324,6 +354,7 @@ auto DCGSettings::load_default_settings_color_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_current_hostname_color_settings_file");
     if(colorS.init_from_file(DCGPaths::hostColor.string())){
         triggers_color_settings();
         return true;
@@ -332,19 +363,23 @@ auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
 }
 
 auto DCGSettings::reset_model() -> void{
+    auto lg = LogGuard("DCGSettings::reset_model");
     modelS = cam::DCModelSettings();
     triggers_model();
 }
 
 auto DCGSettings::save_model_to_default_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_model_to_default_file");
     return modelS.save_to_file(DCGPaths::defaultModel.string());
 }
 
 auto DCGSettings::save_model_to_current_hostname_file() -> bool{
+    auto lg = LogGuard("DCGSettings::save_model_to_current_hostname_file");
     return modelS.save_to_file(DCGPaths::hostModel.string());
 }
 
 auto DCGSettings::load_default_model_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_default_model_file");
     if(modelS.init_from_file(DCGPaths::defaultModel.string())){
         triggers_model();
         return true;
@@ -353,6 +388,7 @@ auto DCGSettings::load_default_model_file() -> bool{
 }
 
 auto DCGSettings::load_current_hostname_model_file() -> bool{
+    auto lg = LogGuard("DCGSettings::load_current_hostname_model_file");
     if(modelS.init_from_file(DCGPaths::hostModel.string())){
         triggers_model();
         return true;
@@ -360,9 +396,6 @@ auto DCGSettings::load_current_hostname_model_file() -> bool{
     return false;
 }
 
-
-
 auto DCGSettings::host_name() -> std::string{
     return Host::get_name();
 }
-

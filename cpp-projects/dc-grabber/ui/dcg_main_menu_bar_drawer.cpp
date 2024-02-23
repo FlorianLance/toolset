@@ -150,7 +150,11 @@ auto DCGMainMenuBarDrawer::draw() -> void{
                 if(ImGui::MenuItem("Ping server")){
                     DCGSignals::get()->ping_server_signal();
                 }
-                ImGui::EndMenu();                
+                if(ImGui::MenuItem("Make it crash")){
+                    abort();
+                }
+
+                ImGui::EndMenu();
             }
 
             ImGui::EndMenu();

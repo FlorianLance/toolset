@@ -59,7 +59,7 @@ public:
     static auto get() -> Logger*;
 
     static auto no_file_generate(bool doFormat = false) -> std::unique_ptr<Logger, LoggerCleaner>;
-    static auto init(std::string_view logDirectoryPath = "", std::string_view logFileName = "default_log.html", bool doFormat = false) -> bool;
+    static auto init(std::string_view logDirectoryPath = "", std::string_view logFileName ="default_log.html", bool doFormat = false) -> bool;
     static auto no_file_init(bool doFormat = false) -> void;
     static auto take_ownership() -> std::unique_ptr<Logger, LoggerCleaner>;
     static auto set_logger_ptr(Logger *logger) -> void;
@@ -108,5 +108,19 @@ private:
     class Impl;
     std::unique_ptr<Impl> i;
 };
+
+struct LogGuard{
+
+    LogGuard(std::string_view log) : m_log(log){
+        using namespace std::string_view_literals;
+        Logger::log(std::format("[Start: {}]\n", m_log));
+    }
+    ~LogGuard(){
+        Logger::log(std::format("[End: {}]\n", m_log));
+    }
+private:
+    std::string_view m_log;
+};
+
 }
 

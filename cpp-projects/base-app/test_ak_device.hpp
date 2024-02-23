@@ -13,7 +13,6 @@
 
 // base
 #include "depth-camera/dc_device_manager.hpp"
-#include "utility/benchmark.hpp"
 #include "geometry/point3.hpp"
 #include "io/cloud_io.hpp"
 
@@ -84,7 +83,6 @@ auto test_kinect4() -> void{
     std::puts("### Close device.\n");
     dManager.update_device_settings(ds);
 
-    tool::Bench::display();
     std::puts("End tests.\n");
 }
 
@@ -93,6 +91,31 @@ auto test_raw_k4device() -> void{
 
     using namespace tool;
     using namespace tool::geo;
+
+    {
+        k4a_device_t handle = nullptr;
+        k4a_result_t result = k4a_device_open(0, &handle);
+
+        // k4a_transformation_t t;
+
+        // k4a_device_configuration_t configuration;
+        // configuration.color_format                      = k4a_image_format_t::K4A_IMAGE_FORMAT_COLOR_NV12;
+        // configuration.color_resolution                  = k4a_color_resolution_t::K4A_COLOR_RESOLUTION_720P;
+        // configuration.depth_delay_off_color_usec        = 0;
+        // configuration.subordinate_delay_off_master_usec = 0;
+        // configuration.synchronized_images_only          = true;
+        // configuration.camera_fps                        = k4a_fps_t::K4A_FRAMES_PER_SECOND_30;
+        // configuration.wired_sync_mode                   = k4a_wired_sync_mode_t::K4A_WIRED_SYNC_MODE_STANDALONE;
+        // configuration.depth_mode                        = k4a_depth_mode_t::K4A_DEPTH_MODE_NFOV_UNBINNED;
+
+        // k4a::calibration calib;
+        // result = k4a_device_get_calibration(handle, configuration.depth_mode, configuration.color_resolution, &calib);
+
+        k4a_device_close(handle);
+    }
+
+
+    return;
 
     for(int ii = 0; ii < 4; ++ii){
 
@@ -123,7 +146,7 @@ auto test_raw_k4device() -> void{
             return;
         }
 
-        const auto &ce = calib.extrinsics;
+        // const auto &ce = calib.extrinsics;
         // std::cout << "K4A_CALIBRATION_TYPE_NUM " <<K4A_CALIBRATION_TYPE_NUM << "\n";
         // for(int ii = 0; ii < K4A_CALIBRATION_TYPE_NUM; ++ii){
         //     for(int jj = 0; jj < K4A_CALIBRATION_TYPE_NUM; ++jj){

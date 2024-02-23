@@ -68,7 +68,7 @@ struct DCCloudsSceneDrawer{
     // settings
     auto update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void;
     auto update_scene_display_settings(const DCSceneDisplaySettings &sdS) -> void;
-    auto update_model(size_t idCloud, const cam::DCModelSettings &model)  -> void;
+    auto update_model_settings(size_t idCloud, const cam::DCModelSettings &model)  -> void;
 
     auto update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void;
 

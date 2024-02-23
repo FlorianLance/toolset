@@ -24,65 +24,73 @@
 # **                                                                            **
 # ********************************************************************************/*/
 
+message("TARGET: "$$TARGET)
+
 # projects list
 TOOLSET_CPP_PROJECTS +=\
-    BASE:base:based \
-    BASE_EXPORT:base-export:base-exportd \
-    OPENGL_UTILITY:opengl-utility:opengl-utilityd \
-    3D_ENGINE:3d-engine:3d-engined \
-    DEMOS:demos:demosd \
-    DC_GRABBER:dc-grabber \
-    DC_MANAGER:dc-manager \
-    DC_MONITORING:dc-monitoring \
-    QT_UTILITY:qt-utility:qt-utilityd \
-    NODES:nodes:nodesd \
-    SCANER_COMPONENT:scaner-component \
-    SCANER_GRABBER:scaner-grabber \
-    SCANER_MANAGER:scaner-manager \
-    GUARDIAN:guardian \
-
+    base \
+    base-app \
+    base-test \
+    base-export \
+    base-export-app \
+    opengl-utility \
+    opengl-utility-app \
+    3d-engine \
+    demos \
+    dc-grabber \
+    dc-manager \
+    dc-monitoring \
+    qt-utility \
+    nodes \
+    scaner-component \
+    scaner-grabber \
+    scaner-manager \
+    guardian \
 
 # define functions
 defineTest(generate_variables) {
 
+    UPT = $$upper($${2})
+    UPT = $$replace(UPT, "-", "_")
+
     # include
-    eval($${2}_INCLUDES = $${1}/$${3})
-    eval(export($${2}_INCLUDES))
+    eval($$UPT"_INCLUDES" = $${1}/$${2})
+    eval(export($$UPT"_INCLUDES"))
 
     # objects files
-    eval($${2}_OBJ = $${1}/_build/temp/obj/$${CFG}/$${3})
-    eval(export($${2}_OBJ))
+    eval($$UPT"_OBJ" = $${1}/_build/temp/obj/$${CFG}/$${2})
+    eval(export($$UPT"_OBJ"))
 
     # moc
-    eval($${2}_MOC = $${1}/_build/temp/moc/$${CFG}/$${3})
-    eval(export($${2}_MOC))
+    eval($$UPT"_MOC" = $${1}/_build/temp/moc/$${CFG}/$${2})
+    eval(export($$UPT"_MOC"))
 
     # rcc
-    eval($${2}_RCC = $${1}/_build/temp/rcc/$${CFG}/$${3})
-    eval(export($${2}_RCC))
+    eval($$UPT"_RCC" = $${1}/_build/temp/rcc/$${CFG}/$${2})
+    eval(export($$UPT"_RCC"))
 
     # ui generated files
-    eval($${2}_UI = $${1}/_build/temp/ui/$${CFG}/$${3})
-    eval(export($${2}_UI))
+    eval($$UPT"_UI" = $${1}/_build/temp/ui/$${CFG}/$${2})
+    eval(export($$UPT"_UI"))
 
     # destination
-    eval($${2}_DEST = $${1}/_build/bin/$${3})
-    eval(export($${2}_DEST))
+    eval($$UPT"_DEST" = $${1}/_build/bin/$${2})
+    eval(export($$UPT"_DEST"))
 
     # lib
     equals(CFG, "debug"){
-        eval($${2}_LIB = "-L"$${1}/_build/bin/$${3} "-l"$${4})        
-        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${4}".lib") # TODO: remove
-        eval($${2}_LIB_FILE = $${1}/_build/bin/$${3}/$${4}".lib")
+        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2}d)
+        eval($$UPT"_LIB_DEP" = $${1}/_build/bin/$${2}/$${2}d".lib") # TODO: remove
+        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}d".lib")
     }
     equals(CFG, "release"){
-        eval($${2}_LIB = "-L"$${1}/_build/bin/$${3} "-l"$${3})
-        eval($${2}_LIB_DEP = $${1}/_build/bin/$${3}/$${3}".lib") # TODO: remove
-        eval($${2}_LIB_FILE = $${1}/_build/bin/$${3}/$${3}".lib")
+        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2})
+        eval($$UPT"_LIB_DEP" = $${1}/_build/bin/$${2}/$${2}".lib") # TODO: remove
+        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}".lib")
     }
-    eval(export($${2}_LIB))    
-    eval(export($${2}_LIB_DEP))
-    eval(export($${2}_LIB_FILE))
+    eval(export($$UPT"_LIB"))
+    eval(export($$UPT"_LIB_DEP"))
+    eval(export($$UPT"_LIB_FILE"))
 }
 
 # sub dir
@@ -91,7 +99,28 @@ TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
 TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
 
 # generate projects variables
-for(project_dir, TOOLSET_CPP_PROJECTS):{
-    generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$section(project_dir, :, 0, 0), $$section(project_dir, :, 1, 1), $$section(project_dir, :, 2, 2))
+for(project, TOOLSET_CPP_PROJECTS):{
+
+    generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$project)
+
+    ##  build files
+    TLOW = $$lower($$TARGET)
+    equals(TLOW, $$project){
+
+        UPT = $$upper($$project)
+        UPT = $$replace(UPT, "-", "_")
+
+        OBJECTS_DIR = $$eval($$UPT"_OBJ")
+        DESTDIR     = $$eval($$UPT"_DEST")
+        RCC_DIR     = $$eval($$UPT"_RCC")
+        UI_DIR      = $$eval($$UPT"_UI")
+        MOC_DIR     = $$eval($$UPT"_MOC")
+        message("OBJ: "$$OBJECTS_DIR)
+        message("DEST:"$$DESTDIR)
+        message("RCC: "$$RCC_DIR)
+        message("UI:  "$$UI_DIR)
+        message("MOC: "$$MOC_DIR)
+    }
 }
+
 
