@@ -22,8 +22,7 @@
 
 using namespace tool::geo;
 using namespace tool::graphics;
-using attachment = tool::gl::FrameBufferAttachment;
-
+using namespace tool::gl;
 
 Sample::Sample(Camera *cam) : // managers
       shadersM(ShadersManager::get_instance()),
@@ -245,7 +244,7 @@ auto Sample::parent_update_imgui() -> void{
                         if(auto modelDrawer = dynamic_cast<gl::ModelDrawer*>(currentDrawer)){
                             auto model = modelDrawer->model();
                             ImGui::Indent();
-                            tool::ImGuiUiDrawer::text(std::format("Number of meshes: {}", model->gmeshes.size()));
+                            tool::ImGuiUiDrawer::text(std::format("Number of meshes: {}", model->meshes.size()));
 
                             tool::ImGuiUiDrawer::text(std::format("Number of textures: {}", model->textures.size()));
                             tool::ImGuiUiDrawer::text(std::format("Number of animations: {}", model->animations.size()));
@@ -412,7 +411,7 @@ auto Sample::draw_skybox() -> void{
         shader->use();
         shader->set_camera_matrices_uniforms(camM);
 
-        gl::TBO::bind_textures({texturesM->cube_map_id("grace")},0);
+        gl::TBO::bind({texturesM->cube_map_id("grace")},0);
 
         commonDrawers["skybox"sv]->draw();
     }
@@ -1061,7 +1060,7 @@ auto Ch5ReflectCubeMap::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("MaterialColor", matColor);
     sampleShader->set_uniform("ReflectFactor", reflectFactor);
 
-    gl::TBO::bind_textures({texturesM->cube_map_id("grace")});
+    gl::TBO::bind({texturesM->cube_map_id("grace")},0);
     draw_nb(sampleShader.get(), drawer);
 }
 
@@ -1088,7 +1087,7 @@ auto Ch5RefractCubeMap::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Material.Eta", rmInfo.eta);
     sampleShader->set_uniform("Material.ReflectionFactor", rmInfo.reflectionFactor);
 
-    gl::TBO::bind_textures({texturesM->cube_map_id("grace")});
+    gl::TBO::bind({texturesM->cube_map_id("grace")},0);
     draw_nb(sampleShader.get(), drawer);
 }
 
@@ -1146,7 +1145,7 @@ auto Ch5ProjectTexture::draw(tool::gl::Drawer *drawer) -> void {
 
     auto tbo = texturesM->texture_tbo("flower-projected");
     tbo->set_texture_options(projOptions);
-    tbo->bind();
+    tbo->bind(0);
 
     commonDrawers["notext-plane-10x10"sv]->draw();
 
@@ -1176,7 +1175,7 @@ auto Ch5DiffuseImageBasedLighting::draw(tool::gl::Drawer *drawer) -> void {
     Sample::draw(drawer);
 
     sampleShader->use();
-    gl::TBO::bind_textures({texturesM->cube_map_id("grace-diffuse"),texturesM->texture_id("spot_texture")});
+    gl::TBO::bind({texturesM->cube_map_id("grace-diffuse"),texturesM->texture_id("spot_texture")},0);
 
     sampleShader->set_uniform("gamma",  gamma);
     sampleShader->set_uniform("CamPos", camera->position().conv<float>());
@@ -1213,14 +1212,12 @@ auto Ch5SamplerObject::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Material.Ks", mInfo.Ks);
     sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
 
-    camM.m = geo::transform(Vec3d{0.3,0.3,0.3},Vec3d{90.,0.,0.},Vec3d{0.,0.,5.});
+    camM.m = geo::transform(Vec3d{0.3,0.3,0.3},Vec3d{90.,0.,0.},Vec3d{0.,0.,-2.});
     update_matrices();
     sampleShader->set_camera_matrices_uniforms(camM);
 
     sampler1.bind(0);
-
-//    texturesM->texture_tbo("flower-projected")->bind();
-    commonDrawers["grid-floor"sv]->draw(sampleShader.get());           
+    commonDrawers["grid-floor"sv]->draw(sampleShader.get());
     draw_nb(sampleShader.get(), drawer);
 
     gl::Sampler::unbind();
@@ -1309,11 +1306,12 @@ auto Ch5RenderToTexture::update_screen_size() -> void {
 
     // set colors buffers to be drawn
     fboCh5RenderToTexture.set_draw_buffers({
-        attachment::color0
+        FrameBuffer::Color0
     });
+    fboCh5RenderToTexture.check_validity();
 
     // Unbind the framebuffer, and revert to default framebuffer
-    gl::FBO::unbind();
+    fboCh5RenderToTexture.unbind();
 }
 
 auto Ch5RenderToTexture::draw(tool::gl::Drawer *drawer) -> void {
@@ -1323,7 +1321,7 @@ auto Ch5RenderToTexture::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->use();
 
     // pass 0
-    gl::FBO::bind(fboCh5RenderToTexture);
+    fboCh5RenderToTexture.bind();
     glViewport(0,0,512,512);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1335,26 +1333,26 @@ auto Ch5RenderToTexture::draw(tool::gl::Drawer *drawer) -> void {
     );
 
     sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f,1.0f});
-    sampleShader->set_uniform("Light.La", lInfo.La.array.data());
-    sampleShader->set_uniform("Light.Position", lInfo.Position.array.data());
-    sampleShader->set_uniform("Material.Ks", mInfo.Ks.array.data());
-    sampleShader->set_uniform("Material.Shininess", &mInfo.Shininess);
+    sampleShader->set_uniform("Light.La", lInfo.La);
+    sampleShader->set_uniform("Light.Position", lInfo.Position);
+    sampleShader->set_uniform("Material.Ks", mInfo.Ks);
+    sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
     sampleShader->set_camera_matrices_uniforms(rMat);
     commonDrawers["spot"sv]->draw(sampleShader.get());
 
     glFlush();
 
     // pass 1
-    gl::FBO::unbind();
-    renderTexCh5RenderToTexture.bind();
+    gl::FrameBufferObject::unbind();
+    renderTexCh5RenderToTexture.bind(0);
 
     glViewport(0,0, camera->screen()->width(), camera->screen()->height());
 
-    sampleShader->set_uniform("Light.Position", lInfo.Position.array.data());
-    sampleShader->set_uniform("Material.Ks", mInfo.Ks.array.data());
-    sampleShader->set_uniform("Material.Shininess", &mInfo.Shininess);
+    sampleShader->set_uniform("Light.Position", lInfo.Position);
+    sampleShader->set_uniform("Material.Ks", mInfo.Ks);
+    sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
 
-    draw_nb(sampleShader.get(), commonDrawers["spot"sv].get());
+    draw_nb(sampleShader.get(), commonDrawers["cube"sv].get());
 }
 
 auto Ch5RenderToTexture::update(float elapsedSeconds) -> void {
@@ -1417,11 +1415,12 @@ auto Ch6EdgeDetectionFilter::update_screen_size() -> void{
 
     // set colors buffers to be drawn
     screenFBO.set_draw_buffers({
-        attachment::color0
+        FrameBuffer::Color0
     });
+    screenFBO.check_validity();
 
     // Unbind the framebuffer, and revert to default framebuffer
-    gl::FBO::unbind();
+    screenFBO.unbind();
 }
 
 auto Ch6EdgeDetectionFilter::draw(tool::gl::Drawer *drawer) -> void {
@@ -1452,8 +1451,8 @@ auto Ch6EdgeDetectionFilter::draw(tool::gl::Drawer *drawer) -> void {
         // pass 2
         glFlush();
 
-        gl::FBO::unbind();
-        screenRenderTexture.bind();
+        gl::FrameBufferObject::unbind();
+        screenRenderTexture.bind(0);
 
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1534,8 +1533,9 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
 
         // set colors buffers to be drawn
         screenFBO.set_draw_buffers({
-            attachment::color0
+            FrameBuffer::Color0
         });
+        screenFBO.check_validity();
     }
 
     {
@@ -1559,12 +1559,13 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
 
         // set colors buffers to be drawn
         intermediateFBO.set_draw_buffers({
-            attachment::color0
+            FrameBuffer::Color0
         });
+        intermediateFBO.check_validity();
     }
 
     // Unbind the framebuffer, and revert to default framebuffer
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 }
 
 auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
@@ -1597,7 +1598,7 @@ auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
 
         // pass 2
         intermediateFBO.bind();
-        screenRenderTexture.bind();
+        screenRenderTexture.bind(0);
 
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1606,8 +1607,8 @@ auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
         draw_screen_quad(sampleShader.get());
 
         // pass 3
-        gl::FBO::unbind();
-        intermediateRenderTexture.bind();
+        gl::FrameBufferObject::unbind();
+        intermediateRenderTexture.bind(0);
 
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -1684,11 +1685,12 @@ auto Ch6HdrLightingToneMapping::update_screen_size() -> void {
 
     // set colors buffers to be drawn
     hdrFBO.set_draw_buffers({
-        attachment::none,
-        attachment::color0
+        FrameBuffer::None,
+        FrameBuffer::Color0
     });
+    hdrFBO.check_validity();
 
-    gl::FBO::unbind();
+    hdrFBO.unbind();
 }
 
 auto Ch6HdrLightingToneMapping::draw(tool::gl::Drawer *drawer) -> void {
@@ -1728,7 +1730,7 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::Drawer *drawer) -> void {
 
     // compute log avg luminance
     const int size = camera->screen()->size_pixels();
-    hdrRenderTexture.bind();
+    hdrRenderTexture.bind(0);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, texData.data());
     //    glGetTextureImage(hdrRenderTexture.id(), 0, GL_RGB, GL_FLOAT, static_cast<GLsizei>(texData.size()*4), texData.data());
 
@@ -1754,7 +1756,7 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::Drawer *drawer) -> void {
 
 
     // pass 2
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
 
@@ -1830,10 +1832,10 @@ auto Ch6HdrBloom::update_screen_size() -> void {
         hdrFBO.attach_depth_buffer(hdrDepthBuffer);
 
         // set colors buffers to be drawn
-        hdrFBO.set_draw_buffers({attachment::color0});
+        hdrFBO.set_draw_buffers({FrameBuffer::Color0});
+        hdrFBO.check_validity();
 
     }
-    gl::FBO::unbind();
 
     {
         // Generate and bind the framebuffer
@@ -1857,9 +1859,10 @@ auto Ch6HdrBloom::update_screen_size() -> void {
 
         //        GLenum drawBufs[] = {GL_COLOR_ATTACHMENT0};
         //        glNamedFramebufferDrawBuffers(blurFBO.id(), 1, drawBufs);
-        blurFBO.set_draw_buffers({attachment::color0});
+        blurFBO.set_draw_buffers({FrameBuffer::Color0});
+        blurFBO.check_validity();
     }
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 }
 
 auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
@@ -1905,7 +1908,7 @@ auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
 
     // compute log average luminance
     const int size = camera->screen()->size_pixels();
-    hdrRenderTexture.bind();
+    hdrRenderTexture.bind(0);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, texData.data());
     //    glGetTextureImage(hdrRenderTexture.id(), 0, GL_RGB, GL_FLOAT, static_cast<GLsizei>(texData.size()*4), texData.data());
     // gl::TBO::bind_textures({hdrRenderTexture.id(),0,0});
@@ -1963,7 +1966,7 @@ auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
 
     // Bind to the default framebuffer, this time we're going to
     // actually draw to the screen!
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glClear(GL_COLOR_BUFFER_BIT);
 
     glViewport(0,0,camera->screen()->width(), camera->screen()->height());
@@ -2058,22 +2061,22 @@ auto Ch6Deferred::update_screen_size() -> void {
 
     // Attach the textures to the framebuffer
     deferredFBO.attach_depth_buffer(depthBuf);
-    deferredFBO.attach_colors_textures({
+    deferredFBO.attach_color_textures({
         &posTex,&normTex,
         &diffuseColorTex,&ambiantColorTex,&specularColorTex
     });
 
     // set colors buffers to be drawn
     deferredFBO.set_draw_buffers({
-        attachment::none,
-        attachment::color0,
-        attachment::color1,
-        attachment::color2,
-        attachment::color3,
-        attachment::color4
+        FrameBuffer::None,
+        FrameBuffer::Color0,
+        FrameBuffer::Color1,
+        FrameBuffer::Color2,
+        FrameBuffer::Color3,
+        FrameBuffer::Color4
     });
-
-    gl::FBO::unbind();
+    deferredFBO.check_validity();
+    deferredFBO.unbind();
 }
 
 auto Ch6Deferred::draw(tool::gl::Drawer *drawer) -> void {
@@ -2134,10 +2137,10 @@ auto Ch6Deferred::draw(tool::gl::Drawer *drawer) -> void {
 
     // pass 2
     sampleShader->set_uniform("Pass", 2);
-    gl::FBO::unbind();
-    gl::TBO::bind_textures({posTex.id(), normTex.id(),
-        diffuseColorTex.id(),ambiantColorTex.id(),specularColorTex.id()
-    });
+    gl::FrameBufferObject::unbind();
+    gl::TBO::bind({posTex.id(), normTex.id(),
+        diffuseColorTex.id(),ambiantColorTex.id(),specularColorTex.id()}
+    ,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     draw_screen_quad(sampleShader.get());
@@ -2241,7 +2244,7 @@ auto Ch6SSAO::update_screen_size() -> void {
 
     // Attach the textures to the framebuffer
     deferredFBO.attach_depth_buffer(depthBuf);
-    deferredFBO.attach_colors_textures({
+    deferredFBO.attach_color_textures({
         &posTex,
         &normTex,
         &colorTex
@@ -2249,12 +2252,13 @@ auto Ch6SSAO::update_screen_size() -> void {
 
     // set colors buffers to be drawn
     deferredFBO.set_draw_buffers({
-        attachment::none,
-        attachment::color0,
-        attachment::color1,
-        attachment::color2,
-        attachment::none
+        FrameBuffer::None,
+        FrameBuffer::Color0,
+        FrameBuffer::Color1,
+        FrameBuffer::Color2,
+        FrameBuffer::None
     });
+    deferredFBO.check_validity();
 
     // Generate and bind the framebuffer
     ssaoFBO.clean();
@@ -2262,20 +2266,21 @@ auto Ch6SSAO::update_screen_size() -> void {
     ssaoFBO.bind();
 
     // Attach the textures to the framebuffer
-    ssaoFBO.attach_colors_textures({
+    ssaoFBO.attach_color_textures({
         &aoTex[0]
     });
 
     // set colors buffers to be drawn
     ssaoFBO.set_draw_buffers({
-        attachment::none,
-        attachment::none,
-        attachment::none,
-        attachment::none,
-        attachment::color0
+        FrameBuffer::None,
+        FrameBuffer::None,
+        FrameBuffer::None,
+        FrameBuffer::None,
+        FrameBuffer::Color0
     });
+    ssaoFBO.check_validity();
 
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 }
 
 auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
@@ -2301,7 +2306,7 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     // floor
-    gl::TBO::bind_textures({texturesM->texture_id("hardwood_diffuse")}, 5);
+    gl::TBO::bind({texturesM->texture_id("hardwood_diffuse")}, 5);
     sampleShader->set_uniform("Material.UseTex", true);
 
     update_matrices_m(Mat4d(true));
@@ -2310,7 +2315,7 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
 
 
     // walls
-    gl::TBO::bind_textures({texturesM->texture_id("brick")}, 5);
+    gl::TBO::bind({texturesM->texture_id("brick")}, 5);
 
     camM.m = geo::translate(Mat4d(true), Vec3d{0,0,-2});
     update_matrices_m(geo::rotate(camM.m, Vec3d{1,0,0},90.));
@@ -2346,8 +2351,8 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
 
-    gl::TBO::bind_textures({posTex.id(),normTex.id(),colorTex.id()/**,aoTex[0].id(),randRotationTex.id()*/},0);
-    gl::TBO::bind_textures({randRotationTex.id()}, 4);
+    gl::TBO::bind({posTex.id(),normTex.id(),colorTex.id()/**,aoTex[0].id(),randRotationTex.id()*/},0);
+    gl::TBO::bind({randRotationTex.id()}, 4);
     draw_screen_quad(sampleShader.get());
 
     // pass 3 : Blur
@@ -2356,16 +2361,16 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     ssaoFBO.attach_color0_texture(aoTex[1]);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
-    gl::TBO::bind_textures({aoTex[0].id() }, 3);
+    gl::TBO::bind({aoTex[0].id() }, 3);
     draw_screen_quad(sampleShader.get());
 
     // pass 4 : Lighting
     // Read from aoTex[1] (blurred)
     sampleShader->set_uniform("Pass", 4);
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
-    gl::TBO::bind_textures({aoTex[1].id() }, 3);
+    gl::TBO::bind({aoTex[1].id() }, 3);
     draw_screen_quad(sampleShader.get());
 }
 
@@ -2411,7 +2416,7 @@ auto Ch6OIT::update_screen_size() -> void {
 
     // The buffer for the head pointers, as an image texture
     headPtrTexture.clean();
-    headPtrTexture.init_image_32ui(width, height, 1);
+    headPtrTexture.init_image_32u(width, height, 1);
 
     // The buffer of linked lists
     linkedListBuffer.clean();
@@ -2443,7 +2448,7 @@ auto Ch6OIT::draw(tool::gl::Drawer*) -> void{
         counterBuffer.update_data(&zero, sizeof(GLuint));
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, clearBuffer.id());
-        headPtrTexture.update_image_32ui(nullptr, width, height, 0, 0);
+        headPtrTexture.update_image_32u(nullptr, width, height, 0, 0);
     }
 
     // pass 1
@@ -2679,7 +2684,7 @@ auto Ch7ScenePointSprite::draw(tool::gl::Drawer *drawer) -> void {
 
     sampleShader->use();
     sampleShader->set_uniform("Size2", sizeSprite);
-    gl::TBO::bind_textures({texturesM->texture_id("flower")});
+    gl::TBO::bind({texturesM->texture_id("flower")},0);
 
     sampleShader->set_uniform("ProjectionMatrix", camera->projection().conv<float>());
     draw_nb(sampleShader.get(), pointsSprites.get());
@@ -2769,9 +2774,9 @@ auto Ch8ShadowMap::init() -> bool {
         shadowFBO.attach_depth_texture(shadowTexture);
 
         // set colors buffers to be drawn
-        shadowFBO.set_draw_buffers({attachment::none});
-
-        gl::FBO::unbind();
+        shadowFBO.set_draw_buffers({FrameBuffer::None});
+        shadowFBO.check_validity();
+        shadowFBO.unbind();
     }
 
     // ##########
@@ -2812,7 +2817,7 @@ auto Ch8ShadowMap::draw(tool::gl::Drawer *drawer) -> void {
     // # fbo
     shadowFBO.bind();
     // # textures
-    gl::TBO::bind_textures({shadowTexture.id()});
+    gl::TBO::bind({shadowTexture.id()},0);
 //     # clean
     glClear(GL_DEPTH_BUFFER_BIT);
     // # flags
@@ -2840,7 +2845,7 @@ auto Ch8ShadowMap::draw(tool::gl::Drawer *drawer) -> void {
 
     // Pass 2 (render)
     // # fbo
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     // # clean
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // # viewport
@@ -2998,9 +3003,10 @@ auto Ch8ShadowMap2::init() -> bool {
         glReadBuffer(GL_NONE);
 
         // set colors buffers to be drawn
-        depthmapFBO.set_draw_buffers({attachment::none});
+        depthmapFBO.set_draw_buffers({FrameBuffer::None});
+        depthmapFBO.check_validity();
 
-        gl::FBO::unbind();
+        depthmapFBO.unbind();
     }
 
 
@@ -3038,7 +3044,7 @@ auto Ch8ShadowMap2::draw(tool::gl::Drawer *) -> void{
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     depthmapFBO.bind();
     glClear(GL_DEPTH_BUFFER_BIT);
-    gl::TBO::bind_textures({texturesM->texture_tbo("hardwood_diffuse")->id()});
+    gl::TBO::bind({texturesM->texture_tbo("hardwood_diffuse")->id()},0);
     render_scene(commonShaders["shadow_mapping_depth"sv].get());
 
     // 2. then render scene as normal with shadow mapping (using depth map)
@@ -3049,9 +3055,9 @@ auto Ch8ShadowMap2::draw(tool::gl::Drawer *) -> void{
     sampleShader->set_uniform("lightPos", lightPos);//camera->view().conv<float>().multiply_point(Pt4f(lightPos,1.0f)).xyz());
     sampleShader->set_uniform("lightSpaceMatrix", lightSpaceMatrix);
     glViewport(0, 0, camera->screen()->width(), camera->screen()->height());
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    gl::TBO::bind_textures({texturesM->texture_tbo("hardwood_diffuse")->id(), depthMap.id()});
+    gl::TBO::bind({texturesM->texture_tbo("hardwood_diffuse")->id(), depthMap.id()},0);
     render_scene(sampleShader.get());
 
     commonShaders["ch8-solid"sv]->use();
@@ -3140,9 +3146,9 @@ auto Ch8ShadowPcf::init() -> bool {
         shadowFBO.attach_depth_texture(shadowTexture);
 
         // set colors buffers to be drawn
-        shadowFBO.set_draw_buffers({attachment::none});
-
-        gl::FBO::unbind();
+        shadowFBO.set_draw_buffers({FrameBuffer::None});
+        shadowFBO.check_validity();
+        shadowFBO.unbind();
     }
 
 
@@ -3178,7 +3184,7 @@ auto Ch8ShadowPcf::draw(tool::gl::Drawer *drawer) -> void {
     // # fbo
     shadowFBO.bind();
     // # textures
-    gl::TBO::bind_textures({shadowTexture.id()});
+    gl::TBO::bind({shadowTexture.id()},0);
     // # clean
     glClear(GL_DEPTH_BUFFER_BIT);
     // # flags
@@ -3213,7 +3219,7 @@ auto Ch8ShadowPcf::draw(tool::gl::Drawer *drawer) -> void {
     auto lp = geo::to_pt4(lightPos,1.f);
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(lp.conv<double>()).conv<float>()});
 
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glViewport(0,0,camera->screen()->width(),camera->screen()->height());
     glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
 

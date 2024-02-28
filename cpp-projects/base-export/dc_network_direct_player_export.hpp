@@ -26,8 +26,6 @@
 
 #pragma once
 
-// std
-#include <deque>
 
 // base
 #include "depth-camera/dc_server_data.hpp"
@@ -37,6 +35,21 @@
 
 namespace tool::cam{
 
+// struct NetworkProcessing{
+
+// };
+// struct DataProcessing{
+
+// };
+// struct DCNetworkDirectPlayer2{
+
+//     auto initialize(const std::string &networkSettingsFilePath) -> bool{
+
+//     }
+
+// };
+
+
 struct DeviceData{
     bool connected = false;
     size_t id = 0;
@@ -44,8 +57,18 @@ struct DeviceData{
     cam::DCDeviceSettings device = cam::DCDeviceSettings::default_init_for_manager();
     cam::DCColorSettings color;
     cam::DCModelSettings model;
-    cam::DCDelaySettings delay;    
+    cam::DCDelaySettings delay;
+
+    std::unique_ptr<std::mutex> feedbackLocker = nullptr;
+    size_t nbFeedbacksReceived =0;
+    std::vector<net::Feedback> feedbacks;
+
+    std::unique_ptr<std::mutex> frameLocker = nullptr;
+    size_t nbFramesReceived =0;
+    size_t nbFramesProcessed =0;
+    std::shared_ptr<DCCompressedFrame> lastCompressedFrame = nullptr;
     std::shared_ptr<DCFrame> lastFrame = nullptr;
+    std::shared_ptr<DCFrame> frameToDisplay = nullptr;
 };
 
 struct DCNetworkDirectPlayer{
@@ -58,14 +81,7 @@ struct DCNetworkDirectPlayer{
     DCServerData serverData;
     std::vector<DeviceData> devicesD;
 
-    // messages
-    std::mutex readMessagesM;
-    std::deque<std::pair<size_t, net::Feedback>> messages;
-    std::vector<std::pair<size_t, net::Feedback>> messagesR;
-    std::atomic_int framesReceived = 0;
-
-    // states
-    std::atomic_bool readFrames = false;
+    // state
     std::vector<size_t> ids;
 
     DCNetworkDirectPlayer();
@@ -74,12 +90,14 @@ struct DCNetworkDirectPlayer{
     auto initialize(const std::string &networkSettingsFilePath) -> bool;
     auto update() -> void;
 
+    // function to be called in a dedicated thread
+    auto read_network_data(size_t idDevice) -> size_t;
+    auto process_data() -> size_t;
+
     // actions
     auto connect_to_devices() -> void;
     auto disconnect_from_devices() -> void;
     auto shutdown_devices() -> void;
-    auto start_reading() -> void;
-    auto stop_reading() -> void;
 
     // states
     auto devices_nb() const noexcept -> size_t;
@@ -114,11 +132,11 @@ DECL_EXPORT tool::cam::DCNetworkDirectPlayer* create__dc_network_direct_player()
 DECL_EXPORT void delete__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT int initialize__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* networkSettingsFilePath);
 DECL_EXPORT void update__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
+DECL_EXPORT int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
+DECL_EXPORT int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 // actions
 DECL_EXPORT void connect_to_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT void disconnect_from_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
-DECL_EXPORT void start_reading__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
-DECL_EXPORT void stop_reading__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 // states
 DECL_EXPORT int devices_nb__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT int is_device_connected__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);

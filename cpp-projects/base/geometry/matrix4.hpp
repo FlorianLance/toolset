@@ -29,7 +29,6 @@
 // local
 #include "utility/constants.hpp"
 #include "geometry/point3.hpp"
-#include "geometry/point4.hpp"
 #include "geometry/matrix3.hpp"
 
 namespace tool::geo {

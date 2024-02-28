@@ -32,8 +32,8 @@
 #include <QDebug>
 
 // opengl-utility
-#include "opengl/shader/shader.hpp"
-#include "opengl/gl_texture.hpp"
+#include "opengl/shader/shader_program.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 
 namespace tool::gl{
 

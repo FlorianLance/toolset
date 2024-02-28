@@ -28,7 +28,7 @@
 #pragma once
 
 // base
-#include "graphics/material.hpp"
+#include "graphics/material/material.hpp"
 
 // local
 #include "opengl/buffer/uniform_buffer_object.hpp"

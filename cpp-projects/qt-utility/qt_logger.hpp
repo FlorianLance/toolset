@@ -79,23 +79,50 @@ private:
 
 signals:
 
-    void message_signal(QString message);
-    void error_signal(QString error);
-    void warning_signal(QString warning);
-    void log_signal(QString log);
-    void status_signal(QString status, int ms);
+    auto message_signal(QString message) -> void;
+    auto error_signal(QString error) -> void;
+    auto warning_signal(QString warning) -> void;
+    auto log_signal(QString log) -> void;
+    auto status_signal(QString status, int ms) -> void;
 
-    void unity_message_signal(QStringView message);
-    void unity_error_signal(QStringView error);
-    void unity_warning_signal(QStringView warning);
-    void unity_unknow_signal(QStringView unknow);
+    auto unity_message_signal(QStringView message) -> void;
+    auto unity_error_signal(QStringView error) -> void;
+    auto unity_warning_signal(QStringView warning) -> void;
+    auto unity_unknow_signal(QStringView unknow) -> void;
 
-    void progress_signal(int state);
+    auto progress_signal(int state) -> void;
 
 private:
 
     struct Impl;
     std::unique_ptr<Impl> m_p;
 };
+
+struct QtMessageGuard{
+
+    QtMessageGuard(QStringView message) : m_message(message){
+        using namespace std::string_view_literals;
+        QtLogger::message(QString("[Start: %1]\n").arg(m_message));
+    }
+    ~QtMessageGuard(){
+        QtLogger::message(QString("[End: %1]\n").arg(m_message));
+    }
+private:
+    QStringView m_message;
+};
+
+struct QtLogGuard{
+
+    QtLogGuard(QStringView log) : m_log(log){
+        using namespace std::string_view_literals;
+        QtLogger::log(QString("[Start: %1]\n").arg(m_log));
+    }
+    ~QtLogGuard(){
+        QtLogger::log(QString("[End: %1]\n").arg(m_log));
+    }
+private:
+    QStringView m_log;
+};
+
 }
 

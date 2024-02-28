@@ -44,9 +44,6 @@ using Vec3  = Pt3<acc>;
 using Vec3f = Pt3<float>;
 using Vec3d = Pt3<double>;
 
-using Col3 = Pt3<std::uint8_t>;
-using Col3f= Pt3f;
-
 template<typename acc>
 using Normal3 = Vec3<acc>;
 

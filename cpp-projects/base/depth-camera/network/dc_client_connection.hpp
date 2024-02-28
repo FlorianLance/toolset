@@ -46,7 +46,7 @@ class DCClientConnection{
 public:
 
     auto init_connections() -> void;
-    auto start_reading(net::UdpClientNetworkSettings *networkS) -> bool;
+    auto start_reading_thread(net::UdpClientNetworkSettings *networkS) -> bool;
     auto init_sender(net::UdpClientNetworkSettings *networkS) -> void;
     auto ping_server() -> void;
     auto disconnect_sender() -> void;

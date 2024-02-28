@@ -31,7 +31,7 @@
 #include "utility/paths.hpp"
 
 // opengl-utility
-#include "opengl/buffer/framebuffer_object.hpp"
+#include "opengl/buffer/frame_buffer_object.hpp"
 
 // 3d-engine
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -139,7 +139,7 @@ auto DCMGlWindow::draw_gl() -> void{
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 }
 
 

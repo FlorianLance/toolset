@@ -89,7 +89,7 @@ private:
     // objects to draw
     int vaoToDisplay = -1;
 
-    geo::Mesh mesh;
+    graphics::Mesh mesh;
 
     gl::CloudPointsDrawer kinectCloud;
     gl::MeshDrawer kinectMesh2;

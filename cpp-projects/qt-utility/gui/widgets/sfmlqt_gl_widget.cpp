@@ -196,7 +196,7 @@ void SfmlQtGlWidget::showEvent(QShowEvent*){
        repaint();
     });
 
-    //  timer
+    // timer
     renderTimer.start(1000/60);
     myInitialized = true;
 

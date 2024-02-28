@@ -135,7 +135,7 @@ auto dc_network_direct_player_export_test() -> void{
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     std::puts("Start reading\n");
-    start_reading__dc_network_direct_player(dcNetworkDirectPlayer);
+    // start_reading__dc_network_direct_player(dcNetworkDirectPlayer);
 
     int nbIterations = 1000;
     std::vector<std::vector<tool::cam::DCVertexMeshData>> data;
@@ -168,7 +168,7 @@ auto dc_network_direct_player_export_test() -> void{
     }
 
     std::puts("Stop reading\n");
-    stop_reading__dc_network_direct_player(dcNetworkDirectPlayer);
+    // stop_reading__dc_network_direct_player(dcNetworkDirectPlayer);
 
     std::puts("Wait...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));

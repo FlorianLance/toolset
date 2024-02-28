@@ -37,12 +37,16 @@
 // local
 #include "utility/logger.hpp"
 
+// debug
+#include <iostream>
+
 using namespace tool::geo;
+using namespace tool::graphics;
 using namespace tool::io;
 
 namespace fs = std::filesystem;
 
-auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_ptr<Model>{
+auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_ptr<ModelMesh>{
 
     if(verbose){
         Logger::message(std::format("[AiLoader] Load model with path [{}].\n", path));
@@ -64,7 +68,7 @@ auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_pt
     }
 
     // create model
-    auto model       = std::make_shared<Model>();
+    auto model       = std::make_shared<ModelMesh>();
     model->directory = pathModel.parent_path().string();
     model->name      = scene->mRootNode->mName.C_Str();
 
@@ -208,12 +212,26 @@ auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_pt
     return model;
 }
 
+auto AiLoader::to_color(std::optional<aiColor3D> assimpColor) -> Pt3f{
+    if(assimpColor.has_value()){
+        return Pt3f{assimpColor.value().r, assimpColor.value().g, assimpColor.value().b};
+    }
+    return {};
+}
 
-void AiLoader::read_mesh(Model *model, aiMesh *aiMesh){
+auto AiLoader::to_string(std::optional<aiString> assimpStr) -> std::string{
+    if(assimpStr.has_value()){
+        return std::string(assimpStr.value().C_Str());
+    }
+    return {};
+}
+
+
+auto AiLoader::read_mesh(ModelMesh *model, aiMesh *aiMesh) -> void{
 
     bool verbose = false;
-
-    auto gmesh = std::make_shared<GMesh>();
+    
+    auto gmesh = std::make_shared<SubModelMesh>();
     gmesh->name = aiMesh->mName.C_Str();
     gmesh->material = &model->materials[aiMesh->mMaterialIndex];
 
@@ -252,28 +270,29 @@ void AiLoader::read_mesh(Model *model, aiMesh *aiMesh){
     for(unsigned int ii = 0; ii < aiMesh->mNumVertices; ii++){
 
         // position
-        mesh->vertices.emplace_back(Pt3f{aiMesh->mVertices[ii].x, aiMesh->mVertices[ii].y, aiMesh->mVertices[ii].z});
+        mesh->vertices.push_back(Pt3f{aiMesh->mVertices[ii].x, aiMesh->mVertices[ii].y, aiMesh->mVertices[ii].z});
+        // mesh->vertices.emplace_back(static_cast<float>(aiMesh->mVertices[ii].x), static_cast<float>(aiMesh->mVertices[ii].y), static_cast<float>(aiMesh->mVertices[ii].z));
 
         // normal
         if(aiMesh->HasNormals()){
-            mesh->normals.emplace_back(Vec3f{aiMesh->mNormals[ii].x,  aiMesh->mNormals[ii].y,  aiMesh->mNormals[ii].z});
+            mesh->normals.push_back(Vec3f{aiMesh->mNormals[ii].x,  aiMesh->mNormals[ii].y,  aiMesh->mNormals[ii].z});
         }
 
         // uv
         // aiMesh->GetNumUVChannels()
         if(aiMesh->HasTextureCoords(0)){
-            mesh->tCoords.emplace_back(Pt2f{aiMesh->mTextureCoords[0][ii].x,  aiMesh->mTextureCoords[0][ii].y});
+            mesh->tCoords.push_back(Pt2f{aiMesh->mTextureCoords[0][ii].x,  aiMesh->mTextureCoords[0][ii].y});
         }
 
         // tangents
         if(aiMesh->HasTangentsAndBitangents()){
-            mesh->tangents.emplace_back(Pt4f{aiMesh->mTangents->x,aiMesh->mTangents->y,aiMesh->mTangents->z,1.f});
+            mesh->tangents.push_back(Pt4f{aiMesh->mTangents->x,aiMesh->mTangents->y,aiMesh->mTangents->z,1.f});
         }
 
         // colors
         // aiMesh->GetNumColorChannels()
         if(aiMesh->HasVertexColors(0)){
-            mesh->colors.emplace_back(Pt4f{
+            mesh->colors.push_back(Pt4f{
                 aiMesh->mColors[0][ii].r,
                 aiMesh->mColors[0][ii].g,
                 aiMesh->mColors[0][ii].b,
@@ -412,33 +431,31 @@ void AiLoader::read_mesh(Model *model, aiMesh *aiMesh){
         }
     }
 
-    model->gmeshes.emplace_back(std::move(gmesh));
+    model->meshes.emplace_back(std::move(gmesh));
 }
 
-void AiLoader::read_material(Model *model, aiMaterial *aiMat){
-
-    using MatP = Material::Property;
-
+auto AiLoader::read_material(ModelMesh *model, aiMaterial *aiMat) -> void{
+    
     // read properties
     Material material;
     // # str
-    material.name               = to_string(read_property<aiString>(MatP::name, aiMat));
+    material.name               = to_string(read_property<aiString>(MaterialProperty::name, aiMat));
     // # int
-    material.backfaceCulling    = read_property<int>(MatP::twosided, aiMat).value() != 0;
-    material.wireframe          = read_property<int>(MatP::enable_wireframe, aiMat).value() != 0;
+    material.backfaceCulling    = read_property<int>(MaterialProperty::twosided, aiMat).value() != 0;
+    material.wireframe          = read_property<int>(MaterialProperty::enable_wireframe, aiMat).value() != 0;
     // # float
-    material.opacity            = read_property<float>(MatP::opacity, aiMat).value();
-    material.shininess          = read_property<float>(MatP::shininess, aiMat).value();
-    material.shininessStrength  = read_property<float>(MatP::shininess_strength, aiMat).value();
-    material.refraction         = read_property<float>(MatP::refacti, aiMat).value();
-    material.reflectivity       = read_property<float>(MatP::reflectivity, aiMat).value();
+    material.opacity            = read_property<float>(MaterialProperty::opacity, aiMat).value();
+    material.shininess          = read_property<float>(MaterialProperty::shininess, aiMat).value();
+    material.shininessStrength  = read_property<float>(MaterialProperty::shininess_strength, aiMat).value();
+    material.refraction         = read_property<float>(MaterialProperty::refacti, aiMat).value();
+    material.reflectivity       = read_property<float>(MaterialProperty::reflectivity, aiMat).value();
     // # point3f
-    material.ambiantColor       = to_color(read_property<aiColor3D>(MatP::color_ambient,      aiMat));
-    material.diffuseColor       = to_color(read_property<aiColor3D>(MatP::color_diffuse,      aiMat));
-    material.specularColor      = to_color(read_property<aiColor3D>(MatP::color_specular,     aiMat));
-    material.emissiveColor      = to_color(read_property<aiColor3D>(MatP::color_emissive,     aiMat));
-    material.transparentColor   = to_color(read_property<aiColor3D>(MatP::color_transparent,  aiMat));
-    material.reflectiveColor    = to_color(read_property<aiColor3D>(MatP::color_reflective,   aiMat));
+    material.ambiantColor       = to_color(read_property<aiColor3D>(MaterialProperty::color_ambient,      aiMat));
+    material.diffuseColor       = to_color(read_property<aiColor3D>(MaterialProperty::color_diffuse,      aiMat));
+    material.specularColor      = to_color(read_property<aiColor3D>(MaterialProperty::color_specular,     aiMat));
+    material.emissiveColor      = to_color(read_property<aiColor3D>(MaterialProperty::color_emissive,     aiMat));
+    material.transparentColor   = to_color(read_property<aiColor3D>(MaterialProperty::color_transparent,  aiMat));
+    material.reflectiveColor    = to_color(read_property<aiColor3D>(MaterialProperty::color_reflective,   aiMat));
     // mat.mNumAllocated;
     // mat.mNumProperties;
 
@@ -476,13 +493,13 @@ void AiLoader::read_material(Model *model, aiMaterial *aiMat){
                 };
 
                 // others textures info
-                auto wrapping     = read_texture_property<int>(MatP::text_mapping,              aiMat, textureInfo.options.type, ii).value();
-                auto uvwSource    = read_texture_property<int>(MatP::text_uvw_source,           aiMat, textureInfo.options.type, ii).value();
-                auto mappingModeU = read_texture_property<int>(MatP::text_mapping_mode_u,       aiMat, textureInfo.options.type, ii).value();
-                auto mappingModeV = read_texture_property<int>(MatP::text_mapping_mode_v,       aiMat, textureInfo.options.type, ii).value();
-                auto flags        = read_texture_property<int>(MatP::text_flags,                aiMat, textureInfo.options.type, ii).value();
-                auto texmapAxis   = read_texture_property<aiVector3D>(MatP::text_texmap_axis,   aiMat, textureInfo.options.type, ii).value();
-                auto blend        = read_texture_property<float>(MatP::text_blend,              aiMat, textureInfo.options.type, ii).value();
+                auto wrapping     = read_texture_property<int>(MaterialProperty::text_mapping,              aiMat, textureInfo.options.type, ii).value();
+                auto uvwSource    = read_texture_property<int>(MaterialProperty::text_uvw_source,           aiMat, textureInfo.options.type, ii).value();
+                auto mappingModeU = read_texture_property<int>(MaterialProperty::text_mapping_mode_u,       aiMat, textureInfo.options.type, ii).value();
+                auto mappingModeV = read_texture_property<int>(MaterialProperty::text_mapping_mode_v,       aiMat, textureInfo.options.type, ii).value();
+                auto flags        = read_texture_property<int>(MaterialProperty::text_flags,                aiMat, textureInfo.options.type, ii).value();
+                auto texmapAxis   = read_texture_property<aiVector3D>(MaterialProperty::text_texmap_axis,   aiMat, textureInfo.options.type, ii).value();
+                auto blend        = read_texture_property<float>(MaterialProperty::text_blend,              aiMat, textureInfo.options.type, ii).value();
 
                 static_cast<void>(wrapping);
                 static_cast<void>(uvwSource);
@@ -509,7 +526,7 @@ void AiLoader::read_material(Model *model, aiMaterial *aiMat){
 
 
 
-std::optional<std::string> AiLoader::retrieve_texture_path(Model *model, const aiString &aiPath){
+auto AiLoader::retrieve_texture_path(ModelMesh *model, const aiString &aiPath) -> std::optional<std::string>{
 
     const std::string path = aiPath.C_Str();
     if(path.length() >  0){
@@ -553,7 +570,7 @@ std::optional<std::string> AiLoader::retrieve_texture_path(Model *model, const a
     return texturePath.string();
 }
 
-void AiLoader::read_bones_hierarchy(tool::graphics::BonesHierarchy *bones, aiNode *node){
+auto AiLoader::read_bones_hierarchy(tool::graphics::BonesHierarchy *bones, aiNode *node) -> void{
 
     bones->boneName = node->mName.C_Str();
 

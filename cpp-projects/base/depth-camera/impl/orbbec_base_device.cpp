@@ -84,7 +84,7 @@ struct OrbbecBaseDevice::Impl{
 
     // device
     DCType deviceType;
-    std::unique_ptr<ob::Context> context        = nullptr;
+    static inline std::unique_ptr<ob::Context> context = nullptr;
     std::shared_ptr<ob::Device> device          = nullptr;
     std::vector<std::shared_ptr<ob::Device>> deviceList;
     std::shared_ptr<ob::SensorList> sensorList  = nullptr;
@@ -382,13 +382,17 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     std::copy(obColorExtrinsics[OB_SENSOR_COLOR].rot,   obColorExtrinsics[OB_SENSOR_COLOR].rot + 9,     k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].rotation);
     std::copy(obColorExtrinsics[OB_SENSOR_COLOR].trans, obColorExtrinsics[OB_SENSOR_COLOR].trans + 3,   k4C.extrinsics[K4A_CALIBRATION_TYPE_COLOR][K4A_CALIBRATION_TYPE_COLOR].translation);
 
-
     return k4C;
 }
 
 OrbbecBaseDevice::OrbbecBaseDevice() : i(std::make_unique<Impl>()){
-    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-    i->context = std::make_unique<ob::Context>();
+
+    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
+
+    if(i->context == nullptr){
+        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_DEBUG);
+        i->context = std::make_unique<ob::Context>();
+    }
 }
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
@@ -415,8 +419,6 @@ auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ether
 auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettings &colorS) -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::initialize"sv);
-
-    Logger::message("[OrbbecDevice] Initialize.\n");
 
     i->frameSet      = nullptr;
     i->colorImage    = nullptr;
@@ -771,8 +773,6 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
         return;
     }
 
-    std::cout << "[uc";
-
     try{
         i->set_property_value(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL,           colorS.autoExposureTime);
         i->set_property_value(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,      colorS.autoWhiteBalance);
@@ -789,8 +789,6 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
     }
-
-    std::cout << "uc]";
 }
 
 auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
@@ -833,6 +831,7 @@ auto OrbbecBaseDevice::read_color_image() -> BinarySpan{
 
     if(i->frameSet != nullptr){
 
+        // auto lg = LogGuard("OrbbecBaseDevice::read_color_image\n"sv);
         i->colorImage = i->frameSet->colorFrame();
 
         if(i->colorImage != nullptr){
@@ -850,8 +849,12 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
 
     if(i->frameSet != nullptr){
 
-        i->depthImage = i->frameSet->depthFrame();
-
+        // auto lg = LogGuard("OrbbecBaseDevice::read_depth_image\n"sv);
+        try{
+            i->depthImage = i->frameSet->depthFrame();
+        }catch(...){
+            Logger::log("THROW\n"sv);
+        }
         if(i->depthImage != nullptr){
             return  std::span<std::uint16_t>{
                 reinterpret_cast<std::uint16_t*>(i->depthImage->data()),
@@ -867,6 +870,7 @@ auto OrbbecBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
 
     if(i->frameSet != nullptr){
 
+        // auto lg = LogGuard("OrbbecBaseDevice::read_infra_image\n"sv);
         i->infraredImage = i->frameSet->irFrame();
 
         if(i->infraredImage != nullptr){
@@ -1010,22 +1014,22 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
             &k4aDepthSizedColorImage
         );
 
-        cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
-        cv::imwrite("D:/output2.png", output2);
+        // cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
+        // cv::imwrite("D:/output2.png", output2);
 
-        std::int64_t count1=0;
-        std::int64_t count2=0;
-        std::int64_t count3=0;
-        for(const auto &d : depthData){
-            count1 += d;
-        }
-        for(const auto &d : colorData){
-            count2 += d.r();
-        }
-        for(const auto &d : i->depthSizedColorData){
-            count3 += d;
-        }
-        std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
+        // std::int64_t count1=0;
+        // std::int64_t count2=0;
+        // std::int64_t count3=0;
+        // for(const auto &d : depthData){
+        //     count1 += d;
+        // }
+        // for(const auto &d : colorData){
+        //     count2 += d.r();
+        // }
+        // for(const auto &d : i->depthSizedColorData){
+        //     count3 += d;
+        // }
+        // std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
 
     }catch(const std::runtime_error &error){
         Logger::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));

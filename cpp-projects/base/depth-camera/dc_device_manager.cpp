@@ -179,9 +179,10 @@ auto DCDeviceManager::update_device_settings(const DCDeviceSettings &deviceS) ->
         }
     }
 
-    if(!std::async(std::launch::async, &DCDeviceManager::update_device_settings_async, this, deviceS).valid()){
-        Logger::error("[DCDeviceManager::update_device_settings] Invalid async update.\n");
-    }
+    update_device_settings_async(deviceS);
+    // if(!std::async(std::launch::async, &DCDeviceManager::update_device_settings_async, this, deviceS).valid()){
+    //     Logger::error("[DCDeviceManager::update_device_settings] Invalid async update.\n");
+    // }
 }
 
 auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &deviceS) -> void{

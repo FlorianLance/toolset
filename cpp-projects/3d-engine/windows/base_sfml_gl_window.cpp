@@ -106,16 +106,18 @@ auto BaseSfmlGlWindow::start() -> void{
 
     m_scene.setActive();
 
-    startL = std::chrono::high_resolution_clock::now();
+    startL = std::chrono::system_clock::now();
 
     running = true;
+    Logger::log("Start GL loop\n"sv);
+    bool firstLoop = true;
     while(running){
 
         const auto &io = ImGui::GetIO();
         imguiMouse    = io.WantCaptureMouse;
         imguiKeyboard = io.WantCaptureKeyboard;
 
-        currentFrame = std::chrono::high_resolution_clock::now();
+        currentFrame = std::chrono::system_clock::now();
 
         // retrieve sfml events
         sf::Event event;
@@ -185,27 +187,44 @@ auto BaseSfmlGlWindow::start() -> void{
         }
 
         // update
+        if(firstLoop){
+            Logger::log("Pre-update\n"sv);
+        }
         pre_update();
         pre_update_signal();
+        if(firstLoop){
+            Logger::log("Update\n"sv);
+        }
         update();
         update_signal();
+        if(firstLoop){
+            Logger::log("Post-Update\n"sv);
+        }
         post_update();
         post_update_signal();
 
         m_scene.clear(sf::Color::White);
 
         // draw opengl
+        if(firstLoop){
+            Logger::log("Draw-GL\n"sv);
+        }
         draw_gl();
         draw_gl_signal();
 
         // ubind vao after drawing opengl
-        VAO::unbind();
+        VAO::unbind();        
 
         // store gl states
         m_scene.pushGLStates();
         {
+
             // update sfml
             ImGui::SFML::Update(m_scene, deltaClock.restart());
+
+            if(firstLoop){
+                Logger::log("Draw-ImGUI\n"sv);
+            }
 
             // imgui
             imguiMouse = false;
@@ -216,6 +235,10 @@ auto BaseSfmlGlWindow::start() -> void{
             });
             ImGui::EndFrame();
 
+            if(firstLoop){
+                Logger::log("Draw-SFML\n"sv);
+            }
+
             // render sfml scene
             draw_sfml();
             draw_sfml_signal();
@@ -225,11 +248,20 @@ auto BaseSfmlGlWindow::start() -> void{
         // restore gl states
         m_scene.popGLStates();
 
+        if(firstLoop){
+            Logger::log("Sleep\n"sv);
+        }
 
         // sleep for fps
-        frameDuration = std::chrono::high_resolution_clock::now()-currentFrame;
+        frameDuration = std::chrono::system_clock::now()-currentFrame;
         if((timePerFrame-frameDuration).count() > 0){
             std::this_thread::sleep_for(timePerFrame-frameDuration);
+        }
+
+        firstLoop = false;
+
+        if(firstLoop){
+            Logger::log("End loop\n"sv);
         }
     }
 

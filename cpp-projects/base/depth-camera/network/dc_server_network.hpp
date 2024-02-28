@@ -61,6 +61,8 @@ struct DCServerNetwork{
     auto devices_nb() const noexcept -> size_t;
     auto device_connected(size_t idG) const noexcept -> bool;
 
+    auto read_data_from_network(size_t idG) -> size_t;
+
     // signals
     SSS<size_t, std::int64_t> remote_synchro_signal;
     SSS<size_t, net::Feedback> remote_feedback_signal;

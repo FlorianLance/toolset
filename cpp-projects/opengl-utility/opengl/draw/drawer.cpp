@@ -27,7 +27,7 @@
 #include "drawer.hpp"
 
 // local
-#include "opengl/gl_texture.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 #include "opengl/gl_draw.hpp"
 #include "utility/logger.hpp"
 
@@ -42,7 +42,7 @@ auto Drawer::draw(ShaderProgram *shader) -> void{
     static_cast<void>(shader);
     if(drawableObject != nullptr){
         if(texturesNames.size() > 0){
-            TBO::bind_textures(texturesNames);
+            TBO::bind(texturesNames,0);
         }
         drawableObject->data->render();
     }
@@ -52,7 +52,7 @@ auto Drawer::draw_adjacency(ShaderProgram *shader) -> void{
     static_cast<void>(shader);
     if(drawableObject != nullptr){
         if(texturesNames.size() > 0){
-            TBO::bind_textures(texturesNames);
+            TBO::bind(texturesNames, 0);
         }
         drawableObject->data->render_adjacency();
     }
@@ -62,7 +62,7 @@ auto Drawer::draw_patches(ShaderProgram *shader) -> void{
     static_cast<void>(shader);
     if(drawableObject != nullptr){
         if(texturesNames.size() > 0){
-            TBO::bind_textures(texturesNames);
+            TBO::bind(texturesNames, 0);
         }
         drawableObject->data->render_patches();
     }
@@ -73,7 +73,7 @@ auto Drawer::draw_instances(ShaderProgram *shader) -> void{
     static_cast<void>(shader);
     if(drawableObject != nullptr){
         if(texturesNames.size() > 0){
-            TBO::bind_textures(texturesNames);
+            TBO::bind(texturesNames, 0);
         }
         // ...
     }
@@ -146,7 +146,7 @@ SphereDrawer::SphereDrawer(float radius, size_t slices, size_t nbStacks, std::ve
 auto SphereDrawer::init(float radius, size_t slices, size_t nbStacks, std::vector<TextureName> textures) -> void{
     clean();
     texturesNames  = textures;
-    drawableObject = std::make_unique<Sphere>(radius, static_cast<GLuint>(slices), static_cast<GLuint>(nbStacks));
+    drawableObject = std::make_unique<SphereShape>(radius, static_cast<GLuint>(slices), static_cast<GLuint>(nbStacks));
 }
 
 CubeDrawer::CubeDrawer(float side, std::vector<TextureName> textures){
@@ -218,16 +218,16 @@ auto VoxelsDrawer::init(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors) -
     }
 }
 
-MeshDrawer::MeshDrawer(geo::Mesh *mesh){
+MeshDrawer::MeshDrawer(graphics::Mesh *mesh){
     init(mesh);
 }
 
-auto MeshDrawer::init(geo::Mesh *mesh) -> void{
+auto MeshDrawer::init(graphics::Mesh *mesh) -> void{
     clean();
     drawableObject = std::make_unique<gl::Mesh>(mesh);
 }
 
-auto GMeshDrawer::init(const std::shared_ptr<graphics::GMesh<float>> &gmesh, const std::vector<tool::graphics::TextureInfo> &texturesInfo) -> void{
+auto GMeshDrawer::init(const std::shared_ptr<graphics::SubModelMesh> &gmesh, const std::vector<tool::graphics::TextureInfo> &texturesInfo) -> void{
 
     clean();
 
@@ -261,13 +261,13 @@ auto GMeshDrawer::init(const std::shared_ptr<graphics::GMesh<float>> &gmesh, con
     drawableObject = std::make_unique<gl::Mesh>(&gmesh->mesh);
 }
 
-auto ModelDrawer::init(const std::weak_ptr<graphics::Model> &model, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
+auto ModelDrawer::init(const std::weak_ptr<graphics::ModelMesh> &model, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
 
     clean();
 
     modelP = model.lock();
     if(modelP){
-        for(auto &gmesh : modelP->gmeshes){
+        for(auto &gmesh : modelP->meshes){
             auto gmeshD = std::make_unique<GMeshDrawer>();
             gmeshD->init(gmesh, texturesInfo);
             drawableObjects.emplace_back(std::move(gmeshD));
@@ -324,7 +324,7 @@ auto ModelDrawer::update_animation(std::string_view animationName, float time) -
     }
 }
 
-auto ModelDrawer::set_bones_uniform(graphics::Model *model, ShaderProgram *shader) -> void{
+auto ModelDrawer::set_bones_uniform(graphics::ModelMesh *model, ShaderProgram *shader) -> void{
 
     if(shader == nullptr){
         return;

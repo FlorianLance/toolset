@@ -41,7 +41,7 @@ public:
     ~DCServerData();
 
     // init / clean
-    auto initialize(size_t nbDevices) -> void;
+    auto initialize(size_t nbDevices, bool startProcessingThread) -> void;
     auto clean() -> void;
 
     // get
@@ -56,8 +56,11 @@ public:
     auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto invalid_last_frame(size_t idC) -> void;
     auto invalid_last_compressed_frame(size_t idC) -> void;
-
     auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
+
+    // when no processing thread started
+    auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
+    // auto process_data() -> size_t;
 
 private:
 

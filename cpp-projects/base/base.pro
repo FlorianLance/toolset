@@ -49,6 +49,18 @@ HEADERS += \
     depth-camera/settings/dc_video_recorder_settings.hpp \
     depth-camera/states/dc_video_player_states.hpp \
     depth-camera/states/dc_video_recorder_states.hpp \
+    graphics/animation/animation.hpp \
+    graphics/animation/bones.hpp \
+    graphics/camera/camera_matrices.hpp \
+    graphics/color/color_utility.hpp \
+    graphics/color/hsv.hpp \
+    graphics/color/rgb.hpp \
+    graphics/material/material_enum.hpp \
+    graphics/model/model_mesh.hpp \
+    graphics/texture/cube_map.hpp \
+    graphics/texture/texture_2d.hpp \
+    graphics/texture/texture_enum.hpp \
+    graphics/texture/texture_options.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -79,7 +91,6 @@ HEADERS += \
     geometry/matrix2.hpp \
     geometry/matrix3.hpp \
     geometry/matrix4.hpp \
-    geometry/mesh.hpp \
     geometry/point.hpp \
     geometry/point2.hpp \
     geometry/point3.hpp \
@@ -94,14 +105,18 @@ HEADERS += \
     geometry/quaternion.hpp \
     geometry/voxel_grid.hpp \
     # graphics
-    graphics/color.hpp \
-    graphics/colors.hpp \
-    graphics/screen.hpp \
+    ## material
+    graphics/material/material.hpp \
+    ## texture
+    graphics/texture/texture.hpp \
+    ## model
+    graphics/model/models_manager.hpp \
+    graphics/model/mesh.hpp \
+    ## color    
     graphics/light.hpp \
-    graphics/material.hpp \
-    graphics/texture.hpp \
-    graphics/model.hpp \
-    graphics/camera.hpp \
+    ## camera
+    graphics/camera/camera.hpp \
+    graphics/camera/screen.hpp \
     # network
     network/udp_server_network_settings.hpp \
     network/udp_client_network_settings.hpp \
@@ -207,7 +222,6 @@ HEADERS += \
     utility/vector.hpp \
     utility/logger.hpp \
     utility/tuple_array.hpp \
-    utility/view.hpp \
     utility/time.hpp \
     utility/io_file.hpp \
     # algorithms
@@ -283,16 +297,25 @@ SOURCES += \
     # io
     depth-camera/dc_video_player.cpp \
     depth-camera/dc_video_recorder.cpp \
+    graphics/animation/animation.cpp \
+    graphics/animation/bones.cpp \
+    graphics/camera/camera.cpp \
+    graphics/color/color_utility.cpp \
+    graphics/model/model_mesh.cpp \
+    graphics/texture/cube_map.cpp \
+    graphics/texture/texture_2d.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
     # graphics     
-    graphics/color.cpp \
-    graphics/model.cpp \
-    graphics/texture.cpp \
+    ## model
+    graphics/model/models_manager.cpp \
+    graphics/model/mesh.cpp \
+    ## texture
+    graphics/texture/texture.cpp \
+    ## color
     # geometry
-    geometry/cloud.cpp \
-    geometry/mesh.cpp \
+    geometry/cloud.cpp \    
     geometry/vertices.cpp \
     geometry/voxel_grid.cpp \
     # network

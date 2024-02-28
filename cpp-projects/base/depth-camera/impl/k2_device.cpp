@@ -51,7 +51,6 @@
 #include <turbojpeg.h>
 
 // local
-#include "utility/view.hpp"
 #include "utility/benchmark.hpp"
 #include "utility/logger.hpp"
 #include "data/fastpfor_encoding.hpp"

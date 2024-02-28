@@ -68,6 +68,7 @@ PRE_TARGETDEPS += $$QT_UTILITY_APP_PRE_TARGETDEPS
 
 ####################################### PROJECT FILES
 HEADERS += \
+    lines_counter.hpp
 
 SOURCES += \
     qt_utility_main.cpp \

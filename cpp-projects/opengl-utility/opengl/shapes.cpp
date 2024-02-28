@@ -312,17 +312,17 @@ Cube::Cube(GLfloat side){
 }
 
 
-gl::Mesh::Mesh(geo::Mesh *mesh){
+gl::Mesh::Mesh(graphics::Mesh *mesh){
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMeshData>();       
     tmd->init_buffers(
-        &mesh->triIds,
-        &mesh->vertices,
-        (mesh->normals.size()  != 0) ? &mesh->normals   : nullptr,
-        (mesh->tCoords.size()  != 0) ? &mesh->tCoords   : nullptr,
-        (mesh->tangents.size() != 0) ? &mesh->tangents  : nullptr,
-        (mesh->bones.size()    != 0) ? &mesh->bones     : nullptr,
-        (mesh->colors.size()   != 0) ? &mesh->colors    : nullptr
+        &mesh->triIds.values,
+        &mesh->vertices.values,
+        (mesh->normals.size()  != 0) ? &mesh->normals.values   : nullptr,
+        (mesh->tCoords.size()  != 0) ? &mesh->tCoords.values   : nullptr,
+        (mesh->tangents.size() != 0) ? &mesh->tangents.values  : nullptr,
+        (mesh->bones.size()    != 0) ? &mesh->bones.values     : nullptr,
+        (mesh->colors.size()   != 0) ? &mesh->colors.values    : nullptr
     );
     data = std::move(tmd);
 }
@@ -395,7 +395,7 @@ Plane::Plane(GLfloat xsize, GLfloat zsize, size_t xdivs, size_t zdivs, GLfloat s
     data = std::move(tmd);
 }
 
-Sphere::Sphere(GLfloat radius, GLuint nSlices, GLuint nStacks){
+SphereShape::SphereShape(GLfloat radius, GLuint nSlices, GLuint nStacks){
 
     GLuint nVerts = (nSlices+1) * (nStacks + 1);
     GLuint elements = (nSlices * 2 * (nStacks-1) ) * 3;

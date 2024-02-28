@@ -136,18 +136,18 @@ struct Matrix{
 
     constexpr auto w() noexcept -> acc& {
         static_assert((_rows == 1 || _cols == 1), "W only available for row or column matrices.");
-        static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 2.");
+        static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 3.");
         return array[3];
     }
     constexpr auto w() const noexcept -> acc {
         static_assert((_rows == 1 || _cols == 1), "W only available for row or column matrices.");
-        static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 2.");
+        static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 3.");
         return array[3];
     }
 
     constexpr auto xyz() const noexcept -> RowVec<acc,3> {
         static_assert((_rows == 1 || _cols == 1), "XYZ only available for row or column matrices.");
-        static_assert(_rows*_cols > 2, "XYZ only available for row or column matrices of a dimension > 2.");
+        static_assert(_rows*_cols > 2, "XYZ only available for row or column matrices of a dimension > 3.");
         return {{x(),y(),z()}};
     }
 

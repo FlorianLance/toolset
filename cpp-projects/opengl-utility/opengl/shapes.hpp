@@ -30,10 +30,11 @@
 // base
 #include "geometry/matrix3.hpp"
 #include "geometry/matrix4.hpp"
-#include "geometry/mesh.hpp"
+#include "graphics/model/mesh.hpp"
 
 // local
 #include "opengl/draw/geometry_data.hpp"
+
 
 namespace tool::gl{
 
@@ -125,14 +126,14 @@ public:
     Cube(GLfloat side);
 };
 
-class Sphere : public BaseShape{
+class SphereShape : public BaseShape{
 public:
-    Sphere(GLfloat radius, GLuint nSlices, GLuint nStacks);
+    SphereShape(GLfloat radius, GLuint nSlices, GLuint nStacks);
 };
 
 class Mesh : public BaseShape{
 public:
-    Mesh(geo::Mesh *mesh);
+    Mesh(graphics::Mesh *mesh);
 };
 
 class Cloud : public BaseShape{

@@ -28,7 +28,7 @@
 
 // local
 #include "vertices.hpp"
-#include "graphics/color.hpp"
+// #include "graphics/color.hpp"
 
 namespace tool::geo {
 

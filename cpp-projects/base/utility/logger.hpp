@@ -109,6 +109,19 @@ private:
     std::unique_ptr<Impl> i;
 };
 
+struct MessageGuard{
+
+    MessageGuard(std::string_view message) : m_message(message){
+        using namespace std::string_view_literals;
+        Logger::message(std::format("[Start: {}]\n", m_message));
+    }
+    ~MessageGuard(){
+        Logger::message(std::format("[End: {}]\n", m_message));
+    }
+private:
+    std::string_view m_message;
+};
+
 struct LogGuard{
 
     LogGuard(std::string_view log) : m_log(log){

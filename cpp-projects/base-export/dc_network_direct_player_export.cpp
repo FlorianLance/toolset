@@ -33,8 +33,6 @@
 // base
 #include "utility/logger.hpp"
 
-// debug
-#include <iostream>
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -43,25 +41,25 @@ using namespace tool::geo;
 DCNetworkDirectPlayer::DCNetworkDirectPlayer(){
 
     // set connections
-    serverNetwork.remote_feedback_signal.connect([&](size_t id, net::Feedback feedback){
-        // std::cout << "feedback " << id << " " << (int)feedback.receivedMessageType << " " << (int)feedback.feedback << "\n";
-        readMessagesM.lock();
-        messages.emplace_back(id, feedback);
-        readMessagesM.unlock();
+    serverNetwork.remote_feedback_signal.connect([&](size_t idCamera, net::Feedback feedback){
+        devicesD[idCamera].feedbackLocker->lock();
+        devicesD[idCamera].feedbacks.push_back(feedback);
+        devicesD[idCamera].nbFeedbacksReceived++;
+        devicesD[idCamera].feedbackLocker->unlock();
     });
     serverNetwork.remote_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCCompressedFrame> cFrame){
-        if(!readFrames){
-            return;
-        }
-        framesReceived++;
-        serverData.new_compressed_frame(idCamera, std::move(cFrame));
+        devicesD[idCamera].frameLocker->lock();
+        devicesD[idCamera].lastCompressedFrame = std::move(cFrame);
+        devicesD[idCamera].frameLocker->unlock();
+
+        devicesD[idCamera].nbFramesReceived++;
     });
     serverNetwork.local_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCFrame> frame){
-        if(!readFrames){
-            return;
-        }
-        framesReceived++;        
-        serverData.new_frame(idCamera, std::move(frame));
+        devicesD[idCamera].frameLocker->lock();
+        devicesD[idCamera].lastFrame = std::move(frame);
+        devicesD[idCamera].frameLocker->unlock();
+
+        devicesD[idCamera].nbFramesReceived++;
     });
 }
 
@@ -88,10 +86,12 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
 
     Logger::message("Network infos:\n");
     size_t id = 0;
-    for(const auto &info : serverNetworkS.clientsInfo){
+    for(auto &info : serverNetworkS.clientsInfo){
         Logger::message(std::format("ID:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
         id, info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
         ++id;
+
+        info.startReadingThread = false;
     }
 
     auto nbConnections = serverNetworkS.clientsInfo.size();
@@ -101,12 +101,14 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
     }
 
     serverNetwork.initialize(serverNetworkS.clientsInfo);
-    serverData.initialize(serverNetwork.devices_nb());
+    serverData.initialize(serverNetwork.devices_nb(), false);
 
-    devicesD = {};
+    devicesD.clear();
     devicesD.resize(nbConnections);
     for(size_t idD = 0; idD < nbConnections; ++idD){
         devicesD[idD].id = idD;
+        devicesD[idD].frameLocker = std::make_unique<std::mutex>();
+        devicesD[idD].feedbackLocker = std::make_unique<std::mutex>();
     }
 
     return true;
@@ -117,9 +119,6 @@ auto DCNetworkDirectPlayer::clean() -> void{
     serverNetwork.clean();
     serverData.clean();
     devicesD.clear();
-    messages.clear();
-    messagesR.clear();
-    readFrames = false;
 }
 
 auto DCNetworkDirectPlayer::connect_to_devices() -> void{
@@ -147,13 +146,6 @@ auto DCNetworkDirectPlayer::shutdown_devices() -> void{
     }
 }
 
-auto DCNetworkDirectPlayer::start_reading() -> void{
-    readFrames = true;
-}
-
-auto DCNetworkDirectPlayer::stop_reading() -> void{
-    readFrames = false;
-}
 
 auto DCNetworkDirectPlayer::devices_nb() const noexcept -> size_t{
     return serverNetwork.devices_nb();
@@ -301,19 +293,20 @@ auto DCNetworkDirectPlayer::update_delay(size_t idD, cam::DCDelaySettings delayS
 
 auto DCNetworkDirectPlayer::update() -> void{
 
-    if(readMessagesM.try_lock()){
-
-        auto size = messages.size();
-        if(size != 0){
-            for(size_t ii = 0; ii < size; ++ii){
-                messagesR.push_back(messages.front());
-                messages.pop_front();
-            }
+    // retrieve all feedbacks
+    std::vector<std::pair<size_t, net::Feedback>> receivedFeedbacks;
+    for(auto &deviceD : devicesD){
+        std::vector<Feedback> dFeedbacks;
+        deviceD.feedbackLocker->lock();
+        std::swap(deviceD.feedbacks, dFeedbacks);
+        deviceD.feedbackLocker->unlock();
+        for(auto &dFeedback : dFeedbacks){
+            receivedFeedbacks.push_back({deviceD.id, dFeedback});
         }
-        readMessagesM.unlock();
     }
 
-    for(const auto &message : messagesR){
+    // process feedbacks
+    for(const auto &message : receivedFeedbacks){
         // log_message(std::format("message [{}] [{}] [{}]\n", message.first, (int)message.second.receivedMessageType, (int)message.second.feedback));
         if(message.second.receivedMessageType == MessageType::init_network_infos && message.second.feedback == FeedbackType::message_received){
 
@@ -335,14 +328,19 @@ auto DCNetworkDirectPlayer::update() -> void{
             // }
         }
     }
-    messagesR.clear();
 
     // update current frames
     for(auto &deviceD : devicesD){
-        deviceD.lastFrame = serverData.get_frame(deviceD.id);
 
-        if(deviceD.lastFrame != nullptr){
-            auto cloudSize = deviceD.lastFrame->cloud.size();
+        deviceD.frameLocker->lock();
+        if(deviceD.lastFrame){
+            deviceD.frameToDisplay = std::move(deviceD.lastFrame);
+            deviceD.lastFrame = nullptr;
+        }
+        deviceD.frameLocker->unlock();
+
+        if(deviceD.frameToDisplay != nullptr){
+            auto cloudSize = deviceD.frameToDisplay->cloud.size();
             if(ids.size() < cloudSize){
                 ids.resize(cloudSize);
                 std::iota(std::begin(ids), std::end(ids), 0);
@@ -351,10 +349,39 @@ auto DCNetworkDirectPlayer::update() -> void{
     }
 }
 
+auto DCNetworkDirectPlayer::read_network_data(size_t idDevice) -> size_t{
+    serverNetwork.read_data_from_network(idDevice);
+    return devicesD[idDevice].nbFramesReceived;
+}
+
+auto DCNetworkDirectPlayer::process_data() -> size_t{
+
+    size_t nbFramesUncompressed = 0;
+    for(size_t idD = 0; idD < devicesD.size(); ++idD){
+        std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
+        devicesD[idD].frameLocker->lock();
+        cFrame = devicesD[idD].lastCompressedFrame;
+        devicesD[idD].lastCompressedFrame = nullptr;
+        devicesD[idD].frameLocker->unlock();
+
+        if(cFrame){
+            auto frame = serverData.uncompress_frame(idD, cFrame);
+            if(frame){
+                devicesD[idD].frameLocker->lock();
+                devicesD[idD].lastFrame = frame;
+                devicesD[idD].nbFramesProcessed++;
+                devicesD[idD].frameLocker->unlock();
+                nbFramesUncompressed++;
+            }
+        }
+    }
+    return nbFramesUncompressed;
+}
+
 auto DCNetworkDirectPlayer::current_frame_id(size_t idD) -> size_t{
     if(idD < devicesD.size()){
-        if(devicesD[idD].lastFrame != nullptr){
-            return devicesD[idD].lastFrame->idCapture;
+        if(devicesD[idD].frameToDisplay != nullptr){
+            return devicesD[idD].frameToDisplay->idCapture;
         }
     }
     return 0;
@@ -362,15 +389,15 @@ auto DCNetworkDirectPlayer::current_frame_id(size_t idD) -> size_t{
 
 auto DCNetworkDirectPlayer::current_frame(size_t idD) -> std::shared_ptr<DCFrame>{
     if(idD < devicesD.size()){
-        return devicesD[idD].lastFrame;
+        return devicesD[idD].frameToDisplay;
     }
     return nullptr;
 }
 
 auto DCNetworkDirectPlayer::current_frame_cloud_size(size_t idD) -> size_t{
     if(idD < devicesD.size()){
-        if(devicesD[idD].lastFrame != nullptr){
-            return devicesD[idD].lastFrame->cloud.size();
+        if(devicesD[idD].frameToDisplay != nullptr){
+            return devicesD[idD].frameToDisplay->cloud.size();
         }
     }
     return 0;
@@ -437,14 +464,6 @@ void disconnect_from_devices__dc_network_direct_player(DCNetworkDirectPlayer *dc
     dcNetworkDirectPlayer->disconnect_from_devices();
 }
 
-void start_reading__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer){
-    dcNetworkDirectPlayer->start_reading();
-}
-
-void stop_reading__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer){
-    dcNetworkDirectPlayer->stop_reading();
-}
-
 int update_device_settings__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* deviceSettingsFilePath){
     return dcNetworkDirectPlayer->update_device_settings(deviceSettingsFilePath) ? 1 : 0;
 }
@@ -463,6 +482,10 @@ int update_model_settings__dc_network_direct_player(DCNetworkDirectPlayer *dcNet
 
 void update__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer){
     dcNetworkDirectPlayer->update();
+}
+
+int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
+    return static_cast<int>(dcNetworkDirectPlayer->read_network_data(idD));
 }
 
 void copy_transform__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, float *transformData){
@@ -488,4 +511,8 @@ int current_frame_cloud_size__dc_network_direct_player(DCNetworkDirectPlayer *dc
 
 int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
     return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(idD, {vertices, static_cast<size_t>(verticesCount)}, applyModelTransform == 1));
+}
+
+int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer){
+    return static_cast<int>(dcNetworkDirectPlayer->process_data());
 }

@@ -26,69 +26,32 @@
 
 #pragma once
 
-// local
-#include "opengl/utility/gl_utility.hpp"
+// glew
+#include <GL/glew.h>
 
 namespace tool::gl {
-
 
 struct VAO{
 
     inline static GLuint currentId = 0;
 
-    ~VAO(){
-        clean();
-    }
+    VAO() = default;
+    VAO(const VAO&) = delete;
+    VAO& operator=(const VAO&) = delete;
+    VAO(VAO&& other) = default;
+    VAO& operator=(VAO&& other) = default;
+    ~VAO();
 
-    GLuint id()const{
-        return m_id;
-    }
+    auto generate() -> void;
+    auto clean() -> void;
 
-    void generate(){
-        if(m_id != 0){
-            std::cerr << "VAO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateVertexArrays(1, &m_id);
-    }
+    auto bind() const -> void;
+    static auto unbind() -> void;
 
-    bool bind() const{
-
-        if(m_id == 0){
-            std::cerr << "VAO not generated, cannot bind it.\n";
-            return false;
-        }
-
-        if(currentId == m_id){
-            return true;
-        }
-
-        glBindVertexArray(m_id);
-        currentId = m_id;
-
-        return true;
-    }
-
-    void clean(){
-
-        if(m_id == 0){
-            return;
-        }
-
-        glDeleteVertexArrays(1, &m_id);
-        m_id = 0;
-    }
-
-    static void unbind(){
-
-        if(currentId == 0){
-            return;
-        }
-        glBindVertexArray(currentId = 0);
-    }
+    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
 
 private:
 
-    GLuint m_id = 0;
+    GLuint m_handle = 0;
 };
 }

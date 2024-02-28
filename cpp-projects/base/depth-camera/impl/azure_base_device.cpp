@@ -175,6 +175,8 @@ auto AzureBaseDevice::Impl::update_k4_body(DCBody &body, const k4abt_body_t &k4a
 
 AzureBaseDevice::AzureBaseDevice() : i(std::make_unique<Impl>()){
 
+    auto lg = LogGuard("AzureBaseDevice::AzureBaseDevice"sv);
+
     i->deviceCount = k4a::device::get_installed_count();
     // if(i->devicesList.empty()){
 

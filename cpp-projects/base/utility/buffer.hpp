@@ -96,9 +96,11 @@ struct Buffer{
     constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}
     constexpr auto push_back(Elem &&nValue)                     -> void {values.push_back(std::move(nValue));}
     template <typename ...ElementsType>
-    constexpr auto push_back(const ElementsType&... nValues)    -> void {(push_back(std::forward(nValues)), ...);}
+    constexpr auto push_back(const ElementsType&... nValues)    -> void {(values.push_back(std::forward(nValues)), ...);}
     template <typename ...ElementsType>
-    constexpr auto push_back(ElementsType&&... nValue)          -> void {(push_back(std::move(nValue)), ...);}
+    constexpr auto push_back(ElementsType&&... nValue)          -> void {(values.push_back(std::move(nValue)), ...);}
+    template <class... _Valty>
+    constexpr auto emplace_back(_Valty&&... _Val)               -> void{values.emplace_back(std::move(_Val)...);}
 
     constexpr auto push_front(const Elem &v) -> void{
         values.push_back(v);
@@ -109,18 +111,18 @@ struct Buffer{
         std::rotate(rbegin(), rbegin() + 1, rend());
     }
 
-    auto insert_at(size_t id, const Elem &nValue) noexcept -> void{
+    constexpr auto insert_at(size_t id, const Elem &nValue) -> void{
         if(id <= values.size()){
             values.insert(values.begin() + id, nValue);
         }
     }
-    auto insert_at(size_t id, Elem &&nValue) noexcept -> void{
+    constexpr auto insert_at(size_t id, Elem &&nValue) -> void{
         if(id <= values.size()){
             values.insert(begin() + id, std::move(nValue));
         }
     }
 
-    auto merge(const Buffer &valuesToMerge) noexcept -> void{
+    constexpr auto merge(const Buffer &valuesToMerge) noexcept -> void{
 
         if(valuesToMerge.empty()){
             return;
@@ -131,7 +133,7 @@ struct Buffer{
         std::copy(valuesToMerge.cbegin(), valuesToMerge.cend(), begin() + currentSize);
     }
 
-    auto merge(Buffer &valuesToMerge) noexcept -> void{
+    constexpr auto merge(Buffer &valuesToMerge) noexcept -> void{
 
         if(valuesToMerge.empty()){
             return;
@@ -142,7 +144,7 @@ struct Buffer{
         std::move(valuesToMerge.begin(), valuesToMerge.end(), begin() + currentSize);
     }
 
-    auto fill(const Elem &value) noexcept -> void{
+    constexpr auto fill(const Elem &value) -> void{
         if(size() > 0){
             std::fill(begin(), end(), value);
         }

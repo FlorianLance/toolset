@@ -27,12 +27,12 @@
 #pragma once
 
 // base
-#include "graphics/model.hpp"
+#include "graphics/model/model_mesh.hpp"
 
 // local
 #include "opengl/shapes.hpp"
-#include "opengl/shader/shader.hpp"
-#include "opengl/buffer/texture_buffer_object.hpp"
+#include "opengl/shader/shader_program.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
 
 namespace tool::gl {
 
@@ -222,31 +222,31 @@ public:
 class MeshDrawer : public Drawer{
 public:
     MeshDrawer() = default;
-    MeshDrawer(geo::Mesh *mesh);
-    auto init(geo::Mesh *mesh) -> void;
+    MeshDrawer(graphics::Mesh *mesh);
+    auto init(graphics::Mesh *mesh) -> void;
 };
 
 class GMeshDrawer : public Drawer{
     umap<TextureType, std::vector<std::pair<TextureName,TBO>>> m_textures;
 public:
     // if texturesInfo empty use textures from material
-    auto init(const std::shared_ptr<graphics::GMesh<float>> &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;
+    auto init(const std::shared_ptr<graphics::SubModelMesh> &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;
 };
 
 // # model
 class ModelDrawer : public HierarchyDrawer{
-    std::shared_ptr<graphics::Model> modelP = nullptr;
+    std::shared_ptr<graphics::ModelMesh> modelP = nullptr;
 public:
     ModelDrawer() = default;
-    ModelDrawer(const std::weak_ptr<graphics::Model> &model, const std::vector<graphics::TextureInfo> &texturesInfo = {}){
+    ModelDrawer(const std::weak_ptr<graphics::ModelMesh> &model, const std::vector<graphics::TextureInfo> &texturesInfo = {}){
         init(model, texturesInfo);
     }
-    auto init(const std::weak_ptr<graphics::Model> &model, const std::vector<graphics::TextureInfo> &texturesInfo) -> void;
+    auto init(const std::weak_ptr<graphics::ModelMesh> &model, const std::vector<graphics::TextureInfo> &texturesInfo) -> void;
     auto draw(gl::ShaderProgram *shader = nullptr)  -> void override;
     auto draw_adjacency(gl::ShaderProgram *shader = nullptr)  -> void override;
     auto update_animation(std::string_view animationName, float time) -> void;
-
-    auto model() -> graphics::Model*{
+    
+    auto model() -> graphics::ModelMesh*{
         if(modelP){
             return modelP.get();
         }
@@ -254,8 +254,8 @@ public:
     }
 
 private:
-
-    auto set_bones_uniform(graphics::Model *model, gl::ShaderProgram *shader) -> void;
+    
+    auto set_bones_uniform(graphics::ModelMesh *model, gl::ShaderProgram *shader) -> void;
 };
 
 

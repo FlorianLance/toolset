@@ -35,7 +35,6 @@
 
 // local
 #include "utility/logger.hpp"
-#include "utility/format.hpp"
 
 using namespace boost::asio;
 using namespace boost::asio::detail;
@@ -51,16 +50,16 @@ struct UdpReader::Impl{
     io_service ioService;
     std::unique_ptr<udp::socket> socket = nullptr;
     udp::endpoint endPoint;
+    std::atomic_bool connected = false;
 
     // reading thread
     std::unique_ptr<std::thread> thread = nullptr;
+    std::atomic_bool readingThreadStarted = false;
+
+    // packets
     size_t currentBufferId = 0;
     size_t buffersCount = 10000;
     std::vector<std::vector<char>> buffers;
-
-    // states
-    std::atomic_bool connectionValid = false;
-    std::atomic_bool isReading = false;
 };
 
 UdpReader::UdpReader() : i(std::make_unique<Impl>()){
@@ -74,24 +73,24 @@ UdpReader::UdpReader() : i(std::make_unique<Impl>()){
 
 UdpReader::~UdpReader(){
 
-    if(is_reading()){
-        stop_reading();
+    if(is_reading_thread_started()){
+        stop_reading_thread();
     }
     if(is_connected()){
-        clean_socket();
+        clean_connection();
     }
 }
 
-auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
+auto UdpReader::init_connection(std::string readingAdress, int port, Protocol protocol) -> bool{
 
-    if(is_reading()){
-        Logger::error(fmt("UdpReader: Cannot init socket while reading thread is still active.\n"));
+    if(is_reading_thread_started()){
+        Logger::error(std::format("[UdpReader::init_connection] Cannot init socket while reading thread is still active.\n"));
         return false;
     }
 
     // reset socket if necessary
-    if(i->connectionValid){
-        clean_socket();
+    if(i->connected){
+        clean_connection();
     }
 
     try {
@@ -107,17 +106,17 @@ auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protoc
         i->socket->bind(i->endPoint);
 
     }catch (const boost::system::system_error &error){
-        Logger::error(fmt("UdpReader: Cannot bind endpoint {}, {}, error message: {}.\n",
+        Logger::error(std::format("[UdpReader::init_connection] Cannot bind endpoint {}, {}, error message: {}.\n",
             readingAdress, port, error.what()));
-        clean_socket();
+        clean_connection();
         return false;
     }
 
-    connection_state_signal(i->connectionValid = true);
+    connection_state_signal(i->connected = true);
     return true;
 }
 
-auto UdpReader::clean_socket() -> void{
+auto UdpReader::clean_connection() -> void{
 
     if(i->socket){
         try {
@@ -126,50 +125,58 @@ auto UdpReader::clean_socket() -> void{
             std::this_thread::sleep_for (std::chrono::milliseconds(75));
             i->socket->close();
         }catch (const boost::system::system_error &error){
-            Logger::error(fmt("UdpReader::clean_socket: Cannot shutdown socket, error message: {}.\n", error.what()));
+            Logger::error(std::format("[UdpReader::clean_connection] Cannot shutdown socket, error message: {}.\n", error.what()));
         }
     }
     i->socket = nullptr;
 
-    if(i->connectionValid){
-        connection_state_signal(i->connectionValid = false);
+    if(i->connected){
+        connection_state_signal(i->connected = false);
     }
 }
 
-auto UdpReader::start_reading() -> void{
+auto UdpReader::start_reading_thread() -> void{
 
-    if(is_reading()){
-        Logger::error("UdpReader::start_reading: Reading already started.\n");
+    if(is_reading_thread_started()){
+        Logger::error("[UdpReader::start_reading_thread] Reading thread already started.\n");
         return;
     }
 
     if(!is_connected()){
-        Logger::error("UdpReader::start_reading: Socket not connected.\n");
+        Logger::error("[UdpReader::start_reading_thread] Socket not connected.\n");
         return;
     }
 
     if(i->thread == nullptr){
-        i->thread = std::make_unique<std::thread>(&UdpReader::read_data, this);
+        i->thread = std::make_unique<std::thread>(&UdpReader::read_data_thread, this);
     }else{
-        Logger::error("UdpReader::start_reading: Cannot start reading, thread not cleaned.\n");
+        Logger::error("[UdpReader::start_reading_thread] Cannot start reading, thread not cleaned.\n");
         return;
     }
 }
 
-auto UdpReader::stop_reading() -> void{
+auto UdpReader::stop_reading_thread() -> void{
 
-    if(!is_reading()){
-        Logger::error("UdpReader::stop_reading: Reading not started.\n");
+    if(!is_reading_thread_started()){
+        Logger::error("[UdpReader::stop_reading_thread] Reading thread not started.\n");
         return;
     }
 
     if(i->thread != nullptr){
         if(i->thread->joinable()){
-            i->isReading = false;
+            i->readingThreadStarted = false;
             i->thread->join();
         }
         i->thread = nullptr;
     }
+}
+
+auto UdpReader::is_reading_thread_started() const noexcept -> bool {
+    return i->readingThreadStarted;
+}
+
+auto UdpReader::is_connected() const noexcept -> bool{
+    return i->connected;
 }
 
 auto UdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
@@ -177,52 +184,51 @@ auto UdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> voi
     static_cast<void>(nbBytes);
 }
 
-auto UdpReader::is_reading() const noexcept -> bool {
-    return i->isReading;
-}
+auto UdpReader::read_packet() -> size_t{
 
-auto UdpReader::is_connected() const noexcept -> bool{
-    return i->connectionValid;
-}
-
-auto UdpReader::read_data() -> void{
-
-    i->isReading = true;
-
-    while(i->isReading){
-
-        if(!i->connectionValid){
-            break;
-        }
-
-        auto buffer = &i->buffers[i->currentBufferId];
-        size_t nbBytesReceived = 0;
-        udp::endpoint senderEndpoint;
-        try {
-            // receive data
-            nbBytesReceived = i->socket->receive_from(
-                boost::asio::buffer(buffer->data(),static_cast<size_t>(buffer->size())),
-                senderEndpoint
-            );
-            i->currentBufferId = (i->currentBufferId + 1) % i->buffersCount;
-
-        } catch (const boost::system::system_error &error) {
-            if(error.code() == boost::asio::error::timed_out){
-                timeout_packet_signal();
-            }else{
-                Logger::error("UdpReader::read_data: Cannot read from socket, error message: {}\n", error.what());
-                connection_state_signal(i->connectionValid = false);
-            }
-            continue;
-        }
-
-        if(nbBytesReceived == 0){
-            Logger::warning("UdpReader::read_data: No bytes received.");
-            continue;
-        }
-        process_packet(buffer, nbBytesReceived);
+    if(!i->connected){
+        return 0;
     }
 
-    i->isReading = false;
+    auto buffer = &i->buffers[i->currentBufferId];
+    size_t nbBytesReceived = 0;
+    udp::endpoint senderEndpoint;
+    try {
+        // receive data
+        nbBytesReceived = i->socket->receive_from(
+            boost::asio::buffer(buffer->data(),static_cast<size_t>(buffer->size())),
+            senderEndpoint
+        );
+        i->currentBufferId = (i->currentBufferId + 1) % i->buffersCount;
+
+    } catch (const boost::system::system_error &error) {
+        if(error.code() == boost::asio::error::timed_out){
+            timeout_packet_signal();
+        }else{
+            Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: {}\n", error.what());
+            connection_state_signal(i->connected = false);
+        }
+        return 0;
+    }
+
+    if(nbBytesReceived == 0){
+        Logger::warning("[UdpReader::read_packet] No bytes received.");
+        return 0;
+    }
+
+    process_packet(buffer, nbBytesReceived);
+
+    return nbBytesReceived;
+}
+
+auto UdpReader::read_data_thread() -> void{
+
+    i->readingThreadStarted = true;
+
+    while(i->readingThreadStarted){
+        read_packet();
+    }
+
+    i->readingThreadStarted = false;
 }
 

@@ -36,19 +36,22 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 struct DCDevice::Impl{
-    std::unique_ptr<DCDeviceImpl> dd;
+    std::unique_ptr<DCDeviceImpl> dd = nullptr;
 };
 
 DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
 
     auto lg = LogGuard("DCDevice::DCDevice"sv);
     if(type == DCType::AzureKinect){
+        auto lg = LogGuard("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
         i->dd = std::make_unique<AzureKinectDeviceImpl>();
         i->dd->dcDevice = this;
     }else if(type == DCType::FemtoBolt){
+        auto lg = LogGuard("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
         i->dd = std::make_unique<FemtoBoltDeviceImpl>();
         i->dd->dcDevice = this;
     }else if(type == DCType::FemtoMega){
+        auto lg = LogGuard("DCDevice::DCDevice FemtoMegaDeviceImpl"sv);
         i->dd = std::make_unique<FemtoMegaDeviceImpl>();
         i->dd->dcDevice = this;
     }
@@ -157,7 +160,7 @@ auto DCDevice::start_reading(const DCConfigSettings &configS) -> bool{
 
 auto DCDevice::stop_reading() -> void{
 
-    auto lg = LogGuard("DCDevice::stop_reading"sv);
+    auto lg = LogGuard("DCDevice::stop_reading"sv);   
     if(!is_reading() || !is_opened()){
         return;
     }

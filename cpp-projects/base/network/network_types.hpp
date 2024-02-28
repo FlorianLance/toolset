@@ -56,6 +56,7 @@ struct ReadSendNetworkInfos{
     std::string sendingAdress;
     int sendingPort;
     Protocol protocol = Protocol::unknow;
+    bool startReadingThread = true;
 };
 
 struct UdpNetworkSendingSettings{

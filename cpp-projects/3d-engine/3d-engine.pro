@@ -53,14 +53,8 @@ HEADERS += \
     imgui-tb/imgui_dc_recorder_drawer.hpp \
     imgui-tb/imgui_dc_ui_drawer.hpp \
     immediate_ui.hpp \
-    # resources
-    resources.hpp \
     # engine
-    engine/drawers_manager.hpp \
     engine/managers.hpp \
-    engine/models_manager.hpp \
-    engine/shaders_manager.hpp \
-    engine/textures_manager.hpp \
     # windows
     windows/base_sfml_gl_window.hpp \
     # imgui
@@ -110,11 +104,6 @@ SOURCES += \
     imgui-tb/imgui_dc_recorder_drawer.cpp \
     imgui-tb/imgui_dc_ui_drawer.cpp \
     resources/resources.cpp \
-    # engine
-    engine/drawers_manager.cpp \
-    engine/models_manager.cpp \
-    engine/shaders_manager.cpp \
-    engine/textures_manager.cpp \
     # windows
     windows/base_sfml_gl_window.cpp \
     # imgui

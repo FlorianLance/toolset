@@ -32,7 +32,6 @@
 
 namespace tool::net{
 
-
 class UdpReader {
 
 public:
@@ -41,15 +40,17 @@ public:
     ~UdpReader();
 
     // slots
-    auto init_socket(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
-    auto clean_socket() -> void;
+    auto init_connection(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
+    auto clean_connection() -> void;
+    auto is_connected() const noexcept -> bool;
 
     // reading thread
-    auto start_reading() -> void;
-    auto stop_reading() -> void;
+    auto start_reading_thread() -> void;
+    auto stop_reading_thread() -> void;
+    auto is_reading_thread_started() const noexcept -> bool;
 
-    auto is_reading() const noexcept -> bool;
-    auto is_connected() const noexcept -> bool;
+    // packets
+    auto read_packet() -> size_t;
 
     // signals
     sigslot::signal<bool> connection_state_signal;
@@ -58,12 +59,11 @@ public:
 protected:
 
     virtual auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void;
-
     std::vector<std::int8_t> m_data;
 
 private :
 
-    auto read_data() -> void;
+    auto read_data_thread() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

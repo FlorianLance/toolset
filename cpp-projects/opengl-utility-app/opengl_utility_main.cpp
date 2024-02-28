@@ -26,7 +26,7 @@
 #include <iostream>
 
 // opgenl
-#include "opengl/buffer/texture_buffer_object.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
 
 // glfw
 #include "glfw/glfw_gl_windows.hpp"

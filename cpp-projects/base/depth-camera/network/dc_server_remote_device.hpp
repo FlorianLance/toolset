@@ -57,6 +57,9 @@ public:
     constexpr auto type() const noexcept -> DCServerType override {return DCServerType::remote;}
     auto device_connected() const noexcept -> bool override;
 
+    // when no reading thread started
+    auto read_data_from_network() -> size_t;
+
     // signals
     SSS<std::int64_t> remote_synchro_signal;
     SSS<net::Feedback> remote_feedback_signal;

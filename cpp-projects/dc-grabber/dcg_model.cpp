@@ -45,7 +45,7 @@ auto DCGModel::initialize() -> bool{
     };
 
     // start udp reading
-    if(!connection.start_reading(&settings.networkS)){
+    if(!connection.start_reading_thread(&settings.networkS)){
         return false;
     }
 

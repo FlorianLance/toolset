@@ -30,12 +30,13 @@
 // base
 #include "utility/logger.hpp"
 #include "utility/format.hpp"
-
 #include "utility/io_file.hpp"
 #include "utility/string.hpp"
 
+// opengl-utility
+#include "opengl/shader/shaders_manager.hpp"
+
 // 3d-engine
-#include "engine/shaders_manager.hpp"
 #include "imgui/extra/ImGuiFileDialog.h"
 
 // local

@@ -35,7 +35,7 @@
 #include "utility/cmd_args.hpp"
 
 // opengl-utilityh
-#include "opengl/buffer/framebuffer_object.hpp"
+#include "opengl/buffer/frame_buffer_object.hpp"
 
 // 3d-engine
 #include "engine/managers.hpp"
@@ -126,7 +126,7 @@ auto DCGGlWindow::draw_gl() -> void{
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 }
 
 

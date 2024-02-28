@@ -247,7 +247,7 @@ bool DrawSampleWindow::init_drawers(){
     dm->add_drawer<gl::PlaneDrawer>("notext-plane-20x10",   Scale{1.f},    20.f,10.f);
     dm->add_drawer<gl::PlaneDrawer>("notext-plane-40x40",   Scale{1.f},    40.f,40.f);
     dm->add_drawer<gl::PlaneDrawer>("floor",                Scale{1.f},    8,8, TextureNames{tm->texture_id("cement")});
-    dm->add_drawer<gl::PlaneDrawer>("grid-floor",           Scale{0.5f},   8,8, TextureNames{tm->texture_id("mybrick-me_textile")});
+    dm->add_drawer<gl::PlaneDrawer>("grid-floor",           Scale{0.5f},   8,8, TextureNames{tm->texture_id("me_textile")});
     dm->add_drawer<gl::PlaneDrawer>("multi-tex-plane",      Scale{0.5f},   8,8, TextureNames{tm->texture_id("mybrick-color"), tm->texture_id("mybrick-normal"), tm->texture_id("mybrick-height")});
     dm->add_drawer<gl::TorusDrawer>("torus",                Scale{0.4f});
     dm->add_drawer<gl::CubeDrawer>("cube",                  Scale{0.3f},   2.f);
@@ -409,7 +409,7 @@ void DrawSampleWindow::draw_gl(){
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
 
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
         if(auto drawer = uiDrawers.get_current_element_ptr(); drawer != nullptr){
@@ -507,6 +507,7 @@ void DrawSampleWindow::draw_imgui(){
             bool selected = id == uiSamples.get_current_id();
             if (ImGui::Selectable(uiSamples.get_alias(id).value().data(), selected)){
                 uiSamples.set_current_id(id);
+                resize_windows();
             }
             if(selected){
                 ImGui::SetItemDefaultFocus();
@@ -518,11 +519,13 @@ void DrawSampleWindow::draw_imgui(){
 
     if(ImGui::Button("^###s^")){
         uiSamples.decrement_current_id();
+        resize_windows();
     }
     ImGui::SameLine();
 
     if(ImGui::Button("v###sv")){
         uiSamples.increment_current_id();
+        resize_windows();
     }
     ImGui::SameLine();
     ImGuiUiDrawer::text(std::to_string(uiSamples.get_current_id()));

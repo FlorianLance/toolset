@@ -35,35 +35,31 @@
 #include <assimp/scene.h>
 
 // local
-#include "graphics/model.hpp"
+#include "graphics/model/model_mesh.hpp"
 #include "utility/tuple_array.hpp"
 
 namespace tool::io {
-
-using Texture2D     = graphics::Texture2D;
-using TextureInfo   = graphics::TextureInfo;
-using GMesh         = graphics::GMesh<float>;
-using Model         = graphics::Model;
-using Mesh          = geo::Mesh;
 
 using namespace std::literals::string_view_literals;
 
 class AiLoader{
 
 public:
-    static auto load_model(std::string_view path, bool verbose = false) -> std::shared_ptr<Model>;
+    static auto load_model(std::string_view path, bool verbose = false) -> std::shared_ptr<graphics::ModelMesh>;
 
 private:
 
     using TextureOperation  = graphics::TextureOperation;
-    using TTexOp = std::tuple<TextureOperation,aiTextureOp>;
+    using TTexOp = std::tuple<
+        TextureOperation,               aiTextureOp>;
     static constexpr TupleArray<TextureOperation::SizeEnum, TTexOp> textureOperations ={{
-        TTexOp{TextureOperation::add,         aiTextureOp::aiTextureOp_Add},
-        TTexOp{TextureOperation::divide,      aiTextureOp::aiTextureOp_Divide},
-        TTexOp{TextureOperation::multiply,    aiTextureOp::aiTextureOp_Multiply},
-        TTexOp{TextureOperation::substract,   aiTextureOp::aiTextureOp_Subtract},
-        TTexOp{TextureOperation::singed_add,  aiTextureOp::aiTextureOp_SignedAdd},
-        TTexOp{TextureOperation::smooth_add,  aiTextureOp::aiTextureOp_SmoothAdd},
+        TTexOp
+        {TextureOperation::add,         aiTextureOp::aiTextureOp_Add},
+        {TextureOperation::divide,      aiTextureOp::aiTextureOp_Divide},
+        {TextureOperation::multiply,    aiTextureOp::aiTextureOp_Multiply},
+        {TextureOperation::substract,   aiTextureOp::aiTextureOp_Subtract},
+        {TextureOperation::singed_add,  aiTextureOp::aiTextureOp_SignedAdd},
+        {TextureOperation::smooth_add,  aiTextureOp::aiTextureOp_SmoothAdd},
     }};
     static TextureOperation get_texture_operation(aiTextureOp t){
         return textureOperations.at<1,0>(t);
@@ -73,19 +69,21 @@ private:
     }
 
     using TextureType  = graphics::TextureType;
-    using TTexType = std::tuple<TextureType,aiTextureType>;
+    using TTexType = std::tuple<
+        TextureType,                aiTextureType>;
     static constexpr TupleArray<TextureType::SizeEnum, TTexType> textureTypes ={{
-        TTexType{TextureType::diffuse,      aiTextureType_DIFFUSE},
-        TTexType{TextureType::ambiant,      aiTextureType_AMBIENT},
-        TTexType{TextureType::specular,     aiTextureType_SPECULAR},
-        TTexType{TextureType::normal,       aiTextureType_NORMALS},
-        TTexType{TextureType::height,       aiTextureType_HEIGHT},
-        TTexType{TextureType::light_map,    aiTextureType_LIGHTMAP},
-        TTexType{TextureType::opacity,      aiTextureType_OPACITY},
-        TTexType{TextureType::emissive,     aiTextureType_EMISSIVE},
-        TTexType{TextureType::shininess,    aiTextureType_SHININESS},
-        TTexType{TextureType::reflection,   aiTextureType_REFLECTION},
-        TTexType{TextureType::displacement, aiTextureType_DISPLACEMENT},
+        TTexType
+        {TextureType::diffuse,      aiTextureType_DIFFUSE},
+        {TextureType::ambiant,      aiTextureType_AMBIENT},
+        {TextureType::specular,     aiTextureType_SPECULAR},
+        {TextureType::normal,       aiTextureType_NORMALS},
+        {TextureType::height,       aiTextureType_HEIGHT},
+        {TextureType::light_map,    aiTextureType_LIGHTMAP},
+        {TextureType::opacity,      aiTextureType_OPACITY},
+        {TextureType::emissive,     aiTextureType_EMISSIVE},
+        {TextureType::shininess,    aiTextureType_SHININESS},
+        {TextureType::reflection,   aiTextureType_REFLECTION},
+        {TextureType::displacement, aiTextureType_DISPLACEMENT},
     }};
 
     static TextureType get_texture_type(aiTextureType t){
@@ -96,14 +94,16 @@ private:
     }
 
     using TextureMapping    = graphics::TextureMapping;
-    using TTexMap = std::tuple<TextureMapping,aiTextureMapping>;
+    using TTexMap = std::tuple<
+        TextureMapping,             aiTextureMapping>;
     static constexpr TupleArray<TextureMapping::SizeEnum,TTexMap> textureMappings ={{
-        TTexMap{TextureMapping::UV,        aiTextureMapping::aiTextureMapping_UV},
-        TTexMap{TextureMapping::box,       aiTextureMapping::aiTextureMapping_BOX},
-        TTexMap{TextureMapping::plane,     aiTextureMapping::aiTextureMapping_PLANE},
-        TTexMap{TextureMapping::sphere,    aiTextureMapping::aiTextureMapping_SPHERE},
-        TTexMap{TextureMapping::cylinder,  aiTextureMapping::aiTextureMapping_CYLINDER},
-        TTexMap{TextureMapping::other,     aiTextureMapping::aiTextureMapping_OTHER},
+        TTexMap
+        {TextureMapping::UV,        aiTextureMapping::aiTextureMapping_UV},
+        {TextureMapping::box,       aiTextureMapping::aiTextureMapping_BOX},
+        {TextureMapping::plane,     aiTextureMapping::aiTextureMapping_PLANE},
+        {TextureMapping::sphere,    aiTextureMapping::aiTextureMapping_SPHERE},
+        {TextureMapping::cylinder,  aiTextureMapping::aiTextureMapping_CYLINDER},
+        {TextureMapping::other,     aiTextureMapping::aiTextureMapping_OTHER},
     }};
 
     static TextureMapping get_texture_mapping(aiTextureMapping t){
@@ -114,12 +114,14 @@ private:
     }    
 
     using TextureMapMode    = graphics::TextureMapMode;
-    using TTexMapMode = std::tuple<TextureMapMode,aiTextureMapMode>;
+    using TTexMapMode = std::tuple<
+        TextureMapMode,             aiTextureMapMode>;
     static constexpr TupleArray<TextureMapMode::SizeEnum,TTexMapMode> textureMapModes ={{
-        TTexMapMode{TextureMapMode::wrap,      aiTextureMapMode::aiTextureMapMode_Wrap},
-        TTexMapMode{TextureMapMode::clamp,     aiTextureMapMode::aiTextureMapMode_Clamp},
-        TTexMapMode{TextureMapMode::decal,     aiTextureMapMode::aiTextureMapMode_Decal},
-        TTexMapMode{TextureMapMode::mirro,     aiTextureMapMode::aiTextureMapMode_Mirror},
+        TTexMapMode
+        {TextureMapMode::wrap,      aiTextureMapMode::aiTextureMapMode_Wrap},
+        {TextureMapMode::clamp,     aiTextureMapMode::aiTextureMapMode_Clamp},
+        {TextureMapMode::decal,     aiTextureMapMode::aiTextureMapMode_Decal},
+        {TextureMapMode::mirro,     aiTextureMapMode::aiTextureMapMode_Mirror},
     }};
 
     static TextureMapMode get_texture_map_mode(aiTextureMapMode t){
@@ -129,44 +131,45 @@ private:
         return textureMapModes.at<0,1>(t);
     }
 
-    using Material = graphics::Material;
-    using TMatProp = std::tuple<Material::Property,std::string_view>;
-    static constexpr TupleArray<Material::Property::SizeEnum, TMatProp> materialProperties ={{
-        TMatProp{Material::Property::name,                      "?mat.name"sv},
-        TMatProp{Material::Property::twosided,                  "$mat.twosided"sv},
-        TMatProp{Material::Property::shading_model,             "$mat.shadingm"sv},
-        TMatProp{Material::Property::enable_wireframe,          "$mat.wireframe"sv},
-        TMatProp{Material::Property::blend_func,                "$mat.blend"sv},
-        TMatProp{Material::Property::opacity,                   "$mat.opacity"sv},
-        TMatProp{Material::Property::bumpscaling,               "$mat.bumpscaling"sv},
-        TMatProp{Material::Property::shininess,                 "$mat.shininess"sv},
-        TMatProp{Material::Property::reflectivity,              "$mat.reflectivity"sv},
-        TMatProp{Material::Property::shininess_strength,        "$mat.shinpercent"sv},
-        TMatProp{Material::Property::refacti,                   "$mat.refracti"sv},
-        TMatProp{Material::Property::color_diffuse,             "$mat.diffuse"sv},
-        TMatProp{Material::Property::color_ambient,             "$mat.ambient"sv},
-        TMatProp{Material::Property::color_specular,            "$mat.specular"sv},
-        TMatProp{Material::Property::color_emissive,            "$mat.emissive"sv},
-        TMatProp{Material::Property::color_transparent,         "$mat.transparent"sv},
-        TMatProp{Material::Property::color_reflective,          "$mat.reflective"sv},
-        TMatProp{Material::Property::global_background_image,   "$mat.global"sv},
-        TMatProp{Material::Property::text_blend,                "$tex.blend"sv},
-        TMatProp{Material::Property::text_mapping,              "$tex.mapping"sv},
-        TMatProp{Material::Property::text_operation,            "$tex.op"sv},
-        TMatProp{Material::Property::text_uvw_source,           "$tex.uvwsrc"sv},
-        TMatProp{Material::Property::text_mapping_mode_u,       "$tex.mapmodeu"sv},
-        TMatProp{Material::Property::text_mapping_mode_v,       "$tex.mapmodev"sv},
-        TMatProp{Material::Property::text_texmap_axis,          "$tex.mapaxis"sv},
-        TMatProp{Material::Property::text_flags,                "$tex.flags"sv},
+    using MatProperty = graphics::MaterialProperty;
+    using TMatProp = std::tuple<MatProperty,std::string_view>;
+    static constexpr TupleArray<MatProperty::SizeEnum, TMatProp> materialProperties ={{
+        TMatProp
+        {MatProperty::name,                      "?mat.name"sv},
+        {MatProperty::twosided,                  "$mat.twosided"sv},
+        {MatProperty::shading_model,             "$mat.shadingm"sv},
+        {MatProperty::enable_wireframe,          "$mat.wireframe"sv},
+        {MatProperty::blend_func,                "$mat.blend"sv},
+        {MatProperty::opacity,                   "$mat.opacity"sv},
+        {MatProperty::bumpscaling,               "$mat.bumpscaling"sv},
+        {MatProperty::shininess,                 "$mat.shininess"sv},
+        {MatProperty::reflectivity,              "$mat.reflectivity"sv},
+        {MatProperty::shininess_strength,        "$mat.shinpercent"sv},
+        {MatProperty::refacti,                   "$mat.refracti"sv},
+        {MatProperty::color_diffuse,             "$mat.diffuse"sv},
+        {MatProperty::color_ambient,             "$mat.ambient"sv},
+        {MatProperty::color_specular,            "$mat.specular"sv},
+        {MatProperty::color_emissive,            "$mat.emissive"sv},
+        {MatProperty::color_transparent,         "$mat.transparent"sv},
+        {MatProperty::color_reflective,          "$mat.reflective"sv},
+        {MatProperty::global_background_image,   "$mat.global"sv},
+        {MatProperty::text_blend,                "$tex.blend"sv},
+        {MatProperty::text_mapping,              "$tex.mapping"sv},
+        {MatProperty::text_operation,            "$tex.op"sv},
+        {MatProperty::text_uvw_source,           "$tex.uvwsrc"sv},
+        {MatProperty::text_mapping_mode_u,       "$tex.mapmodeu"sv},
+        {MatProperty::text_mapping_mode_v,       "$tex.mapmodev"sv},
+        {MatProperty::text_texmap_axis,          "$tex.mapaxis"sv},
+        {MatProperty::text_flags,                "$tex.flags"sv},
         // _AI_MATKEY_UVTRANSFORM_BASE
     }};
-
-    static std::string_view get_assimp_str_code(Material::Property p) {
+    
+    static constexpr auto get_assimp_str_code(MatProperty p) -> std::string_view{
         return materialProperties.at<0,1>(p);
     }
 
     template<typename T>
-    static std::optional<T> read_property(Material::Property property, aiMaterial *assimpMaterial){
+    static auto read_property(MatProperty property, aiMaterial *assimpMaterial) -> std::optional<T>{
         T value;
         if(AI_SUCCESS == assimpMaterial->Get(std::string(get_assimp_str_code(property)).c_str(),0,0, value)){
             return {value};
@@ -174,22 +177,8 @@ private:
         return {T{}};
     }
 
-    static geo::Col3f to_color(std::optional<aiColor3D> assimpColor){
-        if(assimpColor.has_value()){
-            return geo::Col3f{assimpColor.value().r, assimpColor.value().g, assimpColor.value().b};
-        }
-        return {};
-    }
-
-    static const char* to_string(std::optional<aiString> assimpStr){
-        if(assimpStr.has_value()){
-            return assimpStr.value().C_Str();
-        }
-        return {};
-    }
-
     template<typename T>
-    static std::optional<T> read_texture_property(Material::Property property, aiMaterial *assimpMaterial, TextureType type, unsigned int index){
+    static auto read_texture_property(MatProperty property, aiMaterial *assimpMaterial, TextureType type, unsigned int index) -> std::optional<T>{
         T value;
         if(AI_SUCCESS == assimpMaterial->Get(std::string(get_assimp_str_code(property)).c_str(),get_assimp_texture_type(type),index, value)){
             return {value};
@@ -197,10 +186,13 @@ private:
         return {T{}};
     }
 
-    static std::optional<std::string> retrieve_texture_path(Model *model, const aiString &aiPath);
-    static void read_mesh(Model *model, aiMesh *aiMesh);
-    static void read_material(Model *model, aiMaterial *aiMat);    
-    static void read_bones_hierarchy(graphics::BonesHierarchy *bones, aiNode *node);
+    static auto to_color(std::optional<aiColor3D> assimpColor) -> geo::Pt3f;
+    static auto to_string(std::optional<aiString> assimpStr) -> std::string;
+
+    static auto retrieve_texture_path(graphics::ModelMesh *model, const aiString &aiPath) -> std::optional<std::string>;
+    static auto read_mesh(graphics::ModelMesh *model, aiMesh *aiMesh) -> void;
+    static auto read_material(graphics::ModelMesh *model, aiMaterial *aiMat) -> void;
+    static auto read_bones_hierarchy(graphics::BonesHierarchy *bones, aiNode *node) -> void;
 };
 }
 

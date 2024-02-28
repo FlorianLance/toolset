@@ -40,7 +40,7 @@
 // base
 #include "geometry/matrix4.hpp"
 #include "utility/vector.hpp"
-#include "graphics/camera.hpp"
+#include "graphics/camera/camera.hpp"
 
 // opengl-utility
 #include "opengl/vao.hpp"
@@ -91,9 +91,9 @@ public:
         // update buffers
         vao.bind();
 
-        pos.load_data(FloatData{reinterpret_cast<float*>(points)}, SizeData{GLsizeiptr(sizePts * 3 * sizeof(float))});
+        pos.load_data(reinterpret_cast<float*>(points), GLsizeiptr(sizePts * 3 * sizeof(float)));
         pos.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
-        col.load_data(FloatData{reinterpret_cast<float*>(colors)}, SizeData{GLsizeiptr(sizePts * 3 * sizeof(float))});
+        col.load_data(reinterpret_cast<float*>(colors), GLsizeiptr(sizePts * 3 * sizeof(float)));
         col.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
 
         ebo.bind();
@@ -109,12 +109,12 @@ public:
         }
 
         vao.bind();
-        draw_triangles_with_ebo(count);
+        draw_triangles_with_ebo(count.v);
     }
 
     VAO vao;
-    VBO pos;
-    VBO col;
+    VertexBufferObject pos;
+    VertexBufferObject col;
     EBO ebo;
 
     VerticesCount count;
@@ -178,18 +178,18 @@ public:
         // update buffers
         vao.bind();
 //        vbo.bind();
-        vbo.load_data(FloatData{vertices}, SizeData{sizeof (vertices)});
+        vbo.load_data(vertices, sizeof (vertices));
         vbo.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
 //        VBO::unbind();
     }
 
     void draw(){
         vao.bind();
-        draw_triangles(VerticesCount{36});
+        draw_triangles(36);
     }
 
     VAO vao;
-    VBO vbo;
+    VertexBufferObject vbo;
 };
 
 
@@ -204,10 +204,10 @@ public:
             {0.f,0.f,0.f},{0.f,1.f,0.f},
             {0.f,0.f,0.f},{0.f,0.f,1.f}
         };
-        const std::vector<geo::Col4f> axisColors = {
-            geo::Col4f{1.f,0.f,0.f,1.f},geo::Col4f{1.f,0.f,0.f,1.f},
-            geo::Col4f{0.f,1.f,0.f,1.f},geo::Col4f{0.f,1.f,0.f,1.f},
-            geo::Col4f{0.f,0.f,1.f,1.f},geo::Col4f{0.f,0.f,1.f,1.f}
+        const std::vector<geo::Pt4f> axisColors = {
+            geo::Pt4f{1.f,0.f,0.f,1.f},geo::Pt4f{1.f,0.f,0.f,1.f},
+            geo::Pt4f{0.f,1.f,0.f,1.f},geo::Pt4f{0.f,1.f,0.f,1.f},
+            geo::Pt4f{0.f,0.f,1.f,1.f},geo::Pt4f{0.f,0.f,1.f,1.f}
         };
 
         vao.generate();
@@ -217,20 +217,20 @@ public:
         // update buffers
         vao.bind();
 
-        pos.load_data(FloatData{reinterpret_cast<const float*>(axisPts.data())}, SizeData{static_cast<GLsizei>(sizeof(geo::Pt3f)*axisPts.size())});
+        pos.load_data(reinterpret_cast<const float*>(axisPts.data()), static_cast<GLsizei>(sizeof(geo::Pt3f)*axisPts.size()));
         pos.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
 
-        col.load_data(FloatData{reinterpret_cast<const float*>(axisColors.data())},SizeData{static_cast<GLsizei>(sizeof(geo::Pt3f)*axisColors.size())});
+        col.load_data(reinterpret_cast<const float*>(axisColors.data()),static_cast<GLsizei>(sizeof(geo::Pt3f)*axisColors.size()));
         col.attrib(AttriIndex{1}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{4 * sizeof(float)});
     }
 
     void draw(){
         vao.bind();
-        draw_lines(VerticesCount{6});
+        draw_lines(6);
     }
 
     VAO vao;
-    VBO pos, col;
+    VertexBufferObject pos, col;
 };
 
 class DrawGrid{
@@ -255,17 +255,17 @@ public:
         // update buffers
         vao.bind();
 
-        pos.load_data(FloatData{reinterpret_cast<const float*>(linesPts.data())},SizeData{static_cast<GLsizei>(sizeof(geo::Pt3f)*linesPts.size())});
+        pos.load_data(reinterpret_cast<const float*>(linesPts.data()),static_cast<GLsizei>(sizeof(geo::Pt3f)*linesPts.size()));
         pos.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
     }
 
     void draw(){
         vao.bind();
-        draw_lines(VerticesCount{400});
+        draw_lines(400);
     }
 
     VAO vao;
-    VBO pos;
+    VertexBufferObject pos;
 };
 
 

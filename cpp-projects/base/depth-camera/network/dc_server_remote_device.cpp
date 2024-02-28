@@ -63,16 +63,18 @@ DCServerRemoteDevice::~DCServerRemoteDevice(){
 
 auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool {
 
-    // i->id    = id;
-    i->infos = infos;
+    i->infos = infos;    
 
     // init reader
     Logger::message(std::format("DCServerRemoteDevice init reader: {} {} {}\n", i->infos.readingAdress, std::to_string(i->infos.readingPort), static_cast<int>(i->infos.protocol)));
-    if(!i->dcUdpReader.init_socket(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
+    if(!i->dcUdpReader.init_connection(i->infos.readingAdress, i->infos.readingPort, i->infos.protocol)){
         Logger::error("[DCServerRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
-    i->dcUdpReader.start_reading();
+
+    if(i->infos.startReadingThread){
+        i->dcUdpReader.start_reading_thread();
+    }
 
     // init sender
     Logger::message(std::format("DCServerRemoteDevice init sender: {} {} {}\n", i->infos.sendingAdress, std::to_string(i->infos.sendingPort), static_cast<int>(i->infos.protocol)));
@@ -128,11 +130,11 @@ auto DCServerRemoteDevice::clean() -> void{
     i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);
     i->remoteDeviceConnected = false;
     // # stop reading loop
-    if(i->dcUdpReader.is_reading()){
-        i->dcUdpReader.stop_reading();
+    if(i->dcUdpReader.is_reading_thread_started()){
+        i->dcUdpReader.stop_reading_thread();
     }
     // # clean socket
-    i->dcUdpReader.clean_socket();
+    i->dcUdpReader.clean_connection();
 }
 
 auto DCServerRemoteDevice::apply_command(Command command) -> void{
@@ -171,6 +173,10 @@ auto DCServerRemoteDevice::update_delay_settings(const cam::DCDelaySettings &del
 
 auto DCServerRemoteDevice::device_connected() const noexcept -> bool {
     return i->remoteDeviceConnected;
+}
+
+auto DCServerRemoteDevice::read_data_from_network() -> size_t{
+    return i->dcUdpReader.read_packet();
 }
 
 auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void{

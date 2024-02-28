@@ -37,7 +37,7 @@ using namespace tool::cam;
 
 struct DCGrabberDataProcessing::Impl{
 
-    std::atomic_bool isProcessing       = false;
+    std::atomic_bool processingThreadStarted       = false;
     std::unique_ptr<std::thread>thread = nullptr;
     std::unique_ptr<std::mutex>locker  = nullptr;
 
@@ -58,24 +58,24 @@ DCGrabberDataProcessing::DCGrabberDataProcessing() : i(std::make_unique<Impl>())
 }
 
 DCGrabberDataProcessing::~DCGrabberDataProcessing(){
-    clean();
+    clean_processing_thread();
 }
 
-auto DCGrabberDataProcessing::start() -> void {
+auto DCGrabberDataProcessing::start_processing_thread() -> void {
 
-    if(i->isProcessing){
+    if(i->processingThreadStarted){
         return;
     }
-    i->thread = std::make_unique<std::thread>(&DCGrabberDataProcessing::process, this);
+    i->thread = std::make_unique<std::thread>(&DCGrabberDataProcessing::process_thread, this);
 }
 
-auto DCGrabberDataProcessing::stop() -> void {
-    i->isProcessing = false;
+auto DCGrabberDataProcessing::stop_processing_thread() -> void {
+    i->processingThreadStarted = false;
 }
 
-auto DCGrabberDataProcessing::clean() -> void {
+auto DCGrabberDataProcessing::clean_processing_thread() -> void {
 
-    i->isProcessing = false;
+    i->processingThreadStarted = false;
     if(i->thread != nullptr){
         if(i->thread->joinable()){
             i->thread->join();
@@ -83,6 +83,7 @@ auto DCGrabberDataProcessing::clean() -> void {
         i->thread = nullptr;
     }
 }
+
 
 auto DCGrabberDataProcessing::new_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void {
     std::lock_guard<std::mutex> guard(*i->locker);
@@ -119,45 +120,67 @@ auto DCGrabberDataProcessing::update_device_data_settings(const DCDataSettings &
     i->sActions = dataS.server;
 }
 
-auto DCGrabberDataProcessing::process() -> void {
+auto DCGrabberDataProcessing::process() -> bool{
 
-    i->isProcessing = true;
+    std::shared_ptr<DCCompressedFrame> frameToBeUncompresed = nullptr;
+    {
+        std::lock_guard<std::mutex> guard(*i->locker);
 
-    while(i->isProcessing){
+        // check for new compressed frame
+        if(i->lastCF){
+            // store last
+            i->cFrame = i->lastCF;
+            // invalid it
+            i->lastCF = nullptr;
+            // ask for uncompression
+            frameToBeUncompresed = i->cFrame;
+        }
+        // check for new frame
+        if(i->lastF){
+            // store last
+            i->frame  = i->lastF;
+            // invalid it
+            i->lastF  = nullptr;
+        }
+    }
 
-        std::shared_ptr<DCCompressedFrame> frameToBeUncompresed = nullptr;
-        {
-            std::lock_guard<std::mutex> guard(*i->locker);
+    // uncompress
+    {
+        if(frameToBeUncompresed != nullptr){
+            auto uncompressedFrame = std::make_shared<DCFrame>();
 
-            // check for new compressed frame
-            if(i->lastCF){
-                // store last
-                i->cFrame = i->lastCF;
-                // invalid it
-                i->lastCF = nullptr;
-                // ask for uncompression
-                frameToBeUncompresed = i->cFrame;
-            }
-            // check for new frame
-            if(i->lastF){
-                // store last
-                i->frame  = i->lastF;
-                // invalid it
-                i->lastF  = nullptr;
+            if(i->frameUncompressor->uncompress(i->sActions.generation, frameToBeUncompresed.get(), *uncompressedFrame)){
+                std::lock_guard<std::mutex> guard(*i->locker);
+                i->frame = uncompressedFrame;
             }
         }
+    }
 
-        // uncompress
-        {
-            if(frameToBeUncompresed != nullptr){
-                auto uncompressedFrame = std::make_shared<DCFrame>();
+    return i->frame != nullptr;
+}
 
-                if(i->frameUncompressor->uncompress(i->sActions.generation, frameToBeUncompresed.get(), *uncompressedFrame)){
-                    std::lock_guard<std::mutex> guard(*i->locker);
-                    i->frame = uncompressedFrame;
-                }
-            }
-        }
+auto DCGrabberDataProcessing::uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>{
+
+    std::lock_guard<std::mutex> guard(*i->locker);
+    if(!cFrame){
+        return nullptr;
+    }
+
+    auto frame = std::make_shared<DCFrame>();
+    if(i->frameUncompressor->uncompress(i->sActions.generation, cFrame.get(), *frame)){
+        return frame;
+    }
+    return nullptr;
+}
+
+
+auto DCGrabberDataProcessing::process_thread() -> void {
+
+    i->processingThreadStarted = true;
+
+    while(i->processingThreadStarted){
+
+        process();
 
         // sleep
         using namespace std::chrono_literals;

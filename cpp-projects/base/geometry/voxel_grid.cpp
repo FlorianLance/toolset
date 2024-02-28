@@ -28,6 +28,7 @@
 #include "voxel_grid.hpp"
 
 // local
+#include "geometry/point4.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool::geo;

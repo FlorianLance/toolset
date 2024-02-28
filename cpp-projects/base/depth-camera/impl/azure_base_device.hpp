@@ -31,7 +31,7 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_config_settings.hpp"
 #include "depth-camera/settings/dc_data_settings.hpp"
-#include "graphics/color.hpp"
+#include "graphics/color/rgb.hpp"
 #include "utility/buffer.hpp"
 
 namespace tool::cam {

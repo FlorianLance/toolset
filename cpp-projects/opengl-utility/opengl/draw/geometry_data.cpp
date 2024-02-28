@@ -35,7 +35,6 @@
 using namespace tool;
 using namespace tool::gl;
 
-
 auto PointMeshData::init_buffers(GLuint size, const geo::Pt3f *points, const geo::Pt3f *colors, const geo::Pt3f *normals) -> void{
 
     if(points == nullptr){
@@ -56,23 +55,56 @@ auto PointMeshData::init_buffers(GLuint size, const geo::Pt3f *points, const geo
         normalsB.generate();
     }
 
-    vao.bind();
-    pointsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(points)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))});
-    pointsB.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
+    pointsB.load_data(
+        reinterpret_cast<const GLfloat*>(points),
+        static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))
+    );
+    pointsB.dsa_attrib(
+        vao.id(),
+        0,
+        3,
+        sizeof(geo::Pt3f),
+        GL_FLOAT,
+        0,
+        0
+    );
 
     if(colors != nullptr){
-        colorsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(colors)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))});
-        colorsB.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
+
+        colorsB.load_data(
+            reinterpret_cast<const GLfloat*>(colors),
+            static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))
+        );
+        colorsB.dsa_attrib(
+            vao.id(),
+            1,
+            3,
+            sizeof(geo::Pt3f),
+            GL_FLOAT,
+            0,
+            1
+        );
     }
 
     if(normals != nullptr){
-        normalsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(normals)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))});
-        normalsB.attrib(AttriIndex{2}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
+        normalsB.load_data(
+            reinterpret_cast<const GLfloat*>(normals),
+            static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))
+        );
+        normalsB.dsa_attrib(
+            vao.id(),
+            2,
+            3,
+            sizeof(geo::Pt3f),
+            GL_FLOAT,
+            0* sizeof(float),
+            2
+        );
     }
 
     nIndices = static_cast<GLsizei>(size);
 
-    VAO::unbind();
+    // VAO::unbind();
     buffersInitialized = true;
 }
 
@@ -97,16 +129,25 @@ auto PointMeshData::init_buffers(GLuint size, const geo::Pt2f *points, const geo
     }
 
     vao.bind();
-    pointsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(points)}, SizeData{static_cast<GLsizeiptr>(size*2*sizeof(GLfloat))});
+    pointsB.load_data(
+        reinterpret_cast<const GLfloat*>(points),
+        static_cast<GLsizeiptr>(size*2*sizeof(GLfloat))
+    );
     pointsB.attrib(AttriIndex{0}, AttriSize{2}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
 
     if(colors != nullptr){
-        colorsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(colors)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))});
+        colorsB.load_data(
+            reinterpret_cast<const GLfloat*>(colors),
+            static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))
+        );
         colorsB.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
     if(normals != nullptr){
-        normalsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(points)}, SizeData{static_cast<GLsizeiptr>(size*2*sizeof(GLfloat))});
+        normalsB.load_data(
+            reinterpret_cast<const GLfloat*>(points),
+            static_cast<GLsizeiptr>(size*2*sizeof(GLfloat))
+        );
         normalsB.attrib(AttriIndex{2}, AttriSize{2}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
@@ -134,11 +175,17 @@ auto PointMeshData::init_buffers(GLuint size, const geo::Pt3<int> *voxels, const
     }
 
     vao.bind();
-    pointsB.load_data(IntData{reinterpret_cast<const GLint*>(voxels)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLint))});
+    pointsB.load_data(
+        reinterpret_cast<const GLint*>(voxels),
+        static_cast<GLsizeiptr>(size*3*sizeof(GLint))
+    );
     pointsB.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_INT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(int))});
 
     if(colors != nullptr){
-        colorsB.load_data(FloatData{reinterpret_cast<const GLfloat*>(colors)}, SizeData{static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))});
+        colorsB.load_data(
+            reinterpret_cast<const GLfloat*>(colors),
+            static_cast<GLsizeiptr>(size*3*sizeof(GLfloat))
+        );
         colorsB.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
@@ -155,7 +202,7 @@ auto PointMeshData::render() const -> void{
     }
 
     vao.bind();
-    draw_points(VerticesCount{nIndices});
+    draw_points(nIndices);
     VAO::unbind();
 }
 
@@ -166,7 +213,7 @@ auto PointMeshData::render_patches() const -> void{
     }
 
     vao.bind();
-    draw_patches(VerticesCount{nIndices});
+    draw_patches(nIndices);
     VAO::unbind();
 }
 
@@ -178,7 +225,7 @@ auto PointMeshData::clean() -> void{
     buffersInitialized = false;
 }
 
-void LineMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *colors){
+auto LineMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *colors) -> void{
 
     // check inputs
     if(indices == nullptr || points == nullptr){
@@ -216,11 +263,17 @@ void LineMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloa
     indicesB.bind();
     indicesB.load_data(UintData{indices->data()}, SizeData{GLsizeiptr(indices->size()*sizeof(std::uint32_t))});
 
-    pointsB.load_data(FloatData{points->data()}, SizeData{static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))});
+    pointsB.load_data(
+        points->data(),
+        static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))
+    );
     pointsB.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
 
     if(colors != nullptr){
-        colorsB.load_data(FloatData{colors->data()}, SizeData{static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))});
+        colorsB.load_data(
+            colors->data(),
+            static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))
+        );
         colorsB.attrib(AttriIndex{1}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
@@ -230,18 +283,18 @@ void LineMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloa
     buffersInitialized = true;
 }
 
-void LineMeshData::render() const {
+auto LineMeshData::render() const -> void{
 
     if(!buffersInitialized){
         return;
     }
 
     vao.bind();
-    draw_lines_with_ebo(VerticesCount{nIndices});
+    draw_lines_with_ebo(nIndices);
     VAO::unbind();
 }
 
-void LineMeshData::clean(){
+auto LineMeshData::clean() -> void{
     vao.clean();
     pointsB.clean();
     indicesB.clean();
@@ -249,8 +302,7 @@ void LineMeshData::clean(){
     buffersInitialized = false;
 }
 
-
-void TriangleMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors){
+auto TriangleMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
         Logger::error("[TriangleMeshData::init_buffers] error, no indices or points buffers.\n");
@@ -293,8 +345,6 @@ void TriangleMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GL
         }
     }
 
-
-
     // clean if necessary
     if(buffersInitialized){
         clean();
@@ -305,29 +355,44 @@ void TriangleMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GL
 
     // generate buffers
     pointsB.generate();
-    pointsB.load_data(FloatData{points->data()}, SizeData{static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))});
+    pointsB.load_data(
+        points->data(),
+        static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))
+    );
     //    pointsB.dsa_attrib(vao.id(), AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
 
 
     if(hasNormals){
         normalsB.generate();
-        normalsB.load_data(FloatData{normals->data()}, SizeData{static_cast<GLsizeiptr>(normals->size()*sizeof(GLfloat))});
+        normalsB.load_data(
+            normals->data(),
+            static_cast<GLsizeiptr>(normals->size()*sizeof(GLfloat))
+        );
         //        normalsB.dsa_attrib(vao.id(), AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
     }
     if(hasTexCoord){
         texCoordsB.generate();
-        texCoordsB.load_data(FloatData{texCoords->data()}, SizeData{static_cast<GLsizeiptr>(texCoords->size()*sizeof(GLfloat))});
+        texCoordsB.load_data(
+            texCoords->data(),
+            static_cast<GLsizeiptr>(texCoords->size()*sizeof(GLfloat))
+        );
         //        texCoordsB.dsa_attrib(vao.id(), AttriIndex{2}, AttriSize{2}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
     }
     if(hasTangents){
         tangentsB.generate();
-        tangentsB.load_data(FloatData{tangents->data()}, SizeData{static_cast<GLsizeiptr>(tangents->size()*sizeof(GLfloat))});
+        tangentsB.load_data(
+            tangents->data(),
+            static_cast<GLsizeiptr>(tangents->size()*sizeof(GLfloat))
+        );
         //        tangentsB.dsa_attrib(vao.id(), AttriIndex{3}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
     }
 
     if(hasColors){
         colorsB.generate();
-        colorsB.load_data(FloatData{colors->data()}, SizeData{static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))});
+        colorsB.load_data(
+            colors->data(),
+            static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))
+        );
     }
 
     vao.bind();
@@ -365,8 +430,9 @@ void TriangleMeshData::init_buffers(std::vector<GLuint> *indices, std::vector<GL
     buffersInitialized = true;
 }
 
-void TriangleMeshData::init_buffers(std::vector<geo::TriIds> *indices, std::vector<geo::Pt3f> *points, std::vector<geo::Pt3f> *normals,
-                                std::vector<geo::Pt2f> *texCoords, std::vector<geo::Pt4f> *tangents, std::vector<geo::BoneData> *bones, std::vector<geo::Pt4f> *colors){
+auto TriangleMeshData::init_buffers(
+    std::vector<geo::TriIds> *indices, std::vector<geo::Pt3f> *points, std::vector<geo::Pt3f> *normals,
+    std::vector<geo::Pt2f> *texCoords, std::vector<geo::Pt4f> *tangents, std::vector<graphics::BoneData> *bones, std::vector<ColorRGBA32> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
         Logger::error("[TriangleMeshData::init_buffers] error, no indices or points buffers.\n");
@@ -462,23 +528,32 @@ void TriangleMeshData::init_buffers(std::vector<geo::TriIds> *indices, std::vect
     indicesB.load_data(UintData{rawIndices.data()}, SizeData{GLsizeiptr(indices->size()*3*sizeof(std::uint32_t))});
 
     // points
-    pointsB.load_data(FloatData{points->data()->array.data()}, SizeData{static_cast<GLsizeiptr>(points->size()*3*sizeof(GLfloat))});
+    pointsB.load_data(points->data()->array.data(), static_cast<GLsizeiptr>(points->size()*3*sizeof(GLfloat)));
     pointsB.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
 
     if(hasNormals){
-        normalsB.load_data(FloatData{normals->data()->array.data()}, SizeData{static_cast<GLsizeiptr>(normals->size()*3*sizeof(GLfloat))});
+        normalsB.load_data(
+            normals->data()->array.data(),
+            static_cast<GLsizeiptr>(normals->size()*3*sizeof(GLfloat))
+        );
         normalsB.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
     // tex coords
     if(hasTexCoord){
-        texCoordsB.load_data(FloatData{texCoords->data()->array.data()}, SizeData{static_cast<GLsizeiptr>(texCoords->size()*2*sizeof(GLfloat))});
+        texCoordsB.load_data(
+            texCoords->data()->array.data(),
+            static_cast<GLsizeiptr>(texCoords->size()*2*sizeof(GLfloat))
+        );
         texCoordsB.attrib(AttriIndex{2}, AttriSize{2}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
     // tangents
     if(hasTangents){
-        tangentsB.load_data(FloatData{tangents->data()->array.data()}, SizeData{static_cast<GLsizeiptr>(tangents->size()*4*sizeof(GLfloat))});
+        tangentsB.load_data(
+            tangents->data()->array.data(),
+            static_cast<GLsizeiptr>(tangents->size()*4*sizeof(GLfloat))
+        );
         tangentsB.attrib(AttriIndex{3}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
@@ -505,49 +580,50 @@ void TriangleMeshData::init_buffers(std::vector<geo::TriIds> *indices, std::vect
 
 
         glBindBuffer(GL_ARRAY_BUFFER, bonesB.id());
-        glBufferData(GL_ARRAY_BUFFER, sizeof(geo::BoneData) * bones->size(), &bones->at(0), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(graphics::BoneData) * bones->size(), &bones->at(0), GL_STATIC_DRAW);
         glEnableVertexAttribArray(4);
-        glVertexAttribIPointer(4, 4, GL_INT, sizeof(geo::BoneData), (const GLvoid*)0);
+        glVertexAttribIPointer(4, 4, GL_INT, sizeof(graphics::BoneData), (const GLvoid*)0);
         glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(geo::BoneData), (const GLvoid*)(4* sizeof(float)));
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(graphics::BoneData), (const GLvoid*)(4* sizeof(float)));
     }
 
     if(hasColors){
-        colorsB.load_data(FloatData{colors->data()->array.data()}, SizeData{static_cast<GLsizeiptr>(colors->size()*4*sizeof(GLfloat))});
+        colorsB.load_data(
+            colors->data()->array.data(),
+            static_cast<GLsizeiptr>(colors->size()*4*sizeof(GLfloat))
+        );
         colorsB.attrib(AttriIndex{6}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
-
     nIndices = static_cast<GLsizei>(indices->size()*3);
-
 
     VAO::unbind();
     buffersInitialized = true;
 }
 
-void TriangleMeshData::render() const {
+auto TriangleMeshData::render() const -> void{
 
     if(!buffersInitialized){
         return;
     }
 
     vao.bind();
-    draw_triangles_with_ebo(VerticesCount{nIndices});
+    draw_triangles_with_ebo(nIndices);
     VAO::unbind();
 }
 
-void TriangleMeshData::render_adjacency() const{
+auto TriangleMeshData::render_adjacency() const -> void{
 
     if(!buffersInitialized){
         return;
     }
 
     vao.bind();
-    draw_triangles_adjacency_with_ebo(VerticesCount{nIndices});
+    draw_triangles_adjacency_with_ebo(nIndices);
     VAO::unbind();
 }
 
-void TriangleMeshData::clean(){
+auto TriangleMeshData::clean() -> void{
     vao.clean();
     pointsB.clean();
     indicesB.clean();

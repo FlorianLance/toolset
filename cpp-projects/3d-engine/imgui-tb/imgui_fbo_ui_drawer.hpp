@@ -27,11 +27,11 @@
 #pragma once
 
 // base
-#include "graphics/camera.hpp"
+#include "graphics/camera/camera.hpp"
 
 // opengl-utility
-#include "opengl/buffer/framebuffer_object.hpp"
-#include "opengl/gl_texture.hpp"
+#include "opengl/buffer/frame_buffer_object.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 
 namespace tool::graphics {
 
@@ -69,7 +69,7 @@ private:
     auto check_inputs() -> void;
 
     GLint m_viewport[4];
-    gl::FBO m_fbo;
+    gl::FrameBufferObject m_fbo;
     gl::Texture2D m_texture;
     gl::RBO m_depthTexture;
     graphics::Camera m_camera;       

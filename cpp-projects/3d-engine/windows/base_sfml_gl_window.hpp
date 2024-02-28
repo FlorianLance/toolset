@@ -40,8 +40,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "graphics/camera.hpp"
-#include "graphics/screen.hpp"
+#include "graphics/camera/camera.hpp"
 
 
 namespace tool::graphics {
@@ -50,7 +49,7 @@ class BaseSfmlGlWindow{
 
 public:
 
-    using TimePoint = std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds>;
+    using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 
     BaseSfmlGlWindow(
         std::string_view title,

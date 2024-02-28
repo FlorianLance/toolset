@@ -75,20 +75,20 @@ auto DCClientConnection::init_connections() -> void{
     });
 }
 
-auto DCClientConnection::start_reading(UdpClientNetworkSettings *networkS) -> bool{
+auto DCClientConnection::start_reading_thread(UdpClientNetworkSettings *networkS) -> bool{
 
     // stop reading
-    if(m_udpReaderG.is_reading()){
-        m_udpReaderG.stop_reading();
+    if(m_udpReaderG.is_reading_thread_started()){
+        m_udpReaderG.stop_reading_thread();
     }
 
     // init reader
-    if(!m_udpReaderG.init_socket(networkS->udpReadingInterface.ipAddress, networkS->udpReadingPort, networkS->protocol)){
+    if(!m_udpReaderG.init_connection(networkS->udpReadingInterface.ipAddress, networkS->udpReadingPort, networkS->protocol)){
         return false;
     }
 
     // start reading
-    m_udpReaderG.start_reading();
+    m_udpReaderG.start_reading_thread();
 
 
     return true;
@@ -133,10 +133,10 @@ auto DCClientConnection::clean() -> void{
     disconnect_sender();
 
     // stop reading
-    if(m_udpReaderG.is_reading()){
-        m_udpReaderG.stop_reading();
+    if(m_udpReaderG.is_reading_thread_started()){
+        m_udpReaderG.stop_reading_thread();
     }
-    m_udpReaderG.clean_socket();
+    m_udpReaderG.clean_connection();
 }
 
 auto DCClientConnection::update() -> void{

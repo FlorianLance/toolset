@@ -32,7 +32,7 @@
 #include "depth-camera/dc_frame.hpp"
 
 // opengl
-#include "opengl/gl_texture.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 #include "opengl/draw/drawer.hpp"
 
 // local

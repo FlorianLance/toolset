@@ -10,14 +10,18 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+// base
+#include "graphics/camera/camera.hpp"
+
 // opengl-utility
-#include "opengl/buffer/framebuffer_object.hpp"
+#include "opengl/buffer/frame_buffer_object.hpp"
 #include "opengl/buffer/uniform_buffer_object.hpp"
 #include "opengl/buffer/shader_storage_buffer_object.hpp"
 #include "opengl/buffer/pixel_buffer_object.hpp"
 #include "opengl/buffer/atomic_buffer_object.hpp"
 #include "opengl/gl_material.hpp"
 #include "opengl/sampler.hpp"
+#include "opengl/texture/geometry_texture_2d_tbo.hpp"
 
 // local
 #include "engine/managers.hpp"
@@ -329,8 +333,8 @@ private:
     float aspectRatio = 1.f;
     float zNear = 0.2f;
     float zFar = 1000.f;
-    geo::Pt3f projPos = {0.0f,3.0f,0.0f};
-    geo::Pt3f projRot = {-120.0f,0.0f,0.0f};
+    geo::Pt3f projPos = {0.0f,4.0f,0.0f};
+    geo::Pt3f projRot = {90.0f,0.0f,0.0f};
     TextureOptions projOptions;
 };
 struct Ch5DiffuseImageBasedLighting : public Sample{
@@ -381,13 +385,13 @@ struct Ch5RenderToTexture: public Sample{
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::Drawer *drawer = nullptr) -> void final override;
-    void update(float elapsedSeconds)final override;
+    auto update(float elapsedSeconds) -> void final override;
     auto update_imgui() -> void final override;
 public:
     double angle = 0.;
 private:
     // render to texture GBO
-    gl::FBO fboCh5RenderToTexture;
+    gl::FrameBufferObject fboCh5RenderToTexture;
     gl::RBO depthBufCh5RenterToTexture;
     gl::Texture2D renderTexCh5RenderToTexture;
 
@@ -405,8 +409,8 @@ struct Ch6EdgeDetectionFilter: public Sample{
 private:
     bool enable = true;
     float edgeThreshold = 0.05f;
-    // screen FBO
-    gl::FBO screenFBO;
+    // screen FrameBufferObject
+    gl::FrameBufferObject screenFBO;
     gl::RBO screenDepthBuffer;
     gl::Texture2D screenRenderTexture;
 };
@@ -421,12 +425,12 @@ private:
     bool enable = true;
     float sigma2 = 4.0f;
     std::vector<float> weights;
-    // screen FBO
-    gl::FBO screenFBO;
+    // screen FrameBufferObject
+    gl::FrameBufferObject screenFBO;
     gl::RBO screenDepthBuffer;
     gl::Texture2D screenRenderTexture;
-    // intermediate FBO
-    gl::FBO intermediateFBO;
+    // intermediate FrameBufferObject
+    gl::FrameBufferObject intermediateFBO;
     gl::Texture2D intermediateRenderTexture;
 };
 
@@ -438,8 +442,8 @@ struct Ch6HdrLightingToneMapping : public Sample{
     auto update_imgui() -> void final override;
 private:
     bool doToneMap = true;
-    // hdr FBO
-    gl::FBO hdrFBO;
+    // hdr FrameBufferObject
+    gl::FrameBufferObject hdrFBO;
     gl::RBO hdrDepthBuffer;
     gl::Texture2D hdrRenderTexture;
     // texture data
@@ -458,12 +462,12 @@ private:
     float white = 0.928f;
     float sigma = 25.0f;
     float gamma = 2.2f;
-    // hdr FBO
-    gl::FBO hdrFBO;
+    // hdr FrameBufferObject
+    gl::FrameBufferObject hdrFBO;
     gl::RBO hdrDepthBuffer;
     gl::Texture2D hdrRenderTexture;
-    // blur FBO
-    gl::FBO blurFBO;
+    // blur FrameBufferObject
+    gl::FrameBufferObject blurFBO;
     gl::Texture2D blurTex1;
     gl::Texture2D blurTex2;
     // sampler objects
@@ -482,7 +486,7 @@ struct Ch6Deferred : public Sample{
     auto update_screen_size() -> void final override;
     auto draw(gl::Drawer *drawer = nullptr) -> void final override;
 private:
-    gl::FBO deferredFBO;
+    gl::FrameBufferObject deferredFBO;
     gl::RBO depthBuf;
     gl::GeometryTexture2D posTex;
     gl::GeometryTexture2D normTex;
@@ -501,9 +505,9 @@ private:
     float radius = 0.55f;
     float factorScale = 4.f;
     bool doBlurPass = true;
-    gl::FBO deferredFBO;
+    gl::FrameBufferObject deferredFBO;
     gl::RBO depthBuf;
-    gl::FBO ssaoFBO;
+    gl::FrameBufferObject ssaoFBO;
     gl::GeometryTexture2D posTex;
     gl::GeometryTexture2D normTex;
     gl::GeometryTexture2D colorTex;
@@ -514,7 +518,7 @@ private:
 
 struct Ch6OIT : public Sample{
     struct ListNode {
-        geo::Col4f color;
+        geo::Pt4f color;
         GLfloat depth;
         GLuint next;
     };
@@ -578,7 +582,7 @@ struct Ch8ShadowMap : public Sample{
 private:
     void spit_out_depth_buffer();
     void draw_scene();
-    gl::FBO shadowFBO;
+    gl::FrameBufferObject shadowFBO;
     gl::Texture2D shadowTexture;
     GLuint pass1Index, pass2Index;
     int shadowMapWidth = 1024, shadowMapHeight = 1024;
@@ -613,7 +617,7 @@ private:
     int shadowMapWidth = 1024;
     int shadowMapHeight = 1024;
     gl::Texture2D shadowTexture;
-    gl::FBO shadowFBO;
+    gl::FrameBufferObject shadowFBO;
 
     float fov = 60.f;
     float aspectRatio = 1.f;
@@ -639,7 +643,7 @@ private:
 //    unsigned int depthMap;
 
     gl::Texture2D depthMap;
-    gl::FBO depthmapFBO;
+    gl::FrameBufferObject depthmapFBO;
 public:
     float nearPlane = 1.0f;
     float farPlane  = 10.5f;

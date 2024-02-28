@@ -28,9 +28,14 @@
 
 // std
 #include <vector>
+#include <span>
 
 // base
-#include "geometry/mesh.hpp"
+#include "geometry/point2.hpp"
+#include "geometry/triangle3.hpp"
+#include "geometry/point4.hpp"
+#include "graphics/animation/bones.hpp"
+#include "graphics/color/rgb.hpp"
 
 // local
 #include "opengl/buffer/vertex_buffer_object.hpp"
@@ -45,7 +50,7 @@ public:
     virtual ~GeometryData(){}
 
     VAO vao;
-    VBO pointsB;
+    VertexBufferObject pointsB;
     GLsizei nIndices = 0;
 
     virtual auto render() const -> void = 0;
@@ -66,6 +71,26 @@ protected:
 
 class PointMeshData : public GeometryData{
 public:
+
+    // TODO:
+    auto init_buffers(
+        std::span<geo::Pt3f> points,
+        std::span<geo::Pt3f> colors,
+        std::span<geo::Pt3f> normals
+    ) -> void{}
+
+    auto init_buffers(
+        std::span<geo::Pt2f> points,
+        std::span<geo::Pt3f> colors,
+        std::span<geo::Pt2f> normals
+    ) -> void {}
+
+    auto init_buffers(
+        std::span<geo::Pt3<int>> voxels,
+        std::span<geo::Pt3f> colors
+    ) -> void{}
+
+
 
     auto init_buffers(
         GLuint size,
@@ -93,8 +118,8 @@ public:
 
 protected:
 
-    VBO colorsB;
-    VBO normalsB;
+    VertexBufferObject colorsB;
+    VertexBufferObject normalsB;
 };
 
 
@@ -112,7 +137,7 @@ public:
 
 protected:
 
-    VBO colorsB;
+    VertexBufferObject colorsB;
     EBO indicesB;
 };
 
@@ -134,8 +159,8 @@ public:
         std::vector<geo::Pt3f> *normals   = nullptr,
         std::vector<geo::Pt2f> *texCoords = nullptr,
         std::vector<geo::Pt4f> *tangents  = nullptr,
-        std::vector<geo::BoneData> *bones = nullptr,
-        std::vector<geo::Pt4f> *colors    = nullptr
+        std::vector<graphics::BoneData> *bones = nullptr,
+        std::vector<ColorRGBA32> *colors    = nullptr
     );
 
     void render() const override;
@@ -150,12 +175,12 @@ public:
 
 protected:
 
-    VBO pointsB;
-    VBO normalsB;
-    VBO tangentsB;
-    VBO colorsB;
-    VBO texCoordsB;
-    VBO bonesB;
+    VertexBufferObject pointsB;
+    VertexBufferObject normalsB;
+    VertexBufferObject tangentsB;
+    VertexBufferObject colorsB;
+    VertexBufferObject texCoordsB;
+    VertexBufferObject bonesB;
     EBO indicesB;
 
 };

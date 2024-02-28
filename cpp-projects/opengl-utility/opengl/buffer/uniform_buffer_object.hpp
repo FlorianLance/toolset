@@ -29,7 +29,7 @@
 #pragma once
 
 // local
-#include "opengl/shader/shader.hpp"
+#include "opengl/shader/shader_program.hpp"
 
 namespace tool::gl {
 
@@ -40,7 +40,6 @@ struct UBO{
     UBO& operator=(const UBO&) = delete;
     UBO(UBO&& other) = default;
     UBO& operator=(UBO&& other) = default;
-
     ~UBO();
 
     virtual auto generate() -> void;

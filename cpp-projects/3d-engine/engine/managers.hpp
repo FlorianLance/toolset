@@ -27,10 +27,10 @@
 #pragma once
 
 // local
-#include "engine/models_manager.hpp"
-#include "engine/shaders_manager.hpp"
-#include "engine/textures_manager.hpp"
-#include "engine/drawers_manager.hpp"
+#include "graphics/model/models_manager.hpp"
+#include "opengl/shader/shaders_manager.hpp"
+#include "opengl/texture/textures_manager.hpp"
+#include "opengl/draw/drawers_manager.hpp"
 
 namespace tool::graphics {
 

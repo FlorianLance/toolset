@@ -28,10 +28,10 @@
 #include <iostream>
 
 // opengl
-#include "opengl/gl_texture.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 #include "opengl/vao.hpp"
 #include "opengl/shapes.hpp"
-#include "opengl/shader/shader.hpp"
+#include "opengl/shader/shader_program.hpp"
 
 // glfw
 #include <GLFW/glfw3.h>

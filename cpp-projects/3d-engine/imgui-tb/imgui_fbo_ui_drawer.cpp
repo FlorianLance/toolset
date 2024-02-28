@@ -57,7 +57,7 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
     m_camera.update_projection();
 
     m_texture.clean();
-    m_texture.init_image_8ui(size.x(),size.y(), 3);
+    m_texture.init_image_8u(size.x(),size.y(), 3);
 
     TextureOptions options;
     options.minFilter = TextureMinFilter::linear;
@@ -69,15 +69,16 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
     m_depthTexture.bind();
     m_depthTexture.set_data_storage(size.x(), size.y());
 
-    m_fbo.attach_colors_textures({
+    m_fbo.attach_color_textures({
         &m_texture
     });
 
     m_fbo.attach_depth_buffer(m_depthTexture);
 
     m_fbo.set_draw_buffers({
-        tool::gl::FrameBufferAttachment::color0,
+        tool::gl::FrameBuffer::Color0,
     });
+    m_fbo.check_validity();
 }
 
 auto ImguiFboUiDrawer::update_viewport() -> void{
@@ -117,7 +118,7 @@ auto ImguiFboUiDrawer::draw() -> void{
 
 auto ImguiFboUiDrawer::restore_viewport() -> void{
     // restore
-    gl::FBO::unbind();
+    gl::FrameBufferObject::unbind();
     glViewport(
         static_cast<GLsizei>(m_viewport[0]),
         static_cast<GLsizei>(m_viewport[1]),

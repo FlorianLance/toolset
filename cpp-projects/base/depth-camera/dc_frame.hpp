@@ -31,6 +31,7 @@
 #include "utility/image_buffer.hpp"
 #include "geometry/cloud.hpp"
 #include "camera/frame.hpp"
+#include "graphics/color/rgb.hpp"
 
 namespace tool::cam{
 

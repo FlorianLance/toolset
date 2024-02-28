@@ -38,22 +38,29 @@ struct DCGrabberDataProcessing{
     DCGrabberDataProcessing();
     ~DCGrabberDataProcessing();
 
-    auto start() -> void;
-    auto stop() -> void;
-    auto clean() -> void;
-
+    // set
     auto new_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void;
     auto new_frame(std::shared_ptr<DCFrame> frame) -> void;
-    auto get_frame() -> std::shared_ptr<DCFrame>;
-    auto get_compressed_frame() -> std::shared_ptr<DCCompressedFrame>;
     auto invalid_frame() -> void;
     auto invalid_compressed_frame() -> void;
-
     auto update_device_data_settings(const cam::DCDataSettings &dataS) -> void;
+
+    // get
+    auto get_frame() -> std::shared_ptr<DCFrame>;
+    auto get_compressed_frame() -> std::shared_ptr<DCCompressedFrame>;
+
+    // processing thread
+    auto start_processing_thread() -> void;
+    auto stop_processing_thread() -> void;
+    auto clean_processing_thread() -> void;
+
+    // processing
+    auto process() -> bool;
+    auto uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>;
 
 private:
 
-    auto process() -> void;
+    auto process_thread() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

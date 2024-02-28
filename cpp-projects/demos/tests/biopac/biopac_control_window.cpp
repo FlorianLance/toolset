@@ -7,6 +7,9 @@
 // opengl-utility
 #include "opengl/vao.hpp"
 
+// debug
+#include <iostream>
+
 using namespace tool::graphics;
 
 bool BiopacControlWindow::initialize_gl(){

@@ -4,28 +4,23 @@ in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 
-//uniform sampler2D RenderTex;
+layout(binding=0) uniform sampler2D Tex1;
 
-layout (binding=0) uniform sampler2D RenderTex;
+uniform struct LightInfo {
+    vec4 Position;  // Light position in cam. coords.
+    vec3 L;         // D,S intensity
+    vec3 La;        // Amb intensity
+} Light ;
 
-struct LightInfo {
-    vec4 Position;  // Light position in eye coords.
-    vec3 L;   // D,S intensity
-    vec3 La;  // Amb intensity
-};
-uniform LightInfo Light;
-
-struct MaterialInfo {
+uniform struct MaterialInfo {
     vec3 Ks;            // Specular reflectivity
     float Shininess;    // Specular shininess factor
-};
-uniform MaterialInfo Material;
+} Material ;
 
 layout( location = 0 ) out vec4 FragColor;
 
 vec3 blinnPhong( vec3 position, vec3 n ) {
-
-    vec3 texColor = texture(RenderTex, TexCoord).rgb;
+    vec3 texColor = texture(Tex1, TexCoord).rgb;
 
     vec3 ambient = Light.La * texColor;
     vec3 s = normalize( Light.Position.xyz - position );
@@ -33,7 +28,7 @@ vec3 blinnPhong( vec3 position, vec3 n ) {
     vec3 diffuse = texColor * sDotN;
 
     vec3 spec = vec3(0.0);
-    if( sDotN > 0.0 ) {
+        if( sDotN > 0.0 ) {
         vec3 v = normalize(-position.xyz);
         vec3 h = normalize( v + s );
         spec = Material.Ks * pow( max( dot(h,n), 0.0 ), Material.Shininess );
@@ -42,5 +37,5 @@ vec3 blinnPhong( vec3 position, vec3 n ) {
 }
 
 void main() {
-    FragColor = vec4(blinnPhong(Position,normalize(Normal)), 1.0 );
+    FragColor = vec4( blinnPhong( Position, normalize(Normal) ), 1.0 );
 }

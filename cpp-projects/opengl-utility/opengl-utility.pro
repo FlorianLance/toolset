@@ -42,52 +42,71 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
+    # glfw
+    glfw/glfw_gl_windows.hpp \
     # opengl
+    opengl/buffer/frame_buffer_object.hpp \
+    opengl/gl_draw.hpp \
+    opengl/gl_material.hpp \
+    opengl/sampler.hpp \
+    opengl/shader/shader_program.hpp \
+    opengl/vao.hpp \
+    opengl/shapes.hpp \
+    opengl/renderer.hpp \
     ## buffer
     opengl/buffer/atomic_buffer_object.hpp \
     opengl/buffer/element_buffer_object.hpp \
-    opengl/buffer/framebuffer_object.hpp \
     opengl/buffer/pixel_buffer_object.hpp \
-    opengl/buffer/shader_storage_buffer_object.hpp \
-    opengl/buffer/texture_buffer_object.hpp \
+    opengl/buffer/shader_storage_buffer_object.hpp \    
     opengl/buffer/uniform_buffer_object.hpp \
     opengl/buffer/render_buffer_object.hpp \
     opengl/buffer/buffer-utility.hpp \
     opengl/buffer/vertex_buffer_object.hpp \
-    ## shader    
-    opengl/draw/geometry_data.hpp \
+    ## shader        
     opengl/shader/shader.hpp \
+    opengl/shader/shaders_manager.hpp \
+    ## texture
+    opengl/texture/textures_manager.hpp \
+    opengl/texture/texture_buffer_object.hpp \
+    opengl/texture/cube_map_tbo.hpp \
+    opengl/texture/geometry_texture_2d_tbo.hpp \
+    opengl/texture/texture_2d_tbo.hpp \
     ## utility
     opengl/utility/gl_error.hpp \
     opengl/utility/gl_utility.hpp \
     opengl/utility/glew_utility.hpp \
-    ## drawer
+    ## draw
+    opengl/draw/geometry_data.hpp \
     opengl/draw/drawer.hpp \
-    #
-    opengl/gl_draw.hpp \
-    opengl/gl_material.hpp \
-    opengl/gl_texture.hpp \    
-    opengl/sampler.hpp \      
-    opengl/vao.hpp \
-    opengl/shapes.hpp \
-    opengl/renderer.hpp \        
-    # glfw
-    glfw/glfw_gl_windows.hpp \
+    opengl/draw/drawers_manager.hpp \
 
 SOURCES += \
-    # opengl
-    ## buffer
-    opengl/buffer/texture_buffer_object.cpp \
-    ## shader
-    opengl/buffer/uniform_buffer_object.cpp \
-    opengl/buffer/vertex_buffer_object.cpp \
-    opengl/draw/geometry_data.cpp \
-    opengl/shader/shader.cpp \
-    ## drawer
-    opengl/draw/drawer.cpp \
-    #
-    opengl/gl_texture.cpp \    
-    opengl/shapes.cpp \
     # glfw
     glfw/glfw_gl_windows.cpp \
+    # opengl
+    opengl/buffer/frame_buffer_object.cpp \
+    opengl/shader/shader_program.cpp \
+    opengl/shapes.cpp \
+    opengl/sampler.cpp \
+    ## buffer    
+    opengl/buffer/uniform_buffer_object.cpp \
+    opengl/buffer/vertex_buffer_object.cpp \
+    ## shader
+    opengl/shader/shader.cpp \
+    opengl/shader/shaders_manager.cpp \
+    ## texture
+    opengl/texture/texture_buffer_object.cpp \
+    opengl/texture/cube_map_tbo.cpp \
+    opengl/texture/geometry_texture_2d_tbo.cpp \
+    opengl/texture/texture_2d_tbo.cpp \
+    opengl/texture/textures_manager.cpp \
+    ## draw
+    opengl/draw/geometry_data.cpp \
+    opengl/draw/drawer.cpp \
+    opengl/draw/drawers_manager.cpp \
+    opengl/vao.cpp
+
+
+
+
 

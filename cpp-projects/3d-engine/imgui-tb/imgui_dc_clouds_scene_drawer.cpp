@@ -36,7 +36,7 @@
 // local
 #include "imgui-tb/imgui_helper.hpp"
 #include "imgui_ui_drawer.hpp"
-#include "engine/shaders_manager.hpp"
+#include "opengl/shader/shaders_manager.hpp"
 
 using namespace tool;
 using namespace tool::graphics;

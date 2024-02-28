@@ -34,7 +34,7 @@
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "imgui/extra/ImGuiFileDialog.h"
 
-#include "opengl/gl_texture.hpp"
+#include "opengl/texture/texture_2d_tbo.hpp"
 
 using namespace tool::graphics;
 using namespace tool::cam;
@@ -191,7 +191,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
 
                 ImGui::Text("Filtered color");
                 ImGui::Indent();
-                if(ImGui::ColorEdit3("###settings_filtered_color_coloredit3", filters.filterColor.rgb().array.data())){
+                if(ImGui::ColorEdit3("###settings_filtered_color_coloredit3", filters.filterColor.array.data())){
                     filters.filterColor.clamp(0.f,1.f);
                     update = true;
                 }

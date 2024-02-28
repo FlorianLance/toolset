@@ -28,8 +28,9 @@
 
 // local
 #include "io/binary_settings.hpp"
-#include "graphics/color.hpp"
+#include "graphics/color/rgb.hpp"
 #include "depth-camera/dc_enums.hpp"
+#include "geometry/point3.hpp"
 // #include "utility/bit_mask.hpp"
 
 namespace tool::cam {

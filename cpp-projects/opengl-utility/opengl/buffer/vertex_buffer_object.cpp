@@ -26,95 +26,57 @@
 
 #include "vertex_buffer_object.hpp"
 
+// base
+#include "utility/logger.hpp"
 
 using namespace tool::gl;
 
-
-VBO::~VBO(){
+VertexBufferObject::~VertexBufferObject(){
     clean();
 }
 
-void VBO::generate(){
+auto VertexBufferObject::generate() -> void{
 
-    if(m_id != 0){
-        std::cerr << "VBO already generated: " << m_id << "\n";
+    if(m_handle != 0){
+        Logger::error(std::format("VBO already generated: {}.\n", m_handle));
         return;
     }
-    glCreateBuffers(1, &m_id);
+    glCreateBuffers(1, &m_handle);
 }
 
-//void VBO::load_dynamic_data(FloatData data, SizeData size){
+auto VertexBufferObject::clean() -> void{
 
-//    // GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW, GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ, or GL_DYNAMIC_COPY.
-//    GLenum usage = GL_DYNAMIC_DRAW;
-//    glNamedBufferData(
-//        m_id,   // GLuint buffer
-//        size.v, // GLsizeiptr size
-//        data.v, // const void *data
-//        usage   // GLenum usage
-//    );
-//}
+    if(m_handle == 0){
+        return;
+    }
 
-void VBO::load_data(IntData data, SizeData size){
-    GLenum usage =  GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+    glDeleteBuffers(1, &m_handle);
+    m_handle = 0;
+}
+
+
+auto VertexBufferObject::load_data(const GLint *data, GLsizeiptr size, GLenum usage) -> void{
     glNamedBufferStorage(
-        m_id,   // GLuint buffer
-        size.v, // GLsizeiptr size
-        data.v, // const void *data
-        usage   // GLenum usage
+        m_handle,   // GLuint buffer
+        size,       // GLsizeiptr size
+        data,       // const void *data
+        usage       // GLenum usage
     );
 }
 
-void VBO::load_data(FloatData data, SizeData size){
-
-    // bit combination of: GL_DYNAMIC_STORAGE_BIT, GL_MAP_READ_BIT GL_MAP_WRITE_BIT, GL_MAP_PERSISTENT_BIT, GL_MAP_COHERENT_BIT, and GL_CLIENT_STORAGE_BIT.
-
-    // GL_DYNAMIC_STORAGE_BIT
-    // The contents of the data store may be updated after creation through calls to glBufferSubData.
-    // If this bit is not set, the buffer content may not be directly updated by the client.
-    // The data argument may be used to specify the initial content of the buffer's data store regardless of the presence of the GL_DYNAMIC_STORAGE_BIT.
-    // Regardless of the presence of this bit, buffers may always be updated with server-side calls such as glCopyBufferSubData and glClearBufferSubData.
-
-    // GL_MAP_READ_BIT
-    // The data store may be mapped by the client for read access and a pointer in the client's address space obtained that may be read from.
-
-    // GL_MAP_WRITE_BIT
-    // The data store may be mapped by the client for write access and a pointer in the client's address space obtained that may be written through.
-
-    // GL_MAP_PERSISTENT_BIT
-    // The client may request that the server read from or write to the buffer while it is mapped.
-    // The client's pointer to the data store remains valid so long as the data store is mapped, even during execution of drawing or dispatch commands.
-
-    // GL_MAP_COHERENT_BIT
-    // Shared access to buffers that are simultaneously mapped for client access and are used by the server will be coherent,
-    // so long as that mapping is performed using glMapBufferRange.
-    // That is, data written to the store by either the client or server will be immediately visible
-    // to the other with no further action taken by the application. In particular,
-    //  * If GL_MAP_COHERENT_BIT is not set and the client performs a write followed by a call to the glMemoryBarrier command with the GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT set,
-    //    then in subsequent commands the server will see the writes.
-    //  * If GL_MAP_COHERENT_BIT is set and the client performs a write, then in subsequent commands the server will see the writes.
-    //  * If GL_MAP_COHERENT_BIT is not set and the server performs a write, the application must call glMemoryBarrier with the GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT set
-    //    and then call glFenceSync with GL_SYNC_GPU_COMMANDS_COMPLETE (or glFinish). Then the CPU will see the writes after the sync is complete.
-    //  * If GL_MAP_COHERENT_BIT is set and the server does a write, the app must call glFenceSync with GL_SYNC_GPU_COMMANDS_COMPLETE (or glFinish).
-    //    Then the CPU will see the writes after the sync is complete.
-
-    // GL_CLIENT_STORAGE_BIT
-    // When all other criteria for the buffer storage allocation are met, this bit may be used by an implementation
-    // to determine whether to use storage that is local to the server or to the client to serve as the backing store for the buffer.
-
-    GLenum usage = 0;// GL_DYNAMIC_STORAGE_BIT;
+auto VertexBufferObject::load_data(const GLfloat *data, GLsizeiptr size, GLenum usage) -> void{
     glNamedBufferStorage(
-        m_id,   // GLuint buffer
-        size.v, // GLsizeiptr size
-        data.v, // const void *data
-        usage   // GLenum usage
+        m_handle,   // GLuint buffer
+        size,       // GLsizeiptr size
+        data,       // const void *data
+        usage       // GLenum usage
     );
 }
 
 
-bool VBO::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset){
+auto VertexBufferObject::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset) -> bool{
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_id);
+    glBindBuffer(GL_ARRAY_BUFFER, m_handle);
     glEnableVertexAttribArray(index.v);
 
     if(type.v == GL_INT){
@@ -128,30 +90,43 @@ bool VBO::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride
     return true;
 }
 
-//    void dsa_attrib(GLuint vao, AttriIndex index, AttriSize size, AttriType type, Stride stride, RelativeOffset offset){
-//        static_cast<void>(stride);
+auto VertexBufferObject::dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum type, GLuint relativeoffset, GLuint bindingIndex, GLintptr offset, GLboolean normalized) -> void{
 
-////        void glVertexArrayVertexBuffer(
-////            GLuint vaobj,
-////            GLuint bindingindex,
-////            GLuint buffer,
-////            GLintptr offset,
-////            GLsizei stride);
+    glVertexArrayVertexBuffer(
+        vao,            // GLuint vaobj: Specifies the name of the vertex array object to be used by glVertexArrayVertexBuffer function.
+        bindingIndex,   // GLuint bindingindex: The index of the vertex buffer binding point to which to bind the buffer.
+        m_handle,       // GLuint buffer: The name of a buffer to bind to the vertex buffer binding point.
+        offset,         // GLintptr offset: The offset of the first element of the buffer.
+        stride          // GLsizei stride: The distance between elements within the buffer.
+    );
 
-//        glVertexArrayVertexBuffer(vao, 0, m_id, 0, size.v*sizeof(float));
+    glEnableVertexArrayAttrib(
+        vao,
+        index // GLuint index: Specifies the index of the generic vertex attribute to be enabled or disabled.
+    );
 
-//        glEnableVertexArrayAttrib(vao, index.v);
-//        glVertexArrayAttribFormat(vao, index.v, size.v, type.v, GL_FALSE, offset.v);
-//        glVertexArrayAttribBinding(vao, index.v, 0);
-//    }
+    glVertexArrayAttribFormat(
+        vao,            // GLuint vaobj: Specifies the name of the vertex array object for glVertexArrayAttrib{I, L}Format functions.
+        index,          // GLuint attribindex: The generic vertex attribute array being described.
+        size,           // GLint size: The number of values per vertex that are stored in the array.
+        type,           // GLenum type: The type of the data stored in the array.
+        normalized,     // GLboolean normalized: Specifies whether fixed-point data values should be normalized (GL_TRUE) or converted directly as fixed-point values (GL_FALSE) when they are accessed. This parameter is ignored if type is GL_FIXED.
+        relativeoffset  // GLuint relativeoffset: The distance between elements within the buffer.
+    );
 
+    glVertexArrayAttribBinding(
+        vao,
+        index,          // GLuint attribindex: The index of the attribute to associate with a vertex buffer binding.
+        bindingIndex    // GLuint bindingindex: The index of the vertex buffer binding with which to associate the generic vertex attribute.
+    );
 
-void VBO::clean(){
-
-    if(m_id == 0){
-        return;
-    }
-
-    glDeleteBuffers(1, &m_id);
-    m_id = 0;
+    // example
+    // glVertexArrayVertexBuffer(m_VAO, 0, m_Buffers[VERTEX_BUFFER], 0, sizeof(Vertex));
+    // size_t NumFloats = 0;
+    // glEnableVertexArrayAttrib(m_VAO, POSITION_LOCATION);
+    // glVertexArrayAttribFormat(m_VAO, POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, (GLuint)(NumFloats * sizeof(float)));
+    // glVertexArrayAttribBinding(m_VAO, POSITION_LOCATION, 0);
+    // NumFloats += 3;
 }
+
+

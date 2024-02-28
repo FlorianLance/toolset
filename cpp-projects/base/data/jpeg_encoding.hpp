@@ -27,7 +27,7 @@
 #pragma once
 
 // local
-#include "graphics/color.hpp"
+#include "graphics/color/rgb.hpp"
 #include "utility/image_buffer.hpp"
 
 namespace tool::data{

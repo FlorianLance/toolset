@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "graphics/material.hpp"
+#include "graphics/material/material.hpp"
 #include "graphics/light.hpp"
 
 // local

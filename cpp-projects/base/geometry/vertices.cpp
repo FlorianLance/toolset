@@ -27,8 +27,8 @@
 
 #include "vertices.hpp"
 
-//// std
-//#include <algorithm>
+// local
+#include "point4.hpp"
 
 using namespace tool::geo;
 
@@ -266,7 +266,7 @@ auto Vertices3D::sphere() const -> Sphere<float>{
 auto Vertices3D::apply_transformation(const Mat4f &transformation) noexcept -> void{
 
     std::transform(values.begin(), values.end(), values.begin(),
-        [&](geo::Pt3f vertex) {
+        [&](const geo::Pt3f &vertex) {
             return (to_pt4(vertex,1.f)*transformation).xyz();
         }
     );

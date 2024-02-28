@@ -58,7 +58,7 @@ auto DCMModel::initialize() -> bool{
     reset_network();
 
     size_t nbConnections = sNetwork->devices_nb();
-    sData.initialize(nbConnections);
+    sData.initialize(nbConnections, true);
     recorder.initialize(nbConnections);
     calibration.initialize(nbConnections);
     return true;

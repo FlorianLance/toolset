@@ -30,7 +30,7 @@
 #include "geometry/point2.hpp"
 
 // opengl-utility
-#include "opengl/buffer/texture_buffer_object.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
 
 namespace tool::graphics {
 

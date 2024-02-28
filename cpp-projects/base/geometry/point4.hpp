@@ -44,13 +44,6 @@ using Vec4  = Pt4<acc>;
 using Vec4f = Pt4<float>;
 using Vec4d = Pt4<double>;
 
-using Col4 = Pt4<std::uint8_t>;
-using Col4f= Pt4f;
-
-using RGBA  = Col4;
-using RGBAf = Col4f;
-
-
 template<typename acc>
 struct Point4 : Point<acc,4>{
 

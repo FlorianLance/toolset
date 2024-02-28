@@ -26,7 +26,7 @@
 #pragma once
 
 
-#include "opengl/shader/shader.hpp"
+#include "opengl/shader/shader_program.hpp"
 
 namespace tool::gl {
 

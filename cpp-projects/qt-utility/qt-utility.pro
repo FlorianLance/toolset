@@ -71,6 +71,7 @@ PRE_TARGETDEPS += $$QT_UTILITY_PRE_TARGETDEPS
 
 HEADERS += \
     # global    
+    gui/widgets/base_qt_sfml_gl_widget.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
     qt_logger.hpp \
@@ -125,6 +126,7 @@ HEADERS += \
 
 SOURCES += \
     # global    
+    gui/widgets/base_qt_sfml_gl_widget.cpp \
     qt_highlighting.cpp \
     qt_logger.cpp \
     qt_str.cpp \

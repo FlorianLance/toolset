@@ -30,7 +30,6 @@
 
 // local
 #include "geometry/point3.hpp"
-#include "graphics/color.hpp"
 
 namespace tool::geo{
 
