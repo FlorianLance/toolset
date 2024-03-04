@@ -26,8 +26,11 @@
 
 #include "uniform_buffer_object.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 // local
-#include "opengl/utility/gl_utility.hpp"
+#include "opengl/gl_functions.hpp"
 
 using namespace tool::gl;
 
@@ -37,52 +40,21 @@ UBO::~UBO(){
 
 auto UBO::generate() -> void{
 
-    if(m_id != 0){
-        std::cerr << "[GL] UBO already generated: " << m_id << "\n";
+    if(m_handle != 0){
+        Logger::error(std::format("[UBO::generate] UBO already generated [{}]\n", m_handle));
         return;
     }
-    glCreateBuffers(1, &m_id);
+    GL::create_buffers(1, &m_handle);
 }
 
-auto UBO::set_data_storage(GLsizeiptr sizeData, void *data, GLenum usage) -> void{
+auto UBO::bind(GLuint index) -> void{
 
-    glNamedBufferStorage(
-        m_id,              // GLuint buffer,
-        m_size = sizeData, // GLsizeiptr size,
-        data,              // const void *data,
-        usage              // GLbitfield flags
-    );
-}
-
-auto UBO::update_data(void *data, GLsizeiptr sizeData, GLintptr offset) -> void{
-
-    if(m_size == 0){
-        std::cerr << "[GL] UBO no storage initialized.\n";
-        return;
-    }
-
-    if(sizeData > m_size){
-        std::cerr << "[GL] UBO size is bigger than storage.\n";
-        return;
-    }
-
-    glNamedBufferSubData(
-        m_id,       // GLuint buffer: Specifies the name of the buffer object for glNamedBufferSubData.
-        offset,     // GLintptr offset: Specifies the offset into the buffer object's data store where data replacement will begin, measured in bytes.
-        sizeData,   // GLsizeiptr size: Specifies the size in bytes of the data store region being replaced.
-        data        // const void *data: pecifies a pointer to the new data that will be copied into the data store.
-    );
-}
-
-auto UBO::bind(GLuint ubIndex) -> void{
-
-    // bind a range within a buffer object to an indexed buffer target
-    glBindBufferRange(
-        GL_UNIFORM_BUFFER,  // GLenum target
-        ubIndex,            // GLuint index
-        m_id,               // GLuint buffer
-        0,                  // GLintptr offset
-        m_size              // GLsizeiptr size
+    GL::bind_buffer_range(
+        GL_UNIFORM_BUFFER,
+        index,
+        m_handle,
+        0,
+        m_size
     );
 }
 
@@ -104,24 +76,56 @@ auto UBO::bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void{
         sizes.emplace_back(ubo.size());
     }
 
-    glBindBuffersRange(
-        GL_UNIFORM_BUFFER,                  // GLenum target,
-        first,                              // GLuint first,
-        static_cast<GLsizei>(UBOs.size()),  // GLsizei count,
-        buffers.data(),                     // const GLuint *buffers,
-        offsets.data(),                     // const GLintptr *offsets,
-        sizes.data()                        // const GLintptr *sizes);
+    GL::bind_buffers_range(
+        GL_UNIFORM_BUFFER,
+        first,
+        static_cast<GLsizei>(UBOs.size()),
+        buffers.data(),
+        offsets.data(),
+        sizes.data()
+    );
+}
+
+
+
+auto UBO::set_data_storage(GLsizeiptr sizeData, void *data, GLenum usage) -> void{
+
+    GL::named_buffer_storage(
+        m_handle,
+        m_size = sizeData,
+        data,
+        usage
+    );
+}
+
+auto UBO::update_data(void *data, GLsizeiptr sizeData, GLintptr offset) -> void{
+
+    if(m_size == 0){
+        Logger::error("[UBO::update_data] No storage initialized.\n");
+        return;
+    }
+
+    if(sizeData > m_size){
+        Logger::error("[UBO::update_data] Size is bigger than storage.\n");
+        return;
+    }
+
+    GL::named_buffer_sub_data(
+        m_handle,
+        offset,
+        sizeData,
+        data
     );
 }
 
 auto UBO::clean() -> void{
 
-    if(m_id == 0){
+    if(m_handle == 0){
         return;
     }
 
-    glDeleteBuffers(1, &m_id);
-    m_id = 0;
+    GL::delete_buffers(1, &m_handle);
+    m_handle = 0;
 }
 
 auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> void{
@@ -129,13 +133,13 @@ auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> voi
     // shared, packed, std140, and std430
     // https://www.khronos.org/opengl/wiki/Interface_Block_(GLSL)
     if(shader == nullptr){
-        std::cerr << "[GL] MaterialUBO shader is null.\n";
+        Logger::error("[UBO::set_data_space_from_shader] Shader program is null.\n");
         return;
     }
 
     const auto nameStr = get_block_name();
     if(shader->uniformBlocks.count(nameStr) == 0){
-        std::cerr << "[GL] MaterialUBO block uniform not found in shader.\n";
+        Logger::error("[UBO::set_data_space_from_shader] UBO block uniform not found in shader.\n");
         return;
     }
 

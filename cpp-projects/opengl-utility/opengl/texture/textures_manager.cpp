@@ -26,6 +26,9 @@
 
 #include "textures_manager.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 using namespace tool;
 using namespace tool::graphics;
 
@@ -40,13 +43,13 @@ auto TexturesManager::get_instance() -> TexturesManager*{
     return Global::instance.get();
 }
 
-bool TexturesManager::load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos){
+auto TexturesManager::load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos) -> bool{
 
     for(const auto &info : infos){
 
         // check alias
         if(textures.count(info.alias) != 0){
-            std::cerr << "[TexturesM] Texture alias already used: " << info.alias << "\n";
+            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Texture alias already used: {}\n", info.alias));
             continue;
         }
 
@@ -56,14 +59,14 @@ bool TexturesManager::load_textures_from_directory(const Path &directoryPath, st
 
             // find previously loaded texture
             textures[info.alias] = textures[aliasPerPath[textureFilePath]];
-            std::cout << "[TexturesM] Texture file " << textureFilePath << " has already been loaded with alias" << info.alias << "\n";
+            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Texture file {} has already been loaded with alias {}\n", textureFilePath, info.alias));
             continue;
         }
 
         // load texture
         auto texture = std::make_shared<graphics::Texture2D>();
         if(!texture->load_2d_image_file_data(textureFilePath, info.flip, info.targetNbChannels)){
-            std::cerr << "[TexturesM] Cannot load texture file: " << textureFilePath << "\n";
+            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Cannot load texture file: {}\n", textureFilePath));
             return false;
         }
 
@@ -76,11 +79,11 @@ bool TexturesManager::load_textures_from_directory(const Path &directoryPath, st
     return true;
 }
 
-bool TexturesManager::load_cube_map(const Path &basePath, const std::array<std::string, 6> &extensions, const Alias &alias, bool flip){
+auto TexturesManager::load_cube_map(const Path &basePath, const std::array<std::string, 6> &extensions, const Alias &alias, bool flip) -> bool{
 
     // check alias
     if(cubeMaps.count(alias) != 0){
-        std::cerr << "[TexturesM] CubeMap alias already used: " << alias << "\n";
+        Logger::error(std::format("[TexturesManager::load_cube_map] CubeMap alias already used: {}\n", alias));
         return false;
     }
 
@@ -89,7 +92,7 @@ bool TexturesManager::load_cube_map(const Path &basePath, const std::array<std::
     for(size_t ii = 0; ii < extensions.size(); ++ii){
         texturesPath[ii] = {basePath + extensions[ii]};
         if(aliasPerPath.count(texturesPath[ii]) != 0){
-            std::cerr << "[TexturesM] Cubemap texture file already loaded: " << texturesPath[ii] << "\n";
+            Logger::error(std::format("[TexturesManager::load_cube_map] Cubemap texture file already loaded: {}\n", texturesPath[ii]));
             continue;
         }
     }
@@ -97,7 +100,7 @@ bool TexturesManager::load_cube_map(const Path &basePath, const std::array<std::
     // load cube map
     auto cubeMap = std::make_shared<graphics::CubeMap>();
     if(!cubeMap->load_2d_images_files(texturesPath, flip)){
-        std::cerr << "[TexturesM] Cannot load cubemap files. \n";
+        Logger::error("[TexturesManager::load_cube_map] Cannot load cubemap files. \n");
         return false;
     }
 
@@ -111,14 +114,14 @@ bool TexturesManager::load_cube_map(const Path &basePath, const std::array<std::
     return true;
 }
 
-std::weak_ptr<Texture2D> TexturesManager::get_texture(const Alias &textureAlias){
+auto TexturesManager::get_texture(const Alias &textureAlias) -> std::weak_ptr<Texture2D>{
     if(textures.count({textureAlias}) != 0){
         return textures[{textureAlias}];
     }
     return {};
 }
 
-Texture2D *TexturesManager::get_texture_ptr(const Alias &textureAlias){
+auto TexturesManager::get_texture_ptr(const Alias &textureAlias) -> Texture2D*{
     if(textures.count({textureAlias}) != 0){
         return textures[{textureAlias}].get();
     }
@@ -129,15 +132,15 @@ TextureInfo TexturesManager::get_texture_info(const Alias &textureAlias, Texture
     return TextureInfo{get_texture_ptr(textureAlias),options};
 }
 
-bool TexturesManager::generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options){
+auto TexturesManager::generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options) -> bool{
 
     if(textures.count(textureAlias) == 0){
-        std::cerr << "[TextureM] Texture alias " << textureAlias << " doesn't exist.\n";
+        Logger::error(std::format("[TexturesManager::generate_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
         return false;
     }
 
     if(texturesTBOs.count(tboAlias) != 0){
-        std::cerr << "[TexturesM] TBO alias already used: " << tboAlias << "\n";
+        Logger::error(std::format("[TexturesManager::generate_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 
@@ -149,15 +152,15 @@ bool TexturesManager::generate_texture2d_tbo(const Alias &tboAlias, const Alias 
     return true;
 }
 
-bool TexturesManager::generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias){
+auto TexturesManager::generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias) -> bool{
 
     if(textures.count(textureAlias) == 0){
-        std::cerr << "[TextureM] Texture alias " << textureAlias << " doesn't exist.\n";
+        Logger::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
         return false;
     }
 
     if(texturesTBOs.count(tboAlias) != 0){
-        std::cerr << "[TexturesM] TBO alias already used: " << tboAlias << "\n";
+        Logger::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 
@@ -169,15 +172,15 @@ bool TexturesManager::generate_projected_texture2d_tbo(const Alias &tboAlias, co
     return true;
 }
 
-bool TexturesManager::generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias){
+auto TexturesManager::generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias) -> bool{
 
     if(cubeMaps.count(cubemapAlias) == 0){
-        std::cerr << "[TextureM] Cubemap alias " << cubemapAlias << " doesn't exist.\n";
+        Logger::error(std::format("[TexturesManager::generate_cubemap_tbo] Texture alias {} doesn't exist\n", cubemapAlias));
         return false;
     }
 
     if(cubeMapsTBOs.count(tboAlias) != 0){
-        std::cerr << "[TexturesM] TBO alias already used: " << tboAlias << "\n";
+        Logger::error(std::format("[TexturesManager::generate_cubemap_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 
@@ -189,28 +192,28 @@ bool TexturesManager::generate_cubemap_tbo(const Alias &tboAlias, const Alias &c
     return true;
 }
 
-gl::TextureName TexturesManager::texture_id(const TexturesManager::Alias &tboAlias){
+auto TexturesManager::texture_id(const TexturesManager::Alias &tboAlias) -> GLuint{
     if(auto tbo = texture_tbo(tboAlias); tbo != nullptr){
         return tbo->id();
     }
     return 0;
 }
 
-gl::TBO *TexturesManager::cube_map_tbo(const TexturesManager::Alias &tboAlias){
+auto TexturesManager::cube_map_tbo(const TexturesManager::Alias &tboAlias) -> gl::TBO*{
     if(cubeMapsTBOs.count(tboAlias) != 0){
         return &cubeMapsTBOs[tboAlias];
     }
     return nullptr;
 }
 
-gl::TextureName TexturesManager::cube_map_id(const TexturesManager::Alias &tboAlias){
+auto TexturesManager::cube_map_id(const TexturesManager::Alias &tboAlias) -> GLuint{
     if(auto tbo = cube_map_tbo(tboAlias); tbo != nullptr){
         return tbo->id();
     }
     return 0;
 }
 
-gl::TBO *TexturesManager::texture_tbo(const Alias &tboAlias){
+auto TexturesManager::texture_tbo(const Alias &tboAlias) -> gl::TBO*{
     if(texturesTBOs.count(tboAlias) != 0){
         return &texturesTBOs[tboAlias];
     }

@@ -23,58 +23,63 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
-#pragma once
+
+#include "shader_storage_buffer_object.hpp"
+
+// base
+#include "utility/logger.hpp"
 
 // local
-#include "texture_2d_tbo.hpp"
-#include "cube_map_tbo.hpp"
+#include "opengl/gl_functions.hpp"
 
-namespace tool::graphics {
+using namespace tool::gl;
 
-struct TextureLoadingInfo{
-    std::string alias;
-    std::string fileName;
-    bool flip = true;
-    int targetNbChannels = 4;
-};
+SSBO::~SSBO(){
+    clean();
+}
 
-class TexturesManager{
+auto SSBO::generate() -> void{
 
-public:
+    if(m_handle != 0){
+        Logger::error(std::format("[SSBO::generate] SSBO already generated [{}]\n", m_handle));
+        return;
+    }
+    GL::create_buffers(1, &m_handle);
+}
 
-    using Alias = std::string;
-    using Path  = std::string;
+auto SSBO::clean() -> void {
 
-    static auto get_instance() -> TexturesManager*;
+    if(m_handle == 0){
+        return;
+    }
+    GL::delete_buffers(1, &m_handle);
+    m_handle = 0;
+}
 
-    auto load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos) -> bool;
-    auto load_cube_map(const Path &basePath, const std::array<std::string,6> &extensions, const Alias &alias, bool flip = true) -> bool;
+auto SSBO::bind_to_index(GLuint index) const -> bool{
 
-    auto get_texture(const Alias &textureAlias) -> std::weak_ptr<Texture2D>;
-    auto get_texture_ptr(const Alias &textureAlias) -> Texture2D*;
-    auto get_texture_info(const Alias &textureAlias, TextureOptions options = {}) -> TextureInfo;
+    if(m_handle == 0){
+        Logger::error("[SSBO::bind_to_index] SSBO not generated, cannot bind it.\n");
+        return false;
+    }
 
-    auto generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options = {}) -> bool;
-    auto generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias) -> bool;
-    auto generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias) -> bool;
+    GL::bind_buffer_range(
+        GL_SHADER_STORAGE_BUFFER,
+        index,
+        m_handle,
+        0,
+        1
+    );
 
-    auto texture_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto texture_id(const Alias &tboAlias) -> GLuint;
+    return true;
+}
 
-    auto cube_map_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto cube_map_id(const Alias &tboAlias) -> GLuint;
+auto SSBO::set_data_storage(GLsizei size, GLenum usage) -> void{
 
-private:
-
-    std::vector<Alias> texturesAliases;
-    std::vector<Alias> cubeMapsAliases;
-    std::vector<Alias> tboAliases;
-
-    std::unordered_map<Path,  Alias> aliasPerPath;
-
-    std::unordered_map<Alias, std::shared_ptr<Texture2D>> textures;
-    std::unordered_map<Alias, std::shared_ptr<CubeMap>> cubeMaps;
-    std::unordered_map<Alias, gl::TBO> texturesTBOs;
-    std::unordered_map<Alias, gl::TBO> cubeMapsTBOs;
-};
+    glNamedBufferStorage(
+        m_handle,       // GLuint buffer,
+        size,       // GLsizeiptr size,
+        nullptr,    // const void *data,
+        usage       // GLbitfield flags
+    );
 }

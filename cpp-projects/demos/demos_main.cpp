@@ -81,7 +81,7 @@ int main(int, char *argv[]){
     context.antialiasingLevel = 4;
     context.majorVersion      = 4;
     context.minorVersion      = 6;
-    context.attributeFlags    = sf::ContextSettings::Attribute::Default;
+    context.attributeFlags    = sf::ContextSettings::Attribute::Debug;
 
     DemoType demo = DemoType::Samples;
 

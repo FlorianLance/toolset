@@ -26,11 +26,12 @@
 
 #pragma once
 
-// local
-#include "opengl/utility/gl_utility.hpp"
+// glew
+#include <GL/glew.h>
 
 namespace tool::gl{
 
+// https://www.khronos.org/opengl/wiki/Pixel_Buffer_Object
 struct PBO{
 
     PBO() = default;
@@ -38,70 +39,22 @@ struct PBO{
     PBO& operator=(const PBO&) = delete;
     PBO(PBO&& other) = default;
     PBO& operator=(PBO&& other) = default;
+    ~PBO();
 
-    ~PBO(){
-        clean();
-    }
+    [[nodiscard]] constexpr auto id() const noexcept -> GLuint {return m_handle;};
 
-    constexpr GLuint id()const{return m_id;};
+    auto generate() -> void;
+    auto clean() -> void;
 
-    void generate(){
+    auto bind_pack(GLuint index) const -> bool;
+    auto bind_unpack(GLuint index) const -> bool;
 
-        if(m_id != 0){
-            std::cerr << "[GL] PBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateBuffers(1, &m_id);
-    }
-
-    bool bind_pack(GLuint index) const{
-
-        if(m_id == 0){
-            std::cerr << "[GL] PBO not generated, cannot bind it.\n";
-            return false;
-        }
-
-        glBindBufferBase(GL_PIXEL_PACK_BUFFER, index, m_id);
-
-        return true;
-    }
-
-    bool bind_unpack(GLuint index) const{
-
-        if(m_id == 0){
-            std::cerr << "[GL] PBO not generated, cannot bind it.\n";
-            return false;
-        }
-
-        glBindBufferBase(GL_PIXEL_UNPACK_BUFFER, index, m_id);
-
-        return true;
-    }
-
-    void set_data_storage(GLsizei size, UintData data){
-
-        GLenum usage = 0;
-        glNamedBufferStorage(
-            m_id,       // GLuint buffer,
-            size,       // GLsizeiptr size,
-            data.v,     // const void *data,
-            usage       // GLbitfield flags
-        );
-    }
-
-    void clean(){
-
-        if(m_id == 0){
-            return;
-        }
-        glDeleteBuffers(1, &m_id);
-        m_id = 0;
-    }
-
+    auto set_data_storage(GLsizei size, GLuint *data, GLbitfield usage = defaultUsage) -> void;
 
 private:
-    GLuint m_id = 0;
 
+    static inline GLbitfield  defaultUsage = 0;//GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+    GLuint m_handle = 0;
 };
 }
 

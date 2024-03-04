@@ -7,6 +7,9 @@
 // base
 #include "utility/paths.hpp"
 
+// opengl-utility
+#include "opengl/gl_functions.hpp"
+
 // local
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "shaders_tests.hpp"
@@ -246,14 +249,14 @@ bool DrawSampleWindow::init_drawers(){
     dm->add_drawer<gl::PlaneDrawer>("notext-plane-10x10",   Scale{1.f},    10.f,10.f);
     dm->add_drawer<gl::PlaneDrawer>("notext-plane-20x10",   Scale{1.f},    20.f,10.f);
     dm->add_drawer<gl::PlaneDrawer>("notext-plane-40x40",   Scale{1.f},    40.f,40.f);
-    dm->add_drawer<gl::PlaneDrawer>("floor",                Scale{1.f},    8,8, TextureNames{tm->texture_id("cement")});
-    dm->add_drawer<gl::PlaneDrawer>("grid-floor",           Scale{0.5f},   8,8, TextureNames{tm->texture_id("me_textile")});
-    dm->add_drawer<gl::PlaneDrawer>("multi-tex-plane",      Scale{0.5f},   8,8, TextureNames{tm->texture_id("mybrick-color"), tm->texture_id("mybrick-normal"), tm->texture_id("mybrick-height")});
+    dm->add_drawer<gl::PlaneDrawer>("floor",                Scale{1.f},    8,8, std::vector<GLuint>{tm->texture_id("cement")});
+    dm->add_drawer<gl::PlaneDrawer>("grid-floor",           Scale{0.5f},   8,8, std::vector<GLuint>{tm->texture_id("me_textile")});
+    dm->add_drawer<gl::PlaneDrawer>("multi-tex-plane",      Scale{0.5f},   8,8, std::vector<GLuint>{tm->texture_id("mybrick-color"), tm->texture_id("mybrick-normal"), tm->texture_id("mybrick-height")});
     dm->add_drawer<gl::TorusDrawer>("torus",                Scale{0.4f});
     dm->add_drawer<gl::CubeDrawer>("cube",                  Scale{0.3f},   2.f);
-    dm->add_drawer<gl::CubeDrawer>("brick-cube",            Scale{0.3f},   2.f, TextureNames{tm->texture_id("brick")});
-    dm->add_drawer<gl::CubeDrawer>("brick-moss-cube",       Scale{0.3f},   2.f, TextureNames{tm->texture_id("brick"), tm->texture_id("moss")});
-    dm->add_drawer<gl::CubeDrawer>("cement-moss-cube",      Scale{0.3f},   2.f, TextureNames{tm->texture_id("cement"), tm->texture_id("moss")});
+    dm->add_drawer<gl::CubeDrawer>("brick-cube",            Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("brick")});
+    dm->add_drawer<gl::CubeDrawer>("brick-moss-cube",       Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("brick"), tm->texture_id("moss")});
+    dm->add_drawer<gl::CubeDrawer>("cement-moss-cube",      Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("cement"), tm->texture_id("moss")});
     dm->add_drawer<gl::FullscreenQuadDrawer>("screen-quad", Scale{1.f});
     dm->add_drawer<gl::TeapotDrawer>("teapot",              Scale{0.3f});
     dm->add_drawer<gl::SphereDrawer>("sphere",              Scale{0.7f});
@@ -352,8 +355,8 @@ bool DrawSampleWindow::init_samples(){
 bool DrawSampleWindow::initialize_gl(){
 
     // flags
-    glEnable(GL_MULTISAMPLE); // msaa
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    GL::enable(GL_MULTISAMPLE); // msaa
+    GL::enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // implot
     imPlotContext = ImPlot::CreateContext();
@@ -400,16 +403,16 @@ bool DrawSampleWindow::initialize_gl(){
 
 void DrawSampleWindow::draw_gl(){
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
+    GL::enable(GL_DEPTH_TEST);
+    GL::enable(GL_STENCIL_TEST);
 
     // clear
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    gl::FrameBufferObject::unbind();
+    
+    gl::FBO::unbind();
 
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
         if(auto drawer = uiDrawers.get_current_element_ptr(); drawer != nullptr){

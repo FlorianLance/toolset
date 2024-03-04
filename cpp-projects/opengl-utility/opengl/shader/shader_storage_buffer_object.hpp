@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -27,41 +26,35 @@
 
 #pragma once
 
+// glew
+#include <GL/glew.h>
 
-// local
-#include "gl_error.hpp"
+namespace tool::gl{
 
-namespace tool::gl {
+// https://ktstephano.github.io/rendering/opengl/ssbos
 
-[[maybe_unused]] static bool init_glew( ){
+struct SSBO{
 
-    if(GLenum initGlew = glewInit() != GLEW_OK){
-        std::cerr << "[GL]GLEW init error: " << glewGetErrorString(initGlew) << "\n";
-        return false;
-    }
+    SSBO() = default;
+    SSBO(const SSBO&) = delete;
+    SSBO& operator=(const SSBO&) = delete;
+    SSBO(SSBO&& other) = default;
+    SSBO& operator=(SSBO&& other) = default;
+    ~SSBO();
 
-    GLint flags;
-    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT){
+    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;};
 
-        std::cout << "[GL] Debug context available.\n";
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(gl_debug_output, nullptr);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    }
+    auto generate() -> void;
+    auto clean() -> void;
 
-    return true;
+    auto bind_to_index(GLuint index) const -> bool;
+
+    auto set_data_storage(GLsizei size, GLenum usage = 0) -> void;
+
+private:
+
+    GLuint m_handle = 0;
+};
 }
 
-[[maybe_unused]] static void display_glew_info(){
 
-    std::cout   << "----------------------OpenGL Info----------------------------\n"
-              << "Glew Version: " << glewGetString(GLEW_VERSION) << "\n"
-              << "     Version: " << glGetString(GL_VERSION) << "\n"
-              << "      Vendor: " << glGetString(GL_VENDOR) << "\n"
-              << "    Renderer: " << glGetString(GL_RENDERER) << "\n"
-              << "     Shading: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n"
-              << "----------------------------------------------------------------\n";
-}
-}

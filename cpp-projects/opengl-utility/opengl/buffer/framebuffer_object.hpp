@@ -35,12 +35,13 @@ namespace tool::gl{
 using namespace std::literals::string_view_literals;
 
 enum class FrameBuffer : unsigned int{
-    None        = GL_NONE,
-    Front_left  = GL_FRONT_LEFT,
-    Front_right = GL_FRONT_RIGHT,
-    Back_left   = GL_BACK_LEFT,
-    Back_right  = GL_BACK_RIGHT,
-    Color0      = GL_COLOR_ATTACHMENT0,
+    None        = GL_NONE,                  // The fragment shader output value is not written into any color buffer.
+    Front_left  = GL_FRONT_LEFT,            // The fragment shader output value is written into the front left color buffer.
+    Front_right = GL_FRONT_RIGHT,           // The fragment shader output value is written into the front right color buffer.
+    Back_left   = GL_BACK_LEFT,             // The fragment shader output value is written into the back left color buffer.
+    Back_right  = GL_BACK_RIGHT,            // The fragment shader output value is written into the back right color buffer.
+    Color0      = GL_COLOR_ATTACHMENT0,     // The fragment shader output value is written into the nth color attachment of the current framebuffer.
+                                            // n may range from zero to the value of GL_MAX_COLOR_ATTACHMENTS.
     Color1      = GL_COLOR_ATTACHMENT1,
     Color2      = GL_COLOR_ATTACHMENT2,
     Color3      = GL_COLOR_ATTACHMENT3,
@@ -58,21 +59,19 @@ enum class FrameBuffer : unsigned int{
     Color15     = GL_COLOR_ATTACHMENT15,
 };
 
-struct FrameBufferObject{
+struct FBO{
 
-    FrameBufferObject() = default;
-    FrameBufferObject(const FrameBufferObject&) = delete;
-    FrameBufferObject& operator=(const FrameBufferObject&) = delete;
-    FrameBufferObject(FrameBufferObject&& other) = default;
-    FrameBufferObject& operator=(FrameBufferObject&& other) = default;
-    ~FrameBufferObject();
+    FBO() = default;
+    FBO(const FBO&) = delete;
+    FBO& operator=(const FBO&) = delete;
+    FBO(FBO&& other) = default;
+    FBO& operator=(FBO&& other) = default;
+    ~FBO();
 
     auto generate() -> void;
     auto clean() -> void;
 
     [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
-    [[nodiscard]] constexpr auto color_attachment(size_t id = 0) const noexcept -> GLuint {return colorAttachments[id];}
-    [[nodiscard]] constexpr auto depth_attachment() const noexcept -> GLuint{return m_depthAttachment;}
 
     auto bind() const -> void;
     static auto unbind() -> void;
@@ -96,8 +95,6 @@ struct FrameBufferObject{
 private:
 
     GLuint m_handle = 0;
-    std::vector<GLuint> colorAttachments = {0};
-    GLuint m_depthAttachment = 0;
 };
 }
 

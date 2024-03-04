@@ -27,76 +27,53 @@
 #pragma once
 
 // local
-#include "opengl/utility/gl_utility.hpp"
+#include "opengl/gl_functions.hpp"
 
 namespace tool::gl {
 
-static inline auto draw(GLenum mode, GLsizei count, GLsizei instancecount, GLuint baseinstance) -> void{
-
-    glDrawArraysInstancedBaseInstance(
-        mode,           // GLenum mode,           : Specifies what kind of primitives to render
-        0,              // GLint first,           : Specifies the starting index in the enabled arrays.
-        count,          // GLsizei count,         : Specifies the number of indices to be rendered.
-        instancecount,  // GLsizei instancecount, : Specifies the number of instances of the specified range of indices to be rendered.
-        baseinstance    // GLuint baseinstance    : Specifies the base instance for use in fetching instanced vertex attributes.
-    );
-}
-
-static inline auto draw_with_ebo(GLenum mode, GLsizei count, GLsizei instancecount, GLint basevertex, GLuint baseinstance) -> void{
-
-    glDrawElementsInstancedBaseVertexBaseInstance(
-        mode,
-        count,
-        GL_UNSIGNED_INT,
-        nullptr,                // void *indices,         : Specifies a pointer to the location where the indices are stored. (not used with VBO)
-        instancecount,          // GLsizei instancecount, : Specifies the number of instances of the indexed geometry that should be drawn.
-        basevertex,             // GLint basevertex,      : Specifies a constant that should be added to each element of indices when chosing elements from the enabled vertex arrays.
-        baseinstance            // GLuint baseinstance    : Specifies the base instance for use in fetching instanced vertex attributes.
-    );
-}
 
 [[maybe_unused]] static inline auto draw_lines(GLsizei count, GLsizei instancecount = 1, GLuint baseinstance = 0) -> void{
-    draw(GL_LINES, count, instancecount, baseinstance);
+    GL::draw_arrays_instance_base_instance(GL_LINES, 0, count, instancecount, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_triangles(GLsizei count, GLsizei instancecount = 1, GLuint baseinstance = 0) -> void{
-    draw(GL_TRIANGLES, count, instancecount, baseinstance);
+    GL::draw_arrays_instance_base_instance(GL_TRIANGLES, 0, count, instancecount, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_patches(GLsizei count, GLsizei instancecount = 1, GLuint baseinstance = 0) -> void{
-    draw(GL_PATCHES, count, instancecount, baseinstance);
+    GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, count, instancecount, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_points(GLsizei count, GLsizei instancecount = 1, GLuint baseinstance = 0) -> void{
-    draw(GL_POINTS, count, instancecount, baseinstance);
+    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, count, instancecount, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_points_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_POINTS, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_POINTS, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_lines_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_LINES, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_line_strip_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_LINE_STRIP, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINE_STRIP, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_triangles_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_TRIANGLES, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_triangles_adjacency_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_TRIANGLES_ADJACENCY, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_TRIANGLES_ADJACENCY, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_quads_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_QUADS, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_QUADS, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 
 [[maybe_unused]] static inline auto draw_polygon_with_ebo(GLsizei count, GLsizei instancecount = 1, GLint basevertex = 0, GLuint baseinstance = 0) -> void{
-    draw_with_ebo(GL_POLYGON, count, instancecount, basevertex, baseinstance);
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_POLYGON, count, GL_UNSIGNED_INT, nullptr, instancecount, basevertex, baseinstance);
 }
 }
 

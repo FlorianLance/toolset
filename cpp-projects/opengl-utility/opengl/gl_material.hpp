@@ -29,10 +29,12 @@
 
 // base
 #include "graphics/material/material.hpp"
+#include "graphics/light.hpp"
 
 // local
-#include "opengl/buffer/uniform_buffer_object.hpp"
+#include "opengl/shader/uniform_buffer_object.hpp"
 #include "opengl/buffer/buffer-utility.hpp"
+
 
 namespace tool::gl{
 
@@ -40,14 +42,14 @@ class MaterialUBO : public UBO{
 
 public:
 
-    void generate() override{
+    // void generate() override{
 
-        if(m_id != 0){
-            std::cerr << "[GL] UBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateBuffers(1, &m_id);
-    }
+    //     if(m_handle != 0){
+    //         std::cerr << "[GL] UBO already generated: " << m_handle << "\n";
+    //         return;
+    //     }
+    //     glCreateBuffers(1, &m_handle);
+    // }
 
     std::string get_block_name() const override{
         return nameStr;
@@ -80,14 +82,14 @@ class LightUBO : public UBO{
 
 public:
 
-    void generate() override{
+    // void generate() override{
 
-        if(m_id != 0){
-            std::cerr << "[GL] UBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateBuffers(1, &m_id);
-    }
+    //     if(m_handle != 0){
+    //         std::cerr << "[GL] UBO already generated: " << m_handle << "\n";
+    //         return;
+    //     }
+    //     glCreateBuffers(1, &m_handle);
+    // }
 
     std::string get_block_name() const override{
         return nameStr;

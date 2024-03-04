@@ -97,7 +97,7 @@ public:
         col.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
 
         ebo.bind();
-        ebo.load_data(UintData{reinterpret_cast<std::uint32_t*>(triangles)}, SizeData{GLsizeiptr(sizeTri*3*sizeof (std::uint32_t))});
+        ebo.load_data(reinterpret_cast<std::uint32_t*>(triangles), GLsizeiptr(sizeTri*3*sizeof (std::uint32_t)));
 
         initialized = true;
     }
@@ -113,8 +113,8 @@ public:
     }
 
     VAO vao;
-    VertexBufferObject pos;
-    VertexBufferObject col;
+    VBO pos;
+    VBO col;
     EBO ebo;
 
     VerticesCount count;
@@ -189,7 +189,7 @@ public:
     }
 
     VAO vao;
-    VertexBufferObject vbo;
+    VBO vbo;
 };
 
 
@@ -230,7 +230,7 @@ public:
     }
 
     VAO vao;
-    VertexBufferObject pos, col;
+    VBO pos, col;
 };
 
 class DrawGrid{
@@ -265,7 +265,7 @@ public:
     }
 
     VAO vao;
-    VertexBufferObject pos;
+    VBO pos;
 };
 
 

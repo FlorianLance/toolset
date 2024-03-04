@@ -138,21 +138,13 @@ public:
 
 class Cloud : public BaseShape{
 public:
-
-    Cloud(size_t size, const geo::Pt2f *vertices, const geo::Pt3f *colors = nullptr, const geo::Pt2f *normals = nullptr);
-    Cloud(size_t size, const geo::Pt3f *vertices, const geo::Pt3f *colors = nullptr, const geo::Pt3f *normals = nullptr);
-
-    Cloud(size_t size, const std::vector<geo::Pt2f> *vertices, const std::vector<geo::Pt3f> *colors = nullptr, const std::vector<geo::Pt2f> *normals = nullptr);
-    Cloud(size_t size, const std::vector<geo::Pt3f> *vertices, const std::vector<geo::Pt3f> *colors = nullptr, const std::vector<geo::Pt3f> *normals = nullptr);
-
-    Cloud(std::vector<geo::Pt2f> *vertices, std::vector<geo::Pt3f> *colors = nullptr , std::vector<geo::Pt2f> *normals = nullptr);
-    Cloud(std::vector<geo::Pt3f> *vertices, std::vector<geo::Pt3f> *colors = nullptr , std::vector<geo::Pt3f> *normals = nullptr);
-
+    Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals);
+    Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals);
 };
 
 class Voxels : public BaseShape{
 public :
-    Voxels(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors);
+    Voxels(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors);
 };
 
 }

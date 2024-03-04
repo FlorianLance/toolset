@@ -35,7 +35,8 @@
 #include "utility/cmd_args.hpp"
 
 // opengl-utilityh
-#include "opengl/buffer/frame_buffer_object.hpp"
+#include "opengl/gl_functions.hpp"
+#include "opengl/buffer/framebuffer_object.hpp"
 
 // 3d-engine
 #include "engine/managers.hpp"
@@ -95,9 +96,9 @@ auto DCGGlWindow::initialize_gl() -> bool{
     Logger::log("DCGGlWindow::initialize_gl\n");
 
     // flags
-    glEnable(GL_MULTISAMPLE); // msaa
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    GL::enable(GL_MULTISAMPLE); // msaa
+    GL::enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    GL::enable(GL_PROGRAM_POINT_SIZE);
 
     Managers::initialize();
 
@@ -116,8 +117,8 @@ auto DCGGlWindow::initialize_gl() -> bool{
 
 auto DCGGlWindow::draw_gl() -> void{
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
+    GL::enable(GL_DEPTH_TEST);
+    GL::enable(GL_STENCIL_TEST);
 
     // clear
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -125,8 +126,8 @@ auto DCGGlWindow::draw_gl() -> void{
 
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    gl::FrameBufferObject::unbind();
+    
+    gl::FBO::unbind();
 }
 
 

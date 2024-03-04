@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -27,23 +26,38 @@
 
 #pragma once
 
-// base
-#include "graphics/material.hpp"
+// std
+#include <cstdint>
 
-// local
-#include "shader.hpp"
+// glew
+#include <GL/glew.h>
+
 
 namespace tool::gl {
 
-class Renderer{
-
-public:
-
-    void draw(){
-
-    }
-
-//    Material *material;
-//    Shader *shader;
+enum class GlType : std::uint8_t{
+    bool_t =0, bvec2_t, bvec3_t, bvec4_t,
+    int_t, ivec2_t, ivec3_t, ivec4_t,
+    uint_t, uivec2_t, uivec3_t, uivec4_t,
+    float_t, fvec2_t, fvec3_t, fvec4_t,
+    double_t, dvec2_t, dvec3_t, dvec4_t,
+    fmat2x3_t, fmat2x4_t, fmat3x2_t, fmat3x4_t, fmat4x2_t, fma4x3_t, fmat2x2_t, fmat3x3_t, fmat4x4_t,
+    dmat2x3_t, dmat2x4_t, dmat3x2_t, dmat3x4_t, dmat4x2_t, dma4x3_t, dmat2x2_t, dmat3x3_t, dmat4x4_t,
+    sampler1d_t, sampler2d_t, sampler3d_t,
+    samplerCube_t,
+    sampler1dShadow_t, sampler2dShadow_t,
+    sampler1dArray_t, sampler2dArray_t,
+    sampler1dArrayShadow_t, sampler2dArrayShadow_t,
+    sampler2dMS_t, sampler2dMSArray_t,samplerCubeShadow_t,
+    samplerBuffer_t, sampler2dRect_t, sampler2dRectShadow_t,
+    isampler1d_t, isampler2d_t, isampler3d_t, isamplerCube_t,
+    isampler1dArray_t, isampler2dArray_t,
+    isampler2dMS_t, isampler2dMSArray_t,
+    isamplerBuffer_t, isampler2DRect_t,
+    usampler1d_t, usampler2d_t, usampler3d_t,
+    usamplerCube_t, usampler1dArray_t, usampler2dArray_t,
+    usampler2dMS_t, usampler2dMSArray_t, usamplerBuffer,
+    unknow, SizeEnum
 };
+
 }

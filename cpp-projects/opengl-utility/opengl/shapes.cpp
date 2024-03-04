@@ -31,6 +31,9 @@
 #include "utility/vector.hpp"
 #include "utility/logger.hpp"
 
+// local
+#include "opengl/draw/points_mesh_data.hpp"
+
 using namespace tool;
 using namespace tool::gl;
 using namespace tool::geo;
@@ -959,68 +962,24 @@ Pt3f Frustum::origin() const{
 }
 
 
-Cloud::Cloud(size_t size, const Pt2f *vertices, const Pt3f *colors, const Pt2f *normals){
+Cloud::Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals){
     auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(static_cast<GLuint>(size), vertices, colors, normals);
+    pmd->init_and_load_3d_points(points, colors, normals);
     data = std::move(pmd);
 }
 
-Cloud::Cloud(size_t size, const Pt3f *vertices, const Pt3f *colors, const Pt3f *normals){
+Cloud::Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals){
     auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(static_cast<GLuint>(size), vertices, colors, normals);
+    pmd->init_and_load_2d_points(points, colors, normals);
     data = std::move(pmd);
 }
 
-
-Cloud::Cloud(size_t size, const std::vector<geo::Pt2f> *vertices, const std::vector<geo::Pt3f> *colors, const std::vector<geo::Pt2f> *normals){
+Voxels::Voxels(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors){
     auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(
-        static_cast<GLuint>(size),
-        vertices->data(),
-        (colors != nullptr) ? (colors->data()) : nullptr,
-        (normals != nullptr) ? (normals->data()) : nullptr
-    );
-    data = std::move(pmd);
-}
-
-Cloud::Cloud(size_t size, const std::vector<geo::Pt3f> *vertices, const std::vector<geo::Pt3f> *colors, const std::vector<geo::Pt3f> *normals){
-    auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(
-        static_cast<GLuint>(size),
-        vertices->data(),
-        (colors != nullptr) ? (colors->data()) : nullptr,
-        (normals != nullptr) ? (normals->data()) : nullptr
-    );
+    pmd->init_and_load_3d_voxels(voxels, colors);
     data = std::move(pmd);
 }
 
 
-Cloud::Cloud(std::vector<Pt2f> *vertices, std::vector<Pt3f> *colors, std::vector<Pt2f> *normals){
-    auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(
-        static_cast<GLuint>(vertices->size()),
-        vertices->data(),
-        (colors  != nullptr) ? (colors->data())  : nullptr,
-        (normals != nullptr) ? (normals->data()) : nullptr
-    );
-    data = std::move(pmd);
-}
-
-Cloud::Cloud(std::vector<Pt3f> *vertices, std::vector<Pt3f> *colors, std::vector<Pt3f> *normals){
-    auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(
-        static_cast<GLuint>(vertices->size()),
-        vertices->data(),
-        (colors  != nullptr) ? (colors->data())  : nullptr,
-        (normals != nullptr) ? (normals->data()) : nullptr
-    );
-    data = std::move(pmd);
-}
-
-Voxels::Voxels(size_t size, geo::Pt3<int> *voxels, Pt3f *colors){
-    auto pmd = std::make_unique<PointMeshData>();
-    pmd->init_buffers(static_cast<GLuint>(size), voxels, colors);
-    data = std::move(pmd);
-}
 
 

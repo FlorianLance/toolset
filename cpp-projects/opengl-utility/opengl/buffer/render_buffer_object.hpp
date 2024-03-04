@@ -1,9 +1,33 @@
 
+/*******************************************************************************
+** Toolset-opengl-utility                                                     **
+** MIT License                                                                **
+** Copyright (c) [2018] [Florian Lance]                                       **
+**                                                                            **
+** Permission is hereby granted, free of charge, to any person obtaining a    **
+** copy of this software and associated documentation files (the "Software"), **
+** to deal in the Software without restriction, including without limitation  **
+** the rights to use, copy, modify, merge, publish, distribute, sublicense,   **
+** and/or sell copies of the Software, and to permit persons to whom the      **
+** Software is furnished to do so, subject to the following conditions:       **
+**                                                                            **
+** The above copyright notice and this permission notice shall be included in **
+** all copies or substantial portions of the Software.                        **
+**                                                                            **
+** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR **
+** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,   **
+** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL    **
+** THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER **
+** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING    **
+** FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        **
+** DEALINGS IN THE SOFTWARE.                                                  **
+**                                                                            **
+********************************************************************************/
+
 #pragma once
 
-
-// local
-#include "opengl/utility/gl_utility.hpp"
+// glew
+#include "gl/glew.h"
 
 namespace tool::gl{
 
@@ -14,54 +38,18 @@ struct RBO{
     RBO& operator=(const RBO&) = delete;
     RBO(RBO&& other) = default;
     RBO& operator=(RBO&& other) = default;
+    ~RBO();
 
-    ~RBO(){
-        clean();
-    }
+    auto generate() -> void;
+    auto clean() -> void;
 
-    void generate(){
+    constexpr auto id() const noexcept -> GLuint {return m_id;}
 
-        if(m_id != 0){
-            std::cerr << "RBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateRenderbuffers(1, &m_id);
-    }
+    auto bind() -> void;
+    static auto unbind() -> void;
 
-    void bind(){
-        glBindRenderbuffer(GL_RENDERBUFFER, m_id);
-    }
-
-    void set_multisample_data_storage(GLsizei width = 512, GLsizei height = 512, GLsizei  samples = 4){
-        glNamedRenderbufferStorageMultisample(m_id, samples, GL_DEPTH24_STENCIL8, width, height);
-    }
-
-    void set_data_storage(GLsizei width = 512, GLsizei height = 512){
-        glNamedRenderbufferStorage(m_id, GL_DEPTH24_STENCIL8, width, height);
-        // glNamedRenderbufferStorage(m_id, GL_DEPTH_COMPONENT, width, height);
-        // GL_DEPTH_COMPONENT16 	GL_DEPTH_COMPONENT 	16
-        // GL_DEPTH_COMPONENT24 	GL_DEPTH_COMPONENT 	24
-        // GL_DEPTH_COMPONENT32F 	GL_DEPTH_COMPONENT 	f32
-        // GL_DEPTH24_STENCIL8 	GL_DEPTH_STENCIL 	24 8
-        // GL_DEPTH32F_STENCIL8 	GL_DEPTH_STENCIL 	f32 8
-        // GL_STENCIL_INDEX8       GL_STENCIL          8
-    }
-
-    static void unbind(){
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    }
-
-
-    void clean(){
-
-        if(m_id == 0){
-            return;
-        }
-        glDeleteBuffers(1, &m_id);
-        m_id = 0;
-    }
-
-    inline GLuint id() const{return m_id;}
+    auto set_multisample_data_storage(GLsizei width = 512, GLsizei height = 512, GLsizei  samples = 4) -> void;
+    auto set_data_storage(GLsizei width = 512, GLsizei height = 512) -> void;
 
 private:
 

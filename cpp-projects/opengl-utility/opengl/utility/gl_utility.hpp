@@ -28,43 +28,22 @@
 
 // std
 #include <array>
+#include <string>
 #include <unordered_map>
 
 // local
-#include "glew_utility.hpp"
+#include "opengl/gl_types.hpp"
+
 
 namespace tool::gl {
-
-using TextureName  = GLuint;
-using TextureNames = std::vector<TextureName>;
 
 struct UintData{
     const GLuint *v;
 };
-struct IntData{
-    const GLint *v;
-};
-struct FloatData{
-    const GLfloat *v;
-};
+
 struct SizeData{
     const GLsizeiptr v;
 };
-struct DrawUsage{
-    const GLenum v;
-};
-struct BufferUsage{
-    // GL_DYNAMIC_STORAGE_BIT: The contents of the data store may be updated after creation through calls to glBufferSubData.
-    // GL_MAP_READ_BIT: The data store may be mapped by the client for read access and a pointer in the client's address space obtained that may be read from.
-    // GL_MAP_WRITE_BIT: The data store may be mapped by the client for write access and a pointer in the client's address space obtained that may be written through.
-    // GL_MAP_PERSISTENT_BIT: The client may request that the server read from or write to the buffer while it is mapped.
-    // The client's pointer to the data store remains valid so long as the data store is mapped, even during execution of drawing or dispatch commands.
-    // GL_MAP_COHERENT_BIT:
-    // GL_CLIENT_STORAGE_BIT:
-    const GLenum v;
-};
-
-
 struct AttriIndex{
     const GLuint v;
 };
@@ -86,38 +65,10 @@ struct AttribOffset{
 };
 
 
-struct DrawMode{
-    const GLenum v;
-};
 struct VerticesCount{
     GLsizei v;
 };
 
-
-enum class GlType : std::uint8_t{    
-    bool_t =0, bvec2_t, bvec3_t, bvec4_t,
-    int_t, ivec2_t, ivec3_t, ivec4_t,
-    uint_t, uivec2_t, uivec3_t, uivec4_t,
-    float_t, fvec2_t, fvec3_t, fvec4_t,
-    double_t, dvec2_t, dvec3_t, dvec4_t,
-    fmat2x3_t, fmat2x4_t, fmat3x2_t, fmat3x4_t, fmat4x2_t, fma4x3_t, fmat2x2_t, fmat3x3_t, fmat4x4_t,
-    dmat2x3_t, dmat2x4_t, dmat3x2_t, dmat3x4_t, dmat4x2_t, dma4x3_t, dmat2x2_t, dmat3x3_t, dmat4x4_t,
-    sampler1d_t, sampler2d_t, sampler3d_t,
-    samplerCube_t,
-    sampler1dShadow_t, sampler2dShadow_t,
-    sampler1dArray_t, sampler2dArray_t,
-    sampler1dArrayShadow_t, sampler2dArrayShadow_t,
-    sampler2dMS_t, sampler2dMSArray_t,samplerCubeShadow_t,
-    samplerBuffer_t, sampler2dRect_t, sampler2dRectShadow_t,
-    isampler1d_t, isampler2d_t, isampler3d_t, isamplerCube_t,
-    isampler1dArray_t, isampler2dArray_t,
-    isampler2dMS_t, isampler2dMSArray_t,
-    isamplerBuffer_t, isampler2DRect_t,
-    usampler1d_t, usampler2d_t, usampler3d_t,
-    usamplerCube_t, usampler1dArray_t, usampler2dArray_t,
-    usampler2dMS_t, usampler2dMSArray_t, usamplerBuffer,
-    unknow, SizeEnum
-};
 
 static constexpr std::array<std::tuple<GlType, GLenum, const char*>,static_cast<size_t>(GlType::SizeEnum)> glTypeMapping ={{
 
@@ -158,7 +109,7 @@ static constexpr std::array<std::tuple<GlType, GLenum, const char*>,static_cast<
     {GlType::sampler2dShadow_t, GL_SAMPLER_2D_SHADOW,   "sampler 2D shadow"},
 }};
 
-[[maybe_unused]] static constexpr GlType get_type(GLenum t) {
+[[maybe_unused]] static constexpr auto get_type(GLenum t) -> GlType{
     for (auto& m : glTypeMapping) {
         if (t == std::get<1>(m)) {
             return std::get<0>(m);
@@ -167,7 +118,7 @@ static constexpr std::array<std::tuple<GlType, GLenum, const char*>,static_cast<
     return GlType::unknow;
 }
 
-[[maybe_unused]] static constexpr const char* get_name(GlType t) {
+[[maybe_unused]] static constexpr auto get_name(GlType t) -> const char*{
     for (auto& m : glTypeMapping) {
         if (t == std::get<0>(m)) {
             return std::get<2>(m);
@@ -176,7 +127,7 @@ static constexpr std::array<std::tuple<GlType, GLenum, const char*>,static_cast<
     return "?";
 }
 
-[[maybe_unused]] static constexpr const char* get_name(GLenum t) {
+[[maybe_unused]] static constexpr auto get_name(GLenum t) -> const char*{
     for (auto& m : glTypeMapping) {
         if (t == std::get<1>(m)) {
             return std::get<2>(m);
@@ -207,37 +158,6 @@ struct UniformBlockElementInfo{
 };
 
 
-struct UniformBlockInfo{
-
-    UniformBlockSize size;
-    UniformBlockLocation location;
-    UniformBlockElementInfo info;
-
-    std::unordered_map<std::string,UniformBlockElementInfo> elements;
-
-    GLint get_offset(const std::string &elementName) const{
-        if(elements.count(elementName) == 0){
-            std::cerr << "[GL] Error " << elementName << " not found in block uniform info.\n";
-            return {};
-        }
-        return elements.at(elementName).offset;
-    }
-
-    std::vector<GLint> get_offsets(const std::vector<std::string> &elementsNames) const{
-
-        std::vector<GLint> offsets;
-        offsets.reserve(elementsNames.size());
-        for(const auto &name : elementsNames){
-            if(elements.count(name) == 0){
-                std::cerr << "[GL] Error " << name << " not found in block uniform info.\n";
-                return {};
-            }
-            offsets.emplace_back(elements.at(name).offset);
-        }
-        return offsets;
-    }
-
-};
 
 
 // sampler

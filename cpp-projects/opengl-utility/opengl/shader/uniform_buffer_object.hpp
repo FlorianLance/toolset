@@ -42,24 +42,24 @@ struct UBO{
     UBO& operator=(UBO&& other) = default;
     ~UBO();
 
-    virtual auto generate() -> void;
-    auto bind(GLuint ubIndex) -> void;
-    auto set_data_storage(GLsizeiptr sizeData, void *data = nullptr, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;
-    auto update_data(void *data, GLsizeiptr sizeData, GLintptr offset = 0) -> void;
-    auto set_data_space_from_shader(ShaderProgram *shader, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;
+    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
+    [[nodiscard]] constexpr auto size() const noexcept -> GLsizeiptr{return m_size;}
+    [[nodiscard]] virtual auto get_block_name() const -> std::string{return "";}
+    [[nodiscard]] virtual auto get_elements_name() const -> std::vector<std::string>{return {};}
+
+    auto generate() -> void;
     auto clean() -> void;
 
-    constexpr GLuint id() const noexcept {return m_id;}
-    constexpr GLsizeiptr size() const noexcept {return m_size;}
-    virtual auto get_block_name() const -> std::string{return "";}
-    virtual auto get_elements_name() const -> std::vector<std::string>{return {};}
+    auto bind(GLuint index) -> void;
+    static auto bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void; // TEST
 
-    // TEST
-    static auto bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void;
+    auto set_data_storage(GLsizeiptr sizeData, void *data = nullptr, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;    
+    auto set_data_space_from_shader(ShaderProgram *shader, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;
+    auto update_data(void *data, GLsizeiptr sizeData, GLintptr offset = 0) -> void;
 
 protected:
 
-    GLuint m_id = 0;
+    GLuint m_handle = 0;
     GLsizeiptr m_size = 0;
 
     std::vector<GLubyte> m_blockBuffer;
@@ -89,7 +89,6 @@ protected:
 //    vec3 camPos;
 //    vec3 lightPos;
 //};
-
 
 //struct GlobalData {
 //    mat4 projection;

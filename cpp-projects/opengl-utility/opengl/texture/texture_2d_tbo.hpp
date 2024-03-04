@@ -49,7 +49,7 @@ public:
     auto update_image_8u(GLubyte *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset) -> void;
 
     auto init_image_32u(GLsizei w, GLsizei height, int nbChannels) -> void;
-    auto update_image_32u(GLuint *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset) -> void;
+    auto update_image_32u(GLuint *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset, bool generateMipMap) -> void;
 
     auto init_image_32f(GLsizei w, GLsizei h, int nbChannels) -> void;
     auto update_image_32f(GLfloat *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset) -> void;

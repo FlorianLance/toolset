@@ -23,58 +23,57 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
+
 #pragma once
 
 // local
-#include "texture_2d_tbo.hpp"
-#include "cube_map_tbo.hpp"
+#include "geometry_data.hpp"
 
-namespace tool::graphics {
+namespace tool::gl{
 
-struct TextureLoadingInfo{
-    std::string alias;
-    std::string fileName;
-    bool flip = true;
-    int targetNbChannels = 4;
-};
-
-class TexturesManager{
-
+class PointMeshData : public GeometryData{
 public:
 
-    using Alias = std::string;
-    using Path  = std::string;
+    // TODO: test init/load
+    // init
+    auto init_3d_points(
+        size_t size,
+        bool hasColors,
+        bool hasNormals
+    ) -> void;
 
-    static auto get_instance() -> TexturesManager*;
+    // load
+    auto load_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals
+    ) -> void;
 
-    auto load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos) -> bool;
-    auto load_cube_map(const Path &basePath, const std::array<std::string,6> &extensions, const Alias &alias, bool flip = true) -> bool;
+    // init and load
+    auto init_and_load_2d_points(
+        std::span<const geo::Pt2f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt2f> normals
+    ) -> void;
 
-    auto get_texture(const Alias &textureAlias) -> std::weak_ptr<Texture2D>;
-    auto get_texture_ptr(const Alias &textureAlias) -> Texture2D*;
-    auto get_texture_info(const Alias &textureAlias, TextureOptions options = {}) -> TextureInfo;
+    auto init_and_load_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals
+    ) -> void;
 
-    auto generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options = {}) -> bool;
-    auto generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias) -> bool;
-    auto generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias) -> bool;
+    auto init_and_load_3d_voxels(
+        std::span<const geo::Pt3<int>> voxels,
+        std::span<const geo::Pt3f> colors
+    ) -> void;
 
-    auto texture_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto texture_id(const Alias &tboAlias) -> GLuint;
+    auto render() const -> void override;
+    auto render_patches() const -> void override;
+    auto clean() -> void override;
 
-    auto cube_map_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto cube_map_id(const Alias &tboAlias) -> GLuint;
+protected:
 
-private:
-
-    std::vector<Alias> texturesAliases;
-    std::vector<Alias> cubeMapsAliases;
-    std::vector<Alias> tboAliases;
-
-    std::unordered_map<Path,  Alias> aliasPerPath;
-
-    std::unordered_map<Alias, std::shared_ptr<Texture2D>> textures;
-    std::unordered_map<Alias, std::shared_ptr<CubeMap>> cubeMaps;
-    std::unordered_map<Alias, gl::TBO> texturesTBOs;
-    std::unordered_map<Alias, gl::TBO> cubeMapsTBOs;
+    VBO colorsB;
+    VBO normalsB;
 };
 }

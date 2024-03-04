@@ -23,58 +23,59 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
-#pragma once
+
+#include "element_buffer_object.hpp"
+
+// base
+#include "utility/logger.hpp"
 
 // local
-#include "texture_2d_tbo.hpp"
-#include "cube_map_tbo.hpp"
+#include "opengl/gl_functions.hpp"
 
-namespace tool::graphics {
+using namespace tool::gl;
 
-struct TextureLoadingInfo{
-    std::string alias;
-    std::string fileName;
-    bool flip = true;
-    int targetNbChannels = 4;
-};
+EBO::~EBO(){
+    clean();
+}
 
-class TexturesManager{
+auto EBO::generate() -> void{
 
-public:
+    if(m_id != 0){
+        Logger::error(std::format("[EBO::generate] EBO already generated: {}\n", m_id));
+        return;
+    }
+    GL::create_buffers(1, &m_id);
+}
 
-    using Alias = std::string;
-    using Path  = std::string;
+auto EBO::clean() -> void{
 
-    static auto get_instance() -> TexturesManager*;
+    if(m_id == 0){
+        return;
+    }
+    GL::delete_buffers(1, &m_id);
+    m_id = 0;
+}
 
-    auto load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos) -> bool;
-    auto load_cube_map(const Path &basePath, const std::array<std::string,6> &extensions, const Alias &alias, bool flip = true) -> bool;
+auto EBO::bind() -> void{
 
-    auto get_texture(const Alias &textureAlias) -> std::weak_ptr<Texture2D>;
-    auto get_texture_ptr(const Alias &textureAlias) -> Texture2D*;
-    auto get_texture_info(const Alias &textureAlias, TextureOptions options = {}) -> TextureInfo;
+    if(m_id == 0){
+        Logger::error("[GL] EBO not generated, cannot bind it.\n");
+        return;
+    }
 
-    auto generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options = {}) -> bool;
-    auto generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias) -> bool;
-    auto generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias) -> bool;
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
+}
 
-    auto texture_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto texture_id(const Alias &tboAlias) -> GLuint;
+auto EBO::unbind() -> void{
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
 
-    auto cube_map_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto cube_map_id(const Alias &tboAlias) -> GLuint;
+auto EBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> void{
 
-private:
-
-    std::vector<Alias> texturesAliases;
-    std::vector<Alias> cubeMapsAliases;
-    std::vector<Alias> tboAliases;
-
-    std::unordered_map<Path,  Alias> aliasPerPath;
-
-    std::unordered_map<Alias, std::shared_ptr<Texture2D>> textures;
-    std::unordered_map<Alias, std::shared_ptr<CubeMap>> cubeMaps;
-    std::unordered_map<Alias, gl::TBO> texturesTBOs;
-    std::unordered_map<Alias, gl::TBO> cubeMapsTBOs;
-};
+    GL::named_buffer_storage(
+        m_id,
+        size,
+        data,
+        usage
+    );
 }

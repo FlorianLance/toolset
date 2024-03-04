@@ -31,6 +31,9 @@
 #include "geometry/point4.hpp"
 #include "utility/logger.hpp"
 
+// local
+#include "opengl/gl_functions.hpp"
+
 using namespace tool;
 using namespace tool::gl;
 
@@ -40,30 +43,30 @@ TBO::~TBO(){
 
 auto TBO::generate() -> void{
 
-    if(m_id != 0){
-        Logger::error(std::format("[TBO::generate] TBO already generated [{}]\n", m_id));
+    if(m_handle != 0){
+        Logger::error(std::format("[TBO::generate] TBO already generated [{}]\n", m_handle));
         return;
     }
-    glCreateTextures(to_gl(m_mode), 1, &m_id);
+    GL::create_textures(to_gl(m_mode), 1, &m_handle);
 }
 
 auto TBO::clean() -> void{
 
-    if(m_id == 0){
+    if(m_handle == 0){
         return;
     }
 
-    glDeleteBuffers(1, &m_id);
-    m_id = 0;
+    GL::delete_buffers(1, &m_handle);
+    m_handle = 0;
 }
 
 
 auto TBO::bind(GLuint unit) -> void{
     // glBindTextureUnit(unit - GL_TEXTURE0, m_id);
-    bind({m_id}, unit);
+    bind({m_handle}, unit);
 }
 
-auto TBO::bind(std::vector<TextureName> textures, GLuint first) -> void{
+auto TBO::bind(std::vector<GLuint> textures, GLuint first) -> void{
 
     for(const auto &n : textures){
         if(n==0){
@@ -72,57 +75,49 @@ auto TBO::bind(std::vector<TextureName> textures, GLuint first) -> void{
         }
     }
 
-    // bind one or more named textures to a sequence of consecutive texture units
-    glBindTextures(first, static_cast<GLsizei>(textures.size()), textures.data());
+    GL::bind_textures(first, static_cast<GLsizei>(textures.size()), textures.data());
 }
 
 auto TBO::unbind_textures(GLuint first, GLuint count) -> void{
-    std::vector<TextureName> textures(count);
+    std::vector<GLuint> textures(count);
     std::fill(std::begin(textures), std::end(textures), 0);
-    glBindTextures(first, static_cast<GLsizei>(textures.size()), textures.data());
+    GL::bind_textures(first, static_cast<GLsizei>(textures.size()), textures.data());
 }
-
 
 auto TBO::bind_image(GLuint unit, GLint level, GLboolean layered, GLint layer, GLenum access) -> void{
 
-    glBindImageTexture(
-        unit, // GLuint unit,
-        m_id, // GLuint texture,
-        level, // GLint level,
-        layered, // GLboolean layered,
-        layer,   // GLint layer,
-        access,  // GLenum access,
-        m_internalFormat // GLenum format
+    GL::bind_image_texture(
+        unit,
+        m_handle,
+        level,
+        layered,
+        layer,
+        access,
+        m_internalFormat
     );
-//    return bind_image_textures({m_id});
 }
 
+// auto TBO::bind_image_textures(std::vector<GLuint> textures, GLuint first) -> bool{
 
+//     for(const auto &n : textures){
+//         if(n==0){
+//             Logger::error("[TBO::bind_image_textures] TBO not generated, cannot bind it.\n");
+//             return false;
+//         }
+//     }
 
-
-
-auto TBO::bind_image_textures(std::vector<TextureName> textures, GLuint first) -> bool{
-
-    for(const auto &n : textures){
-        if(n==0){
-            Logger::error("[TBO::bind_image_textures] TBO not generated, cannot bind it.\n");
-            return false;
-        }
-    }
-
-    // bind one or more named texture images to a sequence of consecutive image units
-    glBindImageTextures(first, static_cast<GLsizei>(textures.size()), textures.data());
-    return true;
-}
+//     GL::bind_image_textures(first, static_cast<GLsizei>(textures.size()), textures.data());
+//     return true;
+// }
 
 auto TBO::set_texture_options(TextureOptions options) -> void{
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_S,     to_gl(options.wrapS));
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_T,     to_gl(options.wrapT));
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_R,     to_gl(options.wrapR));
-    glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER, to_gl(options.minFilter));
-    glTextureParameteri(m_id, GL_TEXTURE_MAG_FILTER, to_gl(options.magFilter));
-    glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL,  options.maxLevel);
-    glTextureParameterfv(m_id, GL_TEXTURE_BORDER_COLOR, options.borderColor.array.data());
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_WRAP_S,     to_gl(options.wrapS));
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_WRAP_T,     to_gl(options.wrapT));
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_WRAP_R,     to_gl(options.wrapR));
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_MIN_FILTER, to_gl(options.minFilter));
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_MAG_FILTER, to_gl(options.magFilter));
+    GL::texture_parameter_i(m_handle, GL_TEXTURE_MAX_LEVEL,  options.maxLevel);
+    GL::texture_parameter_fv(m_handle, GL_TEXTURE_BORDER_COLOR, options.borderColor.array.data());
 }
 
 auto TBO::init_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels) -> void{
@@ -153,7 +148,7 @@ auto TBO::init_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChann
         Logger::error("[TBO::init_data_u8] Channels nb not managed.\n");
         return;
     }
-    gl_texture_storage();
+    specify_storage();
 }
 
 auto TBO::init_data_u32(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels) -> void{
@@ -185,7 +180,7 @@ auto TBO::init_data_u32(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         return;
     }
 
-    gl_texture_storage();
+    specify_storage();
 }
 
 auto TBO::init_data_f16(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels) -> void{
@@ -216,7 +211,7 @@ auto TBO::init_data_f16(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         Logger::error("[TBO::init_data_f16] Channels nb not managed.\n");
         return;
     }
-    gl_texture_storage();
+    specify_storage();
 }
 
 auto TBO::init_data_f32(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels) -> void{
@@ -247,7 +242,7 @@ auto TBO::init_data_f32(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         Logger::error("[TBO::init_data_f32] Channels nb not managed.\n");
         return;
     }
-    gl_texture_storage();
+    specify_storage();
 }
 
 auto TBO::init_multisample_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, GLsizei samples, int levels) -> void{
@@ -279,13 +274,13 @@ auto TBO::init_multisample_data_u8(GLsizei width, GLsizei height, GLsizei depth,
         return;
     }
 
-    glTextureStorage2DMultisample(
-        m_id,               // GLuint texture,
-        samples,            // GLsizei samples,
-        m_internalFormat,   // GLenum internalformat,
-        m_width,            // GLsizei width,
-        m_height,           // GLsizei height,
-        GL_TRUE             // GLboolean fixedsamplelocations
+    GL::texture_storage_2d_multisample(
+        m_handle,
+        samples,
+        m_internalFormat,
+        m_width,
+        m_height,
+        GL_TRUE
     );
 }
 
@@ -318,13 +313,13 @@ auto TBO::init_multisample_data_f16(GLsizei width, GLsizei height, GLsizei depth
         return;
     }
 
-    glTextureStorage2DMultisample(
-        m_id,               // GLuint texture,
-        samples,            // GLsizei samples,
-        m_internalFormat,   // GLenum internalformat,
-        m_width,            // GLsizei width,
-        m_height,           // GLsizei height,
-        GL_TRUE             // GLboolean fixedsamplelocations
+    GL::texture_storage_2d_multisample(
+        m_handle,
+        samples,
+        m_internalFormat,
+        m_width,
+        m_height,
+        GL_TRUE
     );
 }
 
@@ -357,13 +352,13 @@ auto TBO::init_multisample_data_f32(GLsizei width, GLsizei height, GLsizei depth
         return;
     }
 
-    glTextureStorage2DMultisample(
-        m_id,               // GLuint texture,
-        samples,            // GLsizei samples,
-        m_internalFormat,   // GLenum internalformat,
-        m_width,            // GLsizei width,
-        m_height,           // GLsizei height,
-        GL_TRUE             // GLboolean fixedsamplelocations
+    GL::texture_storage_2d_multisample(
+        m_handle,
+        samples,
+        m_internalFormat,
+        m_width,
+        m_height,
+        GL_TRUE
     );
 }
 
@@ -389,40 +384,40 @@ auto TBO::update_data(GLfloat *data, GLsizei width, GLsizei height, GLsizei dept
 }
 
 auto TBO::generate_mipmap() -> void{
-    glGenerateTextureMipmap(m_id);
+    glGenerateTextureMipmap(m_handle);
 }
 
-auto TBO::gl_texture_storage() -> void{
+auto TBO::specify_storage() -> void{
 
     if(m_mode == TextureMode::texture_2d){
 
-        glTextureStorage2D (
-            m_id,               // GLuint texture
-            m_levelsNb,         // GLsizei levels
-            m_internalFormat,   // GLenum internalformat
-            m_width,            // GLsizei width
-            m_height            // GLsizei height
+        GL::texture_storage_2d(
+            m_handle,
+            m_levelsNb,
+            m_internalFormat,
+            m_width,
+            m_height
         );
 
     }else if(m_mode ==  TextureMode::texture_3d){
 
-        glTextureStorage3D (
-            m_id,               // GLuint texture
-            m_levelsNb,         // GLsizei levels
-            m_internalFormat,   // GLenum internalformat
-            m_width,            // GLsizei width
-            m_height,           // GLsizei height
-            m_depth             // GLsizei depth
+        GL::texture_storage_3d (
+            m_handle,
+            m_levelsNb,
+            m_internalFormat,
+            m_width,
+            m_height,
+            m_depth
         );
 
     }else if(m_mode == TextureMode::cubemap){
 
-        glTextureStorage2D (
-            m_id,               // GLuint texture
-            m_levelsNb,         // GLsizei levels
-            m_internalFormat,   // GLenum internalformat
-            m_width,            // GLsizei width
-            m_height            // GLsizei height
+        GL::texture_storage_2d (
+            m_handle,
+            m_levelsNb,
+            m_internalFormat,
+            m_width,
+            m_height
         );
 
     }else{
@@ -438,7 +433,7 @@ auto TBO::gl_texture_sub_image(void *data, GLint level, GLsizei width, GLsizei h
         // If a non-zero named buffer object is bound to the GL_PIXEL_UNPACK_BUFFER target (see glBindBuffer)
         // while a texture image is specified, pixels is treated as a byte offset into the buffer object's data store.
         glTextureSubImage2D (
-            m_id,               // GLuint texture
+            m_handle,               // GLuint texture
             level,              // GLint level
             xOffset,            // GLint xoffset
             yOffset,            // GLint yoffset
@@ -452,7 +447,7 @@ auto TBO::gl_texture_sub_image(void *data, GLint level, GLsizei width, GLsizei h
     }else if(m_mode ==  TextureMode::texture_3d){
 
         glTextureSubImage3D (
-            m_id,               // GLuint texture
+            m_handle,               // GLuint texture
             level,              // GLint level
             xOffset,            // GLint xoffset
             yOffset,            // GLint yoffset
@@ -468,7 +463,7 @@ auto TBO::gl_texture_sub_image(void *data, GLint level, GLsizei width, GLsizei h
     }else if(m_mode == TextureMode::cubemap){
 
         glTextureSubImage3D (
-            m_id,               // GLuint texture
+            m_handle,               // GLuint texture
             level,              // GLint level
             0,                  // GLint xoffset
             0,                  // GLint yoffset
@@ -500,7 +495,7 @@ auto TBO::get_hdr_texture_data(std::vector<GLfloat> &data) -> void{
         m_type,
         size,
         data.data()
-        );
+    );
 
     // return;
 

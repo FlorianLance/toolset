@@ -31,7 +31,8 @@
 #include "utility/paths.hpp"
 
 // opengl-utility
-#include "opengl/buffer/frame_buffer_object.hpp"
+#include "opengl/buffer/framebuffer_object.hpp"
+#include "opengl/gl_functions.hpp"
 
 // 3d-engine
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -96,9 +97,9 @@ auto DCMGlWindow::initialize_gl() -> bool{
     Logger::message("K4ScanerManagerWindow::initialize_gl\n");
 
     // flags
-    glEnable(GL_MULTISAMPLE); // msaa
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    GL::enable(GL_MULTISAMPLE); // msaa
+    GL::enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    GL::enable(GL_PROGRAM_POINT_SIZE);
 
     // implot
     //    ImPlot::CreateContext();
@@ -129,8 +130,8 @@ auto DCMGlWindow::initialize_imgui() -> void{
 
 auto DCMGlWindow::draw_gl() -> void{
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
+    GL::enable(GL_DEPTH_TEST);
+    GL::enable(GL_STENCIL_TEST);
 
     // clear
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -138,8 +139,8 @@ auto DCMGlWindow::draw_gl() -> void{
 
     // polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    gl::FrameBufferObject::unbind();
+    
+    gl::FBO::unbind();
 }
 
 

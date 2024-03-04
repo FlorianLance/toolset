@@ -30,7 +30,7 @@
 #include "graphics/camera/camera.hpp"
 
 // opengl-utility
-#include "opengl/buffer/frame_buffer_object.hpp"
+#include "opengl/buffer/framebuffer_object.hpp"
 #include "opengl/texture/texture_2d_tbo.hpp"
 
 namespace tool::graphics {
@@ -53,7 +53,7 @@ public:
     auto update_viewport() -> void;
 
     inline auto camera() -> graphics::Camera* {return &m_camera;}
-    auto texture_id() const noexcept -> gl::TextureName {return m_texture.id();}
+    auto texture_id() const noexcept -> GLuint {return m_texture.id();}
     auto is_camera_updated() const noexcept -> bool{return m_cameraUpdated;}
     auto is_screen_updated() const noexcept -> bool{return m_screenUpdated;}
 
@@ -69,7 +69,7 @@ private:
     auto check_inputs() -> void;
 
     GLint m_viewport[4];
-    gl::FrameBufferObject m_fbo;
+    gl::FBO m_fbo;
     gl::Texture2D m_texture;
     gl::RBO m_depthTexture;
     graphics::Camera m_camera;       

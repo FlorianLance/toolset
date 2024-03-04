@@ -31,11 +31,14 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
 
+// opengl-utility
+#include "opengl/gl_functions.hpp"
+
 // local
 #include "imgui-tb/imgui_helper.hpp"
 
 using namespace tool::graphics;
-
+using namespace tool::gl;
 
 ImguiFboUiDrawer::ImguiFboUiDrawer() : m_camera(&m_screen, {0,0,0}, {0,0,1}){
     m_camera.set_fov(60.);
@@ -94,7 +97,7 @@ auto ImguiFboUiDrawer::update_viewport() -> void{
 auto ImguiFboUiDrawer::set_gl_states(geo::Pt4f color) -> void{
     glClearColor(color.x(),color.y(),color.z(),color.w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    GL::enable(GL_DEPTH_TEST);
 }
 
 auto ImguiFboUiDrawer::draw() -> void{
@@ -118,7 +121,7 @@ auto ImguiFboUiDrawer::draw() -> void{
 
 auto ImguiFboUiDrawer::restore_viewport() -> void{
     // restore
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
     glViewport(
         static_cast<GLsizei>(m_viewport[0]),
         static_cast<GLsizei>(m_viewport[1]),

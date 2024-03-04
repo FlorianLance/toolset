@@ -107,31 +107,31 @@ auto FullscreenQuadDrawer::init() -> void{
     drawableObject = std::make_unique<FullscreenQuad>();
 }
 
-TorusDrawer::TorusDrawer(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<TextureName> textures){
+TorusDrawer::TorusDrawer(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<GLuint> textures){
     init(outerRadius, innerRadius, nsides, nrings, textures);
 }
 
-auto TorusDrawer::init(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<TextureName> textures) -> void{
+auto TorusDrawer::init(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<GLuint> textures) -> void{
     clean();
     texturesNames  = textures;
     drawableObject = std::make_unique<Torus>(outerRadius, innerRadius, nsides, nrings);
 }
 
-PlaneDrawer::PlaneDrawer(float xSize, float zSize, std::vector<TextureName> textures){
+PlaneDrawer::PlaneDrawer(float xSize, float zSize, std::vector<GLuint> textures){
     init(xSize, zSize, textures);
 }
 
-auto PlaneDrawer::init(float xSize, float zSize, std::vector<TextureName> textures) -> void{
+auto PlaneDrawer::init(float xSize, float zSize, std::vector<GLuint> textures) -> void{
     clean();
     texturesNames  = textures;
     drawableObject = std::make_unique<Plane>( static_cast<GLfloat>(xSize), static_cast<GLfloat>(zSize), 1, 1, GLfloat{10}, GLfloat{7});
 }
 
-SkyboxDrawer::SkyboxDrawer(float size, std::optional<TextureName> cubemap){
+SkyboxDrawer::SkyboxDrawer(float size, std::optional<GLuint> cubemap){
     init(size, cubemap);
 }
 
-auto SkyboxDrawer::init(float size, std::optional<TextureName> cubemap) -> void{
+auto SkyboxDrawer::init(float size, std::optional<GLuint> cubemap) -> void{
     clean();
     if(cubemap.has_value()){
         texturesNames.emplace_back(cubemap.value());
@@ -139,80 +139,52 @@ auto SkyboxDrawer::init(float size, std::optional<TextureName> cubemap) -> void{
     drawableObject = std::make_unique<Skybox>(size);
 }
 
-SphereDrawer::SphereDrawer(float radius, size_t slices, size_t nbStacks, std::vector<TextureName> textures){
+SphereDrawer::SphereDrawer(float radius, size_t slices, size_t nbStacks, std::vector<GLuint> textures){
     init(radius, slices, nbStacks, textures);
 }
 
-auto SphereDrawer::init(float radius, size_t slices, size_t nbStacks, std::vector<TextureName> textures) -> void{
+auto SphereDrawer::init(float radius, size_t slices, size_t nbStacks, std::vector<GLuint> textures) -> void{
     clean();
     texturesNames  = textures;
     drawableObject = std::make_unique<SphereShape>(radius, static_cast<GLuint>(slices), static_cast<GLuint>(nbStacks));
 }
 
-CubeDrawer::CubeDrawer(float side, std::vector<TextureName> textures){
+CubeDrawer::CubeDrawer(float side, std::vector<GLuint> textures){
     init(side, textures);
 }
 
-auto CubeDrawer::init(float side, std::vector<TextureName> textures) -> void{
+auto CubeDrawer::init(float side, std::vector<GLuint> textures) -> void{
     clean();
     texturesNames  = textures;
     drawableObject = std::make_unique<Cube>(side);
 }
 
-auto CloudPointsDrawer::init(size_t size, const geo::Pt2f *points, const geo::Pt3f *colors) -> void{
+auto CloudPointsDrawer::init(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals) -> void {
     clean();
-    if(size > 0){
-        drawableObject = std::make_unique<gl::Cloud>(size, points, colors);
+    if(!points.empty()){
+        drawableObject = std::make_unique<gl::Cloud>(points, colors, normals);
     }else{
         drawableObject = nullptr;
     }
 }
 
-auto CloudPointsDrawer::init(std::vector<geo::Pt2f> *points, std::vector<geo::Pt3f> *colors) -> void{
+auto CloudPointsDrawer::init(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void {
     clean();
-    if(points->size() > 0){
-        drawableObject = std::make_unique<gl::Cloud>(points, colors);
+    if(!points.empty()){
+        drawableObject = std::make_unique<gl::Cloud>(points, colors, normals);
     }else{
         drawableObject = nullptr;
     }
 }
 
-auto CloudPointsDrawer::init(size_t size, const geo::Pt3f *points, const geo::Pt3f *colors, const geo::Pt3f *normals) -> void{
-    clean();
-    if(size > 0){
-        drawableObject = std::make_unique<gl::Cloud>(size, points, colors, normals);
-    }else{
-        drawableObject = nullptr;
-    }
+VoxelsDrawer::VoxelsDrawer(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors){
+    init(voxels, colors);
 }
 
-auto CloudPointsDrawer::init(std::vector<geo::Pt3f> *points, std::vector<geo::Pt3f> *colors) -> void{
+auto VoxelsDrawer::init(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors) -> void{
     clean();
-    if(points->size() > 0){
-        drawableObject = std::make_unique<gl::Cloud>(points, colors);
-    }else{
-        drawableObject = nullptr;
-    }
-}
-
-auto CloudPointsDrawer::init(size_t size, const std::vector<geo::Pt3f> *points, const std::vector<geo::Pt3f> *colors) -> void{
-    clean();
-    if(size > 0){
-        drawableObject = std::make_unique<gl::Cloud>(size, points, colors);
-    }else{
-        drawableObject = nullptr;
-    }
-}
-
-
-VoxelsDrawer::VoxelsDrawer(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors){
-    init(size, voxels, colors);
-}
-
-auto VoxelsDrawer::init(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors) -> void{
-    clean();
-    if(size > 0){
-        drawableObject = std::make_unique<gl::Voxels>(size, voxels, colors);
+    if(!voxels.empty()){
+        drawableObject = std::make_unique<gl::Voxels>(voxels, colors);
     }else{
         drawableObject = nullptr;
     }
@@ -236,14 +208,14 @@ auto GMeshDrawer::init(const std::shared_ptr<graphics::SubModelMesh> &gmesh, con
             for(auto textureInfo : texturesT.second){
                 gl::Texture2D tbo;
                 tbo.load_texture(textureInfo.texture, textureInfo.options);
-                m_textures[textureInfo.options.type].emplace_back(std::make_pair(TextureName{tbo.id()},std::move(tbo)));
+                m_textures[textureInfo.options.type].emplace_back(std::make_pair(GLuint{tbo.id()},std::move(tbo)));
             }
         }
     }else{
         for(auto textureInfo : texturesInfo){
             gl::Texture2D tbo;
             tbo.load_texture(textureInfo.texture);
-            m_textures[textureInfo.options.type].emplace_back(std::make_pair(TextureName{tbo.id()},std::move(tbo)));
+            m_textures[textureInfo.options.type].emplace_back(std::make_pair(GLuint{tbo.id()},std::move(tbo)));
         }
     }
 
@@ -344,11 +316,11 @@ auto ModelDrawer::set_bones_uniform(graphics::ModelMesh *model, ShaderProgram *s
     }
 }
 
-TeapotDrawer::TeapotDrawer(int grid, std::vector<TextureName> textures){
+TeapotDrawer::TeapotDrawer(int grid, std::vector<GLuint> textures){
     init(grid, textures);
 }
 
-auto TeapotDrawer::init(int grid, std::vector<TextureName> textures) -> void{
+auto TeapotDrawer::init(int grid, std::vector<GLuint> textures) -> void{
     clean();
     texturesNames  = textures;
     drawableObject = std::make_unique<Teapot>(grid);

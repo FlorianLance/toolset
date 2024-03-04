@@ -26,8 +26,8 @@
 
 #pragma once
 
-// local
-#include "opengl/utility/gl_utility.hpp"
+// glew
+#include "gl/glew.h"
 
 namespace tool::gl{
 
@@ -38,79 +38,21 @@ struct EBO{
     EBO& operator=(const EBO&) = delete;
     EBO(EBO&& other) = default;
     EBO& operator=(EBO&& other) = default;
+    ~EBO();
 
-    ~EBO(){
-        clean();
-    }
+    auto generate() -> void;
+    auto clean() -> void;
 
-    void generate(){
+    auto load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> void;
 
-        if(m_id != 0){
-            std::cerr << "[GL] EBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateBuffers(1, &m_id);
-    }
+    auto bind() -> void;
+    static auto unbind() -> void;
 
-    bool bind(){
-
-        if(m_id == 0){
-            std::cerr << "[GL] EBO not generated, cannot bind it.\n";
-            return false;
-        }
-
-        // new way: mix vertex buffer with index buffer
-        // GLint alignment = GL_NONE;
-        // glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
-
-        // REMOVE
-//        glBindBufferRange(
-//            GL_ELEMENT_ARRAY_BUFFER,    // GLenum target
-//            0,                          // GLuint index
-//            m_id,                       // GLuint buffer
-//            0,                          // GLintptr offset
-//            1                           // GLsizeiptr size
-//        );
-         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
-
-        return true;
-    }
-
-    void generate_and_load(UintData data, SizeData size){
-        generate();
-        load_data(data, size);
-    }
-
-    bool load_data(UintData data, SizeData size){
-
-        // bit combination of: GL_DYNAMIC_STORAGE_BIT, GL_MAP_READ_BIT GL_MAP_WRITE_BIT, GL_MAP_PERSISTENT_BIT, GL_MAP_COHERENT_BIT, and GL_CLIENT_STORAGE_BIT.
-        GLenum usage = 0;
-        glNamedBufferStorage(
-            m_id,   // GLuint buffer
-            size.v, // GLsizeiptr size
-            data.v, // const void *data
-            usage // GLenum usage
-        );
-
-        return true;
-    }
-
-    void clean(){
-
-        if(m_id == 0){
-            return;
-        }
-        glDeleteBuffers(1, &m_id);
-        m_id = 0;
-    }
-
-    static void unbind(){
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    }
 
 private:
-    GLuint m_id = 0;
 
+    static inline GLbitfield  defaultUsage = 0;
+    GLuint m_id = 0;
 };
 
 

@@ -41,8 +41,8 @@
 #include "utility/logger.hpp"
 
 // opengl-utility
-#include "opengl/utility/glew_utility.hpp"
 #include "opengl/vao.hpp"
+#include "opengl/gl_functions.hpp"
 
 using namespace tool::gl;
 using namespace tool::geo;
@@ -74,11 +74,11 @@ auto BaseSfmlGlWindow::init() -> bool{
     init_sfml_window();
 
     // glew
-    if(!init_glew()){
+    if(!GL::init_glew()){
         m_scene.close();
         return false;
     }
-    display_glew_info();
+    GL::display_glew_info();
 
     // init imgui
     m_scene.setActive(true);

@@ -26,13 +26,13 @@
 
 #pragma once
 
-// base
-#include "graphics/material/material.hpp"
-#include "graphics/light.hpp"
+// glew
+#include <GL/glew.h>
 
-// local
-#include "opengl/shader/shader.hpp"
-#include "uniform_buffer_object.hpp"
+// base
+#include "geometry/point3.hpp"
+#include "geometry/point4.hpp"
+
 
 namespace tool::gl {
 

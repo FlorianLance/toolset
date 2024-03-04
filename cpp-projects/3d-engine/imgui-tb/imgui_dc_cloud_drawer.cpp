@@ -93,10 +93,9 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
 
     if(frame->cloud.is_valid()){
         cpD.init(
-            frame->cloud.size(),
-            frame->cloud.vertices.get_data(),
-            frame->cloud.colors.get_data(),
-            !frame->cloud.normals.empty() ? frame->cloud.normals.get_data() : nullptr
+            frame->cloud.vertices.span(),
+            frame->cloud.colors.span(),
+            frame->cloud.normals.span()
         );
     }
     
@@ -142,10 +141,8 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
 
 auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool {
 
-//    if(cloudData.size() == 0 || cloudData.vertices.empty() || cloudData.colors.empty()){
-//        return false;
-//    }
-    cpD.init(cloudData.size(), cloudData.vertices.get_data(), cloudData.colors.get_data());
+
+    cpD.init(cloudData.vertices.span(), cloudData.colors.span());
 
     lastFrame   = nullptr;
     lastFrameId = -1;

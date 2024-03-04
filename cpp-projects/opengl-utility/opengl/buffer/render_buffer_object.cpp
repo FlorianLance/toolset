@@ -24,73 +24,57 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "render_buffer_object.hpp"
+
+// base
+#include "utility/logger.hpp"
 
 // local
-#include "opengl/utility/gl_utility.hpp"
+#include "opengl/gl_functions.hpp"
 
-namespace tool::gl{
+using namespace tool::gl;
 
-struct SSBO{
-
-    SSBO() = default;
-    SSBO(const SSBO&) = delete;
-    SSBO& operator=(const SSBO&) = delete;
-    SSBO(SSBO&& other) = default;
-    SSBO& operator=(SSBO&& other) = default;
-
-    ~SSBO(){
-        clean();
-    }
-
-    constexpr GLuint id() const{return m_id;}
-
-    void generate(){
-
-        if(m_id != 0){
-            std::cerr << "[GL] SSBO already generated: " << m_id << "\n";
-            return;
-        }
-        glCreateBuffers(1, &m_id);
-    }
-
-    bool bind_to_index(GLuint index) const{
-
-        if(m_id == 0){
-            std::cerr << "[GL] SSBO not generated, cannot bind it.\n";
-            return false;
-        }
-
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, m_id);
-        // glBindBufferBase
-        return true;
-    }
-
-    void set_data_storage(GLsizei size, GLenum usage = 0){
-
-        glNamedBufferStorage(
-            m_id,       // GLuint buffer,
-            size,       // GLsizeiptr size,
-            nullptr,    // const void *data,
-            usage       // GLbitfield flags
-        );
-    }
-
-    void clean(){
-
-        if(m_id == 0){
-            return;
-        }
-        glDeleteBuffers(1, &m_id);
-        m_id = 0;
-    }
-
-private:
-    GLuint m_id = 0;
-
-};
-
-
+RBO::~RBO(){
+    clean();
 }
 
+auto RBO::generate() -> void{
 
+    if(m_id != 0){
+        Logger::error(std::format("[RBO::generate] RBO already generated: {}\n", m_id));
+        return;
+    }
+    glCreateRenderbuffers(1, &m_id);
+}
+
+auto RBO::clean() -> void{
+
+    if(m_id == 0){
+        return;
+    }
+    GL::delete_buffers(1, &m_id);
+    m_id = 0;
+}
+
+auto RBO::bind() -> void{
+    glBindRenderbuffer(GL_RENDERBUFFER, m_id);
+}
+
+auto RBO::unbind() -> void{
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+auto RBO::set_multisample_data_storage(GLsizei width, GLsizei height, GLsizei samples) -> void{
+    glNamedRenderbufferStorageMultisample(m_id, samples, GL_DEPTH24_STENCIL8, width, height);
+}
+
+auto RBO::set_data_storage(GLsizei width, GLsizei height) -> void{
+    glNamedRenderbufferStorage(m_id, GL_DEPTH24_STENCIL8, width, height);
+    // glNamedRenderbufferStorage(m_id, GL_DEPTH_COMPONENT, width, height);
+    // GL_DEPTH_COMPONENT16 	GL_DEPTH_COMPONENT 	16
+    // GL_DEPTH_COMPONENT24 	GL_DEPTH_COMPONENT 	24
+    // GL_DEPTH_COMPONENT32F 	GL_DEPTH_COMPONENT 	f32
+    // GL_DEPTH24_STENCIL8 	GL_DEPTH_STENCIL 	24 8
+    // GL_DEPTH32F_STENCIL8 	GL_DEPTH_STENCIL 	f32 8
+    // GL_STENCIL_INDEX8       GL_STENCIL          8
+}

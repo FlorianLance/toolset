@@ -60,7 +60,7 @@ void MultiDepthCameraGlWidget::init(size_t nbCameras){
 void MultiDepthCameraGlWidget::update_cloud(size_t id, K2CloudDisplayData *cloudData){
 
     cloudData->dataLocker.lock();
-    kinectClouds[id]->init(cloudData->sizePts, cloudData->points->data(), cloudData->colors->data());
+    // kinectClouds[id]->init(cloudData->sizePts, cloudData->points->data(), cloudData->colors->data());
     cloudData->dataLocker.unlock();
 
     vaoToDisplay = 1;
@@ -69,7 +69,7 @@ void MultiDepthCameraGlWidget::update_cloud(size_t id, K2CloudDisplayData *cloud
 
 void MultiDepthCameraGlWidget::update_raw_cloud(size_t id, std::vector<Pt3f> *points, std::vector<Pt3f> *colors){
 
-    kinectClouds[id]->init(points, colors);
+    // kinectClouds[id]->init(points, colors);
     vaoToDisplay = 1;
     update();
 }

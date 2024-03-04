@@ -87,9 +87,11 @@ auto Texture2D::update_image_8u(GLubyte *data, GLsizei w, GLsizei h, GLint xOffs
     TBO::generate_mipmap();
 }
 
-auto Texture2D::update_image_32u(GLuint *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset) -> void{
+auto Texture2D::update_image_32u(GLuint *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset, bool generateMipMap) -> void{
     TBO::update_data(data, w, h, 1, xOffset, yOffset, 0);
-    TBO::generate_mipmap();
+    if(generateMipMap){
+        TBO::generate_mipmap();
+    }
 }
 
 auto Texture2D::update_image_32f(GLfloat *data, GLsizei w, GLsizei h, GLint xOffset, GLint yOffset) -> void{

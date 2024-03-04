@@ -43,7 +43,7 @@ void DepthCameraGlWidget::update_cloud(K2CloudDisplayData *cloudData){
 
     cloudData->dataLocker.lock();
         sizeCloud = cloudData->sizePts;
-        kinectCloud.init(cloudData->sizePts, cloudData->points->data(), cloudData->colors->data());
+        // kinectCloud.init(cloudData->sizePts, cloudData->points->data(), cloudData->colors->data());
     cloudData->dataLocker.unlock();
     vaoToDisplay = 1;
 }

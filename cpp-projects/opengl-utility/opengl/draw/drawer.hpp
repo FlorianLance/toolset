@@ -63,7 +63,7 @@ public:
 
 protected:
     std::unique_ptr<gl::BaseShape> drawableObject = nullptr;
-    std::vector<TextureName> texturesNames;
+    std::vector<GLuint> texturesNames;
 };
 
 
@@ -137,8 +137,8 @@ public:
 
 class PlaneDrawer : public Drawer{
 public:
-    PlaneDrawer(float xSize = 8.f, float zSize = 8.f, std::vector<TextureName> textures = {});
-    auto init(float xSize, float zSize, std::vector<TextureName> textures) -> void;
+    PlaneDrawer(float xSize = 8.f, float zSize = 8.f, std::vector<GLuint> textures = {});
+    auto init(float xSize, float zSize, std::vector<GLuint> textures) -> void;
 };
 
 class TriangleLineDrawer : public Drawer{
@@ -162,53 +162,46 @@ public:
 // ## points
 class CloudPointsDrawer : public Drawer{
 public:
-
-    auto init(size_t size, const geo::Pt2f *points, const geo::Pt3f *colors = nullptr) -> void;;
-    auto init(std::vector<geo::Pt2f> *points, std::vector<geo::Pt3f> *colors = nullptr) -> void;;
-
-    auto init(size_t size, const geo::Pt3f *points, const geo::Pt3f *colors = nullptr, const geo::Pt3f *normals = nullptr) -> void;;
-
-    auto init(std::vector<geo::Pt3f> *points, std::vector<geo::Pt3f> *colors = nullptr) -> void;;
-
-    auto init(size_t size, const std::vector<geo::Pt3f> *points, const std::vector<geo::Pt3f> *colors = nullptr) -> void;;
+    auto init(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt2f> normals = {}) -> void;
+    auto init(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt3f> normals = {}) -> void;
 };
 
 class VoxelsDrawer : public Drawer{
 public:
-    VoxelsDrawer(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors = nullptr);
-    auto init(size_t size, geo::Pt3<int> *voxels, geo::Pt3f *colors) -> void;
+    VoxelsDrawer(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors);
+    auto init(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors) -> void;
 };
 
 
 // ## triangles
 class SkyboxDrawer : public Drawer{
 public:
-    SkyboxDrawer(float size = 100.f, std::optional<TextureName> cubemap = std::nullopt);
-    auto init(float size, std::optional<TextureName> cubemap) -> void;
+    SkyboxDrawer(float size = 100.f, std::optional<GLuint> cubemap = std::nullopt);
+    auto init(float size, std::optional<GLuint> cubemap) -> void;
 };
 
 class SphereDrawer : public Drawer{
 public:
-    SphereDrawer(float radius = 1.0f, size_t slices = 20, size_t nbStacks = 20, std::vector<TextureName> textures = {});
-    auto init(float radius, size_t slices, size_t nbStacks, std::vector<TextureName> textures) -> void;
+    SphereDrawer(float radius = 1.0f, size_t slices = 20, size_t nbStacks = 20, std::vector<GLuint> textures = {});
+    auto init(float radius, size_t slices, size_t nbStacks, std::vector<GLuint> textures) -> void;
 };
 
 class CubeDrawer : public Drawer{
 public:
-    explicit CubeDrawer(float side = 1.f, std::vector<TextureName> textures = {});
-    auto init(float side, std::vector<TextureName> textures) -> void;
+    explicit CubeDrawer(float side = 1.f, std::vector<GLuint> textures = {});
+    auto init(float side, std::vector<GLuint> textures) -> void;
 };
 
 class TorusDrawer : public Drawer{
 public:
-    TorusDrawer(float outerRadius = 0.7f * 1.5f, float innerRadius = 0.3f * 1.5f, int nsides = 50, int nrings = 50, std::vector<TextureName> textures = {});
-    auto init(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<TextureName> textures) -> void;
+    TorusDrawer(float outerRadius = 0.7f * 1.5f, float innerRadius = 0.3f * 1.5f, int nsides = 50, int nrings = 50, std::vector<GLuint> textures = {});
+    auto init(float outerRadius, float innerRadius, int nsides, int nrings, std::vector<GLuint> textures) -> void;
 };
 
 class TeapotDrawer : public Drawer{
 public:
-    TeapotDrawer(int grid = 14, std::vector<TextureName> textures = {});
-    auto init(int grid, std::vector<TextureName> textures) -> void;
+    TeapotDrawer(int grid = 14, std::vector<GLuint> textures = {});
+    auto init(int grid, std::vector<GLuint> textures) -> void;
 };
 
 class CylinderDrawer : public Drawer{
@@ -227,7 +220,7 @@ public:
 };
 
 class GMeshDrawer : public Drawer{
-    umap<TextureType, std::vector<std::pair<TextureName,TBO>>> m_textures;
+    umap<TextureType, std::vector<std::pair<GLuint,TBO>>> m_textures;
 public:
     // if texturesInfo empty use textures from material
     auto init(const std::shared_ptr<graphics::SubModelMesh> &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;

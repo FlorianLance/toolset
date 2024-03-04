@@ -118,7 +118,7 @@ struct TBO{
 
     auto clean() -> void;
 
-    [[nodiscard]] constexpr auto id()          const noexcept -> TextureName{return m_id;}
+    [[nodiscard]] constexpr auto id()          const noexcept -> GLuint{return m_handle;}
     [[nodiscard]] constexpr auto nb_channels() const noexcept -> GLsizei{return m_nbChannels;}
     [[nodiscard]] constexpr auto width()       const noexcept -> GLsizei{return m_width;}
     [[nodiscard]] constexpr auto height()      const noexcept -> GLsizei{return m_height;}
@@ -126,10 +126,10 @@ struct TBO{
 
     // bind / unbind
     auto bind(GLuint unit) -> void;
-    static auto bind(std::vector<TextureName> textures, GLuint first) -> void;
+    static auto bind(std::vector<GLuint> textures, GLuint first) -> void;
 
-    auto bind_image(GLuint unit, GLint level = 0, GLboolean layered = GL_FALSE, GLint layer = 0, GLenum access = GL_READ_WRITE) -> void;    
-    static auto bind_image_textures(std::vector<TextureName> textures, GLuint first = 0) -> bool;
+    auto bind_image(GLuint unit, GLint level = 0, GLboolean layered = GL_FALSE, GLint layer = 0, GLenum access = GL_READ_WRITE) -> void;
+    // static auto bind_image_textures(std::vector<GLuint> textures, GLuint first = 0) -> bool; // TODO: TEST
     static auto unbind_textures(GLuint first, GLuint count) -> void;
 
     auto set_texture_options(TextureOptions options = {}) -> void;
@@ -157,7 +157,7 @@ protected:
     // mipmap
     auto generate_mipmap() -> void;
 
-    TextureName m_id = 0;
+    GLuint m_handle = 0;
 
     GLenum m_internalFormat;
     GLenum m_format;
@@ -171,7 +171,7 @@ protected:
 
 private:
 
-    auto gl_texture_storage() -> void;
+    auto specify_storage() -> void;
     auto gl_texture_sub_image(void *data, GLint level, GLsizei width, GLsizei height, GLsizei depth, GLint xOffset, GLint yOffset, GLint zOffset) -> void;
 
     TextureMode m_mode;

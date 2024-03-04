@@ -50,7 +50,7 @@ public:
     virtual ~GeometryData(){}
 
     VAO vao;
-    VertexBufferObject pointsB;
+    VBO pointsB;
     GLsizei nIndices = 0;
 
     virtual auto render() const -> void = 0;
@@ -69,58 +69,6 @@ protected:
 };
 
 
-class PointMeshData : public GeometryData{
-public:
-
-    // TODO:
-    auto init_buffers(
-        std::span<geo::Pt3f> points,
-        std::span<geo::Pt3f> colors,
-        std::span<geo::Pt3f> normals
-    ) -> void{}
-
-    auto init_buffers(
-        std::span<geo::Pt2f> points,
-        std::span<geo::Pt3f> colors,
-        std::span<geo::Pt2f> normals
-    ) -> void {}
-
-    auto init_buffers(
-        std::span<geo::Pt3<int>> voxels,
-        std::span<geo::Pt3f> colors
-    ) -> void{}
-
-
-
-    auto init_buffers(
-        GLuint size,
-        const geo::Pt3f *points,
-        const geo::Pt3f *colors = nullptr,
-        const geo::Pt3f *normals = nullptr
-    ) -> void;
-
-    auto init_buffers(
-        GLuint size,
-        const geo::Pt2f *points,
-        const geo::Pt3f *colors = nullptr,
-        const geo::Pt2f *normals = nullptr
-    ) -> void;
-
-    auto init_buffers(
-        GLuint size,
-        const geo::Pt3<int> *voxels,
-        const geo::Pt3f *colors = nullptr
-    ) -> void;
-
-    auto render() const -> void override;
-    auto render_patches() const -> void override;
-    auto clean() -> void override;
-
-protected:
-
-    VertexBufferObject colorsB;
-    VertexBufferObject normalsB;
-};
 
 
 class LineMeshData : public GeometryData{
@@ -136,8 +84,8 @@ public:
     void clean() override;
 
 protected:
-
-    VertexBufferObject colorsB;
+    
+    VBO colorsB;
     EBO indicesB;
 };
 
@@ -174,13 +122,13 @@ public:
     bool hasColors   = false;
 
 protected:
-
-    VertexBufferObject pointsB;
-    VertexBufferObject normalsB;
-    VertexBufferObject tangentsB;
-    VertexBufferObject colorsB;
-    VertexBufferObject texCoordsB;
-    VertexBufferObject bonesB;
+    
+    VBO pointsB;
+    VBO normalsB;
+    VBO tangentsB;
+    VBO colorsB;
+    VBO texCoordsB;
+    VBO bonesB;
     EBO indicesB;
 
 };

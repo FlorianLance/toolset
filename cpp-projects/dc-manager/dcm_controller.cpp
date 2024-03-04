@@ -26,6 +26,9 @@
 
 #include "dcm_controller.hpp"
 
+// std
+#include <iostream>
+
 // base
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"

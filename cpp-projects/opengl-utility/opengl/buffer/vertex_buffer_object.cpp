@@ -29,104 +29,97 @@
 // base
 #include "utility/logger.hpp"
 
+// local
+#include "opengl/gl_functions.hpp"
+
 using namespace tool::gl;
 
-VertexBufferObject::~VertexBufferObject(){
+VBO::~VBO(){
     clean();
 }
 
-auto VertexBufferObject::generate() -> void{
+auto VBO::generate() -> void{
 
     if(m_handle != 0){
-        Logger::error(std::format("VBO already generated: {}.\n", m_handle));
+        Logger::error(std::format("[VBO::generate] VBO already generated: {}.\n", m_handle));
         return;
     }
-    glCreateBuffers(1, &m_handle);
+    GL::create_buffers(1, &m_handle);
 }
 
-auto VertexBufferObject::clean() -> void{
+auto VBO::clean() -> void{
 
     if(m_handle == 0){
         return;
     }
 
-    glDeleteBuffers(1, &m_handle);
+    GL::delete_buffers(1, &m_handle);
     m_handle = 0;
 }
 
 
-auto VertexBufferObject::load_data(const GLint *data, GLsizeiptr size, GLenum usage) -> void{
-    glNamedBufferStorage(
-        m_handle,   // GLuint buffer
-        size,       // GLsizeiptr size
-        data,       // const void *data
-        usage       // GLenum usage
+auto VBO::load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage) -> void{
+    GL::named_buffer_storage(
+        m_handle,
+        size,
+        data,
+        usage
     );
 }
 
-auto VertexBufferObject::load_data(const GLfloat *data, GLsizeiptr size, GLenum usage) -> void{
-    glNamedBufferStorage(
-        m_handle,   // GLuint buffer
-        size,       // GLsizeiptr size
-        data,       // const void *data
-        usage       // GLenum usage
+auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> void{
+    GL::named_buffer_storage(
+        m_handle,
+        size,
+        data,
+        usage
     );
 }
 
 
-auto VertexBufferObject::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset) -> bool{
+auto VBO::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset) -> bool{
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_handle);
-    glEnableVertexAttribArray(index.v);
+    GL::bind_buffer(GL_ARRAY_BUFFER, m_handle);
+    GL::enable_vertex_attrib_array(index.v);
 
     if(type.v == GL_INT){
-        glVertexAttribIPointer(index.v, size.v, type.v, stride.v,  offset.v);
+        GL::vertex_attrib_i_pointer(index.v, size.v, type.v, stride.v,  offset.v);
     }else{
-        glVertexAttribPointer(index.v, size.v, type.v, GL_FALSE, stride.v,  offset.v);
+        GL::vertex_attrib_pointer(index.v, size.v, type.v, GL_FALSE, stride.v,  offset.v);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL::bind_buffer(GL_ARRAY_BUFFER, 0);
 
     return true;
 }
 
-auto VertexBufferObject::dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum type, GLuint relativeoffset, GLuint bindingIndex, GLintptr offset, GLboolean normalized) -> void{
+auto VBO::dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum type, GLuint relativeoffset, GLuint bindingIndex, GLintptr offset, GLboolean normalized) -> void{
 
-    glVertexArrayVertexBuffer(
-        vao,            // GLuint vaobj: Specifies the name of the vertex array object to be used by glVertexArrayVertexBuffer function.
-        bindingIndex,   // GLuint bindingindex: The index of the vertex buffer binding point to which to bind the buffer.
-        m_handle,       // GLuint buffer: The name of a buffer to bind to the vertex buffer binding point.
-        offset,         // GLintptr offset: The offset of the first element of the buffer.
-        stride          // GLsizei stride: The distance between elements within the buffer.
-    );
-
-    glEnableVertexArrayAttrib(
+    GL::vertex_array_vertex_buffer(
         vao,
-        index // GLuint index: Specifies the index of the generic vertex attribute to be enabled or disabled.
+        bindingIndex,
+        m_handle,
+        offset,
+        stride
     );
 
-    glVertexArrayAttribFormat(
-        vao,            // GLuint vaobj: Specifies the name of the vertex array object for glVertexArrayAttrib{I, L}Format functions.
-        index,          // GLuint attribindex: The generic vertex attribute array being described.
-        size,           // GLint size: The number of values per vertex that are stored in the array.
-        type,           // GLenum type: The type of the data stored in the array.
-        normalized,     // GLboolean normalized: Specifies whether fixed-point data values should be normalized (GL_TRUE) or converted directly as fixed-point values (GL_FALSE) when they are accessed. This parameter is ignored if type is GL_FIXED.
-        relativeoffset  // GLuint relativeoffset: The distance between elements within the buffer.
+    GL::enable_vertex_array_attrib(vao,index);
+
+    GL::vertex_array_attrib_format(
+        vao,
+        index,
+        size,
+        type,
+        normalized,
+        relativeoffset
     );
 
-    glVertexArrayAttribBinding(
+    GL::vertex_array_attrib_binding(
         vao,
         index,          // GLuint attribindex: The index of the attribute to associate with a vertex buffer binding.
         bindingIndex    // GLuint bindingindex: The index of the vertex buffer binding with which to associate the generic vertex attribute.
     );
 
-    // example
-    // glVertexArrayVertexBuffer(m_VAO, 0, m_Buffers[VERTEX_BUFFER], 0, sizeof(Vertex));
-    // size_t NumFloats = 0;
-    // glEnableVertexArrayAttrib(m_VAO, POSITION_LOCATION);
-    // glVertexArrayAttribFormat(m_VAO, POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, (GLuint)(NumFloats * sizeof(float)));
-    // glVertexArrayAttribBinding(m_VAO, POSITION_LOCATION, 0);
-    // NumFloats += 3;
 }
 
 

@@ -17,6 +17,7 @@
 
 // opengl-utility
 #include "opengl/utility/gl_utility.hpp"
+#include "opengl/gl_functions.hpp"
 
 //#include "glm/mat4x4.hpp"
 
@@ -1323,7 +1324,7 @@ auto Ch5RenderToTexture::draw(tool::gl::Drawer *drawer) -> void {
     // pass 0
     fboCh5RenderToTexture.bind();
     glViewport(0,0,512,512);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     CameraMatrices rMat;
     rMat.update_mvp(
@@ -1343,7 +1344,7 @@ auto Ch5RenderToTexture::draw(tool::gl::Drawer *drawer) -> void {
     glFlush();
 
     // pass 1
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
     renderTexCh5RenderToTexture.bind(0);
 
     glViewport(0,0, camera->screen()->width(), camera->screen()->height());
@@ -1428,8 +1429,8 @@ auto Ch6EdgeDetectionFilter::draw(tool::gl::Drawer *drawer) -> void {
     // pass 1 : blinnphong
     if(enable){
         screenFBO.bind();
-        glEnable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GL::enable(GL_DEPTH_TEST);
+        GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     Sample::draw(drawer);
     sampleShader->use();
@@ -1451,11 +1452,11 @@ auto Ch6EdgeDetectionFilter::draw(tool::gl::Drawer *drawer) -> void {
         // pass 2
         glFlush();
 
-        gl::FrameBufferObject::unbind();
+        gl::FBO::unbind();
         screenRenderTexture.bind(0);
 
-        glDisable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT);
+        GL::disable(GL_DEPTH_TEST);
+        GL::clear(GL_COLOR_BUFFER_BIT);
 
         sampleShader->set_uniform("Pass", 2);
         draw_screen_quad(sampleShader.get());
@@ -1565,7 +1566,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
     }
 
     // Unbind the framebuffer, and revert to default framebuffer
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
 }
 
 auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
@@ -1574,8 +1575,8 @@ auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
     // pass 1 : blinnPhong
     if(enable){
         screenFBO.bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
+        GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GL::enable(GL_DEPTH_TEST);
     }
 
     Sample::draw(drawer);
@@ -1600,17 +1601,17 @@ auto Ch6GaussianFilter::draw(tool::gl::Drawer *drawer) -> void {
         intermediateFBO.bind();
         screenRenderTexture.bind(0);
 
-        glDisable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT);
+        GL::disable(GL_DEPTH_TEST);
+        GL::clear(GL_COLOR_BUFFER_BIT);
 
         sampleShader->set_uniform("Pass", 2);
         draw_screen_quad(sampleShader.get());
 
         // pass 3
-        gl::FrameBufferObject::unbind();
+        gl::FBO::unbind();
         intermediateRenderTexture.bind(0);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        GL::clear(GL_COLOR_BUFFER_BIT);
 
         sampleShader->set_uniform("Pass", 3);
         draw_screen_quad(sampleShader.get());
@@ -1712,9 +1713,9 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Pass", 1);
 
     hdrFBO.bind();
-    glClearColor(0.5f,0.5f,0.5f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    GL::clear_color(0.5f,0.5f,0.5f,1.0f);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::enable(GL_DEPTH_TEST);
 
 
     auto lightPos = Vec4f{0.0f, 4.0f, 2.5f, 1.0f};
@@ -1756,9 +1757,9 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::Drawer *drawer) -> void {
 
 
     // pass 2
-    gl::FrameBufferObject::unbind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    gl::FBO::unbind();
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
 
     sampleShader->set_uniform("Pass", 2);
     draw_screen_quad(sampleShader.get());
@@ -1862,7 +1863,7 @@ auto Ch6HdrBloom::update_screen_size() -> void {
         blurFBO.set_draw_buffers({FrameBuffer::Color0});
         blurFBO.check_validity();
     }
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
 }
 
 auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
@@ -1899,9 +1900,9 @@ auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Pass", 1);
 
     hdrFBO.bind();
-    glClearColor(0.5f,0.5f,0.5f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    GL::clear_color(0.5f,0.5f,0.5f,1.0f);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::enable(GL_DEPTH_TEST);
 
     materialUBO.bind(0);
     draw_scene1(sampleShader.get());
@@ -1944,9 +1945,9 @@ auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
     blurFBO.attach_color0_texture(blurTex1);
 
     glViewport(0,0,bloomBufWidth, bloomBufHeight);
-    glDisable(GL_DEPTH_TEST);
-    glClearColor(0,0,0,0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
+    GL::clear_color(0,0,0,0);
+    GL::clear(GL_COLOR_BUFFER_BIT);
 
     draw_screen_quad(sampleShader.get());
 
@@ -1966,8 +1967,8 @@ auto Ch6HdrBloom::draw(tool::gl::Drawer *drawer) -> void {
 
     // Bind to the default framebuffer, this time we're going to
     // actually draw to the screen!
-    gl::FrameBufferObject::unbind();
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl::FBO::unbind();
+    GL::clear(GL_COLOR_BUFFER_BIT);
 
     glViewport(0,0,camera->screen()->width(), camera->screen()->height());
 
@@ -2083,8 +2084,8 @@ auto Ch6Deferred::draw(tool::gl::Drawer *drawer) -> void {
 
     // pass 1
     deferredFBO.bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::enable(GL_DEPTH_TEST);
 
     Sample::draw(drawer);
 
@@ -2137,12 +2138,12 @@ auto Ch6Deferred::draw(tool::gl::Drawer *drawer) -> void {
 
     // pass 2
     sampleShader->set_uniform("Pass", 2);
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
     gl::TBO::bind({posTex.id(), normTex.id(),
         diffuseColorTex.id(),ambiantColorTex.id(),specularColorTex.id()}
     ,0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
     draw_screen_quad(sampleShader.get());
 }
 
@@ -2280,7 +2281,7 @@ auto Ch6SSAO::update_screen_size() -> void {
     });
     ssaoFBO.check_validity();
 
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
 }
 
 auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
@@ -2297,8 +2298,8 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     // pass 1 : Render to G-Buffers
     deferredFBO.bind();
     sampleShader->set_uniform("Pass", 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::enable(GL_DEPTH_TEST);
 
     sampleShader->set_uniform("Light.L", geo::Vec3f{0.3f, 0.3f, 0.3f});
     sampleShader->set_uniform("Light.La", lInfo.La);
@@ -2348,8 +2349,8 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     sampleShader->set_uniform("Pass", 2);
     ssaoFBO.bind();
     ssaoFBO.attach_color0_texture(aoTex[0]);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    GL::clear(GL_COLOR_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
 
     gl::TBO::bind({posTex.id(),normTex.id(),colorTex.id()/**,aoTex[0].id(),randRotationTex.id()*/},0);
     gl::TBO::bind({randRotationTex.id()}, 4);
@@ -2359,17 +2360,17 @@ auto Ch6SSAO::draw(tool::gl::Drawer *drawer) -> void {
     // Read from aoTex[0], write to aoTex[1]
     sampleShader->set_uniform("Pass", 3);
     ssaoFBO.attach_color0_texture(aoTex[1]);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    GL::clear(GL_COLOR_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
     gl::TBO::bind({aoTex[0].id() }, 3);
     draw_screen_quad(sampleShader.get());
 
     // pass 4 : Lighting
     // Read from aoTex[1] (blurred)
     sampleShader->set_uniform("Pass", 4);
-    gl::FrameBufferObject::unbind();
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
+    gl::FBO::unbind();
+    GL::clear(GL_COLOR_BUFFER_BIT);
+    GL::disable(GL_DEPTH_TEST);
     gl::TBO::bind({aoTex[1].id() }, 3);
     draw_screen_quad(sampleShader.get());
 }
@@ -2386,161 +2387,213 @@ auto Ch6OIT::init() -> bool {
         return false;
     }
 
-    rotSpeed = tool::PI<float> / 8.0f;
-    angle = 210.f;
-    tPrev = 0.f;
 
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    // quad VAO
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
 
-    pass1Index = glGetSubroutineIndex(sampleShader->id(), GL_FRAGMENT_SHADER, "pass1");
-    pass2Index = glGetSubroutineIndex(sampleShader->id(), GL_FRAGMENT_SHADER, "pass2");
+    // set up framebuffers and their texture attachments
+    // ------------------------------------------------------------------
+    glGenFramebuffers(1, &opaqueFBO);
+    glGenFramebuffers(1, &transparentFBO);
 
-    update_screen_size();
+    // set up attachments for opaque framebuffer
+    glGenTextures(1, &opaqueTexture);
+    glBindTexture(GL_TEXTURE_2D, opaqueTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1920, 1080, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1920, 1080, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, opaqueFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, opaqueTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // set up attachments for transparent framebuffer
+    glGenTextures(1, &accumTexture);
+    glBindTexture(GL_TEXTURE_2D, accumTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1920, 1080, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    // rotSpeed = tool::PI<float> / 8.0f;
+    // angle = 210.f;
+    // tPrev = 0.f;
+
+    // GL::enable(GL_DEPTH_TEST);
+    // glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+
+
+    // pass1Index = glGetSubroutineIndex(sampleShader->id(), GL_FRAGMENT_SHADER, "pass1");
+    // pass2Index = glGetSubroutineIndex(sampleShader->id(), GL_FRAGMENT_SHADER, "pass2");
+
+    // update_screen_size();
 
     return true;
 }
 
 auto Ch6OIT::update_screen_size() -> void {
 
-    const auto width  = camera->screen()->width();
-    const auto height = camera->screen()->height();
+    // const auto width  = camera->screen()->width();
+    // const auto height = camera->screen()->height();
 
-    GLuint maxNodes = 20 * width * height;
-    GLint nodeSize  = 5 * sizeof(GLfloat) + sizeof(GLuint); // The size of a linked list node
+    // GLuint maxNodes = 20 * width * height;
+    // GLint nodeSize  = 5 * sizeof(GLfloat) + sizeof(GLuint); // The size of a linked list node
 
-    // Our atomic counter
-    counterBuffer.clean();
-    counterBuffer.generate();
-    counterBuffer.set_data_storage(sizeof(GLuint), GL_DYNAMIC_STORAGE_BIT);
+    // // Our atomic counter
+    // counterBuffer.clean();
+    // counterBuffer.generate();
+    // counterBuffer.set_data_storage(sizeof(GLuint), GL_DYNAMIC_STORAGE_BIT);
 
-    // The buffer for the head pointers, as an image texture
-    headPtrTexture.clean();
-    headPtrTexture.init_image_32u(width, height, 1);
+    // // The buffer for the head pointers, as an image texture
+    // headPtrTexture.clean();
+    // headPtrTexture.init_image_32u(width, height, 1);
 
-    // The buffer of linked lists
-    linkedListBuffer.clean();
-    linkedListBuffer.generate();
-    linkedListBuffer.set_data_storage(maxNodes * nodeSize);
-    sampleShader->set_uniform("MaxNodes", maxNodes);
+    // // The buffer of linked lists
+    // linkedListBuffer.clean();
+    // linkedListBuffer.generate();
+    // linkedListBuffer.set_data_storage(maxNodes * nodeSize);
+    // sampleShader->set_uniform("MaxNodes", maxNodes);
 
-    std::vector<GLuint> headPtrClearBuf(width*height, 0xffffffff);
-    clearBuffer.clean();
-    clearBuffer.generate();
-    clearBuffer.set_data_storage(static_cast<GLsizei>(headPtrClearBuf.size() * sizeof(GLuint)), gl::UintData{headPtrClearBuf.data()});
+    // std::vector<GLuint> headPtrClearBuf(width*height, 0xffffffff);
+    // clearBuffer.clean();
+    // clearBuffer.generate();
+    // clearBuffer.set_data_storage(static_cast<GLsizei>(headPtrClearBuf.size() * sizeof(GLuint)), headPtrClearBuf.data());
 
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    // glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }
 
 auto Ch6OIT::draw(tool::gl::Drawer*) -> void{
 
-    const auto width  = camera->screen()->width();
-    const auto height = camera->screen()->height();
+    // const auto width  = camera->screen()->width();
+    // const auto height = camera->screen()->height();
 
-    headPtrTexture.bind_image(0, 0, GL_FALSE, 0, GL_READ_WRITE);
-    linkedListBuffer.bind_to_index(0);
-    counterBuffer.bind_to_index(0);
+    // headPtrTexture.bind_image(0, 0, GL_FALSE, 0, GL_READ_WRITE);
+    // linkedListBuffer.bind_to_index(0);
+    // counterBuffer.bind_to_index(0);
 
-    // clear buffers
-    {
-        // updates a subset of a buffer object's data store
-        GLuint zero = 0;
-        counterBuffer.update_data(&zero, sizeof(GLuint));
+    // // clear buffers
+    // {
+    //     // updates a subset of a buffer object's data store
+    //     GLuint zero = 0;
+    //     counterBuffer.update_data(&zero, sizeof(GLuint));
 
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, clearBuffer.id());
-        headPtrTexture.update_image_32u(nullptr, width, height, 0, 0);
-    }
 
-    // pass 1
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDepthMask( GL_FALSE );
+    //     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, clearBuffer.id());
 
-    glUseProgram(sampleShader->id());
-    glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass1Index);
-    {
-        // draw scene
-        sampleShader->set_uniform("LightPosition", geo::Vec4f(0,0,0,1));
-        sampleShader->set_uniform("LightIntensity", geo::Vec3f(0.9f,0.9f,0.9f));
-        sampleShader->set_uniform("Kd", geo::Vec4f(0.2f, 0.2f, 0.9f, 0.55f));
+    //     headPtrTexture.update_image_32u(nullptr, width, height, 0, 0, false);
+    // }
 
-        double size = 0.45;
-        for( int i = 0; i <= 6; i++ ){
-            for( int j = 0; j <= 6; j++ ){
-                for( int k = 0; k <= 6; k++ ) {
-                    if( (i + j + k) % 2 == 0 ) {
 
-                        camM.m = geo::translate(Mat4d(true), Vec3d{i-3.0, j-3.0, k-3.0});
-                        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    // // pass 1
+    // GL::enable(GL_DEPTH_TEST);
+    // glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-                        update_matrices();
-                        sampleShader->set_camera_matrices_uniforms(camM);
-                        commonDrawers["sphere"sv]->draw();
-                    }
-                }
-            }
-        }
+    // GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // GL::depth_mask( GL_FALSE );
 
-        sampleShader->set_uniform("Kd", geo::Vec4f(0.9f, 0.2f, 0.2f, 0.4f));
-        size = 2.0;
-        double pos = 1.75;
-        camM.m = geo::translate(Mat4d(true), Vec3d{-pos, -pos, pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{-pos, -pos, -pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{-pos, pos, pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{-pos, pos, -pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{pos, pos, pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{pos, pos, -pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{pos, -pos, pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        camM.m = geo::translate(Mat4d(true), Vec3d{pos, -pos, -pos});
-        camM.m = geo::scale(camM.m, Vec3d{size,size,size});
-        update_matrices();
-        sampleShader->set_camera_matrices_uniforms(camM);
-        commonDrawers["cube"sv]->draw();
-        glFinish();
-    }
+    // GL::use_program(sampleShader->id());
+    // glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass1Index);
+    // {
+    //     // draw scene
+    //     sampleShader->set_uniform("LightPosition", geo::Vec4f(0,0,0,1));
+    //     sampleShader->set_uniform("LightIntensity", geo::Vec3f(0.9f,0.9f,0.9f));
+    //     sampleShader->set_uniform("Kd", geo::Vec4f(0.2f, 0.2f, 0.9f, 0.55f));
 
-    //  glFlush ensures that previous OpenGL commands must complete in finite time
-    glFlush();
+    //     double size = 0.45;
+    //     for( int i = 0; i <= 6; i++ ){
+    //         for( int j = 0; j <= 6; j++ ){
+    //             for( int k = 0; k <= 6; k++ ) {
+    //                 if( (i + j + k) % 2 == 0 ) {
 
-    // pass 2
-    glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
-    glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    {
-        draw_screen_quad(sampleShader.get());
-    }
+    //                     camM.m = geo::translate(Mat4d(true), Vec3d{i-3.0, j-3.0, k-3.0});
+    //                     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
 
-    glDepthMask( GL_TRUE );
+    //                     update_matrices();
+    //                     sampleShader->set_camera_matrices_uniforms(camM);
+    //                     commonDrawers["sphere"sv]->draw();
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     sampleShader->set_uniform("Kd", geo::Vec4f(0.9f, 0.2f, 0.2f, 0.4f));
+    //     size = 2.0;
+    //     double pos = 1.75;
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{-pos, -pos, pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{-pos, -pos, -pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{-pos, pos, pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{-pos, pos, -pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{pos, pos, pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{pos, pos, -pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{pos, -pos, pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     camM.m = geo::translate(Mat4d(true), Vec3d{pos, -pos, -pos});
+    //     camM.m = geo::scale(camM.m, Vec3d{size,size,size});
+    //     update_matrices();
+    //     sampleShader->set_camera_matrices_uniforms(camM);
+    //     commonDrawers["cube"sv]->draw();
+    //     glFinish();
+    // }
+
+    // //  glFlush ensures that previous OpenGL commands must complete in finite time
+    // glFlush();
+
+    // // pass 2
+    // glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+    // glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
+    // GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    // {
+    //     draw_screen_quad(sampleShader.get());
+    // }
+
+    // GL::depth_mask( GL_TRUE );
 }
 
 
@@ -2558,7 +2611,7 @@ auto Ch7BezCurve::init() -> bool {
     };
 
     bezPoints = std::make_unique<gl::CloudPointsDrawer>();
-    bezPoints->init(&patch);    
+    bezPoints->init(std::span<geo::Pt2f>(patch.data(), patch.size()));
     sampleShader->set_uniform("NumStrips", 1);
     sampleShader->set_uniform("LineColor", geo::Vec4f(1.0f,0.0f,0.0f,1.0f));
 
@@ -2574,12 +2627,12 @@ auto Ch7BezCurve::draw(tool::gl::Drawer *drawer) -> void {
 
     Sample::draw(drawer);
 
-    glEnable(GL_DEPTH_TEST);
+    GL::enable(GL_DEPTH_TEST);
     glPointSize(10.0f);
 
     // Set the number of vertices per patch.  IMPORTANT!!
     glPatchParameteri( GL_PATCH_VERTICES, 4);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camM.m = geo::Mat4d::identity();
     update_matrices();
@@ -2680,7 +2733,7 @@ auto Ch7ScenePointSprite::draw(tool::gl::Drawer *drawer) -> void {
             (dist(e2)/max * 2.f) - 1.0f
         });
     }
-    pointsSprites->init(&locations);
+    pointsSprites->init(std::span<geo::Pt3f>(locations.data(), locations.size()));
 
     sampleShader->use();
     sampleShader->set_uniform("Size2", sizeSprite);
@@ -2715,12 +2768,12 @@ auto Ch7Silhouette::draw(tool::gl::Drawer *drawer) -> void {
 
     Sample::draw(drawer);
 
-    glEnable(GL_DEPTH_TEST);
+    GL::enable(GL_DEPTH_TEST);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.Position", mobileLightPos1);// geo::Pt4f(0.0f,0.0f,0.0f,1.0f));
 
-    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camM.m = Mat4d(true);
     update_matrices();
@@ -2819,11 +2872,11 @@ auto Ch8ShadowMap::draw(tool::gl::Drawer *drawer) -> void {
     // # textures
     gl::TBO::bind({shadowTexture.id()},0);
 //     # clean
-    glClear(GL_DEPTH_BUFFER_BIT);
+    GL::clear(GL_DEPTH_BUFFER_BIT);
     // # flags
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_POLYGON_OFFSET_FILL); // set the scale and units used to calculate depth values
+    GL::enable(GL_DEPTH_TEST);
+    GL::enable(GL_CULL_FACE);
+    GL::enable(GL_POLYGON_OFFSET_FILL); // set the scale and units used to calculate depth values
     glCullFace(GL_FRONT); // specify whether front- or back-facing facets can be culled
     glPolygonOffset(2.5f,10.0f);
     // # viewport
@@ -2845,9 +2898,9 @@ auto Ch8ShadowMap::draw(tool::gl::Drawer *drawer) -> void {
 
     // Pass 2 (render)
     // # fbo
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
     // # clean
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // # viewport
     glViewport(0,0,camera->screen()->width(), camera->screen()->height());
     // # uniforms
@@ -3043,7 +3096,7 @@ auto Ch8ShadowMap2::draw(tool::gl::Drawer *) -> void{
     commonShaders["shadow_mapping_depth"sv]->set_uniform("lightSpaceMatrix", lightSpaceMatrix);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     depthmapFBO.bind();
-    glClear(GL_DEPTH_BUFFER_BIT);
+    GL::clear(GL_DEPTH_BUFFER_BIT);
     gl::TBO::bind({texturesM->texture_tbo("hardwood_diffuse")->id()},0);
     render_scene(commonShaders["shadow_mapping_depth"sv].get());
 
@@ -3055,8 +3108,8 @@ auto Ch8ShadowMap2::draw(tool::gl::Drawer *) -> void{
     sampleShader->set_uniform("lightPos", lightPos);//camera->view().conv<float>().multiply_point(Pt4f(lightPos,1.0f)).xyz());
     sampleShader->set_uniform("lightSpaceMatrix", lightSpaceMatrix);
     glViewport(0, 0, camera->screen()->width(), camera->screen()->height());
-    gl::FrameBufferObject::unbind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gl::FBO::unbind();
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gl::TBO::bind({texturesM->texture_tbo("hardwood_diffuse")->id(), depthMap.id()},0);
     render_scene(sampleShader.get());
 
@@ -3186,11 +3239,11 @@ auto Ch8ShadowPcf::draw(tool::gl::Drawer *drawer) -> void {
     // # textures
     gl::TBO::bind({shadowTexture.id()},0);
     // # clean
-    glClear(GL_DEPTH_BUFFER_BIT);
+    GL::clear(GL_DEPTH_BUFFER_BIT);
     // # flags
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_POLYGON_OFFSET_FILL);
+    GL::enable(GL_DEPTH_TEST);
+    GL::enable(GL_CULL_FACE);
+    GL::enable(GL_POLYGON_OFFSET_FILL);
     glCullFace(GL_FRONT);
     glPolygonOffset(2.5f,10.0f);
     // # viewport
@@ -3213,13 +3266,13 @@ auto Ch8ShadowPcf::draw(tool::gl::Drawer *drawer) -> void {
     //commonDrawers["building"sv]->draw(sampleShader.get());
 
     glCullFace(GL_BACK);
-    glDisable(GL_POLYGON_OFFSET_FILL);
+    GL::disable(GL_POLYGON_OFFSET_FILL);
     glFlush();
 
     auto lp = geo::to_pt4(lightPos,1.f);
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(lp.conv<double>()).conv<float>()});
 
-    gl::FrameBufferObject::unbind();
+    gl::FBO::unbind();
     glViewport(0,0,camera->screen()->width(),camera->screen()->height());
     glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
 

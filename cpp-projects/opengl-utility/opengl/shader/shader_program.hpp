@@ -39,6 +39,40 @@
 
 namespace tool::gl {
 
+struct UniformBlockInfo{
+
+    UniformBlockSize size;
+    UniformBlockLocation location;
+    UniformBlockElementInfo info;
+
+    std::unordered_map<std::string,UniformBlockElementInfo> elements;
+
+    auto get_offset(const std::string &elementName) const -> GLint{
+        if(elements.count(elementName) == 0){
+            // std::cerr << "[GL] Error " << elementName << " not found in block uniform info.\n";
+            return {};
+        }
+        return elements.at(elementName).offset;
+    }
+
+    auto get_offsets(const std::vector<std::string> &elementsNames) const -> std::vector<GLint>{
+
+        std::vector<GLint> offsets;
+        offsets.reserve(elementsNames.size());
+        for(const auto &name : elementsNames){
+            if(elements.count(name) == 0){
+                // std::cerr << "[GL] Error " << name << " not found in block uniform info.\n";
+                return {};
+            }
+            offsets.emplace_back(elements.at(name).offset);
+        }
+        return offsets;
+    }
+
+};
+
+
+
 class ShaderProgram {
 
 public:
