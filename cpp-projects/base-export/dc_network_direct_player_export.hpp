@@ -92,7 +92,7 @@ struct DCNetworkDirectPlayer{
 
     // function to be called in a dedicated thread
     auto read_network_data(size_t idDevice) -> size_t;
-    auto process_data() -> size_t;
+    auto process_data(size_t idDevice) -> bool;
 
     // actions
     auto connect_to_devices() -> void;
@@ -133,7 +133,7 @@ DECL_EXPORT void delete__dc_network_direct_player(tool::cam::DCNetworkDirectPlay
 DECL_EXPORT int initialize__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* networkSettingsFilePath);
 DECL_EXPORT void update__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
-DECL_EXPORT int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
+DECL_EXPORT int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
 // actions
 DECL_EXPORT void connect_to_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT void disconnect_from_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);

@@ -35824,3 +35824,211 @@ ObRTSPClient destructor! rtspURL = rtsp://192.168.1.10:8888/color/1280_720_30_mj
 [02/27 14:41:19.576291][info][37536][GVCPClient.cpp:310] 0, 3, 248, 1 [**1 logs in 4902ms, last: 14:41:14.684320**]
 [02/27 14:41:19.576392][info][404][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L,  [**1 logs in 4902ms, last: 14:41:14.684636**]
 [02/27 14:41:19.576536][info][35584][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669 [**1 logs in 3901ms, last: 14:41:15.685135**]
+[03/04 14:03:06.470252][debug][26132][Context.cpp:31] Context creating. work_dir=D:\DEV\EPFL\lnco-exvr\exvr\toolset\cpp-projects\_build\bin\dc-grabber 
+[03/04 14:03:06.470740][debug][26132][Context.cpp:50] Config file version=1.1
+[03/04 14:03:06.471599][debug][26132][FrameBufferManager.cpp:23] Max global frame buffer size updated! size=2048.000MB
+[03/04 14:03:06.471685][info][26132][Context.cpp:69] Context created with config: default config!
+[03/04 14:03:06.471896][info][26132][Context.cpp:74] Context work_dir=D:\DEV\EPFL\lnco-exvr\exvr\toolset\cpp-projects\_build\bin\dc-grabber 
+[03/04 14:03:06.472166][info][26132][Context.cpp:77] 	- SDK version: 1.9.4
+[03/04 14:03:06.472213][info][26132][Context.cpp:78] 	- SDK stage version: main
+[03/04 14:03:06.472504][info][26132][Context.cpp:82] get config EnumerateNetDevice:false
+[03/04 14:03:06.472538][debug][26132][DeviceManager.cpp:30] DeviceManager init ...
+[03/04 14:03:06.472756][info][26132][MfPal.cpp:102] createObPal: create WinPal!
+[03/04 14:03:06.472995][debug][26132][MfPal.cpp:107] WmfPal init ...
+[03/04 14:03:06.497230][debug][26132][MfPal.cpp:114] WmfPal created!
+[03/04 14:03:06.497304][debug][26132][DeviceManager.cpp:34] Enable USB Device Enumerator ...
+[03/04 14:03:06.519828][debug][26132][EnumeratorLibusb.cpp:323] queryDevicesInfo done!
+[03/04 14:03:06.520123][debug][26132][MfPal.cpp:166] Create WinEventDeviceWatcher!
+[03/04 14:03:06.520249][debug][26132][UsbDeviceEnumerator.cpp:76] No matched usb device found!
+[03/04 14:03:06.520308][info][26132][DeviceManager.cpp:15] Current found device(s): (0)
+[03/04 14:03:06.520346][debug][26132][DeviceManager.cpp:55] DeviceManager construct done!
+[03/04 14:03:06.520423][info][26132][DeviceManager.cpp:310] Enable net device enumeration: true
+[03/04 14:03:06.525001][info][26132][GVCPClient.cpp:223] bind 192.168.1.17:0
+[03/04 14:03:06.526263][info][26132][GVCPClient.cpp:223] bind 192.168.56.1:0
+[03/04 14:03:07.529476][debug][26132][NetDeviceEnumerator.cpp:57] No net source port found!
+[03/04 14:03:07.529621][debug][26132][NetDeviceEnumerator.cpp:33] No net device found!
+[03/04 14:03:07.530176][info][26132][DeviceManager.cpp:15] Current device(s) list: (0)
+[03/04 14:03:07.541598][info][37192][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:07.541696][info][37192][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:08.542209][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:09.553105][debug][37248][NetDeviceEnumerator.cpp:61] Current net source port list:
+[03/04 14:03:09.553688][debug][37248][NetDeviceEnumerator.cpp:64]  - mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, port:8090
+[03/04 14:03:09.554171][debug][37248][NetDeviceEnumerator.cpp:133] Net device list changed!
+[03/04 14:03:09.554219][debug][37248][NetDeviceEnumerator.cpp:135] 1 net device(s) found:
+[03/04 14:03:09.554266][debug][37248][NetDeviceEnumerator.cpp:138]   - Name: Femto Mega, PID: 0x0669, SN/ID: CL2GB33003L, MAC:48:B0:2D:9B:40:F6, IP:192.168.1.10
+[03/04 14:03:09.554296][debug][37248][NetDeviceEnumerator.cpp:150] Current net device list: (1)
+[03/04 14:03:09.554316][debug][37248][NetDeviceEnumerator.cpp:153]   - Name: Femto Mega, PID: 0x0669, SN/ID: CL2GB33003L, MAC:48:B0:2D:9B:40:F6, IP:192.168.1.10
+[03/04 14:03:09.554342][info][37248][DeviceManager.cpp:188] Device changed! removed: 0, added: 1
+[03/04 14:03:09.554363][info][37248][DeviceManager.cpp:15] Current device(s) list: (1)
+[03/04 14:03:09.554404][info][37248][DeviceManager.cpp:20] 	- Name: Femto Mega, PID: 0x0669, SN/ID: CL2GB33003L, Connection: Ethernet, MAC:48:B0:2D:9B:40:F6, ip:192.168.1.10
+[03/04 14:03:11.551689][info][40228][GVCPClient.cpp:310] 0, 3, 248, 1 [**1 logs in 4010ms, last: 14:03:08.551734**]
+[03/04 14:03:11.552682][info][22328][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L,  [**1 logs in 4010ms, last: 14:03:08.551851**]
+[03/04 14:03:12.553757][info][35688][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669 [**1 logs in 4011ms, last: 14:03:09.552926**]
+[03/04 14:03:14.564448][info][41468][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:14.564523][info][41468][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:15.564153][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:20.574524][info][14664][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:20.574615][info][14664][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:21.575066][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:26.585715][info][33232][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:26.585794][info][33232][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:27.586197][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:32.596255][info][41756][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:32.596331][info][41756][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:33.596122][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:38.606587][info][38580][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:38.606693][info][38580][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:39.606298][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:44.618571][info][29352][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:44.618712][info][29352][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:45.618451][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:50.629127][info][29204][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:50.629203][info][29204][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:51.630163][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:03:56.640693][info][33616][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:03:56.640859][info][33616][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:03:57.641846][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:02.654426][info][33656][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:02.654612][info][33656][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:03.655964][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:08.670628][info][41740][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:08.670804][info][41740][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:09.671271][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:14.682653][info][37596][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:14.682830][info][37596][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:15.683430][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:20.695531][info][40460][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:20.695633][info][40460][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:21.695835][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:26.707653][info][40584][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:26.707811][info][40584][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:27.708237][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:32.720135][info][37724][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:32.720320][info][37724][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:33.721282][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:38.733682][info][33368][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:38.733848][info][33368][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:39.733805][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:44.747515][info][35348][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:44.747909][info][35348][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:45.749516][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:50.759823][info][35248][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:50.760069][info][35248][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:51.760347][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:04:56.771530][info][28640][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:04:56.771644][info][28640][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:04:57.772195][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:02.783562][info][25316][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:02.783742][info][25316][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:03.784372][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:08.797329][info][2948][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:08.797438][info][2948][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:09.797201][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:14.808951][info][25492][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:14.809198][info][25492][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:15.808721][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:20.819664][info][33104][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:20.819765][info][33104][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:21.819186][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:26.829814][info][37560][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:26.829904][info][37560][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:27.830131][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:32.839939][info][29096][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:32.840075][info][29096][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:33.840079][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:38.851279][info][40240][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:38.851396][info][40240][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:39.850945][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:44.861474][info][33168][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:44.861569][info][33168][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:45.861821][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:50.874167][info][26336][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:50.874417][info][26336][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:51.874429][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:05:56.887610][info][38664][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:05:56.888050][info][38664][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:05:57.888086][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:02.898218][info][36308][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:02.898324][info][36308][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:03.898303][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:08.907998][info][24816][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:08.908102][info][24816][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:09.908339][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:14.919880][info][39172][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:14.920038][info][39172][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:15.921147][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:20.932315][info][41924][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:20.932420][info][41924][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:21.933068][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:26.944089][info][40428][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:26.944329][info][40428][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:27.945342][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:32.955920][info][27288][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:32.956021][info][27288][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:33.956370][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:38.967145][info][40772][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:38.967276][info][40772][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:39.968255][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:44.980335][info][29656][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:44.980455][info][29656][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:45.980965][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:50.991981][info][12580][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:50.992062][info][12580][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:51.992810][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:06:57.004651][info][27372][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:06:57.004964][info][27372][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:06:58.005091][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:03.018006][info][33392][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:03.018232][info][33392][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:04.018422][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:09.030126][info][37800][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:09.030215][info][37800][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:10.031090][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:15.042774][info][32208][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:15.042913][info][32208][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:16.043654][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:21.054072][info][41168][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:21.054193][info][41168][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:22.054585][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:27.064520][info][10428][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:27.064624][info][10428][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:28.065030][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:33.074795][info][37860][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:33.074909][info][37860][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:34.076232][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:39.086238][info][21272][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:39.086349][info][21272][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:40.086487][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:45.098218][info][40788][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:45.098321][info][40788][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:46.098443][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:51.110515][info][33092][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:51.110628][info][33092][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:52.112022][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:07:57.124513][info][37260][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:07:57.124710][info][37260][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:07:58.125390][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:03.135422][info][24692][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:03.135506][info][24692][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:04.136150][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:09.146853][info][25996][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:09.146965][info][25996][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:10.147150][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:15.159018][info][32400][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:15.159107][info][32400][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:16.159973][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:21.170296][info][38172][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:21.170392][info][38172][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:22.170503][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:27.182856][info][29292][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:27.182970][info][29292][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:28.183160][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:33.198285][info][37076][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:33.198382][info][37076][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:34.198582][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:39.210710][info][28056][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:39.210989][info][28056][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:40.211292][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669
+[03/04 14:08:45.222831][info][40428][GVCPClient.cpp:310] 0, 3, 248, 1
+[03/04 14:08:45.223077][info][40428][GVCPClient.cpp:352] 2,1, 48:B0:2D:9B:40:F6,7, 5,1641, 192.168.1.10, 255.255.255.0, 192.168.1.254, Orbbec, FemtoMega, 1.2.7, Orbbec, CL2GB33003L, 
+[03/04 14:08:46.223235][info][37248][GVCPClient.cpp:76] 	- mac:48:B0:2D:9B:40:F6, ip:192.168.1.10, sn:CL2GB33003L, pid:0x0669

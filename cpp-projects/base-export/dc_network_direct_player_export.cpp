@@ -47,18 +47,21 @@ DCNetworkDirectPlayer::DCNetworkDirectPlayer(){
         devicesD[idCamera].nbFeedbacksReceived++;
         devicesD[idCamera].feedbackLocker->unlock();
     });
+
+    // serverNetwork.remote_frame_signal.connect(  &DCServerData::new_compressed_frame,    &serverData);
+    // serverNetwork.local_frame_signal.connect(   &DCServerData::new_frame,               &serverData);
+
     serverNetwork.remote_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCCompressedFrame> cFrame){
         devicesD[idCamera].frameLocker->lock();
         devicesD[idCamera].lastCompressedFrame = std::move(cFrame);
         devicesD[idCamera].frameLocker->unlock();
-
         devicesD[idCamera].nbFramesReceived++;
     });
+
     serverNetwork.local_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCFrame> frame){
         devicesD[idCamera].frameLocker->lock();
         devicesD[idCamera].lastFrame = std::move(frame);
         devicesD[idCamera].frameLocker->unlock();
-
         devicesD[idCamera].nbFramesReceived++;
     });
 }
@@ -159,7 +162,7 @@ auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSett
 
     if(deviceSettingsPath.length() == 0){
         Logger::warning("Device settings file with path is empty.\n");
-        return true;
+        return false;
     }
 
     if(!std::filesystem::exists(deviceSettingsPath)){
@@ -307,37 +310,44 @@ auto DCNetworkDirectPlayer::update() -> void{
 
     // process feedbacks
     for(const auto &message : receivedFeedbacks){
-        // log_message(std::format("message [{}] [{}] [{}]\n", message.first, (int)message.second.receivedMessageType, (int)message.second.feedback));
         if(message.second.receivedMessageType == MessageType::init_network_infos && message.second.feedback == FeedbackType::message_received){
-
-            // log_message(std::format("Grabber [{}] connected.\n", message.first));
-            // set<int>(
-            //     ParametersContainer::Dynamic,
-            //     std::format("grabber_connected_{}", message.first),
-            //     i->serverNetwork.device_connected(message.first) ? 1 : 0
-            //     );
-
-            // if((get<int>(ParametersContainer::InitConfig, "device_init_file") == 1) || (get<int>(ParametersContainer::InitConfig, "device_init_default") == 1)){
-            //     i->serverNetwork.update_device_settings(message.first, i->grabbersS[message.first].device);
-            // }
-            // if((get<int>(ParametersContainer::InitConfig, "color_init_file") == 1) || (get<int>(ParametersContainer::InitConfig, "color_init_default") == 1)){
-            //     i->serverNetwork.update_color_settings(message.first, i->grabbersS[message.first].color);
-            // }
-            // if((get<int>(ParametersContainer::InitConfig, "filters_init_file") == 1) || (get<int>(ParametersContainer::InitConfig, "filters_init_default") == 1)){
-            //     i->serverNetwork.update_filters_settings(message.first, i->grabbersS[message.first].filters);
-            // }
+            // ...
         }
     }
+
+    std::for_each(std::execution::par_unseq, std::begin(devicesD), std::end(devicesD), [&](DeviceData &deviceD){
+        deviceD.frameLocker->lock();
+
+        if(deviceD.lastCompressedFrame != nullptr){
+            auto cf = std::move(deviceD.lastCompressedFrame);
+            deviceD.lastCompressedFrame = nullptr;
+            deviceD.frameLocker->unlock();
+
+            deviceD.frameToDisplay = serverData.uncompress_frame(deviceD.id, std::move(cf));
+            return;
+
+        }else if(deviceD.lastFrame != nullptr){
+            deviceD.frameToDisplay = std::move(deviceD.lastFrame);
+            deviceD.lastFrame = nullptr;
+        }
+
+        deviceD.frameLocker->unlock();
+    });
+
 
     // update current frames
     for(auto &deviceD : devicesD){
 
-        deviceD.frameLocker->lock();
-        if(deviceD.lastFrame){
-            deviceD.frameToDisplay = std::move(deviceD.lastFrame);
-            deviceD.lastFrame = nullptr;
-        }
-        deviceD.frameLocker->unlock();
+        // deviceD.frameLocker->lock();
+
+        // if(deviceD.lastFrame){
+        //     deviceD.frameToDisplay = std::move(deviceD.lastFrame);
+        //     deviceD.lastFrame = nullptr;
+        // }
+        // deviceD.frameLocker->unlock();
+
+
+        // deviceD.frameToDisplay = serverData.get_frame(deviceD.id);
 
         if(deviceD.frameToDisplay != nullptr){
             auto cloudSize = deviceD.frameToDisplay->cloud.size();
@@ -350,32 +360,40 @@ auto DCNetworkDirectPlayer::update() -> void{
 }
 
 auto DCNetworkDirectPlayer::read_network_data(size_t idDevice) -> size_t{
-    serverNetwork.read_data_from_network(idDevice);
-    return devicesD[idDevice].nbFramesReceived;
+    return serverNetwork.read_data_from_network(idDevice);
 }
 
-auto DCNetworkDirectPlayer::process_data() -> size_t{
+auto DCNetworkDirectPlayer::process_data(size_t idDevice) -> bool{
+    // return serverData.process_data(idDevice);
 
-    size_t nbFramesUncompressed = 0;
-    for(size_t idD = 0; idD < devicesD.size(); ++idD){
-        std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
-        devicesD[idD].frameLocker->lock();
-        cFrame = devicesD[idD].lastCompressedFrame;
-        devicesD[idD].lastCompressedFrame = nullptr;
-        devicesD[idD].frameLocker->unlock();
 
-        if(cFrame){
-            auto frame = serverData.uncompress_frame(idD, cFrame);
-            if(frame){
-                devicesD[idD].frameLocker->lock();
-                devicesD[idD].lastFrame = frame;
-                devicesD[idD].nbFramesProcessed++;
-                devicesD[idD].frameLocker->unlock();
-                nbFramesUncompressed++;
-            }
-        }
-    }
-    return nbFramesUncompressed;
+    // size_t nbFramesUncompressed = 0;
+
+    // for(size_t idD = 0; idD < devicesD.size(); ++idD){
+
+    //     std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
+
+    //     devicesD[idD].frameLocker->lock();
+    //     cFrame = devicesD[idD].lastCompressedFrame;
+    //     devicesD[idD].lastCompressedFrame = nullptr;
+    //     devicesD[idD].frameLocker->unlock();
+
+    //     if(cFrame){
+
+    //         auto frame = serverData.uncompress_frame(idD, cFrame);
+    //         if(frame){
+    //             devicesD[idD].frameLocker->lock();
+    //             devicesD[idD].lastFrame = frame;
+    //             devicesD[idD].nbFramesProcessed++;
+    //             devicesD[idD].frameLocker->unlock();
+    //             nbFramesUncompressed++;
+    //         }
+    //     }
+    // }
+
+    // return nbFramesUncompressed;
+
+    return false;
 }
 
 auto DCNetworkDirectPlayer::current_frame_id(size_t idD) -> size_t{
@@ -488,6 +506,10 @@ int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer
     return static_cast<int>(dcNetworkDirectPlayer->read_network_data(idD));
 }
 
+int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
+    return static_cast<int>(dcNetworkDirectPlayer->process_data(idD)) ? 1 : 0;
+}
+
 void copy_transform__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, float *transformData){
     tool::geo::Mat4f transform = dcNetworkDirectPlayer->device_model(idD);
     std::copy(transform.array.begin(), transform.array.end(), transformData);
@@ -513,6 +535,3 @@ int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer 
     return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(idD, {vertices, static_cast<size_t>(verticesCount)}, applyModelTransform == 1));
 }
 
-int process_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer){
-    return static_cast<int>(dcNetworkDirectPlayer->process_data());
-}

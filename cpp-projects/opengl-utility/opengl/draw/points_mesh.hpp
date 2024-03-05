@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-base                                                               **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,45 +26,61 @@
 
 #pragma once
 
+// std
+#include <span>
+
+// base
+#include "geometry/point2.hpp"
+#include "geometry/point3.hpp"
+
 // local
-#include "dc_compressed_frame.hpp"
-#include "dc_frame.hpp"
-#include "settings/dc_device_settings.hpp"
+#include "vao_renderer.hpp"
 
-namespace tool::cam{
+namespace tool::gl{
 
-class DCServerData{
-
+class PointsMesh : public VAORenderer{
 public:
 
-    DCServerData();
-    ~DCServerData();
+    // TODO: test init/load
+    // init
+    auto init_3d_points(
+        size_t size,
+        bool hasColors,
+        bool hasNormals
+    ) -> void;
 
-    // init / clean
-    auto initialize(size_t nbDevices, bool startProcessingThread) -> void;
-    auto clean() -> void;
+    // load
+    auto load_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals
+    ) -> void;
 
-    // get
-    size_t nb_grabbers() const noexcept;
-    auto get_frame(size_t idC) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame(size_t idC) -> std::shared_ptr<cam::DCCompressedFrame>;
+    // init and load
+    auto init_and_load_2d_points(
+        std::span<const geo::Pt2f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt2f> normals
+    ) -> void;
 
-    // modify
-    auto add_device() -> void;
-    auto remove_device(size_t idDevice) -> void;
-    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto invalid_last_frame(size_t idC) -> void;
-    auto invalid_last_compressed_frame(size_t idC) -> void;
-    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
+    auto init_and_load_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals
+    ) -> void;
 
-    // when no processing thread started
-    auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
-    // auto process_data(size_t idC) -> bool;
+    auto init_and_load_3d_voxels(
+        std::span<const geo::Pt3<int>> voxels,
+        std::span<const geo::Pt3f> colors
+    ) -> void;
 
-private:
+    auto render() const -> void override;
+    auto render_patches() const -> void override;
+    auto clean() -> void override;
 
-    struct Impl;
-    std::unique_ptr<Impl> i;
+protected:
+
+    VBO colorsB;
+    VBO normalsB;
 };
 }

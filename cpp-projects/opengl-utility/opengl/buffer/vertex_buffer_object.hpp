@@ -47,6 +47,7 @@ struct VBO{
 
     auto load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
     auto load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
+    auto load_data(const GLvoid *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
 
     auto attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset = {nullptr}) -> bool;
     // TODO: DSA ATRIB

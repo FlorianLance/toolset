@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,54 +26,31 @@
 
 #pragma once
 
+// base
+#include "utility/buffer.hpp"
+
 // local
-#include "geometry_data.hpp"
+#include "opengl/draw/vao_renderer.hpp"
+#include "opengl/shader/shader_program.hpp"
 
 namespace tool::gl{
 
-class PointMeshData : public GeometryData{
+class ObjectDrawer{
 public:
 
-    // TODO: test init/load
-    // init
-    auto init_3d_points(
-        size_t size,
-        bool hasColors,
-        bool hasNormals
-    ) -> void;
+    virtual auto draw(gl::ShaderProgram *shader = nullptr) -> void;
 
-    // load
-    auto load_3d_points(
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt3f> normals
-    ) -> void;
+    virtual ~ObjectDrawer(){}
 
-    // init and load
-    auto init_and_load_2d_points(
-        std::span<const geo::Pt2f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt2f> normals
-    ) -> void;
-
-    auto init_and_load_3d_points(
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt3f> normals
-    ) -> void;
-
-    auto init_and_load_3d_voxels(
-        std::span<const geo::Pt3<int>> voxels,
-        std::span<const geo::Pt3f> colors
-    ) -> void;
-
-    auto render() const -> void override;
-    auto render_patches() const -> void override;
-    auto clean() -> void override;
-
-protected:
-
-    VBO colorsB;
-    VBO normalsB;
+    std::unique_ptr<VAORenderer> vaoRenderer = nullptr;
+    Buffer<GLuint> texturesNames;
 };
+
+class FullscreenQuadDrawer2 : public ObjectDrawer{
+public:
+
+    FullscreenQuadDrawer2();
+};
+
+
 }

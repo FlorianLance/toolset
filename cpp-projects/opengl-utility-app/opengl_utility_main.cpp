@@ -33,7 +33,7 @@
 
 #include "opengl/shapes.hpp"
 #include "opengl/draw/drawer.hpp"
-#include "opengl/draw/geometry_data.hpp"
+#include "opengl/draw/vao_renderer.hpp"
 
 
 int main(){

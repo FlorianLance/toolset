@@ -176,13 +176,12 @@ auto DCServerData::uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFram
     return i->grabbersDataProcessing[idC]->uncompress(frame);
 }
 
-// auto DCServerData::process_data() -> size_t{
+// auto DCServerData::process_data(size_t idC) -> bool{
 
-//     std::atomic<size_t> nbFramesAvailable = 0;
-//     std::for_each(std::execution::seq, std::begin(i->grabbersDataProcessing), std::end(i->grabbersDataProcessing), [&](std::unique_ptr<cam::DCGrabberDataProcessing> &grabber){
-//         if(grabber->process()){
-//             nbFramesAvailable++;
-//         }
-//     });
-//     return nbFramesAvailable;
+//     if(idC >= i->grabbersDataProcessing.size()){
+//         Logger::error(std::format("[DCServerData::process_data] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+//         return 0;
+//     }
+
+//     return i->grabbersDataProcessing[idC]->process();
 // }

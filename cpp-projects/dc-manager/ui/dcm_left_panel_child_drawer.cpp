@@ -524,6 +524,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     if(ImGui::Button("Send all###device_send_all")){
         for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
             DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
         }
     }
     ImGui::Dummy(ImVec2{0,20});

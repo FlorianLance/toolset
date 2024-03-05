@@ -32,7 +32,9 @@
 #include "utility/logger.hpp"
 
 // local
-#include "opengl/draw/points_mesh_data.hpp"
+#include "opengl/draw/points_mesh.hpp"
+#include "opengl/draw/lines_mesh.hpp"
+#include "opengl/draw/triangles_mesh.hpp"
 
 using namespace tool;
 using namespace tool::gl;
@@ -57,11 +59,16 @@ Axes::Axes(GLfloat length){
         1.f,0.f,0.f,1.f, 1.f,0.f,0.f,1.f,
         0.f,1.f,0.f,1.f, 0.f,1.f,0.f,1.f,
         0.f,0.f,1.f,1.f, 0.f,0.f,1.f,1.f
-    };    
+    };
 
-    auto lmd = std::make_unique<LineMeshData>();
-    lmd->init_buffers(&indices, &points, &colors);
-    data = std::move(lmd);
+    auto lmd = std::make_unique<LinesMesh>();
+    lmd->init_and_load_3d_lines(
+        std::span<const GLuint>(indices.data(),indices.size()),
+        std::span<const geo::Pt3f>(reinterpret_cast<const geo::Pt3f*>(points.data()),points.size()/3),
+        std::span<const geo::Pt4f>(reinterpret_cast<const geo::Pt4f*>(colors.data()),colors.size()/4)
+    );
+
+    vaoRenderer = std::move(lmd);
 }
 
 
@@ -105,9 +112,9 @@ Grid::Grid(GLfloat width, GLfloat height, GLuint nbX, GLuint nbY){
         points.emplace_back(maxY);
     }
 
-    auto lmd = std::make_unique<LineMeshData>();
-    lmd->init_buffers(&indices, &points);
-    data = std::move(lmd);
+    auto lmd = std::make_unique<LinesMesh>();
+    lmd->init_and_load_3d_lines(&indices, &points);
+    vaoRenderer = std::move(lmd);
 }
 
 TriangleLines::TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3){
@@ -124,9 +131,9 @@ TriangleLines::TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo
         p3.x(), p3.y(), p3.z()
     };
 
-    auto lmd = std::make_unique<LineMeshData>();
-    lmd->init_buffers(&indices, &points);
-    data = std::move(lmd);
+    auto lmd = std::make_unique<LinesMesh>();
+    lmd->init_and_load_3d_lines(&indices, &points);
+    vaoRenderer = std::move(lmd);
 }
 
 
@@ -179,9 +186,9 @@ Skybox::Skybox(GLfloat size){
         20,22,21,20,23,22
     };
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el, &p, &n);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 
@@ -245,9 +252,9 @@ Torus::Torus(GLfloat outerRadius, GLfloat innerRadius, GLuint nsides, GLuint nri
         }
     }
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&elements, &points, &normals, &textCoords);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 
@@ -309,15 +316,15 @@ Cube::Cube(GLfloat side){
         20,21,22,20,22,23
     };
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el, &p, &n, &tex);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 
 gl::Mesh::Mesh(graphics::Mesh *mesh){
 
-    auto tmd = std::make_unique<TriangleMeshData>();       
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(
         &mesh->triIds.values,
         &mesh->vertices.values,
@@ -327,7 +334,7 @@ gl::Mesh::Mesh(graphics::Mesh *mesh){
         (mesh->bones.size()    != 0) ? &mesh->bones.values     : nullptr,
         (mesh->colors.size()   != 0) ? &mesh->colors.values    : nullptr
     );
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 
@@ -393,9 +400,9 @@ Plane::Plane(GLfloat xsize, GLfloat zsize, size_t xdivs, size_t zdivs, GLfloat s
         }
     }
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el, &p, &n, &tex, &tang);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 SphereShape::SphereShape(GLfloat radius, GLuint nSlices, GLuint nStacks){
@@ -464,11 +471,11 @@ SphereShape::SphereShape(GLfloat radius, GLuint nSlices, GLuint nStacks){
                 idx += 6;
             }
         }
-    }    
+    }
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el, &p, &n, &tex);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 FullscreenQuad::FullscreenQuad(){
@@ -491,9 +498,9 @@ FullscreenQuad::FullscreenQuad(){
         0,1,2,0,2,3
     };
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el, &p, nullptr, &tex);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 
@@ -891,9 +898,9 @@ Teapot::Teapot(int grid, const geo::Mat4f &lidTransform){
     generate_patches( p, n, tc, el, grid );
     move_lid(grid, p, lidTransform);
 
-    auto tmd = std::make_unique<TriangleMeshData>();
+    auto tmd = std::make_unique<TriangleMesh>();
     tmd->init_buffers(&el,&p, &n, &tc);
-    data = std::move(tmd);
+    vaoRenderer = std::move(tmd);
 }
 
 Frustum::Frustum(){
@@ -940,9 +947,14 @@ void Frustum::set_perspective(float fovy, float ar, float nearDist, float farDis
         5,6,6,7,7,8,8,5
     };
 
-    auto tmd = std::make_unique<LineMeshData>();
-    tmd->init_buffers(&indices, &vertices, nullptr);
-    data = std::move(tmd);
+    auto tmd = std::make_unique<LinesMesh>();
+    tmd->init_and_load_3d_lines(
+        std::span<const GLuint>(indices.data(),indices.size()),
+        std::span<const geo::Pt3f>(reinterpret_cast<const geo::Pt3f*>(vertices.data()),vertices.size()/3),
+        {}
+    );
+
+    vaoRenderer = std::move(tmd);
 }
 
 Mat4f Frustum::view_matrix() const{    
@@ -963,22 +975,24 @@ Pt3f Frustum::origin() const{
 
 
 Cloud::Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals){
-    auto pmd = std::make_unique<PointMeshData>();
+    auto pmd = std::make_unique<PointsMesh>();
     pmd->init_and_load_3d_points(points, colors, normals);
-    data = std::move(pmd);
+    vaoRenderer = std::move(pmd);
 }
 
 Cloud::Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals){
-    auto pmd = std::make_unique<PointMeshData>();
+    auto pmd = std::make_unique<PointsMesh>();
     pmd->init_and_load_2d_points(points, colors, normals);
-    data = std::move(pmd);
+    vaoRenderer = std::move(pmd);
 }
 
 Voxels::Voxels(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors){
-    auto pmd = std::make_unique<PointMeshData>();
+    auto pmd = std::make_unique<PointsMesh>();
     pmd->init_and_load_3d_voxels(voxels, colors);
-    data = std::move(pmd);
+    vaoRenderer = std::move(pmd);
 }
+
+
 
 
 

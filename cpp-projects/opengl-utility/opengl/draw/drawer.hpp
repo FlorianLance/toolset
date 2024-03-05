@@ -55,7 +55,7 @@ public:
 
     auto clean() -> void{
         if(drawableObject){
-            drawableObject->data->clean();
+            drawableObject->vaoRenderer->clean();
         }
     }
 

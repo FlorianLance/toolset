@@ -67,6 +67,15 @@ auto VBO::load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage) -> vo
     );
 }
 
+auto VBO::load_data(const GLvoid *data, GLsizeiptr size, GLbitfield usage) -> void{
+    GL::named_buffer_storage(
+        m_handle,
+        size,
+        data,
+        usage
+    );
+}
+
 auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> void{
     GL::named_buffer_storage(
         m_handle,
@@ -116,8 +125,8 @@ auto VBO::dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum
 
     GL::vertex_array_attrib_binding(
         vao,
-        index,          // GLuint attribindex: The index of the attribute to associate with a vertex buffer binding.
-        bindingIndex    // GLuint bindingindex: The index of the vertex buffer binding with which to associate the generic vertex attribute.
+        index,
+        bindingIndex
     );
 
 }

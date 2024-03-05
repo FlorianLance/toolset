@@ -66,11 +66,22 @@ auto TBO::bind(GLuint unit) -> void{
     bind({m_handle}, unit);
 }
 
+auto TBO::bind(std::span<GLuint> textures, GLuint first) -> void{
+
+    for(const auto &texture : textures){
+        if(texture ==0){
+            Logger::error("[TBO::bind) TBO not generated, cannot bind it.\n");
+            return;
+        }
+    }
+    GL::bind_textures(first, static_cast<GLsizei>(textures.size()), textures.data());
+}
+
 auto TBO::bind(std::vector<GLuint> textures, GLuint first) -> void{
 
     for(const auto &n : textures){
         if(n==0){
-            Logger::error("[TBO::bind_textures) TBO not generated, cannot bind it.\n");
+            Logger::error("[TBO::bind) TBO not generated, cannot bind it.\n");
             return;
         }
     }

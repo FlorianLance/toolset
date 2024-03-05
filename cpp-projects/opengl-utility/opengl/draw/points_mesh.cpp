@@ -24,10 +24,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "points_mesh_data.hpp"
-
-using namespace tool::geo;
-using namespace tool::gl;
+#include "points_mesh.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -35,11 +32,13 @@ using namespace tool::gl;
 // local
 #include "opengl/gl_functions.hpp"
 
+using namespace tool::geo;
+using namespace tool::gl;
 
-auto PointMeshData::init_3d_points(size_t size, bool hasColors, bool hasNormals) -> void{
+auto PointsMesh::init_3d_points(size_t size, bool hasColors, bool hasNormals) -> void{
 
     if(size == 0){
-        Logger::error("[PointMeshData::init_3d_points] No points.\n");
+        Logger::error("[PointsMesh::init_3d_points] No points.\n");
         return;
     }
 
@@ -97,10 +96,10 @@ auto PointMeshData::init_3d_points(size_t size, bool hasColors, bool hasNormals)
     VAO::unbind();
 }
 
-auto PointMeshData::load_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+auto PointsMesh::load_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
 
     if(!buffersInitialized){
-        Logger::error("[PointMeshData::load_3d_points] Buffer not initialized.\n");
+        Logger::error("[PointsMesh::load_3d_points] Buffer not initialized.\n");
         return;
     }
 
@@ -109,10 +108,10 @@ auto PointMeshData::load_3d_points(std::span<const geo::Pt3f> points, std::span<
 
 }
 
-auto PointMeshData::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
+auto PointsMesh::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
 
     if(points.empty()){
-        Logger::error("[PointMeshData::init_and_load_3d_points] No points.\n");
+        Logger::error("[PointsMesh::init_and_load_3d_points] No points.\n");
         return;
     }
 
@@ -139,46 +138,122 @@ auto PointMeshData::init_and_load_3d_points(std::span<const Pt3f> points, std::s
     pointsB.load_data(
         reinterpret_cast<const GLfloat*>(points.data()),
         static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat))
-    );
-    pointsB.dsa_attrib(
-        vao.id(),
-        0,
-        3,
-        sizeof(Pt3f),
-        GL_FLOAT,
-        0,
-        0
-    );
-
+    );    
     if(hasColors){
         colorsB.load_data(
             reinterpret_cast<const GLfloat*>(colors.data()),
             static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat))
         );
-        colorsB.dsa_attrib(
-            vao.id(),
-            1,
-            3,
-            sizeof(Pt3f),
-            GL_FLOAT,
-            0,
-            1
-        );
     }
-
     if(hasNormals){
         normalsB.load_data(
             reinterpret_cast<const GLfloat*>(normals.data()),
             static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat))
         );
-        normalsB.dsa_attrib(
+    }
+
+
+    GLuint positionBindingId = 0;
+    GLuint colorBindingId    = 1;
+    GLuint normalBindingId   = 2;
+
+    GLuint positionLoc = 0;
+    GLuint colorLoc    = 1;
+    GLuint normalLoc   = 2;
+
+    // Bind vbo to buffer bind point
+    GL::vertex_array_vertex_buffer(
+        vao.id(),
+        positionBindingId,
+        pointsB.id(),
+        0,
+        sizeof(GLfloat)*3
+    );
+    if(hasColors){
+        GL::vertex_array_vertex_buffer(
             vao.id(),
-            2,
+            colorBindingId,
+            colorsB.id(),
+            0,
+            sizeof(GLfloat)*3
+        );
+    }
+    if(hasNormals){
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            normalBindingId,
+            normalsB.id(),
+            0,
+            sizeof(GLfloat)*3
+        );
+    }
+
+    // Specify the organization of vertex arrays
+    GL::vertex_array_attrib_format(
+        vao.id(),
+        positionBindingId,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0
+    );
+    if(hasColors){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            colorBindingId,
             3,
-            sizeof(Pt3f),
             GL_FLOAT,
-            0* sizeof(float),
-            2
+            GL_FALSE,
+            0
+        );
+    }
+    if(hasNormals){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            normalBindingId,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+
+    // Enable generic vertex attribute array
+    GL::enable_vertex_array_attrib(
+        vao.id(),
+        positionBindingId
+    );
+    if(hasColors){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            colorBindingId
+        );
+    }
+    if(hasNormals){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            normalBindingId
+        );
+    }
+
+    // Associate a vertex attribute and a vertex buffer binding for a vertex array object
+    GL::vertex_array_attrib_binding(
+        vao.id(),
+        positionLoc,
+        positionBindingId
+    );
+    if(hasColors){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            colorLoc,
+            colorBindingId
+        );
+    }
+    if(hasNormals){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            normalLoc,
+            normalBindingId
         );
     }
 
@@ -188,10 +263,10 @@ auto PointMeshData::init_and_load_3d_points(std::span<const Pt3f> points, std::s
 }
 
 
-auto PointMeshData::init_and_load_2d_points(std::span<const Pt2f> points, std::span<const Pt3f> colors, std::span<const Pt2f> normals) -> void {
+auto PointsMesh::init_and_load_2d_points(std::span<const Pt2f> points, std::span<const Pt3f> colors, std::span<const Pt2f> normals) -> void {
 
     if(points.empty()){
-        Logger::error("[PointMeshData::init_and_load_2d_points] No points.\n");
+        Logger::error("[PointsMesh::init_and_load_2d_points] No points.\n");
         return;
     }
 
@@ -266,10 +341,10 @@ auto PointMeshData::init_and_load_2d_points(std::span<const Pt2f> points, std::s
     VAO::unbind();
 }
 
-auto PointMeshData::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, std::span<const Pt3f> colors) -> void{
+auto PointsMesh::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, std::span<const Pt3f> colors) -> void{
 
     if(voxels.empty()){
-        Logger::error("[PointMeshData::init_and_load_3d_voxels] No voxels.\n");
+        Logger::error("[PointsMesh::init_and_load_3d_voxels] No voxels.\n");
         return;
     }
 
@@ -324,7 +399,7 @@ auto PointMeshData::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, st
     VAO::unbind();
 }
 
-auto PointMeshData::render() const -> void{
+auto PointsMesh::render() const -> void{
 
     if(!buffersInitialized){
         return;
@@ -335,7 +410,7 @@ auto PointMeshData::render() const -> void{
     VAO::unbind();
 }
 
-auto PointMeshData::render_patches() const -> void{
+auto PointsMesh::render_patches() const -> void{
 
     if(!buffersInitialized){
         return;
@@ -346,7 +421,7 @@ auto PointMeshData::render_patches() const -> void{
     VAO::unbind();
 }
 
-auto PointMeshData::clean() -> void{
+auto PointsMesh::clean() -> void{
     vao.clean();
     pointsB.clean();
     colorsB.clean();

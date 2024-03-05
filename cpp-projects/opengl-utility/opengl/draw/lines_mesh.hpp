@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-base                                                               **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,45 +26,42 @@
 
 #pragma once
 
+// std
+#include <span>
+
+// base
+#include "geometry/point3.hpp"
+#include "geometry/point4.hpp"
+
 // local
-#include "dc_compressed_frame.hpp"
-#include "dc_frame.hpp"
-#include "settings/dc_device_settings.hpp"
+#include "vao_renderer.hpp"
+#include "opengl/buffer/element_buffer_object.hpp"
 
-namespace tool::cam{
+namespace tool::gl{
 
-class DCServerData{
-
+class LinesMesh : public VAORenderer{
 public:
 
-    DCServerData();
-    ~DCServerData();
+    auto init_and_load_3d_lines(
+        std::span<const GLuint> indices,
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt4f> colors
+    ) -> void;
 
-    // init / clean
-    auto initialize(size_t nbDevices, bool startProcessingThread) -> void;
-    auto clean() -> void;
+    auto init_and_load_3d_lines(
+        std::vector<GLuint>  *indices,
+        std::vector<GLfloat> *points,
+        std::vector<GLfloat> *colors = nullptr
+    ) -> void;
 
-    // get
-    size_t nb_grabbers() const noexcept;
-    auto get_frame(size_t idC) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame(size_t idC) -> std::shared_ptr<cam::DCCompressedFrame>;
+    auto render() const -> void override;
+    auto clean() -> void override;
 
-    // modify
-    auto add_device() -> void;
-    auto remove_device(size_t idDevice) -> void;
-    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto invalid_last_frame(size_t idC) -> void;
-    auto invalid_last_compressed_frame(size_t idC) -> void;
-    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
+protected:
 
-    // when no processing thread started
-    auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
-    // auto process_data(size_t idC) -> bool;
-
-private:
-
-    struct Impl;
-    std::unique_ptr<Impl> i;
+    EBO indicesB;
+    VBO colorsB;
 };
+
+
 }

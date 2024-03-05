@@ -27,81 +27,46 @@
 #pragma once
 
 // std
-#include <vector>
 #include <span>
 
 // base
 #include "geometry/point2.hpp"
-#include "geometry/triangle3.hpp"
+#include "geometry/point3.hpp"
 #include "geometry/point4.hpp"
+#include "geometry/triangle3.hpp"
 #include "graphics/animation/bones.hpp"
 #include "graphics/color/rgb.hpp"
 
 // local
-#include "opengl/buffer/vertex_buffer_object.hpp"
+#include "vao_renderer.hpp"
 #include "opengl/buffer/element_buffer_object.hpp"
-#include "opengl/vao.hpp"
 
 namespace tool::gl{
 
-class GeometryData{
+class TriangleMesh : public VAORenderer {
 public:
 
-    virtual ~GeometryData(){}
-
-    VAO vao;
-    VBO pointsB;
-    GLsizei nIndices = 0;
-
-    virtual auto render() const -> void = 0;
-    virtual auto render_adjacency() const -> void {}
-    virtual auto render_patches() const -> void {}
-    virtual auto render_instances(int count, int baseId = 0) const -> void  {
-        static_cast<void>(count);
-        static_cast<void>(baseId);
-
-    }
-
-    virtual auto clean() -> void = 0;
-
-protected:
-    bool buffersInitialized = false;   
-};
+    auto init_and_load_3d_mesh(
+        std::span<geo::TriIds> indices,
+        std::span<geo::Pt3f> points,
+        std::span<geo::Pt3f> normals   = {},
+        std::span<geo::Pt2f> texCoords = {},
+        std::span<geo::Pt4f> tangents  = {},
+        std::span<graphics::BoneData> bones = {},
+        std::span<ColorRGBA32> colors = {}
+    ) -> void;
 
 
-
-
-class LineMeshData : public GeometryData{
-public:
-
-    void init_buffers(
-        std::vector<GLuint>  *indices,
-        std::vector<GLfloat> *points,
-        std::vector<GLfloat> *colors = nullptr
-    );
-
-    void render() const override;
-    void clean() override;
-
-protected:
-    
-    VBO colorsB;
-    EBO indicesB;
-};
-
-class TriangleMeshData : public GeometryData {
-public:
-
-    void init_buffers(
+    auto init_buffers(
         std::vector<GLuint>  *indices,
         std::vector<GLfloat> *points,
         std::vector<GLfloat> *normals   = nullptr,
         std::vector<GLfloat> *texCoords = nullptr,
         std::vector<GLfloat> *tangents  = nullptr,
         std::vector<GLfloat> *colors    = nullptr
-    );
+    ) -> void;
 
-    void init_buffers(
+    auto init_buffers(
         std::vector<geo::TriIds> *indices,
         std::vector<geo::Pt3f> *points,
         std::vector<geo::Pt3f> *normals   = nullptr,
@@ -109,11 +74,11 @@ public:
         std::vector<geo::Pt4f> *tangents  = nullptr,
         std::vector<graphics::BoneData> *bones = nullptr,
         std::vector<ColorRGBA32> *colors    = nullptr
-    );
+    ) -> void;
 
-    void render() const override;
-    void render_adjacency() const override;
-    void clean() override;
+    auto render() const -> void override;
+    auto render_adjacency() const -> void override;
+    auto clean() -> void override;
 
     bool hasTexCoord = false;
     bool hasTangents = false;
@@ -122,7 +87,7 @@ public:
     bool hasColors   = false;
 
 protected:
-    
+
     VBO pointsB;
     VBO normalsB;
     VBO tangentsB;
@@ -132,5 +97,6 @@ protected:
     EBO indicesB;
 
 };
+
 
 }

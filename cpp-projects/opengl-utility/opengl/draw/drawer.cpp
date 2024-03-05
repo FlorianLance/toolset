@@ -44,7 +44,7 @@ auto Drawer::draw(ShaderProgram *shader) -> void{
         if(texturesNames.size() > 0){
             TBO::bind(texturesNames,0);
         }
-        drawableObject->data->render();
+        drawableObject->vaoRenderer->render();
     }
 }
 
@@ -54,7 +54,7 @@ auto Drawer::draw_adjacency(ShaderProgram *shader) -> void{
         if(texturesNames.size() > 0){
             TBO::bind(texturesNames, 0);
         }
-        drawableObject->data->render_adjacency();
+        drawableObject->vaoRenderer->render_adjacency();
     }
 }
 
@@ -64,7 +64,7 @@ auto Drawer::draw_patches(ShaderProgram *shader) -> void{
         if(texturesNames.size() > 0){
             TBO::bind(texturesNames, 0);
         }
-        drawableObject->data->render_patches();
+        drawableObject->vaoRenderer->render_patches();
     }
 }
 

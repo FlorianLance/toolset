@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -22,6 +23,7 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
+
 #pragma once
 
 // glew
@@ -33,7 +35,7 @@
 #include "graphics/model/mesh.hpp"
 
 // local
-#include "opengl/draw/geometry_data.hpp"
+#include "opengl/draw/vao_renderer.hpp"
 
 
 namespace tool::gl{
@@ -41,8 +43,9 @@ namespace tool::gl{
 class BaseShape{
 public:
     virtual ~BaseShape(){}
-    std::unique_ptr<GeometryData> data;
+    std::unique_ptr<VAORenderer> vaoRenderer;
 };
+
 
 class FullscreenQuad : public BaseShape{
 public:
@@ -140,6 +143,7 @@ class Cloud : public BaseShape{
 public:
     Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals);
     Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals);
+    auto udpate() -> void{}
 };
 
 class Voxels : public BaseShape{

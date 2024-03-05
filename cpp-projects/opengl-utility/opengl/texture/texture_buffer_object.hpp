@@ -26,6 +26,9 @@
 
 #pragma once
 
+// std
+#include <span>
+
 // base
 #include "graphics/texture/texture_2d.hpp"
 #include "graphics/texture/texture_options.hpp"
@@ -126,6 +129,7 @@ struct TBO{
 
     // bind / unbind
     auto bind(GLuint unit) -> void;
+    static auto bind(std::span<GLuint> textures, GLuint first) -> void;
     static auto bind(std::vector<GLuint> textures, GLuint first) -> void;
 
     auto bind_image(GLuint unit, GLint level = 0, GLboolean layered = GL_FALSE, GLint layer = 0, GLenum access = GL_READ_WRITE) -> void;

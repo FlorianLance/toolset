@@ -46,7 +46,11 @@ HEADERS += \
     glfw/glfw_gl_windows.hpp \
     # opengl
     opengl/buffer/framebuffer_object.hpp \
-    opengl/draw/points_mesh_data.hpp \
+    opengl/draw/lines_mesh.hpp \
+    opengl/draw/object_drawer.hpp \
+    opengl/draw/points_mesh.hpp \
+    opengl/draw/triangles_mesh.hpp \
+    opengl/draw/vao_renderer.hpp \
     opengl/gl_draw.hpp \
     opengl/gl_functions.hpp \
     opengl/gl_material.hpp \
@@ -76,7 +80,6 @@ HEADERS += \
     ## utility
     opengl/utility/gl_utility.hpp \
     ## draw
-    opengl/draw/geometry_data.hpp \
     opengl/draw/drawer.hpp \
     opengl/draw/drawers_manager.hpp \
 
@@ -89,7 +92,11 @@ SOURCES += \
     opengl/buffer/framebuffer_object.cpp \
     opengl/buffer/pixel_buffer_object.cpp \
     opengl/buffer/render_buffer_object.cpp \
-    opengl/draw/points_mesh_data.cpp \
+    opengl/draw/lines_mesh.cpp \
+    opengl/draw/object_drawer.cpp \
+    opengl/draw/points_mesh.cpp \
+    opengl/draw/triangles_mesh.cpp \
+    opengl/draw/vao_renderer.cpp \
     opengl/gl_functions.cpp \
     opengl/shader/shader_program.cpp \
     opengl/shapes.cpp \
@@ -108,7 +115,6 @@ SOURCES += \
     opengl/texture/texture_2d_tbo.cpp \
     opengl/texture/textures_manager.cpp \
     ## draw
-    opengl/draw/geometry_data.cpp \
     opengl/draw/drawer.cpp \
     opengl/draw/drawers_manager.cpp \
     opengl/vao.cpp

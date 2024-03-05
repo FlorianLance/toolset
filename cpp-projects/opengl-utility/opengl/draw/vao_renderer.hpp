@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-base                                                               **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -27,44 +27,33 @@
 #pragma once
 
 // local
-#include "dc_compressed_frame.hpp"
-#include "dc_frame.hpp"
-#include "settings/dc_device_settings.hpp"
+#include "opengl/vao.hpp"
+#include "opengl/buffer/vertex_buffer_object.hpp"
 
-namespace tool::cam{
+namespace tool::gl{
 
-class DCServerData{
-
+class VAORenderer{
 public:
 
-    DCServerData();
-    ~DCServerData();
+    virtual ~VAORenderer(){}
 
-    // init / clean
-    auto initialize(size_t nbDevices, bool startProcessingThread) -> void;
-    auto clean() -> void;
+    VAO vao;
+    VBO pointsB;
+    GLsizei nIndices = 0;
 
-    // get
-    size_t nb_grabbers() const noexcept;
-    auto get_frame(size_t idC) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame(size_t idC) -> std::shared_ptr<cam::DCCompressedFrame>;
+    virtual auto render() const -> void = 0;
+    virtual auto render_adjacency() const -> void {}
+    virtual auto render_patches() const -> void {}
+    virtual auto render_instances(int count, int baseId = 0) const -> void {
+        static_cast<void>(count);
+        static_cast<void>(baseId);
 
-    // modify
-    auto add_device() -> void;
-    auto remove_device(size_t idDevice) -> void;
-    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto invalid_last_frame(size_t idC) -> void;
-    auto invalid_last_compressed_frame(size_t idC) -> void;
-    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
+    }
 
-    // when no processing thread started
-    auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
-    // auto process_data(size_t idC) -> bool;
+    virtual auto clean() -> void = 0;
 
-private:
-
-    struct Impl;
-    std::unique_ptr<Impl> i;
+protected:
+    bool buffersInitialized = false;   
 };
+
 }

@@ -126,21 +126,20 @@ auto DCGrabberDataProcessing::process() -> bool{
     {
         std::lock_guard<std::mutex> guard(*i->locker);
 
-        // check for new compressed frame
-        if(i->lastCF){
+        if(i->lastCF){  // check for new compressed frame
             // store last
             i->cFrame = i->lastCF;
             // invalid it
             i->lastCF = nullptr;
             // ask for uncompression
             frameToBeUncompresed = i->cFrame;
-        }
-        // check for new frame
-        if(i->lastF){
+        }else if(i->lastF){ // check for new frame
             // store last
             i->frame  = i->lastF;
             // invalid it
             i->lastF  = nullptr;
+        }else{
+            return false;
         }
     }
 
@@ -152,11 +151,12 @@ auto DCGrabberDataProcessing::process() -> bool{
             if(i->frameUncompressor->uncompress(i->sActions.generation, frameToBeUncompresed.get(), *uncompressedFrame)){
                 std::lock_guard<std::mutex> guard(*i->locker);
                 i->frame = uncompressedFrame;
+                return true;
             }
         }
     }
 
-    return i->frame != nullptr;
+    return false;
 }
 
 auto DCGrabberDataProcessing::uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>{

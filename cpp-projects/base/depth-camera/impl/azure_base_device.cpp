@@ -281,7 +281,7 @@ auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
             Logger::message("Device destroyed.\n");
         }
 
-        Logger::message("Create device.\n");
+        Logger::message(std::format("Create device from id [{}].\n", deviceId));
         i->device     = std::make_unique<k4a::device>(k4a::device::open(deviceId));
         Logger::message("Device created.\n");
 
