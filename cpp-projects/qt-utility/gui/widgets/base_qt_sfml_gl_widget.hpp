@@ -36,56 +36,7 @@
 // base
 #include "graphics/camera/camera.hpp"
 
-
-#include "opengl/draw/cloud_drawer.hpp"
-#include "opengl/draw/drawer.hpp"
-
 namespace tool {
-
-static const char* cloudVS =
-R"shaderDef(
-    #version 430 core
-
-    layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec3 aColor;
-
-    // model
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 projection;
-
-    // camera
-    uniform vec3 camera_position;
-
-    // cloud
-    uniform float size_pt = 3.f;
-
-    // color
-    uniform vec4 unicolor = vec4(1,0,0,1);
-    uniform bool enable_unicolor = false;
-    out vec4 color;
-
-    void main(){
-        vec4 p = view * model * vec4(aPos, 1.0);
-        gl_Position = projection*p;
-        color = enable_unicolor ? unicolor : vec4(aColor, 1.0);
-        float l = sqrt(length(p.xyz-camera_position.xyz));
-        gl_PointSize = size_pt/(l);
-    }
-)shaderDef";
-
-static const char* cloudFS =
-R"shaderDef(
-    #version 430 core
-
-    out vec4 FragColor;
-    in vec4 color;
-
-    void main(){
-        FragColor = color;
-    }
-
-)shaderDef";
 
 class BaseQtSfmlGlWidget :  public QWidget, public sf::RenderWindow{
 public:
@@ -108,7 +59,7 @@ protected:
     virtual auto wheelEvent(QWheelEvent *event) -> void;
     virtual auto keyPressEvent(QKeyEvent *event) -> void;
 
-    virtual auto on_init() -> void;
+    virtual auto on_init() -> bool;
     virtual auto on_update() -> void;
     virtual auto on_draw() -> void;
     virtual auto on_resize() -> void{}
@@ -126,16 +77,9 @@ protected:
     double lastX=-1., lastY=-1.;
 
     // sfml test
-    sf::CircleShape shape = sf::CircleShape(50.f);
+    // sf::CircleShape shape = sf::CircleShape(50.f);
 
-    geo::ColoredCloudData cloud;
-    gl::CloudDrawer cloudD;
-    gl::ShaderProgram shaderP;
-    gl::ShaderProgram cloudShaderP;
-    std::unique_ptr<gl::AxesDrawer> axesD;
-    std::unique_ptr<gl::GridDrawer> gridD;
-
-private:
+protected:
 
     bool m_windowInitialized = false;
     QTimer m_renderTimer;

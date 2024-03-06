@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -56,6 +56,9 @@ auto CloudDrawer::init_and_load(std::span<const geo::Pt3f> points, std::span<con
 
 auto CloudDrawer::draw() -> void{
     auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
+    if(!pm->initialized()){
+        return;
+    }
     pm->bind();
     GL::draw_arrays_instance_base_instance(GL_POINTS, 0, pm->indices_count(), 1, 0);
     pm->unbind();

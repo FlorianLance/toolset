@@ -48,9 +48,8 @@ public:
         VAO::unbind();
     }
 
-    [[nodiscard]] constexpr auto indices_count() const noexcept -> GLsizei{
-        return nIndices;
-    }
+    [[nodiscard]] constexpr auto initialized() const noexcept -> bool{ return buffersInitialized;}
+    [[nodiscard]] constexpr auto indices_count() const noexcept -> GLsizei{return nIndices;}
 
     // TODO: remove
     virtual auto render() const -> void{}
@@ -67,7 +66,7 @@ protected:
     // GLenum mode;
     VBO pointsB;
     GLsizei nIndices = 0;
-    bool buffersInitialized = false;   
+    bool buffersInitialized = false;
 };
 
 }
