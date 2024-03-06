@@ -40,6 +40,8 @@ auto Sample::parent_init() -> bool{
     if(commonShaders.empty()){
 
         // store
+        // commonShaders["cloud"sv]                = shadersM->get_shader("others/cloud"sv).lock();
+
         commonShaders["floor"sv]                = shadersM->get_shader("ch5/scene-texture"sv).lock();
         commonShaders["unicolor"sv]             = shadersM->get_shader("others/unicolor"sv).lock();
         commonShaders["skybox"sv]               = shadersM->get_shader("others/skybox"sv).lock();
@@ -75,6 +77,7 @@ auto Sample::parent_init() -> bool{
         commonDrawers["spot"sv]                = drawersM->get_drawer("spot"sv).lock();
         commonDrawers["grid-floor"sv]          = drawersM->get_drawer("grid-floor"sv).lock();
         commonDrawers["dragon"sv]              = drawersM->get_drawer("dragon"sv).lock();
+        commonDrawers["cloud"sv]               = drawersM->get_drawer("cloud"sv).lock();
 
         // check
         for(const auto &drawer : commonDrawers){
@@ -3306,4 +3309,38 @@ auto Ch8ShadowPcf::update_imgui() -> void{
 //    ImGui::SliderFloat("Aspect ratio###CH8SMP-2", &aspectRatio, 0.0f, 5.00f, "ratio = %.3f");
     ImGui::DragFloat3("Light pos###CH8SMP-3", lightPos.array.data(), 0.05f, -50.0f, 50.00f, "ratio = %.2f");
     ImGui::DragFloat3("Light rot###CH8SMP-4", lightRot.array.data(), 1.f, -360.0f, 360.00f, "ratio = %.2f");
+}
+
+// Function to generate a random float between min and max
+float randomFloat(float min, float max) {
+    return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX/(max-min)));
+}
+
+auto CloudSample::init() -> bool{
+
+    if((sampleShader = shadersM->get_shader("colored-cloud").lock()) == nullptr){
+        return false;
+    }
+
+    return true;
+}
+
+auto CloudSample::draw(gl::Drawer *drawer) -> void{
+
+    Sample::draw(drawer);
+
+    sampleShader->use();
+    camM.m = geo::Mat4d::identity();
+    update_matrices();
+    camM.v = camera->view();
+    camM.p = camera->projection();
+
+    sampleShader->set_uniform("view", camM.v.conv<float>());
+    sampleShader->set_uniform("projection", camM.p.conv<float>());
+    sampleShader->set_uniform("model", camM.m.conv<float>());
+    sampleShader->set_uniform("enable_unicolor", false);
+    sampleShader->set_uniform("factor_unicolor", 0.5f);
+    sampleShader->set_uniform("size_pt", 3.f);
+    sampleShader->set_uniform("camera_position",camera->position().conv<float>());
+    commonDrawers["cloud"sv]->draw();
 }

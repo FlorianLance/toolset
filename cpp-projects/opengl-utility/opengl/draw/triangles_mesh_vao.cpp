@@ -24,7 +24,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "triangles_mesh.hpp"
+#include "triangles_mesh_vao.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -37,14 +37,14 @@ using namespace tool::gl;
 using namespace tool::geo;
 using namespace tool::graphics;
 
-auto TriangleMesh::init_and_load_3d_mesh(
-    std::span<TriIds> indices,
-    std::span<Pt3f> points,
-    std::span<Pt3f> normals,
-    std::span<Pt2f> texCoords,
-    std::span<Pt4f> tangents,
-    std::span<graphics::BoneData> bones,
-    std::span<ColorRGBA32> colors) -> void{
+auto TriangleMeshVAO::init_and_load_3d_mesh(
+    std::span<const geo::Pt3<GLuint>> indices,
+    std::span<const Pt3f> points,
+    std::span<const Pt3f> normals,
+    std::span<const Pt2f> texCoords,
+    std::span<const Pt4f> tangents,
+    std::span<const graphics::BoneData> bones,
+    std::span<const ColorRGBA32> colors) -> void{
 
     if(points.empty() || indices.empty()){
         Logger::error("[TriangleMesh::init_buffers] No points.\n");
@@ -222,7 +222,7 @@ auto TriangleMesh::init_and_load_3d_mesh(
     }
 }
 
-auto TriangleMesh::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
+auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
         Logger::error("[TriangleMesh::init_buffers] error, no indices or points buffers.\n");
@@ -350,7 +350,7 @@ auto TriangleMesh::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloa
     buffersInitialized = true;
 }
 
-auto TriangleMesh::init_buffers(
+auto TriangleMeshVAO::init_buffers(
     std::vector<TriIds> *indices, std::vector<Pt3f> *points, std::vector<Pt3f> *normals,
     std::vector<Pt2f> *texCoords, std::vector<Pt4f> *tangents, std::vector<graphics::BoneData> *bones, std::vector<ColorRGBA32> *colors) -> void{
 
@@ -438,9 +438,9 @@ auto TriangleMesh::init_buffers(
     std::vector<GLuint> rawIndices;
     rawIndices.reserve(indices->size()*3);
     for(auto &i : *indices){
-        rawIndices.emplace_back(static_cast<GLuint>(i.ids.x()));
-        rawIndices.emplace_back(static_cast<GLuint>(i.ids.y()));
-        rawIndices.emplace_back(static_cast<GLuint>(i.ids.z()));
+        rawIndices.emplace_back(static_cast<GLuint>(i.id1()));
+        rawIndices.emplace_back(static_cast<GLuint>(i.id2()));
+        rawIndices.emplace_back(static_cast<GLuint>(i.id3()));
     }
 
     // indices
@@ -521,7 +521,7 @@ auto TriangleMesh::init_buffers(
     buffersInitialized = true;
 }
 
-auto TriangleMesh::render() const -> void{
+auto TriangleMeshVAO::render() const -> void{
 
     if(!buffersInitialized){
         return;
@@ -532,7 +532,7 @@ auto TriangleMesh::render() const -> void{
     VAO::unbind();
 }
 
-auto TriangleMesh::render_adjacency() const -> void{
+auto TriangleMeshVAO::render_adjacency() const -> void{
 
     if(!buffersInitialized){
         return;
@@ -543,7 +543,7 @@ auto TriangleMesh::render_adjacency() const -> void{
     VAO::unbind();
 }
 
-auto TriangleMesh::clean() -> void{
+auto TriangleMeshVAO::clean() -> void{
     vao.clean();
     pointsB.clean();
     indicesB.clean();

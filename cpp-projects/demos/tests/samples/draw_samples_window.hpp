@@ -39,6 +39,8 @@ private:
     bool init_drawers();
     bool init_samples();
 
+    geo::ColoredCloudData cloud;
+
 protected:
 
     // imgui

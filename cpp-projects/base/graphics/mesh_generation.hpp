@@ -1,8 +1,8 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,40 +26,13 @@
 
 #pragma once
 
-// std
-#include <string>
+// local
+#include "mesh.hpp"
 
-// Qt
-#include <QStringBuilder>
-#include <QStringView>
+namespace tool::graphics{
 
-#define QSL QStringLiteral
-
-namespace tool {
-
-[[nodiscard]][[maybe_unused]] static inline auto from_view(std::string_view str) -> QString{
-    return QString::fromStdString(std::string(str));
-}
-
-[[nodiscard]][[maybe_unused]] static inline auto sub_view_started_by(QStringView view, QChar start, QChar end) -> QStringView{
-    auto idStart = view.indexOf(start) +1;
-    if(idStart == -1){
-        return view;
-    }
-    auto idEnd = view.indexOf(end, idStart);
-    if(idEnd == -1){
-        return view;
-    }
-    return view.mid(idStart, idEnd-idStart);
-}
-
-[[nodiscard]][[maybe_unused]] static inline auto clamp(QString n, int maxLength) -> QString{
-    if(n.length() > maxLength){
-        return n.left(maxLength) % QSL("...");
-    }
-    return n;
-}
+struct MeshGeneration{
+    static auto plane(float xsize, float zsize, size_t xdivs, size_t zdivs, float smax = 1.0f, float tmax = 1.0f) -> Mesh;
+};
 
 }
-
-

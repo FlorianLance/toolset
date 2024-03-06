@@ -1,8 +1,8 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,42 +24,40 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "mesh_drawer.hpp"
 
-// std
-#include <string>
+// local
+#include "opengl/gl_functions.hpp"
+#include "triangles_mesh_vao.hpp"
 
-// Qt
-#include <QStringBuilder>
-#include <QStringView>
+using namespace tool::gl;
+using namespace tool::geo;
 
-#define QSL QStringLiteral
-
-namespace tool {
-
-[[nodiscard]][[maybe_unused]] static inline auto from_view(std::string_view str) -> QString{
-    return QString::fromStdString(std::string(str));
+MeshDrawer2::MeshDrawer2(){
+    BaseDrawer::vaoRenderer = std::make_unique<TriangleMeshVAO>();
 }
 
-[[nodiscard]][[maybe_unused]] static inline auto sub_view_started_by(QStringView view, QChar start, QChar end) -> QStringView{
-    auto idStart = view.indexOf(start) +1;
-    if(idStart == -1){
-        return view;
-    }
-    auto idEnd = view.indexOf(end, idStart);
-    if(idEnd == -1){
-        return view;
-    }
-    return view.mid(idStart, idEnd-idStart);
+auto MeshDrawer2::init_and_load(const graphics::Mesh &mesh) -> void{
+    auto tm = dynamic_cast<TriangleMeshVAO*>(vaoRenderer.get());
+    tm->clean();
+
+    auto triData = reinterpret_cast<const Pt3<GLuint>*>(mesh.triIds.get_data());
+    tm->init_and_load_3d_mesh(
+        std::span<const Pt3<GLuint>>(triData, mesh.triIds.size()),
+        mesh.vertices.span(),
+        mesh.normals.span(),
+        mesh.tCoords.span(),
+        mesh.tangents.span(),
+        mesh.bones.span(),
+        mesh.colors.span()
+    );
 }
 
-[[nodiscard]][[maybe_unused]] static inline auto clamp(QString n, int maxLength) -> QString{
-    if(n.length() > maxLength){
-        return n.left(maxLength) % QSL("...");
-    }
-    return n;
-}
+auto MeshDrawer2::draw() -> void{
+
+    auto tm = dynamic_cast<TriangleMeshVAO*>(vaoRenderer.get());
+    tm->bind();
+    GL::draw_arrays_instance_base_instance(GL_TRIANGLES, 0, tm->indices_count(), 1, 0);
+    tm->unbind();
 
 }
-
-

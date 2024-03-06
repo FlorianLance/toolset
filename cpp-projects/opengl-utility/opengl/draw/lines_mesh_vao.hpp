@@ -39,7 +39,7 @@
 
 namespace tool::gl{
 
-class LinesMesh : public VAORenderer{
+class LinesMeshVAO : public VAORenderer{
 public:
 
     auto init_and_load_3d_lines(

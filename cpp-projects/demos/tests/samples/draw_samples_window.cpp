@@ -45,6 +45,7 @@ bool DrawSampleWindow::init_shaders(){
     const std::vector<Shader::Type> VS_FS_TES_TCS = {Shader::Type::vertex,Shader::Type::fragment, Shader::Type::tess_eval, Shader::Type::tess_control};
 
     std::vector<std::pair<std::string, const std::vector<Shader::Type>*>> shadersNames={
+        {"others/cloud", &VS_FS},
         {"others/unicolor",&VS_FS},{"others/skybox",&VS_FS},{"others/screen-quad",&VS_FS}, // ch1
         {"ch2/1",&VS_FS}, // ch2
         {"ch3/diffuse",&VS_FS},{"ch3/phong",&VS_FS},{"ch3/twoside",&VS_FS},{"ch3/flat",&VS_FS},{"ch3/discard",&VS_FS}, // ch3
@@ -238,7 +239,22 @@ bool DrawSampleWindow::init_models(){
     return loaded;
 }
 
+
 bool DrawSampleWindow::init_drawers(){
+
+    cloud.resize(100000);
+    for(size_t id = 0; id < 100000; ++id){
+        cloud.vertices[id] ={
+            0.001f*((rand()%1000) -500),
+            0.001f*((rand()%1000) -500),
+            0.001f*((rand()%1000) -500)
+        };
+        cloud.colors[id] = {
+            0.001f*(rand()%1000),
+            0.001f*(rand()%1000),
+            0.001f*(rand()%1000)
+        };
+    }
 
     // add drawers
     auto dm = Managers::drawers;
@@ -263,6 +279,12 @@ bool DrawSampleWindow::init_drawers(){
     dm->add_drawer<gl::AxesDrawer>("axes",                  Scale{1.f});
     dm->add_drawer<gl::FrustumDrawer>("frustum",            Scale{1.f});
     dm->add_drawer<gl::SkyboxDrawer>("skybox",              Scale{1.f}, 100.f, std::nullopt);
+
+    dm->add_drawer<gl::CloudPointsDrawer>("cloud",          Scale{1.0f});
+    if(auto cloudD = dm->get_drawer("cloud").lock(); cloudD != nullptr){
+        auto c = dynamic_cast<gl::CloudPointsDrawer*>(cloudD.get());
+        c->init(cloud.vertices.span(), cloud.colors.span());
+    }
 
     // # loaded models
     dm->add_drawer<tool::gl::ModelDrawer>("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
@@ -294,6 +316,7 @@ bool DrawSampleWindow::init_drawers(){
 
 bool DrawSampleWindow::init_samples(){
 
+    uiSamples.add_element("cloud", std::make_unique<CloudSample>(&m_camera));
     // ch3
     uiSamples.add_element("ch3Diffuse", std::make_unique<Ch3Diffuse>(&m_camera));
     uiSamples.add_element("ch3TwoSide",  std::make_unique<Ch3TwoSide>(&m_camera));

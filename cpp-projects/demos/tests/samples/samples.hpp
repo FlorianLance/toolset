@@ -27,6 +27,9 @@
 #include "engine/managers.hpp"
 
 
+#include "opengl/draw/cloud_drawer.hpp"
+
+
 namespace tool::graphics {
 
 // std140
@@ -188,6 +191,15 @@ protected:
     //    auto aluminium = MaterialPbr(Pt4f(0.91f, 0.92f, 0.92f,1.f),       0.50f,0.f);
     //    auto titanium = MaterialPbr(Pt4f(0.542f, 0.497f, 0.449f,1.f),    0.50f,0.f);
     //    auto silver = MaterialPbr(Pt4f(0.95f, 0.93f, 0.88f,1.f),       0.50f,0.f);
+};
+
+
+struct CloudSample : public Sample{
+    CloudSample(Camera *cam) : Sample(cam){}
+    auto init() -> bool final override;
+    auto draw(gl::Drawer *drawer = nullptr) -> void final override;
+
+    gl::CloudPointsDrawer cDrawer;
 };
 
 // ############################################## CH3

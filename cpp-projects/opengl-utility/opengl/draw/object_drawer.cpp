@@ -29,7 +29,7 @@
 
 // local
 #include "opengl/texture/texture_buffer_object.hpp"
-#include "opengl/draw/triangles_mesh.hpp"
+#include "opengl/draw/triangles_mesh_vao.hpp"
 
 using namespace tool::gl;
 using namespace tool::geo;
@@ -66,8 +66,8 @@ FullscreenQuadDrawer2::FullscreenQuadDrawer2(){
     static std::vector<GLuint> trianglesIndices = {
         0,1,2,0,2,3
     };
-
-    auto tmd = std::make_unique<TriangleMesh>();
+    
+    auto tmd = std::make_unique<TriangleMeshVAO>();
     tmd->init_buffers(&trianglesIndices, &points, nullptr, &textCoords);
     vaoRenderer = std::move(tmd);
 }

@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolbox-base                                                               **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,33 +26,27 @@
 
 #pragma once
 
+// base
+#include "utility/buffer.hpp"
+
+
 // local
-#include "geometry/point.hpp"
+#include "vao_renderer.hpp"
+#include "opengl/shader/shader_program.hpp"
 
-namespace tool::geo {
+namespace tool::gl {
 
-template<typename acc>
-using Point4 = Point<acc,4>;
+class BaseDrawer{
+public:
 
-template<typename acc>
-using Pt4 = Point4<acc>;
-using Pt4f = Pt4<float>;
-using Pt4d = Pt4<double>;
+    virtual auto draw() -> void{}
 
-template<typename acc>
-using Vec4  = Pt4<acc>;
-using Vec4f = Pt4<float>;
-using Vec4d = Pt4<double>;
+    float scaleHint = 1.f;
+    Buffer<GLuint> texturesId;
+    gl::ShaderProgram *shader = nullptr;
 
-using Col4 = Pt4<std::uint8_t>;
-using Col4f= Pt4f;
-
-using RGBA  = Col4;
-using RGBAf = Col4f;
-
-template<typename acc>
-constexpr auto to_pt4(Point4<acc> pt, acc w) noexcept -> Pt4<acc>{
-    return {pt.x(),pt.y(),pt.z(),w};
-}
+protected:
+    std::unique_ptr<VAORenderer> vaoRenderer = nullptr;
+};
 
 }

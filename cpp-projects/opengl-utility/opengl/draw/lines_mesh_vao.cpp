@@ -26,7 +26,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "lines_mesh.hpp"
+#include "lines_mesh_vao.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -38,7 +38,7 @@
 using namespace tool::geo;
 using namespace tool::gl;
 
-auto LinesMesh::init_and_load_3d_lines(std::span<const GLuint> indices, std::span<const geo::Pt3f> points, std::span<const geo::Pt4f> colors) -> void {
+auto LinesMeshVAO::init_and_load_3d_lines(std::span<const GLuint> indices, std::span<const geo::Pt3f> points, std::span<const geo::Pt4f> colors) -> void {
 
     if(indices.empty()){
         Logger::error("[LinesMesh::init_and_load_3d_lines] No indices.\n");
@@ -119,7 +119,7 @@ auto LinesMesh::init_and_load_3d_lines(std::span<const GLuint> indices, std::spa
     buffersInitialized = true;
 }
 
-auto LinesMesh::init_and_load_3d_lines(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *colors) -> void{
+auto LinesMeshVAO::init_and_load_3d_lines(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *colors) -> void{
 
     // check inputs
     if(indices == nullptr || points == nullptr){
@@ -181,7 +181,7 @@ auto LinesMesh::init_and_load_3d_lines(std::vector<GLuint> *indices, std::vector
     buffersInitialized = true;
 }
 
-auto LinesMesh::render() const -> void{
+auto LinesMeshVAO::render() const -> void{
 
     if(!buffersInitialized){
         return;
@@ -192,7 +192,7 @@ auto LinesMesh::render() const -> void{
     VAO::unbind();
 }
 
-auto LinesMesh::clean() -> void{
+auto LinesMeshVAO::clean() -> void{
     vao.clean();
     pointsB.clean();
     indicesB.clean();

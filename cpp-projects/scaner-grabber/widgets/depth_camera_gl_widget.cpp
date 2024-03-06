@@ -64,8 +64,8 @@ void DepthCameraGlWidget::update_mesh(K2MeshDisplayData *meshData){
             mesh.colors[ii] = geo::to_pt4((*meshData->colors)[ii], 1.f);
         }
         for(size_t ii = 0; ii < meshData->sizeTris; ++ii){
-            const auto &tri = (*meshData->triangles)[ii];
-            mesh.triIds[ii].ids = geo::Pt3<size_t>{tri.x(), tri.y(), tri.z()};
+            // const auto &tri = (*meshData->triangles)[ii];
+            // mesh.triIds[ii].ids = {tri.x(), tri.y(), tri.z()};
         }
     meshData->dataLocker.unlock();
 

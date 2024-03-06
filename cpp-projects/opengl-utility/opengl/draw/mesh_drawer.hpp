@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,61 +26,18 @@
 
 #pragma once
 
-// std
-#include <span>
-
 // base
-#include "geometry/point2.hpp"
-#include "geometry/point3.hpp"
+#include "graphics/mesh.hpp"
 
 // local
-#include "vao_renderer.hpp"
+#include "base_drawer.hpp"
 
-namespace tool::gl{
+namespace tool::gl {
 
-class PointsMesh : public VAORenderer{
+class MeshDrawer2 : public BaseDrawer{
 public:
-
-    // TODO: test init/load
-    // init
-    auto init_3d_points(
-        size_t size,
-        bool hasColors,
-        bool hasNormals
-    ) -> void;
-
-    // load
-    auto load_3d_points(
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt3f> normals
-    ) -> void;
-
-    // init and load
-    auto init_and_load_2d_points(
-        std::span<const geo::Pt2f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt2f> normals
-    ) -> void;
-
-    auto init_and_load_3d_points(
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt3f> normals
-    ) -> void;
-
-    auto init_and_load_3d_voxels(
-        std::span<const geo::Pt3<int>> voxels,
-        std::span<const geo::Pt3f> colors
-    ) -> void;
-
-    auto render() const -> void override;
-    auto render_patches() const -> void override;
-    auto clean() -> void override;
-
-protected:
-
-    VBO colorsB;
-    VBO normalsB;
+    MeshDrawer2();
+    auto init_and_load(const graphics::Mesh &mesh) -> void;
+    auto draw() -> void override final;
 };
 }

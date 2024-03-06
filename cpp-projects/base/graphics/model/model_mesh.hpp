@@ -33,7 +33,7 @@
 #include "graphics/material/material.hpp"
 #include "graphics/animation/bones.hpp"
 #include "graphics/animation/animation.hpp"
-#include "mesh.hpp"
+#include "graphics/mesh.hpp"
 
 namespace tool::graphics {
 

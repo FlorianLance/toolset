@@ -25,3 +25,34 @@
 ********************************************************************************/
 
 #include "vao_renderer.hpp"
+
+// local
+#include "opengl/gl_functions.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
+
+
+// auto tool::gl::VAORenderer::render() const -> void{
+
+//     if(!buffersInitialized){
+//         return;
+//     }
+
+//     // if(!texturesId.empty()){
+//     //     TBO::bind(texturesId.span(),0);
+//     // }
+
+//     vao.bind();
+//     GL::draw_arrays_instance_base_instance(mode, 0, nIndices, 1, 0);
+//     VAO::unbind();
+// }
+
+// auto tool::gl::VAORenderer::render_patches() const -> void {
+
+//     if(!buffersInitialized){
+//         return;
+//     }
+
+//     vao.bind();
+//     GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, nIndices, 1, 0);
+//     VAO::unbind();
+// }

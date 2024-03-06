@@ -46,10 +46,13 @@ HEADERS += \
     glfw/glfw_gl_windows.hpp \
     # opengl
     opengl/buffer/framebuffer_object.hpp \
-    opengl/draw/lines_mesh.hpp \
+    opengl/draw/base_drawer.hpp \
+    opengl/draw/cloud_drawer.hpp \
+    opengl/draw/lines_mesh_vao.hpp \
+    opengl/draw/mesh_drawer.hpp \
     opengl/draw/object_drawer.hpp \
-    opengl/draw/points_mesh.hpp \
-    opengl/draw/triangles_mesh.hpp \
+    opengl/draw/points_mesh_vao.hpp \
+    opengl/draw/triangles_mesh_vao.hpp \
     opengl/draw/vao_renderer.hpp \
     opengl/gl_draw.hpp \
     opengl/gl_functions.hpp \
@@ -92,10 +95,12 @@ SOURCES += \
     opengl/buffer/framebuffer_object.cpp \
     opengl/buffer/pixel_buffer_object.cpp \
     opengl/buffer/render_buffer_object.cpp \
-    opengl/draw/lines_mesh.cpp \
+    opengl/draw/cloud_drawer.cpp \
+    opengl/draw/lines_mesh_vao.cpp \
+    opengl/draw/mesh_drawer.cpp \
     opengl/draw/object_drawer.cpp \
-    opengl/draw/points_mesh.cpp \
-    opengl/draw/triangles_mesh.cpp \
+    opengl/draw/points_mesh_vao.cpp \
+    opengl/draw/triangles_mesh_vao.cpp \
     opengl/draw/vao_renderer.cpp \
     opengl/gl_functions.cpp \
     opengl/shader/shader_program.cpp \

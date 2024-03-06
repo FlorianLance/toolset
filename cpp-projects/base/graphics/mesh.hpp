@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-opengl-utility                                                     **
+** Toolset-base                                                               **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,77 +26,45 @@
 
 #pragma once
 
-// std
-#include <span>
-
-// base
+// local
 #include "geometry/point2.hpp"
-#include "geometry/point3.hpp"
 #include "geometry/point4.hpp"
-#include "geometry/triangle3.hpp"
+#include "geometry/vertices.hpp"
+#include "geometry/triangle.hpp"
 #include "graphics/animation/bones.hpp"
 #include "graphics/color/rgb.hpp"
 
-// local
-#include "vao_renderer.hpp"
-#include "opengl/buffer/element_buffer_object.hpp"
+namespace tool::graphics {
 
-namespace tool::gl{
+struct Mesh{
 
-class TriangleMesh : public VAORenderer {
-public:
+    geo::Vertices3D vertices;
+    Buffer<geo::Vec3f> normals;
+    Buffer<geo::TriIds> triIds;
+    Buffer<geo::Pt2f> tCoords;
+    Buffer<ColorRGBA32> colors;
+    Buffer<geo::Pt4f> tangents;
+    Buffer<BoneData> bones;
+    //    BVHNodeP<acc> accelerator = nullptr;
 
-    auto init_and_load_3d_mesh(
-        std::span<geo::TriIds> indices,
-        std::span<geo::Pt3f> points,
-        std::span<geo::Pt3f> normals   = {},
-        std::span<geo::Pt2f> texCoords = {},
-        std::span<geo::Pt4f> tangents  = {},
-        std::span<graphics::BoneData> bones = {},
-        std::span<ColorRGBA32> colors = {}
-    ) -> void;
+    Mesh() = default;
+    Mesh(const Mesh& other) = default;
+    Mesh& operator=(const Mesh& other) = default;
+    Mesh(Mesh&& other) = default;
+    Mesh& operator=(Mesh&& other) = default;
 
+    [[nodiscard]] constexpr auto triangle(size_t id) const noexcept-> geo::Triangle3<float>{
+        return {
+            vertices[triIds[id].id1()],
+            vertices[triIds[id].id2()],
+            vertices[triIds[id].id3()]
+        };
+    }
 
-    auto init_buffers(
-        std::vector<GLuint>  *indices,
-        std::vector<GLfloat> *points,
-        std::vector<GLfloat> *normals   = nullptr,
-        std::vector<GLfloat> *texCoords = nullptr,
-        std::vector<GLfloat> *tangents  = nullptr,
-        std::vector<GLfloat> *colors    = nullptr
-    ) -> void;
-
-    auto init_buffers(
-        std::vector<geo::TriIds> *indices,
-        std::vector<geo::Pt3f> *points,
-        std::vector<geo::Pt3f> *normals   = nullptr,
-        std::vector<geo::Pt2f> *texCoords = nullptr,
-        std::vector<geo::Pt4f> *tangents  = nullptr,
-        std::vector<graphics::BoneData> *bones = nullptr,
-        std::vector<ColorRGBA32> *colors    = nullptr
-    ) -> void;
-
-    auto render() const -> void override;
-    auto render_adjacency() const -> void override;
-    auto clean() -> void override;
-
-    bool hasTexCoord = false;
-    bool hasTangents = false;
-    bool hasNormals  = false;
-    bool hasBones    = false;
-    bool hasColors   = false;
-
-protected:
-
-    VBO pointsB;
-    VBO normalsB;
-    VBO tangentsB;
-    VBO colorsB;
-    VBO texCoordsB;
-    VBO bonesB;
-    EBO indicesB;
-
+    [[nodiscard]] auto mean_position() const noexcept -> geo::Pt3f;
+    auto generate_normals() noexcept -> void;
+    auto generate_tangents() noexcept -> void;
+    auto check() const -> void;
 };
-
-
 }
+

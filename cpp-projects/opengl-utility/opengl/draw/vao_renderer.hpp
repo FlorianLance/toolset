@@ -26,6 +26,8 @@
 
 #pragma once
 
+
+
 // local
 #include "opengl/vao.hpp"
 #include "opengl/buffer/vertex_buffer_object.hpp"
@@ -36,23 +38,35 @@ class VAORenderer{
 public:
 
     virtual ~VAORenderer(){}
+    virtual auto clean() -> void = 0;
 
-    VAO vao;
-    VBO pointsB;
-    GLsizei nIndices = 0;
+    auto bind() const -> void{
+        vao.bind();
+    }
 
-    virtual auto render() const -> void = 0;
-    virtual auto render_adjacency() const -> void {}
-    virtual auto render_patches() const -> void {}
+    auto unbind() const -> void{
+        VAO::unbind();
+    }
+
+    [[nodiscard]] constexpr auto indices_count() const noexcept -> GLsizei{
+        return nIndices;
+    }
+
+    // TODO: remove
+    virtual auto render() const -> void{}
     virtual auto render_instances(int count, int baseId = 0) const -> void {
         static_cast<void>(count);
         static_cast<void>(baseId);
-
     }
-
-    virtual auto clean() -> void = 0;
+    virtual auto render_adjacency() const -> void {}
+    virtual auto render_patches() const -> void{}
 
 protected:
+
+    VAO vao;
+    // GLenum mode;
+    VBO pointsB;
+    GLsizei nIndices = 0;
     bool buffersInitialized = false;   
 };
 

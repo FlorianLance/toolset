@@ -42,25 +42,8 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
-    # io
-    depth-camera/dc_video_player.hpp \
-    depth-camera/dc_video_recorder.hpp \
-    depth-camera/settings/dc_video_player_settings.hpp \
-    depth-camera/settings/dc_video_recorder_settings.hpp \
-    depth-camera/states/dc_video_player_states.hpp \
-    depth-camera/states/dc_video_recorder_states.hpp \
-    graphics/animation/animation.hpp \
-    graphics/animation/bones.hpp \
-    graphics/camera/camera_matrices.hpp \
-    graphics/color/color_utility.hpp \
-    graphics/color/hsv.hpp \
-    graphics/color/rgb.hpp \
-    graphics/material/material_enum.hpp \
-    graphics/model/model_mesh.hpp \
-    graphics/texture/cube_map.hpp \
-    graphics/texture/texture_2d.hpp \
-    graphics/texture/texture_enum.hpp \
-    graphics/texture/texture_options.hpp \
+    # io    
+    graphics/mesh_generation.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -71,6 +54,7 @@ HEADERS += \
     io/mouse.hpp \
     io/keyboard.hpp \
     # geometry 
+    geometry/triangle.hpp \
     geometry/cloud.hpp \
     geometry/geometry.hpp \
     geometry/transform.hpp \
@@ -83,7 +67,6 @@ HEADERS += \
     geometry/rectangle.hpp \
     geometry/sphere.hpp \
     geometry/ray3.hpp \
-    geometry/triangle3.hpp \
     geometry/geometry2.hpp \
     geometry/geometry3.hpp \
     geometry/interval.hpp \
@@ -105,16 +88,29 @@ HEADERS += \
     geometry/quaternion.hpp \
     geometry/voxel_grid.hpp \
     # graphics
+    graphics/light.hpp \
+    graphics/mesh.hpp \
+    ## animation
+    graphics/animation/animation.hpp \
+    graphics/animation/bones.hpp \
     ## material
+    graphics/material/material_enum.hpp \
     graphics/material/material.hpp \
     ## texture
     graphics/texture/texture.hpp \
+    graphics/texture/cube_map.hpp \
+    graphics/texture/texture_2d.hpp \
+    graphics/texture/texture_enum.hpp \
+    graphics/texture/texture_options.hpp \
     ## model
     graphics/model/models_manager.hpp \
-    graphics/model/mesh.hpp \
-    ## color    
-    graphics/light.hpp \
+    graphics/model/model_mesh.hpp \
+    ## color        
+    graphics/color/color_utility.hpp \
+    graphics/color/hsv.hpp \
+    graphics/color/rgb.hpp \
     ## camera
+    graphics/camera/camera_matrices.hpp \
     graphics/camera/camera.hpp \
     graphics/camera/screen.hpp \
     # network
@@ -150,9 +146,15 @@ HEADERS += \
     depth-camera/dc_frame_indices.hpp \
     depth-camera/dc_frame_timing.hpp \
     depth-camera/dc_video.hpp \
+    depth-camera/dc_video_player.hpp \
+    depth-camera/dc_video_recorder.hpp \
     ## states
+    depth-camera/states/dc_video_player_states.hpp \
+    depth-camera/states/dc_video_recorder_states.hpp \
     depth-camera/states/dc_calibrator_states.hpp \
     ## settings
+    depth-camera/settings/dc_video_player_settings.hpp \
+    depth-camera/settings/dc_video_recorder_settings.hpp \
     depth-camera/settings/dc_grabber_network_settings.hpp \
     depth-camera/settings/dc_grabber_settings.hpp \
     depth-camera/settings/dc_settings_paths.hpp \
@@ -295,26 +297,27 @@ HEADERS += \
 
 SOURCES += \
     # io
-    depth-camera/dc_video_player.cpp \
-    depth-camera/dc_video_recorder.cpp \
-    graphics/animation/animation.cpp \
-    graphics/animation/bones.cpp \
-    graphics/camera/camera.cpp \
-    graphics/color/color_utility.cpp \
-    graphics/model/model_mesh.cpp \
-    graphics/texture/cube_map.cpp \
-    graphics/texture/texture_2d.cpp \
+    graphics/mesh_generation.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
     # graphics     
-    ## model
-    graphics/model/models_manager.cpp \
-    graphics/model/mesh.cpp \
+    graphics/mesh.cpp \
+    ## animation
+    graphics/animation/animation.cpp \
+    graphics/animation/bones.cpp \
+    ## model    
+    graphics/model/model_mesh.cpp \
+    graphics/model/models_manager.cpp \    
     ## texture
     graphics/texture/texture.cpp \
+    graphics/texture/cube_map.cpp \
+    graphics/texture/texture_2d.cpp \
     ## color
-    # geometry
+    graphics/color/color_utility.cpp \
+    ## camera
+    graphics/camera/camera.cpp \
+    # geometry    
     geometry/cloud.cpp \    
     geometry/vertices.cpp \
     geometry/voxel_grid.cpp \
@@ -340,6 +343,8 @@ SOURCES += \
     # camera
     camera/frame.cpp \
     # depth-camera
+    depth-camera/dc_video_player.cpp \
+    depth-camera/dc_video_recorder.cpp \
     depth-camera/dc_compressed_frame.cpp \
     depth-camera/dc_frame_compressor.cpp \
     depth-camera/dc_frame_uncompressor.cpp \

@@ -28,28 +28,48 @@
 #pragma once
 
 // local
+#include "geometry/point2.hpp"
 #include "geometry/point3.hpp"
-//#include "geometry/interval.hpp"
 
 namespace tool::geo {
 
 struct TriIds{
-    constexpr size_t id1() const{return ids.x();}
-    constexpr size_t id2() const{return ids.y();}
-    constexpr size_t id3() const{return ids.z();}
-    Pt3<size_t> ids;
+
+    [[nodiscard]] constexpr auto id1() const noexcept -> std::uint32_t {return ids[0];}
+    [[nodiscard]] constexpr auto id2() const noexcept -> std::uint32_t {return ids[1];}
+    [[nodiscard]] constexpr auto id3() const noexcept -> std::uint32_t {return ids[2];}
+
+    [[nodiscard]] constexpr auto id1() noexcept -> std::uint32_t&{return ids[0];}
+    [[nodiscard]] constexpr auto id2() noexcept -> std::uint32_t&{return ids[1];}
+    [[nodiscard]] constexpr auto id3() noexcept -> std::uint32_t&{return ids[2];}
+
+    std::array<std::uint32_t,3> ids;
+};
+
+template<typename acc>
+struct Triangle2{
+
+    [[nodiscard]] constexpr auto a() const noexcept -> Pt2<acc> {return v[0];}
+    [[nodiscard]] constexpr auto b() const noexcept -> Pt2<acc> {return v[1];}
+    [[nodiscard]] constexpr auto c() const noexcept -> Pt2<acc> {return v[2];}
+
+    [[nodiscard]] constexpr auto a() noexcept -> Pt2<acc>&{return v[0];}
+    [[nodiscard]] constexpr auto b() noexcept -> Pt2<acc>&{return v[1];}
+    [[nodiscard]] constexpr auto c() noexcept -> Pt2<acc>&{return v[2];}
+
+    std::array<Pt2<acc>,3> v;
 };
 
 template<typename acc>
 struct Triangle3{
 
-    constexpr auto a() const noexcept -> Pt3<acc> {return v[0];}
-    constexpr auto b() const noexcept -> Pt3<acc> {return v[1];}
-    constexpr auto c() const noexcept -> Pt3<acc> {return v[2];}
+    [[nodiscard]] constexpr auto a() const noexcept -> Pt3<acc> {return v[0];}
+    [[nodiscard]] constexpr auto b() const noexcept -> Pt3<acc> {return v[1];}
+    [[nodiscard]] constexpr auto c() const noexcept -> Pt3<acc> {return v[2];}
 
-    constexpr auto a() noexcept -> Pt3<acc>&{return v[0];}
-    constexpr auto b() noexcept -> Pt3<acc>&{return v[1];}
-    constexpr auto c() noexcept -> Pt3<acc>&{return v[2];}
+    [[nodiscard]] constexpr auto a() noexcept -> Pt3<acc>&{return v[0];}
+    [[nodiscard]] constexpr auto b() noexcept -> Pt3<acc>&{return v[1];}
+    [[nodiscard]] constexpr auto c() noexcept -> Pt3<acc>&{return v[2];}
 
     std::array<Pt3<acc>,3> v;
 };

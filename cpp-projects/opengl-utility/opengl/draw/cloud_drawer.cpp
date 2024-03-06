@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -24,42 +24,40 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "cloud_drawer.hpp"
 
-// std
-#include <string>
+// local
+#include "opengl/gl_functions.hpp"
+#include "points_mesh_vao.hpp"
 
-// Qt
-#include <QStringBuilder>
-#include <QStringView>
+using namespace tool::gl;
 
-#define QSL QStringLiteral
-
-namespace tool {
-
-[[nodiscard]][[maybe_unused]] static inline auto from_view(std::string_view str) -> QString{
-    return QString::fromStdString(std::string(str));
+CloudDrawer::CloudDrawer(){
+    BaseDrawer::vaoRenderer = std::make_unique<PointsMeshVAO>();
 }
 
-[[nodiscard]][[maybe_unused]] static inline auto sub_view_started_by(QStringView view, QChar start, QChar end) -> QStringView{
-    auto idStart = view.indexOf(start) +1;
-    if(idStart == -1){
-        return view;
-    }
-    auto idEnd = view.indexOf(end, idStart);
-    if(idEnd == -1){
-        return view;
-    }
-    return view.mid(idStart, idEnd-idStart);
+auto CloudDrawer::init_and_load(const geo::ColoredCloudData &cloud) -> void{
+    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
+    pm->clean();
+    init_and_load(cloud.vertices.span(), cloud.colors.span(), cloud.normals.span());
 }
 
-[[nodiscard]][[maybe_unused]] static inline auto clamp(QString n, int maxLength) -> QString{
-    if(n.length() > maxLength){
-        return n.left(maxLength) % QSL("...");
-    }
-    return n;
+auto CloudDrawer::init_and_load(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals) -> void{
+    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
+    pm->clean();
+    pm->init_and_load_2d_points(points, colors, normals);
 }
 
+auto CloudDrawer::init_and_load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
+    pm->clean();
+    pm->init_and_load_3d_points(points, colors, normals);
 }
 
+auto CloudDrawer::draw() -> void{
+    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
+    pm->bind();
+    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, pm->indices_count(), 1, 0);
+    pm->unbind();
+}
 

@@ -33,8 +33,8 @@
 // debug
 #include <iostream>
 
-using namespace tool::graphics;
 using namespace tool::geo;
+using namespace tool::graphics;
 
 auto Mesh::mean_position() const noexcept -> Pt3f{
     return vertices.mean_position();
@@ -70,7 +70,7 @@ auto Mesh::generate_normals() noexcept -> void{
 
         for(int jj = 0; jj < 3; ++jj){
 
-            size_t id = triIds[ii].ids(jj);
+            size_t id = triIds[ii].ids[jj];
             verticesInTrianglesMsk[id] = 1;
 
             Vec3f currNormal = triNormals[ii];
@@ -111,13 +111,13 @@ auto Mesh::generate_tangents() noexcept -> void{
 
     for(const auto &tri : triIds){
 
-        const Pt3f &p1 = vertices[tri.ids.x()];
-        const Pt3f &p2 = vertices[tri.ids.y()];
-        const Pt3f &p3 = vertices[tri.ids.z()];
+        const Pt3f &p1 = vertices[tri.id1()];
+        const Pt3f &p2 = vertices[tri.id2()];
+        const Pt3f &p3 = vertices[tri.id3()];
 
-        const Vec2f &tc1 = tCoords[tri.ids.x()];
-        const Vec2f &tc2 = tCoords[tri.ids.y()];
-        const Vec2f &tc3 = tCoords[tri.ids.z()];
+        const Vec2f &tc1 = tCoords[tri.id1()];
+        const Vec2f &tc2 = tCoords[tri.id2()];
+        const Vec2f &tc3 = tCoords[tri.id3()];
 
         Vec3f q1 = p2 - p1;
         Vec3f q2 = p3 - p1;
@@ -127,13 +127,13 @@ auto Mesh::generate_tangents() noexcept -> void{
         Vec3f tan1{(t2*q1.x() - t1*q2.x()) * r, (t2*q1.y() - t1*q2.y()) * r, (t2*q1.z() - t1*q2.z()) * r};
         Vec3f tan2{(s1*q2.x() - s2*q1.x()) * r, (s1*q2.y() - s2*q1.y()) * r, (s1*q2.z() - s2*q1.z()) * r};
 
-        tan1Accum[tri.ids.x()] += tan1;
-        tan1Accum[tri.ids.y()] += tan1;
-        tan1Accum[tri.ids.z()] += tan1;
+        tan1Accum[tri.id1()] += tan1;
+        tan1Accum[tri.id2()] += tan1;
+        tan1Accum[tri.id3()] += tan1;
 
-        tan2Accum[tri.ids.x()] += tan2;
-        tan2Accum[tri.ids.y()] += tan2;
-        tan2Accum[tri.ids.z()] += tan2;
+        tan2Accum[tri.id1()] += tan2;
+        tan2Accum[tri.id2()] += tan2;
+        tan2Accum[tri.id3()] += tan2;
     }
 
     for(size_t ii = 0; ii < vertices.size(); ++ii){

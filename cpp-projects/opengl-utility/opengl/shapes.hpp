@@ -32,7 +32,7 @@
 // base
 #include "geometry/matrix3.hpp"
 #include "geometry/matrix4.hpp"
-#include "graphics/model/mesh.hpp"
+#include "graphics/mesh.hpp"
 
 // local
 #include "opengl/draw/vao_renderer.hpp"
@@ -143,7 +143,6 @@ class Cloud : public BaseShape{
 public:
     Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals);
     Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals);
-    auto udpate() -> void{}
 };
 
 class Voxels : public BaseShape{

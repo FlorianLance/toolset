@@ -87,8 +87,6 @@ public:
     auto load_from_source_code(const std::vector<std::tuple<Shader::Type, std::string>> &shadersSourceCode) -> bool;
     auto clean() -> void;
 
-    auto link() -> bool;
-    auto find_uniforms_location() -> void;
     auto use() -> void;
     static auto unbind() -> void;
 
@@ -134,6 +132,9 @@ public:
     auto debug_display() -> void;
 
 private:
+
+    auto link() -> bool;
+    auto find_uniforms_location() -> void;
 
     auto detach_and_delete_shaders() -> void;
     auto init_shader(GLuint &shader, Shader::Type shaderType, const char *sourceCode) -> bool;

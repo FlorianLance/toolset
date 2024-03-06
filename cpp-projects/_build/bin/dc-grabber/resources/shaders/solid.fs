@@ -11,5 +11,5 @@ uniform bool enable_unicolor = true;
 
 void main()
 {
-    FragColor = enable_unicolor ? unicolor : Color;
+    FragColor = unicolor;//enable_unicolor ? unicolor : Color;
 }

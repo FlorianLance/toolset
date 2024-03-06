@@ -100,8 +100,8 @@ auto main(int argc, char *argv[]) -> int{
     });
     QtLogger::message(QSL("Qt-utility"));
 
-
     BaseQtSfmlGlWidget *sampleQtGlW = new BaseQtSfmlGlWidget();
+    sampleQtGlW->resize(1920,1080);
     sampleQtGlW->show();
 
 

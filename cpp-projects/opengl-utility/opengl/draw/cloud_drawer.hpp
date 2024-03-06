@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,40 +26,27 @@
 
 #pragma once
 
-// std
-#include <string>
+// base
+#include "geometry/cloud.hpp"
 
-// Qt
-#include <QStringBuilder>
-#include <QStringView>
+// local
+#include "base_drawer.hpp"
 
-#define QSL QStringLiteral
+namespace tool::gl {
 
-namespace tool {
+class CloudDrawer : public BaseDrawer{
+public:
+    CloudDrawer();
+    // auto init(size_t sizeCloud) -> void;
+    // auto load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt3f> normals = {}) -> void;
+    auto init_and_load(const geo::ColoredCloudData &cloud) -> void;
+    auto init_and_load(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt2f> normals = {}) -> void;
+    auto init_and_load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt3f> normals = {}) -> void;
+    auto draw() -> void override final;
+};
 
-[[nodiscard]][[maybe_unused]] static inline auto from_view(std::string_view str) -> QString{
-    return QString::fromStdString(std::string(str));
-}
 
-[[nodiscard]][[maybe_unused]] static inline auto sub_view_started_by(QStringView view, QChar start, QChar end) -> QStringView{
-    auto idStart = view.indexOf(start) +1;
-    if(idStart == -1){
-        return view;
-    }
-    auto idEnd = view.indexOf(end, idStart);
-    if(idEnd == -1){
-        return view;
-    }
-    return view.mid(idStart, idEnd-idStart);
-}
 
-[[nodiscard]][[maybe_unused]] static inline auto clamp(QString n, int maxLength) -> QString{
-    if(n.length() > maxLength){
-        return n.left(maxLength) % QSL("...");
-    }
-    return n;
-}
+
 
 }
-
-

@@ -66,7 +66,7 @@ auto TBO::bind(GLuint unit) -> void{
     bind({m_handle}, unit);
 }
 
-auto TBO::bind(std::span<GLuint> textures, GLuint first) -> void{
+auto TBO::bind(std::span<const GLuint> textures, GLuint first) -> void{
 
     for(const auto &texture : textures){
         if(texture ==0){
