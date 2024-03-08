@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
     if(controller.initialize(idLocalGrabber)){
         controller.start();
         Logger::message("Exit Depth camera grabber.\n");
-        return 0;
+        return 1;
     }
 
     return -1;

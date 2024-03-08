@@ -190,6 +190,20 @@ QT_UTILITY_APP_PRE_TARGETDEPS =\
     $$OPENGL_UTILITY_LIB_FILE\
     $$QT_UTILITY_LIB_FILE\
 
+########################################################### GUARDIAN
+GUARDIAN_DEP_INCLUDEPATH =\
+    $$QT_UTILITY_DEP_INCLUDEPATH\
+    $$QT_UTILITY_INCLUDES\
+
+GUARDIAN_DEP_LIBS =\
+    $$QT_UTILITY_DEP_LIBS\
+    $$QT_UTILITY_LIB\
+
+GUARDIAN_PRE_TARGETDEPS =\
+    $$BASE_LIB_FILE\
+    $$OPENGL_UTILITY_LIB_FILE\
+    $$QT_UTILITY_LIB_FILE\
+
 ########################################################### NODES
 NODES_DEP_INCLUDEPATH =\
     nodes\
@@ -328,6 +342,7 @@ for(project, TOOLSET_CPP_PROJECTS):{
         INCLUDEPATH     += $$eval($$UPT"_DEP_INCLUDEPATH")
         LIBS            += $$eval($$UPT"_DEP_LIBS")
         PRE_TARGETDEPS  += $$eval($$UPT"_PRE_TARGETDEPS")
+
     }
 }
 

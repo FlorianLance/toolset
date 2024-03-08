@@ -202,12 +202,12 @@ CurveXManagerW::CurveXManagerW(){
     layout->setStretch(1,40);
     layout->setStretch(2,1);
     layout->setStretch(3,1);
-
-    layout->addWidget(ui::F::gen(ui::L::HB(), {ui::W::txt("Title:"), name()}, LStretch{false}, LMargins{false}));
+    
+    layout->addWidget(ui::F::old_gen(ui::L::HB(), {ui::W::txt("Title:"), name()}, LStretch{false}, LMargins{false}));
     layout->addWidget(&curve);
     curve.setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-    layout->addWidget(ui::F::gen(ui::L::HB(), {ui::W::txt("Min Y:"), minY(), ui::W::txt("Max Y:"), maxY(), automaticMinMax()}, LStretch{true}, LMargins{false}));
-    layout->addWidget(ui::F::gen(ui::L::HB(), {ui::W::txt("Max size:"), sizeMax(), ui::W::txt("Curve color:"), color()}, LStretch{true}, LMargins{false}));
+    layout->addWidget(ui::F::old_gen(ui::L::HB(), {ui::W::txt("Min Y:"), minY(), ui::W::txt("Max Y:"), maxY(), automaticMinMax()}, LStretch{true}, LMargins{false}));
+    layout->addWidget(ui::F::old_gen(ui::L::HB(), {ui::W::txt("Max size:"), sizeMax(), ui::W::txt("Curve color:"), color()}, LStretch{true}, LMargins{false}));
 }
 
 ExCurveXW::ExCurveXW(QString name) : ExItemW<CurveXManagerW>(UiType::Curve, name){

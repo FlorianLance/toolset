@@ -64,7 +64,7 @@ struct DCFramesBuffer{
 struct DCDeviceImpl{
 
     DCDeviceImpl();
-    virtual ~DCDeviceImpl(){}
+    virtual ~DCDeviceImpl();
 
     // actions
     virtual auto open(std::uint32_t deviceId) -> bool = 0;

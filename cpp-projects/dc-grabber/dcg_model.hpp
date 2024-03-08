@@ -39,6 +39,8 @@ namespace tool {
 
 struct DCGModel{
 
+    DCGModel();
+    ~DCGModel();
     auto initialize() -> bool;
     auto update() -> void;
     auto clean() -> void;
@@ -48,7 +50,7 @@ struct DCGModel{
     DCGStates states;
 
     net::DCClientConnection connection;
-    cam::DCDeviceManager device;
+    std::unique_ptr<cam::DCDeviceManager> device = nullptr;
     cam::DCVideoRecorder recorder;    
 };
 }

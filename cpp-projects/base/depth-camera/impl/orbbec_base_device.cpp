@@ -48,6 +48,7 @@
 // local
 #include "utility/logger.hpp"
 #include "azure_utility.hpp"
+#include "utility/paths.hpp"
 
 // debug
 #include "thirdparty/stb/stb_image_write.h"
@@ -84,7 +85,8 @@ struct OrbbecBaseDevice::Impl{
 
     // device
     DCType deviceType;
-    static inline std::unique_ptr<ob::Context> context = nullptr;
+    // static inline std::unique_ptr<ob::Context> context = nullptr;
+    std::unique_ptr<ob::Context> context = nullptr;
     std::shared_ptr<ob::Device> device          = nullptr;
     std::vector<std::shared_ptr<ob::Device>> deviceList;
     std::shared_ptr<ob::SensorList> sensorList  = nullptr;
@@ -389,13 +391,24 @@ OrbbecBaseDevice::OrbbecBaseDevice() : i(std::make_unique<Impl>()){
 
     auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
 
-    if(i->context == nullptr){
-        ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_DEBUG);
-        i->context = std::make_unique<ob::Context>();
-    }
+    i->context = std::make_unique<ob::Context>();
+    i->context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
+        if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
+            Logger::error(logMsg);
+        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
+            Logger::warning(logMsg);
+        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
+            Logger::message(logMsg);
+        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
+            Logger::log(logMsg);
+        }
+    });
 }
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
+    auto lg = LogGuard("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
+    Logger::log("Destroy context");
+    i->context    = nullptr;
 }
 
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
@@ -757,14 +770,18 @@ auto OrbbecBaseDevice::close_device() -> void{
     Logger::message("### Close device ###\n");
 
     if(i->pipe != nullptr){
+        Logger::message("Stop pipe\n");
         i->pipe->stop();
+
+        Logger::message("Destroy pipe\n");
         i->pipe = nullptr;
     }
 
-    i->sensorList = nullptr;
+    Logger::message("Clean device\n");
     i->device     = nullptr;
 
     Logger::message("### Device closed ###\n");
+
 }
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{

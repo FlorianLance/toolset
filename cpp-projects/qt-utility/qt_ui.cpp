@@ -26,86 +26,28 @@
 
 #include "qt_ui.hpp"
 
+// local
+#include "qt_logger.hpp"
+
 using namespace tool;
 using namespace tool::ui;
 
-void style::generate_tab_widget_style(QTabWidget *tab, QString id, int widthBorder, QTabWidget::TabPosition position){
-
-    Q_UNUSED(position)
-    QString tabWidgetObjectName = id;
-    QString tabBarObjectName = id + "_bar";
-
-    tab->setObjectName(tabWidgetObjectName);
-    tab->tabBar()->setObjectName(tabBarObjectName);
-
-    QString lB = QString::number(widthBorder);
-
-    QString style =
-    "QTabWidget::tab-bar#"+ tabWidgetObjectName +
-    "{"
-    "   alignment: left;"
-    "}"
-    "QTabWidget::pane#"+ tabWidgetObjectName +
-    "{"
-    "   border: "+lB+"px solid rgb(0,0,0);"
-    "   border-radius: 0px;"
-    "   border-top-left-radius: 0px;"
-    "}"
-    "QTabBar::tab#"+ tabBarObjectName +
-    "{"
-    "   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #f6f7fa, stop: 1 #dadbde);"
-    "   border: "+lB+"px solid rgb(0,0,0);"
-    "   border-right: 0px;"
-    "   border-radius: 0px;"
-    "   min-width:30px;"
-    "   padding: 2px;"
-    "}"
-    "QTabBar::tab#"+ tabBarObjectName + ":selected"
-    "{"
-    "   color : rgb(0,106,255);"
-    "   font: bold 11pt Calibri;"
-    "   background-color:  rgb(220,220,220);"
-    "}"
-    "QTabBar::tab#"+ tabBarObjectName + ":!selected"
-    "{"
-    "   color : rgb(127,180,255);"
-    "   font: bold 11pt Calibri;"
-    "   background-color:  rgb(220,220,220);"
-    "   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #f6f7fa, stop: 1 #dadbde);"
-    "}"
-    "QTabBar::tab#" + tabBarObjectName + ":hover"
-    "{"
-    "   color : rgb(0,106,255);"
-    "   font: bold 11pt Calibri;"
-    "   background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #dadbde, stop: 1 #f6f7fa);"
-    "}"
-    "QTabBar::tab#" + tabBarObjectName + ":first"
-    "{"
-    "   border: "+lB+"px solid rgb(0,0,0);"
-    "   border-right: 0px;"
-    "   border-bottom: 0px;"
-    "   min-height:200px;"
-    "}"
-    "QTabBar::tab#" + tabBarObjectName + ":last"
-    "{"
-    "   border: "+lB+"px solid rgb(0,0,0);"
-    "   border-right: 0px;"
-    "   border-top: 4px solid rgb(0,0,0);"
-    "   min-height:150px;"
-    "}";
-
-    tab->setStyleSheet(style);
-}
-
-
-QFrame *W::init(QFrame *f, bool on, bool enabled){
+auto W::init_frame_on_off(QFrame *f, bool on, bool enabled) -> QFrame*{
     const QSignalBlocker blocker(f);
     f->setStyleSheet(on ? "background-color:green;" : "background-color:red;");
     f->setEnabled(enabled);
     return f;
 }
 
-QComboBox *W::init(QComboBox *cb, QStringList items, int index, bool enabled){
+auto W::init(QComboBox *cb, QStringList items, QString currentItem, bool enabled) -> QComboBox*{
+    const QSignalBlocker blocker(cb);
+    cb->addItems(items);
+    cb->setEnabled(enabled);
+    cb->setCurrentText(currentItem);
+    return cb;
+}
+
+auto W::init(QComboBox *cb, QStringList items, int index, bool enabled) -> QComboBox*{
     const QSignalBlocker blocker(cb);
     cb->addItems(items);
     cb->setEnabled(enabled);
@@ -115,7 +57,7 @@ QComboBox *W::init(QComboBox *cb, QStringList items, int index, bool enabled){
     return cb;
 }
 
-QCheckBox *W::init(QCheckBox *cb, const QString &txt, bool checked, bool enabled){
+auto W::init(QCheckBox *cb, const QString &txt, bool checked, bool enabled) -> QCheckBox*{
     const QSignalBlocker blocker(cb);
     cb->setText(txt);
     cb->setChecked(checked);
@@ -123,7 +65,7 @@ QCheckBox *W::init(QCheckBox *cb, const QString &txt, bool checked, bool enabled
     return cb;
 }
 
-QRadioButton *W::init(QRadioButton *rb, const QString &txt, bool checked, bool enabled){
+auto W::init(QRadioButton *rb, const QString &txt, bool checked, bool enabled) -> QRadioButton*{
     const QSignalBlocker blocker(rb);
     rb->setText(txt);
     rb->setEnabled(enabled);
@@ -131,7 +73,7 @@ QRadioButton *W::init(QRadioButton *rb, const QString &txt, bool checked, bool e
     return rb;
 }
 
-QSlider *W::init(QSlider *sl, MinV<int> min, V<int> value, MaxV<int> max, StepV<int> singleStep, bool enabled){
+auto W::init(QSlider *sl, MinV<int> min, V<int> value, MaxV<int> max, StepV<int> singleStep, bool enabled) -> QSlider*{
     const QSignalBlocker blocker(sl);
     sl->setMinimum(min.v);
     sl->setMaximum(max.v);
@@ -141,14 +83,14 @@ QSlider *W::init(QSlider *sl, MinV<int> min, V<int> value, MaxV<int> max, StepV<
     return sl;
 }
 
-QPushButton *W::init(QPushButton *pb, const QString &txt, bool enabled){
+auto W::init(QPushButton *pb, const QString &txt, bool enabled) -> QPushButton*{
     const QSignalBlocker blocker(pb);
     pb->setText(txt);
     pb->setEnabled(enabled);
     return pb;
 }
 
-QTextEdit *W::init(QTextEdit *te, const QString &txt, Qt::TextFormat tf, bool enabled){
+auto W::init(QTextEdit *te, const QString &txt, Qt::TextFormat tf, bool enabled) -> QTextEdit*{
 
     const QSignalBlocker blocker(te);
     if(tf == Qt::TextFormat::PlainText){
@@ -162,21 +104,21 @@ QTextEdit *W::init(QTextEdit *te, const QString &txt, Qt::TextFormat tf, bool en
     return te;
 }
 
-QLineEdit *W::init(QLineEdit *le, const QString &txt, bool enabled){
+auto W::init(QLineEdit *le, const QString &txt, bool enabled) -> QLineEdit*{
     const QSignalBlocker blocker(le);
     le->setText(txt);
     le->setEnabled(enabled);
     return le;
 }
 
-QLabel *W::init_label(QLabel *la, const QString &txt, bool enabled){
+auto W::init(QLabel *la, const QString &txt, bool enabled) -> QLabel*{
     const QSignalBlocker blocker(la);
     la->setText(txt);
     la->setEnabled(enabled);
     return la;
 }
 
-QSpinBox *W::init(QSpinBox *sb, MinV<int> min, V<int> value, MaxV<int> max, StepV<int> singleStep, bool enabled){
+auto W::init(QSpinBox *sb, MinV<int> min, V<int> value, MaxV<int> max, StepV<int> singleStep, bool enabled) -> QSpinBox*{
     const QSignalBlocker blocker(sb);
     sb->setMinimum(min.v);
     sb->setMaximum(max.v);
@@ -186,7 +128,7 @@ QSpinBox *W::init(QSpinBox *sb, MinV<int> min, V<int> value, MaxV<int> max, Step
     return sb;
 }
 
-QDoubleSpinBox *W::init(QDoubleSpinBox *dsb, MinV<qreal> min, V<qreal> value, MaxV<qreal> max, StepV<qreal> singleStep, int decimals, bool enabled){
+auto W::init(QDoubleSpinBox *dsb, MinV<qreal> min, V<qreal> value, MaxV<qreal> max, StepV<qreal> singleStep, int decimals, bool enabled) -> QDoubleSpinBox*{
     const QSignalBlocker blocker(dsb);
     dsb->blockSignals(true);
     dsb->setDecimals(decimals);
@@ -199,23 +141,66 @@ QDoubleSpinBox *W::init(QDoubleSpinBox *dsb, MinV<qreal> min, V<qreal> value, Ma
     return dsb;
 }
 
-QLabel *W::txt(const QString &txt){
-    return new QLabel(txt);
+
+auto W::set(QSpinBox *sb, int value) -> void{
+    const QSignalBlocker blocker(sb);
+    sb->setValue(value);
 }
 
-QLabel *W::txt(const QString &txt, Qt::Alignment alignment){
+auto W::set(QDoubleSpinBox *dsb, double value) -> void{
+    const QSignalBlocker blocker(dsb);
+    dsb->setValue(value);
+}
+
+auto W::set(QComboBox *cb, int index) -> void{
+    const QSignalBlocker blocker(cb);
+    cb->setCurrentIndex(index);
+}
+
+auto W::set(QComboBox *cb, const QString &txt) -> void{
+    const QSignalBlocker blocker(cb);
+    cb->setCurrentText(txt);
+}
+
+auto W::set(QLineEdit *le, const QString &txt) -> void{
+    const QSignalBlocker blocker(le);
+    le->setText(txt);
+}
+
+auto W::set(QCheckBox *cb, bool checked) -> void{
+    const QSignalBlocker blocker(cb);
+    cb->setChecked(checked);
+}
+
+auto W::set(QRadioButton *rb, bool checked) -> void{
+    const QSignalBlocker blocker(rb);
+    rb->setChecked(checked);
+}
+
+auto W::set(QDateTimeEdit *dte, QDateTime dateTime) -> void{
+    const QSignalBlocker blocker(dte);
+    dte->setDateTime(dateTime);
+}
+
+auto W::set(QDateTimeEdit *dte, QTime time) -> void{
+    const QSignalBlocker blocker(dte);
+    dte->setTime(time);
+}
+
+
+auto W::txt(const QString &txt, Qt::Alignment alignment) -> QLabel*{
     auto t = new QLabel(txt);
     t->setAlignment(alignment);
     return t;
 }
 
-QLabel *W::icon(QIcon icon, QSize size){
+auto W::icon(QIcon icon, QSize size) -> QLabel*{
     auto l = new QLabel();
     l->setPixmap(icon.pixmap(size));
     return l;
 }
 
-QLabel *W::icon(QColor color, QSize size){
+auto W::icon(QColor color, QSize size) -> QLabel*{
     auto l = new QLabel();
     auto p = QPixmap(size);
     p.fill(color);
@@ -223,7 +208,21 @@ QLabel *W::icon(QColor color, QSize size){
     return l;
 }
 
-QFrame *W::horizontal_line(){
+auto L::stretch(QLayout *layout, int stretchF) -> void{
+    auto hbl = qobject_cast<QHBoxLayout*>(layout);
+    if(hbl){
+        hbl->addStretch(stretchF);
+        return;
+    }
+    auto vbl = qobject_cast<QVBoxLayout*>(layout);
+    if(vbl){
+        vbl->addStretch(stretchF);
+        return;
+    }
+}
+
+
+auto F::h_line() -> QFrame*{
     auto line = new QFrame();
     line->setObjectName(QString::fromUtf8("line"));
     line->setGeometry(QRect(320, 150, 118, 3));
@@ -232,20 +231,7 @@ QFrame *W::horizontal_line(){
     return line;
 }
 
-void L::stretch(QLayout *layout){
-    auto hbl = qobject_cast<QHBoxLayout*>(layout);
-    if(hbl){
-        hbl->addStretch();
-        return;
-    }
-    auto vbl = qobject_cast<QVBoxLayout*>(layout);
-    if(vbl){
-        vbl->addStretch();
-        return;
-    }
-}
-
-QFrame *F::gen_frame(QLayout *layout, std::vector<std::pair<QWidget *, int> > widgetsStretch, int stretchFactor, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow){
+QFrame *F::old_gen_frame(QLayout *layout, std::vector<std::pair<QWidget *, int> > widgetsStretch, int stretchFactor, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow){
 
 
     QFrame *frame = new QFrame();
@@ -280,7 +266,7 @@ QFrame *F::gen_frame(QLayout *layout, std::vector<std::pair<QWidget *, int> > wi
     return frame;
 }
 
-QFrame *F::gen_frame(QLayout *layout, std::vector<QWidget *> widgets, LStretchD strech, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow){
+QFrame *F::old_gen_frame(QLayout *layout, std::vector<QWidget *> widgets, LStretchD strech, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow){
 
     QFrame *frame = new QFrame();
     frame->setLayout(layout);
@@ -323,7 +309,7 @@ QFrame *F::gen_frame(QLayout *layout, std::vector<QWidget *> widgets, LStretchD 
     return frame;
 }
 
-QFrame *F::gen(QLayout *layout, std::vector<QWidget *> widgets, LStretch stretch, LMargins margins, QFrame::Shape shape, QFrame::Shadow shadow){
+QFrame *F::old_gen(QLayout *layout, std::vector<QWidget *> widgets, LStretch stretch, LMargins margins, QFrame::Shape shape, QFrame::Shadow shadow){
     QFrame *frame = new QFrame();
     frame->setLayout(layout);
     if(!margins.v){
@@ -344,6 +330,125 @@ QFrame *F::gen(QLayout *layout, std::vector<QWidget *> widgets, LStretch stretch
     }
     frame->setFrameShadow(shadow);
     frame->setFrameShape(shape);
+
+    return frame;
+}
+
+auto F::horiz(std::vector<WL> widgets, int spacerStretch, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow) -> QFrame* {
+    return gen(L::HB(), std::move(widgets), spacerStretch, margins, shape, shadow);
+}
+
+auto F::vert(std::vector<WL> widgets, int spacerStretch, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow) -> QFrame* {
+    return gen(L::VB(), std::move(widgets), spacerStretch, margins, shape, shadow);
+}
+
+auto F::grid(std::vector<WA> widgets, std::vector<int> rowsS, std::vector<int> colsS, int hStretch, int vStretch, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow) -> QFrame*{
+
+    QFrame *frame = new QFrame();
+    frame->setFrameShadow(shadow);
+    frame->setFrameShape(shape);
+
+    auto layout = L::G();
+    layout->setContentsMargins(margins.left, margins.top, margins.right, margins.bottom);
+    layout->setSpacing(margins.inter);
+    frame->setLayout(layout);
+
+    if(widgets.size() > rowsS.size()*colsS.size()){
+        QtLogger::error("F::grid error");
+        return frame;
+    }
+
+    size_t idW = 0;
+    for(size_t ii = 0; ii < rowsS.size(); ++ii){
+        layout->setRowStretch(static_cast<int>(ii), rowsS[ii]);
+        for(size_t jj = 0; jj < colsS.size(); ++jj){
+            if(idW < widgets.size()){
+                layout->addWidget(widgets[idW].w, static_cast<int>(ii), static_cast<int>(jj), widgets[idW].a);
+            }else{
+                break;
+            }
+            ++idW;
+        }
+    }
+    for(size_t ii = 0; ii < colsS.size(); ++ii){
+        layout->setColumnStretch(static_cast<int>(ii), colsS[ii]);
+    }
+
+    if(vStretch != 0){
+        layout->setRowStretch(layout->rowCount(), 100);
+    }
+    if(hStretch != 0){
+        layout->setColumnStretch(layout->columnCount(), 100);
+    }
+
+    return frame;
+}
+
+auto F::grid2(std::vector<WAP> widgets, std::vector<int> rowsS, std::vector<int> colsS, int addRowStretch, int addColStretch, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow) -> QFrame*{
+
+    QFrame *frame = new QFrame();
+    frame->setFrameShadow(shadow);
+    frame->setFrameShape(shape);
+
+    auto layout = L::G();
+    layout->setContentsMargins(margins.left, margins.top, margins.right, margins.bottom);
+    layout->setSpacing(margins.inter);
+    frame->setLayout(layout);
+
+    for(auto &widget : widgets){
+        layout->addWidget(widget.w, widget.rowP, widget.colP, widget.rowsS,  widget.colsS, widget.a);
+    }
+    for(size_t ii = 0; ii < rowsS.size(); ++ii){
+        layout->setRowStretch(static_cast<int>(ii), rowsS[ii]);
+    }
+    for(size_t ii = 0; ii < colsS.size(); ++ii){
+        layout->setColumnStretch(static_cast<int>(ii), colsS[ii]);
+    }
+
+    if(addRowStretch != 0){
+        layout->setRowStretch(layout->rowCount(), addRowStretch);
+    }
+    if(addColStretch != 0){
+        layout->setColumnStretch(layout->columnCount(), addColStretch);
+    }
+
+    return frame;
+}
+
+auto F::gen(QLayout *layout, std::vector<WL> widgets, int spacerStretch, LMarginsD margins, QFrame::Shape shape, QFrame::Shadow shadow) -> QFrame* {
+
+    QFrame *frame = new QFrame();
+    frame->setFrameShadow(shadow);
+    frame->setFrameShape(shape);
+
+    layout->setContentsMargins(margins.left, margins.top, margins.right, margins.bottom);
+    layout->setSpacing(margins.inter);
+    frame->setLayout(layout);
+
+    for(auto widget : widgets){
+        frame->layout()->addWidget(widget.w);
+    }
+
+    if(auto hbL = qobject_cast<QHBoxLayout*>(frame->layout()); hbL != nullptr){
+
+        for(size_t ii = 0; ii < widgets.size(); ++ii){
+            hbL->setStretch(static_cast<int>(ii), widgets[ii].stretchFactor);
+        }
+
+        if(spacerStretch > 0){
+            hbL->addStretch(spacerStretch);
+        }
+
+    }else if(auto vbL = qobject_cast<QVBoxLayout*>(frame->layout()); vbL != nullptr){
+
+        for(size_t ii = 0; ii < widgets.size(); ++ii){
+            vbL->setStretch(static_cast<int>(ii), widgets[ii].stretchFactor);
+        }
+
+        if(spacerStretch > 0){
+            vbL->addStretch(spacerStretch);
+        }
+    }
 
     return frame;
 }

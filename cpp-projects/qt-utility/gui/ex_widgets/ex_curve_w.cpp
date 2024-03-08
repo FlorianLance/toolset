@@ -38,25 +38,25 @@ ExCurveW::ExCurveW(QString name) : ExItemW<QFrame>(UiType::Curve, name){
 
     // right layout
     // # all curves
-    auto fg0  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Range X axis:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fg1  = ui::F::gen_frame(ui::L::HB(), { {ui::W::txt("min"),1}, {minX(), 10}, {ui::W::txt("max"),1}, {maxX(),10}},   0, LMarginsD{0,0,0,0,2});
-    auto fg2  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Range Y axis:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fg3  = ui::F::gen_frame(ui::L::HB(), { {ui::W::txt("min"),1}, {minY(), 10}, {ui::W::txt("max"),1}, {maxY(),10}},   0, LMarginsD{0,0,0,0,2});
-    auto allCurves = ui::F::gen_frame(ui::L::VB(), {fg0,fg1,fg2,fg3}, LStretchD{}, LMarginsD{4,4,4,4}, QFrame::Shape::Box);
+    auto fg0  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Range X axis:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fg1  = ui::F::old_gen_frame(ui::L::HB(), { {ui::W::txt("min"),1}, {minX(), 10}, {ui::W::txt("max"),1}, {maxX(),10}},   0, LMarginsD{0,0,0,0,2});
+    auto fg2  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Range Y axis:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fg3  = ui::F::old_gen_frame(ui::L::HB(), { {ui::W::txt("min"),1}, {minY(), 10}, {ui::W::txt("max"),1}, {maxY(),10}},   0, LMarginsD{0,0,0,0,2});
+    auto allCurves = ui::F::old_gen_frame(ui::L::VB(), {fg0,fg1,fg2,fg3}, LStretchD{}, LMarginsD{4,4,4,4}, QFrame::Shape::Box);
     // # current curve
-    auto fc0  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Current curve:</b>"),1},{currentCurveId(),3}},   0, LMarginsD{0,0,0,0,2});
-    auto fc1  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Preset:</b>"),1},{type(),3}},   0, LMarginsD{0,0,0,0,2});
-    auto fc2  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Y values:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fc3  = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("first"),1},{firstY(),10}, {ui::W::txt("last"),1},{lastY(), 10}},  0, LMarginsD{0,0,0,0,2});
-    auto fc4 = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Add specific point:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fc5 = ui::F::gen_frame(ui::L::HB(), { {ui::W::txt("X"),1}, {addX(), 10}, {ui::W::txt("Y"),1}, {addY(),10}},   0, LMarginsD{0,0,0,0,2});
-    auto fc6 = ui::F::gen_frame(ui::L::HB(), {{addPointB,1}, {resetB,2}},  0, LMarginsD{0,0,0,0,2});
-    auto fc7 = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Others:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fc8 = ui::F::gen_frame(ui::L::HB(), {{fitted(),1}},  0, LMarginsD{0,0,0,0,2});
-    auto fc9 = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("<b>Infos:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
-    auto fc10 = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("Add point with left click"),1}},  0, LMarginsD{0,0,0,0,2});
-    auto fc11 = ui::F::gen_frame(ui::L::HB(), {{ui::W::txt("Remove point with right click"),1}},  0, LMarginsD{0,0,0,0,2});
-    auto currentCurve = ui::F::gen_frame(ui::L::VB(), {fc0,fc1,fc2,fc3,fc4,fc5,fc6,fc7,fc8,fc9,fc10,fc11}, LStretchD{}, LMarginsD{4,4,4,4}, QFrame::Shape::Box);
+    auto fc0  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Current curve:</b>"),1},{currentCurveId(),3}},   0, LMarginsD{0,0,0,0,2});
+    auto fc1  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Preset:</b>"),1},{type(),3}},   0, LMarginsD{0,0,0,0,2});
+    auto fc2  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Y values:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fc3  = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("first"),1},{firstY(),10}, {ui::W::txt("last"),1},{lastY(), 10}},  0, LMarginsD{0,0,0,0,2});
+    auto fc4 = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Add specific point:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fc5 = ui::F::old_gen_frame(ui::L::HB(), { {ui::W::txt("X"),1}, {addX(), 10}, {ui::W::txt("Y"),1}, {addY(),10}},   0, LMarginsD{0,0,0,0,2});
+    auto fc6 = ui::F::old_gen_frame(ui::L::HB(), {{addPointB,1}, {resetB,2}},  0, LMarginsD{0,0,0,0,2});
+    auto fc7 = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Others:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fc8 = ui::F::old_gen_frame(ui::L::HB(), {{fitted(),1}},  0, LMarginsD{0,0,0,0,2});
+    auto fc9 = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("<b>Infos:</b>"),1}},   0, LMarginsD{0,0,0,0,2});
+    auto fc10 = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("Add point with left click"),1}},  0, LMarginsD{0,0,0,0,2});
+    auto fc11 = ui::F::old_gen_frame(ui::L::HB(), {{ui::W::txt("Remove point with right click"),1}},  0, LMarginsD{0,0,0,0,2});
+    auto currentCurve = ui::F::old_gen_frame(ui::L::VB(), {fc0,fc1,fc2,fc3,fc4,fc5,fc6,fc7,fc8,fc9,fc10,fc11}, LStretchD{}, LMarginsD{4,4,4,4}, QFrame::Shape::Box);
     // # container
     auto rightL = new QVBoxLayout();
     rightL->addWidget(allCurves);
@@ -68,7 +68,7 @@ ExCurveW::ExCurveW(QString name) : ExItemW<QFrame>(UiType::Curve, name){
     // main layout
     auto mainL = new QHBoxLayout();
     w->setLayout(mainL);
-    mainL->addWidget(ui::F::gen(ui::L::HB(), {curveW}, LStretch{false}, LMargins{false}, QFrame::Box));
+    mainL->addWidget(ui::F::old_gen(ui::L::HB(), {curveW}, LStretch{false}, LMargins{false}, QFrame::Box));
     mainL->addWidget(rightW);
     mainL->setStretch(0, 3);
     mainL->setStretch(1, 1);

@@ -84,6 +84,10 @@ DCDeviceImpl::DCDeviceImpl(){
     // mainLoopTF->dump(std::cout);
 }
 
+DCDeviceImpl::~DCDeviceImpl(){
+    auto lg = LogGuard("DCDeviceImpl::DCDeviceImpl"sv);
+}
+
 auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
 
     auto lg = LogGuard("DCDeviceImpl::initialize"sv);

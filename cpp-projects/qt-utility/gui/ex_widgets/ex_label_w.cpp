@@ -34,7 +34,7 @@ ExLabelW::ExLabelW(QString name) : ExItemW<QLabel>(UiType::Label, name){
 }
 
 ExLabelW *ExLabelW::init_widget(QString txt, bool enabled){
-    ui::W::init_label(w.get(), txt, enabled);
+    ui::W::init(w.get(), txt, enabled);
     return this;
 }
 

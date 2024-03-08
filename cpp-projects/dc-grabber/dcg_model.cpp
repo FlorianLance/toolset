@@ -32,6 +32,16 @@
 using namespace tool;
 using namespace std::string_view_literals;
 
+DCGModel::DCGModel(){
+    auto lg = LogGuard("DCGModel::DCGModel"sv);
+    device = std::make_unique<cam::DCDeviceManager>();
+}
+
+DCGModel::~DCGModel(){
+    auto lg = LogGuard("~DCGModel::DCGModel"sv);
+    device = nullptr;
+}
+
 auto DCGModel::initialize() -> bool{
 
     auto lg = LogGuard("DCGModel::initialize"sv);
@@ -48,6 +58,7 @@ auto DCGModel::initialize() -> bool{
     if(!connection.start_reading_thread(&settings.networkS)){
         return false;
     }
+
 
     return true;
 }

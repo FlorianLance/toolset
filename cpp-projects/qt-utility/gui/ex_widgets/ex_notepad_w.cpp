@@ -34,7 +34,7 @@ ExNotepadW::ExNotepadW(QString name) : ExItemW<QFrame>(UiType::Notepad, name){
     // main layout
     auto mainL = new QVBoxLayout();
     w->setLayout(mainL);
-    mainL->addWidget(ui::F::gen(ui::L::HB(), { ui::W::txt("Type:"), type()}, LStretch{false}, LMargins{false}, QFrame::Box));
+    mainL->addWidget(ui::F::old_gen(ui::L::HB(), { ui::W::txt("Type:"), type()}, LStretch{false}, LMargins{false}, QFrame::Box));
     mainL->addWidget(text());
     mainL->setStretch(0, 1);
     mainL->setStretch(1, 20);

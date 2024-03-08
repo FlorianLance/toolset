@@ -972,9 +972,7 @@ Pt3f Frustum::origin() const{
     return m_position;
 }
 
-#include <iostream>
 Cloud::Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals){
-    std::cout << "INIT CLOUD " << points.size() << "\n";
     auto pmd = std::make_unique<PointsMeshVAO>();
     pmd->init_and_load_3d_points(points, colors, normals);
     vaoRenderer = std::move(pmd);

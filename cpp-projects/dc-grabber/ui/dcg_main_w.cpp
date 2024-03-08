@@ -65,11 +65,11 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
 
         if(ImGui::BeginChild("Main###MainChild", to_iv2(displaySize), true, ImGuiWindowFlags_NoScrollWithMouse)){
 
-            std::int64_t captD          = model->device.get_capture_duration_ms();
-            std::int64_t procD          = model->device.get_processing_duration_ms();
-            std::int64_t convertImageD  = model->device.get_duration_micro_s("CONVERT_COLOR_IMAGE"sv);
-            std::int64_t resizeImageD   = model->device.get_duration_micro_s("RESIZE_COLOR_IMAGE"sv);
-            std::int64_t filterDepthD   = model->device.get_duration_micro_s("FILTER_DEPTH"sv);
+            std::int64_t captD          = model->device->get_capture_duration_ms();
+            std::int64_t procD          = model->device->get_processing_duration_ms();
+            std::int64_t convertImageD  = model->device->get_duration_micro_s("CONVERT_COLOR_IMAGE"sv);
+            std::int64_t resizeImageD   = model->device->get_duration_micro_s("RESIZE_COLOR_IMAGE"sv);
+            std::int64_t filterDepthD   = model->device->get_duration_micro_s("FILTER_DEPTH"sv);
             std::int64_t totalD         = captD+procD;
 
             auto framesS = 1000.f/totalD;

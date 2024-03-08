@@ -35,7 +35,7 @@ ExColorFrameW::ExColorFrameW(QString name) : ExItemW<QFrame>(UiType::Color_frame
 
 ExColorFrameW *ExColorFrameW::init_widget(bool on, bool enabled){
     onState = on;
-    ui::W::init(w.get(), onState, enabled);
+    ui::W::init_frame_on_off(w.get(), onState, enabled);
     return this;
 }
 

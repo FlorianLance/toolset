@@ -79,6 +79,7 @@ DCDeviceManager::DCDeviceManager(): i(std::make_unique<Impl>()){
 }
 
 DCDeviceManager::~DCDeviceManager(){
+    auto lg = LogGuard("~DCDeviceManager::DCDeviceManager"sv);
     clean();
 }
 

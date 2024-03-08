@@ -36,6 +36,14 @@ CloudDrawer::CloudDrawer(){
     BaseDrawer::vaoRenderer = std::make_unique<PointsMeshVAO>();
 }
 
+auto CloudDrawer::init(size_t sizeCloud, bool initColors, bool initNormals) -> void{
+
+}
+
+auto CloudDrawer::load(const geo::ColoredCloudData &cloud) -> void{
+
+}
+
 auto CloudDrawer::init_and_load(const geo::ColoredCloudData &cloud) -> void{
     auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
     pm->clean();

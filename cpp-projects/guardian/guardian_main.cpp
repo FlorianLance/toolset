@@ -32,6 +32,8 @@
 #include <QTime>
 #include <QTimer>
 
+// qt-utility
+// #include "qt_logger.hpp"
 
 auto wait_process(int ms) -> void {
     QTime dieTime= QTime::currentTime().addMSecs(ms);
@@ -94,10 +96,13 @@ int main(int argc, char *argv[]){
         }
     });
 
+    bool normalExit = false;
     QEventLoop::connect(&process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), &a, [&](int exitCode, QProcess::ExitStatus exitStatus){
         Q_UNUSED(exitStatus)
+        qDebug() << "Exit code: " << exitCode;
         if(exitCode == 1){
             qDebug() << "normal exit";
+            normalExit = true;
         }else{
             qDebug() << "crash exit";
         }
@@ -105,6 +110,12 @@ int main(int argc, char *argv[]){
 
     QTimer timer;
     QEventLoop::connect(&timer, &QTimer::timeout,  [&](){
+
+        if(normalExit){
+            a.quit();
+            return;
+        }
+
         if(process.state() != QProcess::ProcessState::Running && process.state() != QProcess::ProcessState::Starting){
             process.start(exeProgramPath, args);
         }

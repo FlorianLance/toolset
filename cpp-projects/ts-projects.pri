@@ -41,6 +41,7 @@ TOOLSET_CPP_PROJECTS +=\
     dc-manager \
     dc-monitoring \
     qt-utility \
+    qt-utility-app \
     nodes \
     scaner-component \
     scaner-grabber \

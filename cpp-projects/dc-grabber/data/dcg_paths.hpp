@@ -36,7 +36,7 @@ struct DCGPaths{
 
     static auto initialize(size_t idLocalGrabber, const std::filesystem::path &base, const std::string &hostName) -> void{
 
-        logName         = std::format("dcg_grabber_{}_{}.html", hostName, idLocalGrabber);
+        logName         = std::format("dcg_grabber_{}_{}.html", hostName, idLocalGrabber);        
 
         configDir       = base       / "config/";
         settingsDir     = configDir / "settings/";
@@ -65,6 +65,7 @@ struct DCGPaths{
     static inline std::filesystem::path calibrationDir;
 
     static inline std::string logName;
+    static inline std::string orbbecLogName;
     static inline std::filesystem::path defaultNetwork;
     static inline std::filesystem::path hostNetwork;
     static inline std::filesystem::path defaultFilters;

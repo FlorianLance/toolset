@@ -27,44 +27,19 @@
 ####################################### repo
 TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
 
-####################################### PRI
-# defines compiling options
-include(../ts-settings.pri)
-# defines projects paths and variables
-include(../ts-projects.pri)
-# defines thirdparty includes and libs
-include(../ts-thirdparty.pri)
-# defines dependencies
-include(../ts-dependencies.pri)
-
-####################################### TARGET
-equals(CFG, "debug"){
-    TARGET = qt-utilityd-app
-}
-equals(CFG, "release"){
-    TARGET = qt-utility-app
-}
-
-####################################### TEMPLATE
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = qt-utility-app
 TEMPLATE = app
 CONFIG += console
-
-####################################### BUILD FILES
-OBJECTS_DIR = $$QT_UTILITY_OBJ
-MOC_DIR     = $$QT_UTILITY_MOC
-RCC_DIR     = $$QT_UTILITY_RCC
-UI_DIR      = $$QT_UTILITY_UI
-DESTDIR     = $$QT_UTILITY_DEST
-
-####################################### CONFIG
 CONFIG += qt
 QT += core gui opengl widgets printsupport network
 DEFINES += QWT_DLL
 
-####################################### INCLUDES
-INCLUDEPATH += $$QT_UTILITY_APP_DEP_INCLUDEPATH
-LIBS += $$QT_UTILITY_APP_DEP_LIBS
-PRE_TARGETDEPS += $$QT_UTILITY_APP_PRE_TARGETDEPS
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \

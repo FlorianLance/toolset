@@ -99,7 +99,7 @@ auto DCGController::set_connections() -> void{
     auto recD = &view->mainW.recorderD;
     // # model
     auto sett   = &model->settings;
-    auto dev    = &model->device;
+    auto dev    = model->device.get();
     auto rec    = &model->recorder;
     auto con    = &model->connection;
     auto states = &model->states;
