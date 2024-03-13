@@ -66,8 +66,12 @@ auto DCServerUdpSender::send_update_device_settings_message(const cam::DCDeviceS
     // init header
     Header header = Header::generate_mono_packet(MessageType::update_device_settings, sizeof(cam::DCDeviceSettings));
 
+    // compute checksum
+    // header.c
+    // auto data = reinterpret_cast<std::uint16_t>(&device);
+
     // init data
-    UdpMonoPacketData::copy_to_data<cam::DCDeviceSettings>(header, &device, packetBuffer);
+    UdpMonoPacketData::copy_to_data(header, &device, packetBuffer);
 
     // send data
     send_mono_packet(header);

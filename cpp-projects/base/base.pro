@@ -43,6 +43,7 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io    
+    data/checksum.hpp \
     graphics/mesh_generation.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \

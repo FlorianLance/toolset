@@ -50,7 +50,7 @@ struct Header{
     std::uint16_t totalNumberPackets = 0;
     std::uint16_t currentPacketId = 0;
     std::uint16_t currentPacketSizeBytes = 0;
-    // std::int8_t type = 0;
+    std::uint32_t checkSum = 0;
     MessageType type = MessageType::undefined;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{
@@ -69,9 +69,9 @@ struct Packet{
 };
 
 
-struct UdpMonoPacketData{        
+struct UdpMonoPacketData{
 
-    static auto copy_only_header_to_data(const Header &header, std::vector<int8_t> &outputData) -> void{
+    static auto copy_only_header_to_data(const Header &header, std::vector<std::int8_t> &outputData) -> void{
 
         if(outputData.size() < header.totalSizeBytes){
             outputData.resize(header.totalSizeBytes);
@@ -82,14 +82,14 @@ struct UdpMonoPacketData{
     }
 
     template <typename T>
-    static auto generate_data_from_packet(const int8_t *dataP, int sizeData = sizeof(T)) -> std::shared_ptr<T>{
+    static auto generate_data_from_packet(const std::int8_t *dataP, int sizeData = sizeof(T)) -> std::shared_ptr<T>{
         std::shared_ptr<T> data = std::make_shared<T>();
         std::copy(dataP, dataP + sizeData, reinterpret_cast<std::int8_t*>(data.get()));
         return data;
     }
 
     template <typename T>
-    static auto generate_data_from_packet_raw(const int8_t *dataP, int sizeData = sizeof(T)) -> T{
+    static auto generate_data_from_packet_raw(const std::int8_t *dataP, int sizeData = sizeof(T)) -> T{
         T data;
         std::copy(dataP, dataP + sizeData, reinterpret_cast<std::int8_t*>(&data));
         return data;
@@ -98,22 +98,22 @@ struct UdpMonoPacketData{
     template <typename T>
     static auto copy_to_data(const Header &header, const T* dataP, std::vector<int8_t> &data) -> void{
 
-        auto messageData = reinterpret_cast<const int8_t *>(dataP);
-         size_t dataSize = header.totalSizeBytes - sizeof(Header);
-         if(data.size() < dataSize){
-             data.resize(dataSize);
-         }
+        auto messageData = reinterpret_cast<const std::int8_t *>(dataP);
+        size_t dataSize = header.totalSizeBytes - sizeof(Header);
+        if(data.size() < dataSize){
+            data.resize(dataSize);
+        }
 
-         auto headerD = reinterpret_cast<const std::int8_t*>(&header);
-         std::copy(headerD,      headerD     + sizeof(Header),   data.begin());
-         std::copy(messageData,  messageData + dataSize,         data.begin() + sizeof(Header));
+        auto headerD = reinterpret_cast<const std::int8_t*>(&header);
+        std::copy(headerD,      headerD     + sizeof(Header),   data.begin());
+        std::copy(messageData,  messageData + dataSize,         data.begin() + sizeof(Header));
     }
 };
 
 template <typename T>
 struct UdpMonoPacketMessage {
 
-    auto init_packet_from_data(int8_t *data, uint32_t messageNbBytes) -> void{
+    auto init_packet_from_data(std::int8_t *data, std::uint32_t messageNbBytes) -> void{
         std::copy(data, data + messageNbBytes, reinterpret_cast<std::int8_t*>(this));
     }
 

@@ -143,7 +143,7 @@ auto dc_network_direct_player_export_test() -> void{
 
     for(int idL = 0; idL < nbIterations; ++idL){
 
-        update__dc_network_direct_player(dcNetworkDirectPlayer);
+        // update__dc_network_direct_player(dcNetworkDirectPlayer);
 
         for(int idC = 0; idC < devices_nb__dc_network_direct_player(dcNetworkDirectPlayer); ++idC){
             auto sizeVertices = current_frame_cloud_size__dc_network_direct_player(dcNetworkDirectPlayer, idC);

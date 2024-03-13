@@ -430,26 +430,24 @@ auto Sample::draw_scene1(tool::gl::ShaderProgram *shader) -> void{
     mInfo.Shininess = 100.0;
     materialUBO.update(mInfo);
 
-    camM.m = geo::transform(Vec3d{1.0*scale,scale,scale}, modelRot.conv<double>(), modelPos.conv<double>());
-
     // backdrop plane
     CameraMatrices sCam;
     sCam.v = camM.v;
     sCam.p = camM.p;
 
-    sCam.m = geo::rotate(camM.m, Vec3d{-1,0,0}, 90.);
-    sCam.update_m(geo::translate(sCam.m, Vec3d{0,5,0}));
+    sCam.m = geo::transform(Vec3d{1.0,1.0,1.0}, Vec3d{-90.0,0.0,0.0}, Vec3d{0,5,0});
+    sCam.update();
     shader->set_camera_matrices_uniforms(sCam);    
     commonDrawers["notext-plane-20x10"sv]->draw();
 
     // bottom plane
-    sCam.update_m(geo::translate(camM.m, Vec3d{0,-5,0}));
+    sCam.m = geo::transform(Vec3d{1.0,1.0,1.0}, Vec3d{-90.0,0.0,0.0}, Vec3d{0,-5,0});
+    sCam.update();
     shader->set_camera_matrices_uniforms(sCam);
     commonDrawers["notext-plane-20x10"sv]->draw();
 
     // top plane
-    sCam.m = geo::translate(camM.m, Vec3d{0,5,0});
-    sCam.m = geo::rotate(sCam.m, Vec3d{1,0,0}, 180.);
+    sCam.m = geo::transform(Vec3d{1.0,1.0,1.0}, Vec3d{180.0,0.0,0.0}, Vec3d{0,5,0});
     sCam.update();
     shader->set_camera_matrices_uniforms(sCam);
     commonDrawers["notext-plane-20x10"sv]->draw();
@@ -458,19 +456,18 @@ auto Sample::draw_scene1(tool::gl::ShaderProgram *shader) -> void{
     mInfo.Kd = {0.4f, 0.9f, 0.4f};
     materialUBO.update(mInfo);
 
-    sCam.update_m(geo::translate(camM.m, Vec3d{-3,-3,2.0}));
+    sCam.m = geo::transform(Vec3d{1.0,1.0,1.0}, Vec3d{180.0,0.0,0.0}, Vec3d{-3,-3,2.0});
+    sCam.update();
     shader->set_camera_matrices_uniforms(sCam);
-    commonDrawers["notext-plane-20x10"sv]->draw();
+    // commonDrawers["notext-plane-20x10"sv]->draw();
 
     // teapot
     mInfo.Kd = {0.4f, 0.4f, 0.9f};
     materialUBO.update(mInfo);
-
-    sCam.m = geo::translate(camM.m, Vec3d{4,-5,1.5});
-    sCam.m = geo::rotate(sCam.m, Vec3d{1,0,0}, -90.);
+    sCam.m = geo::transform(Vec3d{1.0,1.0,1.0}, Vec3d{-90.0,0.0,0.0}, Vec3d{4,-5,1.5});
     sCam.update();
     shader->set_camera_matrices_uniforms(sCam);
-    commonDrawers["notext-plane-20x10"sv]->draw();
+    // commonDrawers["notext-plane-20x10"sv]->draw();
 }
 
 auto Sample::reload_shader() -> void{
