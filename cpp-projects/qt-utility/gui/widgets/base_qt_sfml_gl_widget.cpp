@@ -60,7 +60,7 @@ auto BaseQtSfmlGlWidget::eventFilter(QObject *object, QEvent *event) -> bool{
     if(object != this){
         return false;
     }
-    return false;
+    return QWidget::eventFilter(object,event);
 }
 
 auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
@@ -79,7 +79,7 @@ auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
     settings.attributeFlags = sf::ContextSettings::Default;
 
     // init window
-    sf::Window::create(reinterpret_cast<sf::WindowHandle>(winId()),settings);
+    sf::RenderWindow::create(reinterpret_cast<sf::WindowHandle>(winId()), settings);
 
     // init glew
     GL::init_glew();
@@ -107,7 +107,9 @@ auto BaseQtSfmlGlWidget::paintEvent(QPaintEvent *) -> void{
     }
 
     on_update();
-    on_draw();
+
+    sf::RenderWindow::setActive(true);
+    on_paint();
     display();
 }
 
@@ -120,6 +122,7 @@ auto BaseQtSfmlGlWidget::resizeEvent(QResizeEvent *event) -> void{
         return;
     }
 
+    sf::RenderWindow::setActive(true);
     glViewport(0, 0, static_cast<GLsizei>(m_screen.width()), static_cast<GLsizei>(m_screen.height()));
     on_resize();
 }
@@ -212,7 +215,7 @@ auto BaseQtSfmlGlWidget::on_update() -> void{
 
 }
 
-auto BaseQtSfmlGlWidget::on_draw() -> void{
+auto BaseQtSfmlGlWidget::on_paint() -> void{
 
     // gl::ShaderProgram::unbind();
     // draw(shape);

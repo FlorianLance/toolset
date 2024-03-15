@@ -61,7 +61,7 @@ protected:
 
     virtual auto on_init() -> bool;
     virtual auto on_update() -> void;
-    virtual auto on_draw() -> void;
+    virtual auto on_paint() -> void;
     virtual auto on_resize() -> void{}
 
     // camera

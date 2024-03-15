@@ -51,6 +51,7 @@ HEADERS += \
     qt_logger.hpp \
     qt_process.hpp \
     qt_str.hpp \
+    qt_style.hpp \
     qt_types.hpp \
     qt_ui.hpp \
     qt_convertors.hpp \
@@ -104,6 +105,7 @@ SOURCES += \
     qt_highlighting.cpp \
     qt_logger.cpp \
     qt_str.cpp \
+    qt_style.cpp \
     qt_ui.cpp \
     # data
     data/argument.cpp \
