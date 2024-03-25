@@ -63,6 +63,7 @@ struct GL{
 
     // texture
     static auto create_textures(GLenum target, GLsizei n, GLuint *textures) -> void;
+    static auto delete_textures(GLsizei n, GLuint *textures) -> void;
     static auto bind_textures(GLuint first, GLsizei count, const GLuint *textures) -> void;
     static auto bind_image_texture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format) -> void;
     static auto bind_image_textures(GLuint first, GLsizei count, const GLuint *textures) -> void;
@@ -71,6 +72,7 @@ struct GL{
     static auto texture_storage_2d_multisample(GLuint texture, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations) -> void;
     static auto texture_storage_2d(GLuint texture, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height) -> void;
     static auto texture_storage_3d(GLuint texture, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth) -> void;
+    static auto texture_sub_image_2d(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) -> void;
 
     static auto named_buffer_storage(GLuint buffer, GLsizeiptr size, const void *data, GLbitfield flags) -> void;
     static auto named_buffer_sub_data(GLuint buffer, GLintptr offset, GLsizeiptr size, const void *data) -> void;

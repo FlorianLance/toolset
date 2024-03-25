@@ -48,10 +48,15 @@ HEADERS += \
     opengl/buffer/framebuffer_object.hpp \
     opengl/draw/base_drawer.hpp \
     opengl/draw/cloud_drawer.hpp \
+    opengl/draw/grid_lines_drawer.hpp \
+    opengl/draw/line_drawer.hpp \
     opengl/draw/lines_mesh_vao.hpp \
     opengl/draw/mesh_drawer.hpp \
     opengl/draw/object_drawer.hpp \
     opengl/draw/points_mesh_vao.hpp \
+    opengl/draw/quad_lines_drawer.hpp \
+    opengl/draw/quad_triangles_drawer.hpp \
+    opengl/draw/sphere_drawer.hpp \
     opengl/draw/triangles_mesh_vao.hpp \
     opengl/draw/vao_renderer.hpp \
     opengl/gl_draw.hpp \
@@ -96,10 +101,15 @@ SOURCES += \
     opengl/buffer/pixel_buffer_object.cpp \
     opengl/buffer/render_buffer_object.cpp \
     opengl/draw/cloud_drawer.cpp \
+    opengl/draw/grid_lines_drawer.cpp \
+    opengl/draw/line_drawer.cpp \
     opengl/draw/lines_mesh_vao.cpp \
     opengl/draw/mesh_drawer.cpp \
     opengl/draw/object_drawer.cpp \
     opengl/draw/points_mesh_vao.cpp \
+    opengl/draw/quad_lines_drawer.cpp \
+    opengl/draw/quad_tirangles_drawer.cpp \
+    opengl/draw/sphere_drawer.cpp \
     opengl/draw/triangles_mesh_vao.cpp \
     opengl/draw/vao_renderer.cpp \
     opengl/gl_functions.cpp \

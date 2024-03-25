@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,67 +24,69 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "element_buffer_object.hpp"
-
-// base
-#include "utility/logger.hpp"
+#include "quad_triangles_drawer.hpp"
 
 // local
 #include "opengl/gl_functions.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
+#include "triangles_mesh_vao.hpp"
 
 using namespace tool::gl;
+using namespace tool::geo;
 
-EBO::~EBO(){
-    clean();
+QuadTrianglesDrawer::QuadTrianglesDrawer(){
+    BaseDrawer::vaoRenderer = std::make_unique<TriangleMeshVAO>();
 }
 
-auto EBO::generate() -> void{
+auto QuadTrianglesDrawer::init_and_load() -> void{
 
-    if(m_handle != 0){
-        Logger::error(std::format("[EBO::generate] EBO already generated: {}\n", m_handle));
+    constexpr static std::array<tool::geo::Pt3f,4> vertices = {
+        tool::geo::Pt3f{-1.f, -1.f, 0.f},
+        tool::geo::Pt3f{ 1.f, -1.f, 0.f},
+        tool::geo::Pt3f{ 1.f,  1.f, 0.f},
+        tool::geo::Pt3f{-1.f,  1.f, 0.f}
+    };
+
+    constexpr static std::array<tool::geo::Pt2f,4> texCoords = {
+        tool::geo::Pt2f{0.f, 1.f},
+        tool::geo::Pt2f{1.f, 1.f},
+        tool::geo::Pt2f{1.f, 0.f},
+        tool::geo::Pt2f{0.f, 0.f},
+        // tool::geo::Pt2f{0.f, 0.f},
+        // tool::geo::Pt2f{1.f, 0.f},
+        // tool::geo::Pt2f{1.f, 1.f},
+        // tool::geo::Pt2f{0.f, 1.f},
+    };
+
+    constexpr static std::array<tool::geo::Pt3f,4> normals = {
+        tool::geo::Pt3f{0.f, 0.f, 1.f},
+        tool::geo::Pt3f{0.f, 0.f, 1.f},
+        tool::geo::Pt3f{0.f, 0.f, 1.f},
+        tool::geo::Pt3f{0.f, 0.f, 1.f}
+    };
+
+    constexpr static std::array<tool::geo::Pt3<GLuint>,2> elements = {
+        tool::geo::Pt3<GLuint>{0,1,2},
+        tool::geo::Pt3<GLuint>{0,2,3}
+    };
+
+    auto tm = dynamic_cast<TriangleMeshVAO*>(vaoRenderer.get());
+    tm->clean();
+    tm->init_and_load_3d_mesh(elements, vertices, normals, texCoords);
+}
+
+auto QuadTrianglesDrawer::draw() -> void{
+
+    auto tm = dynamic_cast<TriangleMeshVAO*>(vaoRenderer.get());
+    if(!tm->initialized()){
         return;
     }
-    GL::create_buffers(1, &m_handle);
-}
 
-auto EBO::clean() -> void{
-
-    if(m_handle == 0){
-        return;
-    }
-    GL::delete_buffers(1, &m_handle);
-    m_handle = 0;
-}
-
-auto EBO::bind() -> void{
-
-    if(m_handle == 0){
-        Logger::error("[EBO::bind] EBO not generated, cannot bind it.\n");
-        return;
+    if(!texturesId.empty()){
+        TBO::bind(texturesId.values, 0);
     }
 
-    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, m_handle);
-}
-
-auto EBO::unbind() -> void{
-    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-auto EBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> void{
-
-    GL::named_buffer_storage(
-        m_handle,
-        size,
-        data,
-        usage
-    );
-}
-
-auto EBO::update_data(const GLuint *data, GLsizeiptr size, GLintptr offset) -> void{
-    GL::named_buffer_sub_data(
-        m_handle,
-        offset,
-        size,
-        data
-    );
+    tm->bind();
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+    tm->unbind();
 }

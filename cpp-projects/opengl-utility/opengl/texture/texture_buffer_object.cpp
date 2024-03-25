@@ -43,7 +43,7 @@ TBO::~TBO(){
 
 auto TBO::generate() -> void{
 
-    if(m_handle != 0){
+    if(generated()){
         Logger::error(std::format("[TBO::generate] TBO already generated [{}]\n", m_handle));
         return;
     }
@@ -52,11 +52,11 @@ auto TBO::generate() -> void{
 
 auto TBO::clean() -> void{
 
-    if(m_handle == 0){
+    if(!generated()){
         return;
     }
 
-    GL::delete_buffers(1, &m_handle);
+    GL::delete_textures(1, &m_handle);
     m_handle = 0;
 }
 
@@ -534,8 +534,5 @@ auto TBO::get_hdr_texture_data(std::vector<GLfloat> &data) -> void{
     //             );
 }
 
-auto TBO::debug_generate() -> void{
-    generate();
-}
 
 

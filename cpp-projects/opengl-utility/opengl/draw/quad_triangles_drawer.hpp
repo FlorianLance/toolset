@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
@@ -26,62 +26,26 @@
 
 #pragma once
 
-// Qt
-#include <QWidget>
-#include <QTimer>
+// local
+#include "base_drawer.hpp"
 
-// sfml
-#include <SFML/Graphics.hpp>
+#include "opengl/vao.hpp"
+#include "opengl/buffer/vertex_buffer_object.hpp"
+#include "opengl/buffer/element_buffer_object.hpp"
 
-// base
-#include "graphics/camera/camera.hpp"
 
-namespace tool {
+namespace tool::gl {
 
-class BaseQtSfmlGlWidget :  public QWidget, public sf::RenderWindow{
+class QuadTrianglesDrawer : public BaseDrawer{
 public:
+    QuadTrianglesDrawer();
+    auto init_and_load() -> void;
+    auto draw() -> void override final;
 
-    BaseQtSfmlGlWidget(QWidget* Parent = nullptr);
-
-protected:
-
-    // Qt
-    auto paintEngine() const -> QPaintEngine*;
-    auto eventFilter(QObject *object, QEvent *event) -> bool;
-
-    // # events
-    auto showEvent(QShowEvent*) -> void;
-    auto paintEvent(QPaintEvent*) -> void;
-    auto resizeEvent(QResizeEvent *event) -> void;
-    virtual auto mousePressEvent(QMouseEvent *event) -> void;
-    virtual auto mouseReleaseEvent(QMouseEvent *event) -> void;
-    virtual auto mouseMoveEvent(QMouseEvent *event) -> void;
-    virtual auto wheelEvent(QWheelEvent *event) -> void;
-    virtual auto keyPressEvent(QKeyEvent *event) -> void;
-
-    virtual auto on_init() -> bool;
-    virtual auto on_update() -> void;
-    virtual auto on_paint() -> void;
-    virtual auto on_resize() -> void{}
-
-    // camera
-    graphics::Screen m_screen;
-    graphics::Camera m_camera;
-    double m_cameraSpeed = 0.05;
-
-    // inputs
-    bool isKeyPressed = false;
-    bool mouseLeftClickPressed = false;
-    bool mouseMiddleClickPressed = false;
-    bool mouseRighClickPressed = false;
-    double lastX=-1., lastY=-1.;
-
-
-protected:
-
-    bool m_windowInitialized = false;
-    QTimer m_renderTimer;
+    VAO vao;
+    EBO indicesB;
+    VBO pointsB;
+    VBO texCoordsB;
+    bool m_initialized= false;
 };
-
-
 }

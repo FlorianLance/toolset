@@ -37,6 +37,295 @@ using namespace tool::gl;
 using namespace tool::geo;
 using namespace tool::graphics;
 
+auto TriangleMeshVAO::generate_bo() -> void{
+
+    indicesB.generate();
+    pointsB.generate();
+    if(m_hasNormals){
+        normalsB.generate();
+    }
+    if(m_hasTexCoord){
+        texCoordsB.generate();
+    }
+    if(m_hasTangents){
+        tangentsB.generate();
+    }
+    if(m_hasBones){
+        // bonesB.generate();
+    }
+    if(m_hasColors){
+        colorsB.generate();
+    }    
+}
+
+auto TriangleMeshVAO::load_data(
+    std::span<const geo::Pt3<GLuint>> indices,
+    std::span<const geo::Pt3f> points,
+    std::span<const geo::Pt3f> normals,
+    std::span<const geo::Pt2f> texCoords,
+    std::span<const geo::Pt4f> tangents,
+    std::span<const graphics::BoneData> bones,
+    std::span<const ColorRGBA32> colors) -> void{
+
+    if(!indices.empty()){
+        indicesB.load_data(
+            reinterpret_cast<const GLuint *>(indices.data()),
+            GLsizeiptr(indices.size()*3*sizeof(std::uint32_t)),
+            indicesBufferUsage
+        );
+    }
+
+    if(!points.empty()){
+        pointsB.load_data(
+            reinterpret_cast<const GLfloat*>(points.data()),
+            static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat)),
+            positionBufferUsage
+        );
+    }
+
+    if(m_hasNormals && !normals.empty()){
+        normalsB.load_data(
+            reinterpret_cast<const GLfloat*>(normals.data()),
+            static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+            normalBufferUsage
+        );
+    }
+
+    if(m_hasTexCoord && !texCoords.empty()){
+        texCoordsB.load_data(
+            reinterpret_cast<const GLfloat*>(texCoords.data()),
+            static_cast<GLsizeiptr>(texCoords.size()*2*sizeof(GLfloat)),
+            texCoordsBufferUsage
+        );
+    }
+
+    if(m_hasTangents && !tangents.empty()){
+        tangentsB.load_data(
+            reinterpret_cast<const GLfloat*>(tangents.data()),
+            static_cast<GLsizeiptr>(tangents.size()*4*sizeof(GLfloat)),
+            tangentsBufferUsage
+        );
+    }
+
+    if(m_hasBones && !bones.empty()){
+        // bonesB.load_data(
+        //     reinterpret_cast<const GLvoid*>(bones.data()),
+        //     static_cast<GLsizeiptr>(bones.size()*sizeof(BoneData)),
+        //     bonesBufferUsage
+        // );
+    }
+
+    if(m_hasColors && !colors.empty()){
+        colorsB.load_data(
+            reinterpret_cast<const GLfloat*>(colors.data()),
+            static_cast<GLsizeiptr>(colors.size()*4*sizeof(GLfloat)),
+            colorBufferUsage
+        );
+    }
+}
+
+auto TriangleMeshVAO::vertex_array_vertex_buffer() -> void{
+
+    GL::vertex_array_vertex_buffer(
+        vao.id(),
+        positionBindingId,
+        pointsB.id(),
+        0,
+        sizeof(GLfloat)*3
+    );
+
+    if(m_hasNormals){
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            normalBindingId,
+            normalsB.id(),
+            0,
+            sizeof(GLfloat)*3
+        );
+    }
+
+    if(m_hasTexCoord){
+
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            texCoordsBindingId,
+            texCoordsB.id(),
+            0,
+            sizeof(GLfloat)*2
+        );
+    }
+
+    if(m_hasTangents){
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            tangentsBindingId,
+            tangentsB.id(),
+            0,
+            sizeof(GLfloat)*4
+        );
+    }
+
+    if(m_hasBones){
+        // ...
+    }
+
+    if(m_hasColors){
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            colorBindingId,
+            colorsB.id(),
+            0,
+            sizeof(GLfloat)*4
+        );
+    }
+}
+
+auto TriangleMeshVAO::vertex_array_attrib_format() -> void{
+
+    GL::vertex_array_attrib_format(
+        vao.id(),
+        positionBindingId,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0
+    );
+
+    if(m_hasNormals){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            normalBindingId,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+
+    if(m_hasTexCoord){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            texCoordsBindingId,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+
+    if(m_hasTangents){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            tangentsBindingId,
+            4,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+
+    if(m_hasBones){
+        // ...
+    }
+
+    if(m_hasColors){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            colorBindingId,
+            4,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+}
+
+auto TriangleMeshVAO::enable_vertex_array_attrib() -> void{
+
+    GL::enable_vertex_array_attrib(
+        vao.id(),
+        positionBindingId
+    );
+
+    if(m_hasNormals){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            normalBindingId
+        );
+    }
+
+    if(m_hasTexCoord){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            texCoordsBindingId
+        );
+    }
+
+    if(m_hasTangents){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            tangentsBindingId
+        );
+    }
+
+    if(m_hasBones){
+        // ...
+    }
+
+    if(m_hasColors){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            colorBindingId
+        );
+    }
+}
+
+auto TriangleMeshVAO::vertex_array_attrib_binding() -> void{
+
+    GL::vertex_array_attrib_binding(
+        vao.id(),
+        positionLoc,
+        positionBindingId
+    );
+
+    if(m_hasNormals){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            normalLoc,
+            normalBindingId
+        );
+    }
+
+    if(m_hasTexCoord){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            texCoordsLoc,
+            texCoordsBindingId
+        );
+    }
+
+    if(m_hasTangents){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            tangentsLoc,
+            tangentsBindingId
+        );
+    }
+
+    if(m_hasBones){
+        // ...
+    }
+
+    if(m_hasColors){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            colorLoc,
+            colorBindingId
+        );
+    }
+}
+
+
 auto TriangleMeshVAO::init_and_load_3d_mesh(
     std::span<const geo::Pt3<GLuint>> indices,
     std::span<const Pt3f> points,
@@ -46,180 +335,45 @@ auto TriangleMeshVAO::init_and_load_3d_mesh(
     std::span<const graphics::BoneData> bones,
     std::span<const ColorRGBA32> colors) -> void{
 
-    if(points.empty() || indices.empty()){
-        Logger::error("[TriangleMesh::init_buffers] No points.\n");
+    if(indices.empty()){
+        Logger::error("[TriangleMeshVAO::init_and_load_3d_mesh] No indices.\n");
         return;
     }
 
-    bool hasNormals  = normals.size()   == points.size();
-    bool hasTexCoord = texCoords.size() == points.size();
-    bool hasTangents = tangents.size()  == points.size();
-    bool hasBones    = bones.size()     == points.size();
-    bool hasColors   = colors.size()    == points.size();
-
-    // generate vao
-    vao.generate();
-
-    // generate vbo
-    pointsB.generate();
-    if(hasNormals){
-        normalsB.generate();
-    }
-    if(hasTexCoord){
-        texCoordsB.generate();
-    }
-    if(hasTangents){
-        tangentsB.generate();
-    }
-    if(hasBones){
-        bonesB.generate();
-    }
-    if(hasColors){
-        colorsB.generate();
+    if(points.empty()){
+        Logger::error("[TriangleMeshVAO::init_and_load_3d_mesh] No points.\n");
+        return;
     }
 
-    // load vbo
-    pointsB.load_data(
-        reinterpret_cast<const GLfloat*>(points.data()),
-        static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat))
-    );
-
-    pointsB.dsa_attrib(
-        vao.id(),
-        0,
-        3,
-        sizeof(Pt3f),
-        GL_FLOAT,
-        0,
-        0
-    );
-
-    if(hasNormals){
-
-        normalsB.load_data(
-            reinterpret_cast<const GLfloat*>(normals.data()),
-            static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat))
-        );
-
-        normalsB.dsa_attrib(
-            vao.id(),
-            1,
-            3,
-            sizeof(Pt3f),
-            GL_FLOAT,
-            0,
-            1
-        );
+    if(buffersInitialized){
+        clean();
     }
 
-    if(hasTexCoord){
+    m_hasNormals  = normals.size()   == points.size();
+    m_hasTexCoord = texCoords.size() == points.size();
+    m_hasTangents = tangents.size()  == points.size();
+    m_hasBones    = bones.size()     == points.size();
+    m_hasColors   = colors.size()    == points.size();
 
-        texCoordsB.load_data(
-            reinterpret_cast<const GLfloat*>(normals.data()),
-            static_cast<GLsizeiptr>(texCoords.size()*2*sizeof(GLfloat))
-        );
+    vao.generate();    
+    generate_bo();
 
-        texCoordsB.dsa_attrib(
-            vao.id(),
-            2,
-            2,
-            sizeof(Pt2f),
-            GL_FLOAT,
-            0,
-            2
-        );
-    }
+    vao.bind();
+    indicesB.bind();
 
-    if(hasTangents){
+    load_data(indices, points, normals, texCoords, tangents, bones, colors);
 
-        tangentsB.load_data(
-            reinterpret_cast<const GLfloat*>(tangents.data()),
-            static_cast<GLsizeiptr>(tangents.size()*3*sizeof(GLfloat))
-        );
+    vertex_array_vertex_buffer();
+    vertex_array_attrib_format();
+    enable_vertex_array_attrib();
+    vertex_array_attrib_binding();
 
-        tangentsB.dsa_attrib(
-            vao.id(),
-            3,
-            3,
-            sizeof(Pt3f),
-            GL_FLOAT,
-            0,
-            3
-         );
-    }
+    nIndicesAllocated = static_cast<GLsizei>(indices.size()*3);
+    buffersInitialized = true;
 
-    if(hasBones){
+    VAO::unbind();
+    indicesB.unbind();
 
-        bonesB.load_data(
-            reinterpret_cast<const GLvoid*>(bones.data()),
-            static_cast<GLsizeiptr>(bones.size()*sizeof(BoneData))
-        );
-
-
-
-
-        // Bind a buffer to a vertex buffer bind point.
-        // glVertexArrayVertexBuffer(
-        //     vaobj,          // Specifies the name of the vertex array object to be used by glVertexArrayVertexBuffer function.
-        //     bindingindex,   // The index of the vertex buffer binding point to which to bind the buffer.
-        //     buffer,         // The name of a buffer to bind to the vertex buffer binding point.
-        //     offset,         // The offset of the first element of the buffer.
-        //     stride          // The distance between elements within the buffer.
-        // );
-
-        // // Enable or disable a generic vertex attribute array.
-        // glEnableVertexArrayAttrib(
-        //     vaobj,  // Specifies the name of the vertex array object for glDisableVertexArrayAttrib and glEnableVertexArrayAttrib functions.
-        //     index   // Specifies the index of the generic vertex attribute to be enabled or disabled.
-        // );
-
-        // // Specify the organization of vertex arrays
-        // glVertexArrayAttribFormat(
-        //     vao.id(),       // Specifies the name of the vertex array object for glVertexArrayAttrib{I, L}Format functions.
-        //     attribindex,    // The generic vertex attribute array being described.
-        //     size,           // The number of values per vertex that are stored in the array.
-        //     type,           // he type of the data stored in the array.
-        //     normalized,     // Specifies whether fixed-point data values should be normalized (GL_TRUE)
-        //     // or converted directly as fixed-point values (GL_FALSE) when they are accessed. This parameter is ignored if type is GL_FIXED.
-        //     relativeoffset  // The distance between elements within the buffer.
-        // );
-
-        // // Associate a vertex attribute and a vertex buffer binding for a vertex array object
-        // glVertexArrayAttribBinding(
-        //     vaobj,          // Specifies the name of the vertex array object for glVertexArrayAttribBinding.
-        //     attribindex,    // The index of the attribute to associate with a vertex buffer binding.
-        //     bindingindex    // The index of the vertex buffer binding with which to associate the generic vertex attribute.
-        // );
-
-
-        // if(type.v == GL_INT){
-        //     GL::vertex_attrib_i_pointer(index.v, size.v, type.v, stride.v,  offset.v);
-        // }else{
-        //     GL::vertex_attrib_pointer(index.v, size.v, type.v, GL_FALSE, stride.v,  offset.v);
-        // }
-
-        // define an array of generic vertex attribute data
-        // void glVertexAttribIPointer(
-        //     GLuint index,
-        //     GLint size,
-        //     GLenum type,
-        //     GLsizei stride,
-        //     const void * pointer
-        // );
-
-
-
-        // glBindBuffer(GL_ARRAY_BUFFER, bonesB.id());
-        // glBufferData(GL_ARRAY_BUFFER, sizeof(graphics::BoneData) * bones->size(), &bones->at(0), GL_STATIC_DRAW);
-
-        // glEnableVertexAttribArray(4);
-        // glVertexAttribIPointer(4, 4, GL_INT, sizeof(graphics::BoneData), (const GLvoid*)0);
-
-        // glEnableVertexAttribArray(5);
-        // glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(graphics::BoneData), (const GLvoid*)(4* sizeof(float)));
-
-
-    }
 }
 
 auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
@@ -343,8 +497,8 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
     if(hasColors){
         colorsB.attrib(AttriIndex{4}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
-
-    nIndices = static_cast<GLsizei>(indices->size());
+    
+    nIndicesAllocated = static_cast<GLsizei>(indices->size());
 
     VAO::unbind();
     buffersInitialized = true;
@@ -514,8 +668,8 @@ auto TriangleMeshVAO::init_buffers(
             );
         colorsB.attrib(AttriIndex{6}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
-
-    nIndices = static_cast<GLsizei>(indices->size()*3);
+    
+    nIndicesAllocated = static_cast<GLsizei>(indices->size()*3);
 
     VAO::unbind();
     buffersInitialized = true;
@@ -528,7 +682,7 @@ auto TriangleMeshVAO::render() const -> void{
     }
 
     vao.bind();
-    draw_triangles_with_ebo(nIndices);
+    draw_triangles_with_ebo(nIndicesAllocated);
     VAO::unbind();
 }
 
@@ -539,9 +693,10 @@ auto TriangleMeshVAO::render_adjacency() const -> void{
     }
 
     vao.bind();
-    draw_triangles_adjacency_with_ebo(nIndices);
+    draw_triangles_adjacency_with_ebo(nIndicesAllocated);
     VAO::unbind();
 }
+
 
 auto TriangleMeshVAO::clean() -> void{
     vao.clean();

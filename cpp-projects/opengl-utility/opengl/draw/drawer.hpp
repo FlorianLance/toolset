@@ -141,11 +141,24 @@ public:
     auto init(float xSize, float zSize, std::vector<GLuint> textures) -> void;
 };
 
+class LineDrawer : public Drawer{
+public:
+    LineDrawer();
+    auto init(const geo::Pt3f &p1, const geo::Pt3f &p2) -> void;
+};
+
 class TriangleLineDrawer : public Drawer{
 public:
     TriangleLineDrawer();
     auto init(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3) -> void;
 };
+
+class QuadLineDrawer : public Drawer{
+public:
+    QuadLineDrawer();
+    auto init(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3, const geo::Pt3f &p4) -> void;
+};
+
 
 class CircleLinesDrawer : public Drawer{
     CircleLinesDrawer(float radius);

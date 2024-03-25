@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-qt-utility                                                         **
+** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
 ** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
@@ -24,64 +24,55 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
-
-// Qt
-#include <QWidget>
-#include <QTimer>
-
-// sfml
-#include <SFML/Graphics.hpp>
+#include "quad_lines_drawer.hpp"
 
 // base
-#include "graphics/camera/camera.hpp"
+#include "utility/logger.hpp"
 
-namespace tool {
+// local
+#include "opengl/gl_functions.hpp"
+#include "lines_mesh_vao.hpp"
 
-class BaseQtSfmlGlWidget :  public QWidget, public sf::RenderWindow{
-public:
+using namespace tool::gl;
 
-    BaseQtSfmlGlWidget(QWidget* Parent = nullptr);
-
-protected:
-
-    // Qt
-    auto paintEngine() const -> QPaintEngine*;
-    auto eventFilter(QObject *object, QEvent *event) -> bool;
-
-    // # events
-    auto showEvent(QShowEvent*) -> void;
-    auto paintEvent(QPaintEvent*) -> void;
-    auto resizeEvent(QResizeEvent *event) -> void;
-    virtual auto mousePressEvent(QMouseEvent *event) -> void;
-    virtual auto mouseReleaseEvent(QMouseEvent *event) -> void;
-    virtual auto mouseMoveEvent(QMouseEvent *event) -> void;
-    virtual auto wheelEvent(QWheelEvent *event) -> void;
-    virtual auto keyPressEvent(QKeyEvent *event) -> void;
-
-    virtual auto on_init() -> bool;
-    virtual auto on_update() -> void;
-    virtual auto on_paint() -> void;
-    virtual auto on_resize() -> void{}
-
-    // camera
-    graphics::Screen m_screen;
-    graphics::Camera m_camera;
-    double m_cameraSpeed = 0.05;
-
-    // inputs
-    bool isKeyPressed = false;
-    bool mouseLeftClickPressed = false;
-    bool mouseMiddleClickPressed = false;
-    bool mouseRighClickPressed = false;
-    double lastX=-1., lastY=-1.;
-
-
-protected:
-
-    bool m_windowInitialized = false;
-    QTimer m_renderTimer;
+static inline std::array<GLuint,8> indices = {
+    0, 1,
+    1, 2,
+    2, 3,
+    3, 0
 };
 
+QuadLinesDrawer::QuadLinesDrawer(){
+    BaseDrawer::vaoRenderer = std::make_unique<LinesMeshVAO>();
+}
 
+auto QuadLinesDrawer::init(bool initColors) -> void{
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    lm->clean();
+    lm->indicesBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
+    lm->positionBufferUsage = GL_DYNAMIC_STORAGE_BIT;
+    lm->colorBufferUsage    = GL_DYNAMIC_STORAGE_BIT;
+    lm->init_data(indices.size(), 4, initColors);
+    lm->update_indices(indices);
+}
+
+auto QuadLinesDrawer::init_and_load(std::span<const geo::Pt3f,4> points, std::span<const geo::Pt3f> colors) -> void{
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    lm->clean();
+    lm->init_and_load_data(indices, points, colors);
+}
+
+auto QuadLinesDrawer::update(std::span<const geo::Pt3f, 4> points, std::span<const geo::Pt3f> colors) -> void{        
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    lm->update_data(points, colors);
+}
+
+auto QuadLinesDrawer::draw() -> void{
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    if(!lm->initialized()){
+        return;
+    }
+    lm->bind();
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, indices.size(), GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+    lm->unbind();
 }

@@ -49,7 +49,8 @@ public:
     }
 
     [[nodiscard]] constexpr auto initialized() const noexcept -> bool{ return buffersInitialized;}
-    [[nodiscard]] constexpr auto indices_count() const noexcept -> GLsizei{return nIndices;}
+    [[nodiscard]] constexpr auto allocated_indices_count() const noexcept -> GLsizei{return nIndicesAllocated;}
+    // [[nodiscard]] constexpr auto nb_indices_to_draw() const noexcept -> GLsizei{return nIndicesToDraw;}
 
     // TODO: remove
     virtual auto render() const -> void{}
@@ -63,9 +64,9 @@ public:
 protected:
 
     VAO vao;
-    // GLenum mode;
     VBO pointsB;
-    GLsizei nIndices = 0;
+    GLsizei nIndicesAllocated = 0;
+    // GLsizei nIndicesToDraw = 0;
     bool buffersInitialized = false;
 };
 

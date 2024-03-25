@@ -57,7 +57,7 @@ auto MeshDrawer2::draw() -> void{
 
     auto tm = dynamic_cast<TriangleMeshVAO*>(vaoRenderer.get());
     tm->bind();
-    GL::draw_arrays_instance_base_instance(GL_TRIANGLES, 0, tm->indices_count(), 1, 0);
+    GL::draw_arrays_instance_base_instance(GL_TRIANGLES, 0, tm->allocated_indices_count(), 1, 0);
     tm->unbind();
 
 }

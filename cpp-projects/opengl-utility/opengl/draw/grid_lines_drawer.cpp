@@ -24,61 +24,73 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "cloud_drawer.hpp"
+#include "grid_lines_drawer.hpp"
 
 // local
 #include "opengl/gl_functions.hpp"
-#include "points_mesh_vao.hpp"
+#include "lines_mesh_vao.hpp"
 
 using namespace tool::gl;
 
-CloudDrawer::CloudDrawer(){
-    BaseDrawer::vaoRenderer = std::make_unique<PointsMeshVAO>();
+GridLinesDrawer::GridLinesDrawer(){
+    BaseDrawer::vaoRenderer = std::make_unique<LinesMeshVAO>();
 }
 
-auto CloudDrawer::init(size_t sizeCloud, bool initColors, bool initNormals) -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    pm->clean();
-    pm->positionBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
-    pm->colorBufferUsage     = GL_DYNAMIC_STORAGE_BIT;
-    pm->normalBufferUsage    = GL_DYNAMIC_STORAGE_BIT;
-    pm->init_3d_points(sizeCloud, initColors, initNormals);
+auto GridLinesDrawer::init_and_load(GLfloat width, GLfloat height, GLuint nbX, GLuint nbY) -> void{
+
+    std::vector<GLuint> indices;
+    indices.reserve(nbX*2+nbY*2);
+
+    std::vector<GLfloat> points;
+    points.reserve((nbX*2+nbY*2)*3);
+
+    const GLfloat lX = nbX*width;
+    const GLfloat lY = nbY*height;
+
+    const GLfloat minX = -lX*0.5f;
+    const GLfloat maxX = +lX*0.5f;
+    for(GLuint ii = 0; ii < nbX; ++ii){
+        indices.emplace_back(static_cast<GLuint>(points.size()));
+        points.emplace_back(minX);
+        points.emplace_back(0.f);
+        points.emplace_back(minX+ii*width);
+
+        indices.emplace_back(static_cast<GLuint>(points.size()));
+        points.emplace_back(maxX);
+        points.emplace_back(0.f);
+        points.emplace_back(minX+ii*width);
+    }
+
+    const GLfloat minY = -lY*0.5f;
+    const GLfloat maxY = +lY*0.5f;
+    for(GLuint ii = 0; ii < nbY; ++ii){
+
+        indices.emplace_back(static_cast<GLuint>(points.size()));
+        points.emplace_back(minY+ii*height);
+        points.emplace_back(0.f);
+        points.emplace_back(minY);
+
+        indices.emplace_back(static_cast<GLuint>(points.size()));
+        points.emplace_back(minY+ii*height);
+        points.emplace_back(0.f);
+        points.emplace_back(maxY);
+    }
+
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    lm->clean();
+    lm->init_and_load_data(
+        std::span<GLuint>(indices.data(),indices.size()),
+        std::span<geo::Pt3f>(reinterpret_cast<geo::Pt3f*>(points.data()), points.size()/3),
+        {}
+    );
 }
 
-auto CloudDrawer::update(const geo::ColoredCloudData &cloud) -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    pm->update_3d_points(cloud.vertices, cloud.colors, cloud.normals);
-    nIndicesToDraw = cloud.size();
-}
-
-auto CloudDrawer::init_and_load(const geo::ColoredCloudData &cloud) -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    pm->clean();
-    init_and_load(cloud.vertices.span(), cloud.colors.span(), cloud.normals.span());
-    nIndicesToDraw = cloud.size();
-}
-
-auto CloudDrawer::init_and_load(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals) -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    pm->clean();
-    pm->init_and_load_2d_points(points, colors, normals);
-    nIndicesToDraw = points.size();
-}
-
-auto CloudDrawer::init_and_load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    pm->clean();
-    pm->init_and_load_3d_points(points, colors, normals);
-    nIndicesToDraw = points.size();
-}
-
-auto CloudDrawer::draw() -> void{
-    auto pm = dynamic_cast<PointsMeshVAO*>(vaoRenderer.get());
-    if(!pm->initialized()){
+auto GridLinesDrawer::draw() -> void{
+    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
+    if(!lm->initialized()){
         return;
     }
-    pm->bind();
-    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, nIndicesToDraw, 1, 0);
-    pm->unbind();
+    lm->bind();
+    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, lm->allocated_indices_count(), GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+    lm->unbind();
 }
-

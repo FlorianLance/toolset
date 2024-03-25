@@ -45,8 +45,6 @@ public:
         PointsMeshVAO::clean();
     }
 
-    // TODO: test init/load
-    // init
     auto init_3d_points(
         size_t size,
         bool hasColors,
@@ -54,10 +52,11 @@ public:
     ) -> void;
 
     // load
-    auto load_3d_points(
+    auto update_3d_points(
         std::span<const geo::Pt3f> points,
         std::span<const geo::Pt3f> colors,
-        std::span<const geo::Pt3f> normals
+        std::span<const geo::Pt3f> normals,
+        GLintptr offset = 0
     ) -> void;
 
     // init and load
@@ -78,9 +77,11 @@ public:
         std::span<const geo::Pt3f> colors
     ) -> void;
 
-    auto render() const -> void override;
-    auto render_patches() const -> void override;
     auto clean() -> void override;
+
+    // TO REMOVE
+    auto render() const -> void override;
+    auto render_patches() const -> void override;        
 
     GLuint positionBindingId = 0;
     GLuint colorBindingId    = 1;

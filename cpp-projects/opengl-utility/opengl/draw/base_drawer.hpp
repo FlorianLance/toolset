@@ -47,6 +47,7 @@ public:
 
 protected:
     std::unique_ptr<VAORenderer> vaoRenderer = nullptr;
+    GLsizei nIndicesToDraw = 0;
 };
 
 }

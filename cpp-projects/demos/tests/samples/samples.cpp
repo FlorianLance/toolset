@@ -2804,7 +2804,7 @@ auto Ch8ShadowMap::init() -> bool {
 
         // Create the depth buffer
         shadowTexture.clean();
-        shadowTexture.debug_generate();
+        shadowTexture.generate();
 
         glTextureStorage2D (
             shadowTexture.id(),    // GLuint texture
@@ -3032,7 +3032,7 @@ auto Ch8ShadowMap2::init() -> bool {
 
         // Create the depth buffer
         depthMap.clean();
-        depthMap.debug_generate();
+        depthMap.generate();
 
         glTextureStorage2D (
             depthMap.id(),    // GLuint texture
@@ -3175,7 +3175,7 @@ auto Ch8ShadowPcf::init() -> bool {
 
         // Create the depth buffer
         shadowTexture.clean();
-        shadowTexture.debug_generate();
+        shadowTexture.generate();
 
         glTextureStorage2D (
             shadowTexture.id(),    // GLuint texture

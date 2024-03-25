@@ -305,7 +305,7 @@ auto PointsMeshVAO::init_3d_points(size_t size, bool hasColors, bool hasNormals)
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
 
-    nIndices = static_cast<GLsizei>(size);
+    nIndicesAllocated = static_cast<GLsizei>(size);
     buffersInitialized = true;
 }
 
@@ -352,21 +352,39 @@ auto PointsMeshVAO::init_and_load_2d_points(std::span<const Pt2f> points, std::s
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
 
-    nIndices = static_cast<GLsizei>(points.size());
+    nIndicesAllocated  = static_cast<GLsizei>(points.size());
     buffersInitialized = true;
     VAO::unbind();
 }
 
-auto PointsMeshVAO::load_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+auto PointsMeshVAO::update_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals, GLintptr offset) -> void{
 
     if(!buffersInitialized){
         Logger::error("[PointsMesh::load_3d_points] Buffer not initialized.\n");
         return;
     }
 
-    // check original buffer size
-    // ...
+    pointsB.update_data(
+        reinterpret_cast<const GLfloat*>(points.data()),
+        static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat)),
+        offset
+    );
 
+    if(m_hasColors){
+        colorsB.update_data(
+            reinterpret_cast<const GLfloat*>(colors.data()),
+            static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat)),
+            offset
+        );
+    }
+
+    if(m_hasNormals){
+        normalsB.update_data(
+            reinterpret_cast<const GLfloat*>(normals.data()),
+            static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+            offset
+        );
+    }
 }
 
 auto PointsMeshVAO::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
@@ -411,7 +429,7 @@ auto PointsMeshVAO::init_and_load_3d_points(std::span<const Pt3f> points, std::s
     vertex_array_attrib_format_for_3d_points();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-    nIndices = static_cast<GLsizei>(points.size());
+    nIndicesAllocated = static_cast<GLsizei>(points.size());
     buffersInitialized = true;
 }
 
@@ -449,7 +467,7 @@ auto PointsMeshVAO::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, st
     vertex_array_attrib_format_for_3d_voxels();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-    nIndices = static_cast<GLsizei>(voxels.size());
+    nIndicesAllocated = static_cast<GLsizei>(voxels.size());
     buffersInitialized = true;
 }
 
@@ -460,7 +478,7 @@ auto PointsMeshVAO::render() const -> void{
     }
 
     vao.bind();
-    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, nIndices, 1, 0);
+    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, nIndicesAllocated, 1, 0);
     VAO::unbind();
 }
 
@@ -471,7 +489,7 @@ auto PointsMeshVAO::render_patches() const -> void{
     }
 
     vao.bind();
-    GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, nIndices, 1, 0);
+    GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, nIndicesAllocated, 1, 0);
     VAO::unbind();
 }
 
@@ -481,6 +499,8 @@ auto PointsMeshVAO::clean() -> void{
     colorsB.clean();
     normalsB.clean();
     buffersInitialized = false;
+    m_hasColors = false;
+    m_hasNormals = false;
 }
 
 

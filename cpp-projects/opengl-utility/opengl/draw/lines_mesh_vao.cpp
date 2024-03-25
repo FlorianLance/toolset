@@ -38,7 +38,181 @@
 using namespace tool::geo;
 using namespace tool::gl;
 
-auto LinesMeshVAO::init_and_load_3d_lines(std::span<const GLuint> indices, std::span<const geo::Pt3f> points, std::span<const geo::Pt4f> colors) -> void {
+auto LinesMeshVAO::generate_bo() -> void{
+
+    pointsB.generate();
+    if(m_hasColors){
+        colorsB.generate();
+    }
+    indicesB.generate();
+}
+
+auto LinesMeshVAO::vertex_array_vertex_buffer_for_3d_lines() -> void{
+
+    GL::vertex_array_vertex_buffer(
+        vao.id(),
+        positionBindingId,
+        pointsB.id(),
+        0,
+        sizeof(GLfloat)*3
+    );
+    if(m_hasColors){
+        GL::vertex_array_vertex_buffer(
+            vao.id(),
+            colorBindingId,
+            colorsB.id(),
+            0,
+            sizeof(GLfloat)*3
+        );
+    }
+}
+
+auto LinesMeshVAO::vertex_array_attrib_format_for_3d_lines() -> void{
+
+    GL::vertex_array_attrib_format(
+        vao.id(),
+        positionBindingId,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0
+    );
+    if(m_hasColors){
+        GL::vertex_array_attrib_format(
+            vao.id(),
+            colorBindingId,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0
+        );
+    }
+}
+
+auto LinesMeshVAO::enable_vertex_array_attrib() -> void{
+
+    GL::enable_vertex_array_attrib(
+        vao.id(),
+        positionBindingId
+    );
+    if(m_hasColors){
+        GL::enable_vertex_array_attrib(
+            vao.id(),
+            colorBindingId
+        );
+    }
+}
+
+auto LinesMeshVAO::vertex_array_attrib_binding() -> void{
+
+    GL::vertex_array_attrib_binding(
+        vao.id(),
+        positionLoc,
+        positionBindingId
+    );
+    if(m_hasColors){
+        GL::vertex_array_attrib_binding(
+            vao.id(),
+            colorLoc,
+            colorBindingId
+        );
+    }
+}
+
+
+auto LinesMeshVAO::init_data(size_t nbIndices, size_t nbPoints, bool hasColors) -> void{
+
+    if(nbIndices == 0){
+        Logger::error("[LinesMeshVAO::init_data] No indices.\n");
+        return;
+    }
+    if(nbPoints == 0){
+        Logger::error("[LinesMeshVAO::init_data] No points.\n");
+        return;
+    }
+
+    if(buffersInitialized){
+        clean();
+    }
+
+    m_hasColors  = hasColors;
+
+    vao.generate();
+    generate_bo();
+
+    vao.bind();
+    indicesB.bind();
+
+    const GLfloat *pointsData = nullptr;
+    pointsB.load_data(
+        pointsData,
+        static_cast<GLsizeiptr>(nbPoints*3*sizeof(GLfloat)),
+        positionBufferUsage
+    );
+    if(m_hasColors){
+        const GLfloat *colorsData = nullptr;
+        colorsB.load_data(
+            colorsData,
+            static_cast<GLsizeiptr>(nbPoints*3*sizeof(GLfloat)),
+            colorBufferUsage
+        );
+    }
+    const GLuint *indicesData = nullptr;
+    indicesB.load_data(
+        indicesData,
+        GLsizeiptr(nbIndices*sizeof(std::uint32_t)),
+        indicesBufferUsage
+    );
+
+    vertex_array_vertex_buffer_for_3d_lines();
+    vertex_array_attrib_format_for_3d_lines();
+    enable_vertex_array_attrib();
+    vertex_array_attrib_binding();
+    
+    nIndicesAllocated = static_cast<GLsizei>(nbIndices);
+    buffersInitialized = true;
+
+    VAO::unbind();
+    indicesB.unbind();
+}
+
+auto LinesMeshVAO::update_indices(std::span<const GLuint> indices, GLintptr offset) -> void{
+
+    if(!buffersInitialized){
+        Logger::error("[LinesMeshVAO::update_indices] Buffer not initialized.\n");
+        return;
+    }
+
+    indicesB.update_data(
+        indices.data(),
+        static_cast<GLsizeiptr>(indices.size()*sizeof(std::uint32_t)),
+        offset
+    );
+}
+
+auto LinesMeshVAO::update_data(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, GLintptr offset) -> void{
+
+    if(!buffersInitialized){
+        Logger::error("[LinesMeshVAO::update_data] Buffer not initialized.\n");
+        return;
+    }
+
+    pointsB.update_data(
+        reinterpret_cast<const GLfloat*>(points.data()),
+        static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat)),
+        offset
+    );
+
+    if(m_hasColors){
+        colorsB.update_data(
+            reinterpret_cast<const GLfloat*>(colors.data()),
+            static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat)),
+            offset
+        );
+    }
+}
+
+auto LinesMeshVAO::init_and_load_data(std::span<const GLuint> indices, std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors) -> void {
 
     if(indices.empty()){
         Logger::error("[LinesMesh::init_and_load_3d_lines] No indices.\n");
@@ -50,135 +224,48 @@ auto LinesMeshVAO::init_and_load_3d_lines(std::span<const GLuint> indices, std::
         return;
     }
 
-    if(indices.size() > points.size()*3){
-        Logger::error("[LinesMesh::init_and_load_3d_lines] Invalid points size.\n");
-        return;
-    }
-
-
     if(buffersInitialized){
         clean();
     }
 
-    bool hasColors  = colors.size() == points.size();
+    m_hasColors  = colors.size() == points.size();
 
-    // generate vao
     vao.generate();
+    generate_bo();
 
-    // generate vbo
-    pointsB.generate();
-    if(hasColors){
-        colorsB.generate();
-    }
-
-    // generate ebo
-    indicesB.generate();
-
-
-    // load vbo
-    pointsB.load_data(
-        reinterpret_cast<const GLfloat*>(points.data()),
-        static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat))
-    );
-    pointsB.dsa_attrib(
-        vao.id(),
-        0,
-        3,
-        sizeof(Pt3f),
-        GL_FLOAT,
-        0,
-        0
-    );
-
-    if(hasColors){
-        colorsB.load_data(
-            reinterpret_cast<const GLfloat*>(colors.data()),
-            static_cast<GLsizeiptr>(colors.size()*4*sizeof(GLfloat))
-        );
-        colorsB.dsa_attrib(
-            vao.id(),
-            1,
-            4,
-            sizeof(Pt4f),
-            GL_FLOAT,
-            0,
-            1
-        );
-    }
-
-    // load ebo
     vao.bind();
     indicesB.bind();
+
     indicesB.load_data(
         indices.data(),
-        GLsizeiptr(indices.size()*sizeof(std::uint32_t))
+        GLsizeiptr(indices.size()*sizeof(std::uint32_t)),
+        indicesBufferUsage
     );
-
-    nIndices = static_cast<GLsizei>(indices.size());
-    VAO::unbind();
-    buffersInitialized = true;
-}
-
-auto LinesMeshVAO::init_and_load_3d_lines(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *colors) -> void{
-
-    // check inputs
-    if(indices == nullptr || points == nullptr){
-        Logger::error("[LinesMesh::init_and_load_3d_lines] error, no indices or points buffers.\n");
-        return;
-    }
-
-    if(indices->size() == 0 || points->size() == 0){
-        Logger::error("[LinesMesh::init_and_load_3d_lines] error, empty buffers.\n");
-        return;
-    }
-
-    if(colors != nullptr){
-        if(points->size()/3 != colors->size()/4){
-            Logger::error("[LinesMesh::init_and_load_3d_lines] error, different size for points and colors buffers.\n");
-            return;
-        }
-    }
-
-    // clean buffers
-    if(buffersInitialized){
-        clean();
-    }
-
-    // generate vao
-    vao.generate();
-
-    // generate vbo
-    pointsB.generate();
-    if(colors != nullptr){
-        colorsB.generate();
-    }
-
-    // generate ebo
-    indicesB.generate();
-
-
-    // load data
-    vao.bind();
-    indicesB.bind();
-    indicesB.load_data(indices->data(), GLsizeiptr(indices->size()*sizeof(std::uint32_t)));
 
     pointsB.load_data(
-        points->data(),
-        static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))
+        reinterpret_cast<const GLfloat*>(points.data()),
+        static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat)),
+        positionBufferUsage
     );
-    pointsB.attrib(AttriIndex{0}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
 
-    if(colors != nullptr){
+    if(m_hasColors){
         colorsB.load_data(
-            colors->data(),
-            static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))
+            reinterpret_cast<const GLfloat*>(colors.data()),
+            static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat)),
+            colorBufferUsage
         );
-        colorsB.attrib(AttriIndex{1}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
 
-    nIndices = static_cast<GLsizei>(indices->size());
-    VAO::unbind();
+    vertex_array_vertex_buffer_for_3d_lines();
+    vertex_array_attrib_format_for_3d_lines();
+    enable_vertex_array_attrib();
+    vertex_array_attrib_binding();
+    
+    nIndicesAllocated = static_cast<GLsizei>(indices.size());    
     buffersInitialized = true;
+
+    VAO::unbind();
+    indicesB.unbind();
 }
 
 auto LinesMeshVAO::render() const -> void{
@@ -188,7 +275,7 @@ auto LinesMeshVAO::render() const -> void{
     }
 
     vao.bind();
-    draw_lines_with_ebo(nIndices);
+    draw_lines_with_ebo(nIndicesAllocated);
     VAO::unbind();
 }
 
@@ -198,4 +285,6 @@ auto LinesMeshVAO::clean() -> void{
     indicesB.clean();
     colorsB.clean();
     buffersInitialized = false;
+    m_hasColors = false;
 }
+

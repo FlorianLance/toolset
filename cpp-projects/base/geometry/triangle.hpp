@@ -74,6 +74,28 @@ struct Triangle3{
     std::array<Pt3<acc>,3> v;
 };
 
+
+//template <typename acc>
+//constexpr auto barycentric(const Pt3<acc> &p, const Triangle3<acc> &t) -> Pt3<acc>{
+
+//    const Vec3<acc> ab = t.b() - t.a();
+//    const Vec3<acc> bc = t.c() - t.b();
+//    const Vec3<acc> ca = t.a() - t.c();
+
+//    Vec3<acc> v = ab - project(ab,vec(t.c(), t.b()));
+//    const acc a = 1 - (dot(v, vec(t.a(),p)) / dot(v,ab));
+
+//    v = bc - project(bc, vec(t.a(),t.c()));
+//    const acc b = 1 - (dot(v,vec(t.b(),p)) / dot(v, bc));
+
+//    v = ca - project(ca, ab);
+//    const acc c = 1 - (dot(v, vec(t.c(),p)) / dot(v, ca));
+
+//    return Pt3<acc>(a,b,c);
+//}
+
+
+
 //template<typename acc>
 //constexpr auto normal(const Triangle3<acc> &t) -> Normal3<acc>{
 //    return ((a() + b() + c())/acc{3});

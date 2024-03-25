@@ -421,6 +421,15 @@ auto GL::create_textures(GLenum target, GLsizei n, GLuint *textures) -> void{
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateTextures.xhtml
 }
 
+auto GL::delete_textures(GLsizei n, GLuint *textures) -> void{
+    // Delete named textures
+    glDeleteTextures(
+        n,          // Specifies the number of textures to be deleted.
+        textures    // Specifies an array of textures to be deleted.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/es3/html/glDeleteTextures.xhtml
+}
+
 auto GL::bind_textures(GLuint first, GLsizei count, const GLuint *textures) -> void{
     // Bind one or more named textures to a sequence of consecutive texture units.
     glBindTextures(
@@ -522,6 +531,27 @@ auto GL::texture_storage_3d(GLuint texture, GLsizei levels, GLenum internalforma
         depth           // Specifies the depth of the texture, in texels.
     );
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexStorage3D.xhtml
+}
+
+auto GL::texture_sub_image_2d(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) -> void{
+    // Specify a two-dimensional texture subimage
+    glTextureSubImage2D(
+        texture,        // Specifies the texture object name for glTextureSubImage2D. The effective target of texture must be one of the valid target values above.
+        level,          // Specifies the level-of-detail number. Level 0 is the base image level. Level n is the nth mipmap reduction image.
+        xoffset,        // Specifies a texel offset in the x direction within the texture array.
+        yoffset,        // Specifies a texel offset in the y direction within the texture array.
+        width,          // Specifies a texel offset in the y direction within the texture array.
+        height,         // Specifies the height of the texture subimage.
+        format,         // Specifies the format of the pixel data. The following symbolic values are accepted:
+                        // GL_RED, GL_RG, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_DEPTH_COMPONENT, and GL_STENCIL_INDEX.
+        type,           // Specifies the data type of the pixel data. The following symbolic values are accepted:
+                        // GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_SHORT, GL_SHORT, GL_UNSIGNED_INT, GL_INT, GL_FLOAT,
+                        // GL_UNSIGNED_BYTE_3_3_2, GL_UNSIGNED_BYTE_2_3_3_REV, GL_UNSIGNED_SHORT_5_6_5, GL_UNSIGNED_SHORT_5_6_5_REV,
+                        // GL_UNSIGNED_SHORT_4_4_4_4, GL_UNSIGNED_SHORT_4_4_4_4_REV, GL_UNSIGNED_SHORT_5_5_5_1, GL_UNSIGNED_SHORT_1_5_5_5_REV,
+                        // GL_UNSIGNED_INT_8_8_8_8, GL_UNSIGNED_INT_8_8_8_8_REV, GL_UNSIGNED_INT_10_10_10_2, and GL_UNSIGNED_INT_2_10_10_10_REV.
+        pixels          // Specifies a pointer to the image data in memory.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
 }
 
 auto GL::named_buffer_storage(GLuint buffer, GLsizeiptr size, const void *data, GLbitfield flags) -> void{

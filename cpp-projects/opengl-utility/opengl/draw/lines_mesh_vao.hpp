@@ -42,22 +42,44 @@ namespace tool::gl{
 class LinesMeshVAO : public VAORenderer{
 public:
 
-    auto init_and_load_3d_lines(
+    ~LinesMeshVAO(){
+        LinesMeshVAO::clean();
+    }
+
+    auto init_data(size_t nbIndices, size_t nbPoints, bool hasColors) -> void;
+    auto init_and_load_data(
         std::span<const GLuint> indices,
         std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt4f> colors
+        std::span<const geo::Pt3f> colors
     ) -> void;
 
-    auto init_and_load_3d_lines(
-        std::vector<GLuint>  *indices,
-        std::vector<GLfloat> *points,
-        std::vector<GLfloat> *colors = nullptr
-    ) -> void;
+    auto update_indices(std::span<const GLuint> indices, GLintptr offset = 0) -> void;
+    auto update_data(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, GLintptr offset = 0) -> void;
 
-    auto render() const -> void override;
     auto clean() -> void override;
 
+    // TO REMOVE
+    auto render() const -> void override;    
+
+    GLuint positionBindingId = 0;
+    GLuint colorBindingId    = 1;
+
+    GLuint positionLoc = 0;
+    GLuint colorLoc    = 1;
+
+    GLbitfield indicesBufferUsage = 0;
+    GLbitfield positionBufferUsage = 0;
+    GLbitfield colorBufferUsage = 0;
+
 protected:
+
+    auto generate_bo() -> void;
+    auto vertex_array_vertex_buffer_for_3d_lines() -> void;
+    auto vertex_array_attrib_format_for_3d_lines() -> void;
+    auto enable_vertex_array_attrib() -> void;
+    auto vertex_array_attrib_binding() -> void;
+
+    bool m_hasColors  = false;
 
     EBO indicesB;
     VBO colorsB;

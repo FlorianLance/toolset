@@ -76,7 +76,7 @@ auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
     settings.depthBits = 24;
     settings.stencilBits = 8;
     settings.antialiasingLevel = 4;
-    settings.attributeFlags = sf::ContextSettings::Default;
+    settings.attributeFlags = sf::ContextSettings::Debug;
 
     // init window
     sf::RenderWindow::create(reinterpret_cast<sf::WindowHandle>(winId()), settings);

@@ -76,6 +76,15 @@ auto VBO::load_data(const GLvoid *data, GLsizeiptr size, GLbitfield usage) -> vo
     );
 }
 
+auto VBO::update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> void{
+    GL::named_buffer_sub_data(
+        m_handle,
+        offset,
+        size,
+        data
+    );
+}
+
 auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> void{
     GL::named_buffer_storage(
         m_handle,

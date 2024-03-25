@@ -56,16 +56,16 @@ Axes::Axes(GLfloat length){
     };
 
     std::vector<GLfloat> colors = {
-        1.f,0.f,0.f,1.f, 1.f,0.f,0.f,1.f,
-        0.f,1.f,0.f,1.f, 0.f,1.f,0.f,1.f,
-        0.f,0.f,1.f,1.f, 0.f,0.f,1.f,1.f
+        1.f,0.f,0.f, 1.f,0.f,0.f,
+        0.f,1.f,0.f, 0.f,1.f,0.f,
+        0.f,0.f,1.f, 0.f,0.f,1.f
     };
 
     auto lmd = std::make_unique<LinesMeshVAO>();
-    lmd->init_and_load_3d_lines(
+    lmd->init_and_load_data(
         std::span<const GLuint>(indices.data(),indices.size()),
         std::span<const geo::Pt3f>(reinterpret_cast<const geo::Pt3f*>(points.data()),points.size()/3),
-        std::span<const geo::Pt4f>(reinterpret_cast<const geo::Pt4f*>(colors.data()),colors.size()/4)
+        std::span<const geo::Pt3f>(reinterpret_cast<const geo::Pt3f*>(colors.data()),colors.size()/3)
     );
 
     vaoRenderer = std::move(lmd);
@@ -113,7 +113,26 @@ Grid::Grid(GLfloat width, GLfloat height, GLuint nbX, GLuint nbY){
     }
 
     auto lmd = std::make_unique<LinesMeshVAO>();
-    lmd->init_and_load_3d_lines(&indices, &points);
+    lmd->init_and_load_data(
+        std::span<GLuint>(indices.data(),indices.size()),
+        std::span<geo::Pt3f>(reinterpret_cast<geo::Pt3f*>(points.data()), points.size()/3),
+        {}
+    );
+    vaoRenderer = std::move(lmd);
+}
+
+Line::Line(const geo::Pt3f &p1, const geo::Pt3f &p2){
+    std::vector<GLuint> indices = {0,1,0};
+    std::vector<GLfloat> points = {
+        p1.x(), p1.y(), p1.z(),
+        p2.x(), p2.y(), p2.z()
+    };
+    auto lmd = std::make_unique<LinesMeshVAO>();
+    lmd->init_and_load_data(
+        std::span<GLuint>(indices.data(),indices.size()),
+        std::span<geo::Pt3f>(reinterpret_cast<geo::Pt3f*>(points.data()), points.size()),
+        {}
+    );
     vaoRenderer = std::move(lmd);
 }
 
@@ -132,10 +151,38 @@ TriangleLines::TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo
     };
 
     auto lmd = std::make_unique<LinesMeshVAO>();
-    lmd->init_and_load_3d_lines(&indices, &points);
+    lmd->init_and_load_data(
+        std::span<GLuint>(indices.data(),indices.size()),
+        std::span<geo::Pt3f>(reinterpret_cast<geo::Pt3f*>(points.data()), points.size()/3),
+        {}
+    );
     vaoRenderer = std::move(lmd);
 }
 
+QuadLines::QuadLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3, const geo::Pt3f &p4){
+
+    std::vector<GLuint> indices = {
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0
+    };
+
+    std::vector<GLfloat> points = {
+        p1.x(), p1.y(), p1.z(),
+        p2.x(), p2.y(), p2.z(),
+        p3.x(), p3.y(), p3.z(),
+        p4.x(), p4.y(), p4.z()
+    };
+
+    auto lmd = std::make_unique<LinesMeshVAO>();
+    lmd->init_and_load_data(
+        std::span<GLuint>(indices.data(),indices.size()),
+        std::span<geo::Pt3f>(reinterpret_cast<geo::Pt3f*>(points.data()), points.size()/3),
+        {}
+    );
+    vaoRenderer = std::move(lmd);
+}
 
 CircleLines::CircleLines(float radius){
 
@@ -947,7 +994,7 @@ void Frustum::set_perspective(float fovy, float ar, float nearDist, float farDis
     };
 
     auto tmd = std::make_unique<LinesMeshVAO>();
-    tmd->init_and_load_3d_lines(
+    tmd->init_and_load_data(
         std::span<const GLuint>(indices.data(),indices.size()),
         std::span<const geo::Pt3f>(reinterpret_cast<const geo::Pt3f*>(vertices.data()),vertices.size()/3),
         {}

@@ -76,26 +76,72 @@ public:
         std::vector<ColorRGBA32> *colors    = nullptr
     ) -> void;
 
-    auto render() const -> void override;
-    auto render_adjacency() const -> void override;
     auto clean() -> void override;
 
+    // ### TO REMOVE
+    auto render() const -> void override;
+    auto render_adjacency() const -> void override;    
     bool hasTexCoord = false;
     bool hasTangents = false;
     bool hasNormals  = false;
     bool hasBones    = false;
     bool hasColors   = false;
+    // ###
+
+
+    GLuint positionBindingId    = 0;
+    GLuint normalBindingId      = 1;
+    GLuint texCoordsBindingId   = 2;
+    GLuint tangentsBindingId    = 3;
+    // ... bones
+    GLuint colorBindingId    = 6;
+
+    GLuint positionLoc  = 0;
+    GLuint normalLoc    = 1;
+    GLuint texCoordsLoc = 2;
+    GLuint tangentsLoc  = 3;
+    // ... bones
+    GLuint colorLoc     = 6;
+
+    GLbitfield indicesBufferUsage = 0;
+    GLbitfield positionBufferUsage = 0;
+    GLbitfield normalBufferUsage = 0;
+    GLbitfield texCoordsBufferUsage = 0;
+    GLbitfield tangentsBufferUsage = 0;
+    GLbitfield bonesBufferUsage = 0;
+    GLbitfield colorBufferUsage = 0;
 
 protected:
 
+    auto generate_bo() -> void;
+
+    auto load_data(
+        std::span<const geo::Pt3<GLuint>> indices,
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> normals   = {},
+        std::span<const geo::Pt2f> texCoords = {},
+        std::span<const geo::Pt4f> tangents  = {},
+        std::span<const graphics::BoneData> bones = {},
+        std::span<const ColorRGBA32> colors = {}) -> void;
+
+    auto vertex_array_vertex_buffer() -> void;
+    auto vertex_array_attrib_format() -> void;
+    auto enable_vertex_array_attrib() -> void;
+    auto vertex_array_attrib_binding() -> void;
+
+    bool m_hasColors    = false;
+    bool m_hasNormals   = false;
+    bool m_hasTexCoord  = false;
+    bool m_hasTangents  = false;
+    bool m_hasBones     = false;
+
+    EBO indicesB;
     VBO pointsB;
     VBO normalsB;
     VBO tangentsB;
     VBO colorsB;
     VBO texCoordsB;
-    VBO bonesB;
-    EBO indicesB;
-
+    VBO bonesB;    
 };
 
 

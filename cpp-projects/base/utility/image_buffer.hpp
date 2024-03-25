@@ -31,15 +31,15 @@
 
 namespace tool{
 
-template<typename ElementType>
-struct ImageSpan : public std::span<ElementType>{
+// template<typename ElementType>
+// struct ImageSpan : public std::span<ElementType>{
 
-    ImageSpan(size_t width, size_t height, const std::vector<ElementType> &values) : std::span<ElementType>(values), width(width), height(height){
-    }
+//     ImageSpan(size_t width, size_t height, const std::vector<ElementType> &values) : std::span<ElementType>(values), width(width), height(height){
+//     }
 
-    size_t width = 0;
-    size_t height = 0;
-};
+//     size_t width = 0;
+//     size_t height = 0;
+// };
 
 template<typename ElementType>
 struct ImageBuffer : public Buffer<ElementType>{
@@ -62,6 +62,19 @@ struct ImageBuffer : public Buffer<ElementType>{
 
     [[nodiscard]] constexpr auto is_valid_image() const noexcept -> bool {
         return !is_encoded() && (width != 0) && (height != 0);
+    }    
+
+    [[nodiscard]] constexpr auto get(size_t idX, size_t idY)       -> ElementType&       {return Buffer<ElementType>::values[idY*width + idX];}
+    [[nodiscard]] constexpr auto get(size_t idX, size_t idY) const -> const ElementType& {return Buffer<ElementType>::values[idY*width + idX];}
+
+    auto fill_neighbour(int idX, int idY, int kernelSize, const ElementType &elem) -> void{
+        for(int ii = idX-kernelSize; ii < idX + kernelSize; ++ii){
+            for(int jj = idY-kernelSize; jj < idY + kernelSize; ++jj)  {
+                if((ii >= 0) && (ii < width) && (jj >= 0) && (jj < height)){
+                    get(ii,jj) = elem;
+                }
+            }
+        }
     }
 
     size_t width = 0;

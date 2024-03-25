@@ -103,10 +103,23 @@ private:
     geo::Mat4f m_view;
 };
 
+class Line : public BaseShape{
+public:
+    Line(const geo::Pt3f &p1, const geo::Pt3f &p2);
+};
+
 class TriangleLines : public BaseShape{
 public:
     TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3);
 };
+
+class QuadLines : public BaseShape{
+public:
+    QuadLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3, const geo::Pt3f &p4);
+};
+
+
+
 
 class CircleLines : public BaseShape{
 public:

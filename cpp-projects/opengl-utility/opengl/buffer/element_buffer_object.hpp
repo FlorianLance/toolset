@@ -44,6 +44,8 @@ struct EBO{
     auto clean() -> void;
 
     auto load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> void;
+    auto update_data(const GLuint *data, GLsizeiptr size, GLintptr offset) -> void;
+
 
     auto bind() -> void;
     static auto unbind() -> void;
@@ -52,7 +54,7 @@ struct EBO{
 private:
 
     static inline GLbitfield  defaultUsage = 0;
-    GLuint m_id = 0;
+    GLuint m_handle = 0;
 };
 
 

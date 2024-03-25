@@ -38,16 +38,10 @@ class CloudDrawer : public BaseDrawer{
 public:
     CloudDrawer();
     auto init(size_t sizeCloud, bool initColors, bool initNormals) -> void;
-    auto load(const geo::ColoredCloudData &cloud) -> void;
-    // auto load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt3f> normals = {}) -> void;
+    auto update(const geo::ColoredCloudData &cloud) -> void;
     auto init_and_load(const geo::ColoredCloudData &cloud) -> void;
     auto init_and_load(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt2f> normals = {}) -> void;
     auto init_and_load(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors = {}, std::span<const geo::Pt3f> normals = {}) -> void;
     auto draw() -> void override final;
 };
-
-
-
-
-
 }
