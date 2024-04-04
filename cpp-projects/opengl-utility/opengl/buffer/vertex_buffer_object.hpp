@@ -26,10 +26,33 @@
 
 #pragma once
 
-// local
-#include "opengl/utility/gl_utility.hpp"
+// glew
+#include "gl/glew.h"
 
 namespace tool::gl {
+
+// TODO: remove
+struct AttriIndex{
+    const GLuint v;
+};
+struct AttriSize{
+    const GLint v;
+};
+struct AttriType{
+    const GLenum v;
+};
+struct Stride{
+    const GLsizei v;
+};
+struct RelativeOffset{
+    const GLuint v;
+};
+
+struct AttribOffset{
+    const GLvoid *v;
+};
+// ###
+
 
 struct VBO{
     
@@ -40,27 +63,33 @@ struct VBO{
     VBO& operator=(VBO&& other) = delete;
     ~VBO();
 
-    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;};
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint     {return m_handle;}
+    [[nodiscard]] constexpr auto loaded_data_size() const noexcept -> GLsizeiptr {return m_loadedDataSize;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
+    [[nodiscard]] constexpr auto is_data_loaded()   const noexcept -> bool       {return loaded_data_size() != 0;}
+    [[nodiscard]] constexpr auto buffer_usage()     const noexcept -> GLbitfield {return m_usage;}
+    [[nodiscard]] constexpr auto is_dynamic()       const noexcept -> bool       {return buffer_usage() & GL_DYNAMIC_STORAGE_BIT;}
 
-    auto generate() -> void;
-    auto clean() -> void;
+    auto initialize() -> void;
+    auto clean()      -> void;
 
-    auto load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
-    auto load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
-    auto load_data(const GLvoid *data, GLsizeiptr size, GLbitfield  usage = defaultUsage) -> void;
+    auto load_data(const GLint   *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> bool;
+    auto load_data(const GLfloat *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> bool;
+    auto load_data(const GLvoid  *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> bool;
+    auto update_data(const GLint   *data, GLsizeiptr size, GLintptr offset) -> bool;
+    auto update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> bool;
+    auto update_data(const GLvoid  *data, GLsizeiptr size, GLintptr offset) -> bool;
 
-    auto update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> void;
-
-
-
+    // TODO: remove
     auto attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride, AttribOffset offset = {nullptr}) -> bool;
-    // TODO: DSA ATRIB
-    auto dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum type, GLuint relativeoffset, GLuint bindingIndex = 0, GLintptr offset = 0, GLboolean normalized = GL_FALSE) -> void;
 
 private:
 
-    static inline GLbitfield  defaultUsage = GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-    GLuint m_handle = 0;
+    GLuint     m_handle = 0;
+    GLsizeiptr m_loadedDataSize = 0;
+    GLbitfield m_usage = 0;
+
+    static constexpr GLbitfield defaultUsage = 0;
 };
 
 

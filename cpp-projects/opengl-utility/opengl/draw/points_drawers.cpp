@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,5 +24,45 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "shader.hpp"
+#include "points_drawers.hpp"
+
+// base
+#include "utility/logger.hpp"
+
+// local
+#include "points_renderer.hpp"
+
+using namespace tool::gl;
+
+
+auto CloudPointsDrawer5::initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+    auto pm = dynamic_cast<PointsRenderer*>(m_vaoRenderer.get());
+    if(dynamic){
+        pm->positionBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
+        pm->colorBufferUsage     = GL_DYNAMIC_STORAGE_BIT;
+        pm->normalBufferUsage    = GL_DYNAMIC_STORAGE_BIT;
+    }
+    pm->initialize(!colors.empty(), !normals.empty());
+    if(!pm->load_data(vertices, colors, normals)){
+        Logger::error("[CloudPointsDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto CloudPointsDrawer5::initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void{
+    initialize(dynamic, cloud.vertices, cloud.colors, cloud.normals);
+}
+
+auto CloudPointsDrawer5::update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+    auto pm = dynamic_cast<PointsRenderer*>(m_vaoRenderer.get());
+    if(!pm->update_data(vertices, 0, colors, 0, normals, 0)){
+        Logger::error("[CloudPointsDrawer::update] Error during update.\n"sv);
+        return;
+    }
+}
+
+auto CloudPointsDrawer5::update(const geo::ColoredCloudData &cloud) -> void{
+    update(cloud.vertices, cloud.colors, cloud.normals);
+}
+
+
 

@@ -31,6 +31,7 @@
 #include <iostream>
 
 // local
+#include "buffer.hpp"
 #include "string_unordered_map.hpp"
 
 namespace tool {
@@ -131,8 +132,8 @@ public:
 protected:
 
     size_t currentId = 0;
-    std::vector<std::tuple<std::string, T>> elements;
-    tool::s_umap<std::string, size_t> aliases;
+    Buffer<std::tuple<std::string, T>> elements;
+    s_umap<std::string, size_t> aliases;
 };
 
 template <class T>

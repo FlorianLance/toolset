@@ -69,12 +69,12 @@ void DepthCameraGlWidget::update_mesh(K2MeshDisplayData *meshData){
         }
     meshData->dataLocker.unlock();
 
-    kinectMesh2.init(&mesh);
+    // kinectMesh2.init(&mesh);
     vaoToDisplay = 2;
 }
 
 void DepthCameraGlWidget::init_joints(){
-    jointsMesh.init();
+    // jointsMesh.init();
 }
 
 void DepthCameraGlWidget::update_joints_state(std::array<K2BodyInfos, 6> *bodies){
@@ -154,38 +154,36 @@ void DepthCameraGlWidget::OnUpdate(){
 
         // cloud shader
         cloudShader.use();
-        cloudShader.set_uniform("view", camera.view().conv<float>());
-        cloudShader.set_uniform("model", (model).conv<float>());
-        cloudShader.set_uniform("projection", camera.projection().conv<float>());
-        cloudShader.set_uniform("size_pt", sizePtsCloud);
-        cloudShader.set_uniform("camera_position", camera.position().conv<float>());
-        cloudShader.set_uniform("enable_unicolor", false);
-        kinectCloud.draw();
+        cloudShader.set_uniform_matrix("view"sv, camera.view().conv<float>());
+        cloudShader.set_uniform_matrix("model"sv, (model).conv<float>());
+        cloudShader.set_uniform_matrix("projection"sv, camera.projection().conv<float>());
+        cloudShader.set_uniform("size_pt"sv, sizePtsCloud);
+        cloudShader.set_uniform("camera_position"sv, camera.position().conv<float>());
+        cloudShader.set_uniform("enable_unicolor"sv, false);
+        // kinectCloud.draw();
 
 
     }else if (vaoToDisplay == 2){
 
         // mesh shader
         meshShader.use();
-        meshShader.set_uniform("view",         camera.view().conv<float>());
-        meshShader.set_uniform("model",        (model).conv<float>());
-        meshShader.set_uniform("projection",   camera.projection().conv<float>());
-        meshShader.set_uniform("enable_unicolor", false);
-        kinectMesh2.draw();
+        meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+        meshShader.set_uniform_matrix("model"sv,        (model).conv<float>());
+        meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+        meshShader.set_uniform("enable_unicolor"sv, false);
+        // kinectMesh2.draw();
     }
 
     // draw joints
     displayJoints = true;
 
 
-
-
     if(displayJoints){
 
         meshShader.use();
-        meshShader.set_uniform("view",         camera.view().conv<float>());
-        meshShader.set_uniform("projection",   camera.projection().conv<float>());
-        meshShader.set_uniform("enable_unicolor", true);        
+        meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+        meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+        meshShader.set_uniform("enable_unicolor"sv, true);
 
         for(const auto &body : m_bodies){
 
@@ -196,7 +194,7 @@ void DepthCameraGlWidget::OnUpdate(){
             if(m_bodiesColors.count(body.id) == 0){
                 m_bodiesColors[body.id] = geo::Pt4f{0.001f*(rand()%1000),0.001f*(rand()%1000),0.001f*(rand()%1000),1};
             }
-            meshShader.set_uniform("unicolor", m_bodiesColors[body.id]);
+            meshShader.set_uniform("unicolor"sv, m_bodiesColors[body.id]);
 
             for(const auto &joint : body.joints){
                 if(joint.second.state == K2TrackingStateT::not_tracked){
@@ -214,8 +212,8 @@ void DepthCameraGlWidget::OnUpdate(){
                     angle,
                     geo::Vec3d{static_cast<double>(p.x()),static_cast<double>(p.y()),static_cast<double>(p.z())}
                 );
-                meshShader.set_uniform("model", (jointsModel).conv<float>());
-                jointsMesh.draw();
+                meshShader.set_uniform_matrix("model"sv, (jointsModel).conv<float>());
+                // jointsMesh.draw();
             }
         }
     }

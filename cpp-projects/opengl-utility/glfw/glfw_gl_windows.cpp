@@ -80,9 +80,9 @@ void GlfwGlWindow::start(){
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         meshShader.use();
-        meshShader.set_uniform("view",         view.conv<float>());
-        meshShader.set_uniform("model",        model.conv<float>());
-        meshShader.set_uniform("projection",   projection.conv<float>());
+        meshShader.set_uniform_matrix("view"sv,         view.conv<float>());
+        meshShader.set_uniform_matrix("model"sv,        model.conv<float>());
+        meshShader.set_uniform_matrix("projection"sv,   projection.conv<float>());
 
         // draw
 //        triVao.draw();

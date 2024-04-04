@@ -27,8 +27,10 @@
 
 #pragma once
 
+
 // local
 #include "thirdparty/sigslot/signal.hpp"
+#include "utility/unordered_map.hpp"
 #include "network/udp_reader.hpp"
 #include "network/udp_header.hpp"
 #include "network/network_types.hpp"
@@ -76,6 +78,12 @@ private:
     static constexpr size_t nbMaxValues = 1000;
 };
 
+
+struct CFReceivedData{
+    std::int64_t firstPacketSentTS;
+    std::int64_t firstPacketReceivedTS;
+};
+
 class DCServerUdpReader : public UdpReader{
 public:
 
@@ -94,6 +102,12 @@ private:
     std::int64_t firstPacketSentCompressedFrameTS = 0;
     UdpMultiPacketsMessage compressedFrameMessage;
     Synchro synchro;
+
+    bool startRecevingCompressedFrame = false;
+
+    using IdMessage = std::int32_t;
+    umap<IdMessage, CFReceivedData> receivingFrames;
+
 };
 
 

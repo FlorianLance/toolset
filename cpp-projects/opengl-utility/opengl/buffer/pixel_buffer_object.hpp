@@ -41,20 +41,28 @@ struct PBO{
     PBO& operator=(PBO&& other) = default;
     ~PBO();
 
-    [[nodiscard]] constexpr auto id() const noexcept -> GLuint {return m_handle;};
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint     {return m_handle;}
+    [[nodiscard]] constexpr auto loaded_data_size() const noexcept -> GLsizeiptr {return m_loadedDataSize;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
+    [[nodiscard]] constexpr auto is_data_loaded()   const noexcept -> bool       {return loaded_data_size() != 0;}
+    [[nodiscard]] constexpr auto buffer_usage()     const noexcept -> GLbitfield {return m_usage;}
+    [[nodiscard]] constexpr auto is_dynamic()       const noexcept -> bool       {return buffer_usage() & GL_DYNAMIC_STORAGE_BIT;}
 
-    auto generate() -> void;
+    auto initialize() -> void;
     auto clean() -> void;
+
+    auto load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> bool;
 
     auto bind_pack(GLuint index) const -> bool;
     auto bind_unpack(GLuint index) const -> bool;
 
-    auto set_data_storage(GLsizei size, GLuint *data, GLbitfield usage = defaultUsage) -> void;
-
 private:
 
-    static inline GLbitfield  defaultUsage = 0;//GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-    GLuint m_handle = 0;
+    GLuint     m_handle = 0;
+    GLsizeiptr m_loadedDataSize = 0;
+    GLbitfield m_usage = 0;
+
+    static constexpr GLbitfield defaultUsage = 0;
 };
 }
 

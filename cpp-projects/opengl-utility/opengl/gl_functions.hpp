@@ -73,24 +73,56 @@ struct GL{
     static auto texture_storage_2d(GLuint texture, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height) -> void;
     static auto texture_storage_3d(GLuint texture, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth) -> void;
     static auto texture_sub_image_2d(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) -> void;
+    static auto texture_sub_image_3d(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels) -> void;
+
 
     static auto named_buffer_storage(GLuint buffer, GLsizeiptr size, const void *data, GLbitfield flags) -> void;
     static auto named_buffer_sub_data(GLuint buffer, GLintptr offset, GLsizeiptr size, const void *data) -> void;
     static auto bind_buffer_range(GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size) -> void;
     static auto bind_buffers_range(GLenum target, GLuint index, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLintptr *sizes) -> void;
-
     static auto vertex_array_vertex_buffer(GLuint vaobj, GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride) -> void;
     static auto enable_vertex_array_attrib(GLuint vaobj, GLuint index) -> void;
     static auto vertex_array_attrib_format(GLuint vaobj, GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset) -> void;
     static auto vertex_array_attrib_binding(GLuint vaobj, GLuint attribindex, GLuint bindingindex) -> void;
 
-    // shader
+    // prgram
+    static auto create_program() -> GLuint;
+    static auto delete_program(GLuint program) -> void;
+    static auto link_program(GLuint program) -> void;
+    static auto get_program_info_log(GLuint program, GLsizei maxLength, GLsizei *length, GLchar *infoLog) -> void;
     static auto use_program(GLuint program) -> void;
+    static auto attach_shader(GLuint program, GLuint shader) -> void;
+    static auto detach_shader(GLuint program, GLuint shader) -> void;
+    // # introspection
+    static auto get_active_uniform_block_iv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params) -> void;
+    static auto get_program_iv(GLuint program, GLenum pname, GLint *params) -> void;
+    static auto get_attached_shaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders) -> void;
+    // shader
+    static auto create_shader(GLenum shaderType) -> GLuint;
+    static auto delete_shader(GLuint shader) -> void;
+    static auto shader_source(GLuint shader, GLsizei count, const GLchar **string, const GLint *length) -> void;
+    static auto compile_shader(GLuint shader) -> void;
+    // # introspection
+    static auto get_shader_iv(GLuint shader, GLenum pname, GLint *params) -> void;
+    static auto get_program_interface_iv(GLuint program, GLenum programInterface, GLenum pname, GLint * params) -> void;
+    static auto get_program_resource_iv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum * props, GLsizei bufSize, GLsizei * length, GLint * params) -> void;
+    static auto get_program_resource_name(GLuint program, GLenum programInterface, GLuint index, GLsizei bufSize, GLsizei * length, char * name) -> void;
+    // # program uniform
+    static auto program_uniform_1i(GLuint program, GLint location, GLint v0) -> void;
+    static auto program_uniform_1ui(GLuint program, GLint location, GLuint v0) -> void;
+    static auto program_uniform_1f(GLuint program, GLint location, GLfloat v0) -> void;
+    static auto program_uniform_2f(GLuint program, GLint location, GLfloat v0, GLfloat v1) -> void;
+    static auto program_uniform_3f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2) -> void;
+    static auto program_uniform_4f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) -> void;
+    static auto program_uniform_1uiv(GLuint program, GLint location, GLsizei count, const GLuint *value) -> void;
+    static auto program_uniform_1fv(GLuint program, GLint location, GLsizei count, const GLfloat *value) -> void;
+    static auto program_uniform_3fv(GLuint program, GLint location, GLsizei count, const GLfloat *value) -> void;
+    static auto program_uniform_matrix_3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) -> void;
+    static auto program_uniform_matrix_4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) -> void;
 
     // draw
     static auto draw_arrays_instance_base_instance(GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance) -> void;
     static auto draw_elements_instanced_base_vertex_base_instance(GLenum mode, GLsizei count, GLenum type, void *indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance) -> void;
-
 
     // deprecated
     static auto bind_buffer(GLenum target, GLuint buffer) -> void;

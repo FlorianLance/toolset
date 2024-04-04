@@ -36,18 +36,56 @@
 
 namespace tool::gl {
 
+enum class DrawerType : std::int8_t{
+    Points,
+    Voxels,
+    Lines,
+    Triangles,
+    Invalid
+};
+
 class BaseDrawer{
 public:
 
-    virtual auto draw() -> void{}
+    BaseDrawer(DrawerType type);
+    virtual ~BaseDrawer(){
+        if(m_vaoRenderer != nullptr){
+            m_vaoRenderer->clean();
+        }
+    }    
+
+    virtual auto draw() -> void;
 
     float scaleHint = 1.f;
+    // gl::ShaderProgram *shader = nullptr;
+
+    auto set_indice_count(size_t count) noexcept -> void{
+        nIndicesToDraw = static_cast<GLsizei>(count);
+    }
+
     Buffer<GLuint> texturesId;
-    gl::ShaderProgram *shader = nullptr;
 
 protected:
-    std::unique_ptr<VAORenderer> vaoRenderer = nullptr;
-    GLsizei nIndicesToDraw = 0;
+
+    std::unique_ptr<VAORenderer> m_vaoRenderer = nullptr;
+    DrawerType m_type = DrawerType::Invalid;
+    std::optional<GLsizei> nIndicesToDraw = {};
 };
+
+class HierarchyDrawer2 : public BaseDrawer{
+
+public:
+    HierarchyDrawer2(DrawerType type) : BaseDrawer(type){}
+
+    auto clean() -> void{
+        children.clear();
+        drawers.clear();
+    }
+
+protected:
+    std::vector<std::unique_ptr<BaseDrawer>> drawers;
+    std::vector<std::unique_ptr<HierarchyDrawer2>> children;
+};
+
 
 }

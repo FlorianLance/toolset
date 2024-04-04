@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -29,43 +28,26 @@
 
 using namespace tool::gl;
 
+auto CubeMap::load_textures(std::span<const tool::graphics::Texture2D, 6> textures) -> void{
+    
+    TBO::initialize();
 
-auto CubeMap::load_textures(std::array<tool::graphics::Texture2D, 6> *textures) -> void{
-
-    TBO::generate();
-
-    const auto size  = (*textures)[0].size();
-    if((*textures)[0].is_hdr()){
-        init_data_f32(size.x(), size.y(), 1,  (*textures)[0].nb_channels());
+    const auto size  = textures.front().size();
+    if(textures.front().is_hdr()){
+        init_data_f32(size.x(), size.y(), 1,  textures.front().nb_channels());
     }else{
-        init_data_u8(size.x(), size.y(), 1,  (*textures)[0].nb_channels());
+        init_data_u8(size.x(), size.y(), 1,  textures.front().nb_channels());
     }
 
     for(GLint face = 0; face < 6; ++face){
 
         update_data(
-            (*textures)[face].data(),
-            m_width,
-            m_height,
-            m_depth,
+            textures[face].data(),
+            m_width, m_height, m_depth,
             0,
             0,
             face
         );
-
-        // glTextureSubImage3D(
-        //     m_id,                       // GLuint texture
-        //     0,                          // GLint level
-        //     0,                          // GLint xoffset
-        //     0,                          // GLint yoffset
-        //     face,                       // GLint zoffset,
-        //     m_width,                    // GLsizei width
-        //     m_height,                   // GLsizei height
-        //     m_depth,                    // GLsizei depth,
-        //     m_format,                   // GLenum format
-        //     m_type,                     // GLenum type
-        //     (*textures)[face].data()    // const void *pixels
-        // );
     }
 
     TextureOptions options;

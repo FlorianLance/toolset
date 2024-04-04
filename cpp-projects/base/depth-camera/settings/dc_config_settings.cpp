@@ -128,7 +128,7 @@ auto DCConfigSettings::total_data_size() const noexcept -> size_t{
         sizeof(synchMode) +
         sizeof(subordinateDelayUsec) +
         // body tracking
-           sizeof(btEnabled) +
+        sizeof(btEnabled) +
         sizeof(btOrientation) +
         sizeof(btProcessingMode) +
         sizeof(btGPUId) +

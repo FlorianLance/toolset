@@ -43,7 +43,6 @@ using namespace std::string_view_literals;
 
 auto Texture::copy_2d_data(int width, int height, int nbChannels, unsigned char *data) -> void{
 
-
     m_sizes = {width, height, 1};
     m_nbChannels = nbChannels;
     m_hdr = false;

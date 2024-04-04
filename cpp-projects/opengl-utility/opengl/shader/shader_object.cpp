@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2024] [Florian Lance]                                       **
+** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,17 +24,5 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "shader_object.hpp"
 
-// local
-#include "base_drawer.hpp"
-
-namespace tool::gl {
-
-class SphereDrawer2 : public BaseDrawer{
-public:
-    SphereDrawer2();
-    auto init_and_load(float radius, size_t nSlices, size_t nStacks) -> void;
-    auto draw() -> void override final;
-};
-}

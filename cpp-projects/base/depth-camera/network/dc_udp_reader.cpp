@@ -80,6 +80,7 @@ auto DCClientUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     }
 }
 
+#include <iostream>
 auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
 
     using namespace std::chrono;
@@ -100,9 +101,20 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
     }break;
     case MessageType::compressed_frame_data:{
 
+        // if(!receivingFrames.contains(header.idMessage)){
+        //     std::cout << "F[" << header.currentPacketId << "|" << header.idMessage << "] ";
+        //     receivingFrames[header.idMessage] = {0};
+
+        //     // Time::nanoseconds_since_epoch().count()
+        // }
+
+
+        // std::cout << header.currentPacketId << " ";
         if(header.currentPacketId == 0){
+
             firstPacketReceivedCompressedFrameTS = Time::nanoseconds_since_epoch().count();
             firstPacketSentCompressedFrameTS     = header.currentPacketTimestampNs;
+            startRecevingCompressedFrame  = true;
         }
 
         if(!compressedFrameMessage.copy_packet_to_data(header, nbBytes, packetData, m_data)){
@@ -110,6 +122,10 @@ auto DCServerUdpReader::process_packet(std::vector<char> *packet, size_t nbBytes
         }
 
         if(compressedFrameMessage.all_received(header)){
+
+            receivingFrames.erase(header.idMessage);
+
+            startRecevingCompressedFrame = false;
 
             // create compressed frame from data
             auto cFrame = std::make_shared<DCCompressedFrame>();

@@ -45,10 +45,10 @@ void MultiDepthCameraGlWidget::init(size_t nbCameras){
 
     meshes.resize(nbCameras);
     for(size_t ii = 0; ii < nbCameras; ++ii){
-        kinectClouds.emplace_back(std::make_unique<gl::CloudPointsDrawer>());
+        // kinectClouds.emplace_back(std::make_unique<gl::CloudPointsDrawer>());
     }
     for(size_t ii = 0; ii < nbCameras; ++ii){
-        kinectMeshes.emplace_back(std::make_unique<gl::MeshDrawer>());
+        // kinectMeshes.emplace_back(std::make_unique<gl::MeshDrawer>());
     }
 
     std::fill(std::begin(visibility), std::end(visibility), true);
@@ -94,14 +94,14 @@ void MultiDepthCameraGlWidget::update_mesh(size_t id, K2MeshDisplayData *meshDat
         }
     meshData->dataLocker.unlock();
 
-    kinectMeshes[id]->init(&meshes[id]);
+    // kinectMeshes[id]->init(&meshes[id]);
     vaoToDisplay = 2;
 
     update();
 }
 
 void MultiDepthCameraGlWidget::init_joints(){
-    jointsMesh.init();
+    // jointsMesh.init();
 }
 
 void MultiDepthCameraGlWidget::update_grabber_cloud_display_parameters(size_t id, DisplayOptions p){
@@ -176,14 +176,14 @@ void MultiDepthCameraGlWidget::OnUpdate(){
 
             // cloud shader
             cloudShader.use();
-            cloudShader.set_uniform("view", camera.view().conv<float>());
-            cloudShader.set_uniform("model", (models[idC]).conv<float>());
-            cloudShader.set_uniform("projection", camera.projection().conv<float>());
-            cloudShader.set_uniform("enable_unicolor", forceColors[idC]);
-            cloudShader.set_uniform("unicolor", Pt4d{colors[idC].redF(),colors[idC].blueF(),colors[idC].greenF(),1.}.conv<float>());
-            cloudShader.set_uniform("size_pt", sizePts[idC]);
-            cloudShader.set_uniform("camera_position", camera.position().conv<float>());
-            kinectClouds[idC]->draw();
+            cloudShader.set_uniform_matrix("view"sv, camera.view().conv<float>());
+            cloudShader.set_uniform_matrix("model"sv, (models[idC]).conv<float>());
+            cloudShader.set_uniform_matrix("projection"sv, camera.projection().conv<float>());
+            cloudShader.set_uniform("enable_unicolor"sv, forceColors[idC]);
+            cloudShader.set_uniform("unicolor"sv, Pt4d{colors[idC].redF(),colors[idC].blueF(),colors[idC].greenF(),1.}.conv<float>());
+            cloudShader.set_uniform("size_pt"sv, sizePts[idC]);
+            cloudShader.set_uniform("camera_position"sv, camera.position().conv<float>());
+            // kinectClouds[idC]->draw();
 
 //            auto f = dynamic_cast<gl::Frustum*>(frustum.object());
 //            f->set_perspective(60.0f, 1.207f, -0.3f, -3.5f);
@@ -194,11 +194,11 @@ void MultiDepthCameraGlWidget::OnUpdate(){
 
             // mesh shader
             meshShader.use();
-            meshShader.set_uniform("view",         camera.view().conv<float>());
-            meshShader.set_uniform("model",        (models[idC]).conv<float>());
-            meshShader.set_uniform("projection",   camera.projection().conv<float>());
-            meshShader.set_uniform("enable_unicolor", false);
-            kinectMeshes[idC]->draw();
+            meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+            meshShader.set_uniform_matrix("model"sv,        (models[idC]).conv<float>());
+            meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+            meshShader.set_uniform("enable_unicolor"sv, false);
+            // kinectMeshes[idC]->draw();
 
 //            auto f = dynamic_cast<gl::Frustum*>(frustum.object());
 //            f->set_perspective(60.0f, 1.0f, -1.0f, -25.0f);
@@ -209,9 +209,9 @@ void MultiDepthCameraGlWidget::OnUpdate(){
         if(displayJoints){
 
             meshShader.use();
-            meshShader.set_uniform("view",         camera.view().conv<float>());
-            meshShader.set_uniform("projection",   camera.projection().conv<float>());
-            meshShader.set_uniform("enable_unicolor", true);
+            meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+            meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+            meshShader.set_uniform("enable_unicolor"sv, true);
 
             for(const auto &kinectBodies : kinectsBodies){
                 for(const auto &body : kinectBodies){
@@ -221,7 +221,7 @@ void MultiDepthCameraGlWidget::OnUpdate(){
                     if(m_bodiesColors.count(body.id) == 0){
                         m_bodiesColors[body.id] = geo::Pt4f{0.001f*(rand()%1000),0.001f*(rand()%1000),0.001f*(rand()%1000),1};
                     }
-                    meshShader.set_uniform("unicolor", m_bodiesColors[body.id]);
+                    meshShader.set_uniform("unicolor"sv, m_bodiesColors[body.id]);
 
                     for(const auto &joint : body.joints){
                         if(joint.second.state == K2TrackingStateT::not_tracked){
@@ -238,8 +238,8 @@ void MultiDepthCameraGlWidget::OnUpdate(){
                             translation_v3(models[idC])+geo::Pt3d{static_cast<double>(p.x()),static_cast<double>(p.y()),static_cast<double>(p.z())}
                         );
 
-                        meshShader.set_uniform("model", (jointsModel).conv<float>());
-                        jointsMesh.draw();
+                        meshShader.set_uniform_matrix("model"sv, (jointsModel).conv<float>());
+                        // jointsMesh.draw();
                     }
                 }
             }

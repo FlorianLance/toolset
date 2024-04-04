@@ -24,7 +24,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "triangles_mesh_vao.hpp"
+#include "triangles_renderer.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -37,35 +37,82 @@ using namespace tool::gl;
 using namespace tool::geo;
 using namespace tool::graphics;
 
-auto TriangleMeshVAO::generate_bo() -> void{
+auto TrianglesRenderer::initialize(bool hasNormals, bool hasTextCoords, bool hasTangents, bool hasBones, bool hasColors) -> void{
 
-    indicesB.generate();
-    pointsB.generate();
-    if(m_hasNormals){
-        normalsB.generate();
+    if(m_buffersInitialized){
+        clean();
     }
-    if(m_hasTexCoord){
-        texCoordsB.generate();
-    }
-    if(m_hasTangents){
-        tangentsB.generate();
-    }
-    if(m_hasBones){
-        // bonesB.generate();
-    }
-    if(m_hasColors){
-        colorsB.generate();
-    }    
+
+    m_hasNormals  = hasNormals;
+    m_hasTexCoord = hasTextCoords;
+    m_hasTangents = hasTangents;
+    m_hasBones    = hasBones;
+    m_hasColors   = hasColors;
+
+    vao.initialize();
+    generate_bo();
+
+    vao.bind();
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, indicesB.id());
+
+    vertex_array_vertex_buffer();
+    vertex_array_attrib_format();
+    enable_vertex_array_attrib();
+    vertex_array_attrib_binding();
+
+    m_buffersInitialized = true;
+
+    VAO::unbind();
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-auto TriangleMeshVAO::load_data(
+
+auto TrianglesRenderer::clean() -> void{
+
+    vao.clean();
+
+    pointsB.clean();
+    indicesB.clean();
+    normalsB.clean();
+    tangentsB.clean();
+    // bonesB.clean();
+    texCoordsB.clean();
+
+    m_buffersInitialized = false;
+
+    m_nbIndices = 0;
+    m_nbVertices = 0;
+
+    m_hasColors    = false;
+    m_hasNormals   = false;
+    m_hasTexCoord  = false;
+    m_hasTangents  = false;
+    m_hasBones     = false;
+
+    indicesBufferUsage = 0;
+    positionBufferUsage = 0;
+    normalBufferUsage = 0;
+    texCoordsBufferUsage = 0;
+    tangentsBufferUsage = 0;
+    bonesBufferUsage = 0;
+    colorBufferUsage = 0;
+}
+
+auto TrianglesRenderer::load_data(
     std::span<const geo::Pt3<GLuint>> indices,
-    std::span<const geo::Pt3f> points,
+    std::span<const geo::Pt3f> vertices,
     std::span<const geo::Pt3f> normals,
     std::span<const geo::Pt2f> texCoords,
     std::span<const geo::Pt4f> tangents,
     std::span<const graphics::BoneData> bones,
-    std::span<const ColorRGBA32> colors) -> void{
+    std::span<const ColorRGBA32> colors) -> bool{
+
+    if(!initialized()){
+        Logger::error("[TriangleMesh::load_data] Buffers must be initialized.\n");
+        return false;
+    }
+
+    m_dataLoaded = false;
 
     if(!indices.empty()){
         indicesB.load_data(
@@ -73,58 +120,286 @@ auto TriangleMeshVAO::load_data(
             GLsizeiptr(indices.size()*3*sizeof(std::uint32_t)),
             indicesBufferUsage
         );
+        m_nbIndices = static_cast<GLsizei>(indices.size()*3);
     }
 
-    if(!points.empty()){
+    if(m_nbIndices == 0){
+        Logger::error("[TriangleMeshVAO::load_data] No indices.\n");
+        return false;
+    }
+
+    if(!vertices.empty()){
         pointsB.load_data(
-            reinterpret_cast<const GLfloat*>(points.data()),
-            static_cast<GLsizeiptr>(points.size()*3*sizeof(GLfloat)),
+            reinterpret_cast<const GLfloat*>(vertices.data()),
+            static_cast<GLsizeiptr>(vertices.size()*3*sizeof(GLfloat)),
             positionBufferUsage
         );
+        m_nbVertices = static_cast<GLsizei>(vertices.size());
     }
 
-    if(m_hasNormals && !normals.empty()){
-        normalsB.load_data(
-            reinterpret_cast<const GLfloat*>(normals.data()),
-            static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
-            normalBufferUsage
-        );
+    if(m_nbVertices == 0){
+        Logger::error("[TriangleMeshVAO::load_data] No vertices.\n");
+        return false;
     }
 
-    if(m_hasTexCoord && !texCoords.empty()){
-        texCoordsB.load_data(
-            reinterpret_cast<const GLfloat*>(texCoords.data()),
-            static_cast<GLsizeiptr>(texCoords.size()*2*sizeof(GLfloat)),
-            texCoordsBufferUsage
-        );
+    if(m_hasNormals && (!normals.empty())){
+        if(normals.size() == m_nbVertices){
+            normalsB.load_data(
+                reinterpret_cast<const GLfloat*>(normals.data()),
+                static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+                normalBufferUsage
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::load_data] Invalid normal buffer size.\n");
+            return false;
+        }
     }
 
-    if(m_hasTangents && !tangents.empty()){
-        tangentsB.load_data(
-            reinterpret_cast<const GLfloat*>(tangents.data()),
-            static_cast<GLsizeiptr>(tangents.size()*4*sizeof(GLfloat)),
-            tangentsBufferUsage
-        );
+    if(m_hasTexCoord && (!texCoords.empty())){
+        if(texCoords.size() == m_nbVertices){
+            texCoordsB.load_data(
+                reinterpret_cast<const GLfloat*>(texCoords.data()),
+                static_cast<GLsizeiptr>(texCoords.size()*2*sizeof(GLfloat)),
+                texCoordsBufferUsage
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::load_data] Invalid texture coordinates buffer size.\n");
+            return false;
+        }
     }
 
-    if(m_hasBones && !bones.empty()){
-        // bonesB.load_data(
-        //     reinterpret_cast<const GLvoid*>(bones.data()),
-        //     static_cast<GLsizeiptr>(bones.size()*sizeof(BoneData)),
-        //     bonesBufferUsage
-        // );
+    if(m_hasTangents && (!tangents.empty())){
+        if(tangents.size() == m_nbVertices){
+            tangentsB.load_data(
+                reinterpret_cast<const GLfloat*>(tangents.data()),
+                static_cast<GLsizeiptr>(tangents.size()*4*sizeof(GLfloat)),
+                tangentsBufferUsage
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::load_data] Invalid tangent buffer size.\n");
+            return false;
+        }
     }
 
-    if(m_hasColors && !colors.empty()){
-        colorsB.load_data(
-            reinterpret_cast<const GLfloat*>(colors.data()),
-            static_cast<GLsizeiptr>(colors.size()*4*sizeof(GLfloat)),
-            colorBufferUsage
-        );
+    if(m_hasBones && (!bones.empty())){
+        if(bones.size() == m_nbVertices){
+            // bonesB.load_data(
+            //     reinterpret_cast<const GLvoid*>(bones.data()),
+            //     static_cast<GLsizeiptr>(bones.size()*sizeof(BoneData)),
+            //     bonesBufferUsage
+            // );
+        }else{
+            Logger::error("[TriangleMeshVAO::load_data] Invalid bones buffer size.\n");
+            return false;
+        }
     }
+
+    if(m_hasColors && (!colors.empty())){
+        if(colors.size() == m_nbVertices){
+            colorsB.load_data(
+                reinterpret_cast<const GLfloat*>(colors.data()),
+                static_cast<GLsizeiptr>(colors.size()*4*sizeof(GLfloat)),
+                colorBufferUsage
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::load_data] Invalid colors buffer size.\n");
+            return false;
+        }
+    }
+
+    m_dataLoaded = true;
+    return true;
 }
 
-auto TriangleMeshVAO::vertex_array_vertex_buffer() -> void{
+auto TrianglesRenderer::update_data(
+    std::span<const geo::Pt3<GLuint>> indices,  size_t indicesOffset,
+    std::span<const geo::Pt3f> vertices,        size_t verticesOffset,
+    std::span<const geo::Pt3f> normals,         size_t normalsOffset,
+    std::span<const geo::Pt2f> texCoords,       size_t textCoordsOffset,
+    std::span<const geo::Pt4f> tangents,        size_t tangentsOffset,
+    std::span<const graphics::BoneData> bones,  size_t bonesoffset,
+    std::span<const ColorRGBA32> colors,        size_t colorsOffset) -> bool{
+
+    if(!initialized()){
+        Logger::error("[TriangleMesh::update_data] Buffers must be initialized.\n");
+        return false;
+    }
+
+    if(!data_loaded()){
+        Logger::error("[TriangleMesh::update_data] Data must be loaded.\n");
+        return false;
+    }
+
+    if(m_nbIndices == 0){
+        Logger::error("[TriangleMeshVAO::update_data] No indices.\n");
+        return false;
+    }
+
+    if(m_nbVertices == 0){
+        Logger::error("[TriangleMeshVAO::update_data] No vertices.\n");
+        return false;
+    }
+
+    if(!indices.empty()){
+
+        if(!(indicesBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Index buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((indicesOffset + indices.size()*3) <= m_nbIndices){
+            indicesB.update_data(
+                reinterpret_cast<const GLuint *>(indices.data()),
+                GLsizeiptr(indices.size()*3*sizeof(std::uint32_t)),
+                static_cast<GLintptr>(indicesOffset)
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid index buffer size.\n");
+            return false;
+        }
+    }
+
+    if(!vertices.empty()){
+
+        if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Vertex buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((verticesOffset + vertices.size()*3) <= m_nbVertices*3){
+            pointsB.update_data(
+                reinterpret_cast<const GLfloat*>(vertices.data()),
+                static_cast<GLsizeiptr>(vertices.size()*3*sizeof(GLfloat)),
+                static_cast<GLintptr>(verticesOffset)
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid vertex buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasNormals && (!normals.empty())){
+
+        if(!(normalBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Normal buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((normalsOffset + normals.size()*3) <= m_nbVertices*3){
+            normalsB.update_data(
+                reinterpret_cast<const GLfloat*>(normals.data()),
+                static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+                static_cast<GLintptr>(normalsOffset)
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid normal buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasTexCoord && (!texCoords.empty())){
+
+        if(!(texCoordsBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Texture coordinates buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((textCoordsOffset + texCoords.size()*2) <= m_nbVertices*2){
+            texCoordsB.update_data(
+                reinterpret_cast<const GLfloat*>(texCoords.data()),
+                static_cast<GLsizeiptr>(texCoords.size()*2*sizeof(GLfloat)),
+                static_cast<GLintptr>(textCoordsOffset)
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid texture coordinates buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasTangents && (!tangents.empty())){
+
+        if(!(tangentsBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Tangent buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((tangentsOffset + tangents.size()*4) <= m_nbVertices*4){
+            tangentsB.update_data(
+                reinterpret_cast<const GLfloat*>(tangents.data()),
+                static_cast<GLsizeiptr>(tangents.size()*4*sizeof(GLfloat)),
+                static_cast<GLintptr>(tangentsOffset)
+            );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid tangent buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasBones && (!bones.empty())){
+
+        if(!(bonesBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Bones buffer storage not dynamic.\n");
+            return false;
+        }
+
+        // if((tangentsOffset + tangents.size()*4) <= m_nbVertices*4){
+        //     bonesB.update_data(
+        //         reinterpret_cast<const GLfloat*>(tangents.data()),
+        //         static_cast<GLsizeiptr>(tangents.size()*4*sizeof(GLfloat)),
+        //         static_cast<GLintptr>(tangentsOffset)
+        //     );
+        // }else{
+        //     Logger::error("[TriangleMeshVAO::update_data] Invalid bones buffer size.\n");
+        //     return false;
+        // }
+    }
+
+    if(m_hasColors && (!colors.empty())){
+
+        if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[TriangleMeshVAO::update_data] Color buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((colorsOffset + colors.size()*4) <= m_nbVertices*4){
+            colorsB.update_data(
+                reinterpret_cast<const GLfloat*>(colors.data()),
+                static_cast<GLsizeiptr>(colors.size()*4*sizeof(GLfloat)),
+                static_cast<GLintptr>(colorsOffset)
+                );
+        }else{
+            Logger::error("[TriangleMeshVAO::update_data] Invalid color buffer size.\n");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+auto TrianglesRenderer::generate_bo() -> void{
+
+    indicesB.initialize();
+    pointsB.initialize();
+    if(m_hasNormals){
+        normalsB.initialize();
+    }
+    if(m_hasTexCoord){
+        texCoordsB.initialize();
+    }
+    if(m_hasTangents){
+        tangentsB.initialize();
+    }
+    if(m_hasBones){
+        // bonesB.generate();
+    }
+    if(m_hasColors){
+        colorsB.initialize();
+    }    
+}
+
+
+auto TrianglesRenderer::vertex_array_vertex_buffer() -> void{
 
     GL::vertex_array_vertex_buffer(
         vao.id(),
@@ -180,7 +455,7 @@ auto TriangleMeshVAO::vertex_array_vertex_buffer() -> void{
     }
 }
 
-auto TriangleMeshVAO::vertex_array_attrib_format() -> void{
+auto TrianglesRenderer::vertex_array_attrib_format() -> void{
 
     GL::vertex_array_attrib_format(
         vao.id(),
@@ -240,7 +515,7 @@ auto TriangleMeshVAO::vertex_array_attrib_format() -> void{
     }
 }
 
-auto TriangleMeshVAO::enable_vertex_array_attrib() -> void{
+auto TrianglesRenderer::enable_vertex_array_attrib() -> void{
 
     GL::enable_vertex_array_attrib(
         vao.id(),
@@ -280,7 +555,7 @@ auto TriangleMeshVAO::enable_vertex_array_attrib() -> void{
     }
 }
 
-auto TriangleMeshVAO::vertex_array_attrib_binding() -> void{
+auto TrianglesRenderer::vertex_array_attrib_binding() -> void{
 
     GL::vertex_array_attrib_binding(
         vao.id(),
@@ -326,7 +601,7 @@ auto TriangleMeshVAO::vertex_array_attrib_binding() -> void{
 }
 
 
-auto TriangleMeshVAO::init_and_load_3d_mesh(
+auto TrianglesRenderer::init_and_load_3d_mesh(
     std::span<const geo::Pt3<GLuint>> indices,
     std::span<const Pt3f> points,
     std::span<const Pt3f> normals,
@@ -345,7 +620,7 @@ auto TriangleMeshVAO::init_and_load_3d_mesh(
         return;
     }
 
-    if(buffersInitialized){
+    if(m_buffersInitialized){
         clean();
     }
 
@@ -355,28 +630,28 @@ auto TriangleMeshVAO::init_and_load_3d_mesh(
     m_hasBones    = bones.size()     == points.size();
     m_hasColors   = colors.size()    == points.size();
 
-    vao.generate();    
+    vao.initialize();
     generate_bo();
 
     vao.bind();
-    indicesB.bind();
-
-    load_data(indices, points, normals, texCoords, tangents, bones, colors);
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, indicesB.id());
 
     vertex_array_vertex_buffer();
     vertex_array_attrib_format();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
 
-    nIndicesAllocated = static_cast<GLsizei>(indices.size()*3);
-    buffersInitialized = true;
+    m_nbVertices = static_cast<GLsizei>(points.size());
+    m_nbIndices  = static_cast<GLsizei>(indices.size()*3);
+    m_buffersInitialized = true;
+
+    load_data(indices, points, normals, texCoords, tangents, bones, colors);
 
     VAO::unbind();
-    indicesB.unbind();
-
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
+auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
         Logger::error("[TriangleMesh::init_buffers] error, no indices or points buffers.\n");
@@ -420,15 +695,15 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
     }
 
     // clean if necessary
-    if(buffersInitialized){
+    if(m_buffersInitialized){
         clean();
     }
 
-    vao.generate();
-    indicesB.generate();
+    vao.initialize();
+    indicesB.initialize();
 
     // generate buffers
-    pointsB.generate();
+    pointsB.initialize();
     pointsB.load_data(
         points->data(),
         static_cast<GLsizeiptr>(points->size()*sizeof(GLfloat))
@@ -437,7 +712,7 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
 
 
     if(hasNormals){
-        normalsB.generate();
+        normalsB.initialize();
         normalsB.load_data(
             normals->data(),
             static_cast<GLsizeiptr>(normals->size()*sizeof(GLfloat))
@@ -445,7 +720,7 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
         //        normalsB.dsa_attrib(vao.id(), AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
     }
     if(hasTexCoord){
-        texCoordsB.generate();
+        texCoordsB.initialize();
         texCoordsB.load_data(
             texCoords->data(),
             static_cast<GLsizeiptr>(texCoords->size()*sizeof(GLfloat))
@@ -453,7 +728,7 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
         //        texCoordsB.dsa_attrib(vao.id(), AttriIndex{2}, AttriSize{2}, AttriType{GL_FLOAT}, Stride{0}, RelativeOffset{0});
     }
     if(hasTangents){
-        tangentsB.generate();
+        tangentsB.initialize();
         tangentsB.load_data(
             tangents->data(),
             static_cast<GLsizeiptr>(tangents->size()*sizeof(GLfloat))
@@ -462,7 +737,7 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
     }
 
     if(hasColors){
-        colorsB.generate();
+        colorsB.initialize();
         colorsB.load_data(
             colors->data(),
             static_cast<GLsizeiptr>(colors->size()*sizeof(GLfloat))
@@ -472,7 +747,7 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
     vao.bind();
 
     // indices
-    indicesB.bind();
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, indicesB.id());
     indicesB.load_data(indices->data(), GLsizeiptr(indices->size()*sizeof(std::uint32_t)));
 
     // points
@@ -498,13 +773,13 @@ auto TriangleMeshVAO::init_buffers(std::vector<GLuint> *indices, std::vector<GLf
         colorsB.attrib(AttriIndex{4}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
     
-    nIndicesAllocated = static_cast<GLsizei>(indices->size());
+    m_nbIndices = static_cast<GLsizei>(indices->size());
 
     VAO::unbind();
-    buffersInitialized = true;
+    m_buffersInitialized = true;
 }
 
-auto TriangleMeshVAO::init_buffers(
+auto TrianglesRenderer::init_buffers(
     std::vector<TriIds> *indices, std::vector<Pt3f> *points, std::vector<Pt3f> *normals,
     std::vector<Pt2f> *texCoords, std::vector<Pt4f> *tangents, std::vector<graphics::BoneData> *bones, std::vector<ColorRGBA32> *colors) -> void{
 
@@ -560,29 +835,29 @@ auto TriangleMeshVAO::init_buffers(
 
 
     // clean if necessary
-    if(buffersInitialized){
+    if(m_buffersInitialized){
         clean();
     }
 
-    vao.generate();
+    vao.initialize();
 
     // generate buffers
-    pointsB.generate();
-    indicesB.generate();
+    pointsB.initialize();
+    indicesB.initialize();
     if(hasNormals){
-        normalsB.generate();
+        normalsB.initialize();
     }
     if(hasTexCoord){
-        texCoordsB.generate();
+        texCoordsB.initialize();
     }
     if(hasTangents){
-        tangentsB.generate();
+        tangentsB.initialize();
     }
     if(hasBones){
-        bonesB.generate();
+        // bonesB.generate();
     }
     if(hasColors){
-        colorsB.generate();
+        colorsB.initialize();
     }
 
     vao.bind();
@@ -598,7 +873,7 @@ auto TriangleMeshVAO::init_buffers(
     }
 
     // indices
-    indicesB.bind();
+    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, indicesB.id());
     indicesB.load_data(rawIndices.data(), GLsizeiptr(indices->size()*3*sizeof(std::uint32_t)));
 
     // points
@@ -669,45 +944,33 @@ auto TriangleMeshVAO::init_buffers(
         colorsB.attrib(AttriIndex{6}, AttriSize{4}, AttriType{GL_FLOAT}, Stride{0}, AttribOffset{reinterpret_cast<GLvoid*>(0* sizeof(float))});
     }
     
-    nIndicesAllocated = static_cast<GLsizei>(indices->size()*3);
+    m_nbIndices = static_cast<GLsizei>(indices->size()*3);
 
     VAO::unbind();
-    buffersInitialized = true;
+    m_buffersInitialized = true;
 }
 
-auto TriangleMeshVAO::render() const -> void{
+auto TrianglesRenderer::render() const -> void{
 
-    if(!buffersInitialized){
+    if(!m_buffersInitialized){
         return;
     }
 
     vao.bind();
-    draw_triangles_with_ebo(nIndicesAllocated);
+    draw_triangles_with_ebo(m_nbIndices);
     VAO::unbind();
 }
 
-auto TriangleMeshVAO::render_adjacency() const -> void{
+auto TrianglesRenderer::render_adjacency() const -> void{
 
-    if(!buffersInitialized){
+    if(!m_buffersInitialized){
         return;
     }
 
     vao.bind();
-    draw_triangles_adjacency_with_ebo(nIndicesAllocated);
+    draw_triangles_adjacency_with_ebo(m_nbIndices);
     VAO::unbind();
 }
-
-
-auto TriangleMeshVAO::clean() -> void{
-    vao.clean();
-    pointsB.clean();
-    indicesB.clean();
-    normalsB.clean();
-    tangentsB.clean();
-    texCoordsB.clean();
-    buffersInitialized = false;
-}
-
 
 
 

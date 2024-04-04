@@ -50,7 +50,7 @@ public:
     DCDevice(DCType type);
     ~DCDevice();
 
-    //  actions
+    // actions
     auto open(std::uint32_t deviceId) -> bool;
     auto start_reading(const DCConfigSettings &configS) -> bool;
     auto stop_reading() -> void;

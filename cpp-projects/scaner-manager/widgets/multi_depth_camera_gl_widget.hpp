@@ -94,11 +94,11 @@ private:
     // objects to draw
     int vaoToDisplay = -1;
     std::vector<graphics::Mesh> meshes;
-    std::vector<std::unique_ptr<gl::CloudPointsDrawer>> kinectClouds;
-    std::vector<std::unique_ptr<gl::MeshDrawer>> kinectMeshes;
-    gl::DrawJointMesh jointsMesh;
+    // std::vector<std::unique_ptr<gl::CloudPointsDrawer>> kinectClouds;
+    // std::vector<std::unique_ptr<gl::MeshDrawer>> kinectMeshes;
+    // gl::DrawJointMesh jointsMesh;
 
-    gl::FrustumDrawer frustum;
+    // gl::FrustumDrawer frustum;
 
 };
 }

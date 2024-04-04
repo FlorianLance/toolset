@@ -39,13 +39,62 @@
 
 // local
 #include "vao_renderer.hpp"
-#include "opengl/buffer/element_buffer_object.hpp"
+
 
 namespace tool::gl{
 
-class TriangleMeshVAO : public VAORenderer {
+class TrianglesRenderer : public VAORenderer {
 public:
 
+    ~TrianglesRenderer(){
+        TrianglesRenderer::clean();
+    }
+
+    auto initialize(bool hasNormals, bool hasTextCoords, bool hasTangents = false, bool hasBones = false, bool hasColors = false) -> void;
+    auto clean() -> void override;
+    auto load_data(
+        std::span<const geo::Pt3<GLuint>> indices,
+        std::span<const geo::Pt3f> vertices,
+        std::span<const geo::Pt3f> normals   = {},
+        std::span<const geo::Pt2f> texCoords = {},
+        std::span<const geo::Pt4f> tangents  = {},
+        std::span<const graphics::BoneData> bones = {},
+        std::span<const ColorRGBA32> colors = {}) -> bool;
+    auto update_data(
+        std::span<const geo::Pt3<GLuint>> indices,      size_t indicesOffset,
+        std::span<const geo::Pt3f> vertices,            size_t verticesOffset   = 0,
+        std::span<const geo::Pt3f> normals   = {},      size_t normalsOffset    = 0,
+        std::span<const geo::Pt2f> texCoords = {},      size_t textCoordsOffset = 0,
+        std::span<const geo::Pt4f> tangents  = {},      size_t tangentsOffset   = 0,
+        std::span<const graphics::BoneData> bones = {}, size_t bonesoffset      = 0,
+        std::span<const ColorRGBA32> colors = {},       size_t colorsOffset     = 0) -> bool;
+
+    // binding ids
+    GLuint positionBindingId    = 0;
+    GLuint normalBindingId      = 1;
+    GLuint texCoordsBindingId   = 2;
+    GLuint tangentsBindingId    = 3;
+    // ... bones
+    GLuint colorBindingId    = 6;
+
+    // locations
+    GLuint positionLoc  = 0;
+    GLuint normalLoc    = 1;
+    GLuint texCoordsLoc = 2;
+    GLuint tangentsLoc  = 3;
+    // ... bones
+    GLuint colorLoc     = 6;
+
+    // usages
+    GLbitfield indicesBufferUsage = 0;
+    GLbitfield positionBufferUsage = 0;
+    GLbitfield normalBufferUsage = 0;
+    GLbitfield texCoordsBufferUsage = 0;
+    GLbitfield tangentsBufferUsage = 0;
+    GLbitfield bonesBufferUsage = 0;
+    GLbitfield colorBufferUsage = 0;
+
+    // ### TO REMOVE
     auto init_and_load_3d_mesh(
         std::span<const geo::Pt3<GLuint>> indices,
         std::span<const geo::Pt3f> points,
@@ -54,8 +103,7 @@ public:
         std::span<const geo::Pt4f> tangents  = {},
         std::span<const graphics::BoneData> bones = {},
         std::span<const ColorRGBA32> colors = {}
-    ) -> void;
-
+        ) -> void;
 
     auto init_buffers(
         std::vector<GLuint>  *indices,
@@ -64,7 +112,7 @@ public:
         std::vector<GLfloat> *texCoords = nullptr,
         std::vector<GLfloat> *tangents  = nullptr,
         std::vector<GLfloat> *colors    = nullptr
-    ) -> void;
+        ) -> void;
 
     auto init_buffers(
         std::vector<geo::TriIds> *indices,
@@ -74,13 +122,9 @@ public:
         std::vector<geo::Pt4f> *tangents  = nullptr,
         std::vector<graphics::BoneData> *bones = nullptr,
         std::vector<ColorRGBA32> *colors    = nullptr
-    ) -> void;
-
-    auto clean() -> void override;
-
-    // ### TO REMOVE
+        ) -> void;
     auto render() const -> void override;
-    auto render_adjacency() const -> void override;    
+    auto render_adjacency() const -> void override;
     bool hasTexCoord = false;
     bool hasTangents = false;
     bool hasNormals  = false;
@@ -88,42 +132,9 @@ public:
     bool hasColors   = false;
     // ###
 
-
-    GLuint positionBindingId    = 0;
-    GLuint normalBindingId      = 1;
-    GLuint texCoordsBindingId   = 2;
-    GLuint tangentsBindingId    = 3;
-    // ... bones
-    GLuint colorBindingId    = 6;
-
-    GLuint positionLoc  = 0;
-    GLuint normalLoc    = 1;
-    GLuint texCoordsLoc = 2;
-    GLuint tangentsLoc  = 3;
-    // ... bones
-    GLuint colorLoc     = 6;
-
-    GLbitfield indicesBufferUsage = 0;
-    GLbitfield positionBufferUsage = 0;
-    GLbitfield normalBufferUsage = 0;
-    GLbitfield texCoordsBufferUsage = 0;
-    GLbitfield tangentsBufferUsage = 0;
-    GLbitfield bonesBufferUsage = 0;
-    GLbitfield colorBufferUsage = 0;
-
 protected:
 
     auto generate_bo() -> void;
-
-    auto load_data(
-        std::span<const geo::Pt3<GLuint>> indices,
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> normals   = {},
-        std::span<const geo::Pt2f> texCoords = {},
-        std::span<const geo::Pt4f> tangents  = {},
-        std::span<const graphics::BoneData> bones = {},
-        std::span<const ColorRGBA32> colors = {}) -> void;
-
     auto vertex_array_vertex_buffer() -> void;
     auto vertex_array_attrib_format() -> void;
     auto enable_vertex_array_attrib() -> void;
@@ -135,7 +146,7 @@ protected:
     bool m_hasTangents  = false;
     bool m_hasBones     = false;
 
-    EBO indicesB;
+    VBO indicesB;
     VBO pointsB;
     VBO normalsB;
     VBO tangentsB;

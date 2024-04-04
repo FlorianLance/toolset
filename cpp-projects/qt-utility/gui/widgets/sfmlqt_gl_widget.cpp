@@ -48,7 +48,7 @@
 
 using namespace tool::ui;
 using namespace tool::geo;
-
+using namespace std::literals::string_view_literals;
 
 bool tool::gl::ColoredCloudShader::init(){
 
@@ -98,7 +98,11 @@ bool tool::gl::ColoredCloudShader::init(){
 
         )shaderDef";
 
-    return load_from_source_code({{Shader::Type::vertex, vertexShaderSource}, {Shader::Type::fragment,fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+    return load_from_source_code(elems);
 }
 
 bool tool::gl::ColoredMeshShader::init(){
@@ -141,7 +145,11 @@ bool tool::gl::ColoredMeshShader::init(){
 
         )shaderDef";
 
-    return load_from_source_code({{Shader::Type::vertex, vertexShaderSource}, {Shader::Type::fragment,fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+    return load_from_source_code(elems);
 }
 
 
@@ -313,21 +321,21 @@ void SfmlQtGlWidget::init_grid(){
 void SfmlQtGlWidget::draw_axes(){
 
     meshShader.use();
-    meshShader.set_uniform("view",         camera.view().conv<float>());
-    meshShader.set_uniform("model",        model.conv<float>());
-    meshShader.set_uniform("projection",   camera.projection().conv<float>());
-    meshShader.set_uniform("enable_unicolor", false);
+    meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+    meshShader.set_uniform_matrix("model"sv,        model.conv<float>());
+    meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+    meshShader.set_uniform("enable_unicolor"sv, false);
     axis.draw();
 }
 
 void SfmlQtGlWidget::draw_grid(){
 
     meshShader.use();
-    meshShader.set_uniform("view",         camera.view().conv<float>());
-    meshShader.set_uniform("model",        model.conv<float>());
-    meshShader.set_uniform("projection",   camera.projection().conv<float>());
-    meshShader.set_uniform("enable_unicolor", true);
-    meshShader.set_uniform("unicolor", geo::Pt4f{0,1,1,1});
+    meshShader.set_uniform_matrix("view"sv,         camera.view().conv<float>());
+    meshShader.set_uniform_matrix("model"sv,        model.conv<float>());
+    meshShader.set_uniform_matrix("projection"sv,   camera.projection().conv<float>());
+    meshShader.set_uniform("enable_unicolor"sv, true);
+    meshShader.set_uniform("unicolor"sv, geo::Pt4f{0,1,1,1});
     grid.draw();
 }
 

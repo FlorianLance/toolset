@@ -38,26 +38,26 @@ RBO::~RBO(){
     clean();
 }
 
-auto RBO::generate() -> void{
+auto RBO::initialize() -> void{
 
-    if(m_id != 0){
-        Logger::error(std::format("[RBO::generate] RBO already generated: {}\n", m_id));
+    if(m_handle != 0){
+        Logger::error(std::format("[RBO::generate] RBO already generated: {}\n", m_handle));
         return;
     }
-    glCreateRenderbuffers(1, &m_id);
+    glCreateRenderbuffers(1, &m_handle);
 }
 
 auto RBO::clean() -> void{
 
-    if(m_id == 0){
+    if(m_handle == 0){
         return;
     }
-    GL::delete_buffers(1, &m_id);
-    m_id = 0;
+    GL::delete_buffers(1, &m_handle);
+    m_handle = 0;
 }
 
 auto RBO::bind() -> void{
-    glBindRenderbuffer(GL_RENDERBUFFER, m_id);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_handle);
 }
 
 auto RBO::unbind() -> void{
@@ -65,11 +65,11 @@ auto RBO::unbind() -> void{
 }
 
 auto RBO::set_multisample_data_storage(GLsizei width, GLsizei height, GLsizei samples) -> void{
-    glNamedRenderbufferStorageMultisample(m_id, samples, GL_DEPTH24_STENCIL8, width, height);
+    glNamedRenderbufferStorageMultisample(m_handle, samples, GL_DEPTH24_STENCIL8, width, height);
 }
 
 auto RBO::set_data_storage(GLsizei width, GLsizei height) -> void{
-    glNamedRenderbufferStorage(m_id, GL_DEPTH24_STENCIL8, width, height);
+    glNamedRenderbufferStorage(m_handle, GL_DEPTH24_STENCIL8, width, height);
     // glNamedRenderbufferStorage(m_id, GL_DEPTH_COMPONENT, width, height);
     // GL_DEPTH_COMPONENT16 	GL_DEPTH_COMPONENT 	16
     // GL_DEPTH_COMPONENT24 	GL_DEPTH_COMPONENT 	24

@@ -26,18 +26,53 @@
 
 #pragma once
 
+// std
+#include <span>
+
+// base
+#include "geometry/point3.hpp"
+
 // local
-#include "base_drawer.hpp"
+#include "vao_renderer.hpp"
 
-namespace tool::gl {
+namespace tool::gl{
 
-class MonoLineDrawer : public BaseDrawer{
+class VoxelsRenderer : public VAORenderer{
 public:
-    MonoLineDrawer();
-    auto init(bool initColors) -> void;
-    auto init_and_load(std::span<const geo::Pt3f,2> points, std::span<const geo::Pt3f> colors = {}) -> void;
-    auto update(std::span<const geo::Pt3f,2> points, std::span<const geo::Pt3f> colors = {}) -> void;
-    auto draw() -> void override final;
+    ~VoxelsRenderer(){
+        VoxelsRenderer::clean();
+    }
+
+    auto initialize(bool hasColors) -> void;
+    auto clean() -> void override;
+    auto load_data(
+        std::span<const geo::Pt3<int>> vertices,
+        std::span<const geo::Pt3f> colors
+    ) -> bool;
+    auto update_data(
+        std::span<const geo::Pt3<int>> vertices,    size_t verticesOffset = 0,
+        std::span<const geo::Pt3f> colors  = {},    size_t colorsOffset   = 0
+    ) -> bool;
+
+    GLuint positionBindingId = 0;
+    GLuint colorBindingId    = 1;
+
+    GLuint positionLoc = 0;
+    GLuint colorLoc    = 1;
+
+    GLbitfield positionBufferUsage = 0;
+    GLbitfield colorBufferUsage = 0;
+
+protected:
+
+    auto generate_vbo() -> void;
+    auto vertex_array_vertex_buffer() -> void;
+    auto vertex_array_attrib_format() -> void;
+    auto enable_vertex_array_attrib() -> void;
+    auto vertex_array_attrib_binding() -> void;
+
+    bool m_hasColors  = false;
+
+    VBO colorsB;
 };
 }
-

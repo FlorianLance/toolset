@@ -30,60 +30,105 @@
 #include <span>
 
 // base
+#include "geometry/point2.hpp"
 #include "geometry/point3.hpp"
-#include "geometry/point4.hpp"
 
 // local
 #include "vao_renderer.hpp"
-#include "opengl/buffer/element_buffer_object.hpp"
 
 namespace tool::gl{
 
-class LinesMeshVAO : public VAORenderer{
+class PointsRenderer : public VAORenderer{
 public:
 
-    ~LinesMeshVAO(){
-        LinesMeshVAO::clean();
+    ~PointsRenderer(){
+        PointsRenderer::clean();
     }
 
-    auto init_data(size_t nbIndices, size_t nbPoints, bool hasColors) -> void;
-    auto init_and_load_data(
-        std::span<const GLuint> indices,
-        std::span<const geo::Pt3f> points,
-        std::span<const geo::Pt3f> colors
-    ) -> void;
-
-    auto update_indices(std::span<const GLuint> indices, GLintptr offset = 0) -> void;
-    auto update_data(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, GLintptr offset = 0) -> void;
-
+    auto initialize(bool hasColors, bool hasNormals) -> void;
     auto clean() -> void override;
-
-    // TO REMOVE
-    auto render() const -> void override;    
+    auto load_data(
+        std::span<const geo::Pt3f> vertices,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals = {}
+    ) -> bool;
+    auto update_data(
+        std::span<const geo::Pt3f> vertices,        size_t verticesOffset = 0,
+        std::span<const geo::Pt3f> colors  = {},    size_t colorsOffset   = 0,
+        std::span<const geo::Pt3f> normals = {},    size_t normalsOffset  = 0
+    ) -> bool;
 
     GLuint positionBindingId = 0;
     GLuint colorBindingId    = 1;
+    GLuint normalBindingId   = 2;
 
     GLuint positionLoc = 0;
     GLuint colorLoc    = 1;
+    GLuint normalLoc   = 2;
 
-    GLbitfield indicesBufferUsage = 0;
     GLbitfield positionBufferUsage = 0;
     GLbitfield colorBufferUsage = 0;
+    GLbitfield normalBufferUsage = 0;
+
+    // TO REMOVE
+    auto initialize(
+        size_t size,
+        bool hasColors,
+        bool hasNormals
+        ) -> void;
+
+    // load
+    auto update_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals,
+        GLintptr offset = 0
+        ) -> void;
+
+    // init and load
+    auto init_and_load_2d_points(
+        std::span<const geo::Pt2f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt2f> normals
+        ) -> void;
+
+    auto init_and_load_3d_points(
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors,
+        std::span<const geo::Pt3f> normals
+        ) -> void;
+
+    auto init_and_load_3d_voxels(
+        std::span<const geo::Pt3<int>> voxels,
+        std::span<const geo::Pt3f> colors
+        ) -> void;
+
+    auto render() const -> void override;
+    auto render_patches() const -> void override;
+    // ###
+
 
 protected:
 
-    auto generate_bo() -> void;
-    auto vertex_array_vertex_buffer_for_3d_lines() -> void;
-    auto vertex_array_attrib_format_for_3d_lines() -> void;
+    auto generate_vbo() -> void;
+    auto vertex_array_vertex_buffer() -> void;
+    auto vertex_array_attrib_format() -> void;
     auto enable_vertex_array_attrib() -> void;
     auto vertex_array_attrib_binding() -> void;
 
+    // TO REMOVE
+    auto vertex_array_vertex_buffer_for_2d_points() -> void;
+    auto vertex_array_attrib_format_for_2d_points() -> void;
+    auto vertex_array_vertex_buffer_for_3d_voxels() -> void;
+    auto vertex_array_attrib_format_for_3d_voxels() -> void;
+    // ###
+
+
+
     bool m_hasColors  = false;
+    bool m_hasNormals = false;
 
-    EBO indicesB;
     VBO colorsB;
+    VBO normalsB;
 };
-
-
 }

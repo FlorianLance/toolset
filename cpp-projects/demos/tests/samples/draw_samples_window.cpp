@@ -15,6 +15,10 @@
 #include "shaders_tests.hpp"
 #include "utility/logger.hpp"
 
+#include "opengl/draw/triangles_drawers.hpp"
+#include "opengl/draw/lines_drawers.hpp"
+#include "opengl/draw/points_drawers.hpp"
+
 using namespace tool::gl;
 using namespace tool::graphics;
 
@@ -38,13 +42,13 @@ DrawSampleWindow::DrawSampleWindow(std::string_view title, graphics::Screen scre
 }
 
 
-bool DrawSampleWindow::init_shaders(){
+auto DrawSampleWindow::init_shaders() -> bool{
 
-    const std::vector<Shader::Type> VS_FS         = {Shader::Type::vertex,Shader::Type::fragment};
-    const std::vector<Shader::Type> VS_FS_GS      = {Shader::Type::vertex,Shader::Type::fragment, Shader::Type::geometry};
-    const std::vector<Shader::Type> VS_FS_TES_TCS = {Shader::Type::vertex,Shader::Type::fragment, Shader::Type::tess_eval, Shader::Type::tess_control};
+    const std::vector<ShaderType> VS_FS         = {ShaderType::vertex,ShaderType::fragment};
+    const std::vector<ShaderType> VS_FS_GS      = {ShaderType::vertex,ShaderType::fragment, ShaderType::geometry};
+    const std::vector<ShaderType> VS_FS_TES_TCS = {ShaderType::vertex,ShaderType::fragment, ShaderType::tess_eval, ShaderType::tess_control};
 
-    std::vector<std::pair<std::string, const std::vector<Shader::Type>*>> shadersNames={
+    std::vector<std::pair<std::string, const std::vector<ShaderType>*>> shadersNames={
         {"others/cloud", &VS_FS},
         {"others/unicolor",&VS_FS},{"others/skybox",&VS_FS},{"others/screen-quad",&VS_FS}, // ch1
         {"ch2/1",&VS_FS}, // ch2
@@ -74,22 +78,22 @@ bool DrawSampleWindow::init_shaders(){
         for(const auto &shaderType : *shaderName.second){
 //            paths.push_back((shadersPaths / Paths::get_shader(shaderName.first, Shader::get_ext(shaderType))).string());
             switch(shaderType){
-            case Shader::Type::vertex:
+            case ShaderType::vertex:
                 paths.push_back((shadersPaths / (shaderName.first + ".vs")).string());
                 break;
-            case Shader::Type::fragment:
+            case ShaderType::fragment:
                 paths.push_back((shadersPaths / (shaderName.first + ".fs")).string());
                 break;
-            case Shader::Type::tess_eval:
+            case ShaderType::tess_eval:
                 paths.push_back((shadersPaths / (shaderName.first + ".tes")).string());
                 break;
-            case Shader::Type::tess_control:
+            case ShaderType::tess_control:
                 paths.push_back((shadersPaths / (shaderName.first + ".tcs")).string());
                 break;
-            case Shader::Type::geometry:
+            case ShaderType::geometry:
                 paths.push_back((shadersPaths / (shaderName.first + ".gs")).string());
                 break;
-            case Shader::Type::compute:
+            case ShaderType::compute:
                 // ..paths.emplace_back((shadersPaths / (shaderName.first + ".cs")).string());
                 break;
             default:
@@ -105,7 +109,7 @@ bool DrawSampleWindow::init_shaders(){
         Logger::message(std::format("Shader [{}] loaded.\n", shaderName.first));
     }
 
-    Managers::shaders->add_shader("colored-cloud", std::move(gl::ColoredCloudShader()));
+    Managers::shaders->add_shader("colored-cloud", gl::ColoredCloudShader());
     //    shadersPaths = currentPath / ".." / ".." / ".." / "cpp" / "toolset" / "resources" / "shaders";
     //    shaderInit &= colorMeshShader.init();
     //    shaderInit &= texturedMeshShader.init();
@@ -117,7 +121,7 @@ bool DrawSampleWindow::init_shaders(){
 }
 
 
-bool DrawSampleWindow::init_textures(){
+auto DrawSampleWindow::init_textures() -> bool{
 
     // paths
     std::string path = std::filesystem::current_path().string() + "/resources/textures";
@@ -152,7 +156,7 @@ bool DrawSampleWindow::init_textures(){
     // cubemaps
     Logger::message("# Load cubemaps\n");
     bool loaded = true;
-    loaded &= Managers::textures->load_cube_map(path + "/pisa/pisa_", {"posx.png","negx.png","posy.png","negy.png","posz.png","negz.png"},  "pisa", false);
+    loaded &= Managers::textures->load_cube_map(path + "/pisa/pisa_", {"posx.png","negx.png","posy.png","negy.png","posz.png","negz.png"}, "pisa", false);
     loaded &= Managers::textures->load_cube_map(path + "/grace/grace_",{"posx.hdr","negx.hdr","posy.hdr","negy.hdr","posz.hdr","negz.hdr"}, "grace", false);
     loaded &= Managers::textures->load_cube_map(path + "/grace-diffuse/grace-diffuse_",{"posx.hdr","negx.hdr","posy.hdr","negy.hdr","posz.hdr","negz.hdr"}, "grace-diffuse", false);
     if(!loaded){
@@ -184,6 +188,7 @@ bool DrawSampleWindow::init_textures(){
     // # cubemaps
     Logger::message("# Generate cubemaps TBO\n");
     loaded = true;
+    loaded &= Managers::textures->generate_cubemap_tbo("pisa", "pisa");
     loaded &= Managers::textures->generate_cubemap_tbo("grace-diffuse", "grace-diffuse");
     loaded &= Managers::textures->generate_cubemap_tbo("grace", "grace");
     if(!loaded){
@@ -198,7 +203,7 @@ bool DrawSampleWindow::init_textures(){
     return true;
 }
 
-bool DrawSampleWindow::init_models(){
+auto DrawSampleWindow::init_models() -> bool{
 
     std::string mesh = Paths::resourcesDir.value() + "/meshes";
     bool loaded = true;
@@ -216,7 +221,7 @@ bool DrawSampleWindow::init_models(){
                 {"alex",    mesh + "/alex/alex_breahting_idle.fbx"},
                 {"rabbit",  mesh + "/rabbit/stanford_rabbit.obj"},
                 {"storm",   mesh + "/storm/source/Storm_Ani.fbx"},
-                {"building",mesh + "/building.obj"},
+                // {"building",mesh + "/building.obj"},
             });
     }
 
@@ -240,8 +245,90 @@ bool DrawSampleWindow::init_models(){
 }
 
 
-bool DrawSampleWindow::init_drawers(){
+auto DrawSampleWindow::init_drawers() -> bool{
 
+
+
+    // add drawers
+    auto dm = Managers::drawers;
+    auto tm = Managers::textures;
+    auto mm = Managers::models;
+
+    Logger::message("PROCEDURAL\n");
+
+    // # procedural
+    auto noTextplane10x10 = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    noTextplane10x10->initialize(10.f, 10.f, 1, 1);
+    dm->add_drawer("notext-plane-10x10", std::move(noTextplane10x10));
+
+    auto noTextplane20x10 = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    noTextplane20x10->initialize(20.f, 10.f, 1, 1);
+    dm->add_drawer("notext-plane-20x10", std::move(noTextplane20x10));
+
+    auto noTextplane40x40 = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    noTextplane40x40->initialize(40.f, 40.f, 1, 1);
+    dm->add_drawer("notext-plane-40x40", std::move(noTextplane40x40));
+
+    auto floor = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    floor->initialize(8.f, 8.f, 1, 1);
+    floor->texturesId.push_back(tm->texture_id("cement"));
+    dm->add_drawer("floor", std::move(floor), 0.5f);
+
+    auto gridFloor = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    gridFloor->initialize(8.f, 8.f, 1, 1);
+    gridFloor->texturesId.push_back(tm->texture_id("me_textile"));
+    dm->add_drawer("grid-floor", std::move(gridFloor), 0.5f);
+
+    auto multiTexPlane = std::make_shared<gl::GridQuadTrianglesDrawer>();
+    multiTexPlane->initialize(8.f, 8.f, 1, 1);
+    multiTexPlane->texturesId.values = {tm->texture_id("mybrick-color"), tm->texture_id("mybrick-normal"), tm->texture_id("mybrick-height")};
+    dm->add_drawer("multi-tex-plane", std::move(multiTexPlane), 0.5f);
+
+    auto brickCube = std::make_shared<gl::CubeTrianglesDrawer>();
+    brickCube->initialize(2.f);
+    brickCube->texturesId.push_back(tm->texture_id("brick"));
+    dm->add_drawer("brick-cube", std::move(brickCube), 0.3f);
+
+    auto mossBrickCube = std::make_shared<gl::CubeTrianglesDrawer>();
+    mossBrickCube->initialize(2.f);
+    mossBrickCube->texturesId.values = {tm->texture_id("brick"), tm->texture_id("moss")};
+    dm->add_drawer("brick-moss-cube", std::move(mossBrickCube), 0.3f);
+
+    auto cementMossCube = std::make_shared<gl::CubeTrianglesDrawer>();
+    cementMossCube->initialize(2.f);
+    cementMossCube->texturesId.values = {tm->texture_id("cement"), tm->texture_id("moss")};
+    dm->add_drawer("cement-moss-cube", std::move(cementMossCube), 0.3f);
+
+    auto screenQuad = std::make_shared<gl::QuadTrianglesDrawer>();
+    screenQuad->initialize(false);
+    dm->add_drawer("screen-quad", std::move(screenQuad), 1.0f);
+
+    auto torus = std::make_shared<gl::TorusTrianglesDrawer>();
+    torus->initialize();
+    dm->add_drawer("torus", std::move(torus), 0.4f);
+
+    auto cube = std::make_shared<gl::CubeTrianglesDrawer>();
+    cube->initialize(2.f);
+    dm->add_drawer("cube", std::move(cube), 0.3f);
+
+    auto sphere = std::make_shared<gl::SphereTrianglesDrawer>();
+    sphere->initialize(1.0f);
+    dm->add_drawer("sphere", std::move(sphere), 0.7f);
+
+    auto axesLines = std::make_shared<gl::AxesLinesDrawer>();
+    axesLines->initialize(1.f);
+    dm->add_drawer("axes", std::move(axesLines), 1.f);
+
+    auto frustum = std::make_shared<gl::FrustumDrawerLinesDrawer>();
+    frustum->initialize(1.f);
+    dm->add_drawer("frustum", std::move(frustum), 1.f);
+
+    auto skybox = std::make_shared<gl::SkyboxTrianglesDrawer>();
+    skybox->initialize(100.f, std::nullopt);
+    dm->add_drawer("skybox", std::move(skybox), 1.f);
+
+
+    geo::ColoredCloudData cloud;
     cloud.resize(100000);
     for(size_t id = 0; id < 100000; ++id){
         cloud.vertices[id] ={
@@ -256,65 +343,44 @@ bool DrawSampleWindow::init_drawers(){
         };
     }
 
-    // add drawers
-    auto dm = Managers::drawers;
-    auto tm = Managers::textures;
-    auto mm = Managers::models;
+    auto cloudD = std::make_shared<gl::CloudPointsDrawer5>();
+    cloudD->initialize(false, cloud);
+    dm->add_drawer("cloud", std::move(cloudD), 1.f);
 
-    // # procedural
-    dm->add_drawer<gl::PlaneDrawer>("notext-plane-10x10",   Scale{1.f},    10.f,10.f);
-    dm->add_drawer<gl::PlaneDrawer>("notext-plane-20x10",   Scale{1.f},    20.f,10.f);
-    dm->add_drawer<gl::PlaneDrawer>("notext-plane-40x40",   Scale{1.f},    40.f,40.f);
-    dm->add_drawer<gl::PlaneDrawer>("floor",                Scale{1.f},    8,8, std::vector<GLuint>{tm->texture_id("cement")});
-    dm->add_drawer<gl::PlaneDrawer>("grid-floor",           Scale{0.5f},   8,8, std::vector<GLuint>{tm->texture_id("me_textile")});
-    dm->add_drawer<gl::PlaneDrawer>("multi-tex-plane",      Scale{0.5f},   8,8, std::vector<GLuint>{tm->texture_id("mybrick-color"), tm->texture_id("mybrick-normal"), tm->texture_id("mybrick-height")});
-    dm->add_drawer<gl::TorusDrawer>("torus",                Scale{0.4f});
-    dm->add_drawer<gl::CubeDrawer>("cube",                  Scale{0.3f},   2.f);
-    dm->add_drawer<gl::CubeDrawer>("brick-cube",            Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("brick")});
-    dm->add_drawer<gl::CubeDrawer>("brick-moss-cube",       Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("brick"), tm->texture_id("moss")});
-    dm->add_drawer<gl::CubeDrawer>("cement-moss-cube",      Scale{0.3f},   2.f, std::vector<GLuint>{tm->texture_id("cement"), tm->texture_id("moss")});
-    dm->add_drawer<gl::FullscreenQuadDrawer>("screen-quad", Scale{1.f});
-    dm->add_drawer<gl::TeapotDrawer>("teapot",              Scale{0.3f});
-    dm->add_drawer<gl::SphereDrawer>("sphere",              Scale{0.7f});
-    dm->add_drawer<gl::AxesDrawer>("axes",                  Scale{1.f});
-    dm->add_drawer<gl::FrustumDrawer>("frustum",            Scale{1.f});
-    dm->add_drawer<gl::SkyboxDrawer>("skybox",              Scale{1.f}, 100.f, std::nullopt);
 
-    dm->add_drawer<gl::CloudPointsDrawer>("cloud",          Scale{1.0f});
-    if(auto cloudD = dm->get_drawer("cloud").lock(); cloudD != nullptr){
-        auto c = dynamic_cast<gl::CloudPointsDrawer*>(cloudD.get());
-        c->init(cloud.vertices.span(), cloud.colors.span());
-    }
+    Logger::message("MODELS\n");
 
-    // # loaded models
-    dm->add_drawer<tool::gl::ModelDrawer>("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
-    dm->add_drawer<tool::gl::ModelDrawer>("notext-spot",    Scale{1.f},    mm->get("spot"));
-    dm->add_drawer<tool::gl::ModelDrawer>("ogre",           Scale{1.f},    mm->get("ogre"),TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
-    dm->add_drawer<tool::gl::ModelDrawer>("pig",            Scale{1.f},    mm->get("pig"));
-    dm->add_drawer<tool::gl::ModelDrawer>("dragon",         Scale{2.f},    mm->get("dragon"));
-    dm->add_drawer<tool::gl::ModelDrawer>("building",       Scale{1.f},    mm->get("building"));
-    dm->add_drawer<tool::gl::ModelDrawer>("crysis",         Scale{0.1f},   mm->get("crysis"));
-    dm->add_drawer<tool::gl::ModelDrawer>("alex",           Scale{0.01f},  mm->get("alex"));
-    dm->add_drawer<tool::gl::ModelDrawer>("rabbit",         Scale{3.f},    mm->get("rabbit"));
-    dm->add_drawer<tool::gl::ModelDrawer>("storm",          Scale{0.01f},    mm->get("storm"));
+    // // # loaded models
+    // dm->add_drawer<tool::gl::ModelDrawer>("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
+    // dm->add_drawer<tool::gl::ModelDrawer>("notext-spot",    Scale{1.f},    mm->get("spot"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("ogre",           Scale{1.f},    mm->get("ogre"),TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
+    // dm->add_drawer<tool::gl::ModelDrawer>("pig",            Scale{1.f},    mm->get("pig"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("dragon",         Scale{2.f},    mm->get("dragon"));
+    // // dm->add_drawer<tool::gl::ModelDrawer>("building",       Scale{1.f},    mm->get("building"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("crysis",         Scale{0.1f},   mm->get("crysis"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("alex",           Scale{0.01f},  mm->get("alex"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("rabbit",         Scale{3.f},    mm->get("rabbit"));
+    // dm->add_drawer<tool::gl::ModelDrawer>("storm",          Scale{0.01f},    mm->get("storm"));
 
 //    auto storm = std::make_shared<tool::gl::ModelDrawer>(mm->get("storm"));
 ////    storm->update_animation(mm->get_animation_name("storm",0), 0.f);
 //    dm->add_drawer("storm", storm, 0.01f);
 
+    Logger::message(("SUB.\n"));
+
     // ui drawers
-    uiDrawers = dm->sub({
-        "cube","torus","crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","spot","ogre"
+    uiDrawers2 = dm->sub({
+        "cube","torus"//,"crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","spot","ogre"
     });
 
-    dynamic_cast<gl::ModelDrawer*>(uiDrawers.get_element_ptr("storm"))->model()->display_hierarchy();
+    // dynamic_cast<gl::ModelDrawer*>(uiDrawers.get_element_ptr("storm"))->model()->display_hierarchy();
 
     Logger::message(("Drawers loaded.\n"));
     return true;
 }
 
 
-bool DrawSampleWindow::init_samples(){
+auto DrawSampleWindow::init_samples() -> bool{
 
     uiSamples.add_element("cloud", std::make_unique<CloudSample>(&m_camera));
     // ch3
@@ -375,7 +441,7 @@ bool DrawSampleWindow::init_samples(){
 
 
 
-bool DrawSampleWindow::initialize_gl(){
+auto DrawSampleWindow::initialize_gl() -> bool{
 
     // flags
     GL::enable(GL_MULTISAMPLE); // msaa
@@ -438,7 +504,7 @@ void DrawSampleWindow::draw_gl(){
     gl::FBO::unbind();
 
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
-        if(auto drawer = uiDrawers.get_current_element_ptr(); drawer != nullptr){
+        if(auto drawer = uiDrawers2.get_current_element_ptr(); drawer != nullptr){
             sample->draw(drawer);
         }
     }
@@ -499,12 +565,12 @@ void DrawSampleWindow::draw_imgui(){
     ImGui::Text("Drawer");
     ImGui::SameLine();
 
-    if(ImGui::BeginCombo("###Drawer", uiDrawers.get_current_alias().data())){
+    if(ImGui::BeginCombo("###Drawer", uiDrawers2.get_current_alias().data())){
 
-        for(size_t id = 0; id < uiDrawers.count(); ++id){
-            bool selected = id == uiDrawers.get_current_id();
-            if (ImGui::Selectable(uiDrawers.get_alias(id).value().data(), selected)){
-                uiDrawers.set_current_id(id);
+        for(size_t id = 0; id < uiDrawers2.count(); ++id){
+            bool selected = id == uiDrawers2.get_current_id();
+            if (ImGui::Selectable(uiDrawers2.get_alias(id).value().data(), selected)){
+                uiDrawers2.set_current_id(id);
             }
             if(selected){
                 ImGui::SetItemDefaultFocus();
@@ -516,12 +582,12 @@ void DrawSampleWindow::draw_imgui(){
     ImGui::SameLine();
 
     if(ImGui::Button("^###d^")){
-        uiDrawers.decrement_current_id();
+        uiDrawers2.decrement_current_id();
     }
     ImGui::SameLine();
 
     if(ImGui::Button("v###dv")){
-        uiDrawers.increment_current_id();
+        uiDrawers2.increment_current_id();
     }
 
     ImGui::Text("Sample");

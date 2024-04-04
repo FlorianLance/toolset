@@ -42,13 +42,17 @@ struct VAO{
     VAO& operator=(VAO&& other) = default;
     ~VAO();
 
-    auto generate() -> void;
+    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
+
+    auto initialize() -> void;
     auto clean() -> void;
 
     auto bind() const -> void;
     static auto unbind() -> void;
 
-    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
+    // auto bind_to_vertex_buffer_binding_point(GLuint vbo) -> void{
+
+    // }
 
 private:
 

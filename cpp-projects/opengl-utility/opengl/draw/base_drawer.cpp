@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -24,55 +25,74 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "quad_lines_drawer.hpp"
+#include "base_drawer.hpp"
 
 // base
 #include "utility/logger.hpp"
 
 // local
 #include "opengl/gl_functions.hpp"
-#include "lines_mesh_vao.hpp"
+#include "points_renderer.hpp"
+#include "lines_renderer.hpp"
+#include "triangles_renderer.hpp"
+#include "voxels_renderer.hpp"
+#include "opengl/texture/texture_buffer_object.hpp"
 
 using namespace tool::gl;
 
-static inline std::array<GLuint,8> indices = {
-    0, 1,
-    1, 2,
-    2, 3,
-    3, 0
-};
-
-QuadLinesDrawer::QuadLinesDrawer(){
-    BaseDrawer::vaoRenderer = std::make_unique<LinesMeshVAO>();
+BaseDrawer::BaseDrawer(DrawerType type) : m_type(type){
+    switch (m_type) {
+    case DrawerType::Points:{
+        m_vaoRenderer = std::make_unique<PointsRenderer>();
+    }break;
+    case DrawerType::Voxels:{
+        m_vaoRenderer = std::make_unique<VoxelsRenderer>();
+    }break;
+    case DrawerType::Lines:{
+        m_vaoRenderer = std::make_unique<LinesRenderer>();
+    }break;
+    case DrawerType::Triangles:{
+        m_vaoRenderer = std::make_unique<TrianglesRenderer>();
+    }break;
+    case ::DrawerType::Invalid:
+        Logger::error("[BaseDrawer] Invalid type.\n");
+        break;
+    }
 }
 
-auto QuadLinesDrawer::init(bool initColors) -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->clean();
-    lm->indicesBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
-    lm->positionBufferUsage = GL_DYNAMIC_STORAGE_BIT;
-    lm->colorBufferUsage    = GL_DYNAMIC_STORAGE_BIT;
-    lm->init_data(indices.size(), 4, initColors);
-    lm->update_indices(indices);
-}
+auto BaseDrawer::draw() -> void{
 
-auto QuadLinesDrawer::init_and_load(std::span<const geo::Pt3f,4> points, std::span<const geo::Pt3f> colors) -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->clean();
-    lm->init_and_load_data(indices, points, colors);
-}
-
-auto QuadLinesDrawer::update(std::span<const geo::Pt3f, 4> points, std::span<const geo::Pt3f> colors) -> void{        
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->update_data(points, colors);
-}
-
-auto QuadLinesDrawer::draw() -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    if(!lm->initialized()){
+    if(!m_vaoRenderer->initialized()){
         return;
     }
-    lm->bind();
-    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, indices.size(), GL_UNSIGNED_INT, nullptr, 1, 0, 0);
-    lm->unbind();
+
+    m_vaoRenderer->bind();
+
+    GLsizei count = m_vaoRenderer->indices_count();
+    if(nIndicesToDraw.has_value()){
+        count = std::min(nIndicesToDraw.value(), count);
+    }
+
+    switch (m_type) {
+    case DrawerType::Points:{
+        GL::draw_arrays_instance_base_instance(GL_POINTS, 0, count, 1, 0);
+    }break;
+    case DrawerType::Voxels:{
+        GL::draw_arrays_instance_base_instance(GL_POINTS, 0, count, 1, 0);
+    }break;
+    case DrawerType::Lines:{
+        GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, count, GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+    }break;
+    case DrawerType::Triangles:{
+        if(!texturesId.empty()){
+            TBO::bind(texturesId.values, 0);
+        }
+        GL::draw_elements_instanced_base_vertex_base_instance(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr, 1, 0, 0);
+    }break;
+    case ::DrawerType::Invalid:
+        Logger::error("[BaseDrawer::draw] Invalid type.\n");
+        break;
+    }
+
+    m_vaoRenderer->unbind();
 }

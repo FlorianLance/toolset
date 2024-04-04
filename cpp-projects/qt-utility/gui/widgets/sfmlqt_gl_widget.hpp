@@ -41,12 +41,12 @@
 #include "geometry/matrix4.hpp"
 #include "utility/vector.hpp"
 #include "graphics/camera/camera.hpp"
+#include "geometry/point4.hpp"
 
 // opengl-utility
 #include "opengl/vao.hpp"
 #include "opengl/buffer/vertex_buffer_object.hpp"
-#include "opengl/buffer/element_buffer_object.hpp"
-#include "opengl/shader/shader.hpp"
+#include "opengl/shader/shader_object.hpp"
 #include "opengl/gl_draw.hpp"
 
 // local
@@ -72,10 +72,10 @@ public:
 
         // generate
         if(!generated){
-            vao.generate();
-            pos.generate();
-            col.generate();
-            ebo.generate();
+            vao.initialize();
+            pos.initialize();
+            col.initialize();
+            ebo.initialize();
             generated = true;
         }
     }
@@ -96,7 +96,8 @@ public:
         col.load_data(reinterpret_cast<float*>(colors), GLsizeiptr(sizePts * 3 * sizeof(float)));
         col.attrib(AttriIndex{1}, AttriSize{3}, AttriType{GL_FLOAT}, Stride{3 * sizeof(float)});
 
-        ebo.bind();
+
+        GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, ebo.id());
         ebo.load_data(reinterpret_cast<std::uint32_t*>(triangles), GLsizeiptr(sizeTri*3*sizeof (std::uint32_t)));
 
         initialized = true;
@@ -115,7 +116,7 @@ public:
     VAO vao;
     VBO pos;
     VBO col;
-    EBO ebo;
+    VBO ebo;
 
     VerticesCount count;
     bool generated = false;
@@ -171,9 +172,9 @@ public:
             -0.5f,  0.5f,  0.5f,
             -0.5f,  0.5f, -0.5f,
         };
-
-        vao.generate();
-        vbo.generate();
+        
+        vao.initialize();
+        vbo.initialize();
 
         // update buffers
         vao.bind();
@@ -209,10 +210,10 @@ public:
             geo::Pt4f{0.f,1.f,0.f,1.f},geo::Pt4f{0.f,1.f,0.f,1.f},
             geo::Pt4f{0.f,0.f,1.f,1.f},geo::Pt4f{0.f,0.f,1.f,1.f}
         };
-
-        vao.generate();
-        pos.generate();
-        col.generate();
+        
+        vao.initialize();
+        pos.initialize();
+        col.initialize();
 
         // update buffers
         vao.bind();
@@ -248,9 +249,9 @@ public:
             linesPts.emplace_back(geo::Pt3f{-10.f+ii*0.2f,0.f,-10.f});
             linesPts.emplace_back(geo::Pt3f{-10.f+ii*0.2f,0.f,+10.f});
         }
-
-        vao.generate();
-        pos.generate();
+        
+        vao.initialize();
+        pos.initialize();
 
         // update buffers
         vao.bind();

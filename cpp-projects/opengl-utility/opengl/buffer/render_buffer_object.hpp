@@ -40,10 +40,11 @@ struct RBO{
     RBO& operator=(RBO&& other) = default;
     ~RBO();
 
-    auto generate() -> void;
+    auto initialize() -> void;
     auto clean() -> void;
 
-    constexpr auto id() const noexcept -> GLuint {return m_id;}
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint     {return m_handle;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
 
     auto bind() -> void;
     static auto unbind() -> void;
@@ -53,7 +54,7 @@ struct RBO{
 
 private:
 
-    GLuint m_id = 0;
+    GLuint m_handle = 0;
 };
 }
 

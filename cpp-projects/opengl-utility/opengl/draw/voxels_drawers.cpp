@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
@@ -24,20 +25,35 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "voxels_drawers.hpp"
 
 // base
-#include "graphics/mesh.hpp"
+#include "utility/logger.hpp"
 
 // local
-#include "base_drawer.hpp"
+#include "voxels_renderer.hpp"
 
-namespace tool::gl {
+using namespace tool::geo;
+using namespace tool::gl;
 
-class MeshDrawer2 : public BaseDrawer{
-public:
-    MeshDrawer2();
-    auto init_and_load(const graphics::Mesh &mesh) -> void;
-    auto draw() -> void override final;
-};
+auto VoxelsDrawer2::initialize(bool dynamic, std::span<const geo::Pt3<int>> vertices, std::span<const geo::Pt3f> colors) -> void{
+
+    auto vm = dynamic_cast<VoxelsRenderer*>(m_vaoRenderer.get());
+    if(dynamic){
+        vm->positionBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
+        vm->colorBufferUsage     = GL_DYNAMIC_STORAGE_BIT;
+    }
+    vm->initialize(!colors.empty());
+    if(!vm->load_data(vertices, colors)){
+        Logger::error("[VoxelsDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto VoxelsDrawer2::update(std::span<const geo::Pt3<int>> vertices, std::span<const geo::Pt3f> colors) -> void{
+
+    auto vm = dynamic_cast<VoxelsRenderer*>(m_vaoRenderer.get());
+    if(!vm->update_data(vertices, 0, colors, 0)){
+        Logger::error("[VoxelsDrawer::update] Error during update.\n"sv);
+        return;
+    }
 }

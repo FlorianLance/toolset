@@ -40,6 +40,7 @@ struct DCConfigSettings : io::BinaryFileSettings{
     // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
+    // std::string strIdDevice = "";
     DCMode mode = dc_default_mode(typeDevice);
 
     // synch

@@ -26,13 +26,27 @@
 
 #pragma once
 
-
+// base
+// #include "utility/unordered_map.hpp"
 
 // local
 #include "opengl/vao.hpp"
 #include "opengl/buffer/vertex_buffer_object.hpp"
 
+
 namespace tool::gl{
+
+// enum class BufferType : std::int8_t{
+//     Index, Vertex, Normal, TextureCoords, Tangent, Bones, Color
+// };
+// struct BufferInfo{
+//     bool enabled = false;
+//     GLuint bindindId = 0;
+//     GLuint location = 0;
+//     GLbitfield usage = 0;
+//     VBO buffer;
+// };
+
 
 class VAORenderer{
 public:
@@ -47,12 +61,14 @@ public:
     auto unbind() const -> void{
         VAO::unbind();
     }
+    
+    [[nodiscard]] constexpr auto initialized()      const noexcept -> bool      {return m_buffersInitialized;}
+    [[nodiscard]] constexpr auto data_loaded()      const noexcept -> bool      {return m_dataLoaded;}
+    [[nodiscard]] constexpr auto ready_to_draw()    const noexcept -> bool      {return initialized() && data_loaded();}
+    [[nodiscard]] constexpr auto vertices_count()   const noexcept -> GLsizei   {return m_nbVertices;}
+    [[nodiscard]] constexpr auto indices_count()    const noexcept -> GLsizei   {return m_nbIndices;}
 
-    [[nodiscard]] constexpr auto initialized() const noexcept -> bool{ return buffersInitialized;}
-    [[nodiscard]] constexpr auto allocated_indices_count() const noexcept -> GLsizei{return nIndicesAllocated;}
-    // [[nodiscard]] constexpr auto nb_indices_to_draw() const noexcept -> GLsizei{return nIndicesToDraw;}
-
-    // TODO: remove
+    // ### TODO: remove
     virtual auto render() const -> void{}
     virtual auto render_instances(int count, int baseId = 0) const -> void {
         static_cast<void>(count);
@@ -60,14 +76,19 @@ public:
     }
     virtual auto render_adjacency() const -> void {}
     virtual auto render_patches() const -> void{}
+    // ###
 
 protected:
 
     VAO vao;
     VBO pointsB;
-    GLsizei nIndicesAllocated = 0;
-    // GLsizei nIndicesToDraw = 0;
-    bool buffersInitialized = false;
+    GLsizei m_nbVertices = 0;
+    GLsizei m_nbIndices = 0;
+    
+    bool m_buffersInitialized   = false;
+    bool m_dataLoaded           = false;
+
+    // umap<BufferType, BufferInfo> bInfos;
 };
 
 }

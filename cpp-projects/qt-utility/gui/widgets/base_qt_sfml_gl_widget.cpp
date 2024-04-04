@@ -33,6 +33,9 @@
 // opengl-utility
 #include "opengl/gl_functions.hpp"
 
+// local
+#include "qt_logger.hpp"
+
 using namespace tool;
 using namespace tool::gl;
 
@@ -86,6 +89,7 @@ auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
     GL::display_glew_info();
 
     // init gl
+    QtLogger::message("BaseQtSfmlGlWidget::on_init");
     if(!on_init()){
         return;
     }

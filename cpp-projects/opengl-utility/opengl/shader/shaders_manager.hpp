@@ -37,34 +37,31 @@ namespace tool::graphics {
 
 class ShadersManager{
 
-    using Alias  = std::string;
-    using AliasV = std::string_view;
-    using Path   = std::string;
-    using PathV  = std::string_view;
-
 public:
 
     ~ShadersManager();
-
     static auto get_instance() -> ShadersManager*;
 
-    auto load_shader(const Alias &alias, const std::vector<std::string> &paths) -> bool;
-    auto reload_shader(AliasV alias) -> std::shared_ptr<gl::ShaderProgram>;
+    auto load_shader(const std::string &alias, std::span<const std::string> paths) -> bool;
+    auto add_shader(const std::string &alias, gl::ShaderProgram&& shader) -> void;
+
+    auto reload_shader(std::string_view alias) -> std::shared_ptr<gl::ShaderProgram>;
     auto reload_shader(gl::ShaderProgram *shader) -> std::shared_ptr<gl::ShaderProgram>;
     auto reload_all_shaders() -> void;
-    auto add_shader(const Alias &alias, gl::ShaderProgram&& shader) -> void;
 
-    auto get_shader(AliasV alias) const noexcept -> std::weak_ptr<gl::ShaderProgram>;
-    auto get_ptr(AliasV alias) -> gl::ShaderProgram*;
-    auto get_all_aliases() const noexcept -> std::vector<std::string_view>;
+    auto get_shader(std::string_view alias) const noexcept -> std::weak_ptr<gl::ShaderProgram>;
+    auto get_ptr(std::string_view alias) -> gl::ShaderProgram*;
+    auto all_aliases() const noexcept -> std::span<const std::string_view>;
 
     auto unbind() -> void;
 
-    auto debug() -> void;
+    auto display_all() -> void;
 
 private:
 
-    s_umap<Alias, std::shared_ptr<gl::ShaderProgram>> shaders;    
+    std::vector<std::unique_ptr<std::string>> aliases;
+    std::vector<std::string_view> aliasesV;
+    s_umap<std::string_view, std::shared_ptr<gl::ShaderProgram>> shaders;
 };
 
 }

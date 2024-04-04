@@ -22,18 +22,9 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
-// std
-#include <iostream>
-
-// opgenl
-#include "opengl/texture/texture_buffer_object.hpp"
 
 // glfw
 #include "glfw/glfw_gl_windows.hpp"
-
-#include "opengl/shapes.hpp"
-#include "opengl/draw/drawer.hpp"
-#include "opengl/draw/vao_renderer.hpp"
 
 
 int main(){

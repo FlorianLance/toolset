@@ -157,38 +157,47 @@ using Res   = geo::Pt2<int>;
 using MaxFPS= DCFramerate;
 using FPS   = DCFramerate;
 using DRes  = DCDepthResolution;
-using DeviceValue = int;
+using FovH        = int;
+using FovV        = int;
 
 using TDCDepthRes = std::tuple<
-    DRes,                   Res,         Range,          MaxFPS,         DeviceValue>;
+    DRes,                   Res,         Range,          MaxFPS,        FovH,  FovV>;
 static constexpr TupleArray<DCDepthResolution::SizeEnum, TDCDepthRes> dcDepthRes = {{
     // cloud
     TDCDepthRes
-    {DRes::OFF,             {0,0},       {0.f,0.f},      FPS::Undefined, 0},
-    {DRes::K4A_320x288,     {320,288},   {0.5f,5.46f},   FPS::F30,       0},
-    {DRes::K4A_640x576,     {640,576},   {0.5f,3.86f},   FPS::F30,       0},
-    {DRes::K4A_512x512,     {512,512},   {0.25f,2.88f},  FPS::F30,       0},
-    {DRes::K4A_1024x1024,   {1024,1024}, {0.25f,2.21f},  FPS::F15,       0},
+    {DRes::OFF,             {0,0},       {0.f,0.f},      FPS::Undefined, 0,     0},
+    {DRes::K4A_320x288,     {320,288},   {0.5f,5.46f},   FPS::F30,       75,    65},
+    {DRes::K4A_640x576,     {640,576},   {0.5f,3.86f},   FPS::F30,       75,    65},
+    {DRes::K4A_512x512,     {512,512},   {0.25f,2.88f},  FPS::F30,       120,   120},
+    {DRes::K4A_1024x1024,   {1024,1024}, {0.25f,2.21f},  FPS::F15,       120,   120},
 }};
 
-[[maybe_unused]] static constexpr auto dc_depth_width(DCDepthResolution r) -> int{
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_width(DCDepthResolution r) -> int{
     return dcDepthRes.at<0,1>(r).x();
 }
 
-[[maybe_unused]] static constexpr auto dc_depth_height(DCDepthResolution r) -> int{
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_height(DCDepthResolution r) -> int{
     return dcDepthRes.at<0,1>(r).y();
 }
 
-[[maybe_unused]] static constexpr auto dc_depth_size(DCDepthResolution r) -> int{
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_size(DCDepthResolution r) -> int{
     return dc_depth_width(r)*dc_depth_height(r);
 }
 
-[[maybe_unused]] static constexpr auto dc_depth_range(DCDepthResolution r) -> Range{
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_range(DCDepthResolution r) -> Range{
     return dcDepthRes.at<0,2>(r);
 }
 
-[[maybe_unused]] static constexpr auto dc_depth_max_fps(DCDepthResolution r) -> FPS{
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_max_fps(DCDepthResolution r) -> FPS{
     return dcDepthRes.at<0,3>(r);
+}
+
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_h_fov(DCDepthResolution r) -> int{
+    return dcDepthRes.at<0,4>(r);
+}
+
+[[nodiscard]] [[maybe_unused]] static constexpr auto dc_depth_v_fov(DCDepthResolution r) -> int{
+    return dcDepthRes.at<0,5>(r);
 }
 
 // camera mode
@@ -496,7 +505,7 @@ static constexpr TupleArray<DCType::SizeEnum, TDCDevices> dcDevices = {{
     {DCType::FemtoBolt,     false,      true,       false,              false,          true,    DCMode::FB_C1280x720_DI640x576_NV12_F30},
     {DCType::FemtoMega,     false,      true,       false,              false,          true,    DCMode::FM_C1280x720_DI640x576_MJPG_F30},
     {DCType::Kinect2,       true,       true,       false,              false,          false,   DCMode::Invalid},
-    {DCType::Recording,     true,       true,       false,              false,          false,   DCMode::Invalid},
+    {DCType::Recording,     true,       true,       false,              false,          true,    DCMode::Invalid},
     {DCType::Undefined,     false,      false,      false,              false,          false,   DCMode::Invalid},
 }};
 

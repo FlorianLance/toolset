@@ -44,6 +44,7 @@ include(../ts-dependencies.pri)
 HEADERS += \
     # io    
     data/checksum.hpp \
+    depth-camera/impl/recording_device_impl.hpp \
     graphics/mesh_generation.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
@@ -298,6 +299,7 @@ HEADERS += \
 
 SOURCES += \
     # io
+    depth-camera/impl/recording_device_impl.cpp \
     graphics/mesh_generation.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \

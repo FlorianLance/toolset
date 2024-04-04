@@ -28,13 +28,14 @@
 // std
 #include <string>
 #include <vector>
+#include <span>
 
 namespace tool{
 
 struct String{
 
-    static auto join(const std::vector<std::string> &parts) -> std::string;
-    static auto join(const std::vector<std::string> &parts, const std::string &sep) -> std::string;
+    static auto join(std::span<const std::string> parts) -> std::string;
+    static auto join(std::span<const std::string> parts, const std::string &sep) -> std::string;
     static auto remove_from_left(std::string &str, char delim) -> void;
     static auto remove_from_right(std::string &str, char delim) -> void;
     static auto remove_after_right(std::string &str, char delim) -> void;

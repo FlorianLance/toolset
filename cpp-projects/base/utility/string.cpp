@@ -32,11 +32,11 @@
 #include <sstream>
 #include <charconv>
 
-auto tool::String::join(const std::vector<std::string> &parts) -> std::string{
+auto tool::String::join(std::span<const std::string> parts) -> std::string{
     return std::accumulate(parts.begin(), parts.end(), std::string{});
 }
 
-auto tool::String::join(const std::vector<std::string> &parts, const std::string &delim) -> std::string{
+auto tool::String::join(std::span<const std::string> parts, const std::string &delim) -> std::string{
 
     if (parts.empty()){
         return std::string();

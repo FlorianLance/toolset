@@ -32,9 +32,9 @@ auto DCCalibratorDrawer::initialize(size_t nbGrabbers) -> void{
     DCCloudsSceneDrawer::initialize(2*nbGrabbers);
 
     for(size_t ii = 0; ii < nbGrabbers; ++ii){
-        auto &cdC = cloudsD[ii].display;
+        auto &cdC = cloudsD[ii]->display;
         cdC.forceCloudColor = true;
-        auto &cdP = cloudsD[nbGrabbers  + ii].display;
+        auto &cdP = cloudsD[nbGrabbers  + ii]->display;
         cdP.forceCloudColor = true;
     }
 }
@@ -54,10 +54,10 @@ auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DC
 
         auto visibilty = (ii == modelId) || (ii == sourceId) || allSelection;
 
-        auto &cdC = cloudsD[ii].display;
+        auto &cdC = cloudsD[ii]->display;
         cdC.cloudVisible = m_settings.displayCalibrationCloud && visibilty;
 
-        auto &cdP = cloudsD[grabbersData->size()  + ii].display;
+        auto &cdP = cloudsD[grabbersData->size()  + ii]->display;
         cdP.cloudVisible = m_settings.displayProcessedCloud && visibilty;
     }
     m_redrawClouds = true;
@@ -76,21 +76,21 @@ auto DCCalibratorDrawer::draw() -> void{
 auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const cam::DCModelSettings &model) -> void{
 
     auto tr = model.compute_full_transformation();
-    cloudsD[idGrabber].model                      = tr;
-    cloudsD[(cloudsD.size()/2) + idGrabber].model = tr;
+    cloudsD[idGrabber]->model                      = tr;
+    cloudsD[(cloudsD.size()/2) + idGrabber]->model = tr;
     m_redrawClouds = true;
 }
 
 auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCCloudDisplaySettings &cloudDisplay) -> void{
 
-    auto &cdC = cloudsD[idGrabber].display;
+    auto &cdC = cloudsD[idGrabber]->display;
     cdC.forceCloudColor = true;
     cdC.cloudColor = cloudDisplay.cloudColor;
     cdC.sizePoints = cloudDisplay.sizePoints;
     cdC.useVoxels  = cloudDisplay.useVoxels;
     cdC.sizeVoxels = cloudDisplay.sizeVoxels;
 
-    auto &cdP = cloudsD[(cloudsD.size()/2)  + idGrabber].display;
+    auto &cdP = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
     cdP.cloudColor = cloudDisplay.cloudColor * 0.5f;
     cdP.sizePoints = cloudDisplay.sizePoints * 2.f;
     cdP.useVoxels  = cloudDisplay.useVoxels;

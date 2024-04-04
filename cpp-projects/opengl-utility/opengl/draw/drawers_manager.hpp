@@ -30,7 +30,7 @@
 #include "utility/id_alias_map.hpp"
 
 // local
-#include "drawer.hpp"
+#include "base_drawer.hpp"
 
 namespace tool::graphics {
 
@@ -48,26 +48,29 @@ public:
 
     static auto get_instance() -> DrawersManager*;
 
-    template <typename D, typename... A>
-    auto add_drawer(const Alias &alias, Scale scaleHint, A&&... args){
-        add_drawer(alias, std::make_shared<D>(std::forward<A>(args)...), scaleHint.v);
-    }
-    auto add_drawer(const Alias &alias, std::shared_ptr<gl::Drawer> drawer, float scaleHint = 1.f) -> void;
+    // template <typename D, typename... A>
+    // auto add_drawer(const Alias &alias, Scale scaleHint, A&&... args){
+    //     add_drawer(alias, std::make_shared<D>(std::forward<A>(args)...), scaleHint.v);
+    // }
+    // auto add_drawer(const std::string &alias, std::shared_ptr<gl::Drawer> drawer, float scaleHint = 1.f) -> void;
+    auto add_drawer(const std::string &alias, std::shared_ptr<gl::BaseDrawer> drawer, float scaleHint = 1.f) -> void;
 
-    auto get_drawer(AliasV alias) const noexcept -> std::weak_ptr<gl::Drawer>;
-    auto get_alias(Id id) const noexcept -> AliasV;
-    auto get_id(AliasV alias) const -> size_t;
-    inline auto count() const noexcept -> size_t{return drawers.count();}
+    auto get_drawer(std::string_view alias) const noexcept -> std::weak_ptr<gl::BaseDrawer>;
+    auto get_alias(Id id) const noexcept -> std::string_view;
+    auto get_id(std::string_view alias) const -> size_t;
+    inline auto count() const noexcept -> size_t{return drawers2.count();}
 
-    auto draw(AliasV alias, gl::ShaderProgram *shader = nullptr) -> void;
+    auto draw(std::string_view alias, gl::ShaderProgram *shader = nullptr) -> void;
 
-    auto sub(std::vector<std::string_view> aliases) const -> IdAliasMapSharedPtr<gl::Drawer>;
+    auto sub(std::vector<std::string_view> aliases) const -> IdAliasMapSharedPtr<gl::BaseDrawer>;
 
     auto debug() -> void;
 private:
 
-    IdAliasMapSharedPtr<gl::Drawer> drawers;
+    // IdAliasMapSharedPtr<gl::Drawer> drawers;
+    IdAliasMapSharedPtr<gl::BaseDrawer> drawers2;
 };
 }
+
 
 

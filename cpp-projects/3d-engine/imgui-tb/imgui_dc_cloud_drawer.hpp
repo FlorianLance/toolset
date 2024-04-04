@@ -33,7 +33,9 @@
 
 // opengl
 #include "opengl/texture/texture_2d_tbo.hpp"
-#include "opengl/draw/drawer.hpp"
+#include "opengl/draw/points_drawers.hpp"
+#include "opengl/draw/triangles_drawers.hpp"
+#include "opengl/draw/lines_drawers.hpp"
 
 // local
 #include "imgui_texture_ui_drawer.hpp"
@@ -46,18 +48,6 @@ struct DCCloudDrawer{
     std::int32_t lastFrameId = -1;
     std::shared_ptr<cam::DCFrame> lastFrame = nullptr;
 
-    // drawers
-    gl::CloudPointsDrawer cpD;
-    ImGuiTextureUiDrawer colorD;
-    ImGuiTextureUiDrawer depthD;
-    ImGuiTextureUiDrawer infraD;
-    gl::SphereDrawer spD;
-
-    // settings
-    geo::Mat4f model = geo::Mat4f::identity();
-    cam::DCFiltersSettings filters;
-    DCCloudDisplaySettings display;
-
     // joints sub models
     size_t nbBodies = 0;
     std::vector<std::array<std::tuple<bool,geo::Mat4f>, cam::dcJointsCount>> jointsModels;
@@ -67,6 +57,19 @@ struct DCCloudDrawer{
     gl::Texture2D depthSizedColorT;
     gl::Texture2D depthT;
     gl::Texture2D infraT;
+
+    // drawers
+    gl::CloudPointsDrawer5 cpD;
+    ImGuiTextureUiDrawer colorD;
+    ImGuiTextureUiDrawer depthD;
+    ImGuiTextureUiDrawer infraD;
+    gl::SphereTrianglesDrawer spD;
+    gl::FrustumDrawerLinesDrawer frustumD;
+
+    // settings
+    geo::Mat4f model = geo::Mat4f::identity();
+    cam::DCFiltersSettings filters;
+    DCCloudDisplaySettings display;
 
     // init
     auto initialize() -> void;

@@ -55,7 +55,12 @@ public:
         }
 
         gl = std::make_unique<gl::ShaderProgram>();
-        return gl->load_from_source_code({{Shader::Type::vertex, vertexCode.toStdString().c_str()}, {Shader::Type::fragment, fragmentCode.toStdString().c_str()}});
+
+        std::array elems = {
+            std::make_tuple(ShaderType::vertex,   vertexCode.toStdString()),
+            std::make_tuple(ShaderType::fragment, fragmentCode.toStdString())
+        };
+        return gl->load_from_source_code(elems);
     }
 
     std::unique_ptr<gl::ShaderProgram> gl = nullptr;

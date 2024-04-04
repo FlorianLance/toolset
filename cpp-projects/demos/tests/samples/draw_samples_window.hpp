@@ -22,31 +22,32 @@ public:
 
 private:
 
-    void update() override;
 
     // gl
-    bool initialize_gl() override;
+    auto initialize_gl() -> bool override;
     void draw_gl() override;    
     // imgui
     void draw_imgui() override;
     // # window
     void resize_windows() override;
 
+    void update() override;
+
     // managers
-    bool init_textures();
-    bool init_shaders();
-    bool init_models();
-    bool init_drawers();
+    auto init_models() -> bool;
+    auto init_textures() -> bool;
+    auto init_shaders() -> bool;
+    auto init_drawers() -> bool;
+
     bool init_samples();
 
-    geo::ColoredCloudData cloud;
 
 protected:
 
     // imgui
     ImPlotContext *imPlotContext = nullptr;
 
-    IdAliasMapSharedPtr<gl::Drawer> uiDrawers;
+    IdAliasMapSharedPtr<gl::BaseDrawer> uiDrawers2;
     IdAliasMapUniquePtr<Sample> uiSamples;
 
     bool m_showDemoWindow = false;

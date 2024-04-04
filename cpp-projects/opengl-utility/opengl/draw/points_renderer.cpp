@@ -24,7 +24,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "points_mesh_vao.hpp"
+#include "points_renderer.hpp"
 
 // base
 #include "utility/logger.hpp"
@@ -36,18 +36,195 @@ using namespace tool::geo;
 using namespace tool::gl;
 
 
-auto PointsMeshVAO::generate_vbo() -> void{
+auto PointsRenderer::initialize(bool hasColors, bool hasNormals) -> void{
 
-    pointsB.generate();
+    if(m_buffersInitialized){
+        clean();
+    }
+
+    m_hasColors  = hasColors;
+    m_hasNormals = hasNormals;
+
+    vao.initialize();
+    generate_vbo();
+
+    vertex_array_vertex_buffer();
+    vertex_array_attrib_format();
+    enable_vertex_array_attrib();
+    vertex_array_attrib_binding();
+
+    m_buffersInitialized = true;
+}
+
+
+auto PointsRenderer::clean() -> void{
+
+    vao.clean();
+
+    pointsB.clean();
+    colorsB.clean();
+    normalsB.clean();
+
+    m_buffersInitialized = false;
+
+    m_nbIndices = 0;
+    m_nbVertices = 0;
+
+    m_hasColors = false;
+    m_hasNormals = false;
+
+    positionBufferUsage = 0;
+    colorBufferUsage = 0;
+    normalBufferUsage = 0;
+}
+
+
+auto PointsRenderer::load_data(
+    std::span<const geo::Pt3f> vertices,
+    std::span<const geo::Pt3f> colors,
+    std::span<const geo::Pt3f> normals
+    ) -> bool{
+
+    if(!vertices.empty()){
+        pointsB.load_data(
+            reinterpret_cast<const GLfloat*>(vertices.data()),
+            static_cast<GLsizeiptr>(vertices.size()*3*sizeof(GLfloat)),
+            positionBufferUsage
+        );
+        m_nbVertices = static_cast<GLsizei>(vertices.size());
+        m_nbIndices  = m_nbVertices;
+    }
+
+    if(m_nbVertices == 0){
+        Logger::error("[PointsRenderer::load_data] No vertices.\n");
+        return false;
+    }
+
+    if(m_hasColors && (!colors.empty())){
+        if(colors.size() == m_nbVertices){
+            colorsB.load_data(
+                reinterpret_cast<const GLfloat*>(colors.data()),
+                static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat)),
+                colorBufferUsage
+            );
+        }else{
+            Logger::error("[PointsRenderer::load_data] Invalid color buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasNormals && (!normals.empty())){
+        if(normals.size() == m_nbVertices){
+            normalsB.load_data(
+                reinterpret_cast<const GLfloat*>(normals.data()),
+                static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+                normalBufferUsage
+            );
+        }else{
+            Logger::error("[PointsRenderer::load_data] Invalid normal buffer size.\n");
+            return false;
+        }
+    }
+
+    m_dataLoaded = true;
+
+    return true;
+}
+
+auto PointsRenderer::update_data(
+    std::span<const Pt3f> vertices, size_t verticesOffset ,
+    std::span<const Pt3f> colors,   size_t colorsOffset,
+    std::span<const Pt3f> normals,  size_t normalsOffset
+    ) -> bool{
+
+    if(!initialized()){
+        Logger::error("[PointsRenderer::update_data] Buffers must be initialized.\n");
+        return false;
+    }
+
+    if(!data_loaded()){
+        Logger::error("[PointsRenderer::update_data] Data must be loaded.\n");
+        return false;
+    }
+
+    if(m_nbVertices == 0){
+        Logger::error("[PointsRenderer::update_data] No vertices.\n");
+        return false;
+    }
+
+    if(!vertices.empty()){
+
+        if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[PointsRenderer::update_data] Vertex buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((verticesOffset + vertices.size()*3) <= m_nbVertices*3){
+            pointsB.update_data(
+                reinterpret_cast<const GLfloat*>(vertices.data()),
+                static_cast<GLsizeiptr>(vertices.size()*3*sizeof(GLfloat)),
+                static_cast<GLintptr>(verticesOffset)
+            );
+        }else{
+            Logger::error("[PointsRenderer::update_data] Invalid vertex buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasColors && (!colors.empty())){
+
+        if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((colorsOffset + colors.size()*3) <= m_nbVertices*3){
+            colorsB.update_data(
+                reinterpret_cast<const GLfloat*>(colors.data()),
+                static_cast<GLsizeiptr>(colors.size()*3*sizeof(GLfloat)),
+                static_cast<GLintptr>(colorsOffset)
+            );
+        }else{
+            Logger::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
+            return false;
+        }
+    }
+
+    if(m_hasNormals && (!normals.empty())){
+
+        if(!(normalBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
+            Logger::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
+            return false;
+        }
+
+        if((normalsOffset + normals.size()*3) <= m_nbVertices*3){
+            normalsB.update_data(
+                reinterpret_cast<const GLfloat*>(normals.data()),
+                static_cast<GLsizeiptr>(normals.size()*3*sizeof(GLfloat)),
+                static_cast<GLintptr>(normalsOffset)
+            );
+        }else{
+            Logger::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+auto PointsRenderer::generate_vbo() -> void{
+
+    pointsB.initialize();
     if(m_hasColors){
-        colorsB.generate();
+        colorsB.initialize();
     }
     if(m_hasNormals){
-        normalsB.generate();
+        normalsB.initialize();
     }
 }
 
-auto PointsMeshVAO::vertex_array_vertex_buffer_for_2d_points() -> void{
+auto PointsRenderer::vertex_array_vertex_buffer_for_2d_points() -> void{
 
     GL::vertex_array_vertex_buffer(
         vao.id(),
@@ -76,7 +253,7 @@ auto PointsMeshVAO::vertex_array_vertex_buffer_for_2d_points() -> void{
     }
 }
 
-auto PointsMeshVAO::vertex_array_vertex_buffer_for_3d_points() -> void{
+auto PointsRenderer::vertex_array_vertex_buffer() -> void{
 
     GL::vertex_array_vertex_buffer(
         vao.id(),
@@ -105,7 +282,7 @@ auto PointsMeshVAO::vertex_array_vertex_buffer_for_3d_points() -> void{
     }
 }
 
-auto PointsMeshVAO::vertex_array_vertex_buffer_for_3d_voxels() -> void{
+auto PointsRenderer::vertex_array_vertex_buffer_for_3d_voxels() -> void{
 
     GL::vertex_array_vertex_buffer(
         vao.id(),
@@ -125,7 +302,7 @@ auto PointsMeshVAO::vertex_array_vertex_buffer_for_3d_voxels() -> void{
     }
 }
 
-auto PointsMeshVAO::vertex_array_attrib_format_for_2d_points() -> void{
+auto PointsRenderer::vertex_array_attrib_format_for_2d_points() -> void{
 
     GL::vertex_array_attrib_format(
         vao.id(),
@@ -158,7 +335,7 @@ auto PointsMeshVAO::vertex_array_attrib_format_for_2d_points() -> void{
 }
 
 
-auto PointsMeshVAO::vertex_array_attrib_format_for_3d_points() -> void{
+auto PointsRenderer::vertex_array_attrib_format() -> void{
 
     GL::vertex_array_attrib_format(
         vao.id(),
@@ -190,7 +367,7 @@ auto PointsMeshVAO::vertex_array_attrib_format_for_3d_points() -> void{
     }
 }
 
-auto PointsMeshVAO::vertex_array_attrib_format_for_3d_voxels() -> void{
+auto PointsRenderer::vertex_array_attrib_format_for_3d_voxels() -> void{
 
     GL::vertex_array_attrib_format(
         vao.id(),
@@ -213,7 +390,7 @@ auto PointsMeshVAO::vertex_array_attrib_format_for_3d_voxels() -> void{
     }
 }
 
-auto PointsMeshVAO::enable_vertex_array_attrib() -> void{
+auto PointsRenderer::enable_vertex_array_attrib() -> void{
 
     GL::enable_vertex_array_attrib(
         vao.id(),
@@ -235,7 +412,7 @@ auto PointsMeshVAO::enable_vertex_array_attrib() -> void{
 
 
 
-auto PointsMeshVAO::vertex_array_attrib_binding() -> void{
+auto PointsRenderer::vertex_array_attrib_binding() -> void{
 
     GL::vertex_array_attrib_binding(
         vao.id(),
@@ -259,21 +436,21 @@ auto PointsMeshVAO::vertex_array_attrib_binding() -> void{
 }
 
 
-auto PointsMeshVAO::init_3d_points(size_t size, bool hasColors, bool hasNormals) -> void{
+auto PointsRenderer::initialize(size_t size, bool hasColors, bool hasNormals) -> void{
 
     if(size == 0){
         Logger::error("[PointsMesh::init_3d_points] No points.\n");
         return;
     }
-
-    if(buffersInitialized){
+    
+    if(m_buffersInitialized){
         clean();
     }
 
     m_hasColors  = hasColors;
     m_hasNormals = hasNormals;
 
-    vao.generate();
+    vao.initialize();
     generate_vbo();
 
     // load vbo
@@ -300,30 +477,30 @@ auto PointsMeshVAO::init_3d_points(size_t size, bool hasColors, bool hasNormals)
         );
     }
 
-    vertex_array_vertex_buffer_for_3d_points();
-    vertex_array_attrib_format_for_3d_points();
+    vertex_array_vertex_buffer();
+    vertex_array_attrib_format();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-
-    nIndicesAllocated = static_cast<GLsizei>(size);
-    buffersInitialized = true;
+    
+    m_nbIndices = static_cast<GLsizei>(size);
+    m_buffersInitialized = true;
 }
 
-auto PointsMeshVAO::init_and_load_2d_points(std::span<const Pt2f> points, std::span<const Pt3f> colors, std::span<const Pt2f> normals) -> void {
+auto PointsRenderer::init_and_load_2d_points(std::span<const Pt2f> points, std::span<const Pt3f> colors, std::span<const Pt2f> normals) -> void {
 
     if(points.empty()){
         Logger::error("[PointsMesh::init_and_load_2d_points] No points.\n");
         return;
     }
-
-    if(buffersInitialized){
+    
+    if(m_buffersInitialized){
         clean();
     }
 
     m_hasColors  = colors.size() == points.size();
     m_hasNormals = normals.size() == points.size();
 
-    vao.generate();
+    vao.initialize();
     generate_vbo();
 
     // load vbo
@@ -351,15 +528,15 @@ auto PointsMeshVAO::init_and_load_2d_points(std::span<const Pt2f> points, std::s
     vertex_array_attrib_format_for_2d_points();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-
-    nIndicesAllocated  = static_cast<GLsizei>(points.size());
-    buffersInitialized = true;
+    
+    m_nbIndices  = static_cast<GLsizei>(points.size());
+    m_buffersInitialized = true;
     VAO::unbind();
 }
 
-auto PointsMeshVAO::update_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals, GLintptr offset) -> void{
-
-    if(!buffersInitialized){
+auto PointsRenderer::update_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals, GLintptr offset) -> void{
+    
+    if(!m_buffersInitialized){
         Logger::error("[PointsMesh::load_3d_points] Buffer not initialized.\n");
         return;
     }
@@ -387,21 +564,21 @@ auto PointsMeshVAO::update_3d_points(std::span<const geo::Pt3f> points, std::spa
     }
 }
 
-auto PointsMeshVAO::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
+auto PointsRenderer::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
 
     if(points.empty()){
         Logger::error("[PointsMesh::init_and_load_3d_points] No points.\n");
         return;
     }
-
-    if(buffersInitialized){
+    
+    if(m_buffersInitialized){
         clean();
     }
 
     m_hasColors  = colors.size() == points.size();
     m_hasNormals = normals.size() == points.size();
 
-    vao.generate();
+    vao.initialize();
     generate_vbo();
 
     // load vbo
@@ -425,22 +602,22 @@ auto PointsMeshVAO::init_and_load_3d_points(std::span<const Pt3f> points, std::s
         );
     }
 
-    vertex_array_vertex_buffer_for_3d_points();
-    vertex_array_attrib_format_for_3d_points();
+    vertex_array_vertex_buffer();
+    vertex_array_attrib_format();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-    nIndicesAllocated = static_cast<GLsizei>(points.size());
-    buffersInitialized = true;
+    m_nbIndices = static_cast<GLsizei>(points.size());
+    m_buffersInitialized = true;
 }
 
-auto PointsMeshVAO::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, std::span<const Pt3f> colors) -> void{
+auto PointsRenderer::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, std::span<const Pt3f> colors) -> void{
 
     if(voxels.empty()){
         Logger::error("[PointsMesh::init_and_load_3d_voxels] No voxels.\n");
         return;
     }
-
-    if(buffersInitialized){
+    
+    if(m_buffersInitialized){
         clean();
     }
 
@@ -448,7 +625,7 @@ auto PointsMeshVAO::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, st
     m_hasNormals = false;
 
 
-    vao.generate();
+    vao.initialize();
     generate_vbo();
 
     // load vbo
@@ -467,40 +644,33 @@ auto PointsMeshVAO::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, st
     vertex_array_attrib_format_for_3d_voxels();
     enable_vertex_array_attrib();
     vertex_array_attrib_binding();
-    nIndicesAllocated = static_cast<GLsizei>(voxels.size());
-    buffersInitialized = true;
+    m_nbIndices = static_cast<GLsizei>(voxels.size());
+    m_buffersInitialized = true;
 }
 
-auto PointsMeshVAO::render() const -> void{
-
-    if(!buffersInitialized){
+auto PointsRenderer::render() const -> void{
+    
+    if(!m_buffersInitialized){
         return;
     }
 
     vao.bind();
-    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, nIndicesAllocated, 1, 0);
+    GL::draw_arrays_instance_base_instance(GL_POINTS, 0, m_nbIndices, 1, 0);
     VAO::unbind();
 }
 
-auto PointsMeshVAO::render_patches() const -> void{
-
-    if(!buffersInitialized){
+auto PointsRenderer::render_patches() const -> void{
+    
+    if(!m_buffersInitialized){
         return;
     }
 
     vao.bind();
-    GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, nIndicesAllocated, 1, 0);
+    GL::draw_arrays_instance_base_instance(GL_PATCHES, 0, m_nbIndices, 1, 0);
     VAO::unbind();
 }
 
-auto PointsMeshVAO::clean() -> void{
-    vao.clean();
-    pointsB.clean();
-    colorsB.clean();
-    normalsB.clean();
-    buffersInitialized = false;
-    m_hasColors = false;
-    m_hasNormals = false;
-}
+
+
 
 

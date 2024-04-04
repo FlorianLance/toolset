@@ -41,21 +41,20 @@
 using namespace tool;
 using namespace tool::graphics;
 using namespace tool::cam;
+using namespace tool::geo;
 
 auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
 
     fboD.init();
     cloudsD.resize(nbDrawers);
     for(auto &cloudD : cloudsD){
-        cloudD.initialize();
+        cloudD = std::make_unique<DCCloudDrawer>();
+        cloudD->initialize();
     }
 
-    gridD = std::make_unique<gl::GridDrawer>();
-
-
-    plane1PointsD = std::make_unique<gl::SphereDrawer>(0.05f);
-
-    plane1D = std::make_unique<gl::TriangleLineDrawer>();
+    gridD.initialize(1.f,1.f, 100, 100);
+    plane1PointsD.initialize(0.05f);
+    plane1D.initialize(true);
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -66,14 +65,14 @@ auto DCCloudsSceneDrawer::reset() -> void{
 
 auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool {
     if(idCloud < cloudsD.size()){
-        return cloudsD[idCloud].init_from_frame(std::move(frame));
+        return cloudsD[idCloud]->init_from_frame(std::move(frame));
     }
     return false;
 }
 
-auto DCCloudsSceneDrawer::update_from_colored_cloud_data(size_t idCloud, const geo::ColoredCloudData &cloud) -> bool{
+auto DCCloudsSceneDrawer::update_from_colored_cloud_data(size_t idCloud, const ColoredCloudData &cloud) -> bool{
     if(idCloud < cloudsD.size()){
-        return cloudsD[idCloud].init_from_colored_cloud_data(cloud);
+        return cloudsD[idCloud]->init_from_colored_cloud_data(cloud);
     }
     return false;
 }
@@ -98,6 +97,16 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
     auto cloudShader = ShadersManager::get_instance()->get_ptr("cloud");
     auto voxelShader = ShadersManager::get_instance()->get_ptr("voxelCloud");
 
+    if(auto shader = solidShader){
+        shader->use();
+        shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
+        shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
+        shader->set_uniform_matrix("model"sv, Mat4f::identity());
+        shader->set_uniform("enable_unicolor", true);
+        shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
+        gridD.draw();
+    }
+
     size_t idC = 0;
     for(auto &cloudD : cloudsD){
 
@@ -107,26 +116,26 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
         }
 
-        if(!cloudD.display.cloudVisible){
+        if(!cloudD->display.cloudVisible){
             continue;
         }
 
-        if(auto shader = cloudD.display.useVoxels ? voxelShader : cloudShader){
+        if(auto shader = cloudD->display.useVoxels ? voxelShader : cloudShader){
             shader->use();
-            shader->set_uniform("view", fboD.camera()->view().conv<float>());
-            shader->set_uniform("projection", fboD.camera()->projection().conv<float>());
-            shader->set_uniform("model", cloudD.model);
-            shader->set_uniform("enable_unicolor", cloudD.display.forceCloudColor);
-            shader->set_uniform("unicolor", cloudD.display.cloudColor);
-            shader->set_uniform("factor_unicolor", cloudD.display.factorUnicolor);
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("model"sv, cloudD->model);
+            shader->set_uniform("enable_unicolor", cloudD->display.forceCloudColor);
+            shader->set_uniform("unicolor", cloudD->display.cloudColor);
+            shader->set_uniform("factor_unicolor", cloudD->display.factorUnicolor);
 
-            if(cloudD.display.useVoxels){
-                shader->set_uniform("hSize", cloudD.display.sizeVoxels);
+            if(cloudD->display.useVoxels){
+                shader->set_uniform("hSize", cloudD->display.sizeVoxels);
             }else{
-                shader->set_uniform("size_pt", cloudD.display.sizePoints);
+                shader->set_uniform("size_pt", cloudD->display.sizePoints);
                 shader->set_uniform("camera_position", fboD.camera()->position().conv<float>());
             }
-            cloudD.cpD.draw();
+            cloudD->cpD.draw();
         }else{
             Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n");
             break;
@@ -135,65 +144,72 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
         if(auto shader = solidShader){
 
             shader->use();
-            shader->set_uniform("view", fboD.camera()->view().conv<float>());
-            shader->set_uniform("projection", fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("model"sv, cloudD->model);
             shader->set_uniform("enable_unicolor", true);
+            shader->set_uniform("unicolor", cloudD->display.cloudColor);
+            cloudD->frustumD.draw();
+
 
             // body tracking
-            for(size_t ii = 0; ii < cloudD.nbBodies; ++ii){
-                shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
-                for(size_t jj = 0; jj < cloudD.jointsModels[ii].size(); ++jj){
-                    const auto &jm = cloudD.jointsModels[ii][jj];
+            for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
+                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
+                    const auto &jm = cloudD->jointsModels[ii][jj];
                     if(std::get<0>(jm)){
-                        shader->set_uniform("model", std::get<1>(jm) * cloudD.model);
-                        cloudD.spD.draw();
+                        shader->set_uniform_matrix("model", std::get<1>(jm) * cloudD->model);
+                        cloudD->spD.draw();
                     }
                 }
             }
 
             // filtering planes
-            if(cloudD.filters.filterDepthWithCloud){
+            if(cloudD->filters.filterDepthWithCloud){
 
-                auto p1 = cloudD.filters.p1A;
-                auto p2 = cloudD.filters.p1B;
-                auto p3 = cloudD.filters.p1C;
-                geo::Pt3f meanPt    = (p1+p2+p3)/3.f;
+                auto p1 = cloudD->filters.p1A;
+                auto p2 = cloudD->filters.p1B;
+                auto p3 = cloudD->filters.p1C;
+                Pt3f meanPt    = (p1+p2+p3)/3.f;
 
-                shader->set_uniform("model",  geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p1) * cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,0.f, 1.f});
-                plane1PointsD->draw(shader);
+                shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
+                shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
+                plane1PointsD.draw();
 
-                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p2) * cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
-                plane1PointsD->draw(shader);
+                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
+                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                plane1PointsD.draw();
 
-                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, p3) * cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{0.f,0.f,1.f, 1.f});
-                plane1PointsD->draw(shader);
+                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
+                shader->set_uniform("unicolor", Pt4f{0.f,0.f,1.f, 1.f});
+                plane1PointsD.draw();
 
-                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, meanPt) * cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{0.f,1.f,1.f, 1.f});
-                plane1PointsD->draw(shader);
+                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
+                shader->set_uniform("unicolor", Pt4f{0.f,1.f,1.f, 1.f});
+                plane1PointsD.draw();
 
-                auto sp = cloudD.filters.pSphere;
-                shader->set_uniform("model", geo::transform<float>(geo::Pt3f(1.f,1.f,1.f), geo::Pt3f{0.f,0.f,0.f}, sp) * cloudD.model);
-                shader->set_uniform("unicolor", geo::Pt4f{0.5f,0.5f,1.f, 1.f});
-                plane1PointsD->draw(shader);
+                auto sp = cloudD->filters.pSphere;
+                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
+                shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
+                plane1PointsD.draw();
 
-                shader->set_uniform("unicolor", geo::Pt4f{1.f,0.f,0.f, 1.f});
-                shader->set_uniform("model", cloudD.model);
+                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                shader->set_uniform_matrix("model", cloudD->model);
 
                 auto v1 = vec(meanPt,p1);
                 auto v2 = vec(meanPt,p2);
                 auto v3 = vec(meanPt,p3);
                 for(int ii = 0; ii < 40; ++ii){
                     auto f = (-20+ii)*0.05f;
-                    plane1D->init(f*v1 + p1, f*v2 + p2, f*v3 + p3);
-                    plane1D->draw(shader);
+                    std::array<Pt3f, 3> dataP = {f*v1 + p1, f*v2 + p2, f*v3 + p3};
+                    plane1D.update(dataP);
+                    plane1D.draw();
+                    // plane1D->init(f*v1 + p1, f*v2 + p2, f*v3 + p3);
+                    // plane1D->draw(shader);
                 }
             }
 
-//            auto id = geo::Mat4f::identity();
+//            auto id = Mat4f::identity();
 //            shader->set_uniform("model", id);
 //            gridD->draw(shader);
 
@@ -206,128 +222,128 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
     fboD.unbind();
 }
 
-auto DCCloudsSceneDrawer::draw_color_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void{
+auto DCCloudsSceneDrawer::draw_color_texture_imgui_child(size_t idCloud, const std::string &windowName, Pt2f sizeWindow) -> void{
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.colorD.draw_child(windowName, sizeWindow);
+    cD->colorD.draw_child(windowName, sizeWindow);
 
     // check mouse inputs
-    const auto &hp = cD.colorD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.colorD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.colorD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbaColor.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbaColor.height) &&
-                !cD.lastFrame->rgbaColor.empty()){
-                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->rgbaColor[hp.y() * cD.lastFrame->rgbaColor.width + hp.x()]);
+    const auto &hp = cD->colorD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->colorD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->colorD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbaColor.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbaColor.height) &&
+                !cD->lastFrame->rgbaColor.empty()){
+                mouse_pressed_color_signal(idCloud, idB, hp, cD->lastFrame->rgbaColor[hp.y() * cD->lastFrame->rgbaColor.width + hp.x()]);
             }
         }
     }
 }
 
-auto DCCloudsSceneDrawer::draw_depth_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void{
+auto DCCloudsSceneDrawer::draw_depth_texture_imgui_child(size_t idCloud, const std::string &windowName, Pt2f sizeWindow) -> void{
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.depthD.draw_child(windowName, sizeWindow);
+    cD->depthD.draw_child(windowName, sizeWindow);
 
     // check mouse inputs
-    const auto &hp = cD.depthD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.depthD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.depthD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbDepth.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbDepth.height) &&
-                !cD.lastFrame->rgbDepth.empty()){
-                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->rgbDepth[hp.y() * cD.lastFrame->rgbDepth.width + hp.x()]);
+    const auto &hp = cD->depthD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->depthD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->depthD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbDepth.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbDepth.height) &&
+                !cD->lastFrame->rgbDepth.empty()){
+                mouse_pressed_depth_signal(idCloud, idB, hp, cD->lastFrame->rgbDepth[hp.y() * cD->lastFrame->rgbDepth.width + hp.x()]);
             }
         }
     }
 }
 
-auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void{
+auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const std::string &windowName, Pt2f sizeWindow) -> void{
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.infraD.draw_child(windowName, sizeWindow);
+    cD->infraD.draw_child(windowName, sizeWindow);
 
     // check mouse inputs
-    const auto &hp = cD.infraD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.infraD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.infraD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbInfra.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbInfra.height) &&
-                !cD.lastFrame->rgbInfra.empty()){
-                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->rgbInfra[hp.y() * cD.lastFrame->rgbInfra.width + hp.x()]);
+    const auto &hp = cD->infraD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->infraD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->infraD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbInfra.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbInfra.height) &&
+                !cD->lastFrame->rgbInfra.empty()){
+                mouse_pressed_infra_signal(idCloud, idB, hp, cD->lastFrame->rgbInfra[hp.y() * cD->lastFrame->rgbInfra.width + hp.x()]);
             }
         }
     }
 }
 
 
-auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::string_view text) -> void {
+auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const Pt2f &screenPos, const Pt2f &sizeTexture, std::string_view text) -> void {
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.colorD.draw_at_position(screenPos, sizeTexture, std::string(text));//std::move(text));
+    cD->colorD.draw_at_position(screenPos, sizeTexture, std::string(text));//std::move(text));
 
     // // TEST
     // auto cursorScreenPos = ImGui::GetCursorScreenPos();
     // ImGui::SetCursorScreenPos(to_iv2(screenPos));
-    // cD.colorD.draw_child(std::string(text), sizeTexture);
+    // cD->colorD.draw_child(std::string(text), sizeTexture);
     // ImGui::SetCursorScreenPos(cursorScreenPos);
 
     // check mouse inputs
-    const auto &hp = cD.colorD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.colorD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.colorD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbaColor.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbaColor.height) &&
-                !cD.lastFrame->rgbaColor.empty()){
-                mouse_pressed_color_signal(idCloud, idB, hp, cD.lastFrame->rgbaColor[hp.y() * cD.lastFrame->rgbaColor.width + hp.x()]);
+    const auto &hp = cD->colorD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->colorD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->colorD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbaColor.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbaColor.height) &&
+                !cD->lastFrame->rgbaColor.empty()){
+                mouse_pressed_color_signal(idCloud, idB, hp, cD->lastFrame->rgbaColor[hp.y() * cD->lastFrame->rgbaColor.width + hp.x()]);
             }
         }
     }
 }
 
-auto DCCloudsSceneDrawer::draw_depth_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void {
+auto DCCloudsSceneDrawer::draw_depth_texture_imgui_at_position(size_t idCloud, const Pt2f &screenPos, const Pt2f &sizeTexture, std::optional<std::string> text) -> void {
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.depthD.draw_at_position(screenPos, sizeTexture, std::move(text));
+    cD->depthD.draw_at_position(screenPos, sizeTexture, std::move(text));
 
     // check mouse inputs
-    const auto &hp = cD.depthD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.depthD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.depthD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbDepth.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbDepth.height) &&
-                !cD.lastFrame->rgbDepth.empty()){
-                mouse_pressed_depth_signal(idCloud, idB, hp, cD.lastFrame->rgbDepth[hp.y() * cD.lastFrame->rgbDepth.width + hp.x()]);
+    const auto &hp = cD->depthD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->depthD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->depthD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbDepth.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbDepth.height) &&
+                !cD->lastFrame->rgbDepth.empty()){
+                mouse_pressed_depth_signal(idCloud, idB, hp, cD->lastFrame->rgbDepth[hp.y() * cD->lastFrame->rgbDepth.width + hp.x()]);
             }
         }
     }
 }
 
-auto DCCloudsSceneDrawer::draw_infra_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void {
+auto DCCloudsSceneDrawer::draw_infra_texture_imgui_at_position(size_t idCloud, const Pt2f &screenPos, const Pt2f &sizeTexture, std::optional<std::string> text) -> void {
 
-    auto &cD = cloudsD[idCloud];
+    auto cD = cloudsD[idCloud].get();
 
     // draw
-    cD.infraD.draw_at_position(screenPos, sizeTexture, std::move(text));
+    cD->infraD.draw_at_position(screenPos, sizeTexture, std::move(text));
 
     // check mouse inputs
-    const auto &hp = cD.infraD.hoveringPixel;
-    for(size_t idB = 0; idB < cD.infraD.mouseButtonsPressed.size(); ++idB){
-        if(cD.lastFrame != nullptr && cD.infraD.mouseButtonsPressed[idB]){
-            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD.lastFrame->rgbInfra.width)  &&
-                hp.y() >= 0 && hp.y() < static_cast<int>(cD.lastFrame->rgbInfra.height) &&
-                !cD.lastFrame->rgbInfra.empty()){
-                mouse_pressed_infra_signal(idCloud, idB, hp, cD.lastFrame->rgbInfra[hp.y() * cD.lastFrame->rgbInfra.width + hp.x()]);
+    const auto &hp = cD->infraD.hoveringPixel;
+    for(size_t idB = 0; idB < cD->infraD.mouseButtonsPressed.size(); ++idB){
+        if(cD->lastFrame != nullptr && cD->infraD.mouseButtonsPressed[idB]){
+            if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbInfra.width)  &&
+                hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbInfra.height) &&
+                !cD->lastFrame->rgbInfra.empty()){
+                mouse_pressed_infra_signal(idCloud, idB, hp, cD->lastFrame->rgbInfra[hp.y() * cD->lastFrame->rgbInfra.width + hp.x()]);
             }
         }
     }
@@ -344,7 +360,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
             if(ImGuiUiDrawer::begin_tab_item("Color###direct_all_color_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
-                    textures.push_back(&cloudD.colorT);
+                    textures.push_back(&cloudD->colorT);
                 }
 
                 auto textPos = compute_textures_rectangles(content_region_size_available(), textures);
@@ -365,7 +381,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
             if(ImGuiUiDrawer::begin_tab_item("Depth###direct_all_depth_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
-                    textures.push_back(&cloudD.depthT);
+                    textures.push_back(&cloudD->depthT);
                 }
 
                 auto textPos = compute_textures_rectangles(content_region_size_available(), textures);
@@ -385,7 +401,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
             if(ImGuiUiDrawer::begin_tab_item("Infra###direct_all_infra_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
-                    textures.push_back(&cloudD.infraT);
+                    textures.push_back(&cloudD->infraT);
                 }
 
                 auto textPos = compute_textures_rectangles(content_region_size_available(), textures);
@@ -414,7 +430,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
     }
 }
 
-auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor, bool drawDepth, bool drawInfra, bool drawCloud, std::optional<geo::Pt2<int>> sizeW) -> void{
+auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor, bool drawDepth, bool drawInfra, bool drawCloud, std::optional<Pt2<int>> sizeW) -> void{
 
     static_cast<void>(sizeW);
     if(focusWindow){        
@@ -482,7 +498,7 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
 
 auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void{
     if(idCloud < cloudsD.size()){
-        cloudsD[idCloud].display = cloudDisplay;
+        cloudsD[idCloud]->display = cloudDisplay;
         m_redrawClouds = true;
     }
     // else{
@@ -496,17 +512,17 @@ auto DCCloudsSceneDrawer::update_scene_display_settings(const DCSceneDisplaySett
 }
 
 auto DCCloudsSceneDrawer::update_model_settings(size_t idCloud, const cam::DCModelSettings &model) -> void{
-    cloudsD[idCloud].model = model.compute_full_transformation();
+    cloudsD[idCloud]->model = model.compute_full_transformation();
     m_redrawClouds = true;
 }
 
 // #include <iostream>
 auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void {
-    cloudsD[idCloud].filters = filters;
+    cloudsD[idCloud]->filters = filters;
     m_redrawClouds = true;
 }
 
-auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, const std::vector<const gl::Texture2D *> &textures) -> std::vector<std::tuple<geo::Pt2f, geo::Pt2f>>{
+auto DCCloudsSceneDrawer::compute_textures_rectangles(Pt2f parentSize, const std::vector<const gl::Texture2D *> &textures) -> std::vector<std::tuple<Pt2f, Pt2f>>{
 
     //    constexpr bool allow_flip = false;
     //    const auto runtime_flipping_mode = rectpack2D::flipping_option::DISABLED;
@@ -515,7 +531,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, cons
 
 //    std::vector<rect_type> rectangles;
 //    for(const auto &texture : textures){
-//        auto sizeF = geo::Pt2f{1.f*texture->width(), 1.f*texture->height()};
+//        auto sizeF = Pt2f{1.f*texture->width(), 1.f*texture->height()};
 //        rectangles.emplace_back(rectpack2D::rect_xywh(0,0,static_cast<int>(sizeF.x()),static_cast<int>(sizeF.y())));
 //    }
 
@@ -540,7 +556,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, cons
 //        )
 //    );
 
-//    std::vector<std::tuple<geo::Pt2f,geo::Pt2f>> infos;
+//    std::vector<std::tuple<Pt2f,Pt2f>> infos;
 //    for(const auto &r : rectangles){
 //        infos.push_back({{1.f*r.x,1.f*r.y},{1.f*r.w, 1.f*r.h}});
 //    }
@@ -559,7 +575,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, cons
         BinPack2D::ContentAccumulator<const gl::Texture2D*> inputContent;
 
         for(const auto &texture : textures){
-            auto sizeF = geo::Pt2f{texture->width() * factor, texture->height() * factor};
+            auto sizeF = Pt2f{texture->width() * factor, texture->height() * factor};
 
             inputContent += BinPack2D::Content<const gl::Texture2D*>(
                 texture, BinPack2D::Coord(), BinPack2D::Size(static_cast<int>(sizeF.x()), static_cast<int>(sizeF.y())), false
@@ -581,7 +597,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, cons
             // Read all placed content.
             canvasArray.CollectContent( outputContent );
 
-            std::vector<std::tuple<geo::Pt2f,geo::Pt2f>> infos;
+            std::vector<std::tuple<Pt2f,Pt2f>> infos;
 
             typedef BinPack2D::Content<const gl::Texture2D*>::Vector::iterator binpack2d_iterator;
             for( binpack2d_iterator itor = outputContent.Get().begin(); itor != outputContent.Get().end(); itor++ ) {
@@ -602,7 +618,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(geo::Pt2f parentSize, cons
     return {};
 }
 
-auto DCCloudsSceneDrawer::draw_fbo(tool::geo::Pt2<int> size) -> void{
+auto DCCloudsSceneDrawer::draw_fbo(Pt2<int> size) -> void{
     fboD.bind();
     fboD.resize(size);
     fboD.draw();

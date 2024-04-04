@@ -47,9 +47,32 @@ namespace tool {
         }
     };
 
+    template<typename ... Bases>
+    struct overload : Bases ...
+    {
+        using is_transparent = void;
+        using Bases::operator() ... ;
+    };
+
+    struct char_pointer_hash
+    {
+        auto operator()( const char* ptr ) const noexcept
+        {
+            return std::hash<std::string_view>{}( ptr );
+        }
+    };
+
+    using transparent_string_hash = overload<
+        std::hash<std::string>,
+        std::hash<std::string_view>,
+        char_pointer_hash
+    >;
+
+
+
     template <typename Type>
     concept StringLike = std::is_convertible_v<Type, std::string_view>;
 
     template <typename StringLike, typename Value>
-    using s_umap = ankerl::unordered_dense::map<StringLike, Value,  string_hash, std::equal_to<>>;    
+    using s_umap = ankerl::unordered_dense::map<StringLike, Value,  transparent_string_hash, std::equal_to<>>;
 }

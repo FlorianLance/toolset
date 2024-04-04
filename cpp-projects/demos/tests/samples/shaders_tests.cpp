@@ -31,51 +31,55 @@ ColoredCloudShader::ColoredCloudShader(){
 
     // init shader
     const char* vertexShaderSource = R"shaderDef(
-                                     #version 430 core
+    #version 430 core
 
-                                     layout (location = 0) in vec3 aPos;
-                                     layout (location = 1) in vec3 aColor;
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec3 aColor;
 
+    // model
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
 
+    // camera
+    uniform vec3 camera_position;
 
-                                     // model
-                                     uniform mat4 model;
-                                     uniform mat4 view;
-                                     uniform mat4 projection;
+    // cloud
+    uniform float size_pt = 3.f;
 
-                                     // camera
-                                     uniform vec3 camera_position;
+    // color
+    uniform vec4 unicolor = vec4(1,0,0,1);
+    uniform bool enable_unicolor = false;
+    uniform float factor_unicolor = 0.5f;
+    out vec4 color;
 
-                                     // cloud
-                                     uniform float size_pt = 3.f;
+    void main(){
+        vec4 p = view * model * vec4(aPos, 1.0);
+        gl_Position = projection*p;
+        color = enable_unicolor ? mix(unicolor, vec4(aColor, 1.0), factor_unicolor) : vec4(aColor, 1.0);
+        float l = sqrt(length(p.xyz-camera_position.xyz));
+        gl_PointSize = size_pt;///(l);
+    }
 
-                                     // color
-                                     uniform vec4 unicolor = vec4(1,0,0,1);
-                                     uniform bool enable_unicolor = false;
-                                     out vec4 color;
-
-                                     void main(){
-                                     vec4 p = view * model * vec4(aPos, 1.0);
-                                     gl_Position = projection*p;
-                                     color = enable_unicolor ? unicolor : vec4(aColor, 1.0);
-                                     float l = sqrt(length(p.xyz-camera_position.xyz));
-                                     gl_PointSize = size_pt/(l);
-                                     }
-
-                                     )shaderDef";
+     )shaderDef";
 
     const char* fragmentShaderSource = R"shaderDef(
-                                       #version 430 core
-                                       out vec4 FragColor;
-                                       in vec4 color;
+    #version 430 core
+    out vec4 FragColor;
+    in vec4 color;
 
-                                       void main(){
-                                       FragColor = color;
-                                       }
+    void main(){
+        FragColor = color;
+    }
 
-                                       )shaderDef";
+    )shaderDef";
 
-    load_from_source_code({{Shader::Type::vertex,vertexShaderSource}, {Shader::Type::fragment, fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+
+    load_from_source_code(elems);
 }
 
 bool ColoredMeshShader::init(){
@@ -122,7 +126,12 @@ bool ColoredMeshShader::init(){
 
                                        )shaderDef";
 
-    return load_from_source_code({{Shader::Type::vertex,vertexShaderSource}, {Shader::Type::fragment, fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+
+    return load_from_source_code(elems);
 }
 
 bool TexturedMeshShader::init(){
@@ -151,7 +160,11 @@ bool TexturedMeshShader::init(){
                                        "   // FragColor = FragColor = vec4(texCoord.x, texCoord.y, 0,  1.0f);\n"
                                        "}\n\0";
 
-    return load_from_source_code({{Shader::Type::vertex,vertexShaderSource}, {Shader::Type::fragment, fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+    return load_from_source_code(elems);
 }
 
 bool TexturedColoredMeshShader::init(){
@@ -186,7 +199,11 @@ bool TexturedColoredMeshShader::init(){
                                        "   FragColor = mix(texture(texture1, texCoord), texture(texture2, texCoord), 0.2);\n"
                                        "}\n\0";
 
-    return load_from_source_code({{Shader::Type::vertex,vertexShaderSource}, {Shader::Type::fragment, fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+    return load_from_source_code(elems);
 }
 
 bool TexturedNormalsMeshShader::init(){
@@ -250,6 +267,10 @@ bool TexturedNormalsMeshShader::init(){
 
                                        )shaderDef";
 
-    return load_from_source_code({{Shader::Type::vertex,vertexShaderSource}, {Shader::Type::fragment, fragmentShaderSource}});
+    std::array elems = {
+        std::make_tuple(ShaderType::vertex,   std::string(vertexShaderSource)),
+        std::make_tuple(ShaderType::fragment, std::string(fragmentShaderSource))
+    };
+    return load_from_source_code(elems);
 }
 

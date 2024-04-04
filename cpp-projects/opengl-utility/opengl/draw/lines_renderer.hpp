@@ -1,9 +1,8 @@
 
-
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2024] [Florian Lance]                                       **
+** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -25,50 +24,68 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "line_drawer.hpp"
+#pragma once
+
+// std
+#include <span>
+
+// base
+#include "geometry/point3.hpp"
 
 // local
-#include "opengl/gl_functions.hpp"
-#include "lines_mesh_vao.hpp"
+#include "vao_renderer.hpp"
 
-using namespace tool::gl;
+namespace tool::gl{
 
-static inline std::array<GLuint,2> indices = {
-    0, 1
+class LinesRenderer : public VAORenderer{
+public:
+
+    ~LinesRenderer(){
+        LinesRenderer::clean();
+    }
+
+    auto initialize(bool hasColors) -> void;
+    auto clean() -> void override;
+    auto load_data(
+        std::span<const GLuint> indices,
+        std::span<const geo::Pt3f> points,
+        std::span<const geo::Pt3f> colors = {}
+    ) -> bool;
+    auto update_data(
+        std::span<const geo::Pt3<GLuint>> indices,  size_t indicesOffset,
+        std::span<const geo::Pt3f> vertices,        size_t verticesOffset = 0,
+        std::span<const geo::Pt3f> colors = {},     size_t colorsOffset   = 0) -> bool;
+
+    // binding ids
+    GLuint positionBindingId = 0;
+    GLuint colorBindingId    = 1;
+
+     // locations
+    GLuint positionLoc = 0;
+    GLuint colorLoc    = 1;
+
+    // usages
+    GLbitfield indicesBufferUsage = 0;
+    GLbitfield positionBufferUsage = 0;
+    GLbitfield colorBufferUsage = 0;
+
+    // ### TO REMOVE
+    auto render() const -> void override;
+    // ###
+
+protected:
+
+    auto generate_bo() -> void;
+    auto vertex_array_vertex_buffer() -> void;
+    auto vertex_array_attrib_format() -> void;
+    auto enable_vertex_array_attrib() -> void;
+    auto vertex_array_attrib_binding() -> void;
+
+    bool m_hasColors  = false;
+
+    VBO indicesB;
+    VBO colorsB;
 };
 
-MonoLineDrawer::MonoLineDrawer(){
-    BaseDrawer::vaoRenderer = std::make_unique<LinesMeshVAO>();
-}
 
-auto MonoLineDrawer::init(bool initColors) -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->clean();
-    lm->indicesBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
-    lm->positionBufferUsage = GL_DYNAMIC_STORAGE_BIT;
-    lm->colorBufferUsage    = GL_DYNAMIC_STORAGE_BIT;
-    lm->init_data(indices.size(), 2, initColors);
-    lm->update_indices(indices);
 }
-
-auto MonoLineDrawer::init_and_load(std::span<const geo::Pt3f,2> points, std::span<const geo::Pt3f> colors) -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->clean();
-    lm->init_and_load_data(indices, points, colors);
-}
-
-auto MonoLineDrawer::update(std::span<const geo::Pt3f, 2> points, std::span<const geo::Pt3f> colors) -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    lm->update_data(points, colors);
-}
-
-auto MonoLineDrawer::draw() -> void{
-    auto lm = dynamic_cast<LinesMeshVAO*>(vaoRenderer.get());
-    if(!lm->initialized()){
-        return;
-    }
-    lm->bind();
-    GL::draw_elements_instanced_base_vertex_base_instance(GL_LINES, indices.size(), GL_UNSIGNED_INT, nullptr, 1, 0, 0);
-    lm->unbind();
-}
-

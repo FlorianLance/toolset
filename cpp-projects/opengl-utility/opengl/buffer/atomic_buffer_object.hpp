@@ -40,20 +40,28 @@ struct ABO{
     ABO& operator=(ABO&& other) = default;
     ~ABO();
 
-    auto generate() -> void;
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint     {return m_handle;}
+    [[nodiscard]] constexpr auto loaded_data_size() const noexcept -> GLsizeiptr {return m_loadedDataSize;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
+    [[nodiscard]] constexpr auto is_data_loaded()   const noexcept -> bool       {return loaded_data_size() != 0;}
+    [[nodiscard]] constexpr auto buffer_usage()     const noexcept -> GLbitfield {return m_usage;}
+    [[nodiscard]] constexpr auto is_dynamic()       const noexcept -> bool       {return buffer_usage() & GL_DYNAMIC_STORAGE_BIT;}
+
+    auto initialize() -> void;
     auto clean() -> void;
 
-    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
+    auto load_data(GLsizeiptr size, GLenum usage = defaultUsage) -> bool;
+    auto update_data(const GLuint *data, GLsizeiptr size, GLintptr offset) -> bool;
 
     auto bind_to_index(GLuint index) const -> bool;
 
-    auto set_data_storage(GLsizeiptr sizeData, GLenum usage = 0) -> void;
-    auto update_data(GLuint *data, GLsizeiptr sizeData, GLintptr offset = 0) -> void;
-
 private:
 
-    GLuint m_handle = 0;
-    GLsizeiptr m_size = 0;
+    GLuint     m_handle = 0;
+    GLsizeiptr m_loadedDataSize = 0;
+    GLbitfield m_usage = 0;
+
+    static constexpr GLbitfield defaultUsage = 0;
 };
 }
 

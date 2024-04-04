@@ -38,10 +38,10 @@ VBO::~VBO(){
     clean();
 }
 
-auto VBO::generate() -> void{
+auto VBO::initialize() -> void{
 
-    if(m_handle != 0){
-        Logger::error(std::format("[VBO::generate] VBO already generated: {}.\n", m_handle));
+    if(is_initialized()){
+        Logger::error(std::format("[VBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -49,49 +49,90 @@ auto VBO::generate() -> void{
 
 auto VBO::clean() -> void{
 
-    if(m_handle == 0){
+    if(!is_initialized()){
         return;
     }
 
     GL::delete_buffers(1, &m_handle);
-    m_handle = 0;
+    m_handle         = 0;
+    m_loadedDataSize = 0;
+    m_usage          = 0;
 }
 
+auto VBO::load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage) -> bool{
+    return load_data(reinterpret_cast<const GLvoid *>(data), size, usage);
+}
 
-auto VBO::load_data(const GLint *data, GLsizeiptr size, GLbitfield  usage) -> void{
+auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> bool{
+    return load_data(reinterpret_cast<const GLvoid *>(data), size, usage);
+}
+
+auto VBO::load_data(const GLvoid *data, GLsizeiptr size, GLbitfield usage) -> bool{
+
+    if(!is_initialized()){
+        Logger::error("[VBO::load_data] Not initialized.\n");
+        return false;
+    }
+
+    if(is_data_loaded()){
+        Logger::error(std::format("[VBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        return false;
+    }
+
+    if(size == 0){
+        Logger::error(std::format("[VBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        return false;
+    }
+
     GL::named_buffer_storage(
         m_handle,
-        size,
+        m_loadedDataSize = size,
         data,
-        usage
+        m_usage = usage
     );
+
+    return true;
 }
 
-auto VBO::load_data(const GLvoid *data, GLsizeiptr size, GLbitfield usage) -> void{
-    GL::named_buffer_storage(
-        m_handle,
-        size,
-        data,
-        usage
-    );
+auto VBO::update_data(const GLint *data, GLsizeiptr size, GLintptr offset) -> bool{
+    return update_data(reinterpret_cast<const GLvoid*>(data), size, offset);
 }
 
-auto VBO::update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> void{
+auto VBO::update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> bool{
+    return update_data(reinterpret_cast<const GLvoid*>(data), size, offset);
+}
+
+auto VBO::update_data(const GLvoid *data, GLsizeiptr size, GLintptr offset) -> bool{
+
+    if(!is_initialized()){
+        Logger::error("[VBO::update_data] Not initialized.\n");
+        return false;
+    }
+
+    if(!is_data_loaded()){
+        Logger::error(std::format("[VBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
+        return false;
+    }
+
+    if(!is_dynamic()){
+        Logger::error(std::format("[VBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
+        return false;
+    }
+
+    if(size + offset > loaded_data_size()){
+        Logger::error(std::format("[VBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
+        m_loadedDataSize, size, offset, m_handle));
+        return false;
+    }
+
     GL::named_buffer_sub_data(
         m_handle,
         offset,
         size,
         data
     );
-}
 
-auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> void{
-    GL::named_buffer_storage(
-        m_handle,
-        size,
-        data,
-        usage
-    );
+    return true;
 }
 
 
@@ -111,33 +152,5 @@ auto VBO::attrib(AttriIndex index, AttriSize size, AttriType type, Stride stride
     return true;
 }
 
-auto VBO::dsa_attrib(GLuint vao, GLint index, GLint size, GLsizei stride, GLenum type, GLuint relativeoffset, GLuint bindingIndex, GLintptr offset, GLboolean normalized) -> void{
-
-    GL::vertex_array_vertex_buffer(
-        vao,
-        bindingIndex,
-        m_handle,
-        offset,
-        stride
-    );
-
-    GL::enable_vertex_array_attrib(vao,index);
-
-    GL::vertex_array_attrib_format(
-        vao,
-        index,
-        size,
-        type,
-        normalized,
-        relativeoffset
-    );
-
-    GL::vertex_array_attrib_binding(
-        vao,
-        index,
-        bindingIndex
-    );
-
-}
 
 

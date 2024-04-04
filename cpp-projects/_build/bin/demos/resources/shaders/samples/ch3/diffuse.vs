@@ -20,7 +20,6 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-
 void main()
 {
     vec3 tnorm = normalize( NormalMatrix * VertexNormal);
@@ -28,11 +27,4 @@ void main()
     vec3 s = normalize(vec3(LightPosition - eyeCoords));
     LightIntensity =  Ld * Kd * max( dot( s, tnorm ), 0.0 );
     gl_Position = MVP * vec4(VertexPosition,1.0);
-
-    //LightIntensity =  vec3(1,0,0);//Ld * Kd * max( dot( s, tnorm ), 0.0 );
-    // equivalent
-//    gl_Position = projection * view * model * vec4(VertexPosition,1.0);
-    //vec4 p = view * model * vec4(VertexPosition, 1.0);
-//    gl_Position = view * model * projection*vec4(VertexPosition,1.0);
-//    gl_Position = vec4(VertexPosition,1.0)*projection*view*model;
 }

@@ -554,6 +554,24 @@ auto GL::texture_sub_image_2d(GLuint texture, GLint level, GLint xoffset, GLint 
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
 }
 
+auto GL::texture_sub_image_3d(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels) -> void{
+    // Specify a three-dimensional texture subimage (see texture_sub_image_2d)
+    glTextureSubImage3D(
+        texture,
+        level,
+        xoffset,
+        yoffset,
+        zoffset,
+        width,
+        height,         // Specifies the depth of the texture subimage.
+        depth,
+        format,
+        type,
+        pixels
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage3D.xhtml
+}
+
 auto GL::named_buffer_storage(GLuint buffer, GLsizeiptr size, const void *data, GLbitfield flags) -> void{
     // Creates and initializes a buffer object's immutable data store.
     glNamedBufferStorage(
@@ -684,12 +702,313 @@ auto GL::vertex_array_attrib_binding(GLuint vaobj, GLuint attribindex, GLuint bi
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribBinding.xhtml
 }
 
+auto GL::create_program() -> GLuint {
+    // Creates a program object.
+    return glCreateProgram();
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateProgram.xhtml
+}
+
+auto GL::delete_program(GLuint program) -> void{
+    // Deletes a program object.
+    glDeleteProgram(
+        program     // Specifies the program object to be deleted.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteProgram.xhtml
+}
+
+auto GL::detach_shader(GLuint program, GLuint shader) -> void{
+    // Detaches a shader object from a program object to which it is attached.
+    glDetachShader(
+        program,    // Specifies the program object from which to detach the shader object.
+        shader      // Specifies the shader object to be detached.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDetachShader.xhtml
+}
+
+auto GL::get_active_uniform_block_iv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params) -> void{
+    // Query information about an active uniform block.
+    glGetActiveUniformBlockiv(
+        program,            // Specifies the name of a program containing the uniform block.
+        uniformBlockIndex,  // Specifies the index of the uniform block within program.
+        pname,              // Specifies the name of the parameter to query.
+        params              // Specifies the address of a variable to receive the result of the query.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniformBlock.xhtml
+}
+
+auto GL::get_program_iv(GLuint program, GLenum pname, GLint *params) -> void{
+    // Return a parameter from a program object.
+    glGetProgramiv(
+        program,    // Specifies the program object to be queried.
+        pname,      // Specifies the object parameter. Accepted symbolic names are GL_DELETE_STATUS, GL_LINK_STATUS,
+                    // GL_VALIDATE_STATUS, GL_INFO_LOG_LENGTH, GL_ATTACHED_SHADERS, GL_ACTIVE_ATTRIBUTES,
+                    // GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH.
+        params      // Returns the requested object parameter.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/es2.0/xhtml/glGetProgramiv.xml
+}
+
+auto GL::get_attached_shaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders) -> void{
+    // Returns the handles of the shader objects attached to a program object.
+    glGetAttachedShaders(
+        program,    // Specifies the program object to be queried.
+        maxCount,   // Specifies the size of the array for storing the returned object names.
+        count,      // Returns the number of names actually returned in shaders.
+        shaders     // Specifies an array that is used to return the names of attached shader objects.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetAttachedShaders.xhtml
+}
+
+auto GL::create_shader(GLenum shaderType) -> GLuint{
+    // Creates a shader object.
+    return glCreateShader(
+        shaderType  // Specifies the type of shader to be created. Must be one of GL_COMPUTE_SHADER, GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, or GL_FRAGMENT_SHADER.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateShader.xhtml
+}
+
+auto GL::delete_shader(GLuint shader) -> void{
+    // Deletes a shader object
+    glDeleteShader(
+        shader      // Specifies the shader object to be deleted.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteShader.xhtml
+}
+
+auto GL::shader_source(GLuint shader, GLsizei count, const GLchar **string, const GLint *length) -> void{
+    // Replaces the source code in a shader object.
+    glShaderSource(
+        shader,     // Specifies the handle of the shader object whose source code is to be replaced.
+        count,      // Specifies the number of elements in the string and length arrays.
+        string,     // Specifies an array of pointers to strings containing the source code to be loaded into the shader.
+        length      // Specifies an array of string lengths.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glShaderSource.xhtml
+}
+
+auto GL::compile_shader(GLuint shader) -> void{
+    // Compiles a shader object
+    glCompileShader(
+        shader      // Specifies the shader object to be compiled.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCompileShader.xhtml
+}
+
+auto GL::link_program(GLuint program) -> void{
+    // Links a program object
+    glLinkProgram(
+        program         // Specifies the handle of the program object to be linked.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glLinkProgram.xhtml
+}
+
+auto GL::get_program_info_log(GLuint program, GLsizei maxLength, GLsizei *length, GLchar *infoLog) -> void{
+    //  Returns the information log for a program object.
+    glGetProgramInfoLog(
+        program,        // Specifies the program object whose information log is to be queried.
+        maxLength,      // Specifies the size of the character buffer for storing the returned information log.
+        length,         // Returns the length of the string returned in infoLog (excluding the null terminator).
+        infoLog         // Specifies an array of characters that is used to return the information log.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramInfoLog.xhtml
+}
+
 auto GL::use_program(GLuint program) -> void{
     // Installs a program object as part of current rendering state.
     glUseProgram(
         program         // Specifies the handle of the program object whose executables are to be used as part of current rendering state.
     );
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUseProgram.xhtml
+}
+
+auto GL::attach_shader(GLuint program, GLuint shader) -> void{
+    // Attaches a shader object to a program object.
+    glAttachShader(
+        program,        // Specifies the program object to which a shader object will be attached.
+        shader          // Specifies the shader object that is to be attached.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glAttachShader.xhtml
+}
+
+auto GL::get_shader_iv(GLuint shader, GLenum pname, GLint *params) -> void{
+    // Return a parameter from a shader object.
+    glGetShaderiv(
+        shader,     // Specifies the shader object to be queried.
+        pname,      // Specifies the object parameter. Accepted symbolic names are GL_SHADER_TYPE, GL_DELETE_STATUS, GL_COMPILE_STATUS, GL_INFO_LOG_LENGTH, GL_SHADER_SOURCE_LENGTH.
+        params      // Returns the requested object parameter.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/es2.0/xhtml/glGetShaderiv.xml
+}
+
+auto GL::get_program_interface_iv(GLuint program, GLenum programInterface, GLenum pname, GLint *params) -> void{
+    // Query a property of an interface in a program.
+    glGetProgramInterfaceiv(
+        program,            // The name of a program object whose interface to query.
+        programInterface,   // A token identifying the interface within program to query.
+        pname,              // The name of the parameter within programInterface to query.
+        params              // The address of a variable to retrieve the value of pname for the program interface.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramInterface.xhtml
+}
+
+auto GL::get_program_resource_iv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei bufSize, GLsizei *length, GLint *params) -> void{
+    // Retrieve values for multiple properties of a single active resource within a program object
+    glGetProgramResourceiv(
+        program,            // The name of a program object whose resources to query.
+        programInterface,   // A token identifying the interface within program containing the resource named name.
+        index,
+        propCount,
+        props,
+        bufSize,
+        length,
+        params
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramResource.xhtml
+}
+
+auto GL::get_program_resource_name(GLuint program, GLenum programInterface, GLuint index, GLsizei bufSize, GLsizei *length, char *name) -> void{
+    // Query the name of an indexed resource within a program
+    glGetProgramResourceName(
+        program,            // The name of a program object whose resources to query.
+        programInterface,   // A token identifying the interface within program containing the indexed resource.
+                            //  GL_UNIFORM: The query is targeted at the set of active uniforms within program.
+                            //  GL_UNIFORM_BLOCK: The query is targeted at the set of active uniform blocks within program.
+                            //  GL_PROGRAM_INPUT: The query is targeted at the set of active input variables used by the first shader stage of program. If program contains multiple shader stages then input variables from any stage other than the first will not be enumerated.
+                            //  GL_PROGRAM_OUTPUT: The query is targeted at the set of active output variables produced by the last shader stage of program. If program contains multiple shader stages then output variables from any stage other than the last will not be enumerated.
+                            //  GL_VERTEX_SUBROUTINE, GL_TESS_CONTROL_SUBROUTINE, GL_TESS_EVALUATION_SUBROUTINE, GL_GEOMETRY_SUBROUTINE, GL_FRAGMENT_SUBROUTINE, GL_COMPUTE_SUBROUTINE: The query is targeted at the set of active subroutines for the vertex, tessellation control, tessellation evaluation, geometry, fragment and compute shader stages of program, respectively.
+                            //  GL_VERTEX_SUBROUTINE_UNIFORM, GL_TESS_CONTROL_SUBROUTINE_UNIFORM, GL_TESS_EVALUATION_SUBROUTINE_UNIFORM, GL_GEOMETRY_SUBROUTINE_UNIFORM, GL_FRAGMENT_SUBROUTINE_UNIFORM, GL_COMPUTE_SUBROUTINE_UNIFORM: The query is targeted at the set of active subroutine uniform variables used by the vertex, tessellation control, tessellation evaluation, geometry, fragment and compute shader stages of program, respectively.
+                            //  GL_TRANSFORM_FEEDBACK_VARYING: The query is targeted at the set of output variables from the last non-fragment stage of program that would be captured if transform feedback were active.
+                            //  GL_BUFFER_VARIABLE: The query is targeted at the set of active buffer variables used by program.
+                            //  GL_SHADER_STORAGE_BLOCK :The query is targeted at the set of active shader storage blocks used by program.
+        index,              // The index of the resource within programInterface of program.
+        bufSize,            // The size of the character array whose address is given by name.
+        length,             // The address of a variable which will receive the length of the resource name.
+        name                // The address of a character array into which will be written the name of the resource.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetProgramResourceName.xhtml
+}
+
+auto GL::program_uniform_1i(GLuint program, GLint location, GLint v0) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform1i(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0          // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_1ui(GLuint program, GLint location, GLuint v0) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform1ui(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0          // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_1f(GLuint program, GLint location, GLfloat v0) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform1f(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0          // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_2f(GLuint program, GLint location, GLfloat v0, GLfloat v1) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform2f(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0,         // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+        v1
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_3f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform3f(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0,         // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+        v1,
+        v2
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_4f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform4f(
+        program,    // Specifies the handle of the program containing the uniform variable to be modified.
+        location,   // Specifies the location of the uniform variable to be modified.
+        v0,         // For the scalar commands, specifies the new values to be used for the specified uniform variable.
+        v1,
+        v2,
+        v3
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_1uiv(GLuint program, GLint location, GLsizei count, const GLuint *value) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform1uiv(
+        program,
+        location,
+        count,
+        value
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_1fv(GLuint program, GLint location, GLsizei count, const GLfloat *value) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform1fv(
+        program,
+        location,
+        count,
+        value
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_3fv(GLuint program, GLint location, GLsizei count, const GLfloat *value) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniform3fv(
+        program,
+        location,
+        count,
+        value
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_matrix_3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniformMatrix3fv(
+        program,
+        location,
+        count,
+        transpose,
+        value
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
+}
+
+auto GL::program_uniform_matrix_4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) -> void{
+    // Specify the value of a uniform variable for a specified program object
+    glProgramUniformMatrix4fv(
+        program,
+        location,
+        count,
+        transpose,
+        value
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramUniform.xhtml
 }
 
 auto GL::draw_arrays_instance_base_instance(GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance) -> void{

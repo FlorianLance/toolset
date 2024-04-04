@@ -42,24 +42,15 @@ class MaterialUBO : public UBO{
 
 public:
 
-    // void generate() override{
-
-    //     if(m_handle != 0){
-    //         std::cerr << "[GL] UBO already generated: " << m_handle << "\n";
-    //         return;
-    //     }
-    //     glCreateBuffers(1, &m_handle);
-    // }
-
-    std::string get_block_name() const override{
+    auto get_block_name() const -> const std::string_view override {
         return nameStr;
     }
 
-    std::vector<std::string> get_elements_name() const override{
-        return elementsStr;
+    auto get_elements_name() const -> std::span<const std::string_view> override{
+        return std::span<const std::string_view>(elementsStr.data(), elementsStr.size());
     }
 
-    void update(graphics::MaterialInfo &data){
+    auto update(graphics::MaterialInfo &data) -> void{
         BufferUtility::copy(data.Ka,           m_offsets[0], m_blockBuffer);
         BufferUtility::copy(data.Kd,           m_offsets[1], m_blockBuffer);
         BufferUtility::copy(data.Ks,           m_offsets[2], m_blockBuffer);
@@ -69,12 +60,12 @@ public:
 
 protected:
 
-    static inline const std::string nameStr = "MaterialInfo";
-    static inline const std::vector<std::string> elementsStr = {
-        "MaterialInfo.Ka",
-        "MaterialInfo.Kd",
-        "MaterialInfo.Ks",
-        "MaterialInfo.Shininess"
+    static constexpr std::string_view nameStr = "MaterialInfo"sv;
+    static constexpr std::array<std::string_view,4> elementsStr = {
+        "MaterialInfo.Ka"sv,
+        "MaterialInfo.Kd"sv,
+        "MaterialInfo.Ks"sv,
+        "MaterialInfo.Shininess"sv
     };
 };
 
@@ -82,24 +73,15 @@ class LightUBO : public UBO{
 
 public:
 
-    // void generate() override{
-
-    //     if(m_handle != 0){
-    //         std::cerr << "[GL] UBO already generated: " << m_handle << "\n";
-    //         return;
-    //     }
-    //     glCreateBuffers(1, &m_handle);
-    // }
-
-    std::string get_block_name() const override{
+    auto get_block_name() const -> const std::string_view override {
         return nameStr;
     }
 
-    std::vector<std::string> get_elements_name() const override{
-        return elementsStr;
+    auto get_elements_name() const -> std::span<const std::string_view> override{
+        return std::span<const std::string_view>(elementsStr.data(), elementsStr.size());
     }
 
-    void update(graphics::LightInfo &data){
+    auto update(graphics::LightInfo &data) -> void{
         BufferUtility::copy(data.Position,  m_offsets[0], m_blockBuffer);
         BufferUtility::copy(data.La,        m_offsets[1], m_blockBuffer);
         BufferUtility::copy(data.Ld,        m_offsets[2], m_blockBuffer);
@@ -109,8 +91,8 @@ public:
 
 protected:
 
-    static inline const std::string nameStr = "LightInfo";
-    static inline const std::vector<std::string> elementsStr = {
+    static constexpr std::string_view nameStr = "LightInfo"sv;
+    static constexpr std::array<std::string_view,4> elementsStr = {
         "LightInfo.Position",
         "LightInfo.La",
         "LightInfo.Ld",

@@ -30,6 +30,7 @@
 #include "depth-camera/impl/azure_kinect_device_impl.hpp"
 #include "depth-camera/impl/femto_bolt_device_impl.hpp"
 #include "depth-camera/impl/femto_mega_device_impl.hpp"
+#include "depth-camera/impl/recording_device_impl.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool::geo;
@@ -53,6 +54,10 @@ DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
     }else if(type == DCType::FemtoMega){
         auto lg = LogGuard("DCDevice::DCDevice FemtoMegaDeviceImpl"sv);
         i->dd = std::make_unique<FemtoMegaDeviceImpl>();
+        i->dd->dcDevice = this;
+    }else if(type == DCType::Recording){
+        auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
+        i->dd = std::make_unique<RecordingDeviceImpl>();
         i->dd->dcDevice = this;
     }
 }

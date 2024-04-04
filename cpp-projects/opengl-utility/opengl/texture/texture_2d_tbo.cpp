@@ -32,8 +32,8 @@ using namespace tool::gl;
 
 
 auto Texture2D::load_texture(tool::graphics::Texture2D *texture, TextureOptions options, int levels, GLint xOffset, GLint yOffset, GLint zOffset) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
 
     if(texture->is_hdr()){
         TBO::init_data_f32(texture->width(), texture->height(), 1, texture->nb_channels(), levels);
@@ -58,27 +58,27 @@ auto Texture2D::load_projected_texture(tool::graphics::Texture2D *texture, int l
 }
 
 auto Texture2D::init_render(GLsizei w, GLsizei h, int nbChannels) -> void{
-    TBO::generate();
+    TBO::initialize();
     TBO::init_data_u8(w, h, 1, nbChannels);
 }
 
 auto Texture2D::init_hdr_render(GLsizei w, GLsizei h, int nbChannels) -> void{
-    TBO::generate();
+    TBO::initialize();
     TBO::init_data_f32(w, h, 1, nbChannels);
 }
 
 auto Texture2D::init_image_8u(GLsizei w, GLsizei h, int nbChannels) -> void{
-    TBO::generate();
+    TBO::initialize();
     TBO::init_data_u8(w, h, 1, nbChannels);
 }
 
 auto Texture2D::init_image_32u(GLsizei w, GLsizei h, int nbChannels) -> void{
-    TBO::generate();
+    TBO::initialize();
     TBO::init_data_u32(w, h, 1, nbChannels);
 }
 
 auto Texture2D::init_image_32f(GLsizei w, GLsizei h, int nbChannels) -> void{
-    TBO::generate();
+    TBO::initialize();
     TBO::init_data_f32(w, h, 1, nbChannels);
 }
 
@@ -127,8 +127,8 @@ auto Texture2D::init_or_update_8ui(GLsizei w, GLsizei h, int numChannels, uint8_
 }
 
 auto Texture2D::load_data(float *data, GLsizei w, GLsizei h, int nbChannels, bool useInternal16Bits, TextureOptions options, int levels, GLint xOffset, GLint yOffset, GLint zOffset) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
 
     if(useInternal16Bits){
         TBO::init_data_f16(w, h, 1, nbChannels, levels);

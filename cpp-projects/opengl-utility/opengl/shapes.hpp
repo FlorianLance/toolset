@@ -26,17 +26,12 @@
 
 #pragma once
 
-// glew
-#include <GL/glew.h>
-
 // base
 #include "geometry/matrix3.hpp"
 #include "geometry/matrix4.hpp"
-#include "graphics/mesh.hpp"
 
 // local
 #include "opengl/draw/vao_renderer.hpp"
-
 
 namespace tool::gl{
 
@@ -44,17 +39,6 @@ class BaseShape{
 public:
     virtual ~BaseShape(){}
     std::unique_ptr<VAORenderer> vaoRenderer;
-};
-
-
-class FullscreenQuad : public BaseShape{
-public:
-    FullscreenQuad();
-};
-
-class Torus : public BaseShape{
-public:
-    Torus(GLfloat outerRadius, GLfloat innerRadius, GLuint nsides, GLuint nrings);
 };
 
 class Teapot : public BaseShape{
@@ -73,94 +57,8 @@ private:
     void move_lid(int grid, std::vector<GLfloat> & p, const geo::Mat4f &lidTransform);
 };
 
-class Grid : public BaseShape{
-public:
-    Grid(GLfloat width, GLfloat height, GLuint nbX, GLuint nbY);
-};
-
-class Axes : public BaseShape{
-public:
-    Axes(GLfloat length);
-};
-
-class Frustum : public BaseShape{
-public:
-
-    Frustum();
-
-    void orient( const geo::Pt3f &pos, const geo::Pt3f &at, const geo::Pt3f &up);
-    void set_perspective( float fovy, float ar, float nearDist, float farDist );
-
-    geo::Mat4f view_matrix() const;
-    geo::Mat4f inverse_view_matrix() const;
-    geo::Mat4f projection_matrix() const;
-    geo::Pt3f origin() const;
-
-private:
-
-    float mNear, mFar, fovy, ar;
-    geo::Pt3f m_position;
-    geo::Mat4f m_view;
-};
-
-class Line : public BaseShape{
-public:
-    Line(const geo::Pt3f &p1, const geo::Pt3f &p2);
-};
-
-class TriangleLines : public BaseShape{
-public:
-    TriangleLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3);
-};
-
-class QuadLines : public BaseShape{
-public:
-    QuadLines(const geo::Pt3f &p1, const geo::Pt3f &p2, const geo::Pt3f &p3, const geo::Pt3f &p4);
-};
 
 
 
-
-class CircleLines : public BaseShape{
-public:
-
-    CircleLines(float radius);
-};
-
-class Plane : public BaseShape{
-public:
-    Plane(GLfloat xsize, GLfloat zsize, size_t xdivs, size_t zdivs, GLfloat smax = 1.0f, GLfloat tmax = 1.0f);
-};
-
-class Skybox : public BaseShape{
-public:
-    Skybox(GLfloat size);
-};
-
-class Cube : public BaseShape{
-public:
-    Cube(GLfloat side);
-};
-
-class SphereShape : public BaseShape{
-public:
-    SphereShape(GLfloat radius, GLuint nSlices, GLuint nStacks);
-};
-
-class Mesh : public BaseShape{
-public:
-    Mesh(graphics::Mesh *mesh);
-};
-
-class Cloud : public BaseShape{
-public:
-    Cloud(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals);
-    Cloud(std::span<const geo::Pt2f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt2f> normals);
-};
-
-class Voxels : public BaseShape{
-public :
-    Voxels(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors);
-};
 
 }

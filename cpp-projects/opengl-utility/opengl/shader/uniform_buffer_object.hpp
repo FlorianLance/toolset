@@ -44,8 +44,8 @@ struct UBO{
 
     [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
     [[nodiscard]] constexpr auto size() const noexcept -> GLsizeiptr{return m_size;}
-    [[nodiscard]] virtual auto get_block_name() const -> std::string{return "";}
-    [[nodiscard]] virtual auto get_elements_name() const -> std::vector<std::string>{return {};}
+    [[nodiscard]] virtual auto get_block_name() const -> const std::string_view {return ""sv;}
+    [[nodiscard]] virtual auto get_elements_name() const -> std::span<const std::string_view>{return {};}
 
     auto generate() -> void;
     auto clean() -> void;

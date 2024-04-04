@@ -25,6 +25,9 @@
 ********************************************************************************/
 #pragma once
 
+// base
+#include "utility/string_unordered_map.hpp"
+
 // local
 #include "texture_2d_tbo.hpp"
 #include "cube_map_tbo.hpp"
@@ -42,39 +45,34 @@ class TexturesManager{
 
 public:
 
-    using Alias = std::string;
-    using Path  = std::string;
 
     static auto get_instance() -> TexturesManager*;
 
-    auto load_textures_from_directory(const Path &directoryPath, std::vector<TextureLoadingInfo> infos) -> bool;
-    auto load_cube_map(const Path &basePath, const std::array<std::string,6> &extensions, const Alias &alias, bool flip = true) -> bool;
+    auto load_textures_from_directory(const std::string &directoryPath, const std::vector<TextureLoadingInfo> &infos) -> bool;
+    auto load_cube_map(const std::string &basePath, const std::array<std::string,6> &extensions, const std::string &alias, bool flip = true) -> bool;
 
-    auto get_texture(const Alias &textureAlias) -> std::weak_ptr<Texture2D>;
-    auto get_texture_ptr(const Alias &textureAlias) -> Texture2D*;
-    auto get_texture_info(const Alias &textureAlias, TextureOptions options = {}) -> TextureInfo;
+    auto get_texture(const std::string &textureAlias) -> std::weak_ptr<Texture2D>;
+    auto get_texture_ptr(const std::string &textureAlias) -> Texture2D*;
+    auto get_texture_info(const std::string &textureAlias, TextureOptions options = {}) -> TextureInfo;
 
-    auto generate_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias, TextureOptions options = {}) -> bool;
-    auto generate_projected_texture2d_tbo(const Alias &tboAlias, const Alias &textureAlias) -> bool;
-    auto generate_cubemap_tbo(const Alias &tboAlias, const Alias &cubemapAlias) -> bool;
+    auto generate_texture2d_tbo(const std::string &tboAlias, const std::string &textureAlias, TextureOptions options = {}) -> bool;
+    auto generate_projected_texture2d_tbo(const std::string &tboAlias, const std::string &textureAlias) -> bool;
+    auto generate_cubemap_tbo(const std::string &tboAlias, const std::string &cubemapAlias) -> bool;
 
-    auto texture_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto texture_id(const Alias &tboAlias) -> GLuint;
+    auto texture_tbo(const std::string &tboAlias) -> gl::TBO*;
+    auto texture_id(const std::string &tboAlias) -> GLuint;
 
-    auto cube_map_tbo(const Alias &tboAlias) -> gl::TBO*;
-    auto cube_map_id(const Alias &tboAlias) -> GLuint;
+    auto cube_map_tbo(const std::string &tboAlias) -> gl::TBO*;
+    auto cube_map_id(const std::string &tboAlias) -> GLuint;
 
 private:
 
-    std::vector<Alias> texturesAliases;
-    std::vector<Alias> cubeMapsAliases;
-    std::vector<Alias> tboAliases;
+    s_umap<std::string,  std::string> aliasPerPath;
 
-    std::unordered_map<Path,  Alias> aliasPerPath;
+    s_umap<std::string, std::shared_ptr<Texture2D>> textures2DPerAlias;
+    s_umap<std::string, std::shared_ptr<CubeMap>> cubeMapsPerAlias;
 
-    std::unordered_map<Alias, std::shared_ptr<Texture2D>> textures;
-    std::unordered_map<Alias, std::shared_ptr<CubeMap>> cubeMaps;
-    std::unordered_map<Alias, gl::TBO> texturesTBOs;
-    std::unordered_map<Alias, gl::TBO> cubeMapsTBOs;
+    s_umap<std::string, std::unique_ptr<gl::Texture2D>> textures2DTboPerAlias;
+    s_umap<std::string, std::unique_ptr<gl::CubeMap>> cubeMapsTboPerAlias;
 };
 }

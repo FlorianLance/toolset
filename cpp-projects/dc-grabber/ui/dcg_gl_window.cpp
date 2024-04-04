@@ -54,10 +54,10 @@ auto DCGGlWindow::init_shaders() -> bool{
 
     Logger::log("DCGGlWindow::init_shaders\n");
 
-    const std::vector<Shader::Type> VS_FS         = {Shader::Type::vertex,Shader::Type::fragment};
-    const std::vector<Shader::Type> VS_FS_GS      = {Shader::Type::vertex,Shader::Type::fragment, Shader::Type::geometry};
+    const std::vector<ShaderType> VS_FS         = {ShaderType::vertex,ShaderType::fragment};
+    const std::vector<ShaderType> VS_FS_GS      = {ShaderType::vertex,ShaderType::fragment, ShaderType::geometry};
 
-    std::vector<std::pair<std::string, const std::vector<Shader::Type>*>> shadersNames={
+    std::vector<std::pair<std::string, const std::vector<ShaderType>*>> shadersNames={
         {"solid",&VS_FS},
         {"cloud",&VS_FS},
         {"voxelCloud",&VS_FS_GS}
@@ -74,7 +74,7 @@ auto DCGGlWindow::init_shaders() -> bool{
         std::vector<std::string> paths;
         paths.reserve(shaderName.second->size());
         for(const auto &shaderType : *shaderName.second){
-            paths.push_back(Paths::get_shader(shaderName.first, Shader::get_ext(shaderType)));
+            paths.push_back(Paths::get_shader(shaderName.first, get_ext(shaderType)));
         }
 
         Logger::message(std::format("Load shader [{}].\n", shaderName.first));

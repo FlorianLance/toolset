@@ -38,10 +38,10 @@ PBO::~PBO(){
     clean();
 }
 
-auto PBO::generate() -> void{
+auto PBO::initialize() -> void{
     
     if(m_handle != 0){
-        Logger::error(std::format("[PBO::generate] PBO already generated: {}.\n", m_handle));
+        Logger::error(std::format("[PBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -52,49 +52,69 @@ auto PBO::clean() -> void{
     if(m_handle == 0){
         return;
     }
+
     GL::delete_buffers(1, &m_handle);
-    m_handle = 0;
+    m_handle         = 0;
+    m_loadedDataSize = 0;
+    m_usage          = 0;
+}
+
+auto PBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> bool{
+
+    if(!is_initialized()){
+        Logger::error("[PBO::load_data] Not initialized.\n");
+        return false;
+    }
+
+    if(is_data_loaded()){
+        Logger::error(std::format("[PBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        return false;
+    }
+
+    if(size == 0){
+        Logger::error(std::format("[PBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        return false;
+    }
+
+    GL::named_buffer_storage(
+        m_handle,
+        m_loadedDataSize = size,
+        data,
+        m_usage = usage
+    );
+
+    return true;
 }
 
 auto PBO::bind_pack(GLuint index) const -> bool{
-    
-    if(m_handle == 0){
-        Logger::error("[PBO::bind_pack] PBO not generated, cannot bind it.\n");
+
+    if(!is_initialized()){
+        Logger::error("[PBO::bind_pack] Not initialized.\n");
         return false;
     }
-    
+
     glBindBufferBase(GL_PIXEL_PACK_BUFFER, index, m_handle);
 
     // GL::bind_buffers_range(
     //     GL_PIXEL_PACK_BUFFER,
     //     index,
     //     1,
-    //     &m_id,
+    //     &m_handle,
     //     nullptr,
-    //     nullptr
+    //     &m_loadedDataSize
     // );
 
     return true;
 }
 
 auto PBO::bind_unpack(GLuint index) const -> bool{
-    
-    if(m_handle == 0){
-        Logger::error("[PBO::bind_unpack] PBO not generated, cannot bind it.\n");
+
+    if(!is_initialized()){
+        Logger::error("[PBO::bind_unpack] Not initialized.\n");
         return false;
     }
-    
+
     glBindBufferBase(GL_PIXEL_UNPACK_BUFFER, index, m_handle);
 
     return true;
-}
-
-auto PBO::set_data_storage(GLsizei size, GLuint *data, GLbitfield usage) -> void{
-
-    GL::named_buffer_storage(
-        m_handle,
-        size,
-        data,
-        usage
-    );
 }

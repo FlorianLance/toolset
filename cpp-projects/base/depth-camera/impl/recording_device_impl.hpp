@@ -1,8 +1,8 @@
 
 /*******************************************************************************
-** Toolset-opengl-utility                                                     **
+** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,38 +26,50 @@
 
 #pragma once
 
-// glew
-#include "gl/glew.h"
+// local
+#include "depth-camera/dc_device_impl.hpp"
+#include "depth-camera/dc_video_player.hpp"
 
-namespace tool::gl{
+namespace tool::cam {
 
-struct EBO{
+struct RecordingDeviceImpl : public DCDeviceImpl{
 
-    EBO() = default;
-    EBO(const EBO&) = delete;
-    EBO& operator=(const EBO&) = delete;
-    EBO(EBO&& other) = default;
-    EBO& operator=(EBO&& other) = default;
-    ~EBO();
+    RecordingDeviceImpl();
 
-    auto generate() -> void;
-    auto clean() -> void;
+    // actions
+    auto open_file(const std::string &path) -> bool override final;
+    auto start_reading(const DCConfigSettings &newConfigS) -> bool override final;
+    auto stop_reading() -> void override final;
+    auto close() -> void override final;
 
-    auto load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage = defaultUsage) -> void;
-    auto update_data(const GLuint *data, GLsizeiptr size, GLintptr offset) -> void;
-
-
-    auto bind() -> void;
-    static auto unbind() -> void;
-
+    // getters
+    auto is_opened() const noexcept -> bool override final;
+    auto nb_devices() const noexcept -> std::uint32_t override final;
+    auto device_name() const noexcept -> std::string override final;
 
 private:
 
-    static inline GLbitfield  defaultUsage = 0;
-    GLuint m_handle = 0;
+    // // initialization
+    // auto initialize_device_specific() -> void override final;
+    // auto update_from_colors_settings() -> void override final;
+
+    // // read data
+    // auto read_calibration() -> void override final;
+    // auto capture_frame(std::int32_t timeoutMs) -> bool override final;
+    // auto read_color_image(bool enable) -> bool override final;
+    // auto read_depth_image(bool enable) -> bool override final;
+    // auto read_infra_image(bool enable) -> bool override final;
+    // //auto read_audio(bool enable) -> void override final {/** NO AUDIO SENSOR */}
+    // auto read_IMU(bool enable) -> void override final;
+    // auto read_body_tracking(bool enable) -> void override final;
+
+    // // process data
+    // auto resize_color_image_to_depth_size() -> void override final;
+    // auto generate_cloud(bool enable) -> void override final;
+
+    DCVideoPlayer playerD;
+    DCVideo video;
 };
 
 
 }
-
-

@@ -38,7 +38,7 @@ namespace tool::gl{
 class CubeMap : public TBO{
 public:
     CubeMap() : TBO(TextureMode::cubemap){}
-    auto load_textures(std::array<graphics::Texture2D,6> *textures) -> void;
+    auto load_textures(std::span<const graphics::Texture2D,6> textures) -> void;
 };
 
 

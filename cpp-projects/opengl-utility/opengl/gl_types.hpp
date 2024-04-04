@@ -27,13 +27,17 @@
 #pragma once
 
 // std
-#include <cstdint>
+#include <string_view>
 
 // glew
 #include <GL/glew.h>
 
+// base
+#include "utility/tuple_array.hpp"
 
 namespace tool::gl {
+
+using namespace std::literals::string_view_literals;
 
 enum class GlType : std::uint8_t{
     bool_t =0, bvec2_t, bvec3_t, bvec4_t,
@@ -57,7 +61,56 @@ enum class GlType : std::uint8_t{
     usampler1d_t, usampler2d_t, usampler3d_t,
     usamplerCube_t, usampler1dArray_t, usampler2dArray_t,
     usampler2dMS_t, usampler2dMSArray_t, usamplerBuffer,
-    unknow, SizeEnum
+    unknow,
+    SizeEnum
 };
+
+using TGlTypes = std::tuple<
+    GlType,                     GLenum,                 std::string_view>;
+
+static constexpr TupleArray<GlType::SizeEnum, TGlTypes> glTypes ={{
+    TGlTypes
+    {GlType::bool_t,            GL_BOOL,                "bool"sv},
+    {GlType::bvec2_t,           GL_BOOL_VEC2,           "bvec2"sv},
+    {GlType::bvec3_t,           GL_BOOL_VEC3,           "bvec3"sv},
+    {GlType::bvec4_t,           GL_BOOL_VEC4,           "bvec4"sv},
+    {GlType::int_t,             GL_INT,                 "int"sv},
+    {GlType::ivec2_t,           GL_INT_VEC2,            "ivec2"sv},
+    {GlType::ivec3_t,           GL_INT_VEC3,            "ivec3"sv},
+    {GlType::ivec4_t,           GL_INT_VEC4,            "ivec4"sv},
+    {GlType::uint_t,            GL_UNSIGNED_INT,        "uint"sv},
+    {GlType::uivec2_t,          GL_UNSIGNED_INT_VEC2,   "uivec2"sv},
+    {GlType::uivec3_t,          GL_UNSIGNED_INT_VEC3,   "uivec3"sv},
+    {GlType::uivec4_t,          GL_UNSIGNED_INT_VEC4,   "uivec4"sv},
+    {GlType::float_t,           GL_FLOAT,               "float"sv},
+    {GlType::fvec2_t,           GL_FLOAT_VEC2,          "fvec2"sv},
+    {GlType::fvec3_t,           GL_FLOAT_VEC3,          "fvec3"sv},
+    {GlType::fvec4_t,           GL_FLOAT_VEC4,          "fvec4"sv},
+    {GlType::double_t,          GL_FLOAT,               "double"sv},
+    {GlType::dvec2_t,           GL_FLOAT_VEC2,          "dvec2"sv},
+    {GlType::dvec3_t,           GL_FLOAT_VEC3,          "dvec3"sv},
+    {GlType::dvec4_t,           GL_FLOAT_VEC4,          "dvec4"sv},
+    {GlType::fmat2x2_t,         GL_FLOAT_MAT2,          "fmat2x2"sv},
+    {GlType::fmat3x3_t,         GL_FLOAT_MAT3,          "fmat3x3"sv},
+    {GlType::fmat4x4_t,         GL_FLOAT_MAT4,          "fmat4x4"sv},
+    {GlType::dmat2x2_t,         GL_DOUBLE_MAT2,         "dmat2x2"sv},
+    {GlType::dmat3x3_t,         GL_DOUBLE_MAT3,         "dmat3x3"sv},
+    {GlType::dmat4x4_t,         GL_DOUBLE_MAT4,         "dmat4x4"sv},
+    {GlType::sampler2d_t,       GL_SAMPLER_2D,          "sampler 2D"sv},
+    {GlType::sampler2dShadow_t, GL_SAMPLER_2D_SHADOW,   "sampler 2D shadow"sv},
+
+}};
+
+[[nodiscard]][[maybe_unused]] static constexpr auto get_type(GLenum t) -> GlType{
+    return glTypes.at<1,0>(t);
+}
+
+[[nodiscard]][[maybe_unused]] static constexpr auto get_name(GlType t) -> std::string_view{
+    return glTypes.at<0,2>(t);
+}
+
+[[nodiscard]][[maybe_unused]] static constexpr auto get_name(GLenum t) -> std::string_view{
+    return glTypes.at<1,2>(t);
+}
 
 }

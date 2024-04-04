@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-opengl-utility                                                     **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,67 +24,18 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "element_buffer_object.hpp"
-
-// base
-#include "utility/logger.hpp"
+#pragma once
 
 // local
-#include "opengl/gl_functions.hpp"
+#include "base_drawer.hpp"
 
-using namespace tool::gl;
+namespace tool::gl {
 
-EBO::~EBO(){
-    clean();
+class VoxelsDrawer2 : public BaseDrawer{
+public:
+    VoxelsDrawer2() : BaseDrawer(DrawerType::Voxels){}
+    auto initialize(bool dynamic, std::span<const geo::Pt3<int>> vertices, std::span<const geo::Pt3f> colors) -> void;
+    auto update(std::span<const geo::Pt3<int>> vertices, std::span<const geo::Pt3f> colors) -> void;
+};
 }
 
-auto EBO::generate() -> void{
-
-    if(m_handle != 0){
-        Logger::error(std::format("[EBO::generate] EBO already generated: {}\n", m_handle));
-        return;
-    }
-    GL::create_buffers(1, &m_handle);
-}
-
-auto EBO::clean() -> void{
-
-    if(m_handle == 0){
-        return;
-    }
-    GL::delete_buffers(1, &m_handle);
-    m_handle = 0;
-}
-
-auto EBO::bind() -> void{
-
-    if(m_handle == 0){
-        Logger::error("[EBO::bind] EBO not generated, cannot bind it.\n");
-        return;
-    }
-
-    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, m_handle);
-}
-
-auto EBO::unbind() -> void{
-    GL::bind_buffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-auto EBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> void{
-
-    GL::named_buffer_storage(
-        m_handle,
-        size,
-        data,
-        usage
-    );
-}
-
-auto EBO::update_data(const GLuint *data, GLsizeiptr size, GLintptr offset) -> void{
-    GL::named_buffer_sub_data(
-        m_handle,
-        offset,
-        size,
-        data
-    );
-}

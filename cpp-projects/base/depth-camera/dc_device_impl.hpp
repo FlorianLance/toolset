@@ -67,7 +67,9 @@ struct DCDeviceImpl{
     virtual ~DCDeviceImpl();
 
     // actions
-    virtual auto open(std::uint32_t deviceId) -> bool = 0;
+    virtual auto open(std::uint32_t deviceId) -> bool{static_cast<void>(deviceId); return false;}
+    virtual auto open(std::string_view deviceId) -> bool{static_cast<void>(deviceId); return false;}
+    virtual auto open_file(const std::string &path) -> bool{static_cast<void>(path); return false;}
     virtual auto start_reading(const DCConfigSettings &newConfigS) -> bool = 0;
     virtual auto stop_reading() -> void = 0;
     virtual auto close() -> void = 0;

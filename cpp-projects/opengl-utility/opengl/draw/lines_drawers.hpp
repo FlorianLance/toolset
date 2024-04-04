@@ -29,23 +29,47 @@
 // local
 #include "base_drawer.hpp"
 
-#include "opengl/vao.hpp"
-#include "opengl/buffer/vertex_buffer_object.hpp"
-#include "opengl/buffer/element_buffer_object.hpp"
-
-
 namespace tool::gl {
 
-class QuadTrianglesDrawer : public BaseDrawer{
+class LineDrawer2 : public BaseDrawer{
 public:
-    QuadTrianglesDrawer();
-    auto init_and_load() -> void;
-    auto draw() -> void override final;
-
-    VAO vao;
-    EBO indicesB;
-    VBO pointsB;
-    VBO texCoordsB;
-    bool m_initialized= false;
+    LineDrawer2() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic) -> void;
+    auto update(std::span<const geo::Pt3f,2> vertices, std::span<const geo::Pt3f> colors = {}) -> void;
 };
+
+class AxesLinesDrawer : public BaseDrawer{
+public:
+    AxesLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(float length = 1.f) -> void;
+};
+
+class TriangleLinesDrawer : public BaseDrawer{
+public:
+    TriangleLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic) -> void;
+    auto update(std::span<const geo::Pt3f,3> vertices, std::span<const geo::Pt3f> colors = {}) -> void;
+};
+
+class QuadLinesDrawer : public BaseDrawer{
+public:
+    QuadLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic) -> void;
+    auto update(std::span<const geo::Pt3f,4> vertices, std::span<const geo::Pt3f> colors = {}) -> void;
+};
+
+class FrustumDrawerLinesDrawer : public BaseDrawer{
+public:
+    FrustumDrawerLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic, float fovy = 50.0f, float ar = 1.0f, float nearDist = 0.5f, float farDist = 100.0f) -> void;
+    auto update(float fovy, float ar, float nearDist, float farDist) -> void;
+};
+
+class GridLinesDrawer : public BaseDrawer{
+public:
+    GridLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(float width = 0.2f, float height = 0.2f, int nbX = 100, int nbY = 100) -> void;
+};
+
 }
+

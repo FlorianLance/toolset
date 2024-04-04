@@ -68,7 +68,7 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
     m_texture.set_texture_options(options);
 
     m_depthTexture.clean();
-    m_depthTexture.generate();
+    m_depthTexture.initialize();
     m_depthTexture.bind();
     m_depthTexture.set_data_storage(size.x(), size.y());
 

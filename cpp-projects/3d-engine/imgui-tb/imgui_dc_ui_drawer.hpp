@@ -26,6 +26,9 @@
 
 #pragma once
 
+// std
+#include <map>
+
 // base
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_calibrator_settings.hpp"
@@ -35,14 +38,9 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
-
 #include "depth-camera/states/dc_video_player_states.hpp"
 #include "depth-camera/states/dc_video_recorder_states.hpp"
 #include "depth-camera/states/dc_calibrator_states.hpp"
-
-
-// opengl
-#include "opengl/draw/drawer.hpp"
 
 // local
 #include "imgui_types.hpp"
@@ -126,14 +124,6 @@ public:
     }
 
     static inline bool m_isManager = false;
-};
-
-
-struct CloudPointsFrameDrawer{
-    int currentFrameId = 0;
-    int startFrameId = 0;
-    int endFrameId = 0;
-    gl::CloudPointsDrawer cloudD;
 };
 
 }

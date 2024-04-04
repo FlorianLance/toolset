@@ -27,30 +27,34 @@
 #pragma once
 
 // base
-#include "utility/buffer.hpp"
+#include "geometry/cloud.hpp"
 
 // local
-#include "opengl/draw/vao_renderer.hpp"
-#include "opengl/shader/shader_program.hpp"
+#include "base_drawer.hpp"
 
-namespace tool::gl{
+namespace tool::gl {
 
-class ObjectDrawer{
+class CloudPointsDrawer5 : public BaseDrawer{
 public:
-
-    virtual auto draw(gl::ShaderProgram *shader = nullptr) -> void;
-
-    virtual ~ObjectDrawer(){}
-
-    std::unique_ptr<VAORenderer> vaoRenderer = nullptr;
-    Buffer<GLuint> texturesNames;
+    CloudPointsDrawer5() : BaseDrawer(DrawerType::Points){}
+    auto initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void;
+    auto initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void;
+    auto update(const geo::ColoredCloudData &cloud) -> void;
+    auto update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void;
 };
 
-class FullscreenQuadDrawer2 : public ObjectDrawer{
-public:
 
-    FullscreenQuadDrawer2();
-};
+// VoxelsDrawer::VoxelsDrawer(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors){
+//     init(voxels, colors);
+// }
 
+// auto VoxelsDrawer::init(std::span<const geo::Pt3<int>> voxels, std::span<const geo::Pt3f> colors) -> void{
+//     clean();
+//     if(!voxels.empty()){
+//         drawableObject = std::make_unique<gl::Voxels>(voxels, colors);
+//     }else{
+//         drawableObject = nullptr;
+//     }
+// }
 
 }

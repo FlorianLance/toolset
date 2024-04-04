@@ -47,35 +47,31 @@ HEADERS += \
     # opengl
     opengl/buffer/framebuffer_object.hpp \
     opengl/draw/base_drawer.hpp \
-    opengl/draw/cloud_drawer.hpp \
-    opengl/draw/grid_lines_drawer.hpp \
-    opengl/draw/line_drawer.hpp \
-    opengl/draw/lines_mesh_vao.hpp \
-    opengl/draw/mesh_drawer.hpp \
-    opengl/draw/object_drawer.hpp \
-    opengl/draw/points_mesh_vao.hpp \
-    opengl/draw/quad_lines_drawer.hpp \
-    opengl/draw/quad_triangles_drawer.hpp \
-    opengl/draw/sphere_drawer.hpp \
-    opengl/draw/triangles_mesh_vao.hpp \
+    opengl/draw/lines_drawers.hpp \
+    opengl/draw/lines_renderer.hpp \
+    opengl/draw/points_drawers.hpp \
+    opengl/draw/points_renderer.hpp \
+    opengl/draw/triangles_drawers.hpp \
+    opengl/draw/triangles_renderer.hpp \
     opengl/draw/vao_renderer.hpp \
+    opengl/draw/voxels_drawers.hpp \
+    opengl/draw/voxels_renderer.hpp \
     opengl/gl_draw.hpp \
     opengl/gl_functions.hpp \
     opengl/gl_material.hpp \
     opengl/gl_types.hpp \
     opengl/sampler.hpp \
+    opengl/shader/shader_object.hpp \
     opengl/shader/shader_program.hpp \
     opengl/vao.hpp \
     opengl/shapes.hpp \
     ## buffer
     opengl/buffer/atomic_buffer_object.hpp \
-    opengl/buffer/element_buffer_object.hpp \
     opengl/buffer/pixel_buffer_object.hpp \     
     opengl/buffer/render_buffer_object.hpp \
     opengl/buffer/buffer-utility.hpp \
     opengl/buffer/vertex_buffer_object.hpp \
     ## shader        
-    opengl/shader/shader.hpp \
     opengl/shader/shaders_manager.hpp \
     opengl/shader/shader_storage_buffer_object.hpp \
     opengl/shader/uniform_buffer_object.hpp \
@@ -88,7 +84,6 @@ HEADERS += \
     ## utility
     opengl/utility/gl_utility.hpp \
     ## draw
-    opengl/draw/drawer.hpp \
     opengl/draw/drawers_manager.hpp \
 
 SOURCES += \
@@ -96,30 +91,27 @@ SOURCES += \
     glfw/glfw_gl_windows.cpp \
     # opengl
     opengl/buffer/atomic_buffer_object.cpp \
-    opengl/buffer/element_buffer_object.cpp \
     opengl/buffer/framebuffer_object.cpp \
     opengl/buffer/pixel_buffer_object.cpp \
     opengl/buffer/render_buffer_object.cpp \
-    opengl/draw/cloud_drawer.cpp \
-    opengl/draw/grid_lines_drawer.cpp \
-    opengl/draw/line_drawer.cpp \
-    opengl/draw/lines_mesh_vao.cpp \
-    opengl/draw/mesh_drawer.cpp \
-    opengl/draw/object_drawer.cpp \
-    opengl/draw/points_mesh_vao.cpp \
-    opengl/draw/quad_lines_drawer.cpp \
-    opengl/draw/quad_tirangles_drawer.cpp \
-    opengl/draw/sphere_drawer.cpp \
-    opengl/draw/triangles_mesh_vao.cpp \
+    opengl/draw/base_drawer.cpp \
+    opengl/draw/lines_drawers.cpp \
+    opengl/draw/lines_renderer.cpp \
+    opengl/draw/points_drawers.cpp \
+    opengl/draw/points_renderer.cpp \
+    opengl/draw/triangles_drawers.cpp \
+    opengl/draw/triangles_renderer.cpp \
     opengl/draw/vao_renderer.cpp \
+    opengl/draw/voxels_drawers.cpp \
+    opengl/draw/voxels_renderer.cpp \
     opengl/gl_functions.cpp \
+    opengl/shader/shader_object.cpp \
     opengl/shader/shader_program.cpp \
     opengl/shapes.cpp \
     opengl/sampler.cpp \
     ## buffer        
     opengl/buffer/vertex_buffer_object.cpp \
     ## shader
-    opengl/shader/shader.cpp \
     opengl/shader/shaders_manager.cpp \
     opengl/shader/shader_storage_buffer_object.cpp \
     opengl/shader/uniform_buffer_object.cpp \
@@ -130,7 +122,6 @@ SOURCES += \
     opengl/texture/texture_2d_tbo.cpp \
     opengl/texture/textures_manager.cpp \
     ## draw
-    opengl/draw/drawer.cpp \
     opengl/draw/drawers_manager.cpp \
     opengl/vao.cpp
 

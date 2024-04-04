@@ -144,7 +144,7 @@ auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> voi
     }
 
     const auto &blockInfo = shader->uniformBlocks.at(nameStr);
-    m_blockBuffer.resize((blockInfo.size.v));
+    m_blockBuffer.resize((blockInfo.size));
     m_offsets = blockInfo.get_offsets(get_elements_name());
 
     set_data_storage(static_cast<GLint>(m_blockBuffer.size()), nullptr, usage);

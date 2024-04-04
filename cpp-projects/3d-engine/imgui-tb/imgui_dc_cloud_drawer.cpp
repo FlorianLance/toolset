@@ -27,6 +27,7 @@
 #include "imgui_dc_cloud_drawer.hpp"
 
 using namespace tool::graphics;
+using namespace tool::geo;
 
 auto DCCloudDrawer::initialize() -> void {
 
@@ -40,7 +41,13 @@ auto DCCloudDrawer::initialize() -> void {
     depthD.init(&depthT);
     infraD.init(&infraT);
 
-    spD.init(0.05f, 20,  20, {});
+    spD.initialize(0.05f, 20, 20);
+
+    std::vector<Pt3f> initData(1024*1024);
+    cpD.initialize(true, initData, initData, {});
+    cpD.set_indice_count(0);
+
+    frustumD.initialize(true);
 }
 
 auto DCCloudDrawer::reset() -> void{
@@ -60,7 +67,10 @@ auto DCCloudDrawer::reset() -> void{
     infraT.init_or_update_8ui(100,100,3, reset3.data());
 
     // clean cloud drawer
-    cpD.clean();
+    // std::vector<Pt3f> initData(1024*1024);
+    // cpD.initialize(true, initData, initData, {});
+    cpD.set_indice_count(0);
+    // cpD.clean();
 }
 
 auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
@@ -68,6 +78,14 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     if(lastFrameId == frame->idCapture){
         return false;
     }
+
+
+    auto dr = cam::dc_depth_resolution(frame->mode);
+    auto range = cam::dc_depth_range(dr);
+    auto hFov = dc_depth_h_fov(dr);
+    auto vFov = dc_depth_v_fov(dr);
+    frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x(), range.y());
+
 
     if(!frame->rgbaDepthSizedColor.empty()){
         colorT.init_or_update_8ui(
@@ -92,11 +110,13 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     }
 
     if(frame->cloud.is_valid()){
-        cpD.init(
-            frame->cloud.vertices.span(),
-            frame->cloud.colors.span(),
-            frame->cloud.normals.span()
-        );
+        cpD.update(frame->cloud);
+        cpD.set_indice_count(frame->cloud.vertices.size());
+        // cpD.init(
+        //     frame->cloud.vertices.span(),
+        //     frame->cloud.colors.span(),
+        //     frame->cloud.normals.span()
+        // );
     }
     
     nbBodies = frame->bodyTracking.size();
@@ -139,10 +159,11 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     //    }
 }
 
-auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool {
+auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool {    
 
-
-    cpD.init(cloudData.vertices.span(), cloudData.colors.span());
+    cpD.update(cloudData);
+    cpD.set_indice_count(cloudData.vertices.size());
+    // cpD.init(cloudData.vertices.span(), cloudData.colors.span());
 
     lastFrame   = nullptr;
     lastFrameId = -1;

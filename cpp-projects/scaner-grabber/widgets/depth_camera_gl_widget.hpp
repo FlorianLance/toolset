@@ -91,11 +91,11 @@ private:
 
     graphics::Mesh mesh;
 
-    gl::CloudPointsDrawer kinectCloud;
-    gl::MeshDrawer kinectMesh2;
+    // gl::CloudPointsDrawer kinectCloud;
+    // gl::MeshDrawer kinectMesh2;
 
     // ...
-    gl::DrawJointMesh jointsMesh;
+    // gl::DrawJointMesh jointsMesh;
 };
 
 }

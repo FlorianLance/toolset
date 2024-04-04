@@ -36,7 +36,7 @@ VAO::~VAO(){
     clean();
 }
 
-auto VAO::generate() -> void{
+auto VAO::initialize() -> void{
     if(m_handle != 0){
         Logger::warning(std::format("[VAO::generate] VAO already generated: {}\n", m_handle));
         return;

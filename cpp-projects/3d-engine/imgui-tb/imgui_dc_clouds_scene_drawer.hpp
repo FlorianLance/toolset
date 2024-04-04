@@ -28,6 +28,10 @@
 // base
 #include "thirdparty/sigslot/signal.hpp"
 
+// opengl-utility
+#include "opengl/draw/lines_drawers.hpp"
+#include "opengl/draw/triangles_drawers.hpp"
+
 // local
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
@@ -78,17 +82,14 @@ struct DCCloudsSceneDrawer{
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
 
     // drawers
-    std::vector<DCCloudDrawer> cloudsD;
-    std::unique_ptr<gl::GridDrawer> gridD = nullptr;    
+    std::vector<std::unique_ptr<DCCloudDrawer>> cloudsD;
+    gl::GridLinesDrawer gridD;
+    gl::TriangleLinesDrawer plane1D;
+    gl::SphereTrianglesDrawer plane1PointsD;
     ImguiFboUiDrawer fboD;
+
     // settings
     DCSceneDisplaySettings display;
-
-    // test
-    std::unique_ptr<gl::TriangleLineDrawer> plane1D = nullptr;
-    std::unique_ptr<gl::SphereDrawer> plane1PointsD = nullptr;
-
-    geo::Matrix<float,4,4> plane1Tr = geo::Mat4f::identity();
 
 private:
 

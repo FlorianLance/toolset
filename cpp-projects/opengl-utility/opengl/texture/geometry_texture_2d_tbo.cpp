@@ -5,8 +5,8 @@ using namespace tool::gl;
 
 
 auto GeometryTexture2D::init_position(GLsizei w, GLsizei h) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
     TBO::init_data_f32(w, h, 1, 3);
 
     TextureOptions options;
@@ -19,8 +19,8 @@ auto GeometryTexture2D::init_position(GLsizei w, GLsizei h) -> void{
 }
 
 auto GeometryTexture2D::init_color(GLsizei w, GLsizei h) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
     TBO::init_data_u8(w, h, 1, 3);
 
     TextureOptions options;
@@ -31,8 +31,8 @@ auto GeometryTexture2D::init_color(GLsizei w, GLsizei h) -> void{
 }
 
 auto GeometryTexture2D::init_ao(GLsizei w, GLsizei h) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
     TBO::init_data_f32(w, h, 1, 1);
 
     TextureOptions options;
@@ -44,8 +44,8 @@ auto GeometryTexture2D::init_ao(GLsizei w, GLsizei h) -> void{
 
 
 auto GeometryMultisampleTexture2D::init_color(GLsizei w, GLsizei h, GLsizei samples) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
     TBO::init_multisample_data_u8(w, h, 1, 3, samples);
 
     TextureOptions options;
@@ -57,8 +57,8 @@ auto GeometryMultisampleTexture2D::init_color(GLsizei w, GLsizei h, GLsizei samp
 }
 
 auto GeometryMultisampleTexture2D::init_position(GLsizei w, GLsizei h, GLsizei samples) -> void{
-
-    TBO::generate();
+    
+    TBO::initialize();
     TBO::init_multisample_data_f32(w, h, 1, 3, samples);
 
     TextureOptions options;
