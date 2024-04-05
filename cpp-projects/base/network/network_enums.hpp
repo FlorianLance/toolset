@@ -43,7 +43,6 @@ enum class FeedbackType : std::int8_t{
     quit,
     shutdown,
     restart,
-    update_device_list,
     SizeEnum
 };
 
@@ -59,15 +58,13 @@ TFeedbackTypes
     {FeedbackType::quit,                "quit"sv},
     {FeedbackType::shutdown,            "shutdown"sv},
     {FeedbackType::restart,             "restart"sv},
-    {FeedbackType::update_device_list,  "update_device_list"sv},
 }};
 
-
-[[maybe_unused]] static constexpr auto to_string(FeedbackType m) -> Name{
+[[nodiscard]] [[maybe_unused]] static constexpr auto to_string(FeedbackType m) -> Name{
     return feedbackTypes.at<0,1>(m);
 }
 
-[[maybe_unused]] static constexpr auto to_i8(FeedbackType m) -> std::int8_t{
+[[nodiscard]] [[maybe_unused]] static constexpr auto to_i8(FeedbackType m) -> std::int8_t{
     return static_cast<std::int8_t>(m);
 }
 
@@ -103,11 +100,11 @@ static constexpr TupleArray<MessageType::SizeEnum, TMessageTypes> MessageTypes =
     {MessageType::ping,                         "ping"sv},
 }};
 
-[[maybe_unused]] static constexpr auto to_string(MessageType m) -> Name{
+[[nodiscard]] [[maybe_unused]] static constexpr auto to_string(MessageType m) -> Name{
     return MessageTypes.at<0,1>(m);
 }
 
-[[maybe_unused]] static constexpr auto to_i8(MessageType m) -> std::int8_t{
+[[nodiscard]] [[maybe_unused]] static constexpr auto to_i8(MessageType m) -> std::int8_t{
     return static_cast<std::int8_t>(m);
 }
 

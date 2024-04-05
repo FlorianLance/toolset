@@ -89,6 +89,7 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
     });
     i->dcUdpReader.feedback_signal.connect(&DCServerRemoteDevice::receive_feedback, this);
     i->dcUdpReader.compressed_frame_signal.connect(&DCServerRemoteDevice::receive_compressed_frame, this);
+    i->dcUdpReader.status_signal.connect(&DCServerRemoteDevice::receive_status, this);
 
     return true;
 }
@@ -127,7 +128,9 @@ auto DCServerRemoteDevice::clean() -> void{
     // clean reader
     // # remove connections
     i->dcUdpReader.feedback_signal.disconnect(&DCServerRemoteDevice::receive_feedback, this);
-    i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);
+    i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);    
+    i->dcUdpReader.status_signal.disconnect(&DCServerRemoteDevice::receive_status, this);
+
     i->remoteDeviceConnected = false;
     // # stop reading loop
     if(i->dcUdpReader.is_reading_thread_started()){
@@ -179,14 +182,14 @@ auto DCServerRemoteDevice::read_data_from_network() -> size_t{
     return i->dcUdpReader.read_packet();
 }
 
-auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void{
+auto DCServerRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
 
-    switch(message.data.feedback){
+    switch(message.feedback){
     case FeedbackType::message_received:
-        if(message.data.receivedMessageType == MessageType::init_network_infos){
+        if(message.receivedMessageType == MessageType::init_network_infos){
             i->remoteDeviceConnected = true;
         }
         break;
@@ -207,7 +210,7 @@ auto DCServerRemoteDevice::receive_feedback(Header h, UdpMonoPacketMessage<Feedb
         break;
     }
 
-    remote_feedback_signal(std::move(message.data));
+    remote_feedback_signal(std::move(message));
 }
 
 auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void{
@@ -217,4 +220,8 @@ auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<ca
     if(compressedFrame){
         remote_frame_signal(std::move(compressedFrame));
     }
+}
+
+auto DCServerRemoteDevice::receive_status(UdpReceivedStatus status) -> void{
+    remote_status_signal(status);
 }

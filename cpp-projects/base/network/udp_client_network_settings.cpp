@@ -55,7 +55,7 @@ auto UdpClientNetworkSettings::initialize() -> bool{
 
     if(ipv4Interfaces.empty() && ipv6Interfaces.empty()){
         Logger::error("Cannot find any ipv4/ipv6 interface. Abort initialization.\n");
-        return false;
+        return false;        
     }
 
     return true;
@@ -90,7 +90,7 @@ auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
             protocol = Protocol::ipv4;
         }
         udpReadingInterfaceId = String::to_int(values[0]);
-        udpReadingPort = String::to_int(values[1]);
+        udpReadingPort        = String::to_int(values[1]);
 
         const auto &interfaces = (protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
         udpReadingInterface = interfaces[udpReadingInterfaceId];

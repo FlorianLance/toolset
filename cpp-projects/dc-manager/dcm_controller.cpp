@@ -130,6 +130,8 @@ auto DCMController::set_connections() -> void{
 
     serverNet->remote_synchro_signal.connect(               &DCMModel::update_synchro,                      model.get());
     serverNet->remote_feedback_signal.connect(              &DCMModel::add_feedback,                        model.get());
+    serverNet->remote_status_signal.connect(                &DCMModel::update_status,                       model.get());
+
     s->reset_network_signal.connect(                        &DCMModel::reset_network,                       model.get());
 
     // # server network

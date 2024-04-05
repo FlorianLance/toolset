@@ -1,9 +1,8 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -28,53 +27,85 @@
 #pragma once
 
 // local
-#include "network/udp_server_network_settings.hpp"
-#include "depth-camera/settings/dc_device_settings.hpp"
-#include "depth-camera/settings/dc_color_settings.hpp"
-#include "depth-camera/settings/dc_filters_settings.hpp"
-#include "depth-camera/settings/dc_delay_settings.hpp"
-#include "depth-camera/dc_compressed_frame.hpp"
-#include "depth-camera/dc_frame.hpp"
-#include "thirdparty/sigslot/signal.hpp"
+#include "utility/buffer.hpp"
 
-namespace tool::net {
+namespace tool{
 
-template<typename ...arg>
-using SSS = sigslot::signal<arg...>;
+template <typename ElementType>
+struct SingleRingBuffer{
 
-struct DCServerNetwork{
+    constexpr auto resize(size_t count, ElementType initValue) -> void{
+        buffers.resize(count);
+        buffers.fill(initValue);
+    }
 
-    DCServerNetwork();
-    ~DCServerNetwork();
+    auto set_current(ElementType value) noexcept -> void{
+        if(currentId < buffers.size()){
+            buffers[currentId] = value;
+        }
+    }
 
-    auto initialize(const std::vector<net::ReadSendNetworkInfos> &clientsInfo) -> void;
-    auto clean() -> void;
+    auto increment() noexcept -> void{
+        currentId = (currentId + 1) % buffers.size();
+    }
 
-    auto init_connection(size_t idG) -> void;
-    auto apply_command(size_t idG, Command command) -> void;
-    auto update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void;
-
-    auto update_filters_settings(size_t idG, const cam::DCFiltersSettings &filtersS) -> void;
-    auto update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void;
-    auto update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void;
-
-    auto devices_nb() const noexcept -> size_t;
-    auto device_connected(size_t idG) const noexcept -> bool;
-
-    auto read_data_from_network(size_t idG) -> size_t;
-
-    // signals
-    SSS<size_t, std::int64_t> remote_synchro_signal;
-    SSS<size_t, net::Feedback> remote_feedback_signal;
-    SSS<size_t, net::UdpReceivedStatus> remote_status_signal;
-
-    SSS<size_t, std::shared_ptr<cam::DCFrame>> local_frame_signal;
-    SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
+    auto span() noexcept -> std::span<ElementType>{
+        return buffers.span();
+    }
 
 private:
+    size_t currentId = 0;
+    Buffer<ElementType> buffers;
+};
 
-    struct Impl;
-    std::unique_ptr<Impl> i;
+
+template <typename ElementType>
+struct DoubleRingBuffer{
+
+    constexpr auto resize(size_t count, size_t size = 0) -> void{
+        buffers.resize(count);
+        if(size != 0){
+            for(auto &buffer : buffers){
+                buffer.resize(size);
+            }
+        }
+        currentId = 0;
+    }
+
+    constexpr auto resize_current(size_t size) -> void{
+        if(currentId < buffers.size()){
+            buffers[currentId].resize(size);
+        }
+    }
+
+    constexpr auto current_size() const noexcept -> size_t{
+        if(currentId < buffers.size()){
+            return buffers[currentId].size();
+        }
+        return 0;
+    }
+
+    auto current_span(size_t size) noexcept -> std::span<ElementType>{
+        if(currentId < buffers.size()){
+            if(size > buffers[currentId].size()){
+                size = buffers[currentId].size();
+            }
+            return std::span<ElementType>(buffers[currentId].get_data(), size);;
+        }
+        return {};
+    }
+
+    auto increment() noexcept -> void{
+        currentId = (currentId + 1) % buffers.size();
+    }
+
+private:
+    size_t currentId = 0;
+    Buffer<Buffer<ElementType>> buffers;
 };
 
 }
+
+
+
+

@@ -30,16 +30,15 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
-#include "utility/unordered_map.hpp"
+
 #include "network/udp_reader.hpp"
-#include "network/udp_header.hpp"
 #include "network/network_types.hpp"
+
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/dc_compressed_frame.hpp"
-
 
 namespace tool::net {
 
@@ -51,63 +50,41 @@ public:
 
     // signals
     SSS<Header, std::shared_ptr<UdpNetworkSendingSettings>> init_network_infos_signal;
-    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>>> update_device_settings_signal;
-    SSS<Header, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>>> update_color_settings_signal;
+    SSS<Header, std::shared_ptr<cam::DCDeviceSettings>> update_device_settings_signal;
+    SSS<Header, std::shared_ptr<cam::DCColorSettings>> update_color_settings_signal;
     SSS<Header, std::shared_ptr<cam::DCFiltersSettings>> update_filters_signal;
-    SSS<Header, UdpMonoPacketMessage<cam::DCDelaySettings>> update_delay_signal;
+    SSS<Header, cam::DCDelaySettings> update_delay_signal;
     SSS<Header, Command> command_signal;
 
 protected:
 
-    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
-
-private:
-    UdpMultiPacketsMessage filtersMessage;
-};
-
-struct Synchro{
-
-    Synchro();
-    auto update_average_difference(std::int64_t timestampNS) -> void;
-    std::int64_t averageDiffNs = 0;
+    auto process_packet(std::span<std::int8_t>) -> void override;
 
 private:
 
-    size_t currentId = 0;
-    std::vector<std::chrono::nanoseconds> diffNs;    
-    static constexpr size_t nbMaxValues = 1000;
+    MultiPacketsUdpReception filtersReception;
 };
 
-
-struct CFReceivedData{
-    std::int64_t firstPacketSentTS;
-    std::int64_t firstPacketReceivedTS;
-};
 
 class DCServerUdpReader : public UdpReader{
 public:
 
     // signals
     SSS<std::int64_t> synchro_signal;
-    SSS<Header, UdpMonoPacketMessage<Feedback>> feedback_signal;
+    SSS<Header, Feedback> feedback_signal;
     SSS<Header, std::shared_ptr<cam::DCCompressedFrame>> compressed_frame_signal;
+
+    SSS<UdpReceivedStatus> status_signal;
 
 protected:
 
-    auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void override;
+    auto process_packet(std::span<std::int8_t> packet) -> void override;
 
 private:
 
-    std::int64_t firstPacketReceivedCompressedFrameTS = 0;
-    std::int64_t firstPacketSentCompressedFrameTS = 0;
-    UdpMultiPacketsMessage compressedFrameMessage;
-    Synchro synchro;
-
-    bool startRecevingCompressedFrame = false;
-
-    using IdMessage = std::int32_t;
-    umap<IdMessage, CFReceivedData> receivingFrames;
-
+    AverageSynch synchro;
+    Framerate framerate;
+    MultiPacketsUdpReception cFramesReception;
 };
 
 

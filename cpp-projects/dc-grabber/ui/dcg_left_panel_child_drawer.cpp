@@ -101,9 +101,9 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 
 
     ImGuiUiDrawer::title2("NETWORK");
-    ImGui::Spacing();   
+    ImGui::Spacing();
 
-    ImGuiUiDrawer::text(fmt("Id grabber: {}", settings.idLocalGrabber));
+    ImGuiUiDrawer::text(std::format("Id grabber: {}", settings.idLocalGrabber));
     ImGui::Spacing();
 
     ImGui::Text("Connection state:");
@@ -123,8 +123,9 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 
     ImGui::Text("UDP reading:");
     ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", settings.networkS.udpReadingInterface.ipAddress));
-    ImGuiUiDrawer::text(fmt("Port: {}", settings.networkS.udpReadingPort));
+
+    ImGuiUiDrawer::text(std::format("IP address: [{}]", settings.networkS.udpReadingInterface.ipAddress));
+    ImGuiUiDrawer::text(std::format("Port: {}", settings.networkS.udpReadingPort));
     ImGui::Unindent();
 
     ImGui::Text("UDP sending:");

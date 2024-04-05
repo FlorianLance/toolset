@@ -29,7 +29,6 @@
 
 // local
 #include "network/udp_sender.hpp"
-#include "network/network_types.hpp"
 #include "depth-camera/dc_compressed_frame.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"

@@ -62,6 +62,7 @@ struct DCMGrabberSettings{
     DCCloudDisplaySettings cloudDisplay;
 
     std::int64_t synchroAverageDiff = 0;
+    net::UdpReceivedStatus receivedStatus;
 
     static const inline std::vector<geo::Pt4f> cloudsColors = {
         {1.0f,0.0f,0.0f, 1.0f},

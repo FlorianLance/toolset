@@ -55,6 +55,7 @@ struct DCMModel{
     auto reset_network() -> void;
     auto add_feedback(size_t id, net::Feedback feedback) -> void;
     auto update_synchro(size_t id, std::int64_t averageDiffNs) -> void;
+    auto update_status(size_t id, net::UdpReceivedStatus status) -> void;
 
     //
     auto add_default_device() -> void;

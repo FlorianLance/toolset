@@ -37,10 +37,7 @@
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/dc_types.hpp"
-
-
 #include "network/udp_client_network_settings.hpp"
-#include "network/udp_header.hpp"
 
 // local
 #include "dcg_ui_settings.hpp"
@@ -54,10 +51,10 @@ struct DCGSettings{
     // settings
     auto init_network_sending_settings(std::shared_ptr<net::UdpNetworkSendingSettings> networkSendingS) -> void;
     auto update_filters(std::shared_ptr<cam::DCFiltersSettings> filtersS) -> void;
-    auto update_device_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCDeviceSettings>> deviceS) -> void;
-    auto update_color_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCColorSettings>> colorS) -> void;
+    auto update_device_settings(std::shared_ptr<cam::DCDeviceSettings> deviceS) -> void;
+    auto update_color_settings(std::shared_ptr<cam::DCColorSettings> colorS) -> void;
     auto update_color_settings_from_device_manager(const cam::DCColorSettings &colorS) -> void;
-    auto update_delay(net::UdpMonoPacketMessage<cam::DCDelaySettings> delayS) -> void;
+    auto update_delay(cam::DCDelaySettings delayS) -> void;
     // auto update_filters_depth_mask(size_t idC, size_t idB, geo::Pt2<int> pixel, geo::Pt3<std::uint8_t> value) -> void;
     auto update_imu_sample(cam::DCImuSample imuSample) -> void;
 

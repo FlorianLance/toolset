@@ -84,6 +84,10 @@ auto DCMModel::update_synchro(size_t id, int64_t averageDiffNs) -> void{
     settings.grabbersS[id].synchroAverageDiff = averageDiffNs;
 }
 
+auto DCMModel::update_status(size_t id, net::UdpReceivedStatus status) -> void{
+    settings.grabbersS[id].receivedStatus = status;
+}
+
 auto DCMModel::add_default_device() -> void{
     settings.add_default_device();
 }

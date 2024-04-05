@@ -26,6 +26,8 @@
 
 #include "multi_depth_camera_gl_widget.hpp"
 
+#include "geometry/quaternion.hpp"
+
 // qt-utility
 #include "qt_logger.hpp"
 

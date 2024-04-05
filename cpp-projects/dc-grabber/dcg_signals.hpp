@@ -103,6 +103,7 @@ public:
     // # other
     SSS<> ping_server_signal;
     SSS<> debug_device_send_signal;
+    SSS<bool, int> sending_failure_signal;
 
 };
 

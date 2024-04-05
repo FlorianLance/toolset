@@ -123,7 +123,6 @@ HEADERS += \
     network/tcp_reader.hpp \
     network/tcp_sender.hpp \
     network/tcp_server.hpp \
-    network/udp_header.hpp \
     network/udp_reader.hpp \
     network/udp_sender.hpp \
     # camera
@@ -214,6 +213,7 @@ HEADERS += \
     utility/io_fstream.hpp \
     utility/math.hpp \
     utility/paths.hpp \
+    utility/ring_buffer.hpp \
     utility/safe_queue.hpp \
     utility/stop_watch.hpp \
     utility/string.hpp \
@@ -340,7 +340,6 @@ SOURCES += \
     network/tcp_reader.cpp \
     network/tcp_sender.cpp \
     network/tcp_server.cpp \
-    network/udp_header.cpp \
     network/udp_reader.cpp \
     network/udp_sender.cpp \
     # camera

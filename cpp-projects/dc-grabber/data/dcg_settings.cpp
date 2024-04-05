@@ -170,28 +170,30 @@ auto DCGSettings::update_filters(std::shared_ptr<cam::DCFiltersSettings> filters
     triggers_filters_settings();
 }
 
-auto DCGSettings::update_device_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCDeviceSettings>> deviceS) -> void {
+auto DCGSettings::update_device_settings(std::shared_ptr<cam::DCDeviceSettings> deviceS) -> void {
     auto lg = LogGuard("DCGSettings::update_device_settings"sv);
-    this->deviceS = std::move(deviceS->data);
+    this->deviceS = *deviceS;
     triggers_device_settings();
 }
 
-auto DCGSettings::update_color_settings(std::shared_ptr<net::UdpMonoPacketMessage<cam::DCColorSettings>> colorS) -> void{
+auto DCGSettings::update_color_settings(std::shared_ptr<cam::DCColorSettings> colorS) -> void{
     auto lg = LogGuard("DCGSettings::update_color_settings"sv);
-    this->colorS = std::move(colorS->data);
+    this->colorS = *colorS;
     triggers_color_settings();
 }
+
+auto DCGSettings::update_delay(cam::DCDelaySettings delayS) -> void{
+    auto lg = LogGuard("DCGSettings::update_delay"sv);
+    this->delayS = delayS;
+    triggers_delay_settings();
+}
+
 
 auto DCGSettings::update_color_settings_from_device_manager(const cam::DCColorSettings &colorS) -> void{
     auto lg = LogGuard("DCGSettings::update_color_settings_from_device_manager"sv);
     this->colorS = colorS;
 }
 
-auto DCGSettings::update_delay(net::UdpMonoPacketMessage<cam::DCDelaySettings> delayS) -> void{
-    auto lg = LogGuard("DCGSettings::update_delay"sv);
-    this->delayS = std::move(delayS.data);
-    triggers_delay_settings();
-}
 
 
 

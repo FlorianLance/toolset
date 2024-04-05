@@ -340,6 +340,8 @@ auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const UdpServerNetworkSetti
 
 auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void{
 
+    using namespace  std::chrono;
+
     if (!ImGuiUiDrawer::begin_tab_item("[all]###all_settings_commands_tabitem")){
         return;
     }
@@ -392,19 +394,38 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
 
     ImGui::Spacing();
 
-    ImGui::Text("Synchronization:");
+    ImGui::Text("Status:");
     ImGui::Indent();
-    ImGui::Text("Average difference:");
-    ImGui::Indent();
+    {
+        ImGui::Text("Percentage success (/100):");
+        ImGui::Indent();
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", ii, grabbersS[ii].receivedStatus.percentageSuccess));
+        }
+        ImGui::Unindent();
 
-    using namespace  std::chrono;
-    for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-        ImGuiUiDrawer::text(std::format("Grabber {} : {} µs",
-            ii,
-            duration_cast<microseconds>(nanoseconds(grabbersS[ii].synchroAverageDiff)).count())
-        );
+        ImGui::Text("Framerate (fps):");
+        ImGui::Indent();
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.framerate));
+        }
+        ImGui::Unindent();
     }
     ImGui::Unindent();
+
+    ImGui::Text("Synchronization:");
+    ImGui::Indent();
+    {
+        ImGui::Text("Average difference (µs):");
+        ImGui::Indent();
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {} ",
+                ii,
+                duration_cast<microseconds>(nanoseconds(grabbersS[ii].synchroAverageDiff)).count())
+            );
+        }
+        ImGui::Unindent();
+    }
     ImGui::Unindent();
 
     ImGui::Text("Network interfaces:");
@@ -419,10 +440,13 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::Spacing();
     ImGui::Text("IPV6:");
     for(size_t id = 0; id < networkS.ipv6Interfaces.size(); ++id){
+
+        auto address = networkS.ipv6Interfaces[id].ipAddress;
+        String::replace_all(address, "%", "[P]");
         ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
             id,
-            networkS.ipv6Interfaces[id].ipAddress)
-        );
+            address
+        ));
     }
 
     ImGui::EndTabItem();

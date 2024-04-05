@@ -26,13 +26,8 @@
 
 #pragma once
 
-// std
-#include <memory>
-#include <string>
-
 // local
-#include "udp_header.hpp"
-#include "network_enums.hpp"
+#include "network_types.hpp"
 
 namespace tool::net{
 
@@ -56,11 +51,16 @@ public:
 
     auto update_size_packets(size_t newUdpPacketSize) -> void;
 
+    auto simulate_failure(bool enabled, int percentage) -> void;
+
 protected:
+
+    auto generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header;
 
     size_t sizeUdpPacket = 9000;
     std::vector<std::int8_t> packetBuffer;
     std::vector<std::int8_t> bufferToSend;
+    umap<MessageType, std::int32_t> currentIdMessages;
 
 private:
 

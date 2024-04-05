@@ -29,9 +29,7 @@
 // base
 #include "utility/array.hpp"
 #include "depth-camera/impl/k2_types.hpp"
-
-// opengl-utility
-#include "opengl/draw/drawer.hpp"
+#include "graphics/mesh.hpp"
 
 // qt_utility
 #include "gui/widgets/sfmlqt_gl_widget.hpp"

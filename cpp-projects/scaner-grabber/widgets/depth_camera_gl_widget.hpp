@@ -26,8 +26,8 @@
 
 #pragma once
 
-// opengl-utility
-#include "opengl/draw/drawer.hpp"
+// base
+#include "graphics/mesh.hpp"
 
 // qt_utility
 #include "gui/widgets/sfmlqt_gl_widget.hpp"

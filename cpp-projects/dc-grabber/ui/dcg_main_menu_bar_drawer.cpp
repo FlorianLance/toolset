@@ -152,6 +152,27 @@ auto DCGMainMenuBarDrawer::draw() -> void{
                 if(ImGui::MenuItem("Ping server")){
                     DCGSignals::get()->ping_server_signal();
                 }
+
+                if(ImGui::MenuItem("Disable sending failure")){
+                    DCGSignals::get()->sending_failure_signal(false, 0);
+                }
+
+                if(ImGui::MenuItem("Enable sending failure 1%")){
+                    DCGSignals::get()->sending_failure_signal(true, 1);
+                }
+
+                if(ImGui::MenuItem("Enable sending failure 10%")){
+                    DCGSignals::get()->sending_failure_signal(true, 10);
+                }
+
+                if(ImGui::MenuItem("Enable sending failure 50%")){
+                    DCGSignals::get()->sending_failure_signal(true, 50);
+                }
+
+                if(ImGui::MenuItem("Enable sending failure 90%")){
+                    DCGSignals::get()->sending_failure_signal(true, 90);
+                }
+
                 if(ImGui::MenuItem("Make it crash")){
                     abort();
                 }

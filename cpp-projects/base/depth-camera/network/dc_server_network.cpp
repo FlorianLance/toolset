@@ -81,6 +81,10 @@ auto DCServerNetwork::initialize(const std::vector<net::ReadSendNetworkInfos> &c
             rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
                 this->remote_feedback_signal(idDevice, feedback);
             });
+            rDevice->remote_status_signal.connect([this,idDevice](net::UdpReceivedStatus status){
+                this->remote_status_signal(idDevice, status);
+            });
+
             rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
                 this->remote_frame_signal(idDevice,std::move(cFrame));
             });

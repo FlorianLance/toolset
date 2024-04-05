@@ -128,6 +128,8 @@ auto DCGController::set_connections() -> void{
     s->init_network_sending_settings_signal.connect(                 &CCo::init_sender,                                     con);
     s->ping_server_signal.connect(                                   &CCo::ping_server,                                     con);
     s->debug_device_send_signal.connect(                             &CCo::dummy_device_trigger,                            con);
+    s->sending_failure_signal.connect(                               &CCo::simulate_sending_failure,                        con);
+
     dev->new_compressed_frame_signal.connect(                        &CCo::send_frame,                                      con);
     // # settings
     CCo::receive_init_network_sending_settings_signal.connect(       &Sett::init_network_sending_settings,                  sett);

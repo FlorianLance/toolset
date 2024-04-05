@@ -28,7 +28,6 @@
 
 // local
 #include "dc_server_device.hpp"
-#include "network/udp_header.hpp"
 #include "depth-camera/dc_compressed_frame.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 
@@ -64,11 +63,13 @@ public:
     SSS<std::int64_t> remote_synchro_signal;
     SSS<net::Feedback> remote_feedback_signal;
     SSS<std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
+    SSS<UdpReceivedStatus> remote_status_signal;
 
 private:
 
-    auto receive_feedback(Header h, UdpMonoPacketMessage<Feedback> message) -> void;
+    auto receive_feedback(Header h, Feedback message) -> void;
     auto receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void;
+    auto receive_status(net::UdpReceivedStatus status) -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

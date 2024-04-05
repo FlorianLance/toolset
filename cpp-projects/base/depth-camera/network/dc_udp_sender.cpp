@@ -33,6 +33,7 @@
 
 // local
 #include "utility/logger.hpp"
+#include "data/checksum.hpp"
 
 
 using namespace tool::net;
@@ -45,10 +46,11 @@ auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &netwo
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::init_network_infos, sizeof(UdpNetworkSendingSettings));
+    Header header = generate_mono_packet(MessageType::init_network_infos, sizeof(UdpNetworkSendingSettings));
 
     // init data
     UdpMonoPacketData::copy_to_data<net::UdpNetworkSendingSettings>(header, &network, packetBuffer);
+    // header.checkSum = data::Checksum::gen_crc16(reinterpret_cast<std::uint8_t*>(packetBuffer.data()), header.total_size_data_bytes());
 
     // send data
     send_mono_packet(header);
@@ -64,14 +66,11 @@ auto DCServerUdpSender::send_update_device_settings_message(const cam::DCDeviceS
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::update_device_settings, sizeof(cam::DCDeviceSettings));
-
-    // compute checksum
-    // header.c
-    // auto data = reinterpret_cast<std::uint16_t>(&device);
+    Header header = generate_mono_packet(MessageType::update_device_settings, sizeof(cam::DCDeviceSettings));
 
     // init data
     UdpMonoPacketData::copy_to_data(header, &device, packetBuffer);
+
 
     // send data
     send_mono_packet(header);
@@ -87,10 +86,11 @@ auto DCServerUdpSender::send_update_color_settings_message(const cam::DCColorSet
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::update_color_settings, sizeof(cam::DCColorSettings));
+    Header header = generate_mono_packet(MessageType::update_color_settings, sizeof(cam::DCColorSettings));
 
     // init data
     UdpMonoPacketData::copy_to_data<cam::DCColorSettings>(header, &color, packetBuffer);
+
 
     // send data
     send_mono_packet(header);
@@ -106,10 +106,11 @@ auto DCServerUdpSender::send_delay_settings_message(cam::DCDelaySettings delay) 
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::delay, sizeof(cam::DCDelaySettings));
+    Header header = generate_mono_packet(MessageType::delay, sizeof(cam::DCDelaySettings));
 
     // init data
     UdpMonoPacketData::copy_to_data<cam::DCDelaySettings>(header, &delay, packetBuffer);
+
 
     // send data
     send_mono_packet(header);
@@ -125,10 +126,11 @@ auto DCServerUdpSender::send_command_message(net::Command command) -> Header{
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::command, sizeof(Command));
+    Header header = generate_mono_packet(MessageType::command, sizeof(Command));
 
     // init data
-    UdpMonoPacketData::copy_to_data<net::Command>(header, &command, packetBuffer);
+    UdpMonoPacketData::copy_to_data<net::Command>(header, &command, packetBuffer);    
+
 
     // send data
     send_mono_packet(header);
@@ -146,7 +148,13 @@ auto DCServerUdpSender::send_update_filters_settings_message(const cam::DCFilter
     // init header
     Header header;
     header.type      = MessageType::update_filters;
-    header.idMessage = static_cast<std::int32_t>(idLastMasksFiltersMessageSent);
+    if(currentIdMessages.contains(header.type)){
+        header.idMessage = currentIdMessages[header.type]++;
+    }else{
+        currentIdMessages[header.type] = 0;
+        header.idMessage = 0;
+    }
+
 
     // init data
     auto totalDataSizeBytes = filters.total_data_size();
@@ -165,21 +173,22 @@ auto DCServerUdpSender::send_update_filters_settings_message(const cam::DCFilter
         return false;
     }
 
-    ++idLastMasksFiltersMessageSent;
     return true;
 }
 
 auto DCClientUdpSender::send_synchronisation_message() -> bool{
 
-    if(!is_opened()){ Logger::error("DCClientUdpSender::send_synchronisation_message: sender not opened, message canceled.\n");
+    if(!is_opened()){
+        Logger::error("DCClientUdpSender::send_synchronisation_message: sender not opened, message canceled.\n");
         return false;
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::synchro, 0);
+    Header header = generate_mono_packet(MessageType::synchro, 0);
 
     // init data
     UdpMonoPacketData::copy_only_header_to_data(header, packetBuffer);
+
 
     // send data
     return send_mono_packet(header) != 0;
@@ -193,10 +202,11 @@ auto DCClientUdpSender::send_feedback_message(Feedback feedback) -> bool{
     }
 
     // init header
-    Header header = Header::generate_mono_packet(MessageType::feedback, sizeof(Feedback));
+    Header header = generate_mono_packet(MessageType::feedback, sizeof(Feedback));    
 
     // init data
     UdpMonoPacketData::copy_to_data<Feedback>(header, &feedback, packetBuffer);
+
 
     // send data
     return send_mono_packet(header) != 0;
@@ -229,6 +239,7 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<cam::DCCom
             nbBytesSent, header.totalSizeBytes));
         return false;
     }
+
 
     ++idLastFrameMutliPacketsMessageSent;
     return true;

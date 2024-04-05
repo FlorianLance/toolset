@@ -26,6 +26,7 @@
 
 #include "udp_reader.hpp"
 
+
 // boost
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -57,18 +58,13 @@ struct UdpReader::Impl{
     std::atomic_bool readingThreadStarted = false;
 
     // packets
-    size_t currentBufferId = 0;
-    size_t buffersCount = 10000;
-    std::vector<std::vector<char>> buffers;
+    DoubleRingBuffer<char> packetsRingBuffer;
 };
 
 UdpReader::UdpReader() : i(std::make_unique<Impl>()){
 
-    // init buffers
-    i->buffers.resize(i->buffersCount);
-    for(auto &buffer : i->buffers){
-        buffer.resize(9000);
-    }
+    i->packetsRingBuffer.resize(10000, packetSize);
+    messagesBuffer.resize(100, 0);
 }
 
 UdpReader::~UdpReader(){
@@ -97,9 +93,9 @@ auto UdpReader::init_connection(std::string readingAdress, int port, Protocol pr
         // open socket
         i->socket   = std::make_unique<udp::socket>(i->ioService);
         i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
-        i->socket->set_option(socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{500});
+        i->socket->set_option(socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{timeoutMs});
         i->socket->set_option(udp::socket::reuse_address(true));
-        i->socket->set_option(udp::socket::receive_buffer_size(9000*50));//*10));
+        i->socket->set_option(udp::socket::receive_buffer_size(receiveBufferSize));
 
         // bind socket
         i->endPoint = udp::endpoint(address::from_string(readingAdress), static_cast<unsigned short>(port));
@@ -179,9 +175,8 @@ auto UdpReader::is_connected() const noexcept -> bool{
     return i->connected;
 }
 
-auto UdpReader::process_packet(std::vector<char> *packet, size_t nbBytes) -> void{
+auto UdpReader::process_packet(std::span<std::int8_t> packet) -> void{
     static_cast<void>(packet);
-    static_cast<void>(nbBytes);
 }
 
 auto UdpReader::read_packet() -> size_t{
@@ -190,20 +185,21 @@ auto UdpReader::read_packet() -> size_t{
         return 0;
     }
 
-    auto buffer = &i->buffers[i->currentBufferId];
+    auto buffer = i->packetsRingBuffer.current_span(packetSize);
+
     size_t nbBytesReceived = 0;
     udp::endpoint senderEndpoint;
     try {
         // receive data
         nbBytesReceived = i->socket->receive_from(
-            boost::asio::buffer(buffer->data(),static_cast<size_t>(buffer->size())),
+            boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
             senderEndpoint
         );
-        i->currentBufferId = (i->currentBufferId + 1) % i->buffersCount;
+        i->packetsRingBuffer.increment();
 
     } catch (const boost::system::system_error &error) {
         if(error.code() == boost::asio::error::timed_out){
-            timeout_packet_signal();
+            // timeout_packet_signal();
         }else{
             Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: {}\n", error.what());
             connection_state_signal(i->connected = false);
@@ -216,7 +212,7 @@ auto UdpReader::read_packet() -> size_t{
         return 0;
     }
 
-    process_packet(buffer, nbBytesReceived);
+    process_packet(std::span<std::int8_t>(reinterpret_cast<std::int8_t*>(buffer.data()), nbBytesReceived));
 
     return nbBytesReceived;
 }

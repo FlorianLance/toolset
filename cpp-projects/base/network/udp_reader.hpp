@@ -27,6 +27,7 @@
 #pragma once
 
 // local
+#include "utility/ring_buffer.hpp"
 #include "thirdparty/sigslot/signal.hpp"
 #include "network_enums.hpp"
 
@@ -55,15 +56,21 @@ public:
     // signals
     sigslot::signal<bool> connection_state_signal;
     sigslot::signal<> timeout_packet_signal;
+    sigslot::signal<size_t> timeout_messages_signal;
 
 protected:
 
-    virtual auto process_packet(std::vector<char> *packet, size_t nbBytes) -> void;
-    std::vector<std::int8_t> m_data;
+    virtual auto process_packet(std::span<std::int8_t> packet) -> void;
+    
+    DoubleRingBuffer<std::int8_t> messagesBuffer;
 
 private :
 
     auto read_data_thread() -> void;
+
+    static constexpr size_t packetSize = 9000;
+    static constexpr size_t receiveBufferSize = packetSize * 50;
+    static constexpr size_t timeoutMs = 500;
 
     struct Impl;
     std::unique_ptr<Impl> i;

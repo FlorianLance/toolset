@@ -50,6 +50,9 @@ struct UdpSender::Impl{
     std::unique_ptr<ip::udp::socket> socket = nullptr;
     boost::asio::ip::basic_resolver_results<ip::udp> endpoint;
     std::string solvedAdress;
+
+    bool simulateFailure = false;
+    int percentageFailture = 0;
 };
 
 UdpSender::UdpSender(): i(std::make_unique<Impl>()){
@@ -136,6 +139,7 @@ auto UdpSender::send_mono_packet(Header &header) -> size_t{
     return send_packet_data(packetBuffer.data(), header.totalSizeBytes);
 }
 
+
 auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t{
 
     constexpr size_t sizePacketHeader = sizeof (Header);
@@ -178,7 +182,16 @@ auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t
         );
 
         // send packet
-        nbBytesSent += send_packet_data(packetBuffer.data(), header.currentPacketSizeBytes);
+        if(!i->simulateFailure){
+            nbBytesSent += send_packet_data(packetBuffer.data(), header.currentPacketSizeBytes);
+        }else{
+            // failure simulation
+            if(rand()%100 > i->percentageFailture){
+                nbBytesSent += send_packet_data(packetBuffer.data(), header.currentPacketSizeBytes);
+            }else{
+                nbBytesSent += header.currentPacketSizeBytes;
+            }
+        }
 
         // update offset
         header.dataOffset += header.currentPacketSizeBytes - sizeof(Header);
@@ -189,4 +202,33 @@ auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t
 auto UdpSender::update_size_packets(size_t newUdpPacketSize) -> void{
     sizeUdpPacket = newUdpPacketSize;
     packetBuffer.resize(sizeUdpPacket);
+}
+
+auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
+    i->simulateFailure      = enabled;
+    i->percentageFailture   = percentage;
+}
+
+auto UdpSender::generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header{
+
+    Header header;
+    header.type                     = type;
+    header.totalSizeBytes           = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);
+    header.totalNumberPackets       = 1;
+    header.currentPacketId          = 0;
+    header.currentPacketSizeBytes   = header.totalSizeBytes;
+    header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
+    header.dataOffset               = 0;
+
+    if(currentIdMessages.contains(type)){
+        header.idMessage = currentIdMessages[type]++;
+        if(header.idMessage > 1000000){
+            currentIdMessages[type] = 0;
+        }
+    }else{
+        currentIdMessages[type] = 0;
+        header.idMessage = 0;
+    }
+
+    return header;
 }

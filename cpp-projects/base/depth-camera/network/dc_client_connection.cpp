@@ -44,12 +44,12 @@ auto DCClientConnection::init_connections() -> void{
         std::lock_guard l(m_readerL);
         m_initNetworkInfosMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<cam::DCDeviceSettings>> message){
+    m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<cam::DCDeviceSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDeviceSettingsMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<UdpMonoPacketMessage<cam::DCColorSettings>> message){
+    m_udpReaderG.update_color_settings_signal.connect([&](Header h, std::shared_ptr<cam::DCColorSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateColorSettingsMessage  = {std::move(h), message};
@@ -59,7 +59,7 @@ auto DCClientConnection::init_connections() -> void{
         std::lock_guard l(m_readerL);
         m_updateFiltersMessage  = {std::move(h), message};
     });
-    m_udpReaderG.update_delay_signal.connect([&](Header h, UdpMonoPacketMessage<cam::DCDelaySettings> message){
+    m_udpReaderG.update_delay_signal.connect([&](Header h, cam::DCDelaySettings message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateDelayMessage  = {std::move(h), message};
@@ -71,7 +71,10 @@ auto DCClientConnection::init_connections() -> void{
         m_commandMessage  = {std::move(h), message};
     });
     m_udpReaderG.timeout_packet_signal.connect([&](){
-        // Logger::message("timeout\n");
+        Logger::warning("Packet timeout\n");
+    });
+    m_udpReaderG.timeout_messages_signal.connect([&](size_t count){
+        // Logger::warning(std::format("Messages dropped for timeout [{}]\n", count));
     });
 }
 
@@ -246,17 +249,21 @@ auto DCClientConnection::last_frame_id_sent() const -> size_t{
     return m_lastFrameIdSent;
 }
 
+auto DCClientConnection::simulate_sending_failure(bool enabled, int percentage) -> void{
+    m_udpSenderG.simulate_failure(enabled, percentage);
+}
+
 auto DCClientConnection::dummy_device_trigger() -> void {
 
     Header header;
-    DCDeviceSettings settings;
-    settings.configS.startReading  = true;
-    settings.configS.openDevice = true;
-    settings.configS.typeDevice   = DCType::AzureKinect;
-    settings.configS.synchMode    = DCSynchronisationMode::Standalone;
+    auto settings = std::make_shared<DCDeviceSettings>();
+    settings->configS.startReading  = true;
+    settings->configS.openDevice = true;
+    settings->configS.typeDevice   = DCType::AzureKinect;
+    settings->configS.synchMode    = DCSynchronisationMode::Standalone;
 
     std::lock_guard l(m_readerL);
-    m_updateDeviceSettingsMessage  = {std::move(header), std::make_shared<UdpMonoPacketMessage<cam::DCDeviceSettings>>(settings)};
+    m_updateDeviceSettingsMessage  = {std::move(header), std::move(settings)};
 }
 
 auto DCClientConnection::send_messages_loop() -> void{
@@ -275,6 +282,7 @@ auto DCClientConnection::send_messages_loop() -> void{
         if(auto feedback = std::get_if<Feedback>(&message.value()); feedback != nullptr){
             Logger::message(std::format("[DCClientConnection] Send feedback of type [{}].\n", static_cast<int>(feedback->receivedMessageType)));
             m_udpSenderG.send_feedback_message(*feedback);
+            Logger::message("end Feedback\n");
         }
 
         if(auto frame = std::get_if<std::shared_ptr<cam::DCCompressedFrame>>(&message.value()); frame != nullptr){
