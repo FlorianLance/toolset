@@ -350,8 +350,16 @@ auto DrawSampleWindow::init_drawers() -> bool{
 
     Logger::message("MODELS\n");
 
+    if(auto model = mm->get("spot").lock(); model != nullptr){
+        auto spotM = std::make_shared<gl::ModelMeshDrawer2>();
+        spotM->initialize(*model, TexturesInfo{tm->get_texture_info("spot_texture")});
+        dm->add_drawer("spot", std::move(spotM),1.f);
+    }
+
+    // spotM.initialize(mm->get("spot"));
+
     // // # loaded models
-    // dm->add_drawer<tool::gl::ModelDrawer>("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
+    // dm->add_drawer("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
     // dm->add_drawer<tool::gl::ModelDrawer>("notext-spot",    Scale{1.f},    mm->get("spot"));
     // dm->add_drawer<tool::gl::ModelDrawer>("ogre",           Scale{1.f},    mm->get("ogre"),TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
     // dm->add_drawer<tool::gl::ModelDrawer>("pig",            Scale{1.f},    mm->get("pig"));
@@ -370,7 +378,7 @@ auto DrawSampleWindow::init_drawers() -> bool{
 
     // ui drawers
     uiDrawers2 = dm->sub({
-        "cube","torus"//,"crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","spot","ogre"
+        "cube","torus", "spot"//,"crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","ogre"
     });
 
     // dynamic_cast<gl::ModelDrawer*>(uiDrawers.get_element_ptr("storm"))->model()->display_hierarchy();

@@ -77,7 +77,7 @@ auto Sample::parent_init() -> bool{
         commonDrawers["notext-plane-20x10"sv]  = drawersM->get_drawer("notext-plane-20x10"sv).lock();
         commonDrawers["notext-plane-40x40"sv]  = drawersM->get_drawer("notext-plane-40x40"sv).lock();
         // commonDrawers["notext-spot"sv]         = drawersM->get_drawer("notext-spot"sv).lock();
-        // commonDrawers["spot"sv]                = drawersM->get_drawer("spot"sv).lock();
+        commonDrawers["spot"sv]                = drawersM->get_drawer("spot"sv).lock();
         commonDrawers["grid-floor"sv]          = drawersM->get_drawer("grid-floor"sv).lock();
         // commonDrawers["dragon"sv]              = drawersM->get_drawer("dragon"sv).lock();
         commonDrawers["cloud"sv]               = drawersM->get_drawer("cloud"sv).lock();

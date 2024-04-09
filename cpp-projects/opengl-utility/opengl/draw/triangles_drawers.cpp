@@ -32,6 +32,7 @@
 
 // local
 #include "triangles_renderer.hpp"
+#include <iostream>
 
 
 using namespace tool::geo;
@@ -631,8 +632,10 @@ auto ModelMeshDrawer2::initialize(const graphics::ModelMesh &modelMesh, const st
     clean();
 
     // initialize current level drawers
+    std::cout << "init model mesh " << modelMesh.meshes.size() << "\n";
     for(const auto &gmesh : modelMesh.meshes){
         auto gmeshD = std::make_unique<GMeshDrawer2>();
+        std::cout << "->" << gmesh->name << " " << gmesh->mesh.vertices.size() << "\n";
         gmeshD->initialize(*gmesh, texturesInfo);
         drawers.push_back(std::move(gmeshD));
     }
