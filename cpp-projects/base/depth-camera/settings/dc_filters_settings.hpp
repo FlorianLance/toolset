@@ -31,6 +31,7 @@
 #include "graphics/color/rgb.hpp"
 #include "depth-camera/dc_enums.hpp"
 #include "geometry/point3.hpp"
+#include "geometry/obb3.hpp"
 // #include "utility/bit_mask.hpp"
 
 namespace tool::cam {
@@ -40,7 +41,6 @@ enum class PlaneFilteringMode : std::int8_t{
     Above,
     Below
 };
-
 
 struct DCFiltersSettings : io::BinaryFileSettings{
 
@@ -69,6 +69,8 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     bool removeFromPointDistance = false;
     geo::Pt3f pSphere = {0.f,0.f,1.f};
     float maxSphereDistance = 1000.0f;
+    bool keepOnlyPointsInsideOOB = false;
+    geo::OBB3<float> oob;
     // # complex
     bool doLocalDiffFiltering = true;
     float maxLocalDiff = 10.f;
@@ -108,59 +110,3 @@ struct DCFiltersSettings : io::BinaryFileSettings{
 
 }
 
-
-
-
-
-// struct DCFiltersSettings : io::BinaryFileSettings{
-
-//     // width / height / depth
-//     float minWidthF  = 0.f;
-//     float maxWidthF  = 1.f;
-//     float minHeightF = 0.f;
-//     float maxHeightF = 1.f;
-//     float minDepthF  = 0.f;
-//     float maxDepthF  = 1.f;
-
-//     // color
-//     ColorRGB32 filterColor  = ColorRGB32{0.f,0.5f,0.08f};
-//     geo::Pt3f maxDiffColor  = geo::Pt3f{20.f,0.5f,0.5f};
-
-//     // # neigbhours
-//     float maxLocalDiff = 10.f;
-//     unsigned char nbMinNeighbours = 1;
-
-//     // loops
-//     unsigned char minNeighboursLoops = 1;
-//     unsigned char erosionLoops = 1;
-
-//     // flogs
-//     bool filterDepthWithColor        = false;
-//     bool filterDepthWithInfra        = false;
-//     bool filterDepthWithBodyTracking = false;
-//     bool filterDepthWithCloud        = false;
-
-//     bool doLocalDiffFiltering       = true;
-//     bool doMinNeighboursFiltering   = false;
-//     bool doErosion                  = false;
-//     bool keepOnlyBiggestCluster     = false;
-//     bool invalidateColorFromDepth   = false;
-//     bool invalidateInfraFromDepth   = false;
-
-//     PlaneFilteringMode p1FMode = PlaneFilteringMode::None;
-//     geo::Pt3f p1A;
-//     geo::Pt3f p1B;
-//     geo::Pt3f p1C;
-
-
-//     DCFiltersSettings();
-//     DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-//         DCFiltersSettings::init_from_data(data, offset, sizeData);
-//     }
-//     static auto default_init_for_calibration() -> DCFiltersSettings;
-
-//     // i/o
-//     auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-//     auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-//     auto total_data_size() const noexcept -> size_t override;
-// };

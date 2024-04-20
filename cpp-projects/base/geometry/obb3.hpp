@@ -26,6 +26,9 @@
 
 #pragma once
 
+// std
+#include <span>>
+
 // local
 #include "geometry/matrix3.hpp"
 #include "geometry/point3.hpp"
@@ -37,45 +40,57 @@ struct OBB3{
 
     OBB3() = default;
 
-    constexpr OBB3(const Pt3<acc> &p, const Vec3<acc> &s, const Mat3<acc> &o = geo::Mat3<acc>::identity()) noexcept : position(p), size(s), orientation(o){
+    constexpr OBB3(const Pt3<acc> &p, const Vec3<acc> &s) noexcept{//}, const Mat3<acc> &o = geo::Mat3<acc>::identity()) noexcept : position(p), size(s), orientation(o){
     }
 
-    constexpr auto min() const noexcept -> Vec3<acc>{
-        const Vec3<acc> p1 = position + size;
-        const Vec3<acc> p2 = position - size;
-        return Vec3<acc>(std::min(p1.x(), p2.x()), std::min(p1.y(), p2.y()),std::min(p1.z(), p2.z()));
-    }
+    // [[nodiscard]] constexpr auto min() const noexcept -> Vec3<acc>{
+    //     const auto p1 = position + size;
+    //     const auto p2 = position - size;
+    //     return Vec3<acc>(std::min(p1.x(), p2.x()), std::min(p1.y(), p2.y()),std::min(p1.z(), p2.z()));
+    // }
 
-    constexpr auto max() const noexcept -> Vec3<acc>{
-        const Vec3<acc> p1 = position + size;
-        const Vec3<acc> p2 = position - size;
-        return Vec3<acc>(std::max(p1.x(), p2.x()), std::max(p1.y(), p2.y()),std::max(p1.z(), p2.z()));
-    }
+    // [[nodiscard]] constexpr auto max() const noexcept -> Vec3<acc>{
+    //     const auto p1 = position + size;
+    //     const auto p2 = position - size;
+    //     return Vec3<acc>(std::max(p1.x(), p2.x()), std::max(p1.y(), p2.y()),std::max(p1.z(), p2.z()));
+    // }
 
-    auto is_point_inside(const Pt3<acc> &p) const noexcept -> bool{
+    [[nodiscard]] auto is_point_inside(Mat3<acc> &orientation, const Pt3<acc> &p) const noexcept -> bool{
 
-        const Vec3<acc> dir = p - position;
-
+        Vec3<acc> dir = p - position;
         for(int ii = 0; ii < 3; ++ii){
-            const int id = ii*3;
-            const acc distance = dot(dir,{orientation[id], orientation[id + 1], orientation[id + 2]});
-
-            const bool equal1 = almost_equal<acc>(distance, size[ii]);
-            const bool equal2 = almost_equal<acc>(distance, -size[ii]);
-
-            if(distance > size[ii] && !equal1){
+            std::span<const float,3> axis(orientation.array.data() + ii * 3, 3);
+            float distance = geo::dot(dir, axis);
+            if(distance < -size(ii)){
                 return false;
             }
-            if(distance < -size[ii] && !equal2){
+            if(distance > size(ii)){
                 return false;
             }
         }
+
+        // for(int ii = 0; ii < 3; ++ii){
+        //     const int id = ii*3;
+        //     const acc distance = dot(dir,Vec3<acc>{orientation(id), orientation(id + 1), orientation(id + 2)});
+
+        //     const bool equal1 = almost_equal<acc>(distance, size(ii));
+        //     const bool equal2 = almost_equal<acc>(distance, -size(ii));
+
+        //     if(distance > size(ii) && !equal1){
+        //         return false;
+        //     }
+        //     if(distance < -size(ii) && !equal2){
+        //         return false;
+        //     }
+        // }
         return true;
     }
 
     Pt3<acc> position = {0,0,0};
     Vec3<acc> size = {1,1,1};
-    Mat3<acc> orientation{};
+    Vec3<acc> rotation = {0,0,0};
+    // Mat3<acc> orientation = Mat3<acc>::identity();
+
 };
 }
 

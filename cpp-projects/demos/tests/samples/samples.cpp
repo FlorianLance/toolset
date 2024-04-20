@@ -76,10 +76,10 @@ auto Sample::parent_init() -> bool{
         commonDrawers["notext-plane-10x10"sv]  = drawersM->get_drawer("notext-plane-10x10"sv).lock();
         commonDrawers["notext-plane-20x10"sv]  = drawersM->get_drawer("notext-plane-20x10"sv).lock();
         commonDrawers["notext-plane-40x40"sv]  = drawersM->get_drawer("notext-plane-40x40"sv).lock();
-        // commonDrawers["notext-spot"sv]         = drawersM->get_drawer("notext-spot"sv).lock();
+        commonDrawers["notext-spot"sv]         = drawersM->get_drawer("notext-spot"sv).lock();
         commonDrawers["spot"sv]                = drawersM->get_drawer("spot"sv).lock();
         commonDrawers["grid-floor"sv]          = drawersM->get_drawer("grid-floor"sv).lock();
-        // commonDrawers["dragon"sv]              = drawersM->get_drawer("dragon"sv).lock();
+        commonDrawers["dragon"sv]              = drawersM->get_drawer("dragon"sv).lock();
         commonDrawers["cloud"sv]               = drawersM->get_drawer("cloud"sv).lock();
 
         // check
@@ -91,8 +91,11 @@ auto Sample::parent_init() -> bool{
         }
     }
 
-    materialFloorUBO.generate();
+    materialFloorUBO.initialize();
     materialFloorUBO.set_data_space_from_shader(commonShaders["floor"sv].get());
+
+    materialUBO.initialize();        
+    lightUBO.initialize();
 
     floorM.Ka = {0.5f, 0.5f, 0.5f};
     floorM.Kd = {0.5f, 0.5f, 0.5f};
@@ -128,7 +131,7 @@ auto Sample::update(float elapsedSeconds) -> void{
 }
 
 
-auto Sample::draw(tool::gl::BaseDrawer *drawer) -> void {
+auto Sample::parent_draw(tool::gl::BaseDrawer *drawer) -> void {
 
     currentDrawer = drawer;
 
@@ -487,7 +490,7 @@ auto Ch3Diffuse::init() -> bool{
 
 auto Ch3Diffuse::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();    
     sampleShader->set_uniform("LightPosition", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
@@ -508,17 +511,20 @@ auto Ch3Flat::init() -> bool{
         return false;
     }
 
-    lightUBO.generate();
+    return true;
+}
+
+auto Ch3Flat::update_parameters() -> void{
+
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
-    return true;
+    materialUBO.update(mInfo);
 }
 
 auto Ch3Flat::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -526,9 +532,7 @@ auto Ch3Flat::draw(tool::gl::BaseDrawer *drawer) -> void {
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(1);
-
     draw_nb(sampleShader.get(),drawer);
 }
 
@@ -539,17 +543,21 @@ auto Ch3Discard::init() -> bool{
         return false;
     }
 
-    lightUBO.generate();
-    lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
 }
 
+auto Ch3Discard::update_parameters() -> void{
+
+    lightUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+
+    materialUBO.update(mInfo);
+}
+
 auto Ch3Discard::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -557,7 +565,7 @@ auto Ch3Discard::draw(tool::gl::BaseDrawer *drawer) -> void {
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
-    materialUBO.update(mInfo);
+
     materialUBO.bind(1);
 
     sampleShader->set_uniform("discardV", discardV);
@@ -576,17 +584,21 @@ auto Ch3TwoSide::init() -> bool {
     if((sampleShader = shadersM->get_shader("ch3/twoside").lock()) == nullptr){
         return false;
     }
-    lightUBO.generate();
-    lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
 }
 
+auto Ch3TwoSide::update_parameters() -> void{
+
+    lightUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+
+    materialUBO.update(mInfo);
+}
+
 auto Ch3TwoSide::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -594,12 +606,10 @@ auto Ch3TwoSide::draw(tool::gl::BaseDrawer *drawer) -> void {
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(1);
 
     draw_nb(sampleShader.get(),drawer);
 }
-
 
 auto Ch3Phong::init() -> bool {
 
@@ -607,17 +617,21 @@ auto Ch3Phong::init() -> bool {
         return false;
     }
 
-    lightUBO.generate();
-    lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
 }
 
+auto Ch3Phong::update_parameters() -> void{
+
+    lightUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+
+    materialUBO.update(mInfo);
+}
+
+
 auto Ch3Phong::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -626,7 +640,6 @@ auto Ch3Phong::draw(tool::gl::BaseDrawer *drawer) -> void {
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(1);
 
     draw_nb(sampleShader.get(),drawer);
@@ -638,22 +651,25 @@ auto Ch4PhongDirectionnalLight::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
 }
 
+auto Ch4PhongDirectionnalLight::update_parameters() -> void{
+
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.update(mInfo);
+}
+
 auto Ch4PhongDirectionnalLight::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", lInfo.La);
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(worldLight.conv<double>()).conv<float>()});
 
-    materialUBO.update(mInfo);
     materialUBO.bind(0);
 
     draw_nb(sampleShader.get(),drawer);
@@ -666,17 +682,21 @@ auto Ch4BlinnPhong::init() -> bool {
         return false;
     }
 
-    lightUBO.generate();
-    lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
 }
 
+auto Ch4BlinnPhong::update_parameters() -> void{
+
+    lightUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+
+    materialUBO.update(mInfo);
+}
+
+
 auto Ch4BlinnPhong::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -685,7 +705,6 @@ auto Ch4BlinnPhong::draw(tool::gl::BaseDrawer *drawer) -> void {
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(1);
 
     draw_nb(sampleShader.get(),drawer);
@@ -698,15 +717,18 @@ auto Ch4Cartoon::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
+}
+
+auto Ch4Cartoon::update_parameters() -> void{
+
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.update(mInfo);
 }
 
 auto Ch4Cartoon::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  lInfo.Ld);//Vec3f{0.8f,0.8f,0.8f});
@@ -714,7 +736,6 @@ auto Ch4Cartoon::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform("levels", levels);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(0);
 
     draw_nb(sampleShader.get(),drawer);
@@ -730,15 +751,18 @@ auto Ch4PhongMultiLights::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
+}
+
+auto Ch4PhongMultiLights::update_parameters() -> void{
+
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.update(mInfo);
 }
 
 auto Ch4PhongMultiLights::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     std::vector<Pt4f> lPos ={
         Pt4f{camera->view().multiply_point(Pt4d{5.0,5.0,2.0,1.0}).conv<float>()},
@@ -772,7 +796,6 @@ auto Ch4PhongMultiLights::draw(tool::gl::BaseDrawer *drawer) -> void {
         sampleShader->set_uniform((lightName + "Position").c_str(), lPos[ii]);
     }
 
-    materialUBO.update(mInfo);
     materialUBO.bind(0);
 
     draw_nb(sampleShader.get(), drawer);
@@ -785,15 +808,17 @@ auto Ch4PhongPerFragment::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
+}
+
+auto Ch4PhongPerFragment::update_parameters() -> void{
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.update(mInfo);
 }
 
 auto Ch4PhongPerFragment::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.f,0.8f,0.8f});
@@ -813,33 +838,34 @@ auto Ch4PBR::init() -> bool {
         return false;
     }
 
-    materialsB.generate();
-    materialsB.set_data_storage(1*sizeof(MaterialPbr), &mPbrInfo, GL_DYNAMIC_STORAGE_BIT);
-
     lights.resize(3);
     lights[0].La = Vec3f{45.0f,45.0f,45.0f};
     lights[1].La = Vec3f{15.0f,15.0f,15.0f};
     lights[2].La = Vec3f{30.0f,30.0f,30.0f};
 
-    lightsB.generate();
-    lightsB.set_data_storage(lights.size()*sizeof(Light2), lights.data(), GL_DYNAMIC_STORAGE_BIT);
+    pbrMatUBO.initialize();
+    pbrMatUBO.load_data(&mPbrInfo, 1*sizeof(MaterialPbr),GL_DYNAMIC_STORAGE_BIT);
+
+    lightsUBO.initialize();
+    lightsUBO.load_data(lights.data(), lights.size()*sizeof(Light2), GL_DYNAMIC_STORAGE_BIT);
 
     return true;
 }
 
+
 auto Ch4PBR::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     lights[0].Position = camera->view().conv<float>().multiply_point(mobileLightPos1);
     lights[1].Position = camera->view().conv<float>().multiply_point(mobileLightPos2);
     lights[2].Position = camera->view().conv<float>().multiply_point(worldLight);
-    lightsB.update_data(lights.data(), lights.size()*sizeof(Light2));
-    lightsB.bind(0);
+    lightsUBO.update_data(lights.data(), lights.size()*sizeof(Light2));
+    lightsUBO.bind(0);
 
-    materialsB.update_data(&mPbrInfo, 1*sizeof(MaterialPbr));
-    materialsB.bind(1);
+    pbrMatUBO.update_data(&mPbrInfo, 1*sizeof(MaterialPbr));
+    pbrMatUBO.bind(1);
 
     draw_nb(sampleShader.get(), drawer);
 }
@@ -861,7 +887,6 @@ auto Ch5DiscardPixels::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
@@ -869,7 +894,7 @@ auto Ch5DiscardPixels::init() -> bool {
 
 auto Ch5DiscardPixels::draw(tool::gl::BaseDrawer *) -> void{
 
-    Sample::draw();
+    parent_draw();
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
@@ -894,7 +919,7 @@ auto Ch5SceneTexture::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
@@ -902,7 +927,7 @@ auto Ch5SceneTexture::init() -> bool {
 
 auto Ch5SceneTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
@@ -921,7 +946,7 @@ auto Ch5SceneMutliTexture::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     brickMossD = drawersM->get_drawer("brick-moss-cube"sv).lock();
 
@@ -930,7 +955,7 @@ auto Ch5SceneMutliTexture::init() -> bool {
 
 auto Ch5SceneMutliTexture::draw(tool::gl::BaseDrawer *) -> void{
 
-    Sample::draw();
+    parent_draw();
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
@@ -949,7 +974,7 @@ auto Ch5NormalMap::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
@@ -957,7 +982,7 @@ auto Ch5NormalMap::init() -> bool {
 
 auto Ch5NormalMap::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("animate", nbAnimations > 0);
@@ -981,7 +1006,7 @@ auto Ch5ParallaxMapping::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
@@ -989,7 +1014,7 @@ auto Ch5ParallaxMapping::init() -> bool {
 
 auto Ch5ParallaxMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("showHeightMap", showHeightMap);
@@ -1019,7 +1044,7 @@ auto Ch5SteepParallaxMapping::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     return true;
@@ -1027,7 +1052,7 @@ auto Ch5SteepParallaxMapping::init() -> bool {
 
 auto Ch5SteepParallaxMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
@@ -1056,7 +1081,7 @@ auto Ch5ReflectCubeMap::init() -> bool {
 
 auto Ch5ReflectCubeMap::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("WorldCameraPosition", camera->position().conv<float>());
@@ -1083,7 +1108,7 @@ auto Ch5RefractCubeMap::init() -> bool {
 
 auto Ch5RefractCubeMap::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("WorldCameraPosition", camera->position().conv<float>());
@@ -1105,7 +1130,7 @@ auto Ch5ProjectTexture::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     projOptions.wrapS = TextureWrapMode::clamp_to_border;
@@ -1116,43 +1141,42 @@ auto Ch5ProjectTexture::init() -> bool {
 
 auto Ch5ProjectTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
-    // auto frustumV =  geo::transform(Vec3d{1,1,1},projRot.conv<double>(),projPos.conv<double>());
+    auto frustumM =  geo::transform(Vec3d{1,1,1},projRot.conv<double>(),projPos.conv<double>());
+    commonShaders["unicolor"sv]->use();
+    commonShaders["unicolor"sv]->set_uniform("unicolor", Vec3f{1.0f,0.0f,0.0f});
+    commonShaders["unicolor"sv]->set_uniform_matrix("MVP",((frustumM*camera->view())*camera->projection()).conv<float>());
 
-    // auto frustum = dynamic_cast<gl::FrustumDrawerLinesDrawer*>(commonDrawers["frustum"sv]->object());
-    // frustum->set_perspective(fov, aspectRatio, zNear, zFar);
-    // auto frustumP = frustum->projection_matrix().conv<double>();
+    auto frustum = dynamic_cast<gl::FrustumDrawerLinesDrawer*>(commonDrawers["frustum"sv].get());
+    frustum->update(fov, aspectRatio, zNear, zFar);
+    frustum->draw();
 
-    // commonShaders["unicolor"sv]->use();
-    // commonShaders["unicolor"sv]->set_uniform("unicolor", Vec3f{1.0f,0.0f,0.0f});
-    // commonShaders["unicolor"sv]->set_uniform_matrix("MVP",((frustumV*camera->view())*camera->projection()).conv<float>());
-    // commonDrawers["frustum"sv]->draw();
+    auto frustumP = geo::perspective<double>(deg_2_rad(fov), aspectRatio, zNear, zFar);
+    sampleShader->use();
+    auto tr = geo::translate(geo::Mat4d::identity(), Vec3d{0.5,0.5,0.5});
+    Mat4d bias = geo::scale(tr, Vec3d{0.5,0.5,0.5});
+    sampleShader->set_uniform_matrix("ProjectorMatrix", ((inverse(frustumM*-1.0)*frustumP*bias).conv<float>()));
 
-    // sampleShader->use();
-    // auto tr = geo::translate(geo::Mat4d::identity(), Vec3d{0.5,0.5,0.5});
-    // Mat4d bias = geo::scale(tr, Vec3d{0.5,0.5,0.5});
-    // sampleShader->set_uniform_matrix("ProjectorMatrix", ((inverse(frustumV)*frustumP*bias).conv<float>()));
+    camM.m = geo::transform(Vec3d{1,1,1},Vec3d{0.,0.,0},Vec3d{0.,-0.75,0.});
+    update_matrices();
 
-    // camM.m = geo::transform(Vec3d{1,1,1},Vec3d{0.,0.,0},Vec3d{0.,-0.75,0.});
-    // update_matrices();
+    sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
+    sampleShader->set_uniform("Light.La", Vec3f{0.2f,0.2f,0.2f});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
-    // sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
-    // sampleShader->set_uniform("Light.La", Vec3f{0.2f,0.2f,0.2f});
-    // sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    materialUBO.update(mInfo);
+    materialUBO.bind(0);
 
-    // materialUBO.update(mInfo);
-    // materialUBO.bind(0);
+    sampleShader->set_camera_matrices_uniforms(camM);
 
-    // sampleShader->set_camera_matrices_uniforms(camM);
+    auto tbo = texturesM->texture_tbo("flower-projected");
+    tbo->set_texture_options(projOptions);
+    tbo->bind(0);
 
-    // auto tbo = texturesM->texture_tbo("flower-projected");
-    // tbo->set_texture_options(projOptions);
-    // tbo->bind(0);
+    commonDrawers["notext-plane-10x10"sv]->draw();
 
-    // commonDrawers["notext-plane-10x10"sv]->draw();
-
-    // draw_nb(sampleShader.get(), drawer);
+    draw_nb(sampleShader.get(), drawer);
 }
 
 auto Ch5ProjectTexture::update_imgui() -> void{
@@ -1175,7 +1199,7 @@ auto Ch5DiffuseImageBasedLighting::init() -> bool {
 
 auto Ch5DiffuseImageBasedLighting::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     gl::TBO::bind({texturesM->cube_map_id("grace-diffuse"),texturesM->texture_id("spot_texture")},0);
@@ -1199,74 +1223,82 @@ auto Ch5SamplerObject::init() -> bool {
     // sampler objects
     options1.magFilter = TextureMagFilter::linear;
     options1.minFilter = TextureMinFilter::linear;
-    sampler1 = gl::Sampler(options1);
+    sampler1.initialize();
+    sampler1.update(options1);
 
     return true;
 }
 
 auto Ch5SamplerObject::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
-    // sampleShader->use();
-    // sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f, 1.0f});
-    // sampleShader->set_uniform("Light.La", lInfo.La);
-    // sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
-    // sampleShader->set_uniform("Material.Ks", mInfo.Ks);
-    // sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
+    sampleShader->use();
+    sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f, 1.0f});
+    sampleShader->set_uniform("Light.La", lInfo.La);
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Material.Ks", mInfo.Ks);
+    sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
 
-    // camM.m = geo::transform(Vec3d{0.3,0.3,0.3},Vec3d{90.,0.,0.},Vec3d{0.,0.,-2.});
-    // update_matrices();
-    // sampleShader->set_camera_matrices_uniforms(camM);
+    camM.m = geo::transform(Vec3d{0.3,0.3,0.3},Vec3d{90.,0.,0.},Vec3d{0.,0.,-2.});
+    update_matrices();
+    sampleShader->set_camera_matrices_uniforms(camM);
 
-    // sampler1.bind(0);
-    // commonDrawers["grid-floor"sv]->draw(sampleShader.get());
+    sampler1.bind(0);
+    commonDrawers["grid-floor"sv]->draw();
+
     // draw_nb(sampleShader.get(), drawer);
 
-    // gl::Sampler::unbind();
+    gl::Sampler::unbind();
 
 }
 
 auto Ch5SamplerObject::update_imgui() -> void{
 
+    bool updateSampler = false;
     auto &magf1 = options1.magFilter;
+
     int id = static_cast<int>(magf1);
     if(ImGuiUiDrawer::combo("magFilter###CH5SO-2", &id, magFiltersStr)){
         magf1 = static_cast<TextureMagFilter>(id);
-        sampler1.initialize(options1);
+        updateSampler = true;
     }
 
     auto &minf1 = options1.minFilter;
     id = static_cast<int>(minf1);
     if(ImGuiUiDrawer::combo("minFilter###CH5SO-3", &id, minFiltersStr)){
         minf1 = static_cast<TextureMinFilter>(id);
-        sampler1.initialize(options1);
+        updateSampler = true;
     }
 
     auto &wrapR1 = options1.wrapR;
     id = static_cast<int>(wrapR1);
     if(ImGuiUiDrawer::combo("wrapR###CH5SO-4", &id, wrapModeStr)){
         wrapR1 = static_cast<TextureWrapMode>(id);
-        sampler1.initialize(options1);
+        updateSampler = true;
     }
 
     auto &wrapS1 = options1.wrapS;
     id = static_cast<int>(wrapS1);
     if(ImGuiUiDrawer::combo("wrapS###CH5SO-5", &id, wrapModeStr)){
         wrapS1 = static_cast<TextureWrapMode>(id);
-        sampler1.initialize(options1);
+        updateSampler = true;
     }
 
     auto &wrapT1 = options1.wrapT;
     id = static_cast<int>(wrapT1);
-    if(ImGuiUiDrawer::combo("wrapR###CH5SO-6", &id, wrapModeStr)){
+    if(ImGuiUiDrawer::combo("wrapT###CH5SO-6", &id, wrapModeStr)){
         wrapT1 = static_cast<TextureWrapMode>(id);
-        sampler1.initialize(options1);
+        updateSampler = true;
     }
 
     ImGuiColorEditFlags miscFlags = ImGuiColorEditFlags_None;
     if(ImGui::ColorEdit4("borderColor###CH5SO-7", options1.borderColor.array.data(), miscFlags)){
-        sampler1.initialize(options1);
+        updateSampler = true;
+    }
+
+    if(updateSampler){
+        sampler1.update(options1);
     }
 }
 
@@ -1319,7 +1351,7 @@ auto Ch5RenderToTexture::update_screen_size() -> void {
 
 auto Ch5RenderToTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    // Sample::draw(drawer);
+    // parent_draw(drawer);
 
     // sampleShader->use();
 
@@ -1378,9 +1410,9 @@ auto Ch6EdgeDetectionFilter::init() -> bool {
         return false;
     }
 
-    lightUBO.generate();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     update_screen_size();
 
@@ -1434,7 +1466,7 @@ auto Ch6EdgeDetectionFilter::draw(tool::gl::BaseDrawer *drawer) -> void {
         GL::enable(GL_DEPTH_TEST);
         GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
-    Sample::draw(drawer);
+    parent_draw(drawer);
     sampleShader->use();
     sampleShader->set_uniform("Pass", 1);
     sampleShader->set_uniform("EdgeThreshold", edgeThreshold);
@@ -1494,9 +1526,9 @@ auto Ch6GaussianFilter::init() -> bool {
     }
 
 
-    lightUBO.generate();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     update_screen_size();
@@ -1581,7 +1613,7 @@ auto Ch6GaussianFilter::draw(tool::gl::BaseDrawer *drawer) -> void {
         GL::enable(GL_DEPTH_TEST);
     }
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Weight[0]", weights);
@@ -1646,7 +1678,7 @@ auto Ch6HdrLightingToneMapping::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     update_screen_size();
@@ -1698,7 +1730,7 @@ auto Ch6HdrLightingToneMapping::update_screen_size() -> void {
 
 auto Ch6HdrLightingToneMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
 
@@ -1777,7 +1809,7 @@ auto Ch6HdrBloom::init() -> bool {
         return false;
     }
 
-    materialUBO.generate();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     weights.resize(10);
@@ -1870,7 +1902,7 @@ auto Ch6HdrBloom::update_screen_size() -> void {
 
 auto Ch6HdrBloom::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     gl::TBO::unbind_textures(0, 3);
 
@@ -2089,7 +2121,7 @@ auto Ch6Deferred::draw(tool::gl::BaseDrawer *drawer) -> void {
     GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GL::enable(GL_DEPTH_TEST);
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     gl::TBO::unbind_textures(0, 3);
     sampleShader->use();
@@ -2290,7 +2322,7 @@ auto Ch6SSAO::update_screen_size() -> void {
 
 auto Ch6SSAO::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("doBlurPass", doBlurPass);
@@ -2629,7 +2661,7 @@ auto Ch7BezCurve::init() -> bool {
 
 auto Ch7BezCurve::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    // Sample::draw(drawer);
+    // parent_draw(drawer);
 
     // GL::enable(GL_DEPTH_TEST);
     // glPointSize(10.0f);
@@ -2688,7 +2720,7 @@ auto Ch7ShadeWire::update_screen_size() -> void {
 
 auto Ch7ShadeWire::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     sampleShader->use();
     sampleShader->set_uniform("Line.Width", lineWidth);
@@ -2722,7 +2754,7 @@ auto Ch7ScenePointSprite::init() -> bool {
 
 auto Ch7ScenePointSprite::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    // Sample::draw(drawer);
+    // parent_draw(drawer);
 
     // std::mt19937 e2(rd());
     // std::uniform_real_distribution<float> dist(0.f, 10000.f);
@@ -2770,7 +2802,7 @@ auto Ch7Silhouette::init() -> bool {
 
 auto Ch7Silhouette::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     GL::enable(GL_DEPTH_TEST);
 
@@ -2855,7 +2887,7 @@ auto Ch8ShadowMap::init() -> bool {
 
 auto Ch8ShadowMap::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    Sample::draw(drawer);
+    parent_draw(drawer);
 
     // update frustum
     lightFrustum->update(fov, aspectRatio, 1.0f, 25.0f);
@@ -3079,7 +3111,7 @@ auto Ch8ShadowMap2::init() -> bool {
 
 auto Ch8ShadowMap2::draw(tool::gl::BaseDrawer *) -> void{
 
-    //Sample::draw(drawer);
+    //parent_draw(drawer);
 
     glm::vec3 lightPos1,lookAt1;
     lightPos1.x = lightPos.x();
@@ -3226,7 +3258,7 @@ auto Ch8ShadowPcf::init() -> bool {
 
 auto Ch8ShadowPcf::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    // Sample::draw(drawer);
+    // parent_draw(drawer);
 
     // auto lightFrustum = dynamic_cast<gl::Frustum*>(commonDrawers["frustum"sv]->object());
 
@@ -3329,20 +3361,7 @@ auto CloudSample::init() -> bool{
 
 auto CloudSample::draw(gl::BaseDrawer *drawer) -> void{
 
-    Sample::draw(drawer);
-
-    // if(auto shader = commonShaders["skybox"sv]; shader != nullptr){
-
-    //     camM.m = geo::transform(Vec3d{1.,1.,1.},skyboxRot.conv<double>(),Vec3d{0.,0.,0.});
-    //     update_matrices();
-
-    //     shader->use();
-
-    //     shader->set_uniform_matrix("MVP"sv, camM.mvp.conv<float>());
-
-    //     gl::TBO::bind({cubemap.id()},0);
-    //     commonDrawers["skybox"sv]->draw();
-    // }
+    parent_draw(drawer);
 
     sampleShader->use();    
     sampleShader->set_uniform_matrix("view",       camera->view().conv<float>());

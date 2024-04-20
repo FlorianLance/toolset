@@ -73,6 +73,8 @@ auto DCFiltersSettings::init_from_data(std::int8_t const * const data, size_t &o
     read(removeFromPointDistance, data, offset, sizeData);
     read(pSphere, data, offset, sizeData);
     read(maxSphereDistance, data, offset, sizeData);
+    read(keepOnlyPointsInsideOOB, data, offset, sizeData);
+    read(oob, data, offset, sizeData);
     read(doLocalDiffFiltering, data, offset, sizeData);
     read(maxLocalDiff, data, offset, sizeData);
     read(localDiffConnectivity, data, offset, sizeData);
@@ -116,7 +118,9 @@ auto DCFiltersSettings::write_to_data(std::int8_t * const data, size_t &offset, 
     write(p1C, data, offset, sizeData);
     write(removeFromPointDistance, data, offset, sizeData);
     write(pSphere, data, offset, sizeData);
-    write(maxSphereDistance, data, offset, sizeData);
+    write(maxSphereDistance, data, offset, sizeData);    
+    write(keepOnlyPointsInsideOOB, data, offset, sizeData);
+    write(oob, data, offset, sizeData);
     write(doLocalDiffFiltering, data, offset, sizeData);
     write(maxLocalDiff, data, offset, sizeData);
     write(localDiffConnectivity, data, offset, sizeData);
@@ -156,6 +160,8 @@ auto DCFiltersSettings::total_data_size() const noexcept -> size_t{
         sizeof(removeFromPointDistance) +
         sizeof(pSphere) +
         sizeof(maxSphereDistance) +
+        sizeof(keepOnlyPointsInsideOOB) +
+        sizeof(oob) +
         sizeof(doLocalDiffFiltering) +
         sizeof(maxLocalDiff) +
         sizeof(localDiffConnectivity) +

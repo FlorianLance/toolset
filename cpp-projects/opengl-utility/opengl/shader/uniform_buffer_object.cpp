@@ -38,94 +38,86 @@ UBO::~UBO(){
     clean();
 }
 
-auto UBO::generate() -> void{
+auto UBO::initialize() -> void{
 
-    if(m_handle != 0){
-        Logger::error(std::format("[UBO::generate] UBO already generated [{}]\n", m_handle));
+    if(is_initialized()){
+        Logger::error(std::format("[UBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
 }
 
-auto UBO::bind(GLuint index) -> void{
+auto UBO::clean() -> void{
 
-    GL::bind_buffer_range(
-        GL_UNIFORM_BUFFER,
-        index,
-        m_handle,
-        0,
-        m_size
-    );
-}
-
-auto UBO::bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void{
-
-    // to test
-    std::vector<GLuint> buffers;
-    buffers.reserve(UBOs.size());
-
-    std::vector<GLintptr> offsets;
-    offsets.reserve(UBOs.size());
-
-    std::vector<GLintptr> sizes;
-    sizes.reserve(UBOs.size());
-
-    for(const auto &ubo : UBOs){
-        buffers.emplace_back(ubo.id());
-        offsets.emplace_back(0);
-        sizes.emplace_back(ubo.size());
+    if(!is_initialized()){
+        return;
     }
 
-    GL::bind_buffers_range(
-        GL_UNIFORM_BUFFER,
-        first,
-        static_cast<GLsizei>(UBOs.size()),
-        buffers.data(),
-        offsets.data(),
-        sizes.data()
-    );
+    GL::delete_buffers(1, &m_handle);
+    m_handle         = 0;
+    m_loadedDataSize = 0;
+    m_usage          = 0;
 }
 
 
+auto UBO::load_data(const GLvoid *data, GLsizeiptr size, GLenum usage) -> bool{
 
-auto UBO::set_data_storage(GLsizeiptr sizeData, void *data, GLenum usage) -> void{
+    if(!is_initialized()){
+        Logger::error("[UBO::load_data] Not initialized.\n");
+        return false;
+    }
+
+    if(is_data_loaded()){
+        Logger::error(std::format("[UBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        return false;
+    }
+
+    if(size == 0){
+        Logger::error(std::format("[UBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        return false;
+    }
 
     GL::named_buffer_storage(
         m_handle,
-        m_size = sizeData,
+        m_loadedDataSize = size,
         data,
-        usage
+        m_usage = usage
     );
+
+    return true;
 }
 
-auto UBO::update_data(void *data, GLsizeiptr sizeData, GLintptr offset) -> void{
+auto UBO::update_data(const GLvoid *data, GLsizeiptr size, GLintptr offset) -> bool{
 
-    if(m_size == 0){
-        Logger::error("[UBO::update_data] No storage initialized.\n");
-        return;
+    if(!is_initialized()){
+        Logger::error("[UBO::update_data] Not initialized.\n");
+        return false;
     }
 
-    if(sizeData > m_size){
-        Logger::error("[UBO::update_data] Size is bigger than storage.\n");
-        return;
+    if(!is_data_loaded()){
+        Logger::error(std::format("[UBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
+        return false;
+    }
+
+    if(!is_dynamic()){
+        Logger::error(std::format("[UBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
+        return false;
+    }
+
+    if(size + offset > loaded_data_size()){
+        Logger::error(std::format("[UBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
+        m_loadedDataSize, size, offset, m_handle));
+        return false;
     }
 
     GL::named_buffer_sub_data(
         m_handle,
         offset,
-        sizeData,
+        size,
         data
     );
-}
 
-auto UBO::clean() -> void{
-
-    if(m_handle == 0){
-        return;
-    }
-
-    GL::delete_buffers(1, &m_handle);
-    m_handle = 0;
+    return true;
 }
 
 auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> void{
@@ -147,5 +139,52 @@ auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> voi
     m_blockBuffer.resize((blockInfo.size));
     m_offsets = blockInfo.get_offsets(get_elements_name());
 
-    set_data_storage(static_cast<GLint>(m_blockBuffer.size()), nullptr, usage);
+    load_data(nullptr, static_cast<GLint>(m_blockBuffer.size()), usage);
 }
+
+
+
+auto UBO::bind(GLuint index) -> void{
+
+    GL::bind_buffer_range(
+        GL_UNIFORM_BUFFER,
+        index,
+        m_handle,
+        0,
+        m_loadedDataSize
+    );
+}
+
+auto UBO::bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void{
+
+    // to test
+    std::vector<GLuint> buffers;
+    buffers.reserve(UBOs.size());
+
+    std::vector<GLintptr> offsets;
+    offsets.reserve(UBOs.size());
+
+    std::vector<GLintptr> sizes;
+    sizes.reserve(UBOs.size());
+
+    for(const auto &ubo : UBOs){
+        buffers.emplace_back(ubo.id());
+        offsets.emplace_back(0);
+        sizes.emplace_back(ubo.loaded_data_size());
+    }
+
+    GL::bind_buffers_range(
+        GL_UNIFORM_BUFFER,
+        first,
+        static_cast<GLsizei>(UBOs.size()),
+        buffers.data(),
+        offsets.data(),
+        sizes.data()
+    );
+}
+
+
+
+
+
+

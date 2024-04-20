@@ -26,6 +26,9 @@
 
 #pragma once
 
+// base
+#include "geometry/obb3.hpp"
+
 // local
 #include "base_drawer.hpp"
 
@@ -68,7 +71,14 @@ public:
 class GridLinesDrawer : public BaseDrawer{
 public:
     GridLinesDrawer() : BaseDrawer(DrawerType::Lines){}
-    auto initialize(float width = 0.2f, float height = 0.2f, int nbX = 100, int nbY = 100) -> void;
+    auto initialize(float width = 0.2f, float height = 0.2f, int nbX = 100, int nbY = 100, bool addDiagonals = false) -> void;
+};
+
+class OrientedBoundingBoxLinesDrawer : public BaseDrawer{
+public:
+    OrientedBoundingBoxLinesDrawer() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic, const geo::OBB3<float> &obb) -> void;
+    auto update(const geo::OBB3<float> &obb) -> void;
 };
 
 }

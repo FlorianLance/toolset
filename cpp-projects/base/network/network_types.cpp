@@ -220,3 +220,17 @@ auto MultiPacketsUdpReception::get_percentage_success() -> int{
 }
 
 
+AverageLatency::AverageLatency(){
+    latencies.resize(nbMaxValues, 0);
+}
+
+auto AverageLatency::update_average_latency(int64_t latency) -> void{
+
+    latencies.set_current(latency);
+    latencies.increment();
+
+    auto span = latencies.span();
+    averageLatency = static_cast<std::int64_t>(
+        1.0 * std::accumulate(std::begin(span), std::end(span), 0) / nbMaxValues
+    );
+}

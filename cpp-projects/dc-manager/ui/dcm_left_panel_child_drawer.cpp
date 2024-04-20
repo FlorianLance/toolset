@@ -410,6 +410,13 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
             ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.framerate));
         }
         ImGui::Unindent();
+
+        ImGui::Text("Total latency (from capture to reception) (µs):");
+        ImGui::Indent();
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.latency));
+        }
+        ImGui::Unindent();
     }
     ImGui::Unindent();
 

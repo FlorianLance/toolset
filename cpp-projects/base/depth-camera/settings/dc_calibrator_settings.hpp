@@ -56,7 +56,7 @@ struct DCCalibratorSettings{
     auto initialize(size_t nbClients) -> void{
 
         models.resize(nbClients);
-        sources.resize(nbClients+1);
+        sources.resize(nbClients);
         for(size_t idC = 0; idC < nbClients; ++idC){
             auto name = std::format("[{}]", idC);
             models[idC]  = name;

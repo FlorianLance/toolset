@@ -62,10 +62,7 @@ auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame
 
 auto DCRecorderDrawer::draw() -> void{
 
-    if(m_redrawClouds || has_to_redraw_clouds()){
-        draw_clouds_to_fbo();
-    }
-    m_redrawClouds = false;
+
 
     bool focusWindow = false;
 
@@ -77,6 +74,12 @@ auto DCRecorderDrawer::draw() -> void{
         bool allTabOpened = false;
         if ((allTabOpened = ImGuiUiDrawer::begin_tab_item("All###display_recorder_all_tabitem"))){
             display.drawOnlyCloudId  = -1;
+
+            if(m_redrawClouds || has_to_redraw_clouds()){
+                draw_clouds_to_fbo();
+            }
+            m_redrawClouds = false;
+
             draw_all_clouds_drawers_in_one_tab();
             ImGui::EndTabItem();
         }
@@ -86,6 +89,12 @@ auto DCRecorderDrawer::draw() -> void{
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
             if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_recorder_per_grabber_tabitem_{}", ii, ii).c_str())){
                 display.drawOnlyCloudId  = ii;
+
+                if(m_redrawClouds || has_to_redraw_clouds()){
+                    draw_clouds_to_fbo();
+                }
+                m_redrawClouds = false;
+
                 draw_cloud_drawer_tab(ii, focusWindow, "display_recorder"sv);
                 ImGui::EndTabItem();
             }

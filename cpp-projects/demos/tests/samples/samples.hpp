@@ -21,54 +21,35 @@
 #include "opengl/buffer/pixel_buffer_object.hpp"
 #include "opengl/buffer/atomic_buffer_object.hpp"
 #include "opengl/gl_material.hpp"
-#include "opengl/sampler.hpp"
+#include "opengl/texture/sampler.hpp"
 #include "opengl/texture/geometry_texture_2d_tbo.hpp"
 
 // local
 #include "engine/managers.hpp"
-
 
 #include "opengl/draw/points_drawers.hpp"
 
 
 namespace tool::graphics {
 
-// std140
-struct Light2{
-    geo::Vec4f Position; // Light position in cam coords
-    geo::Vec3f La;
-    float padding1;
-    geo::Vec3f Ld;
-    float padding2;
-    geo::Vec3f Ls;
-    float padding3;
-};
-
-// std140
-struct MaterialPbr{
-
-    MaterialPbr(geo::Pt4f c, float r, float m) : color(c), rough(r), metal(m){}
-
-    geo::Pt4f color;                        // 0
-    float rough;                            // 12
-    float metal;                            // 16
-    float padding1;                         // 20
-    float padding2;                         // 24
-    // float padding3;                      // 28
-    // float padding4;                      // 32
-};
-
 
 struct Sample{
 
     Sample(Camera *cam);
     virtual ~Sample(){}
-    auto parent_init() -> bool;
-    virtual auto init() -> bool{return true;}
+
+    auto parent_init() -> bool;    
+    auto parent_update_imgui() -> void;
+
+    virtual auto draw(gl::BaseDrawer *drawer = nullptr) -> void {};
+    virtual auto update_parameters() -> void{}
     virtual auto update_screen_size()-> void{}
     virtual auto update(float elapsedSeconds) -> void;
-    virtual auto draw(gl::BaseDrawer *drawer = nullptr) -> void;
-    virtual auto parent_update_imgui() -> void;
+
+protected:
+
+    virtual auto init() -> bool{return true;}
+    auto parent_draw(gl::BaseDrawer *drawer = nullptr) -> void;
     virtual auto update_imgui() -> void{}
 
     // matrices
@@ -99,7 +80,7 @@ struct Sample{
             m[0][1], m[1][1], m[2][1], m[3][1],
             m[0][2], m[1][2], m[2][2], m[3][2],
             m[0][3], m[1][3], m[2][3], m[3][3],
-            };
+        };
     }
     // # misc
     static inline auto gauss(float x, float sigma2 ) -> float{
@@ -107,6 +88,7 @@ struct Sample{
         double expon = -(x*x) / (2.0 * sigma2);
         return (float) (coeff*exp(expon));
     }
+
 
 public:
 
@@ -219,11 +201,13 @@ struct Ch3Diffuse : public Sample{
 struct Ch3Flat : public Sample{
     Ch3Flat(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch3Discard : public Sample{
     Ch3Discard(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
 private:
@@ -233,37 +217,44 @@ private:
 struct Ch3TwoSide : public Sample{
     Ch3TwoSide(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch3Phong : public Sample{
     Ch3Phong(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 // ############################################## CH4
 struct Ch4PhongDirectionnalLight : public Sample{
     Ch4PhongDirectionnalLight(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4PhongMultiLights : public Sample{
     Ch4PhongMultiLights(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4PhongPerFragment : public Sample{
     Ch4PhongPerFragment(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4BlinnPhong : public Sample{
     Ch4BlinnPhong(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4Cartoon : public Sample{
     Ch4Cartoon(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
 private:
@@ -276,8 +267,8 @@ struct Ch4PBR : public Sample{
     auto update_imgui() -> void final override;
 private:
     std::vector<Light2> lights;
-    gl::UBO lightsB;
-    gl::UBO materialsB;
+    gl::UBO lightsUBO;
+    gl::UBO pbrMatUBO;
 };
 // ############################################## CH5
 struct Ch5DiscardPixels : public Sample{

@@ -94,6 +94,8 @@ struct DCDeviceImpl{
 
 protected:
 
+    auto do_loop() -> void;
+
     // initialization
     auto initialize(const DCConfigSettings &newConfig) -> void;
     virtual auto initialize_device_specific() -> void{}
@@ -198,13 +200,10 @@ protected:
     // decoders
     data::JpegDecoder jpegColorDecoder;
 
-    // tasks
+    // threads/tasks
+    std::unique_ptr<std::thread> loopT = nullptr;
     std::unique_ptr<tf::Executor> executor = nullptr;
-    std::unique_ptr<tf::Taskflow> mainLoopTF = nullptr;
-    std::unique_ptr<tf::Taskflow> readDataTF = nullptr;
     std::unique_ptr<tf::Taskflow> processDataTF = nullptr;
-    std::unique_ptr<tf::Taskflow> processFrameTF = nullptr;
-    tf::Future<void> loopFuture;
 
 private:
 

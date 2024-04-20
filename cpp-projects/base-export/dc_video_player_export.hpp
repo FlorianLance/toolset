@@ -58,4 +58,7 @@ DECL_EXPORT int get_current_frames_total_cloud_size__dc_video_player(tool::cam::
 DECL_EXPORT int copy_camera_cloud__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
 DECL_EXPORT int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
 
+// vfx
+DECL_EXPORT int copy_camera_cloud_vfx__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt4f *positions, tool::geo::Pt4f *colors, int verticesCount, int applyModelTransform, float *minMax);
+
 }

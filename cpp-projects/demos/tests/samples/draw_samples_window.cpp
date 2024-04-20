@@ -320,7 +320,7 @@ auto DrawSampleWindow::init_drawers() -> bool{
     dm->add_drawer("axes", std::move(axesLines), 1.f);
 
     auto frustum = std::make_shared<gl::FrustumDrawerLinesDrawer>();
-    frustum->initialize(1.f);
+    frustum->initialize(true);
     dm->add_drawer("frustum", std::move(frustum), 1.f);
 
     auto skybox = std::make_shared<gl::SkyboxTrianglesDrawer>();
@@ -351,34 +351,65 @@ auto DrawSampleWindow::init_drawers() -> bool{
     Logger::message("MODELS\n");
 
     if(auto model = mm->get("spot").lock(); model != nullptr){
-        auto spotM = std::make_shared<gl::ModelMeshDrawer2>();
-        spotM->initialize(*model, TexturesInfo{tm->get_texture_info("spot_texture")});
-        dm->add_drawer("spot", std::move(spotM),1.f);
+        {
+            auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+            mmD->initialize(*model, TexturesInfo{tm->get_texture_info("spot_texture")});
+            dm->add_drawer("spot", std::move(mmD),1.f);
+        }
+        {
+            auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+            mmD->initialize(*model);
+            dm->add_drawer("notext-spot", std::move(mmD),1.f);
+        }
     }
 
-    // spotM.initialize(mm->get("spot"));
+    if(auto model = mm->get("ogre").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model, TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
+        dm->add_drawer("ogre", std::move(mmD),1.f);
+    }
 
-    // // # loaded models
-    // dm->add_drawer("spot",           Scale{1.f},    mm->get("spot"),TexturesInfo{tm->get_texture_info("spot_texture",{})});
-    // dm->add_drawer<tool::gl::ModelDrawer>("notext-spot",    Scale{1.f},    mm->get("spot"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("ogre",           Scale{1.f},    mm->get("ogre"),TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
-    // dm->add_drawer<tool::gl::ModelDrawer>("pig",            Scale{1.f},    mm->get("pig"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("dragon",         Scale{2.f},    mm->get("dragon"));
-    // // dm->add_drawer<tool::gl::ModelDrawer>("building",       Scale{1.f},    mm->get("building"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("crysis",         Scale{0.1f},   mm->get("crysis"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("alex",           Scale{0.01f},  mm->get("alex"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("rabbit",         Scale{3.f},    mm->get("rabbit"));
-    // dm->add_drawer<tool::gl::ModelDrawer>("storm",          Scale{0.01f},    mm->get("storm"));
+    if(auto model = mm->get("pig").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("pig", std::move(mmD),1.f);
+    }
 
-//    auto storm = std::make_shared<tool::gl::ModelDrawer>(mm->get("storm"));
-////    storm->update_animation(mm->get_animation_name("storm",0), 0.f);
-//    dm->add_drawer("storm", storm, 0.01f);
+    if(auto model = mm->get("dragon").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("dragon", std::move(mmD),2.f);
+    }
+
+    if(auto model = mm->get("crysis").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("crysis", std::move(mmD),0.1f);
+    }
+
+    if(auto model = mm->get("alex").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("alex", std::move(mmD),0.01f);
+    }
+
+    if(auto model = mm->get("rabbit").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("rabbit", std::move(mmD),3.f);
+    }
+
+    if(auto model = mm->get("storm").lock(); model != nullptr){
+        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        mmD->initialize(*model);
+        dm->add_drawer("storm", std::move(mmD),0.01f);
+    }
 
     Logger::message(("SUB.\n"));
 
     // ui drawers
     uiDrawers2 = dm->sub({
-        "cube","torus", "spot"//,"crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","ogre"
+        "cube","torus", "spot", "crysis","storm","alex","dragon","pig","sphere","rabbit","teapot","ogre"
     });
 
     // dynamic_cast<gl::ModelDrawer*>(uiDrawers.get_element_ptr("storm"))->model()->display_hierarchy();
@@ -439,6 +470,7 @@ auto DrawSampleWindow::init_samples() -> bool{
             Logger::error(std::format("Cannot init sample {}\n", std::get<0>(sample)));
             return false;
         }
+        std::get<1>(sample)->update_parameters();
     }
 
     uiSamples.set_current_id(0);
@@ -498,7 +530,7 @@ auto DrawSampleWindow::initialize_gl() -> bool{
 }
 
 
-void DrawSampleWindow::draw_gl(){
+auto DrawSampleWindow::draw_gl() -> void{
 
     GL::enable(GL_DEPTH_TEST);
     GL::enable(GL_STENCIL_TEST);
@@ -518,16 +550,13 @@ void DrawSampleWindow::draw_gl(){
     }
 }
 
-void DrawSampleWindow::update(){
-
-    // update current sample
+auto DrawSampleWindow::update() -> void{
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
         sample->update(elapsed_secondes());
     }
 }
 
-
-void DrawSampleWindow::draw_imgui(){
+auto DrawSampleWindow::draw_imgui() -> void{
 
     // menu bar
     if (ImGui::BeginMainMenuBar()){
@@ -573,6 +602,7 @@ void DrawSampleWindow::draw_imgui(){
     ImGui::Text("Drawer");
     ImGui::SameLine();
 
+
     if(ImGui::BeginCombo("###Drawer", uiDrawers2.get_current_alias().data())){
 
         for(size_t id = 0; id < uiDrawers2.count(); ++id){
@@ -601,6 +631,7 @@ void DrawSampleWindow::draw_imgui(){
     ImGui::Text("Sample");
     ImGui::SameLine();
 
+    bool newSampleSelected = false;
     if(ImGui::BeginCombo("###Sample", uiSamples.get_current_alias().data())){
 
         for(size_t id = 0; id < uiSamples.count(); ++id){
@@ -608,6 +639,7 @@ void DrawSampleWindow::draw_imgui(){
             if (ImGui::Selectable(uiSamples.get_alias(id).value().data(), selected)){
                 uiSamples.set_current_id(id);
                 resize_windows();
+                 newSampleSelected = true;
             }
             if(selected){
                 ImGui::SetItemDefaultFocus();
@@ -620,64 +652,29 @@ void DrawSampleWindow::draw_imgui(){
     if(ImGui::Button("^###s^")){
         uiSamples.decrement_current_id();
         resize_windows();
+        newSampleSelected = true;
     }
     ImGui::SameLine();
 
     if(ImGui::Button("v###sv")){
         uiSamples.increment_current_id();
         resize_windows();
+        newSampleSelected = true;
     }
     ImGui::SameLine();
     ImGuiUiDrawer::text(std::to_string(uiSamples.get_current_id()));
 
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
         sample->parent_update_imgui();
+        if(newSampleSelected){
+            sample->update_parameters();
+        }
     }
 
     ImGui::End();
-
-
-    //    if (ImGui::CollapsingHeader("Scatter Plots")) { // crash
-    //        srand(0);
-    //        static float xs1[100], ys1[100];
-    //        for (int i = 0; i < 100; ++i) {
-    //            xs1[i] = i * 0.01f;
-    //            ys1[i] = xs1[i] + 0.1f * ((float)rand() / (float)RAND_MAX);
-    //        }
-    //        static float xs2[50], ys2[50];
-    //        for (int i = 0; i < 50; i++) {
-    //            xs2[i] = 0.25f + 0.2f * ((float)rand() / (float)RAND_MAX);
-    //            ys2[i] = 0.75f + 0.2f * ((float)rand() / (float)RAND_MAX);
-    //        }
-
-    //        if (ImPlot::BeginPlot("Scatter Plot", NULL, NULL)) {
-    //            ImPlot::PlotScatter("Data 1", xs1, ys1, 100);
-    //            ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
-    //            ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 6, ImVec4(0,1,0,0.5f), IMPLOT_AUTO, ImVec4(0,1,0,1));
-    //            ImPlot::PlotScatter("Data 2", xs2, ys2, 50);
-    //            ImPlot::PopStyleVar();
-    //            ImPlot::EndPlot();
-    //        }
-    //    }
-    //    if (ImGui::CollapsingHeader("Stairstep Plots")) {
-    //        static float ys1[101], ys2[101];
-    //        for (int i = 0; i < 101; ++i) {
-    //            ys1[i] = 0.5f + 0.4f * sinf(50 * i * 0.01f);
-    //            ys2[i] = 0.5f + 0.2f * sinf(25 * i * 0.01f);
-    //        }
-
-    //        if (ImPlot::BeginPlot("Stairstep Plot", "x", "f(x)")) {
-    //            ImPlot::PlotStairs("Signal 1", ys1, 101, 0.01f);
-    //            ImPlot::SetNextMarkerStyle(ImPlotMarker_Square, 2.0f);
-    //            ImPlot::PlotStairs("Signal 2", ys2, 101, 0.01f);
-    //            ImPlot::EndPlot();
-    //        }
-    //    }
-
 }
 
-
-void DrawSampleWindow::resize_windows(){
+auto DrawSampleWindow::resize_windows() -> void{
     // resize current sample
     if(auto sample = uiSamples.get_current_element_ptr(); sample != nullptr){
         sample->update_screen_size();

@@ -146,7 +146,7 @@ auto AzureKinectDeviceImpl::read_body_tracking(bool enable) -> void{
 
 auto AzureKinectDeviceImpl::generate_cloud(bool enable) -> void{
 
-    if(enable && !fData.depth.empty() && fData.validDepthValues > 0){
+    if(enable && !fData.depth.empty()){
         fData.depthCloud = azureD->generate_cloud();
     }else{
         fData.depthCloud = {};

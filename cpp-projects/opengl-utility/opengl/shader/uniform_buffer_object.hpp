@@ -42,28 +42,38 @@ struct UBO{
     UBO& operator=(UBO&& other) = default;
     ~UBO();
 
-    [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}
-    [[nodiscard]] constexpr auto size() const noexcept -> GLsizeiptr{return m_size;}
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint{return m_handle;}
+    [[nodiscard]] constexpr auto loaded_data_size() const noexcept -> GLsizeiptr{return m_loadedDataSize;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
+    [[nodiscard]] constexpr auto is_data_loaded()   const noexcept -> bool       {return loaded_data_size() != 0;}
+    [[nodiscard]] constexpr auto buffer_usage()     const noexcept -> GLbitfield {return m_usage;}
+    [[nodiscard]] constexpr auto is_dynamic()       const noexcept -> bool       {return buffer_usage() & GL_DYNAMIC_STORAGE_BIT;}
+
     [[nodiscard]] virtual auto get_block_name() const -> const std::string_view {return ""sv;}
     [[nodiscard]] virtual auto get_elements_name() const -> std::span<const std::string_view>{return {};}
 
-    auto generate() -> void;
+    auto initialize() -> void;
     auto clean() -> void;
 
     auto bind(GLuint index) -> void;
     static auto bind_range(const std::vector<UBO> &UBOs, GLuint first) -> void; // TEST
 
-    auto set_data_storage(GLsizeiptr sizeData, void *data = nullptr, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;    
+    auto load_data(const GLvoid *data, GLsizeiptr size, GLenum usage = defaultUsage) -> bool;
+    auto update_data(const GLvoid *data, GLsizeiptr size, GLintptr offset = 0) -> bool;
+
     auto set_data_space_from_shader(ShaderProgram *shader, GLenum usage = GL_DYNAMIC_STORAGE_BIT) -> void;
-    auto update_data(void *data, GLsizeiptr sizeData, GLintptr offset = 0) -> void;
+
 
 protected:
 
     GLuint m_handle = 0;
-    GLsizeiptr m_size = 0;
+    GLsizeiptr m_loadedDataSize = 0;
+    GLbitfield m_usage = 0;
+
+    static constexpr GLbitfield defaultUsage = GL_DYNAMIC_STORAGE_BIT;
 
     std::vector<GLubyte> m_blockBuffer;
-    std::vector<GLint> m_offsets;
+    std::vector<GLint> m_offsets;        
 };
 
 

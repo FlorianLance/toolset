@@ -39,20 +39,27 @@ namespace tool::gl {
 struct Sampler{
 
     Sampler() = default;
-    Sampler(const graphics::TextureOptions &textureOptions);
+    Sampler(const Sampler&) = delete;
+    Sampler& operator=(const Sampler&) = delete;
+    Sampler(Sampler&& other) = delete;
+    Sampler& operator=(Sampler&& other) = delete;
+    ~Sampler();
 
-    auto initialize(const graphics::TextureOptions &textureOptions) -> void;
-    auto bind(GLuint unitIndex)const -> void;
+    [[nodiscard]] constexpr auto id()               const noexcept -> GLuint     {return m_handle;}
+    [[nodiscard]] constexpr auto is_initialized()   const noexcept -> bool       {return id() != 0;}
 
-    constexpr auto id() const noexcept -> GLuint{return m_id;};
+    auto initialize() -> void;
+    auto clean()      -> void;
 
-    static auto generate(const std::vector<graphics::TextureOptions> &texturesOptions) -> std::vector<Sampler>;
-    static auto bind_samplers(const std::vector<Sampler> &samplers, GLuint first = 0) -> void;
+    auto update(const graphics::TextureOptions &textureOptions) -> bool;
+
+    auto bind(GLuint unit) const -> void;
+    static auto bind(std::span<const Sampler> samplers, GLuint first) -> void;
     static auto unbind(GLuint first=0, GLuint count=1) -> void;
 
 private:
 
-    GLuint m_id = 0;
+    GLuint m_handle = 0;
 };
 
 }

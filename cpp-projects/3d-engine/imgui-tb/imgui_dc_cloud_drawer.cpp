@@ -26,6 +26,9 @@
 
 #include "imgui_dc_cloud_drawer.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 using namespace tool::graphics;
 using namespace tool::geo;
 
@@ -73,19 +76,18 @@ auto DCCloudDrawer::reset() -> void{
     // cpD.clean();
 }
 
+
 auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
 
     if(lastFrameId == frame->idCapture){
         return false;
     }
 
-
     auto dr = cam::dc_depth_resolution(frame->mode);
     auto range = cam::dc_depth_range(dr);
     auto hFov = dc_depth_h_fov(dr);
     auto vFov = dc_depth_v_fov(dr);
     frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x(), range.y());
-
 
     if(!frame->rgbaDepthSizedColor.empty()){
         colorT.init_or_update_8ui(

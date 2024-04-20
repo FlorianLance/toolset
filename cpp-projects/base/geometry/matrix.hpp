@@ -33,7 +33,7 @@
 #include <functional>
 #include <array>
 #include <numeric>
-
+#include <span>
 
 // local
 #include "utility/math.hpp"
@@ -468,9 +468,22 @@ constexpr auto sum(const RowVec<acc,dim> &vec)  noexcept -> acc{
     return std::accumulate(vec.array.begin(), vec.array.end(), 0);
 }
 
+
 template <typename acc, int dim>
 constexpr auto dot(const RowVec<acc, dim> &l, const RowVec<acc, dim> &r) noexcept -> acc {
     return std::inner_product(l.array.cbegin(), l.array.cend(), r.array.cbegin(), acc{0});
+}
+template <typename acc, int dim>
+constexpr auto dot(std::span<const acc, dim> l, std::span<const acc, dim> r) noexcept -> acc {
+    return std::inner_product(l.cbegin(), l.cend(), r.cbegin(), acc{0});
+}
+template <typename acc, int dim>
+constexpr auto dot(const RowVec<acc, dim> &l, std::span<const acc, dim> r) noexcept -> acc {
+    return std::inner_product(l.array.cbegin(), l.array.cend(), r.cbegin(), acc{0});
+}
+template <typename acc, int dim>
+constexpr auto dot(std::span<const acc, dim> l, const RowVec<acc, dim> &r) noexcept -> acc {
+    return std::inner_product(l.cbegin(), l.cend(), r.array.cbegin(), acc{0});
 }
 
 template <typename acc, int dim>

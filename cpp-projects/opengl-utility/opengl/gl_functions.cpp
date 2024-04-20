@@ -407,6 +407,34 @@ auto GL::check_named_framebuffer_status(GLuint framebuffer, GLenum target) -> GL
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCheckFramebufferStatus.xhtml
 }
 
+auto GL::create_samplers(GLsizei n, GLuint *samplers) -> void{
+    // Create sampler objects
+    glCreateSamplers(
+        n,              // Number of sampler objects to create.
+        samplers        // Specifies an array in which names of the new sampler objects are stored.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCreateSamplers.xhtml
+}
+
+auto GL::delete_samplers(GLsizei n, const GLuint *samplers) -> void{
+    // Delete named sampler objects.
+    glDeleteSamplers(
+        n,              // Specifies the number of sampler objects to be deleted.
+        samplers        // Specifies an array of sampler objects to be deleted.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteSamplers.xhtml
+}
+
+auto GL::bind_samplers(GLuint first, GLsizei count, const GLuint *samplers) -> void{
+    // Bind one or more named sampler objects to a sequence of consecutive sampler units.
+    glBindSamplers(
+        first,          // Specifies the first sampler unit to which a sampler object is to be bound.
+        count,          // Specifies the number of samplers to bind.
+        samplers        // Specifies the address of an array of names of existing sampler objects.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindSamplers.xhtml
+}
+
 auto GL::create_textures(GLenum target, GLsizei n, GLuint *textures) -> void{    
     // Create texture objects.
     glCreateTextures(

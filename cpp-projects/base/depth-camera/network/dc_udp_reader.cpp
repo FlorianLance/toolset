@@ -30,6 +30,7 @@
 // local
 #include "depth-camera/dc_compressed_frame.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -141,6 +142,9 @@ auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
 
             framerate.add_frame();
 
+            // update latency
+            latency.update_average_latency(Time::difference_micro_s(nanoseconds(cFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+
             // send compressed frame
             compressed_frame_signal(std::move(header), std::move(cFrame));
         }
@@ -149,7 +153,7 @@ auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
             timeout_messages_signal(nbMessageTimeout);
         }
 
-        status_signal(UdpReceivedStatus{cFramesReception.get_percentage_success(), framerate.get_framerate()});
+        status_signal(UdpReceivedStatus{cFramesReception.get_percentage_success(), framerate.get_framerate(), latency.averageLatency});
 
     }break;  
     default:

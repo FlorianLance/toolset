@@ -82,6 +82,8 @@ public:
         drawers.clear();
     }
 
+    auto draw() -> void override;
+
 protected:
     std::vector<std::unique_ptr<BaseDrawer>> drawers;
     std::vector<std::unique_ptr<HierarchyDrawer2>> children;

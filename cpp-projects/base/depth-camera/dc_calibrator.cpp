@@ -375,6 +375,7 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
                     continue;
                 }
                 idSources.push_back(ii);
+                Logger::message(std::format("Add source [{}] to list: \n", ii));
             }
         }
     }else{
@@ -392,10 +393,10 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         return false;
     }
 
-    Logger::message(std::format("model {}\n", idModel));
-    for(auto &s : idSources){
-        Logger::message(std::format("source {}\n", s));
-    }
+    // Logger::message(std::format("Model {}\n", idModel));
+    // for(auto &s : idSources){
+    //     Logger::message(std::format("source {}\n", s));
+    // }
 
     if(!m_p->set_model_cloud(idModel, models[idModel])){
         Logger::error("[DCCalibrator] Model cloud is empty, calibration aborted.\n");
@@ -408,6 +409,8 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
     }
 
     for(auto idSource : idSources){
+
+        Logger::message(std::format("Calibrate with source [{}] and model [{}].\n", idSource, idModel));
 
         if(idSource == idModel){
             Logger::error("[DCCalibrator] Id model and source are the same, source ignored.\n");

@@ -470,6 +470,43 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshDa
     return 0;
 }
 
+auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt4f> positions, std::span<geo::Pt4f> colors, bool applyModelTransform, std::span<geo::Pt3f,2> minMax) -> size_t{
+
+    if(auto frame = current_frame(idCamera); frame != nullptr){
+
+        auto verticesCountToCopy = std::min(frame->cloud.size(), positions.size());
+
+        auto tr = video()->get_transform(idCamera).conv<float>();
+
+        if(applyModelTransform){
+            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];
+                positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f});
+                const auto &col = frame->cloud.colors[id];
+                colors[id] = {
+                    col.x(), col.y(), col.z(), 1.f
+                };
+            });
+        }else{
+            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];;
+                positions[id] = geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f};
+                const auto &col = frame->cloud.colors[id];
+                colors[id] = {
+                    col.x(), col.y(), col.z(), 1.f
+                };
+            });
+        }
+
+        auto aabb = frame->cloud.vertices.aabb();
+        minMax[0] = aabb.min;
+        minMax[1] = aabb.max;
+
+        return verticesCountToCopy;
+    }
+    return 0;
+}
+
 auto DCVideoPlayer::copy_all_current_clouds(std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
 
     std::vector<size_t> startId;

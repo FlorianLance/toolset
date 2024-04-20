@@ -82,10 +82,13 @@ struct DCCloudsSceneDrawer{
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
 
     // drawers
-    std::vector<std::unique_ptr<DCCloudDrawer>> cloudsD;
     gl::GridLinesDrawer gridD;
-    gl::TriangleLinesDrawer plane1D;
-    gl::SphereTrianglesDrawer plane1PointsD;
+    gl::SphereTrianglesDrawer sphereD;
+
+    std::vector<std::unique_ptr<DCCloudDrawer>> cloudsD;
+    gl::TriangleLinesDrawer trianglesLinesD;
+    gl::OrientedBoundingBoxLinesDrawer oobLinesD;
+
     ImguiFboUiDrawer fboD;
 
     // settings

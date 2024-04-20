@@ -133,7 +133,7 @@ auto TriangleLinesDrawer::update(std::span<const geo::Pt3f, 3> vertices, std::sp
 auto QuadLinesDrawer::initialize(bool dynamic) -> void{
 
     static constexpr std::array<GLuint,8> indices = {
-                                                      0, 1, 1, 2, 2, 3, 3, 0
+        0, 1, 1, 2, 2, 3, 3, 0
     };
 
     static constexpr std::array<Pt3f,4> vertices = {
@@ -170,52 +170,50 @@ auto QuadLinesDrawer::update(std::span<const Pt3f, 4> vertices, std::span<const 
     }
 }
 
-auto GridLinesDrawer::initialize(float width , float height, int nbX, int nbY) -> void{
+auto GridLinesDrawer::initialize(float width, float height, int nbX, int nbY, bool addDiagonals) -> void{
+
+    size_t nbVertices = nbX*nbY;
+    auto hW = nbX*width*0.5f;
+    auto hH = nbY*height*0.5f;
+    auto start = Pt3f(-hW, 0.f, -hH);
+
+    std::vector<Pt3f> vertices;
+    vertices.reserve(nbVertices);
+    for(int ii = 0; ii < nbX; ++ii){
+        for(int jj = 0; jj < nbY; ++jj){
+            vertices.push_back(start + Vec3f{ii*width, 0.f, jj*height});
+        }
+    }
 
     std::vector<GLuint> indices;
-    indices.reserve(nbX*2+nbY*2);
+    indices.reserve(nbX + nbY);// + (addDiagonals ? (std::max(nbX,nbY)*2) : 0));
+    for(int ii = 0; ii < nbY; ++ii){
+        indices.push_back(ii);
+        indices.push_back(ii + nbY * (nbX-1));
+    }
+    for(int ii = 0; ii < nbX; ++ii){
+        indices.push_back(ii*nbY);
+        indices.push_back(ii*nbY + (nbY-1));
+    }
+    if(addDiagonals){
 
-    std::vector<GLfloat> vertices;
-    vertices.reserve((nbX*2+nbY*2)*3);
+        // int ii = 0;
+        // indices.push_back(ii);
+        // indices.push_back(ii);
 
-    const GLfloat lX = nbX*width;
-    const GLfloat lY = nbY*height;
-
-    const GLfloat minX = -lX*0.5f;
-    const GLfloat maxX = +lX*0.5f;
-    for(GLuint ii = 0; ii < nbX; ++ii){
-        indices.emplace_back(static_cast<GLuint>(vertices.size()));
-        vertices.emplace_back(minX);
-        vertices.emplace_back(0.f);
-        vertices.emplace_back(minX+ii*width);
-
-        indices.emplace_back(static_cast<GLuint>(vertices.size()));
-        vertices.emplace_back(maxX);
-        vertices.emplace_back(0.f);
-        vertices.emplace_back(minX+ii*width);
+        // for(int ii = 0; ii < nbX-1; ++ii){
+        //     int id1 = nbX-2 -ii;
+        //     int id2 = id1 + ii*(nbX+1);
+        //     // int id2 = 2*nbX-1+ (ii*nbX);
+        //     indices.push_back(id1);
+        //     indices.push_back(id2);
+        // }
     }
 
-    const GLfloat minY = -lY*0.5f;
-    const GLfloat maxY = +lY*0.5f;
-    for(GLuint ii = 0; ii < nbY; ++ii){
 
-        indices.emplace_back(static_cast<GLuint>(vertices.size()));
-        vertices.emplace_back(minY+ii*height);
-        vertices.emplace_back(0.f);
-        vertices.emplace_back(minY);
-
-        indices.emplace_back(static_cast<GLuint>(vertices.size()));
-        vertices.emplace_back(minY+ii*height);
-        vertices.emplace_back(0.f);
-        vertices.emplace_back(maxY);
-    }
-    
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     lm->initialize(false);
-    if(!lm->load_data(
-        std::span<GLuint>(indices.data(),indices.size()),
-        std::span<Pt3f>(reinterpret_cast<Pt3f*>(vertices.data()), vertices.size()/3)
-    )){
+    if(!lm->load_data(indices, vertices)){
         Logger::error("[GridLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
@@ -272,5 +270,67 @@ auto FrustumDrawerLinesDrawer::update(float fovy, float ar, float nearDist, floa
     }
 }
 
+auto OrientedBoundingBoxLinesDrawer::initialize(bool dynamic, const geo::OBB3<float> &obb) -> void{
+
+    static constexpr std::array<GLuint,48> indices = {
+        0, 1, 0, 2, 1, 3, 2, 3,
+        4, 5, 4, 6, 5, 7, 6, 7,
+        2, 6, 3, 7, 0, 4, 1, 5,
+        0, 3, 1, 2, 1, 7, 3, 5,
+        2, 7, 3, 6, 0, 6, 2, 4,
+        0, 5, 1, 4, 4, 7, 5, 6
+    };
+
+    auto tr = geo::transform(obb.size*0.5f, obb.rotation, obb.position);
+    std::array<Pt3f,8> vertices = {
+        Pt3f
+        {-1.f,-1.f,-1.f},
+        {1.f,-1.f,-1.f},
+        {-1.f,1.f,-1.f},
+        {1.f,1.f,-1.f},
+        {-1.f,-1.f,1.f},
+        {1.f,-1.f,1.f},
+        {-1.f,1.f,1.f},
+        {1.f,1.f,1.f},
+    };
+
+    for(auto &v : vertices){
+        v = tr.multiply_point(Pt4f{v.x(),v.y(),v.z(),1.f}).xyz();
+    }
+
+    auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
+    if(dynamic){
+        lm->positionBufferUsage = GL_DYNAMIC_STORAGE_BIT;
+    }
+    lm->initialize(false);
+    if(!lm->load_data(indices, vertices)){
+        Logger::error("[OrientedBoundingBoxLinesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto OrientedBoundingBoxLinesDrawer::update(const geo::OBB3<float> &obb) -> void{
 
 
+    auto tr = geo::transform(obb.size*0.5f, obb.rotation, obb.position);
+    std::array<Pt3f,8> vertices = {
+        Pt3f
+        {-1.f,-1.f,-1.f},
+        {1.f,-1.f,-1.f},
+        {-1.f,1.f,-1.f},
+        {1.f,1.f,-1.f},
+        {-1.f,-1.f,1.f},
+        {1.f,-1.f,1.f},
+        {-1.f,1.f,1.f},
+        {1.f,1.f,1.f},
+    };
+
+    for(auto &v : vertices){
+        v = tr.multiply_point(Pt4f{v.x(),v.y(),v.z(),1.f}).xyz();
+    }
+
+
+    auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
+    if(!lm->update_data({}, 0, vertices, 0)){
+        Logger::error("[OrientedBoundingBoxLinesDrawer::update] Error during update.\n"sv);
+    }
+}

@@ -52,9 +52,24 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
         cloudD->initialize();
     }
 
-    gridD.initialize(1.f,1.f, 100, 100);
-    plane1PointsD.initialize(0.05f);
-    plane1D.initialize(true);
+    gridD.initialize(1.f,1.f, 10, 20, true);
+    sphereD.initialize(0.05f);
+
+    // trianglesLinesD.resize(nbDrawers);
+    // for(auto &d : trianglesLinesD){
+    //     d = std::make_unique<gl::TriangleLinesDrawer>();
+    //     d->initialize(true);
+    // }
+    trianglesLinesD.initialize(true);
+
+    // oobLinesD.resize(nbDrawers);
+    geo::OBB3<float> obb;
+    // for(auto &d : oobLinesD){
+    //     d = std::make_unique<gl::OrientedBoundingBoxLinesDrawer>();
+    //     d->initialize(true, obb);
+    // }
+    oobLinesD.initialize(true, obb);
+
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -167,51 +182,60 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             // filtering planes
             if(cloudD->filters.filterDepthWithCloud){
 
-                auto p1 = cloudD->filters.p1A;
-                auto p2 = cloudD->filters.p1B;
-                auto p3 = cloudD->filters.p1C;
-                Pt3f meanPt    = (p1+p2+p3)/3.f;
+                if(cloudD->filters.p1FMode != PlaneFilteringMode::None){
+                    auto p1 = cloudD->filters.p1A;
+                    auto p2 = cloudD->filters.p1B;
+                    auto p3 = cloudD->filters.p1C;
+                    Pt3f meanPt    = (p1+p2+p3)/3.f;
 
-                shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
-                shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
-                plane1PointsD.draw();
+                    shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
+                    sphereD.draw();
 
-                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
-                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
-                plane1PointsD.draw();
+                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                    sphereD.draw();
 
-                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
-                shader->set_uniform("unicolor", Pt4f{0.f,0.f,1.f, 1.f});
-                plane1PointsD.draw();
+                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{0.f,0.f,1.f, 1.f});
+                    sphereD.draw();
 
-                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
-                shader->set_uniform("unicolor", Pt4f{0.f,1.f,1.f, 1.f});
-                plane1PointsD.draw();
+                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{0.f,1.f,1.f, 1.f});
+                    sphereD.draw();
 
-                auto sp = cloudD->filters.pSphere;
-                shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
-                shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
-                plane1PointsD.draw();
 
-                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
-                shader->set_uniform_matrix("model", cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                    shader->set_uniform_matrix("model", cloudD->model);
 
-                auto v1 = vec(meanPt,p1);
-                auto v2 = vec(meanPt,p2);
-                auto v3 = vec(meanPt,p3);
-                for(int ii = 0; ii < 40; ++ii){
-                    auto f = (-20+ii)*0.05f;
-                    std::array<Pt3f, 3> dataP = {f*v1 + p1, f*v2 + p2, f*v3 + p3};
-                    plane1D.update(dataP);
-                    plane1D.draw();
-                    // plane1D->init(f*v1 + p1, f*v2 + p2, f*v3 + p3);
-                    // plane1D->draw(shader);
+                    auto v1 = vec(meanPt,p1);
+                    auto v2 = vec(meanPt,p2);
+                    auto v3 = vec(meanPt,p3);
+
+                    for(int ii = 0; ii < 40; ++ii){
+                        auto f = (-20+ii)*0.05f;
+                        std::array<Pt3f, 3> dataP = {f*v1 + p1, f*v2 + p2, f*v3 + p3};
+                        trianglesLinesD.update(dataP);
+                        trianglesLinesD.draw();
+                    }
+                }
+
+                if(cloudD->filters.removeFromPointDistance){
+
+                    auto sp = cloudD->filters.pSphere;
+                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
+                    sphereD.draw();
+                }
+
+                if(cloudD->filters.keepOnlyPointsInsideOOB){
+
+                    shader->set_uniform_matrix("model",  cloudD->model);
+                    shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,0.5f, 1.f});
+                    oobLinesD.update(cloudD->filters.oob);
+                    oobLinesD.draw();
                 }
             }
-
-//            auto id = Mat4f::identity();
-//            shader->set_uniform("model", id);
-//            gridD->draw(shader);
 
         }else{
             Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"solid\" must be available in the shader manager.\n");
@@ -519,6 +543,7 @@ auto DCCloudsSceneDrawer::update_model_settings(size_t idCloud, const cam::DCMod
 // #include <iostream>
 auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void {
     cloudsD[idCloud]->filters = filters;
+    // oobLinesD[idCloud]->update(filters.oob);
     m_redrawClouds = true;
 }
 

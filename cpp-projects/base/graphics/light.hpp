@@ -39,5 +39,18 @@ struct LightInfo{
     geo::Vec3f Ld;      // diffuse light intensity
     geo::Vec3f Ls;      // specular light intensity
 };
+
+// std140
+struct Light2{
+    geo::Vec4f Position; // Light position in cam coords
+    geo::Vec3f La;
+    float padding1;
+    geo::Vec3f Ld;
+    float padding2;
+    geo::Vec3f Ls;
+    float padding3;
+};
+
+
 }
 // alignas(sizeof(float)*4)

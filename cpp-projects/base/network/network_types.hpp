@@ -95,6 +95,15 @@ private:
     SingleRingBuffer<std::chrono::nanoseconds> diffNs;
 };
 
+struct AverageLatency{
+    AverageLatency();
+    auto update_average_latency(std::int64_t latency) -> void;
+    std::int64_t averageLatency = 0;
+private:
+    static constexpr size_t nbMaxValues = 100;
+    SingleRingBuffer<std::int64_t> latencies;
+};
+
 struct Header{
 
     Header() = default;
@@ -191,8 +200,9 @@ struct UdpMonoPacketData{
 
 
 struct UdpReceivedStatus{
-    int percentageSuccess = 0;
+    int percentageSuccess = 0;    
     float framerate = 0.f;
+    std::int64_t latency = 0;
 };
 
 }

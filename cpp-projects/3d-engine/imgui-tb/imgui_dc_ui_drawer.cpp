@@ -364,7 +364,60 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
                 fs.speedDrag = 1.0f;
                 fs.format = "%.1f";
 
-                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Max distance:","settings_max_distance_from_point_dragfloat", &filters.maxSphereDistance, fs, ds)){
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("Max distance:", "settings_max_distance_from_point_dragfloat", &filters.maxSphereDistance, fs, ds)){
+                    update = true;
+                }
+
+                ImGui::Unindent();
+
+
+                ImGui::Text("Oriented-bounding-box filtering:");
+                ImGui::Indent();
+
+                if(ImGui::Checkbox("Enable###settings_point_inside_oob_filtering_checkbox", &filters.keepOnlyPointsInsideOOB)){
+                    update = true;
+                }
+
+
+                ImGui::Text("Position (mm):");
+                auto trPtr = filters.oob.position.array.data();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","oob_x", trPtr, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","oob_y", trPtr+1, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","oob_z", trPtr+2, modelTrFs, modelTrDs)){
+                    update = true;
+                }
+
+                ImGui::Text("Rotation (°):");
+                auto rotPtr = filters.oob.rotation.array.data();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","oob_rot_x", rotPtr, modelRotFs, modelRotDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","oob_rot_y", rotPtr+1, modelRotFs, modelRotDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","oob_rot_z", rotPtr+2, modelRotFs, modelRotDs)){
+                    update = true;
+                }
+
+                ImGui::Text("Size:");
+                auto scPtr = filters.oob.size.array.data();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","oob_sc_x", scPtr, modelScFs, modelScDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","oob_sc_y", scPtr+1, modelScFs, modelScDs)){
+                    update = true;
+                }
+                ImGui::SameLine();
+                if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","oob_sc_z", scPtr+2, modelScFs, modelScDs)){
                     update = true;
                 }
 

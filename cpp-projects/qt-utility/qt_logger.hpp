@@ -35,7 +35,6 @@
 
 namespace tool {
 
-
 class QtLogger : public QObject{
 
 Q_OBJECT
@@ -45,37 +44,34 @@ public:
         normal, warning, error, log, unknow,
     };
 
-
     QtLogger();
     ~QtLogger();
 
-    static QtLogger *get();
+    static auto get() -> QtLogger*;
 
-    static void set_html_ui_type_message_color(MessageType type, const QColor &col);
-//    static void set_as_console_type_message(MessageType type);
+    static auto init(QString logDirectoryPath = "", QString logFileName = QSL("default_log.html"), bool displayConsole = false, bool copyPreviousLog = true) -> void;
+    static auto clean() -> void;
 
-    static void init(QString logDirectoryPath = "", QString logFileName = "default_log.html", bool displayConsole = false);
+    static auto message(const QString &message, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto warning(const QString &warning, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto error(const QString &error, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto log(const QString &log, bool triggersSignal = true, bool saveToFile = true) -> void;
 
-    static void message(const QString &message, bool triggersSignal = true, bool saveToFile = true);
-    static void error(const QString &error, bool triggersSignal = true, bool saveToFile = true);
-    static void warning(const QString &warning, bool triggersSignal = true, bool saveToFile = true);
-    static void log(const QString &log, bool triggersSignal = true, bool saveToFile = true);
+    static auto set_html_ui_type_message_color(MessageType type, const QColor &col) -> void;
 
-    static void unity_message(QStringView message, bool triggersSignal = true, bool saveToFile = true);
-    static void unity_error(QStringView error, bool triggersSignal = true, bool saveToFile = true);
-    static void unity_warning(QStringView warning, bool triggersSignal = true, bool saveToFile = true);
-    static void unity_unknow(QStringView unknow, bool triggersSignal = true, bool saveToFile = true);
+    static auto status(const QString &status, int ms = 0) -> void;
+    static auto progress(int state) -> void;
 
-    static void status(const QString &status, int ms = 0);
-    static void progress(int state);
-
-    static void clean();
+    // TODO: rename
+    static auto unity_message(QStringView message, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto unity_error(QStringView error, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto unity_warning(QStringView warning, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto unity_unknow(QStringView unknow, bool triggersSignal = true, bool saveToFile = true) -> void;
 
 private:
 
-    static QString to_html_line(QtLogger::MessageType type, QStringView text, bool addTimestamp);
-    static void insert_line_to_log_file(MessageType type, QStringView message);
-
+    static auto to_html_paragraph(QtLogger::MessageType type, QStringView text, bool addTimestamp) -> QString;
+    static auto insert_to_log_file(QStringView message, bool flush = true) -> void;
 
 signals:
 
@@ -102,10 +98,10 @@ struct QtMessageGuard{
 
     QtMessageGuard(QStringView message) : m_message(message){
         using namespace std::string_view_literals;
-        QtLogger::message(QString("[Start: %1]\n").arg(m_message));
+        QtLogger::message(QSL("[Start: %1]\n").arg(m_message));
     }
     ~QtMessageGuard(){
-        QtLogger::message(QString("[End: %1]\n").arg(m_message));
+        QtLogger::message(QSL("[End: %1]\n").arg(m_message));
     }
 private:
     QStringView m_message;
@@ -115,10 +111,10 @@ struct QtLogGuard{
 
     QtLogGuard(QStringView log) : m_log(log){
         using namespace std::string_view_literals;
-        QtLogger::log(QString("[Start: %1]\n").arg(m_log));
+        QtLogger::log(QSL("[Start: %1]\n").arg(m_log));
     }
     ~QtLogGuard(){
-        QtLogger::log(QString("[End: %1]\n").arg(m_log));
+        QtLogger::log(QSL("[End: %1]\n").arg(m_log));
     }
 private:
     QStringView m_log;

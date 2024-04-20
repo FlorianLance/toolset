@@ -151,7 +151,7 @@ auto FemtoMegaDeviceImpl::resize_color_image_to_depth_size() -> void {
 
 auto FemtoMegaDeviceImpl::generate_cloud(bool enable) -> void{
     
-    if(enable && !fData.depth.empty() && fData.validDepthValues > 0){
+    if(enable && !fData.depth.empty()){
         fData.depthCloud = orbbecD->generate_cloud(mInfos, fData.depth);
     }else{
         fData.depthCloud = {};

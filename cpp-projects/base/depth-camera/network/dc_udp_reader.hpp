@@ -84,6 +84,7 @@ private:
 
     AverageSynch synchro;
     Framerate framerate;
+    AverageLatency latency;
     MultiPacketsUdpReception cFramesReception;
 };
 

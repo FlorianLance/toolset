@@ -41,47 +41,342 @@
 using namespace tool::geo;
 using namespace tool::cam;
 
+auto DCDeviceImpl::do_loop() -> void{
+
+    executor = std::make_unique<tf::Executor>();
+
+
+
+    tf::Taskflow taskf;
+
+    auto preprocessColorImageT              = taskf.emplace([&](){preprocess_color_image();}).name("preprocess_color_image");
+    auto preprocessDepthSizedColorImageT    = taskf.emplace([&](){preprocess_depth_sized_color_image();}).name("preprocess_depth_sized_color_image");
+    auto preprocessDepthImageT              = taskf.emplace([&](){preprocess_depth_image();}).name("preprocess_depth_image");
+    auto preprocessInfraImageT              = taskf.emplace([&](){preprocess_infra_image();}).name("preprocess_infra_image");
+    auto preprocessCloudImageT              = taskf.emplace([&](){preprocess_cloud_image();}).name("preprocess_cloud_image");
+    auto preprocessBodyTrackingImageT       = taskf.emplace([&](){preprocess_body_tracking_image();}).name("preprocess_body_tracking_image");
+
+    auto filterDepthT = taskf.emplace([&](){
+        auto t = TimeDiffGuard(timeM, "FILTER_DEPTH"sv);
+        filter_depth_basic();
+        filter_depth_from_depth_sized_color();
+        filter_depth_from_infra();
+        filter_depth_from_cloud();
+        filter_depth_from_body_tracking();
+        filter_depth_complex();
+        update_valid_depth_values();
+    }).name("filter_depth");
+    filterDepthT.priority(tf::TaskPriority::MAX);
+
+    auto filterDepthSizedColorFromDepthT = taskf.emplace([&](){filter_depth_sized_color_from_depth();}).name("filter_depth_sized_color_from_depth");
+    auto mixDepthSizedColorWithBodyTrackingT = taskf.emplace([&](){mix_depth_sized_color_with_body_tracking();}).name("mix_depth_sized_color_with_body_tracking");
+
+    auto filterInfraFromDepthT = taskf.emplace([&](){filter_infra_from_depth();}).name("filter_infra_from_depth");
+    auto mixInfraWithBodyTrackingT = taskf.emplace([&](){mix_infra_with_body_tracking();}).name("mix_infra_with_body_tracking");
+
+    auto startUpdateCompressedFrameT = taskf.emplace([&](){}).name("start_update_compressed_frame");
+    auto updateCompressedFrameColorT = taskf.emplace([&](){update_compressed_frame_color();}).name("update_compressed_frame_color");
+    auto updateCompressedFrameDepthSizedColorT = taskf.emplace([&](){update_compressed_frame_depth_sized_color();}).name("update_compressed_frame_depth_sized_color");
+    auto updateCompressedFrameDepthT = taskf.emplace([&](){update_compressed_frame_depth();}).name("update_compressed_frame_depth");
+    auto updateCompressedFrameInfraT = taskf.emplace([&](){update_compressed_frame_infra();}).name("update_compressed_frame_infra");
+    auto updateCompressedFrameCloudT = taskf.emplace([&](){update_compressed_frame_cloud();}).name("update_compressed_frame_cloud");
+    auto updateCompressedFrameAudioT = taskf.emplace([&](){update_compressed_frame_audio();}).name("update_compressed_frame_audio");
+    auto updateCompressedFrameIMUT = taskf.emplace([&](){update_compressed_frame_imu();}).name("update_compressed_frame_imu");
+    auto updateCompressedFrameBodiesT = taskf.emplace([&](){update_compressed_frame_bodies();}).name("update_compressed_frame_bodies");
+    auto updateCompressedFrameCalibrationT = taskf.emplace([&](){update_compressed_frame_calibration();}).name("update_compressed_frame_calibration");
+    auto tCompressedFrameFinalize = taskf.emplace([&](){
+        auto t = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
+        if(cFrame != nullptr){
+            // set infos
+            cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
+            cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
+            cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
+            cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
+            cFrame->mode               = settings.config.mode;
+            cFrame->validVerticesCount = fData.validDepthValues;
+
+            // add frame
+            frames.add_compressed_frame(std::move(cFrame));
+            cFrame = nullptr;
+        }
+    }).name("finalize_compressed_frame");
+
+    auto sendCompressedFrameT = taskf.emplace([&](){
+        auto t = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
+        if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+            dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
+        }
+    }).name("send_compressed_frame");
+
+
+    auto startUpdateFrameT = taskf.emplace([&](){}).name("start_update_rame");
+    auto updateFrameColorT = taskf.emplace([&](){update_frame_color();}).name("update_frame_color");
+    auto updateFrameDepthSizedColorT = taskf.emplace([&](){update_frame_depth_sized_color();}).name("update_frame_depth_sized_color");
+    auto updateFrameDepthT = taskf.emplace([&](){update_frame_depth();}).name("update_frame_depth");
+    auto updateFrameInfraT = taskf.emplace([&](){update_frame_infra();}).name("update_frame_infra");
+    auto updateFrameCloudT = taskf.emplace([&](){update_frame_cloud();}).name("update_frame_cloud");
+    auto updateFrameAudioT = taskf.emplace([&](){update_frame_audio();}).name("update_frame_audio");
+    auto updateFrameIMUT = taskf.emplace([&](){update_frame_imu();}).name("update_frame_imu");
+    auto updateFrameBodiesT = taskf.emplace([&](){update_frame_bodies();}).name("update_frame_bodies");
+    auto updateFrameCalibrationT = taskf.emplace([&](){update_frame_calibration();}).name("update_frame_calibration");
+    auto tFrameFinalize = taskf.emplace([&](){
+        auto t = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
+        if(frame != nullptr){
+
+            // set infos
+            frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
+            frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
+            frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
+            frame->mode            = settings.config.mode;
+
+            frames.add_frame(std::move(frame));
+            frame = nullptr;
+        }
+    }).name("finalize_frame");
+
+    auto sendFrameT = taskf.emplace([&](){
+        auto tsf = TimeDiffGuard(timeM, "SEND_FRAME"sv);
+        if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+            dcDevice->new_frame_signal(std::move(frameToSend));
+        }
+    }).name("send_frame");
+
+
+
+
+    filterDepthT.succeed(
+        preprocessColorImageT, preprocessDepthSizedColorImageT, preprocessDepthImageT,
+        preprocessInfraImageT, preprocessCloudImageT, preprocessBodyTrackingImageT
+    );
+
+    filterDepthT.precede(filterDepthSizedColorFromDepthT, filterInfraFromDepthT);
+
+    mixDepthSizedColorWithBodyTrackingT.succeed(filterDepthSizedColorFromDepthT);
+    mixInfraWithBodyTrackingT.succeed(filterInfraFromDepthT);
+
+    startUpdateCompressedFrameT.succeed(mixDepthSizedColorWithBodyTrackingT, mixInfraWithBodyTrackingT);
+    startUpdateCompressedFrameT.precede(
+        updateCompressedFrameColorT, updateCompressedFrameDepthSizedColorT, updateCompressedFrameDepthT,
+        updateCompressedFrameInfraT, updateCompressedFrameCloudT, updateCompressedFrameAudioT,
+        updateCompressedFrameIMUT, updateCompressedFrameDepthT, updateCompressedFrameBodiesT,
+        updateCompressedFrameCalibrationT
+    );
+
+    tCompressedFrameFinalize.succeed(
+        updateCompressedFrameColorT, updateCompressedFrameDepthSizedColorT, updateCompressedFrameDepthT,
+        updateCompressedFrameInfraT, updateCompressedFrameCloudT, updateCompressedFrameAudioT,
+        updateCompressedFrameIMUT, updateCompressedFrameDepthT, updateCompressedFrameBodiesT,
+        updateCompressedFrameCalibrationT
+    );
+    sendCompressedFrameT.succeed(tCompressedFrameFinalize);
+
+    startUpdateFrameT.succeed(sendCompressedFrameT);
+    startUpdateFrameT.precede(
+        updateFrameColorT, updateFrameDepthSizedColorT, updateFrameDepthT,
+        updateFrameInfraT, updateFrameCloudT, updateFrameAudioT,
+        updateFrameIMUT, updateFrameDepthT, updateFrameBodiesT,
+        updateFrameCalibrationT
+    );
+    tFrameFinalize.succeed(
+        updateFrameColorT, updateFrameDepthSizedColorT, updateFrameDepthT,
+        updateFrameInfraT, updateFrameCloudT, updateFrameAudioT,
+        updateFrameIMUT, updateFrameDepthT, updateFrameBodiesT,
+        updateFrameCalibrationT
+    );
+    sendFrameT.succeed(tFrameFinalize);
+
+
+    timeM.start("LOOP"sv);
+    update_from_colors_settings();
+    readFramesFromCameras = true;
+    read_calibration();
+
+    while(readFramesFromCameras){
+
+        auto tl = TimeDiffGuard(timeM, "ITER_LOOP"sv);
+        auto tf = TimeDiffGuard(timeM, "PROCESS_FRAME"sv);
+
+        fData.reset_spans();
+
+        parametersM.lock();
+        {
+            cFiltersS = settings.filters;
+            cDataS    = settings.data;
+            cDelayS   = settings.delay;
+            times     = timeM.times;
+        }
+        parametersM.unlock();
+        update_from_data_settings();
+
+        {
+            auto t = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
+            captureSuccess = capture_frame(mInfos.timeout_ms());
+            if(!captureSuccess){
+                dataIsValid = false;
+                continue;
+            }
+        }
+        timeM.start("READ_IMAGES"sv);
+        {
+            auto t = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
+            read_color_image(mInfos.has_color() && cDataS.capture_color());
+        }
+        {
+            auto t = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
+            read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
+        }
+        {
+            auto t = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
+            read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
+        }
+        {
+            auto t = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
+            read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
+        }
+        {
+            auto t = TimeDiffGuard(timeM, "READ_AUDIO"sv);
+            read_audio(cDataS.capture_audio() && mInfos.has_audio());
+        }
+        {
+            auto t = TimeDiffGuard(timeM, "READ_IMU"sv);
+            read_IMU(cDataS.capture_imu());
+        }
+        timeM.end("READ_IMAGES"sv);
+
+        dataIsValid = check_data_validity();
+
+        if(captureSuccess && dataIsValid){
+
+            auto t = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
+
+            // timeM.start("PROCESSING_DATA"sv);
+            if(cDataS.client.generation.has_data_to_generate()){
+                frame = std::make_shared<DCFrame>();
+            }else{
+                frame = nullptr;
+            }
+            if(cDataS.client.compression.has_data_to_compress()){
+                cFrame = std::make_shared<DCCompressedFrame>();
+            }else{
+                cFrame = nullptr;
+            }
+
+            {
+                auto t = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
+                convert_color_image();
+            }
+            {
+                auto t = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
+                resize_color_image_to_depth_size();
+            }
+            {
+                auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
+                generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
+            }
+
+            executor->run(taskf).wait();
+
+            // preprocess_color_image();
+            // preprocess_depth_sized_color_image();
+            // preprocess_depth_image();
+            // preprocess_infra_image();
+            // preprocess_cloud_image();
+            // preprocess_body_tracking_image();
+
+            // timeM.start("FILTER_DEPTH"sv);
+            // filter_depth_basic();
+            // filter_depth_from_depth_sized_color();
+            // filter_depth_from_infra();
+            // filter_depth_from_cloud();
+            // filter_depth_from_body_tracking();
+            // filter_depth_complex();
+            // update_valid_depth_values();
+            // timeM.end("FILTER_DEPTH"sv);
+
+            // filter_depth_sized_color_from_depth();
+            // mix_depth_sized_color_with_body_tracking();
+
+            // filter_infra_from_depth();
+            // mix_infra_with_body_tracking();
+
+
+            // update_compressed_frame_color();
+            // update_compressed_frame_depth_sized_color();
+            // update_compressed_frame_depth();
+            // update_compressed_frame_infra();
+            // update_compressed_frame_cloud();
+            // update_compressed_frame_audio();
+            // update_compressed_frame_imu();
+            // update_compressed_frame_bodies();
+            // update_compressed_frame_calibration();
+
+            // {
+                // auto tfcf = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
+                // if(cFrame != nullptr){
+                //     // set infos
+                //     cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
+                //     cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
+                //     cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
+                //     cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
+                //     cFrame->mode               = settings.config.mode;
+                //     cFrame->validVerticesCount = fData.validDepthValues;
+
+                //     // add frame
+                //     frames.add_compressed_frame(std::move(cFrame));
+                //     cFrame = nullptr;
+                // }
+            // }
+            // {
+                // auto tscf = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
+                // if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+                //     dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
+                // }
+            // }
+
+            // update_frame_color();
+            // update_frame_depth_sized_color();
+            // update_frame_depth();
+            // update_frame_infra();
+            // update_frame_cloud();
+            // update_frame_audio();
+            // update_frame_imu();
+            // update_frame_bodies();
+            // update_frame_calibration();
+
+            // {
+            //     auto tff = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
+            //     if(frame != nullptr){
+
+            //         // set infos
+            //         frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
+            //         frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
+            //         frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
+            //         frame->mode            = settings.config.mode;
+
+            //         frames.add_frame(std::move(frame));
+            //         frame = nullptr;
+            //     }
+            // }
+
+            // {
+            //     auto tsf = TimeDiffGuard(timeM, "SEND_FRAME"sv);
+            //     if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+            //         dcDevice->new_frame_signal(std::move(frameToSend));
+            //     }
+            // }
+            // timeM.end("PROCESSING_DATA"sv);
+        }
+
+        if(captureSuccess){
+            mInfos.increment_capture_id();
+        }
+    }
+
+    timeM.end("LOOP"sv);
+}
+
+
 DCDeviceImpl::DCDeviceImpl(){
-
-    // init tasks
-    mainLoopTF = std::make_unique<tf::Taskflow>();
-    auto startLoopT = mainLoopTF->emplace([&](){
-        timeM.start("LOOP"sv);
-        update_from_colors_settings();
-        readFramesFromCameras = true;
-        read_calibration();
-
-    }).name("start_loop");
-
-    auto endLoopT = mainLoopTF->emplace([&](){
-        timeM.end("LOOP"sv);
-    }).name("end_loop");
-
-    auto doLoopCT = mainLoopTF->emplace([&](){
-        return readFramesFromCameras ? 1 : 0;
-    }).name("do_loop");
-
-    auto startIterationLoopT = mainLoopTF->emplace([&](){
-        timeM.start("ITER_LOOP"sv);
-    }).name("start_iteration_loop");
-
-    auto endIterationLoopT = mainLoopTF->emplace([&](){
-        timeM.end("ITER_LOOP"sv);
-        return 0;
-    }).name("end_iteration_loop");
-
-    // main loop
-    readDataTF          = read_data_taskflow();
-    processDataTF       = process_data_taskflow();
-    processFrameTF      = process_frame_taskflow(*readDataTF, *processDataTF);
-    auto processFrameT  = mainLoopTF->composed_of(*processFrameTF).name("process_frame_module");
-
-    startLoopT.precede(doLoopCT);
-    doLoopCT.precede(endLoopT, startIterationLoopT);
-    startIterationLoopT.precede(processFrameT);
-    processFrameT.precede(endIterationLoopT);
-    endIterationLoopT.precede(doLoopCT);
-    // mainLoopTF->dump(std::cout);
 }
 
 DCDeviceImpl::~DCDeviceImpl(){
@@ -103,24 +398,27 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
 auto DCDeviceImpl::start_reading_thread() -> void{
     auto lg = LogGuard("DCDeviceImpl::start_reading_thread"sv);
     timeM.start("START_READING_THREAD"sv);
-    // std::cout << "std::thread::hardware_concurrency " << std::thread::hardware_concurrency() << "\n";
-    executor = std::make_unique<tf::Executor>(1);
-    loopFuture = executor->run(*mainLoopTF);
+
+    loopT = std::make_unique<std::thread>(&DCDeviceImpl::do_loop, this);
 }
 
 auto DCDeviceImpl::stop_reading_thread() -> void{
     auto lg = LogGuard("DCDeviceImpl::stop_reading_thread"sv);
     if(readFramesFromCameras){
         readFramesFromCameras = false;
-        loopFuture.wait();
+
+        if(loopT != nullptr){
+            if(loopT->joinable()){
+                loopT->join();
+            }
+            loopT = nullptr;
+        }
     }
     timeM.end("END_READING_THREAD"sv);
 }
 
 auto DCDeviceImpl::convert_color_image() -> void{
 
-    auto t = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
-    // std::cout << "[cc";
     fData.color = {};
 
     if(!mInfos.has_color() || fData.rawColor.empty()){
@@ -166,7 +464,6 @@ auto DCDeviceImpl::convert_color_image() -> void{
     }
 
     fData.color = fData.convertedColorData.span();
-    // std::cout << "cc]";
 }
 
 auto DCDeviceImpl::filter_depth_basic() -> void{
@@ -206,8 +503,8 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
         }
 
         // depth filtering
-        if( (ii < minW)  || (ii > maxW)  ||                   // width
-            (jj < minH)  || (jj > maxH)  ||                   // height
+        if( (ii <= minW)  || (ii >= maxW)  ||                 // width
+            (jj <= minH)  || (jj >= maxH)  ||                 // height
             (currentDepth < minD) || (currentDepth > maxD) ){ // depth
             fData.depthMask[id] = 0;
             return;
@@ -267,6 +564,8 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
 
     auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_CLOUD"sv);
 
+    // std::cout << "F[" << cFiltersS.filterDepthWithCloud << " " << fData.depth.empty() << " " << fData.depthCloud.empty() <<"|";
+
     // invalidate depth from cloud geometry
     if(!cFiltersS.filterDepthWithCloud){
         return;
@@ -275,9 +574,10 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
         return;
     }
 
-    if(cFiltersS.p1FMode == PlaneFilteringMode::None && !cFiltersS.removeFromPointDistance){
+    if(cFiltersS.p1FMode == PlaneFilteringMode::None && !cFiltersS.removeFromPointDistance && !cFiltersS.keepOnlyPointsInsideOOB){
         return; // do nothing
     }
+
 
     // plane filtering parameters
     auto p1             = cFiltersS.p1A*1000.f;
@@ -292,9 +592,16 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     geo::Pt3f pSphere   = cFiltersS.pSphere*1000.f;
     auto squareMaxDistanceFromPoint = cFiltersS.maxSphereDistance*cFiltersS.maxSphereDistance;
 
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](auto idC){
+    const auto &oobRot = cFiltersS.oob.rotation;
+    geo::Mat3f oobOrientation = geo::rotation_m3x3(geo::Vec3f{deg_2_rad(oobRot.x()), deg_2_rad(oobRot.y()), deg_2_rad(oobRot.z())});
+    auto invO = inverse(oobOrientation);
+    auto halfDimensions = cFiltersS.oob.size * 500.f;
+    auto oobPos = cFiltersS.oob.position * 1000.f;
+
+    std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
         auto idD = std::get<0>(idC);
+
         if(fData.depth[idD] == dc_invalid_depth_value){
             return;
         }
@@ -318,6 +625,29 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
                 fData.depthMask[idD] = 0;
                 return;
             }
+        }
+
+        if(cFiltersS.keepOnlyPointsInsideOOB){
+
+            auto pointLocal = (fData.depthCloud[idD].template conv<float>()) - oobPos;// cFiltersS.oob.position;
+            auto pointLocalRotated = pointLocal * invO;
+            if(std::abs(pointLocalRotated.x())  > halfDimensions.x() ||
+                std::abs(pointLocalRotated.y()) > halfDimensions.y() ||
+                std::abs(pointLocalRotated.z()) > halfDimensions.z()){
+                fData.depthMask[idD] = 0;
+                return;
+            }
+
+            // if(!valid){
+            //     fData.depthMask[idD] = 0;
+            //     return;
+            // }
+            // return (pointLocalRotated.array().abs() <= halfDimensions.array()).all();
+
+            // if(!cFiltersS.oob.is_point_inside(oobOrientation, fData.depthCloud[idD].template conv<float>()*0.001f)){
+            //     fData.depthMask[idD] = 0;
+            //     return;
+            // }
         }
     });
 }
@@ -402,6 +732,13 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
 
     // count valid depth values
     fData.validDepthValues = 0;
+    int count = 0;
+    for(const auto &d : fData.depthMask){
+        if(d == 0){
+            count++;
+        }
+    }
+
     std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
         if(fData.depthMask[id] == 0){
             fData.depth[id] = dc_invalid_depth_value;
@@ -537,11 +874,11 @@ auto DCDeviceImpl::update_frame_depth() -> void{
             frame->rgbDepth.width  = mInfos.depth_width();
             frame->rgbDepth.height = mInfos.depth_height();
             frame->rgbDepth.resize(mInfos.depth_size());
+            frame->rgbDepth.fill(ColorRGB8(0,0,0));
 
             std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
 
                 if(fData.depth[id] == dc_invalid_depth_value){
-                    frame->rgbDepth[id] = ColorRGB8{};
                     return;
                 }
 
@@ -1349,6 +1686,7 @@ auto DCDeviceImpl::get_duration_micro_s(std::string_view id) -> std::optional<st
     return std::nullopt;
 }
 
+
 auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{
     // store frame
     auto afterCaptureTS = std::chrono::nanoseconds(frame->afterCaptureTS);
@@ -1411,84 +1749,8 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 
 auto DCDeviceImpl::read_data_taskflow() -> std::unique_ptr<tf::Taskflow>{
 
-    // auto readDataTF = std::make_unique<tf::Taskflow>();
-    // auto captureCT = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
-    //     captureSuccess = capture_frame(mInfos.timeout_ms());
-    //     return captureSuccess ? 1 : 0;
-    // }).name("capture_frame");
-
-    // auto captureFailureT   = readDataTF->emplace([&](){
-    // }).name("capture_failure");
-
-    // auto captureSuccessT   = readDataTF->emplace([&](){
-    //     timeM.start("READ_IMAGES"sv);
-    // }).name("capture_success");
-
-    // auto readColorImageT   = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
-    //     read_color_image(mInfos.has_color() && cDataS.capture_color());
-    // }).name("read_color_image");
-
-    // auto readDepthImageT   = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
-    //     read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
-    //     Logger::log("end\n"sv);
-    // }).name("read_depth_image");
-
-    // auto readInfraImageT   = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
-    //     read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
-    // }).name("read_infra_image");
-
-    // auto readBodytrackingT = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-    //     read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
-    // }).name("read_body_tracking");
-
-    // auto readAudioT = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_AUDIO"sv);
-    //     read_audio(cDataS.capture_audio() && mInfos.has_audio());
-    // }).name("read_audio");
-
-    // auto readIMUT = readDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "READ_IMU"sv);
-    //     read_IMU(cDataS.capture_imu());
-    // }).name("read_imu");
-
-    // auto waitForDataCheckT = readDataTF->emplace([&](){
-    //     timeM.end("READ_IMAGES"sv);
-    //     dataIsValid = check_data_validity();
-    // }).name("wait_for_data");
-
-    // captureCT.precede(captureFailureT, captureSuccessT);
-
-    // captureSuccessT.precede(
-    //     readColorImageT, readDepthImageT, readInfraImageT,
-    //     readBodytrackingT, readAudioT, readIMUT
-    // );
-
-    // waitForDataCheckT.succeed(
-    //     readColorImageT, readDepthImageT, readInfraImageT,
-    //     readBodytrackingT, readAudioT, readIMUT
-    // );
-    // readColorImageT.priority(tf::TaskPriority::HIGH);
-    // readDepthImageT.priority(tf::TaskPriority::HIGH);
-    // readInfraImageT.priority(tf::TaskPriority::NORMAL);
-    // readBodytrackingT.priority(tf::TaskPriority::NORMAL);
-    // readAudioT.priority(tf::TaskPriority::NORMAL);
-    // readIMUT.priority(tf::TaskPriority::LOW);
-
-    // captureCT.precede(captureFailureT, captureSuccessT);
-    // captureSuccessT.precede(readColorImageT);
-    // readColorImageT.precede(readDepthImageT);
-    // readDepthImageT.precede(readInfraImageT);
-    // readInfraImageT.precede(readBodytrackingT);
-    // readBodytrackingT.precede(readAudioT);
-    // readAudioT.precede(readIMUT);
-    // waitForDataCheckT.succeed(readIMUT);
-
     auto readDataTF = std::make_unique<tf::Taskflow>();
+
     auto captureCT = readDataTF->emplace([&](){
         {
             auto t = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
@@ -1532,364 +1794,34 @@ auto DCDeviceImpl::read_data_taskflow() -> std::unique_ptr<tf::Taskflow>{
 
 auto DCDeviceImpl::process_data_taskflow()  -> std::unique_ptr<tf::Taskflow>{
 
-    // auto processDataTF = std::make_unique<tf::Taskflow>();
-    // auto startProcessingDataT = processDataTF->emplace([&](){
-    //     // std::cout << "[pd";
-    //     timeM.start("PROCESSING_DATA"sv);
-    //     if(cDataS.client.generation.has_data_to_generate()){
-    //         frame = std::make_shared<DCFrame>();
-    //     }else{
-    //         frame = nullptr;
-    //     }
-    //     if(cDataS.client.compression.has_data_to_compress()){
-    //         cFrame = std::make_shared<DCCompressedFrame>();
-    //     }else{
-    //         cFrame = nullptr;
-    //     }
-    // }).name("start_processing_data");
-    // auto convertColorImageT = processDataTF->emplace([&](){
-    //     // std::cout << "[cc";
-    //     convert_color_image();
-    //     // std::cout << "cc]";
-    // }).name("convert_color_image");
-    // convertColorImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto resizeColorImageT = processDataTF->emplace([&](){
-    //     // std::cout << "[rr";
-    //     auto t = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
-    //     resize_color_image_to_depth_size();
-    //     // std::cout << "rr]";
-    // }).name("resize_color_image");
-    // resizeColorImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto generateCloudT = processDataTF->emplace([&](){
-    //     // std::cout << "[gc";
-    //     auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-    //     generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
-    //     // std::cout << "gc]";
-    // }).name("generate_cloud");
-    // generateCloudT.priority(tf::TaskPriority::HIGH);
-
-    // auto preprocessColorImageT = processDataTF->emplace([&](){
-    //     preprocess_color_image();
-    // }).name("preprocess_color_image");
-    // preprocessColorImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto preprocessDepthSizedColorImageT = processDataTF->emplace([&](){
-    //     preprocess_depth_sized_color_image();
-    // }).name("preprocess_depth_sized_color_image");
-    // preprocessDepthSizedColorImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto preprocessDepthImageT = processDataTF->emplace([&](){
-    //     preprocess_depth_image();
-    // }).name("preprocess_depth_image");
-    // preprocessDepthImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto preprocessInfraImageT = processDataTF->emplace([&](){
-    //     preprocess_infra_image();
-    // }).name("preprocess_infra_image");
-    // preprocessInfraImageT.priority(tf::TaskPriority::NORMAL);
-
-    // auto preprocessCloudImageT = processDataTF->emplace([&](){
-    //     preprocess_cloud_image();
-    // }).name("preprocess_cloud_image");
-    // preprocessCloudImageT.priority(tf::TaskPriority::HIGH);
-
-    // auto preprocessBodytrackingImageT     = processDataTF->emplace([&](){
-    //     preprocess_body_tracking_image();
-    // }).name("preprocess_body_tracking_image");
-    // preprocessBodytrackingImageT.priority(tf::TaskPriority::NORMAL);
-
-    // startProcessingDataT.precede(
-    //     convertColorImageT, generateCloudT,
-    //     preprocessColorImageT,preprocessDepthImageT,
-    //     preprocessInfraImageT,preprocessBodytrackingImageT
-    // );
-
-    // convertColorImageT.precede(resizeColorImageT);
-    // resizeColorImageT.precede(preprocessDepthSizedColorImageT);
-    // generateCloudT.precede(preprocessCloudImageT);
-
-    // auto filterDepthBasicT = processDataTF->emplace([&](){
-    //     // std::cout << "[fd";
-    //     timeM.start("FILTER_DEPTH"sv);
-    //     filter_depth_basic();
-    // }).name("filter_depth_basic");
-    // filterDepthBasicT.priority(tf::TaskPriority::HIGH);
-
-    // auto filterDepthFromDepthSizedColorT = processDataTF->emplace([&](){
-    //     filter_depth_from_depth_sized_color();
-    // }).name("filter_depth_from_depth_sized_color");
-    // filterDepthFromDepthSizedColorT.priority(tf::TaskPriority::HIGH);
-
-    // auto filterDepthFromInfraT = processDataTF->emplace([&](){
-    //     filter_depth_from_infra();
-    // }).name("filter_depth_from_infra");
-    // filterDepthFromInfraT.priority(tf::TaskPriority::HIGH);
-
-    // auto filterDepthFromBodyTrackingT = processDataTF->emplace([&](){
-    //     filter_depth_from_body_tracking();
-    // }).name("filter_depth_from_body_tracking");
-    // filterDepthFromBodyTrackingT.priority(tf::TaskPriority::HIGH);
-
-    // auto filterDepthFromCloudT = processDataTF->emplace([&](){
-    //     filter_depth_from_cloud();
-    // }).name("filter_depth_from_cloud");
-    // filterDepthFromCloudT.priority(tf::TaskPriority::HIGH);
-
-    // auto filterDepthComplexT = processDataTF->emplace([&](){
-    //     filter_depth_complex();
-    //     update_valid_depth_values();
-    //     timeM.end("FILTER_DEPTH"sv);
-    //     // std::cout << "fd]";
-    // }).name("filter_depth_complex");
-    // filterDepthComplexT.priority(tf::TaskPriority::HIGH);
-
-    // preprocessDepthImageT.precede(filterDepthBasicT);
-    // filterDepthFromBodyTrackingT.succeed(filterDepthBasicT,         preprocessBodytrackingImageT);
-    // filterDepthFromInfraT.succeed(filterDepthFromBodyTrackingT,     preprocessInfraImageT);
-    // filterDepthFromCloudT.succeed(filterDepthFromInfraT,            preprocessCloudImageT);
-    // filterDepthFromDepthSizedColorT.succeed(filterDepthFromCloudT,  preprocessDepthSizedColorImageT);
-    // filterDepthComplexT.succeed(filterDepthFromDepthSizedColorT);
-
-    // auto filterDepthSizedColorFromDepthT = processDataTF->emplace([&](){
-    //     filter_depth_sized_color_from_depth();
-    // }).name("filter_depth_sized_color_from_depth");
-    // filterDepthSizedColorFromDepthT.priority(tf::TaskPriority::NORMAL);
-
-    // auto filterInfraFromDepthT = processDataTF->emplace([&](){
-    //     filter_infra_from_depth();
-    // }).name("filter_infra_from_depth");
-    // filterInfraFromDepthT.priority(tf::TaskPriority::NORMAL);
-
-    // auto mixDepthSizedColorWithBodyTrackingT = processDataTF->emplace([&](){
-    //     mix_depth_sized_color_with_body_tracking();
-    // }).name("mix_depth_sized_color_with_body_tracking");
-    // mixDepthSizedColorWithBodyTrackingT.priority(tf::TaskPriority::NORMAL);
-
-    // auto mixInfraWithBodyTrackingT = processDataTF->emplace([&](){
-    //     mix_infra_with_body_tracking();
-    // }).name("mix_infra_with_body_tracking");
-    // mixInfraWithBodyTrackingT.priority(tf::TaskPriority::NORMAL);
-
-    // filterDepthSizedColorFromDepthT.succeed(filterDepthComplexT);
-    // filterDepthSizedColorFromDepthT.precede(mixDepthSizedColorWithBodyTrackingT);
-
-    // filterInfraFromDepthT.succeed(filterDepthComplexT);
-    // filterInfraFromDepthT.precede(mixInfraWithBodyTrackingT);
-
-    // auto updateCompressedFrameColorT = processDataTF->emplace([&](){
-    //     update_compressed_frame_color();
-    // }).name("update_compressed_frame_color");
-    // updateCompressedFrameColorT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameDepthSizedColorT = processDataTF->emplace([&](){
-    //     update_compressed_frame_depth_sized_color();
-    // }).name("update_compressed_frame_depth_sized_color");
-    // updateCompressedFrameDepthSizedColorT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameDepthT = processDataTF->emplace([&](){
-    //     update_compressed_frame_depth();
-    // }).name("update_compressed_frame_depth");
-    // updateCompressedFrameDepthT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameInfraT = processDataTF->emplace([&](){
-    //     update_compressed_frame_infra();
-    // }).name("update_compressed_frame_infra");
-    // updateCompressedFrameInfraT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameCloudT = processDataTF->emplace([&](){
-    //     update_compressed_frame_cloud();
-    // }).name("update_compressed_frame_cloud");
-    // updateCompressedFrameCloudT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameAudioT = processDataTF->emplace([&](){
-    //     update_compressed_frame_audio();
-    // }).name("update_compressed_frame_audio");
-    // updateCompressedFrameAudioT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameIMUT = processDataTF->emplace([&](){
-    //     update_compressed_frame_imu();
-    // }).name("update_compressed_frame_imu");
-    // updateCompressedFrameIMUT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameBodiesT = processDataTF->emplace([&](){
-    //     update_compressed_frame_bodies();
-    // }).name("update_compressed_frame_bodies");
-    // updateCompressedFrameBodiesT.priority(tf::TaskPriority::HIGH);
-
-    // auto updateCompressedFrameCalibrationT = processDataTF->emplace([&](){
-    //     update_compressed_frame_calibration();
-    // }).name("update_compressed_frame_calibration");
-    // updateCompressedFrameCalibrationT.priority(tf::TaskPriority::HIGH);
-
-    // auto finalizedCompressedFrameT = processDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
-    //     if(cFrame != nullptr){
-
-    //         // set infos
-    //         cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
-    //         cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
-    //         cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
-    //         cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
-    //         cFrame->mode               = settings.config.mode;
-    //         cFrame->validVerticesCount = fData.validDepthValues;
-
-    //         // add frame
-    //         frames.add_compressed_frame(std::move(cFrame));
-    //         cFrame = nullptr;
-    //     }
-    // }).name("finalize_compressed_frame");
-    // finalizedCompressedFrameT.priority(tf::TaskPriority::HIGH);
-
-    // auto sendCompressedFrameT  = processDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
-    //     if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-    //         dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
-    //         // auto t1 = Time::nanoseconds_since_epoch();
-    //         // auto t2 = timeM.get_end("CAPTURE_FRAME"sv);
-    //         // std::cout << "-> " << Time::to_micro_s(t1-t2) << "\n";
-    //     }
-
-    // }).name("send_compressed_frame");
-    // sendCompressedFrameT.priority(tf::TaskPriority::HIGH);
-
-    // updateCompressedFrameColorT.succeed(convertColorImageT);
-    // updateCompressedFrameDepthSizedColorT.succeed(mixDepthSizedColorWithBodyTrackingT);
-    // updateCompressedFrameDepthT.succeed(filterDepthComplexT);
-    // updateCompressedFrameInfraT.succeed(mixInfraWithBodyTrackingT);
-    // updateCompressedFrameCloudT.succeed(filterDepthComplexT);
-
-    // updateCompressedFrameAudioT.succeed(startProcessingDataT);
-    // updateCompressedFrameCalibrationT.succeed(startProcessingDataT);
-    // updateCompressedFrameIMUT.succeed(startProcessingDataT);
-    // updateCompressedFrameBodiesT.succeed(preprocessBodytrackingImageT);
-
-    // finalizedCompressedFrameT.succeed(
-    //     updateCompressedFrameColorT, updateCompressedFrameDepthSizedColorT, updateCompressedFrameDepthT,
-    //     updateCompressedFrameInfraT,  updateCompressedFrameCloudT, updateCompressedFrameCalibrationT,
-    //     updateCompressedFrameAudioT, updateCompressedFrameIMUT, updateCompressedFrameBodiesT
-    // );
-    // sendCompressedFrameT.succeed(finalizedCompressedFrameT);
-
-    // auto updateFrameColorT = processDataTF->emplace([&](){
-    //     update_frame_color();
-    // }).name("update_frame_color");
-    // updateFrameColorT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameDepthSizedColorT = processDataTF->emplace([&](){
-    //     update_frame_depth_sized_color();
-    // }).name("update_frame_depth_sized_color");
-    // updateFrameDepthSizedColorT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameDepthT = processDataTF->emplace([&](){
-    //     update_frame_depth();
-    // }).name("update_frame_depth");
-    // updateFrameDepthT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameInfraT = processDataTF->emplace([&](){
-    //     update_frame_infra();
-    // }).name("update_frame_infra");
-    // updateFrameInfraT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameCloudT = processDataTF->emplace([&](){
-    //     update_frame_cloud();
-    // }).name("update_frame_cloud");
-    // updateFrameCloudT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameAudioT = processDataTF->emplace([&](){
-    //     update_frame_audio();
-    // }).name("update_compressed_frame_audio");
-    // updateFrameAudioT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameIMUT = processDataTF->emplace([&](){
-    //     update_frame_imu();
-    // }).name("update_frame_imu");
-    // updateFrameIMUT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameBodiesT = processDataTF->emplace([&](){
-    //     update_frame_bodies();
-    // }).name("update_frame_bodies");
-    // updateFrameBodiesT.priority(tf::TaskPriority::NORMAL);
-
-    // auto updateFrameCalibrationT = processDataTF->emplace([&](){
-    //     update_frame_calibration();
-    // }).name("update_frame_calibration");
-    // updateFrameCalibrationT.priority(tf::TaskPriority::NORMAL);
-
-    // auto finalizedFrameT = processDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
-    //     if(frame != nullptr){
-
-    //         // set infos
-    //         frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
-    //         frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
-    //         frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
-    //         frame->mode            = settings.config.mode;
-
-    //         frames.add_frame(std::move(frame));
-    //         frame = nullptr;
-    //     }
-    // }).name("finalize_frame");
-    // finalizedFrameT.priority(tf::TaskPriority::NORMAL);
-
-    // auto sendFrameT  = processDataTF->emplace([&](){
-    //     auto t = TimeDiffGuard(timeM, "SEND_FRAME"sv);
-    //     if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-    //         dcDevice->new_frame_signal(std::move(frameToSend));
-    //     }
-    // }).name("send_frame");
-    // sendFrameT.priority(tf::TaskPriority::NORMAL);
-
-    // updateFrameColorT.succeed(convertColorImageT);
-    // updateFrameDepthSizedColorT.succeed(mixDepthSizedColorWithBodyTrackingT);
-    // updateFrameDepthT.succeed(filterDepthComplexT);
-    // updateFrameInfraT.succeed(mixInfraWithBodyTrackingT);
-    // updateFrameCloudT.succeed(filterDepthComplexT);
-
-    // updateFrameAudioT.succeed(startProcessingDataT);
-    // updateFrameCalibrationT.succeed(startProcessingDataT);
-    // updateFrameIMUT.succeed(startProcessingDataT);
-    // updateFrameBodiesT.succeed(preprocessBodytrackingImageT);
-
-    // finalizedFrameT.succeed(
-    //     updateFrameColorT, updateFrameDepthSizedColorT, updateFrameDepthT,
-    //     updateFrameInfraT,  updateFrameCloudT, updateFrameCalibrationT,
-    //     updateFrameAudioT, updateFrameIMUT, updateFrameBodiesT
-    // );
-    // sendFrameT.succeed(finalizedFrameT);
-
-    // auto endProcessingDataT = processDataTF->emplace([&](){
-    //     timeM.end("PROCESSING_DATA"sv);
-    //     // std::cout << "pd]";
-    // }).name("end_processing_data");
-
-    // endProcessingDataT.succeed(sendCompressedFrameT, sendFrameT);
-
-    // return processDataTF;
 
     auto processDataTF = std::make_unique<tf::Taskflow>();
     auto startProcessingDataT = processDataTF->emplace([&](){
-        // std::cout << "[pd";
-        timeM.start("PROCESSING_DATA"sv);
-        if(cDataS.client.generation.has_data_to_generate()){
-            frame = std::make_shared<DCFrame>();
-        }else{
-            frame = nullptr;
-        }
-        if(cDataS.client.compression.has_data_to_compress()){
-            cFrame = std::make_shared<DCCompressedFrame>();
-        }else{
-            cFrame = nullptr;
-        }
 
-        convert_color_image();
-        resize_color_image_to_depth_size();
+        // timeM.start("PROCESSING_DATA"sv);
+        // if(cDataS.client.generation.has_data_to_generate()){
+        //     frame = std::make_shared<DCFrame>();
+        // }else{
+        //     frame = nullptr;
+        // }
+        // if(cDataS.client.compression.has_data_to_compress()){
+        //     cFrame = std::make_shared<DCCompressedFrame>();
+        // }else{
+        //     cFrame = nullptr;
+        // }
 
-        {
-            auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-            generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
-        }
+        // {
+        //     auto t = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
+        //     convert_color_image();
+        // }
+        // {
+        //     auto t = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
+        //     resize_color_image_to_depth_size();
+        // }
+        // {
+        //     auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
+        //     generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
+        // }
 
     }).name("start_processing_data");
 
@@ -1922,12 +1854,6 @@ auto DCDeviceImpl::process_data_taskflow()  -> std::unique_ptr<tf::Taskflow>{
         preprocess_body_tracking_image();
     }).name("preprocess_body_tracking_image");
     preprocessBodytrackingImageT.priority(tf::TaskPriority::NORMAL);
-
-    startProcessingDataT.precede(
-        preprocessColorImageT,preprocessDepthImageT,preprocessDepthSizedColorImageT,
-    preprocessCloudImageT,
-        preprocessInfraImageT,preprocessBodytrackingImageT
-    );
 
     auto filterDepthBasicT = processDataTF->emplace([&](){
         timeM.start("FILTER_DEPTH"sv);
@@ -1962,12 +1888,40 @@ auto DCDeviceImpl::process_data_taskflow()  -> std::unique_ptr<tf::Taskflow>{
     }).name("filter_depth_complex");
     filterDepthComplexT.priority(tf::TaskPriority::HIGH);
 
-    preprocessDepthImageT.precede(filterDepthBasicT);
-    filterDepthFromBodyTrackingT.succeed(filterDepthBasicT,         preprocessBodytrackingImageT);
-    filterDepthFromInfraT.succeed(filterDepthFromBodyTrackingT,     preprocessInfraImageT);
-    filterDepthFromCloudT.succeed(filterDepthFromInfraT,            preprocessCloudImageT);
-    filterDepthFromDepthSizedColorT.succeed(filterDepthFromCloudT,  preprocessDepthSizedColorImageT);
-    filterDepthComplexT.succeed(filterDepthFromDepthSizedColorT);
+    startProcessingDataT.precede(
+        preprocessColorImageT,
+        preprocessDepthImageT,
+        preprocessDepthSizedColorImageT,
+        preprocessCloudImageT,
+        preprocessInfraImageT,
+        preprocessBodytrackingImageT
+    );
+
+    filterDepthBasicT.succeed(
+        preprocessDepthImageT
+    );
+
+    filterDepthFromBodyTrackingT.succeed(
+        filterDepthBasicT,
+        preprocessBodytrackingImageT
+    );
+    filterDepthFromInfraT.succeed(
+        filterDepthFromBodyTrackingT,
+        preprocessInfraImageT
+    );
+    filterDepthFromCloudT.succeed(
+        filterDepthFromInfraT,
+        preprocessCloudImageT
+    );
+
+    filterDepthFromDepthSizedColorT.succeed(
+        filterDepthFromCloudT,
+        preprocessDepthSizedColorImageT
+    );
+
+    filterDepthComplexT.succeed(
+        filterDepthFromDepthSizedColorT
+    );
 
     auto filterDepthSizedColorFromDepthT = processDataTF->emplace([&](){
         filter_depth_sized_color_from_depth();
@@ -2086,52 +2040,52 @@ auto DCDeviceImpl::process_data_taskflow()  -> std::unique_ptr<tf::Taskflow>{
         updateCompressedFrameColorT, updateCompressedFrameDepthSizedColorT, updateCompressedFrameDepthT,
         updateCompressedFrameInfraT,  updateCompressedFrameCloudT, updateCompressedFrameCalibrationT,
         updateCompressedFrameAudioT, updateCompressedFrameIMUT, updateCompressedFrameBodiesT
-        );
+    );
     sendCompressedFrameT.succeed(finalizedCompressedFrameT);
 
     auto updateFrameColorT = processDataTF->emplace([&](){
-                                              update_frame_color();
-                                          }).name("update_frame_color");
+        update_frame_color();
+    }).name("update_frame_color");
     updateFrameColorT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameDepthSizedColorT = processDataTF->emplace([&](){
-                                                        update_frame_depth_sized_color();
-                                                    }).name("update_frame_depth_sized_color");
+        update_frame_depth_sized_color();
+    }).name("update_frame_depth_sized_color");
     updateFrameDepthSizedColorT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameDepthT = processDataTF->emplace([&](){
-                                              update_frame_depth();
-                                          }).name("update_frame_depth");
+        update_frame_depth();
+    }).name("update_frame_depth");
     updateFrameDepthT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameInfraT = processDataTF->emplace([&](){
-                                              update_frame_infra();
-                                          }).name("update_frame_infra");
+        update_frame_infra();
+    }).name("update_frame_infra");
     updateFrameInfraT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameCloudT = processDataTF->emplace([&](){
-                                              update_frame_cloud();
-                                          }).name("update_frame_cloud");
+        update_frame_cloud();
+    }).name("update_frame_cloud");
     updateFrameCloudT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameAudioT = processDataTF->emplace([&](){
-                                              update_frame_audio();
-                                          }).name("update_compressed_frame_audio");
+        update_frame_audio();
+    }).name("update_compressed_frame_audio");
     updateFrameAudioT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameIMUT = processDataTF->emplace([&](){
-                                            update_frame_imu();
-                                        }).name("update_frame_imu");
+        update_frame_imu();
+    }).name("update_frame_imu");
     updateFrameIMUT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameBodiesT = processDataTF->emplace([&](){
-                                               update_frame_bodies();
-                                           }).name("update_frame_bodies");
+        update_frame_bodies();
+    }).name("update_frame_bodies");
     updateFrameBodiesT.priority(tf::TaskPriority::NORMAL);
 
     auto updateFrameCalibrationT = processDataTF->emplace([&](){
-                                                    update_frame_calibration();
-                                                }).name("update_frame_calibration");
+        update_frame_calibration();
+        }).name("update_frame_calibration");
     updateFrameCalibrationT.priority(tf::TaskPriority::NORMAL);
 
     auto finalizedFrameT = processDataTF->emplace([&](){
@@ -2172,7 +2126,7 @@ auto DCDeviceImpl::process_data_taskflow()  -> std::unique_ptr<tf::Taskflow>{
         updateFrameColorT, updateFrameDepthSizedColorT, updateFrameDepthT,
         updateFrameInfraT,  updateFrameCloudT, updateFrameCalibrationT,
         updateFrameAudioT, updateFrameIMUT, updateFrameBodiesT
-        );
+    );
     sendFrameT.succeed(finalizedFrameT);
 
     auto endProcessingDataT = processDataTF->emplace([&](){
@@ -2236,6 +2190,9 @@ auto DCDeviceImpl::process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow
     checkDataCT.precede(failureDataT, startProcessingDataModuleT);
 
     endProcessingFrameT.succeed(startProcessingDataModuleT);
+
+
+
 
     return processFrameTF;
 }

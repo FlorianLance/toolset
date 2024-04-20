@@ -33,17 +33,37 @@
 
 // local
 #include "opengl/shader/uniform_buffer_object.hpp"
-#include "opengl/buffer/buffer-utility.hpp"
 
 
 namespace tool::gl{
+
+class BufferUtility{
+
+public:
+
+    // static auto copy(float &value, GLint offset, std::span<GLubyte> blockBuffer) -> void{
+    //     std::memcpy(blockBuffer.data() + offset, &value, sizeof(GLfloat));
+    // }
+
+    template <typename T>
+    static auto copy(const T &value, GLint offset, std::span<GLubyte> blockBuffer) -> void{
+        std::copy(reinterpret_cast<const GLubyte*>(&value), reinterpret_cast<const GLubyte*>(&value) + sizeof (value), std::begin(blockBuffer) +  offset);
+    }
+    // static auto copy(const geo::Pt3f &value, GLint offset, std::span<GLubyte> blockBuffer) -> void{
+    //     std::copy(reinterpret_cast<const GLubyte*>(&value), reinterpret_cast<const GLubyte*>(&value) + sizeof (value), std::begin(blockBuffer) +  offset);
+    // }
+    // static auto copy(const geo::Pt4f &value, GLint offset, std::span<GLubyte> blockBuffer) -> void{
+    //     std::copy(reinterpret_cast<const GLubyte*>(&value), reinterpret_cast<const GLubyte*>(&value) + sizeof (value), std::begin(blockBuffer) +  offset);
+    // }
+};
+
 
 class MaterialUBO : public UBO{
 
 public:
 
     auto get_block_name() const -> const std::string_view override {
-        return nameStr;
+        return "MaterialInfo"sv;
     }
 
     auto get_elements_name() const -> std::span<const std::string_view> override{
@@ -60,7 +80,6 @@ public:
 
 protected:
 
-    static constexpr std::string_view nameStr = "MaterialInfo"sv;
     static constexpr std::array<std::string_view,4> elementsStr = {
         "MaterialInfo.Ka"sv,
         "MaterialInfo.Kd"sv,
@@ -74,7 +93,7 @@ class LightUBO : public UBO{
 public:
 
     auto get_block_name() const -> const std::string_view override {
-        return nameStr;
+        return "LightInfo"sv;
     }
 
     auto get_elements_name() const -> std::span<const std::string_view> override{
@@ -91,7 +110,6 @@ public:
 
 protected:
 
-    static constexpr std::string_view nameStr = "LightInfo"sv;
     static constexpr std::array<std::string_view,4> elementsStr = {
         "LightInfo.Position",
         "LightInfo.La",

@@ -84,5 +84,20 @@ struct RefractMaterialInfo {
     float reflectionFactor; // percentage of reflected light
 };
 
+// std140
+struct MaterialPbr{
+
+    MaterialPbr(geo::Pt4f c, float r, float m) : color(c), rough(r), metal(m){}
+
+    geo::Pt4f color;                        // 0
+    float rough;                            // 12
+    float metal;                            // 16
+    float padding1;                         // 20
+    float padding2;                         // 24
+    // float padding3;                      // 28
+    // float padding4;                      // 32
+};
+
+
 }
 

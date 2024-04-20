@@ -29,7 +29,7 @@ private:
     // imgui
     void draw_imgui() override;
     // # window
-    void resize_windows() override;
+    auto resize_windows() -> void override;
 
     void update() override;
 
@@ -38,9 +38,7 @@ private:
     auto init_textures() -> bool;
     auto init_shaders() -> bool;
     auto init_drawers() -> bool;
-
-    bool init_samples();
-
+    auto init_samples() -> bool;
 
 protected:
 

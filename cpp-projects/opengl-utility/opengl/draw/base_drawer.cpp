@@ -96,3 +96,12 @@ auto BaseDrawer::draw() -> void{
 
     m_vaoRenderer->unbind();
 }
+
+auto HierarchyDrawer2::draw() -> void{
+    for(const auto &drawer : drawers){
+        drawer->draw();
+    }
+    for(const auto &child : children){
+        child->draw();
+    }
+}

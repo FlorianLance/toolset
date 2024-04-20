@@ -45,20 +45,15 @@ struct TextureOptions{
         TextureMapMode::wrap
     };
 
-    // mixed
-    TextureWrapMode wrapS = TextureWrapMode::repeat; // Sets the wrap parameter for texture coordinate s
-    TextureWrapMode wrapT = TextureWrapMode::repeat; // Sets the wrap parameter for texture coordinate t
-    TextureWrapMode wrapR = TextureWrapMode::repeat; // Sets the wrap parameter for texture coordinate r
-    TextureMinFilter minFilter = TextureMinFilter::nearest_mipmap_linear;
-    TextureMagFilter magFilter = TextureMagFilter::linear;
+    int maxLevel = 1000;        // Sets the index of the highest defined mipmap level.
 
+    TextureWrapMode wrapS       = TextureWrapMode::repeat;
+    TextureWrapMode wrapT       = TextureWrapMode::repeat;
+    TextureWrapMode wrapR       = TextureWrapMode::repeat;
+    TextureMinFilter minFilter  = TextureMinFilter::nearest_mipmap_linear;
+    TextureMagFilter magFilter  = TextureMagFilter::linear;
     geo::Pt4f borderColor{0.0f,0.0f,0.0f,0.0f};
-
-    int maxLevel = 1000;    // Sets the index of the highest defined mipmap level.
-                            // This is an integer value. The initial value is 1000.
-    int minLOD = -1000;     // Sets the minimum level-of-detail parameter.
-                            // This floating-point value limits the selection of highest resolution mipmap (lowest mipmap level). The initial value is -1000.
-    int maxLOD = 1000;      // Sets the maximum level-of-detail parameter.
-                            // This floating-point value limits the selection of the lowest resolution mipmap (highest mipmap level). The initial value is 1000.
+    float minLOD = -1000.f;     // Sets the minimum level-of-detail parameter.
+    float maxLOD = 1000.f;      // Sets the maximum level-of-detail parameter.
 };
 }

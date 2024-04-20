@@ -62,6 +62,11 @@ struct GL{
     static auto check_named_framebuffer_status(GLuint framebuffer, GLenum target) -> GLenum;
 
     // texture
+    static auto create_samplers(GLsizei n, GLuint *samplers) -> void;
+    static auto delete_samplers(GLsizei n, const GLuint * samplers) -> void;
+    static auto bind_samplers(GLuint first, GLsizei count, const GLuint *samplers) -> void;
+
+
     static auto create_textures(GLenum target, GLsizei n, GLuint *textures) -> void;
     static auto delete_textures(GLsizei n, GLuint *textures) -> void;
     static auto bind_textures(GLuint first, GLsizei count, const GLuint *textures) -> void;

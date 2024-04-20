@@ -39,14 +39,13 @@
 #include <QColor>
 
 // base
-//#include "utility/logger.hpp"
 #include "utility/time.hpp"
 
 // qt-utility
 #include "qt_str.hpp"
 
 using namespace tool;
-
+using namespace Qt::Literals::StringLiterals;
 
 struct QtLogger::Impl{
 
@@ -58,16 +57,11 @@ struct QtLogger::Impl{
 
     static inline std::chrono::nanoseconds epochStart;
 
-    static const inline QString startHtmlBalise           = QSL("<p>");
-    static const inline QString startTimestampHtmlBalise  = QSL("<p> [");
-    static const inline QString midTimestampHtmlBalise    = QSL("] ");
-    static const inline QString endHtmlBalise             = QSL("</font></p>\n");
-
-    static inline QString htmlNormalBaliseColor     = QSL("<font color=\"DarkBlue\">");
-    static inline QString htmlWarningBaliseColor    = QSL("<font color=\"Orange\">");
-    static inline QString htmlErrorBaliseColor      = QSL("<font color=\"DarkRed\">");
-    static inline QString htmlLogBaliseColor        = QSL("<font color=\"LightGrey\">");
-    static inline QString htmlUnknowBaliseColor     = QSL("<font color=\"Black\">");
+    static inline QString htmlNormalBaliseColor     = u"DarkBlue"_s;
+    static inline QString htmlWarningBaliseColor    = u"Orange"_s;
+    static inline QString htmlErrorBaliseColor      = u"DarkRed"_s;
+    static inline QString htmlLogBaliseColor        = u"LightGrey"_s;
+    static inline QString htmlUnknowBaliseColor     = u"Black"_s;
 
     Impl(){}
 };
@@ -75,41 +69,116 @@ struct QtLogger::Impl{
 QtLogger::QtLogger() : m_p(std::make_unique<Impl>()){
 }
 
-QtLogger::~QtLogger()
-{
-
+QtLogger::~QtLogger(){
 }
 
-QtLogger *QtLogger::get(){
+auto QtLogger::get() -> QtLogger *{
     if(QtLogger::Impl::logger != nullptr){
         return QtLogger::Impl::logger.get();
     }
     return nullptr;
 }
 
-void QtLogger::set_html_ui_type_message_color(QtLogger::MessageType type, const QColor &col){
+auto QtLogger::init(QString logDirectoryPath, QString logFileName, bool displayConsole, bool copyPreviousLog) -> void{
 
-    const QString baliseStr = QSL("<font color=") % col.name() %QSL(">");
+    QtLogger::Impl::displayConsole = displayConsole;
+
+    if(logDirectoryPath.length() == 0 || logFileName.length() == 0){
+        logDirectoryPath = QApplication::applicationDirPath() % u"/logs"_s;
+        logFileName      = u"default_"_s % QHostInfo::localHostName() % u".html"_s;
+    }
+
+    QString logDirPath       = logDirectoryPath;
+    QString logName          = logFileName;
+    QString absoluteFilePath = logDirPath % "/" % logName;
+
+    if(!QFile::exists(logDirPath)){
+        QDir logDir(logDirPath);
+        if(!logDir.mkdir(logDirPath)){
+            qWarning() << "[QtLogger::init] Cannot create logging directory path.\n";
+            return;
+        }
+    }
+
+    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
+    if(QtLogger::Impl::logger == nullptr){
+
+        QFileInfo info(absoluteFilePath);
+
+        if(info.exists() && copyPreviousLog){
+
+            int id = absoluteFilePath.lastIndexOf('.');
+            if(id != -1){
+                QString leftPart  = absoluteFilePath.left(id);
+                QString extension = absoluteFilePath.mid(id);
+                QString previousFileName  = leftPart % u"_previous_"_s % info.lastModified().toString(u"yyyy-MM-dd_hh-mm-ss"_s) % extension;
+
+                bool canCopy = true;
+                if(QFile::exists(previousFileName)){
+                    if(!QFile::remove(previousFileName)){
+                        qWarning() << "[QtLogger::init] Cannot remove previous log file: " << previousFileName;
+                        canCopy = false;
+                    }
+                }
+
+                if(canCopy){
+                    if(!QFile::copy(absoluteFilePath, previousFileName)){
+                        qWarning() << "[QtLogger::init] Cannot save last log file " << absoluteFilePath << " to " << previousFileName;
+                    }
+                }
+            }else{
+                qWarning() << "[QtLogger::init] Invalid log file path, no extension: " << absoluteFilePath;
+                return;
+            }
+        }
+
+        // init log file
+        QtLogger::Impl::epochStart = Time::nanoseconds_since_epoch();
+        QtLogger::Impl::logger     = std::make_unique<QtLogger>();
+        QtLogger::Impl::file       = std::make_unique<QFile>(absoluteFilePath);
+
+        if(!QtLogger::Impl::file->open(QFile::WriteOnly | QFile::Text)){
+            qWarning() << "[QtLogger::init] Cannot write to log file: " << absoluteFilePath;
+            return;
+        }
+
+        QtLogger::Impl::out = std::make_unique<QTextStream>(QtLogger::Impl::file.get());
+    }
+}
+
+auto QtLogger::clean() -> void{
+
+    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
+    if(QtLogger::Impl::file){
+        QtLogger::Impl::file->close();
+        QtLogger::Impl::file = nullptr;
+        QtLogger::Impl::out  = nullptr;
+    }
+    QtLogger::Impl::logger = nullptr;
+}
+
+auto QtLogger::set_html_ui_type_message_color(QtLogger::MessageType type, const QColor &col) -> void{
+
     switch (type) {
     case MessageType::normal:
-        QtLogger::Impl::htmlNormalBaliseColor = baliseStr;
+        QtLogger::Impl::htmlNormalBaliseColor = col.name();
         break;
     case MessageType::warning:
-        QtLogger::Impl::htmlWarningBaliseColor = baliseStr;
+        QtLogger::Impl::htmlWarningBaliseColor = col.name();
         break;
     case MessageType::error:
-        QtLogger::Impl::htmlErrorBaliseColor = baliseStr;
+        QtLogger::Impl::htmlErrorBaliseColor = col.name();
         break;
     case MessageType::log:
-        QtLogger::Impl::htmlLogBaliseColor = baliseStr;
+        QtLogger::Impl::htmlLogBaliseColor = col.name();
         break;
     case MessageType::unknow:
-        QtLogger::Impl::htmlUnknowBaliseColor = baliseStr;
+        QtLogger::Impl::htmlUnknowBaliseColor = col.name();
         break;
     }
 }
 
-QString QtLogger::to_html_line(QtLogger::MessageType type, QStringView text, bool addTimestamp){
+auto QtLogger::to_html_paragraph(QtLogger::MessageType type, QStringView text, bool addTimestamp) -> QString{
 
     QStringView colorCode;
     switch (type) {
@@ -131,112 +200,23 @@ QString QtLogger::to_html_line(QtLogger::MessageType type, QStringView text, boo
     }
 
     if(!addTimestamp){
-        return QString("%1%2%3%4").arg(QtLogger::Impl::startHtmlBalise, colorCode, text, QtLogger::Impl::endHtmlBalise);
+        return u"<p> <font color=\"%1\"> %2 </font></p>"_s.arg(colorCode, text);
     }else{
-        return QString("%1%2%3%4%5%6").arg(
-            QtLogger::Impl::startTimestampHtmlBalise,
+        return u"<p> [%1] <font color=\"%2\"> %3 </font></p>"_s.arg(
             QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - QtLogger::Impl::epochStart).count()),
-            QtLogger::Impl::midTimestampHtmlBalise,
             colorCode,
-            text,
-            QtLogger::Impl::endHtmlBalise
+            text
         );
     }
 }
 
-void QtLogger::insert_line_to_log_file(QtLogger::MessageType type, QStringView message){
-
-    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
-    if(QtLogger::Impl::out){
-        (*QtLogger::Impl::out) << to_html_line(type, message, true) << Qt::flush;
-    }
-}
-
-void QtLogger::init(QString logDirectoryPath, QString logFileName, bool displayConsole){
-
-    QtLogger::Impl::displayConsole = displayConsole;
-
-    if(logDirectoryPath.length() == 0 || logFileName.length() == 0){
-        logDirectoryPath = QApplication::applicationDirPath() % QSL("/logs");
-        logFileName      = QSL("default_") % QHostInfo::localHostName() % QSL(".html");
-    }
-
-    QString logDirPath       = logDirectoryPath;
-    QString logName          = logFileName;
-    QString absoluteFilePath = logDirPath % "/" % logName;
-
-    if(!QFile::exists(logDirPath)){
-        QDir logDir(logDirPath);
-        if(!logDir.mkdir(logDirPath)){
-            qWarning() << "[QtLogger-ERROR] Cannot create logging directory path.\n";
-            return;
-        }
-    }
-
-    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
-    if(QtLogger::Impl::logger == nullptr){
-
-        QFileInfo info(absoluteFilePath);
-
-        if(info.exists()){
-
-            int id = absoluteFilePath.lastIndexOf('.');
-            if(id != -1){
-                QString leftPart  = absoluteFilePath.left(id);
-                QString extension = absoluteFilePath.mid(id);
-                QString previousFileName  = leftPart % QSL("_previous_") % info.lastModified().toString("yyyy-MM-dd_hh-mm-ss") % extension;
-
-                bool copyPrevious = true;
-                if(QFile::exists(previousFileName)){
-                    if(!QFile::remove(previousFileName)){
-                        qWarning() << "[QtLogger-ERROR] Cannot remove previous log file: " << previousFileName;
-                        copyPrevious = false;
-                    }
-                }
-
-                if(copyPrevious){
-                    if(!QFile::copy(absoluteFilePath, previousFileName)){
-                        qWarning() << "[QtLogger-ERROR] Cannot save last log file " << absoluteFilePath << " to " << previousFileName;
-                    }
-                }
-            }else{
-                qWarning() << "[QtLogger-ERROR] Invalid log file path, no extension: " << absoluteFilePath;
-                return;
-            }
-        }
-
-        // init log file
-        QtLogger::Impl::epochStart = Time::nanoseconds_since_epoch();
-        QtLogger::Impl::logger     = std::make_unique<QtLogger>();
-        QtLogger::Impl::file       = std::make_unique<QFile>(absoluteFilePath);
-
-        if(!QtLogger::Impl::file->open(QFile::WriteOnly | QFile::Text)){
-            qWarning() << "[QtLogger-ERROR] Cannot write to log file: " << absoluteFilePath;
-            return;
-        }
-
-        QtLogger::Impl::out = std::make_unique<QTextStream>(QtLogger::Impl::file.get());
-    }
-}
-
-void QtLogger::clean(){
-
-    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
-    if(QtLogger::Impl::file){
-        QtLogger::Impl::file->close();
-        QtLogger::Impl::file = nullptr;
-        QtLogger::Impl::out  = nullptr;
-    }
-    QtLogger::Impl::logger = nullptr;
-}
-
-void QtLogger::message(const QString &message, bool triggersSignal, bool saveToFile){
+auto QtLogger::message(const QString &message, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
             emit QtLogger::Impl::logger->message_signal(
-                to_html_line(MessageType::normal, message, false)
+                to_html_paragraph(MessageType::normal, message, false)
             );
             if(QtLogger::Impl::displayConsole){
                 qDebug() << message;
@@ -244,37 +224,18 @@ void QtLogger::message(const QString &message, bool triggersSignal, bool saveToF
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::normal, message);
+            insert_to_log_file(to_html_paragraph(MessageType::normal, message, true));
         }
     }
 }
 
-void QtLogger::error(const QString &error, bool triggersSignal, bool saveToFile){
-
-    if(auto logger = QtLogger::get(); logger != nullptr){
-
-        if(triggersSignal){
-            emit QtLogger::Impl::logger->error_signal(
-                to_html_line(MessageType::error, error, false)
-            );
-            if(QtLogger::Impl::displayConsole){
-                qDebug() << error;
-            }
-        }
-
-        if(saveToFile){
-            insert_line_to_log_file(MessageType::error, error);
-        }
-    }
-}
-
-void QtLogger::warning(const QString &warning, bool triggersSignal, bool saveToFile){
+auto QtLogger::warning(const QString &warning, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
             emit QtLogger::Impl::logger->warning_signal(
-                to_html_line(MessageType::warning, warning, false)
+                to_html_paragraph(MessageType::warning, warning, false)
             );
             if(QtLogger::Impl::displayConsole){
                 qWarning() << warning;
@@ -282,45 +243,75 @@ void QtLogger::warning(const QString &warning, bool triggersSignal, bool saveToF
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::warning, warning);
+            insert_to_log_file(to_html_paragraph(MessageType::warning, warning, true));
         }
     }
 }
 
-void QtLogger::log(const QString &log, bool triggersSignal, bool saveToFile){
+auto QtLogger::error(const QString &error, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
-            emit QtLogger::Impl::logger->log_signal(
-                to_html_line(MessageType::log, log, false)
+            emit QtLogger::Impl::logger->error_signal(
+                to_html_paragraph(MessageType::error, error, false)
             );
+            if(QtLogger::Impl::displayConsole){
+                qDebug() << error;
+            }
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::log, log);
+            insert_to_log_file(to_html_paragraph(MessageType::error, error, true));
         }
     }
 }
 
-void QtLogger::status(const QString &status, int ms){
+auto QtLogger::log(const QString &log, bool triggersSignal, bool saveToFile) -> void{
+
+    if(auto logger = QtLogger::get(); logger != nullptr){
+
+        if(triggersSignal){
+            emit QtLogger::Impl::logger->log_signal(to_html_paragraph(MessageType::log, log, false));
+        }
+
+        if(saveToFile){
+            insert_to_log_file(to_html_paragraph(MessageType::log, log, true));
+        }
+    }
+}
+
+auto QtLogger::insert_to_log_file(QStringView message, bool flush) -> void{
+
+    std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);
+    if(QtLogger::Impl::out){
+        if(flush){
+            (*QtLogger::Impl::out) << message << Qt::flush;
+        }else{
+            (*QtLogger::Impl::out) << message;
+        }
+    }
+}
+
+
+auto QtLogger::status(const QString &status, int ms) -> void{
     if(auto logger = QtLogger::get(); logger != nullptr){
         emit QtLogger::Impl::logger->status_signal(status, ms);
     }
 }
 
-void QtLogger::progress(int state){
+auto QtLogger::progress(int state) -> void {
     if(auto logger = QtLogger::get(); logger != nullptr){
         emit QtLogger::Impl::logger->progress_signal(state);
     }
 }
 
-void QtLogger::unity_message(QStringView message, bool triggersSignal, bool saveToFile){
+auto QtLogger::unity_message(QStringView message, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
-            int idRichText = message.indexOf(QSL("|R|"));
+            int idRichText = message.indexOf(u"|R|"_s);
             if(idRichText != -1){
                 emit QtLogger::Impl::logger->unity_message_signal(message.chopped(idRichText));
             }else{
@@ -329,66 +320,49 @@ void QtLogger::unity_message(QStringView message, bool triggersSignal, bool save
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::normal, message);
+            insert_to_log_file(to_html_paragraph(MessageType::normal, message, true));
         }
     }
 }
 
-void QtLogger::unity_error(QStringView error, bool triggersSignal, bool saveToFile){
+auto QtLogger::unity_error(QStringView error, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
-//            int idRichText = error.indexOf(QSL("<font color="));
-//            if(idRichText != -1){
-//                emit QtLogger::Impl::logger->unity_error_signal(error.chopped(idRichText));
-//            }else{
-                emit QtLogger::Impl::logger->unity_error_signal(error);
-//            }
+            emit QtLogger::Impl::logger->unity_error_signal(error);
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::error, error);
+            insert_to_log_file(to_html_paragraph(MessageType::error, error, true));
         }
     }
 }
 
-void QtLogger::unity_warning(QStringView warning, bool triggersSignal, bool saveToFile){
+auto QtLogger::unity_warning(QStringView warning, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
-//            int idRichText = warning.indexOf(QSL("<font color="));
-//            if(idRichText != -1){
-//                emit QtLogger::Impl::logger->unity_warning_signal(warning.chopped(idRichText));
-//            }else{
-                emit QtLogger::Impl::logger->unity_warning_signal(warning);
-//            }
+            emit QtLogger::Impl::logger->unity_warning_signal(warning);
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::warning, warning);
+            insert_to_log_file(to_html_paragraph(MessageType::warning, warning, true));
         }
     }
 }
 
-void QtLogger::unity_unknow(QStringView unknow, bool triggersSignal, bool saveToFile){
+auto QtLogger::unity_unknow(QStringView unknow, bool triggersSignal, bool saveToFile) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
         if(triggersSignal){
-//            int idRichText = unknow.indexOf(QSL("<font color="));
-//            if(idRichText != -1){
-//                emit QtLogger::Impl::logger->unity_unknow_signal(unknow.chopped(idRichText));
-//            }else{
-                emit QtLogger::Impl::logger->unity_unknow_signal(unknow);
-//            }
+            emit QtLogger::Impl::logger->unity_unknow_signal(unknow);
         }
 
         if(saveToFile){
-            insert_line_to_log_file(MessageType::unknow, unknow);
+            insert_to_log_file(to_html_paragraph(MessageType::unknow, unknow, true));
         }
     }
 }
-
-// #include "moc_qt_logger.cpp"
