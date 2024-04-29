@@ -57,7 +57,7 @@ FBO::~FBO(){
     clean();
 }
 
-auto FBO::generate() -> void{
+auto FBO::initialize() -> void{
 
     if(m_handle != 0){
         Logger::error(std::format("[FBO::generate] FBO already generated: {}\n", m_handle));

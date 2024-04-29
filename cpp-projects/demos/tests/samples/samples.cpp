@@ -516,9 +516,13 @@ auto Ch3Flat::init() -> bool{
 
 auto Ch3Flat::update_parameters() -> void{
 
+    lightUBO.clean();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
 
@@ -549,9 +553,13 @@ auto Ch3Discard::init() -> bool{
 
 auto Ch3Discard::update_parameters() -> void{
 
+    lightUBO.clean();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
 
@@ -590,9 +598,13 @@ auto Ch3TwoSide::init() -> bool {
 
 auto Ch3TwoSide::update_parameters() -> void{
 
+    lightUBO.clean();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
 
@@ -622,9 +634,13 @@ auto Ch3Phong::init() -> bool {
 
 auto Ch3Phong::update_parameters() -> void{
 
+    lightUBO.clean();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
 
@@ -657,6 +673,8 @@ auto Ch4PhongDirectionnalLight::init() -> bool {
 
 auto Ch4PhongDirectionnalLight::update_parameters() -> void{
 
+    materialUBO.clean();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
@@ -687,9 +705,13 @@ auto Ch4BlinnPhong::init() -> bool {
 
 auto Ch4BlinnPhong::update_parameters() -> void{
 
+    lightUBO.clean();
+    lightUBO.initialize();
     lightUBO.set_data_space_from_shader(sampleShader.get());
-    materialUBO.set_data_space_from_shader(sampleShader.get());
 
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
 
@@ -721,7 +743,8 @@ auto Ch4Cartoon::init() -> bool {
 }
 
 auto Ch4Cartoon::update_parameters() -> void{
-
+    materialUBO.clean();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
@@ -755,7 +778,8 @@ auto Ch4PhongMultiLights::init() -> bool {
 }
 
 auto Ch4PhongMultiLights::update_parameters() -> void{
-
+    materialUBO.clean();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
@@ -812,6 +836,8 @@ auto Ch4PhongPerFragment::init() -> bool {
 }
 
 auto Ch4PhongPerFragment::update_parameters() -> void{
+    materialUBO.clean();
+    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
     materialUBO.update(mInfo);
 }
@@ -887,9 +913,14 @@ auto Ch5DiscardPixels::init() -> bool {
         return false;
     }
 
-    materialUBO.set_data_space_from_shader(sampleShader.get());
-
     return true;
+}
+
+auto Ch5DiscardPixels::update_parameters() -> void{
+    materialUBO.clean();
+    materialUBO.initialize();
+    materialUBO.set_data_space_from_shader(sampleShader.get());
+    materialUBO.update(mInfo);
 }
 
 auto Ch5DiscardPixels::draw(tool::gl::BaseDrawer *) -> void{
@@ -903,7 +934,6 @@ auto Ch5DiscardPixels::draw(tool::gl::BaseDrawer *) -> void{
     sampleShader->set_uniform_matrix("ModelViewMatrix",   camM.mv.conv<float>());
     sampleShader->set_uniform("decay_factor",      decayFactor);
 
-    materialUBO.update(mInfo);
     materialUBO.bind(0);
 
     draw_nb(sampleShader.get(), cementMossD.get());
@@ -919,10 +949,14 @@ auto Ch5SceneTexture::init() -> bool {
         return false;
     }
 
+    return true;
+}
+
+auto Ch5SceneTexture::update_parameters() -> void{
+    materialUBO.clean();
     materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
-
-    return true;
+    materialUBO.update(mInfo);
 }
 
 auto Ch5SceneTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
@@ -934,7 +968,6 @@ auto Ch5SceneTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
-    materialUBO.update(mInfo);
     materialUBO.bind(0);
 
     draw_nb(sampleShader.get(),drawer);
@@ -1325,7 +1358,7 @@ auto Ch5RenderToTexture::init() -> bool {
 auto Ch5RenderToTexture::update_screen_size() -> void {
 
     // Generate and bind the framebuffer
-    fboCh5RenderToTexture.generate();
+    fboCh5RenderToTexture.initialize();
     fboCh5RenderToTexture.bind();
 
     // Create the depth buffer
@@ -1351,43 +1384,43 @@ auto Ch5RenderToTexture::update_screen_size() -> void {
 
 auto Ch5RenderToTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
 
-    // parent_draw(drawer);
+    parent_draw(drawer);
 
-    // sampleShader->use();
+    sampleShader->use();
 
-    // // pass 0
-    // fboCh5RenderToTexture.bind();
-    // glViewport(0,0,512,512);
-    // GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // pass 0
+    fboCh5RenderToTexture.bind();
+    glViewport(0,0,512,512);
+    GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // CameraMatrices rMat;
-    // rMat.update_mvp(
-    //     geo::transform(Vec3d{projScale,projScale,projScale}, projModelRot.conv<double>(), projModelPos.conv<double>()),
-    //     geo::look_at(Vec3d{0.0,0.,-2.}, Vec3d{0.0,0.0,1.0}, Vec3d{0.0,1.0,0.0}),
-    //     geo::perspective(deg_2_rad(60.0), 1.0, 0.3, 1000.0)
-    // );
+    CameraMatrices rMat;
+    rMat.update_mvp(
+        geo::transform(Vec3d{projScale,projScale,projScale}, projModelRot.conv<double>(), projModelPos.conv<double>()),
+        geo::look_at(Vec3d{0.0,0.,-2.}, Vec3d{0.0,0.0,1.0}, Vec3d{0.0,1.0,0.0}),
+        geo::perspective(deg_2_rad(60.0), 1.0, 0.3, 1000.0)
+    );
 
-    // sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f,1.0f});
-    // sampleShader->set_uniform("Light.La", lInfo.La);
-    // sampleShader->set_uniform("Light.Position", lInfo.Position);
-    // sampleShader->set_uniform("Material.Ks", mInfo.Ks);
-    // sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
-    // sampleShader->set_camera_matrices_uniforms(rMat);
-    // commonDrawers["spot"sv]->draw(sampleShader.get());
+    sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f,1.0f});
+    sampleShader->set_uniform("Light.La", lInfo.La);
+    sampleShader->set_uniform("Light.Position", lInfo.Position);
+    sampleShader->set_uniform("Material.Ks", mInfo.Ks);
+    sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
+    sampleShader->set_camera_matrices_uniforms(rMat);
+    commonDrawers["spot"sv]->draw();
 
-    // glFlush();
+    glFlush();
 
-    // // pass 1
-    // gl::FBO::unbind();
-    // renderTexCh5RenderToTexture.bind(0);
+    // pass 1
+    gl::FBO::unbind();
+    renderTexCh5RenderToTexture.bind(0);
 
-    // glViewport(0,0, camera->screen()->width(), camera->screen()->height());
+    glViewport(0,0, camera->screen()->width(), camera->screen()->height());
 
-    // sampleShader->set_uniform("Light.Position", lInfo.Position);
-    // sampleShader->set_uniform("Material.Ks", mInfo.Ks);
-    // sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
+    sampleShader->set_uniform("Light.Position", lInfo.Position);
+    sampleShader->set_uniform("Material.Ks", mInfo.Ks);
+    sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
 
-    // draw_nb(sampleShader.get(), commonDrawers["cube"sv].get());
+    draw_nb(sampleShader.get(), commonDrawers["cube"sv].get());
 }
 
 auto Ch5RenderToTexture::update(float elapsedSeconds) -> void {
@@ -1423,7 +1456,7 @@ auto Ch6EdgeDetectionFilter::update_screen_size() -> void{
 
     // Generate and bind the framebuffer
     screenFBO.clean();
-    screenFBO.generate();
+    screenFBO.initialize();
     screenFBO.bind();
 
     // Create the texture object
@@ -1541,7 +1574,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
     {
         // Generate and bind the framebuffer
         screenFBO.clean();
-        screenFBO.generate();
+        screenFBO.initialize();
         screenFBO.bind();
 
         // Create the texture object
@@ -1576,7 +1609,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
     {
         // Generate and bind the framebuffer
         intermediateFBO.clean();
-        intermediateFBO.generate();
+        intermediateFBO.initialize();
         intermediateFBO.bind();
 
         // Create the texture object
@@ -1678,7 +1711,6 @@ auto Ch6HdrLightingToneMapping::init() -> bool {
         return false;
     }
 
-    materialUBO.initialize();
     materialUBO.set_data_space_from_shader(sampleShader.get());
 
     update_screen_size();
@@ -1693,7 +1725,7 @@ auto Ch6HdrLightingToneMapping::update_screen_size() -> void {
 
     // Generate and bind the framebuffer
     hdrFBO.clean();
-    hdrFBO.generate();
+    hdrFBO.initialize();
     hdrFBO.bind();
 
     // Create the depth buffer
@@ -1732,6 +1764,7 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     parent_draw(drawer);
 
+    return;
     sampleShader->use();
 
     auto intense = Vec3f{1.0f,1.0f,1.0f};
@@ -1841,7 +1874,7 @@ auto Ch6HdrBloom::update_screen_size() -> void {
     {
         // Generate and bind the framebuffer
         hdrFBO.clean();
-        hdrFBO.generate();
+        hdrFBO.initialize();
         hdrFBO.bind();
 
         // Create the depth buffer
@@ -1875,7 +1908,7 @@ auto Ch6HdrBloom::update_screen_size() -> void {
     {
         // Generate and bind the framebuffer
         blurFBO.clean();
-        blurFBO.generate();
+        blurFBO.initialize();
         blurFBO.bind();
 
         bloomBufWidth  = camera->screen()->width()/8;
@@ -2073,7 +2106,7 @@ auto Ch6Deferred::update_screen_size() -> void {
 
     // Generate and bind the framebuffer
     deferredFBO.clean();
-    deferredFBO.generate();
+    deferredFBO.initialize();
     deferredFBO.bind();
 
     // Create the depth buffer
@@ -2165,7 +2198,7 @@ auto Ch6Deferred::draw(tool::gl::BaseDrawer *drawer) -> void {
             update_matrices_m(geo::transform(Vec3d{0.3,0.3,0.3},Vec3d{-90.,0.,0.},Vec3d{-15.f+ii*3,0,-15.f+jj*3}));
             sampleShader->set_camera_matrices_uniforms(camM);
             // commonDrawers["teapot"sv]->draw(sampleShader.get());
-            commonDrawers["teapot"sv]->draw();
+            commonDrawers["torus"sv]->draw();
         }
     }
 
@@ -2258,7 +2291,7 @@ auto Ch6SSAO::update_screen_size() -> void {
 
     // Generate and bind the framebuffer
     deferredFBO.clean();
-    deferredFBO.generate();
+    deferredFBO.initialize();
     deferredFBO.bind();
 
     // Create the depth buffer
@@ -2299,7 +2332,7 @@ auto Ch6SSAO::update_screen_size() -> void {
 
     // Generate and bind the framebuffer
     ssaoFBO.clean();
-    ssaoFBO.generate();
+    ssaoFBO.initialize();
     ssaoFBO.bind();
 
     // Attach the textures to the framebuffer
@@ -3064,7 +3097,7 @@ auto Ch8ShadowMap2::init() -> bool {
     {
         // Generate and bind the framebuffer
         depthmapFBO.clean();
-        depthmapFBO.generate();
+        depthmapFBO.initialize();
         depthmapFBO.bind();
 
         // Create the depth buffer
@@ -3207,7 +3240,7 @@ auto Ch8ShadowPcf::init() -> bool {
 
         // Generate and bind the framebuffer
         shadowFBO.clean();
-        shadowFBO.generate();
+        shadowFBO.initialize();
         shadowFBO.bind();
 
         // Create the depth buffer

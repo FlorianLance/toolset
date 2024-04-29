@@ -64,11 +64,11 @@ struct FBO{
     FBO() = default;
     FBO(const FBO&) = delete;
     FBO& operator=(const FBO&) = delete;
-    FBO(FBO&& other) = default;
-    FBO& operator=(FBO&& other) = default;
+    FBO(FBO&& other) = delete;
+    FBO& operator=(FBO&& other) = delete;
     ~FBO();
 
-    auto generate() -> void;
+    auto initialize() -> void;
     auto clean() -> void;
 
     [[nodiscard]] constexpr auto id() const noexcept -> GLuint{return m_handle;}

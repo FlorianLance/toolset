@@ -46,7 +46,7 @@ ImguiFboUiDrawer::ImguiFboUiDrawer() : m_camera(&m_screen, {0,0,0}, {0,0,1}){
 
 auto ImguiFboUiDrawer::init() -> void{
     m_fbo.clean();
-    m_fbo.generate();
+    m_fbo.initialize();
 }
 
 auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{

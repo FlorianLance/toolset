@@ -25,13 +25,13 @@ private:
 
     // gl
     auto initialize_gl() -> bool override;
-    void draw_gl() override;    
+    auto draw_gl() -> void override;
     // imgui
-    void draw_imgui() override;
+    auto draw_imgui() -> void override;
     // # window
     auto resize_windows() -> void override;
 
-    void update() override;
+    auto update() -> void override;
 
     // managers
     auto init_models() -> bool;

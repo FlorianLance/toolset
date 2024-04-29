@@ -274,6 +274,7 @@ private:
 struct Ch5DiscardPixels : public Sample{
     Ch5DiscardPixels(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
 private:
@@ -283,6 +284,7 @@ private:
 struct Ch5SceneTexture : public Sample{
     Ch5SceneTexture(Camera *cam) : Sample(cam){}
     auto init() -> bool final override;
+    auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch5SceneMutliTexture : public Sample{
