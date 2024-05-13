@@ -35,8 +35,9 @@ SUBDIRS =\
     3d-engine \
     qt-utility qt-utility-app \
     nodes demos \
-    scaner-component scaner-grabber guardian scaner-manager \
-    dc-grabber dc-manager dc-monitoring \
+    #scaner-component scaner-grabber guardian scaner-manager \
+    dc-grabber dc-manager \
+    #dc-monitoring \
 
 # where to find the sub projects
 ## toolset
@@ -44,8 +45,8 @@ SUBDIRS =\
 base.subdir                     = cpp-projects/base
 base-app.subdir                 = cpp-projects/base-app
 base-test.subdir                = cpp-projects/base-test
-base-export.subdir              = toolset/cpp-projects/base-export
-base-export-app.subdir          = toolset/cpp-projects/base-export-app
+base-export.subdir              = cpp-projects/base-export
+base-export-app.subdir          = cpp-projects/base-export-app
 ### opengl-utility
 opengl-utility.subdir           = cpp-projects/opengl-utility
 opengl-utility-app.subdir       = cpp-projects/opengl-utility-app

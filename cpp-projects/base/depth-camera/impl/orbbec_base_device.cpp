@@ -387,8 +387,9 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     return k4C;
 }
 
-OrbbecBaseDevice::OrbbecBaseDevice() : i(std::make_unique<Impl>()){
+OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>()){
 
+    i->deviceType = deviceType;
     auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
 
     i->context = std::make_unique<ob::Context>();
@@ -462,16 +463,22 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
     Logger::message("### Open device ###\n");
 
     Logger::message(std::format("Open device with id [{}]\n", deviceId));
-    if(deviceId >= i->deviceList.size()){
-        Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
-        return false;
+    if(i->deviceType != DCType::FemtoMega){
+        if(deviceId >= i->deviceList.size()){
+            Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
+            return false;
+        }
     }
 
     try {
 
-        // retrieve device
-        Logger::message("Retrieve from devices list.\n");
-        i->device     = i->deviceList[deviceId];
+        if(i->deviceType == DCType::FemtoMega){
+            Logger::message(std::format("Retrieve from ip adress: {}.\n",std::format("192.168.{}.2", deviceId+1)));
+            i->device     = i->context->createNetDevice(std::format("192.168.{}.2", deviceId+1).c_str() , 8090);
+        }else{
+            Logger::message("Retrieve from devices list.\n");
+            i->device     = i->deviceList[deviceId];
+        }
 
         Logger::message("Retrieve sensor list.\n");
         i->sensorList = i->device->getSensorList();
@@ -559,7 +566,7 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
 
     auto lg = LogGuard("OrbbecBaseDevice::start_pipeline"sv);
 
-    i->deviceType = mInfos.device();
+    //i->deviceType = mInfos.device();
 
     Logger::message("### Start pipeline ###.\n");
     Logger::message("Create config.\n");

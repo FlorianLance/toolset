@@ -37,7 +37,7 @@ namespace tool::cam {
 
 struct OrbbecBaseDevice{
 
-    OrbbecBaseDevice();
+    OrbbecBaseDevice(DCType deviceType);
     ~OrbbecBaseDevice();
 
     // initialization

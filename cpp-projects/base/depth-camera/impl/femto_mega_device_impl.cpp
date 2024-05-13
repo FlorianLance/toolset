@@ -35,7 +35,7 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 FemtoMegaDeviceImpl::FemtoMegaDeviceImpl(){
-    orbbecD  = std::make_unique<OrbbecBaseDevice>();
+    orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
     orbbecD->query_devices("Femto Mega"sv, true);
 }
 

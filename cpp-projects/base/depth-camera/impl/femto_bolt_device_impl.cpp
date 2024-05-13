@@ -34,7 +34,7 @@ using namespace tool::cam;
 
 
 FemtoBoltDeviceImpl::FemtoBoltDeviceImpl(){
-    orbbecD  = std::make_unique<OrbbecBaseDevice>();
+    orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoBolt);
     orbbecD->query_devices("Femto Bolt"sv, false);
 }
 

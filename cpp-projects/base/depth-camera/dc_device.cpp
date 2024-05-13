@@ -37,11 +37,13 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 struct DCDevice::Impl{
+    DCType type;
     std::unique_ptr<DCDeviceImpl> dd = nullptr;
 };
 
 DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
 
+    i->type = type;
     auto lg = LogGuard("DCDevice::DCDevice"sv);
     if(type == DCType::AzureKinect){
         auto lg = LogGuard("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
@@ -59,7 +61,7 @@ DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
         auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
         i->dd = std::make_unique<RecordingDeviceImpl>();
         i->dd->dcDevice = this;
-    }
+    }    
 }
 
 DCDevice::~DCDevice(){
@@ -73,16 +75,18 @@ auto DCDevice::open(std::uint32_t deviceId) -> bool{
         return false;
     }
 
-    // cameras
-    auto deviceCount = nb_devices();
-    if(deviceCount == 0){
-        Logger::error("[DCDevice::open] No device found\n");
-        return false;
-    }
-    Logger::message(std::format("[DCDevice] Devices found: {}\n", deviceCount));
-    if(deviceId >= deviceCount){
-        Logger::error("[DCDevice::open] Invalid device id\n");
-        return false;
+    if(i->type != DCType::FemtoMega){
+        // cameras
+        auto deviceCount = nb_devices();
+        if(deviceCount == 0){
+            Logger::warning("[DCDevice::open] No device found\n");
+            return false;
+        }
+        Logger::message(std::format("[DCDevice] Devices found: {}\n", deviceCount));
+        if(deviceId >= deviceCount){
+            Logger::error("[DCDevice::open] Invalid device id\n");
+            return false;
+        }
     }
 
     return i->dd->open(deviceId);
