@@ -42,10 +42,7 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
-    # io    
-    data/checksum.hpp \
-    depth-camera/impl/recording_device_impl.hpp \
-    graphics/mesh_generation.hpp \
+    # io        
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -92,6 +89,7 @@ HEADERS += \
     # graphics
     graphics/light.hpp \
     graphics/mesh.hpp \
+    graphics/mesh_generation.hpp \
     ## animation
     graphics/animation/animation.hpp \
     graphics/animation/bones.hpp \
@@ -178,6 +176,7 @@ HEADERS += \
     depth-camera/network/dc_server_local_device.hpp \
     depth-camera/network/dc_server_remote_device.hpp \
     ## impl
+    depth-camera/impl/recording_device_impl.hpp \
     depth-camera/impl/k2_config_files.hpp \
     depth-camera/impl/k2_device.hpp \
     depth-camera/impl/k2_manager.hpp \
@@ -234,6 +233,7 @@ HEADERS += \
     data/fastpfor_encoding.hpp \
     data/jpeg_encoding.hpp \
     data/FastDifferentialCoding/fastdelta.h \
+    data/checksum.hpp \
     # tests
     tests/marching_cube_test.hpp \
     # thirdparty
@@ -299,19 +299,18 @@ HEADERS += \
 
 SOURCES += \
     # io
-    depth-camera/impl/recording_device_impl.cpp \
-    graphics/mesh_generation.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
     # graphics     
     graphics/mesh.cpp \
+    graphics/mesh_generation.cpp \
     ## animation
     graphics/animation/animation.cpp \
     graphics/animation/bones.cpp \
     ## model    
     graphics/model/model_mesh.cpp \
-    graphics/model/models_manager.cpp \    
+    graphics/model/models_manager.cpp \
     ## texture
     graphics/texture/texture.cpp \
     graphics/texture/cube_map.cpp \
@@ -336,6 +335,7 @@ SOURCES += \
     utility/logger.cpp \
     utility/paths.cpp \
     utility/string.cpp \
+    utility/stop_watch.cpp \
     # network
     network/tcp_reader.cpp \
     network/tcp_sender.cpp \
@@ -393,6 +393,7 @@ SOURCES += \
     depth-camera/impl/femto_bolt_device_impl.cpp \
     depth-camera/impl/femto_mega_device_impl.cpp \
     depth-camera/impl/orbbec_base_device.cpp \
+    depth-camera/impl/recording_device_impl.cpp \
     # exvr
     exvr/ex_component.cpp \
     exvr/ex_element.cpp \

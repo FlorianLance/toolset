@@ -75,12 +75,8 @@ struct DCPlayerData{
         return false;
     }
 
-
-    auto set_current_time(double timeMs) noexcept -> void{
-        if(timeMs > video.duration_ms()){
-            timeMs = video.duration_ms();
-        }
-        stopWatch.set_current_time(timeMs);
+    auto reset_playing() noexcept -> void{
+        stopWatch.reset();
     }
 
     auto start_playing() noexcept -> void{
@@ -97,6 +93,16 @@ struct DCPlayerData{
             return;
         }
         stopWatch.stop();
+    }
+
+    auto set_current_time(double timeMs) noexcept -> void{
+        if(timeMs > video.duration_ms()){
+            timeMs = video.duration_ms();
+        }
+        if(timeMs < 0.0){
+            timeMs = 0.0;
+        }
+        stopWatch.set_current_time(timeMs);
     }
 
     auto is_started() const noexcept -> bool{
@@ -222,7 +228,7 @@ private:
 struct DCVideoPlayer::Impl{
     DCPlayerData data;
     DCVideoPlayerStates states;
-    DCVideoPlayerSettings settings;    
+    DCVideoPlayerSettings settings;
 };
 
 DCVideoPlayer::DCVideoPlayer(): i(std::make_unique<Impl>()){
@@ -233,7 +239,18 @@ DCVideoPlayer::~DCVideoPlayer(){
 
 auto DCVideoPlayer::set_video(const DCVideo &video) -> void{
 
+    // stop playing current video
+    stop_video();
+
+    // init data with new video
     i->data.initialize(video);
+
+    // reset custom times
+    i->settings.startTimeMs = -1.0;
+    i->settings.endTimeMs   = -1.0;
+
+    // update player states
+    i->states.isStarted = false;
     update_states();
 
     // retrieve models and send them
@@ -246,40 +263,103 @@ auto DCVideoPlayer::set_video(const DCVideo &video) -> void{
     initialize_signal(std::move(models));
 }
 
-auto DCVideoPlayer::display_infos() -> void{
-    // using namespace std::chrono;
-    // for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
-    //     std::cout << "FROM idc " << idC << "\n";
-    //     auto firstC = video()->get_compressed_frames_ptr(idC)->first_frame_received_timestamp();
-    //     for(size_t idC2 = 0; idC2 < video()->nb_cameras(); ++idC2){
-    //         auto camD = video()->get_compressed_frames_ptr(idC2);
-    //         auto diff = nanoseconds(camD->first_frame_received_timestamp() - firstC);
-    //         std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_received_timestamp()/**.value()*/ << " " << camD->last_frame_received_timestamp()/**.value()*/ << "\n";
-    //     }
-    // }
-
-//    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
-//        auto camD = video()->get_camera_data(idC);
-//        auto first = camD->first_frame_capture_timestamp().value();
-//        std::cout <<  "CAMERA " << idC << "\n\n";
-//        for(size_t idF = 0; idF < camD->nb_frames(); ++idF){
-//            auto ts = camD->get_compressed_frame(idF).lock()->afterCaptureTS;
-//            auto diffN = nanoseconds(ts-first);
-//            auto diffN2 = nanoseconds(ts - firstC);
-//            std::cout << duration_cast<milliseconds>(diffN) << " " << duration_cast<milliseconds>(diffN2) << " | ";
-//        }
-//        std::cout << "\n";
-//    }
+auto DCVideoPlayer::is_started() const noexcept -> bool{
+    return i->states.isStarted;
 }
 
-auto DCVideoPlayer::start_playing() noexcept -> void{
+auto DCVideoPlayer::is_playing() const noexcept -> bool{
+    return i->data.is_started();
+}
+
+auto DCVideoPlayer::start_video() noexcept -> void{
+
+    if(is_started() && !is_playing()){
+        unpause_video();
+        return;
+    }
+
+    i->states.isStarted = true;
+
+    i->data.start_playing();
+    if(start_time_ms() > 0.0){
+        i->data.set_current_time(start_time_ms());
+    }
+
+    update_states();
+}
+
+auto DCVideoPlayer::stop_video() noexcept -> void{
+
+    i->states.isStarted = false;
+    i->data.reset_playing();
+    update_states();
+}
+
+auto DCVideoPlayer::pause_video() noexcept -> void{
+
+    if(!is_started()){
+        return;
+    }
+
+    i->data.stop_playing();
+    update_states();
+}
+
+auto DCVideoPlayer::unpause_video() noexcept -> void{
+
+    if(!is_started()){
+        return;
+    }
+
     i->data.start_playing();
     update_states();
 }
 
-auto DCVideoPlayer::stop_playing() noexcept -> void{
-    i->data.stop_playing();
+auto DCVideoPlayer::go_to_start_time() noexcept -> void{
+    i->data.set_current_time(start_time_ms());
+    update_states();
+}
+
+auto DCVideoPlayer::go_to_end_time() noexcept -> void{
+    i->data.set_current_time(end_time_ms());
+    update_states();
+}
+
+auto DCVideoPlayer::is_looping() const noexcept -> bool {
+    return i->settings.doLoop;
+}
+
+auto DCVideoPlayer::duration_ms() const noexcept -> double{
+    return i->data.video.duration_ms();
+}
+
+auto DCVideoPlayer::start_time_ms() const noexcept -> double{
+    if((i->settings.startTimeMs > 0.0) && (i->settings.startTimeMs < duration_ms())){
+        return i->settings.startTimeMs;
+    }
+    return 0.0;
+}
+
+auto DCVideoPlayer::end_time_ms() const noexcept -> double{
+    if((i->settings.endTimeMs > 0.0) && (i->settings.endTimeMs < duration_ms())){
+        return i->settings.endTimeMs;
+    }
+    return duration_ms();
+}
+
+
+auto DCVideoPlayer::set_current_time(double timeMs) noexcept -> void{
+
+    if(timeMs < start_time_ms()){
+        timeMs = start_time_ms();
+    }
+
+    if(timeMs > end_time_ms()){
+        timeMs = end_time_ms();
+    }
+
+    i->data.set_current_time(timeMs);
     update_states();
 }
 
@@ -287,30 +367,16 @@ auto DCVideoPlayer::current_time_ms() const noexcept -> double{
     return i->data.current_time_ms();
 }
 
-auto DCVideoPlayer::is_looping() const noexcept -> bool {
-    return i->settings.doLoop;
-}
-
-auto DCVideoPlayer::restart() noexcept -> void{
-    i->data.set_current_time(0.0);
-    update_states();
-}
-
-auto DCVideoPlayer::set_current_time(double timeMs) noexcept -> void{
-    i->data.set_current_time(timeMs);
-    update_states();
-}
-
 auto DCVideoPlayer::update() -> void{
 
     // update time
     auto cTime = current_time_ms();
-    if(cTime > video()->duration_ms()){
+
+    if(cTime > end_time_ms()){
         if(is_looping()){
-            cTime = 0.0;
-            i->data.set_current_time(cTime);
+            go_to_start_time();
         }else{
-            i->data.stop_playing();
+            go_to_end_time();
         }
     }
 
@@ -554,9 +620,6 @@ auto DCVideoPlayer::copy_all_current_clouds(std::span<DCVertexMeshData> vertices
     return totalNbVertices;
 }
 
-auto DCVideoPlayer::is_playing() const noexcept -> bool{
-    return i->data.is_started();
-}
 
 auto DCVideoPlayer::video() -> DCVideo* {
     return &i->data.video;
@@ -566,7 +629,7 @@ auto DCVideoPlayer::load_from_file(std::string_view path) -> bool{
 
     if(i->data.load_from_file(path)){
 
-        restart();
+        go_to_start_time();
 
         // retrieve models and send them
         std::vector<DCModelSettings> models;
@@ -592,20 +655,6 @@ auto DCVideoPlayer::merge_before(DCVideo &other) -> void{
     update_states();
 }
 
-auto DCVideoPlayer::save_cloud_to_file(std::string_view path) -> bool{
-
-    Logger::error("[DCPlayer::save_cloud_to_file] Not implemented.\n");
-    // size_t idC = 0;
-    // for(const auto &ccf : i->data.camerasCompressedFrame){
-    //     if(ccf != nullptr){
-    //         Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
-    //     }
-    //     idC++;
-    // }
-
-    return true;
-}
-
 auto DCVideoPlayer::update_states() noexcept -> void{
 
     if(i->states.nbFrames.size() != i->data.video.nb_cameras()){
@@ -625,3 +674,39 @@ auto DCVideoPlayer::update_states() noexcept -> void{
     states_updated_signal(i->states);
 }
 
+auto DCVideoPlayer::save_cloud_to_file(std::string_view path) -> bool{
+    Logger::error("[DCVideoPlayer::save_cloud_to_file] Not implemented.\n");
+    // ...
+    return true;
+}
+
+
+auto DCVideoPlayer::display_infos() -> void{
+
+    Logger::error("[DCVideoPlayer::display_infos] Not implemented.\n");
+
+    // using namespace std::chrono;
+    // for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
+
+    //     std::cout << "FROM idc " << idC << "\n";
+    //     auto firstC = video()->get_compressed_frames_ptr(idC)->first_frame_received_timestamp();
+    //     for(size_t idC2 = 0; idC2 < video()->nb_cameras(); ++idC2){
+    //         auto camD = video()->get_compressed_frames_ptr(idC2);
+    //         auto diff = nanoseconds(camD->first_frame_received_timestamp() - firstC);
+    //         std::cout << "  Camera " << idC2 << " mdiff: " <<  duration_cast<milliseconds>(diff) << " "<< camD->first_frame_received_timestamp()/**.value()*/ << " " << camD->last_frame_received_timestamp()/**.value()*/ << "\n";
+    //     }
+    // }
+
+    //    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
+    //        auto camD = video()->get_camera_data(idC);
+    //        auto first = camD->first_frame_capture_timestamp().value();
+    //        std::cout <<  "CAMERA " << idC << "\n\n";
+    //        for(size_t idF = 0; idF < camD->nb_frames(); ++idF){
+    //            auto ts = camD->get_compressed_frame(idF).lock()->afterCaptureTS;
+    //            auto diffN = nanoseconds(ts-first);
+    //            auto diffN2 = nanoseconds(ts - firstC);
+    //            std::cout << duration_cast<milliseconds>(diffN) << " " << duration_cast<milliseconds>(diffN2) << " | ";
+    //        }
+    //        std::cout << "\n";
+    //    }
+}

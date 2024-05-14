@@ -47,6 +47,23 @@ public:
     auto video() -> DCVideo*;
     auto display_infos() -> void;;
 
+    // navigation
+    auto start_video() noexcept -> void;
+    auto stop_video() noexcept -> void;
+    auto pause_video() noexcept -> void;
+    auto unpause_video() noexcept -> void;
+    auto go_to_start_time() noexcept -> void;
+    auto go_to_end_time() noexcept -> void;
+    auto set_current_time(double timeMs) noexcept -> void;
+
+    auto is_started() const noexcept -> bool;
+    auto is_playing() const noexcept -> bool;
+    auto duration_ms() const noexcept -> double;
+    auto current_time_ms() const noexcept -> double;
+    auto is_looping() const noexcept -> bool;    
+    auto start_time_ms() const noexcept -> double;
+    auto end_time_ms() const noexcept -> double;
+
     // frames
     auto current_frame_id(size_t idCamera) const -> size_t;
     auto current_compressed_frame_cloud_size(size_t idCamera) -> size_t;
@@ -55,17 +72,7 @@ public:
     auto current_frames_total_cloud_size() -> size_t;
     auto copy_current_cloud(size_t idCamera, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
     auto copy_current_cloud(size_t idCamera, std::span<geo::Pt4f> positions, std::span<geo::Pt4f> colors, bool applyModelTransform, std::span<geo::Pt3f,2> minMax) -> size_t;
-
     auto copy_all_current_clouds(std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
-
-    // navigation
-    auto is_playing() const noexcept -> bool;
-    auto start_playing() noexcept -> void;
-    auto stop_playing() noexcept -> void;
-    auto restart() noexcept -> void;
-    auto set_current_time(double timeMs) noexcept -> void;
-    auto current_time_ms() const noexcept -> double;
-    auto is_looping() const noexcept -> bool;
 
     // edit
     auto remove_until_current_frame() -> void;

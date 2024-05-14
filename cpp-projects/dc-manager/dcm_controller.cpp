@@ -167,9 +167,9 @@ auto DCMController::set_connections() -> void{
 
     // # player
     s->update_player_settings_signal.connect(               &Player::update_settings,                       player);
-    s->start_player_signal.connect(                         &Player::start_playing,                         player);
-    s->pause_player_signal.connect(                         &Player::stop_playing,                          player);
-    s->restart_player_signal.connect(                       &Player::restart,                               player);
+    s->start_player_signal.connect(                         &Player::start_video,                           player);
+    s->pause_player_signal.connect(                         &Player::pause_video,                           player);
+    s->restart_player_signal.connect(                       &Player::go_to_start_time,                      player);
     s->set_player_time_signal.connect(                      &Player::set_current_time,                      player);
     s->remove_until_current_frame_player_signal.connect(    &Player::remove_until_current_frame,            player);
     s->remove_after_current_frame_player_signal.connect(    &Player::remove_after_current_frame,            player);

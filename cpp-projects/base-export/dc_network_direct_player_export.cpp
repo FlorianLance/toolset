@@ -398,6 +398,39 @@ auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<DC
     return 0;
 }
 
+auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<geo::Pt4f> positions, std::span<geo::Pt4f> colors, bool applyModelTransform) -> size_t{
+
+    if(auto frame = current_frame(idD); frame != nullptr){
+
+        auto verticesCountToCopy = std::min(frame->cloud.size(), positions.size());
+        auto tr = device_model(idD);
+
+        if(applyModelTransform){
+
+            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];
+                positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f});
+                const auto &col = frame->cloud.colors[id];
+                colors[id] = {
+                    col.x(), col.y(), col.z(), 1.f
+                };
+            });
+        }else{
+
+            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = frame->cloud.vertices[id];;
+                positions[id] = geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f};
+                const auto &col = frame->cloud.colors[id];
+                colors[id] = {
+                    col.x(), col.y(), col.z(), 1.f
+                };
+            });
+        }
+        return verticesCountToCopy;
+    }
+    return 0;
+}
+
 DCNetworkDirectPlayer* create__dc_network_direct_player(){
     return new DCNetworkDirectPlayer();
 }
@@ -475,3 +508,11 @@ int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer 
     return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(idD, {vertices, static_cast<size_t>(verticesCount)}, applyModelTransform == 1));
 }
 
+int copy_current_frame_vertices_vfx__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, tool::geo::Pt4f *positions, tool::geo::Pt4f *colors, int verticesCount, int applyModelTransform){
+    return dcNetworkDirectPlayer->copy_current_frame_vertices(
+        idD,
+        std::span<tool::geo::Pt4f>(positions, verticesCount),
+        std::span<tool::geo::Pt4f>(colors, verticesCount),
+        applyModelTransform == 1
+    );
+}

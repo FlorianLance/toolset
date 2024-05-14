@@ -77,12 +77,12 @@ auto RecordingDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> b
     DCConfigSettings configs = newConfigS;
     initialize(configs);
 
-    playerD.start_playing();
+    playerD.start_video();
     return true;
 }
 
 auto RecordingDeviceImpl::stop_reading() -> void{
-    playerD.stop_playing();
+    playerD.stop_video();
 }
 
 auto RecordingDeviceImpl::close() -> void {

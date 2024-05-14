@@ -24,6 +24,8 @@
 
 #include "dc_video_player_export.hpp"
 
+#include "utility/stop_watch.hpp"
+
 auto dc_video_player_export_test() -> void{
 
     std::puts("Create DCPlayer\n");
@@ -37,7 +39,7 @@ auto dc_video_player_export_test() -> void{
     }
 
     std::puts("Set settings\n");
-    set_looping_state__dc_video_player(dcPlayer, 0);
+    set_player_settings__dc_video_player(dcPlayer, 0, -1.f, -1.f);
 
     std::puts("Infos:\n");
     std::puts(std::format("\tDuration: {}ms\n", duration_ms__dc_video_player(dcPlayer)).c_str());
@@ -59,7 +61,7 @@ auto dc_video_player_export_test() -> void{
     cloudsResSize.resize(nbCameras);
 
     std::puts("Start playing:\n");
-    start_playing__dc_video_player(dcPlayer);
+    start_video__dc_video_player(dcPlayer);
 
     while(is_playing__dc_video_player(dcPlayer)){
 
@@ -93,11 +95,11 @@ auto dc_video_player_export_test() -> void{
 
 auto dc_network_direct_player_export_test() -> void{
 
-    std::string networkSettingsFilePath = "D:/DEV/EPFL/lnco-exvr/exvr/toolset/cpp-projects/_build/bin/dc-manager/config/network/network_FLORIAN-PC.config";
-    std::string deviceSettingsFilePath = "D:/DEV/EPFL/lnco-exvr/exvr/toolset/cpp-projects/_build/bin/dc-manager/config/settings/device_FLORIAN-PC_all.config";
-    std::string filtersSettingsFilePath = "D:/DEV/EPFL/lnco-exvr/exvr/toolset/cpp-projects/_build/bin/dc-manager/config/settings/filters_FLORIAN-PC_all.config";
-    std::string colorsSettingsFilePath = "D:/DEV/EPFL/lnco-exvr/exvr/toolset/cpp-projects/_build/bin/dc-manager/config/settings/color_FLORIAN-PC_all.config";
-    std::string modelSettingsFilePath = "D:/DEV/EPFL/lnco-exvr/exvr/toolset/cpp-projects/_build/bin/dc-manager/config/calibration/model_FLORIAN-PC_all.config";
+    std::string networkSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/network/network_FLORIAN-PC.config";
+    std::string deviceSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/device_FLORIAN-PC_all.config";
+    std::string filtersSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/filters_FLORIAN-PC_all.config";
+    std::string colorsSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/color_FLORIAN-PC_all.config";
+    std::string modelSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/calibration/model_FLORIAN-PC_all.config";
 
     std::puts("Create DCNetworkDirectPlayer\n");
     auto dcNetworkDirectPlayer = create__dc_network_direct_player();
@@ -110,30 +112,47 @@ auto dc_network_direct_player_export_test() -> void{
     }
     std::puts(std::format("Number of devices: {}\n",devices_nb__dc_network_direct_player(dcNetworkDirectPlayer)).c_str());
 
-
     std::puts("Connect to devices\n");
     connect_to_devices__dc_network_direct_player(dcNetworkDirectPlayer);
     std::puts("Wait...\n");
+
+
+    int nbDevices = devices_nb__dc_network_direct_player(dcNetworkDirectPlayer);
+
+    std::atomic_bool readData = true;
+    std::thread rThread([&](){
+        std::puts("start thread");
+        while(readData){
+            for(int idD = 0; idD < nbDevices; ++idD){
+                std::puts(std::format("read data {}\n", idD).c_str());
+                read_network_data__dc_network_direct_player(dcNetworkDirectPlayer, idD);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        std::puts("end thread");
+    });
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    std::puts("Devices connection state:\n");
-    for(int idD = 0; idD < devices_nb__dc_network_direct_player(dcNetworkDirectPlayer); ++idD){
-        if(is_device_connected__dc_network_direct_player(dcNetworkDirectPlayer, idD)){
-            std::puts(std::format("\tDevice n°{} connected\n", idD).c_str());
-        }else{
-            std::puts(std::format("\tDevice n°{} not connected\n", idD).c_str());
-        }
-    }
+    // std::puts("Devices connection state:\n");
+    // for(int idD = 0; idD < nbDevices; ++idD){
+    //     if(is_device_connected__dc_network_direct_player(dcNetworkDirectPlayer, idD)){
+    //         std::puts(std::format("\tDevice n°{} connected\n", idD).c_str());
+    //     }else{
+    //         std::puts(std::format("\tDevice n°{} not connected\n", idD).c_str());
+    //     }
+    // }
 
     std::puts("Update settings\n");
     update_device_settings__dc_network_direct_player(dcNetworkDirectPlayer, deviceSettingsFilePath.c_str());
-    update_color_settings__dc_network_direct_player(dcNetworkDirectPlayer, colorsSettingsFilePath.c_str());
-    update_filters_settings__dc_network_direct_player(dcNetworkDirectPlayer, filtersSettingsFilePath.c_str());
-    update_model_settings__dc_network_direct_player(dcNetworkDirectPlayer, modelSettingsFilePath.c_str());
+    // update_color_settings__dc_network_direct_player(dcNetworkDirectPlayer, colorsSettingsFilePath.c_str());
+    // update_filters_settings__dc_network_direct_player(dcNetworkDirectPlayer, filtersSettingsFilePath.c_str());
+    // update_model_settings__dc_network_direct_player(dcNetworkDirectPlayer, modelSettingsFilePath.c_str());
 
     std::puts("Wait...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
+
+    return;
     std::puts("Start reading\n");
     // start_reading__dc_network_direct_player(dcNetworkDirectPlayer);
 
@@ -168,6 +187,8 @@ auto dc_network_direct_player_export_test() -> void{
     }
 
     std::puts("Stop reading\n");
+    readData = false;
+    rThread.join();
     // stop_reading__dc_network_direct_player(dcNetworkDirectPlayer);
 
     std::puts("Wait...\n");
@@ -186,6 +207,31 @@ auto dc_network_direct_player_export_test() -> void{
 
 int main(int, char *[]){
 
+    // tool::StopWatch sw;
+
+    // sw.start();
+
+    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+
+    // sw.set_current_time(50.0);
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+
+    // sw.stop();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // sw.start();
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // sw.stop();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+    // sw.set_current_time(200.0);
+    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
+
+
+    return 0;
     // dc_video_player_export_test();
     dc_network_direct_player_export_test();
 

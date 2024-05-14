@@ -33,6 +33,7 @@ namespace tool::cam {
 
 struct DCVideoPlayerStates{
 
+    bool isStarted = false;
     bool isPlaying = false;
     std::vector<size_t> nbFrames;
     std::vector<size_t> currentFrames;

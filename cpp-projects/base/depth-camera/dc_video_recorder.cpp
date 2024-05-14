@@ -26,11 +26,9 @@
 
 #include "dc_video_recorder.hpp"
 
-// std
-//#include <iostream>
-//#include <chrono>
 
 // local
+#include "utility/time.hpp"
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
 
