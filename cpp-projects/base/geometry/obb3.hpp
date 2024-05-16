@@ -27,7 +27,7 @@
 #pragma once
 
 // std
-#include <span>>
+#include <span>
 
 // local
 #include "geometry/matrix3.hpp"

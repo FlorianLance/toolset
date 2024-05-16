@@ -64,7 +64,7 @@ ExCodeEditorW *ExCodeEditorW::init_widget_as_csharp_editor(const QColor &bc, QSt
     w->setEnabled(enabled);
 
 
-    connect(w.get(), &CodeEditor::textChanged,this, [=]{trigger_ui_change();});
+    connect(w.get(), &CodeEditor::textChanged,this, [&]{trigger_ui_change();});
 
     return this;
 }

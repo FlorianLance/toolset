@@ -40,6 +40,7 @@ include(../ts-projects.pri)
 include(../ts-thirdparty.pri)
 include(../ts-dependencies.pri)
 
+
 ####################################### PROJECT FILES
 HEADERS += \
     # io        
@@ -114,6 +115,7 @@ HEADERS += \
     graphics/camera/camera.hpp \
     graphics/camera/screen.hpp \
     # network
+    network/boost_asio.hpp \
     network/udp_server_network_settings.hpp \
     network/udp_client_network_settings.hpp \
     network/network_enums.hpp \

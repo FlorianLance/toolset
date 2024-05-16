@@ -1,6 +1,4 @@
 
-
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -31,11 +29,8 @@
 // std
 #include <numeric>
 
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ip/host_name.hpp>
-
 // local
+#include "boost_asio.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
 
@@ -231,6 +226,6 @@ auto AverageLatency::update_average_latency(int64_t latency) -> void{
 
     auto span = latencies.span();
     averageLatency = static_cast<std::int64_t>(
-        1.0 * std::accumulate(std::begin(span), std::end(span), 0) / nbMaxValues
+        1.0 * std::accumulate(std::begin(span), std::end(span), std::int64_t{0}) / nbMaxValues
     );
 }

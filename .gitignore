@@ -13,6 +13,7 @@ cpp-projects/**/*.pch
 cpp-projects/**/*.rc
 
 ## build
+cpp-projects/_build/temp
 ### bin
 cpp-projects/_build/bin/**/*.dll
 cpp-projects/_build/bin/**/*.exe

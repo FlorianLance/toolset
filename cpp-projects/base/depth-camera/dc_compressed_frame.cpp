@@ -305,7 +305,7 @@ auto DCCompressedFrame::write_to_data(std::span<int8_t> data, size_t &offset) ->
 }
 
 auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void{
-
+    static_cast<void>(file);
     // // # read info
     // read(idCapture, file);
     // read(afterCaptureTS, file);
@@ -348,7 +348,7 @@ auto DCCompressedFrame::init_legacy_cloud_frame_from_file_stream(std::ifstream &
 }
 
 auto DCCompressedFrame::init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void{
-
+    static_cast<void>(file);
     // // # read info
     // read(afterCaptureTS, file);
     // receivedTS = afterCaptureTS;

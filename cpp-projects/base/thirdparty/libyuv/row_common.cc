@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+
+
+
 #include "libyuv/row.h"
 
 #include <assert.h>
@@ -20,6 +23,10 @@
 namespace libyuv {
 extern "C" {
 #endif
+
+
+#pragma warning(push)
+#pragma warning(disable: 4242)
 
 // This macro controls YUV to RGB using unsigned math to extend range of
 // YUV to RGB coefficients to 0 to 4 instead of 0 to 2 for more accuracy on B:
@@ -4331,6 +4338,10 @@ void HalfMergeUVRow_C(const uint8_t* src_u,
     dst_uv[1] = (src_v[0] + src_v[src_stride_v] + 1) >> 1;
   }
 }
+
+
+#pragma warning(pop)
+
 
 #ifdef __cplusplus
 }  // extern "C"

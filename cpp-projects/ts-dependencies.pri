@@ -329,21 +329,31 @@ SCANER_MANAGER_APP_PRE_TARGETDEPS =\
     $$OPENGL_UTILITY_LIB_FILE\
     $$QT_UTILITY_LIB_FILE\
 
-# generate projects variables
+
+########################################################### FIND CURRENT PROJECT FROM LIST
+PROJECT_FOUND="NULL"
 for(project, TOOLSET_CPP_PROJECTS):{
-
-    ## deps files
+    debug_project = $$project"d"
     TLOW = $$lower($$TARGET)
+
     equals(TLOW, $$project){
-
-        UPT = $$upper($$project)
-        UPT = $$replace(UPT, "-", "_")
-
-        INCLUDEPATH     += $$eval($$UPT"_DEP_INCLUDEPATH")
-        LIBS            += $$eval($$UPT"_DEP_LIBS")
-        PRE_TARGETDEPS  += $$eval($$UPT"_PRE_TARGETDEPS")
-
+        PROJECT_FOUND = $$project
+    }
+    equals(TLOW, $$debug_project){
+        PROJECT_FOUND = $$project
     }
 }
+
+########################################################### GENERATE PROJECTS VARIABLES
+
+!equals(PROJECT_FOUND, "NULL"){
+    UPT = $$upper($$PROJECT_FOUND)
+    UPT = $$replace(UPT, "-", "_")
+
+    INCLUDEPATH     += $$eval($$UPT"_DEP_INCLUDEPATH")
+    LIBS            += $$eval($$UPT"_DEP_LIBS")
+    PRE_TARGETDEPS  += $$eval($$UPT"_PRE_TARGETDEPS")
+}
+
 
 

@@ -202,7 +202,7 @@ struct DCPlayerData{
 
 
     auto merge_before(DCVideo &other) -> void{
-
+        static_cast<void>(other);
         tool::Logger::error("[DCPlayerData::merge_before] Not implemented.\n");
 
         // if(other.nb_cameras() != video.nb_cameras()){
@@ -675,6 +675,7 @@ auto DCVideoPlayer::update_states() noexcept -> void{
 }
 
 auto DCVideoPlayer::save_cloud_to_file(std::string_view path) -> bool{
+    static_cast<void>(path);
     Logger::error("[DCVideoPlayer::save_cloud_to_file] Not implemented.\n");
     // ...
     return true;

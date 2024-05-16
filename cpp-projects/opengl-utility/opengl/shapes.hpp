@@ -35,27 +35,27 @@
 
 namespace tool::gl{
 
-class BaseShape{
-public:
-    virtual ~BaseShape(){}
-    std::unique_ptr<VAORenderer> vaoRenderer;
-};
+// class BaseShape{
+// public:
+//     virtual ~BaseShape(){}
+//     std::unique_ptr<VAORenderer> vaoRenderer;
+// };
 
-class Teapot : public BaseShape{
-public:
-    Teapot(int grid, const geo::Mat4f &lidTransform = geo::Mat4f::identity());
+// class Teapot : public BaseShape{
+// public:
+//     Teapot(int grid, const geo::Mat4f &lidTransform = geo::Mat4f::identity());
 
-private:
+// private:
 
-    void generate_patches(std::vector<GLfloat> & p, std::vector<GLfloat> & n, std::vector<GLfloat> & tc, std::vector<GLuint> & el, int grid);
-    void build_patch_reflect(int patchNum,std::vector<GLfloat> & B, std::vector<GLfloat> & dB,std::vector<GLfloat> & v, std::vector<GLfloat> & n,std::vector<GLfloat> & tc, std::vector<GLuint> & el,int &index, int &elIndex, int &tcIndex, int grid,bool reflectX, bool reflectY);
-    void build_patch(geo::Vec3f patch[][4], std::vector<GLfloat> & B, std::vector<GLfloat> & dB, std::vector<GLfloat> & v, std::vector<GLfloat> & n,std::vector<GLfloat> & tc, std::vector<GLuint> & el, int &index, int &elIndex, int &tcIndex, int grid, geo::Mat3f reflect, bool invertNormal);
-    void get_patch( int patchNum, geo::Vec3f patch[][4], bool reverseV );
-    void compute_basis_functions( std::vector<GLfloat> & B, std::vector<GLfloat> & dB, int grid );
-    geo::Vec3f evaluate( int gridU, int gridV, std::vector<GLfloat> & B, geo::Vec3f patch[][4] );
-    geo::Vec3f evaluate_normal(  int gridU, int gridV, std::vector<GLfloat> & B, std::vector<GLfloat> & dB, geo::Vec3f patch[][4] );
-    void move_lid(int grid, std::vector<GLfloat> & p, const geo::Mat4f &lidTransform);
-};
+//     void generate_patches(std::vector<GLfloat> & p, std::vector<GLfloat> & n, std::vector<GLfloat> & tc, std::vector<GLuint> & el, int grid);
+//     void build_patch_reflect(int patchNum,std::vector<GLfloat> & B, std::vector<GLfloat> & dB,std::vector<GLfloat> & v, std::vector<GLfloat> & n,std::vector<GLfloat> & tc, std::vector<GLuint> & el,int &index, int &elIndex, int &tcIndex, int grid,bool reflectX, bool reflectY);
+//     void build_patch(geo::Vec3f patch[][4], std::vector<GLfloat> & B, std::vector<GLfloat> & dB, std::vector<GLfloat> & v, std::vector<GLfloat> & n,std::vector<GLfloat> & tc, std::vector<GLuint> & el, int &index, int &elIndex, int &tcIndex, int grid, geo::Mat3f reflect, bool invertNormal);
+//     void get_patch( int patchNum, geo::Vec3f patch[][4], bool reverseV );
+//     void compute_basis_functions( std::vector<GLfloat> & B, std::vector<GLfloat> & dB, int grid );
+//     geo::Vec3f evaluate( int gridU, int gridV, std::vector<GLfloat> & B, geo::Vec3f patch[][4] );
+//     geo::Vec3f evaluate_normal(  int gridU, int gridV, std::vector<GLfloat> & B, std::vector<GLfloat> & dB, geo::Vec3f patch[][4] );
+//     void move_lid(int grid, std::vector<GLfloat> & p, const geo::Mat4f &lidTransform);
+// };
 
 
 

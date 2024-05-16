@@ -211,7 +211,7 @@ private:
     auto maximum_local_depth_difference(const DCFrameIndices &ids, std::span<std::uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void;
     auto keep_only_biggest_cluster() -> void;
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
-    auto erode(std::uint8_t nbLoops, DCConnectivity connectivity) -> void;
+    auto erode(std::uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void;
 
     // tasks
     auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;

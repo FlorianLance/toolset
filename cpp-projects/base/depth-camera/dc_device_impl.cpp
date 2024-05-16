@@ -674,6 +674,51 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
         return;
     }
 
+
+    if(cFiltersS.doErosion)
+    {
+        std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 1);
+
+
+        for(int ii = 0; ii < cFiltersS.erosionLoops; ++ii){
+            std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
+
+                if(fData.depthMask[id] == 0){
+                    return;
+                }
+
+                float currDepth = fData.depth[id];
+                auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
+
+                for(auto cId : fIndices.neighbours4Depth1D[id]){
+
+                    // if(fData.depth[cId] < currDepth){
+                    //     continue;
+                    // }
+
+                    if((fData.depthMask[cId] == 0) || (abs(fData.depth[cId]-currDepth) > 500)){
+                        // auto hsvDiffColor = Convert::to_hsv(fData.depthSizedColor[cId]);
+                        // if((std::abs(hsv.h()- hsvDiffColor.h()) < cFiltersS.maxDiffColor.x()) ||
+                        // (std::abs(hsv.s()- hsvDiffColor.s()) < cFiltersS.maxDiffColor.y()) ||
+                        // (std::abs(hsv.v()- hsvDiffColor.v()) < cFiltersS.maxDiffColor.z())){
+                        //     fData.filteringMask[id] = 0;
+                        //     return;
+                        // }
+                        fData.filteringMask[id] = 0;
+                        return;
+                    }
+                }
+            });
+
+            for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
+                if(fData.filteringMask[ii] == 0){
+                    fData.depthMask[ii] = 0;
+                }
+            }
+
+        }
+    }
+
     if(cFiltersS.doLocalDiffFiltering){
         maximum_local_depth_difference(fIndices, fData.depth, cFiltersS.maxLocalDiff, DCConnectivity::Connectivity_2H);
     }
@@ -683,9 +728,12 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
         mininum_neighbours(cFiltersS.minNeighboursLoops, cFiltersS.nbMinNeighbours, DCConnectivity::Connectivity_4);
     }
 
+
+
+
     // erosion
     if(cFiltersS.doErosion){
-        erode(cFiltersS.erosionLoops, DCConnectivity::Connectivity_8);
+        // erode(cFiltersS.erosionLoops, DCConnectivity::Connectivity_8, 8);
     }
 
     // keep only biggest cluster
@@ -1597,7 +1645,7 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
     }
 }
 
-auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity) -> void{
+auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void{
 
     for(size_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
@@ -1617,7 +1665,8 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity) -> void{
                         ++count;
                     }
                 }
-                fData.filteringMask[id] = count == 4 ? 1 : 0;
+                // fData.filteringMask[id] = count == 4 ? 1 : 0;
+                fData.filteringMask[id] = (count >= nbMinValid) ? 1 : 0;
             }else{
                 for(auto cId : fIndices.neighbours8Depth1D[id]){
 
@@ -1625,7 +1674,8 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity) -> void{
                         ++count;
                     }
                 }
-                fData.filteringMask[id] = count == 8 ? 1 : 0;
+                // fData.filteringMask[id] = count == 8 ? 1 : 0;
+                fData.filteringMask[id] = (count >= nbMinValid) ? 1 : 0;
             }
         });
 

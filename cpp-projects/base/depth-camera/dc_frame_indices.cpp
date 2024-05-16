@@ -65,11 +65,11 @@ auto DCFrameIndices::initialize(const DCModeInfos &infos) -> void{
 
         // fill
         std::iota(std::begin(depths1D), std::end(depths1D), 0);
-        size_t id = 0;
+        std::int32_t id = 0;
         for(size_t ii = 0; ii < infos.depth_height(); ++ii){
             for(size_t jj = 0; jj < infos.depth_width(); ++jj){
 
-                depths3D[id] = {id,jj,ii};
+                depths3D[id] = {static_cast<size_t>(id),jj,ii};
 
                 // A B C
                 // D I E

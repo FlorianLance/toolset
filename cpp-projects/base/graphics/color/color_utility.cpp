@@ -39,7 +39,7 @@ auto Convert::to_hsv(const ColorRGB32 &rgbf) noexcept -> ColorHSV{
 
     if(fDelta > 0) {
         if(fCMax == rgbf.r()) {
-            hsv.h() = 60.f * (fmod<float>(((rgbf.g() - rgbf.b()) / fDelta), 6.f));
+            hsv.h() = 60.f * (fmodf(((rgbf.g() - rgbf.b()) / fDelta), 6.f));
         } else if(fCMax == rgbf.g()) {
             hsv.h() = 60.f * (((rgbf.b() - rgbf.r()) / fDelta) + 2.f);
         } else if(fCMax == rgbf.b()) {

@@ -244,6 +244,9 @@ int main(){
         std::cerr << error;
     });
 
+    test_femto_mega();
+
+    return 0;
 
     // convert_kvid("D:/test_kvid/thirdPartR.kvid", "D:/test_kvid/thirdPartR_conv.kvid");
 
@@ -281,7 +284,7 @@ int main(){
     // test_raw_orbbec_femto();
     // test_raw_k4device();
     // test_kinect4();
-    test_femto_mega();
+
     return 0;
 }
 

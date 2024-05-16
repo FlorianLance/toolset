@@ -30,10 +30,8 @@
 // std
 #include <format>
 
-// boost
-#include <boost/asio.hpp>
-
 // local
+#include "boost_asio.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
 
@@ -94,8 +92,7 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
         }
 
     }catch (const boost::system::system_error& error){
-        Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}.\n",
-            targetName, port));
+        Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}.\n", targetName, port));
         // Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}, error message: {}.\n",
         //                           targetName, port, error.what()));
         clean_socket();
@@ -216,7 +213,7 @@ auto UdpSender::generate_mono_packet(MessageType type, size_t messageNbBytes) ->
     header.totalSizeBytes           = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);
     header.totalNumberPackets       = 1;
     header.currentPacketId          = 0;
-    header.currentPacketSizeBytes   = header.totalSizeBytes;
+    header.currentPacketSizeBytes   = static_cast<std::uint16_t>(header.totalSizeBytes);
     header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
     header.dataOffset               = 0;
 

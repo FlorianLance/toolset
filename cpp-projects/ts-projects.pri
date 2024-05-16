@@ -99,29 +99,46 @@ TOOLSET_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
 TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
 TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
 
-# generate projects variables
+
+
+########################################################### generate projects variables
 for(project, TOOLSET_CPP_PROJECTS):{
-
     generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$project)
+}
 
-    ##  build files
+########################################################### FIND CURRENT PROJECT FROM LIST
+PROJECT_FOUND="NULL"
+for(project, TOOLSET_CPP_PROJECTS):{
+    debug_project = $$project"d"
     TLOW = $$lower($$TARGET)
+
     equals(TLOW, $$project){
-
-        UPT = $$upper($$project)
-        UPT = $$replace(UPT, "-", "_")
-
-        OBJECTS_DIR = $$eval($$UPT"_OBJ")
-        DESTDIR     = $$eval($$UPT"_DEST")
-        RCC_DIR     = $$eval($$UPT"_RCC")
-        UI_DIR      = $$eval($$UPT"_UI")
-        MOC_DIR     = $$eval($$UPT"_MOC")
-        message("OBJ: "$$OBJECTS_DIR)
-        message("DEST:"$$DESTDIR)
-        message("RCC: "$$RCC_DIR)
-        message("UI:  "$$UI_DIR)
-        message("MOC: "$$MOC_DIR)
+        PROJECT_FOUND = $$project
+    }
+    equals(TLOW, $$debug_project){
+        PROJECT_FOUND = $$project
     }
 }
+
+!equals(PROJECT_FOUND, "NULL"){
+    UPT = $$upper($$PROJECT_FOUND)
+    UPT = $$replace(UPT, "-", "_")
+
+    OBJECTS_DIR = $$eval($$UPT"_OBJ")
+    DESTDIR     = $$eval($$UPT"_DEST")
+    RCC_DIR     = $$eval($$UPT"_RCC")
+    UI_DIR      = $$eval($$UPT"_UI")
+    MOC_DIR     = $$eval($$UPT"_MOC")
+
+    message("--TOOLSET--")
+    message("TARGET: "$$TARGET)
+    message("PROJECT_FOUND: "$$PROJECT_FOUND)
+    message("OBJ: "$$OBJECTS_DIR)
+    message("DEST:"$$DESTDIR)
+    message("RCC: "$$RCC_DIR)
+    message("UI:  "$$UI_DIR)
+    message("MOC: "$$MOC_DIR)
+}
+
 
 

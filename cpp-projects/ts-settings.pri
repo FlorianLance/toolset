@@ -11,7 +11,7 @@ CONFIG(release, debug|release){
 }
 
 # CONFIG
-CONFIG += warn_on
+# CONFIG += warn_on
 
 # OS
 COMPILER = ""   # vs / gcc
@@ -52,15 +52,42 @@ equals(COMPILER, "vs"){ # Visual studio
     #     QMAKE_CXXFLAGS *= -std:c++20    # The latest draft C++ standard preview features.
     # }
 
-    QMAKE_CXXFLAGS *= -MP               # Build with Multiple Processes
+    # Build with Multiple Processes
+    QMAKE_CXXFLAGS *= -MP
 
-    # warnings levels
-    QMAKE_CXXFLAGS -= -W0
-    QMAKE_CXXFLAGS -= -W1
-    QMAKE_CXXFLAGS -= -W2
-    QMAKE_CXXFLAGS *= -W3
+    # Enforces standards conformance.
+    QMAKE_CXXFLAGS *= -permissive-
+
+    # warnings
+    QMAKE_CFLAGS_WARN_ON -= -W3
+    QMAKE_CFLAGS_WARN_ON += -W4
+
     # QMAKE_CXXFLAGS *= -W4
-    # QMAKE_CXXFLAGS *= -WX
+    QMAKE_CXXFLAGS *= -w14640
+    QMAKE_CXXFLAGS *= -w14242 # 'identfier': conversion from 'type1' to 'type1', possible loss of data
+
+    # /w14242 'identfier': conversion from 'type1' to 'type1', possible loss of data
+    # /w14254 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data
+    # /w14263 'function': member function does not override any base class virtual member function
+    # /w14265 'classname': class has virtual functions, but destructor is not virtual instances of this class may not be destructed correctly
+    # /w14287 'operator': unsigned/negative constant mismatch
+    # /we4289 nonstandard extension used: 'variable': loop control variable declared in the for-loop is used outside the for-loop scope
+    # /w14296 'operator': expression is always 'boolean_value'
+    # /w14311 'variable': pointer truncation from 'type1' to 'type2'
+    # /w14545 expression before comma evaluates to a function which is missing an argument list
+    # /w14546 function call before comma missing argument list
+    # /w14547 'operator': operator before comma has no effect; expected operator with side-effect
+    # /w14549 'operator': operator before comma has no effect; did you intend 'operator'?
+    # /w14555 expression has no effect; expected expression with side-effect
+    # /w14619 pragma warning: there is no warning number 'number'
+    # /w14640 Enable warning on thread unsafe static member initialization
+    # /w14826 Conversion from 'type1' to 'type_2' is sign-extended. This may cause unexpected runtime behavior.
+    # /w14905 wide string literal cast to 'LPSTR'
+    # /w14906 string literal cast to 'LPWSTR'
+    # /w14928 illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+
+    # QMAKE_CXXFLAGS *= -WX #  treat warnings as errors
+
     # optimization
     QMAKE_CXXFLAGS -= -O1               # Creates small code.
     QMAKE_CXXFLAGS *= -O2               # Creates fast code.
@@ -80,7 +107,7 @@ equals(COMPILER, "vs"){ # Visual studio
     #/std:c++latest         The latest draft C++ standard preview features.
     #/openmp                Enables #pragma omp in source code.
     #-MP                    Build with Multiple Processes
-    #-MD                    Compiles to create a multithreaded DLL, by using MSVCRT.lib.
+    #-MD
 }
 
 

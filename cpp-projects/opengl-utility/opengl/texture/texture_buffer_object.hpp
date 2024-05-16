@@ -164,9 +164,9 @@ protected:
 
     GLuint m_handle = 0;
 
-    GLenum m_internalFormat;
-    GLenum m_format;
-    GLenum m_type;
+    GLenum m_internalFormat=0;
+    GLenum m_format=0;
+    GLenum m_type=0;
 
     int m_nbChannels=0;
     GLsizei m_width=0;

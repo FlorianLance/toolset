@@ -211,14 +211,17 @@ auto DCCalibrator::Impl::do_RANSAC(unsigned int seed) const -> open3d::pipelines
     };
 
     return open3d::pipelines::registration::RegistrationRANSACBasedOnFeatureMatching(
-        *m_sourcePcCloud, *m_modelPcCloud, *m_sourceFpfh, *m_modelFpfh,
-        settings.ransac.mutualFilter,
-        settings.ransac.maxDistanceCorr,
+        *m_sourcePcCloud,   // source
+        *m_modelPcCloud,    // target
+        *m_sourceFpfh,      // source feature
+        *m_modelFpfh,       // target feature
+        settings.ransac.mutualFilter,   // mutual filter
+        settings.ransac.maxDistanceCorr, // max correspondance distance
         open3d::pipelines::registration::TransformationEstimationPointToPoint(false),
-        settings.ransac.N,
-        correspondence_checker,
-        open3d::pipelines::registration::RANSACConvergenceCriteria(settings.ransac.maxIteration, settings.ransac.confidence),
-        seed
+        settings.ransac.N,      // ransac number
+        correspondence_checker, //
+        open3d::pipelines::registration::RANSACConvergenceCriteria(settings.ransac.maxIteration, settings.ransac.confidence)//,
+        // seed
     );
 }
 
