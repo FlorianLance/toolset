@@ -284,7 +284,144 @@ private:
         if(!cFrame->fpfDepth.empty() && gSettings.depth){
             depthDecoder.decode(
                 cFrame->fpfDepth, frame->depth
-            );            
+            );
+
+            // test
+            frame->normals.resize_image(frame->depth.width, frame->depth.height);
+
+            std::int32_t id = 0;
+            for(int ii = 0; ii < frame->depth.width; ++ii){
+                for(int jj = 0; jj < frame->depth.height; ++jj){
+
+                    // A B C
+                    // D I E
+                    // F G H
+                    std::int32_t idA = -1;
+                    std::int32_t idD = -1;
+                    std::int32_t idF = -1;
+                    std::int32_t idC = -1;
+                    std::int32_t idE = -1;
+                    std::int32_t idH = -1;
+                    std::int32_t idB = -1;
+                    std::int32_t idG = -1;
+
+                    bool notOnLeft   = jj > 0;
+                    bool notOnRight  = jj < frame->depth.width - 1;
+                    bool notOnTop    = ii > 0;
+                    bool notOnBottom = ii < frame->depth.height-1;
+
+
+                    if(notOnLeft){
+                        idD = id - 1;
+                        if(notOnTop){
+                            idA = id - static_cast<int>(frame->depth.width)-1;
+                        }
+                        if(notOnBottom){
+                            idF = id + static_cast<int>(frame->depth.width)-1;
+                        }
+                    }
+                    if(notOnRight){
+                        idE = id + 1;
+                        if(notOnTop){
+                            idC = id - static_cast<int>(frame->depth.width) + 1;
+                        }
+                        if(notOnBottom){
+                            idH = id + static_cast<int>(frame->depth.width) + 1;
+                        }
+                    }
+                    if(notOnTop){
+                        idB = id - static_cast<int>(frame->depth.width);
+                    }
+                    if(notOnBottom){
+                        idG = id + static_cast<int>(frame->depth.width);
+                    }
+
+                    float dzdx = 0.f;
+                    float dzdy = 0.f;
+
+                    if(notOnLeft && notOnRight && notOnTop && notOnBottom){
+
+                        dzdx =
+                           ((frame->depth[idC]-frame->depth[idA])+
+                            (frame->depth[idE]-frame->depth[idD])+
+                            (frame->depth[idH]-frame->depth[idF]))/6.f;
+
+                        dzdy =
+                            ((frame->depth[idF]-frame->depth[idA])+
+                             (frame->depth[idG]-frame->depth[idB])+
+                             (frame->depth[idH]-frame->depth[idC]))/6.f;
+
+                        frame->normals[id] = normalize(Vec3f(dzdx, dzdy, -1.0f));
+
+                    }else{
+                        frame->normals[id] = normalize(Vec3f(0, 0, -1.0f));
+                    }
+                    // else if(!notOnLeft && notOnTop && notOnBottom){
+
+                    //     dzdx =
+                    //         ((frame->depth[idC]-frame->depth[idA])+
+                    //          (frame->depth[idE]-frame->depth[idD])+
+                    //          (frame->depth[idH]-frame->depth[idF]))/6.f;
+
+                    //     dzdy =
+                    //         ((frame->depth[idF]-frame->depth[idA])+
+                    //          (frame->depth[idG]-frame->depth[idB])+
+                    //          (frame->depth[idH]-frame->depth[idC]))/6.f;
+
+
+                    // }else if(!notOnRight && notOnTop && notOnBottom){
+
+                    // }else if(!notOnTop && notOnLeft && notOnRight){
+
+                    // }else if(!notOnBottom && notOnLeft && notOnRight){
+
+                    // }else if(!notOnLeft && !notOnTop){
+
+                    // }else if(!notOnRight && !notOnTop){
+
+                    // }else if(!notOnLeft && !notOnBottom){
+
+                    // }else if(!notOnRight && !notOnBottom){
+
+                    // }
+
+                    ++id;
+                }
+            }
+
+            // for(int x = 1; x < frame->depth.width-1; ++x) {
+            //     for(int y = 1; y < frame->depth.height-1; ++y) {
+
+            //         auto right = frame->depth.get(x+1, y);
+            //         auto left  = frame->depth.get(x-1, y);
+
+            //         auto up    = frame->depth.get(x, y+1);
+            //         auto down  = frame->depth.get(x, y-1);
+
+
+            //         float dzdx = 0.f;
+            //         if(right > 0 && left > 0){
+            //             dzdx = (right - left)*0.5f;
+            //         }else if(right > 0){
+            //             dzdx = right;
+            //         }else if(left > 0){
+            //             dzdx = left;
+            //         }
+
+            //         float dzdy = 0.f;
+            //         if(up > 0 && down > 0){
+            //             dzdy = (up - down)*0.5f;
+            //         }else if(right > 0){
+            //             dzdy = up;
+            //         }else if(down > 0){
+            //             dzdy = down;
+            //         }
+            //         frame->normals.get(x,y) = normalize(Vec3f(dzdx, dzdy, -1.0f));
+            //     }
+            // }
+
+
+
         }
         tComputeDepthData = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
@@ -351,7 +488,7 @@ private:
             &k4aPointCloudImage
         );
 
-        frame->cloud.resize(cFrame->validVerticesCount, false);
+        frame->cloud.resize(cFrame->validVerticesCount, true);
 
         if(depthVertexCorrrespondance.size() < frame->depth.size()){
             depthVertexCorrrespondance.resize(frame->depth.size());
@@ -407,11 +544,12 @@ private:
             //     static_cast<float>( pointCloud[idD].z())
             // }*0.001f;
             frame->cloud.vertices[idV]= geo::Pt3f{
-                 static_cast<float>(pointCloud[idD].x()),
-                 static_cast<float>(pointCloud[idD].y()),
-                 static_cast<float>(pointCloud[idD].z())
-             }*0.001f;
+                static_cast<float>(pointCloud[idD].x()),
+                static_cast<float>(pointCloud[idD].y()),
+                static_cast<float>(pointCloud[idD].z())
+            }*0.001f;
 
+            frame->cloud.normals[idV] = frame->normals[idD];
 
             if(useColors){
                 frame->cloud.colors[idV] = geo::Pt3f{

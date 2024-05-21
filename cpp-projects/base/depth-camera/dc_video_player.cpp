@@ -8,6 +8,7 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
+#include "dc_frame_indices.hpp"
 
 using namespace tool::cam;
 
@@ -19,6 +20,9 @@ struct DCPlayerData{
     std::vector<std::shared_ptr<DCFrame>> camerasFrame;
 
     std::vector<size_t> ids;
+
+    DCModeInfos mInfos;
+    DCFrameIndices indices;
 
     auto initialize(const DCVideo &nVideo) -> void{
 
@@ -398,11 +402,19 @@ auto DCVideoPlayer::update() -> void{
         }
     });
 
+    if(!i->data.camerasFrame.empty()){
+        if(i->data.camerasFrame.front()->mode != i->data.mInfos.mode()){
+            i->data.mInfos.initialize(i->data.camerasFrame.front()->mode);
+            i->data.indices.initialize(i->data.mInfos);
+        }
+    }
+
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
         if(uncompressResults[idC]){
+
             auto cloudSize = i->data.camerasFrame[idC]->cloud.size();
-            if(i->data.ids.size() < cloudSize){
+            if(i->data.ids.size() != cloudSize){
                 i->data.ids.resize(cloudSize);
                 std::iota(std::begin(i->data.ids), std::end(i->data.ids), 0);
             }
@@ -536,7 +548,7 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshDa
     return 0;
 }
 
-auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt4f> positions, std::span<geo::Pt4f> colors, bool applyModelTransform, std::span<geo::Pt3f,2> minMax) -> size_t{
+auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform, std::span<geo::Pt3f,2> minMax) -> size_t{
 
     if(auto frame = current_frame(idCamera); frame != nullptr){
 
@@ -547,20 +559,34 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt4f> pos
         if(applyModelTransform){
             std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];
-                positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f});
+                positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
                 const auto &col = frame->cloud.colors[id];
                 colors[id] = {
-                    col.x(), col.y(), col.z(), 1.f
+                    col.x(), col.y(), col.z()
                 };
+
+                const auto &norm = frame->cloud.normals[id];
+                normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
+
+
+                // normals[id] = {
+                //     nor.x(), nor.y(), nor.z()
+                // };
             });
         }else{
             std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];;
-                positions[id] = geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f};
+                positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
                 const auto &col = frame->cloud.colors[id];
                 colors[id] = {
-                    col.x(), col.y(), col.z(), 1.f
+                    col.x(), col.y(), col.z()
                 };
+                // const auto &nor = frame->cloud.normals[id];
+                // normals[id] = {
+                //     nor.x(), nor.y(), nor.z()
+                // };
+                const auto &norm = frame->cloud.normals[id];
+                normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
             });
         }
 

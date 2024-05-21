@@ -33,9 +33,6 @@
 // turbojpg
 #include <turbojpeg.h>
 
-// turbopfor
-#include "TurboPFor/vp4.h"
-
 // local
 #include "utility/logger.hpp"
 #include "data/jpeg_encoding.hpp"

@@ -108,7 +108,7 @@ struct DCNetworkDirectPlayer{
 
     // data
     auto copy_current_frame_vertices(size_t idD, std::span<tool::cam::DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
-    auto copy_current_frame_vertices(size_t idD, std::span<geo::Pt4f> positions, std::span<geo::Pt4f> colors, bool applyModelTransform) -> size_t;
+    auto copy_current_frame_vertices(size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform) -> size_t;
 
 private:
 
@@ -146,7 +146,7 @@ DECL_EXPORT int update_model_settings__dc_network_direct_player(tool::cam::DCNet
 DECL_EXPORT void copy_transform__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, float *transformData);
 DECL_EXPORT int copy_current_frame_vertices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
 // vfx
-DECL_EXPORT int copy_current_frame_vertices_vfx__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, tool::geo::Pt4f *positions, tool::geo::Pt4f *colors, int verticesCount, int applyModelTransform);
+DECL_EXPORT int copy_current_frame_vertices_vfx__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform);
 
 }
 

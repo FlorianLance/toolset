@@ -33,7 +33,7 @@
 
 #include "utility/io_fstream.hpp"
 
-#include "TurboPFor/vp4.h"
+// #include "TurboPFor/vp4.h"
 
 #include "thirdparty/stb/stb_image_write.h"
 #include "io/cloud_io.hpp"
@@ -184,15 +184,15 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
                         decodedVertices.resize(paddedUncompressedSize);
                     }
 
-                    size_t decodedBytesNb = p4nzdec128v16(
-                        encodedCloudVerticesData.data(),
-                        paddedUncompressedSize,
-                        decodedVertices.data());
-                    if(decodedBytesNb == 0){
-                        Logger::error("[K4FrameUncompressor::uncompress_lossless_16_bits_128padded_data] Error decoding data.\n");
-                    }
+                    // size_t decodedBytesNb = p4nzdec128v16(
+                    //     encodedCloudVerticesData.data(),
+                    //     paddedUncompressedSize,
+                    //     decodedVertices.data());
+                    // if(decodedBytesNb == 0){
+                    //     Logger::error("[K4FrameUncompressor::uncompress_lossless_16_bits_128padded_data] Error decoding data.\n");
+                    // }
 
-                    decodedVertices.resize(uncompressedSize);
+                    // decodedVertices.resize(uncompressedSize);
 
 
                     // auto vData = reinterpret_cast<geo::Pt3<std::uint16_t>*>(decodedVertices.data());

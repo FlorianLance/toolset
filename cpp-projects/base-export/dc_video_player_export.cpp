@@ -127,11 +127,12 @@ int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer,
     return static_cast<int>(dcPlayer->copy_all_current_clouds(std::span<DCVertexMeshData>(vertices, verticesCount), applyModelTransform == 1));
 }
 
-int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt4f *positions, tool::geo::Pt4f *colors, int verticesCount, int applyModelTransform, float *minMax){
+int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform, float *minMax){
     return static_cast<int>(dcPlayer->copy_current_cloud(
         idCamera,
-        std::span<tool::geo::Pt4f>(positions, verticesCount),
-        std::span<tool::geo::Pt4f>(colors, verticesCount),
+        std::span<tool::geo::Pt3f>(positions, verticesCount),
+        std::span<tool::geo::Pt3f>(colors, verticesCount),
+        std::span<tool::geo::Pt3f>(normals, verticesCount),
         applyModelTransform == 1,
         std::span<tool::geo::Pt3f,2>(reinterpret_cast<tool::geo::Pt3f*>(minMax), 2)
     ));

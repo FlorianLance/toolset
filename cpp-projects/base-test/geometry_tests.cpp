@@ -877,7 +877,7 @@ constexpr auto ccc(const geo::Matrix<acc,_rows,_cols> &lhs, const geo::Matrix<ac
 }
 
 // turbopfor
-#include "TurboPFor/vp4.h"
+// #include "TurboPFor/vp4.h"
 
 bool comparator(const tool::geo::CVoxel& lhs, const tool::geo::CVoxel& rhs) {
     auto *c1 = reinterpret_cast<const std::uint64_t*>(&lhs);
@@ -996,40 +996,40 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
         Logger::message(std::format("cvoxels size: {} : bytes {}\n", cvoxels.size(), cvoxels.size()*sizeof(tool::geo::CVoxel)));
         Logger::message(std::format("encoded size: {}\n", encoded.size()));
 
-        size_t encodedBytesNb = p4nzenc64(
-            reinterpret_cast<std::uint64_t*>(cvoxels.data()),
-            cvoxels.size(),
-            encoded.data()
-        );
-        Logger::message(std::format("p4nzenc64: {}\n", encodedBytesNb));
+        // size_t encodedBytesNb = p4nzenc64(
+        //     reinterpret_cast<std::uint64_t*>(cvoxels.data()),
+        //     cvoxels.size(),
+        //     encoded.data()
+        // );
+        // Logger::message(std::format("p4nzenc64: {}\n", encodedBytesNb));
 
-         encodedBytesNb = p4nd1enc64(
-             reinterpret_cast<std::uint64_t*>(cvoxels.data()),
-             cvoxels.size(),
-             encoded.data()
-         );
-         Logger::message(std::format("p4nd1enc64: {}\n", encodedBytesNb));
+        //  encodedBytesNb = p4nd1enc64(
+        //      reinterpret_cast<std::uint64_t*>(cvoxels.data()),
+        //      cvoxels.size(),
+        //      encoded.data()
+        //  );
+        //  Logger::message(std::format("p4nd1enc64: {}\n", encodedBytesNb));
 
-        encodedBytesNb = p4ndenc64(
-          reinterpret_cast<std::uint64_t*>(cvoxels.data()),
-          cvoxels.size(),
-          encoded.data()
-        );
-        Logger::message(std::format("p4ndenc64: {}\n", encodedBytesNb));
+        // encodedBytesNb = p4ndenc64(
+        //   reinterpret_cast<std::uint64_t*>(cvoxels.data()),
+        //   cvoxels.size(),
+        //   encoded.data()
+        // );
+        // Logger::message(std::format("p4ndenc64: {}\n", encodedBytesNb));
 
-         encodedBytesNb = p4nenc64(
-           reinterpret_cast<std::uint64_t*>(cvoxels.data()),
-           cvoxels.size(),
-           encoded.data()
-         );
-         Logger::message(std::format("p4nenc64: {}\n", encodedBytesNb));
+        //  encodedBytesNb = p4nenc64(
+        //    reinterpret_cast<std::uint64_t*>(cvoxels.data()),
+        //    cvoxels.size(),
+        //    encoded.data()
+        //  );
+        //  Logger::message(std::format("p4nenc64: {}\n", encodedBytesNb));
 
-          encodedBytesNb = p4nenc128v64(
-            reinterpret_cast<std::uint64_t*>(cvoxels.data()),
-            cvoxels.size(),
-            encoded.data()
-          );
-          Logger::message(std::format("p4nenc128v64: {}\n", encodedBytesNb));
+        //   encodedBytesNb = p4nenc128v64(
+        //     reinterpret_cast<std::uint64_t*>(cvoxels.data()),
+        //     cvoxels.size(),
+        //     encoded.data()
+        //   );
+        //   Logger::message(std::format("p4nenc128v64: {}\n", encodedBytesNb));
 
 
 //                                  p4nenc128v64

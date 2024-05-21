@@ -33,10 +33,12 @@ BASE_DEP_INCLUDEPATH =\
     $$OPEN3D_INCLUDES $$OPENCV_INCLUDES\
     ## compression
     $$TURBOJPG_INCLUDES $$FASTPFOR_INCLUDES\
-    $$TURBOPFOR_INCLUDES\ # to be removed
+    # $$TURBOPFOR_INCLUDES\ # to be removed
     ## devices
-    $$LIBSOUNDIO_INCLUDES $$LIBUSB_INCLUDES\
-    $$KINECT2_INCLUDES $$KINECT4_INCLUDES $$ORBBEC_INCLUDES\
+    $$LIBSOUNDIO_INCLUDES \
+    $$LIBUSB_INCLUDES \
+    # $$KINECT2_INCLUDES \
+    $$KINECT4_INCLUDES $$ORBBEC_INCLUDES\
 
 BASE_DEP_LIBS =\
     ## general
@@ -45,10 +47,12 @@ BASE_DEP_LIBS =\
     $$OPEN3D_LIBS $$OPENCV_LIBS\
     ## compression
     $$TURBOJPG_LIBS $$FASTPFOR_LIBS\
-    $$TURBOPFOR_LIBS\ # to be removed
+    # $$TURBOPFOR_LIBS\ # to be removed
     ## devices
-    $$LIBSOUNDIO_LIBS $$LIBUSB_LIBS\
-    $$KINECT2_LIBS $$KINECT4_LIBS $$ORBBEC_LIBS\
+    $$LIBSOUNDIO_LIBS \
+    $$LIBUSB_LIBS \
+    # $$KINECT2_LIBS
+    $$KINECT4_LIBS $$ORBBEC_LIBS\
 
 
 ########################################################### BASE_APP

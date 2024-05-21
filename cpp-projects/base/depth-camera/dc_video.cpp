@@ -61,8 +61,7 @@ auto DCVideo::initialize(size_t nbDevices) -> void{
     m_camerasUncompressors.resize(nbDevices);
     for(auto &uncompressor : m_camerasUncompressors){
         uncompressor = std::make_unique<DCFrameUncompressor>();
-    }
-
+    }    
     m_camerasTransforms  = std::vector<geo::Mat4d>(nbDevices, geo::Mat4d::identity());
 }
 

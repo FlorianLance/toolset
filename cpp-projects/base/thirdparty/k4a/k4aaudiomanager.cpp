@@ -5,10 +5,6 @@
 //
 #include "k4aaudiomanager.h"
 
-// System headers
-//
-//#include <regex>
-
 // Library headers
 //
 #include <libusb.h>

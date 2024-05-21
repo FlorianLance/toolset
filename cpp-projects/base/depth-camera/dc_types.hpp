@@ -182,7 +182,7 @@ struct DCModeInfos{
 
 private:
 
-    DCMode            m_mode;
+    DCMode            m_mode            = DCMode::Invalid;
     DCImageFormat     m_imageFormat     = DCImageFormat::NV12;
     DCColorResolution m_colorResolution = DCColorResolution::OFF;
     DCDepthResolution m_depthResolution = DCDepthResolution::OFF;
