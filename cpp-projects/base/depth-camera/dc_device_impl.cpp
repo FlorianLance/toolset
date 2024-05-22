@@ -900,54 +900,57 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && cDataS.client.generation.depth){
+    if(fData.depth.empty()){
+        frame->depth.reset();
+        frame->rgbDepth.reset();
+        return;
+    }
 
+    if(cDataS.client.generation.depth){
         frame->depth.width  = mInfos.depth_width();
         frame->depth.height = mInfos.depth_height();
         frame->depth.resize(mInfos.depth_size());
         std::copy(fData.depth.begin(), fData.depth.end(), frame->depth.begin());
-
-        if(cDataS.client.generation.depthImage){
-
-            const auto dRange = mInfos.depth_range_mm();
-            const auto diff   = dRange.y() - dRange.x();
-            static constexpr std::array<Pt3f,5> depthGradient ={
-                Pt3f{0.f,0.f,1.f},
-                {0.f,1.f,1.f},
-                {0.f,1.f,0.f},
-                {1.f,1.f,0.f},
-                {1.f,0.f,0.f},
-            };
-
-            frame->rgbDepth.width  = mInfos.depth_width();
-            frame->rgbDepth.height = mInfos.depth_height();
-            frame->rgbDepth.resize(mInfos.depth_size());
-            frame->rgbDepth.fill(ColorRGB8(0,0,0));
-
-            std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-
-                if(fData.depth[id] == dc_invalid_depth_value){
-                    return;
-                }
-
-                float vF = (static_cast<float>(fData.depth[id]) - dRange.x())/diff;
-                float intPart;
-                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-                size_t idG = static_cast<size_t>(intPart);
-
-                auto col = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-                frame->rgbDepth[id] = ColorRGB8{
-                    static_cast<std::uint8_t>(255*col.x()),
-                    static_cast<std::uint8_t>(255*col.y()),
-                    static_cast<std::uint8_t>(255*col.z())
-                };
-            });
-        }else{
-            frame->rgbDepth.reset();
-        }
-
     }else{
         frame->depth.reset();
+    }
+
+    if(cDataS.client.generation.depthImage){
+
+        const auto dRange = mInfos.depth_range_mm();
+        const auto diff   = dRange.y() - dRange.x();
+        static constexpr std::array<Pt3f,5> depthGradient ={
+            Pt3f{0.f,0.f,1.f},
+            {0.f,1.f,1.f},
+            {0.f,1.f,0.f},
+            {1.f,1.f,0.f},
+            {1.f,0.f,0.f},
+        };
+
+        frame->rgbDepth.width  = mInfos.depth_width();
+        frame->rgbDepth.height = mInfos.depth_height();
+        frame->rgbDepth.resize(mInfos.depth_size());
+        frame->rgbDepth.fill(ColorRGB8(0,0,0));
+
+        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+
+            if(fData.depth[id] == dc_invalid_depth_value){
+                return;
+            }
+
+            float vF = (static_cast<float>(fData.depth[id]) - dRange.x())/diff;
+            float intPart;
+            float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+            size_t idG = static_cast<size_t>(intPart);
+
+            auto col = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+            frame->rgbDepth[id] = ColorRGB8{
+                static_cast<std::uint8_t>(255*col.x()),
+                static_cast<std::uint8_t>(255*col.y()),
+                static_cast<std::uint8_t>(255*col.z())
+            };
+        });
+    }else{
         frame->rgbDepth.reset();
     }
 }
@@ -959,39 +962,41 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         return;
     }
 
-    if(!fData.infra.empty() && cDataS.client.generation.infra){
+    if(fData.infra.empty()){
+        frame->infra.reset();
+        frame->rgbInfra.reset();
+    }
 
+    if(cDataS.client.generation.infra){
         frame->infra.width  = mInfos.infra_width();
         frame->infra.height = mInfos.infra_height();
         frame->infra.resize(mInfos.infra_size());
         std::copy(fData.infra.begin(), fData.infra.end(), frame->infra.begin());
-
-        if(cDataS.client.generation.infraImage){
-
-            frame->rgbInfra.width  = mInfos.infra_width();
-            frame->rgbInfra.height = mInfos.infra_height();
-            frame->rgbInfra.resize(mInfos.infra_size());
-
-            const float max = 2000;
-            std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-
-                float vF = static_cast<float>(fData.infra[id]);
-                if(vF > max){
-                    vF = max;
-                }
-                vF/=max;
-                frame->rgbInfra[id] = ColorRGB8{
-                    static_cast<std::uint8_t>(255*vF),
-                    static_cast<std::uint8_t>(255*vF),
-                    static_cast<std::uint8_t>(255*vF)
-                };
-            });
-        }else{
-            frame->rgbInfra.reset();
-        }
-
     }else{
         frame->infra.reset();
+    }
+
+    if(cDataS.client.generation.infraImage){
+
+        frame->rgbInfra.width  = mInfos.infra_width();
+        frame->rgbInfra.height = mInfos.infra_height();
+        frame->rgbInfra.resize(mInfos.infra_size());
+
+        const float max = 2000;
+        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+
+            float vF = static_cast<float>(fData.infra[id]);
+            if(vF > max){
+                vF = max;
+            }
+            vF/=max;
+            frame->rgbInfra[id] = ColorRGB8{
+                static_cast<std::uint8_t>(255*vF),
+                static_cast<std::uint8_t>(255*vF),
+                static_cast<std::uint8_t>(255*vF)
+            };
+        });
+    }else{
         frame->rgbInfra.reset();
     }
 }
