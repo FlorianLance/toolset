@@ -47,7 +47,7 @@ auto DCCloudDrawer::initialize() -> void {
     spD.initialize(0.05f, 20, 20);
 
     std::vector<Pt3f> initData(1024*1024);
-    cpD.initialize(true, initData, initData, {});
+    cpD.initialize(true, initData, initData, initData);
     cpD.set_indice_count(0);
 
     frustumD.initialize(true);
@@ -64,7 +64,7 @@ auto DCCloudDrawer::reset() -> void{
     jointsModels.clear();
 
     std::vector<std::uint8_t> reset4(4* 100*100, 50);
-    std::vector<std::uint8_t> reset3(3* 100*100, 50);
+    std::vector<std::uint8_t> reset3(3* 100*100, 50);    
     colorT.init_or_update_8ui(100,100,4, reset4.data());
     depthT.init_or_update_8ui(100,100,3, reset3.data());
     infraT.init_or_update_8ui(100,100,3, reset3.data());
@@ -114,11 +114,6 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     if(frame->cloud.is_valid()){
         cpD.update(frame->cloud);
         cpD.set_indice_count(frame->cloud.vertices.size());
-        // cpD.init(
-        //     frame->cloud.vertices.span(),
-        //     frame->cloud.colors.span(),
-        //     frame->cloud.normals.span()
-        // );
     }
     
     nbBodies = frame->bodyTracking.size();

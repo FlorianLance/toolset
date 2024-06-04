@@ -47,8 +47,13 @@ SFML_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/SFML"
 TURBOPFOR_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/TurboPFor-Integer-Compression"
 FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
+MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
+#
 
 ########################################################## INCLUDES
+
+MODERN_JSON_INCLUDES = \
+    $$MODERN_JSON\
 
 TURBOPFOR_INCLUDES = \
     $$TURBOPFOR_DIR"/include" \

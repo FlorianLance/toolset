@@ -410,31 +410,29 @@ auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<ge
             std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];
                 positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
+                positions[id].x() *= -1.f;
                 const auto &col = frame->cloud.colors[id];
                 colors[id] = {
                     col.x(), col.y(), col.z()
                 };
                 const auto &norm = frame->cloud.normals[id];
                 normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
-                // normals[id] = {
-                //     norm.x(), norm.y(), norm.z()
-                // };
+                normals[id].x() *= -1.f;
             });
         }else{
 
             std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];;
                 positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
+                positions[id].x() *= -1.f;
                 const auto &col = frame->cloud.colors[id];
                 colors[id] = {
                     col.x(), col.y(), col.z()
                 };
-                // const auto &norm = frame->cloud.normals[id];
-                // normals[id] = {
-                //     norm.x(), norm.y(), norm.z()
-                // };
+
                 const auto &norm = frame->cloud.normals[id];
                 normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
+                normals[id].x() *= -1.f;
             });
         }
         return verticesCountToCopy;

@@ -108,18 +108,23 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
     fboD.update_viewport();
     fboD.set_gl_states(display.backgroundColor);
 
-    auto solidShader = ShadersManager::get_instance()->get_ptr("solid");
-    auto cloudShader = ShadersManager::get_instance()->get_ptr("cloud");
-    auto voxelShader = ShadersManager::get_instance()->get_ptr("voxelCloud");
+    auto solidShader        = ShadersManager::get_instance()->get_ptr("solid");
+    auto pointsCloudShader  = ShadersManager::get_instance()->get_ptr("cloud");
+    auto circlesCloudShader = ShadersManager::get_instance()->get_ptr("voxelCloud");
 
-    if(auto shader = solidShader){
-        shader->use();
-        shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
-        shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
-        shader->set_uniform_matrix("model"sv, Mat4f::identity());
-        shader->set_uniform("enable_unicolor", true);
-        shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
-        gridD.draw();
+    if(display.drawGrid){
+        if(auto shader = solidShader){
+
+            shader->use();
+            // transforms
+            shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("model"sv, Mat4f::identity());
+            // colors
+            shader->set_uniform("enable_unicolor", true);
+            shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
+            gridD.draw();
+        }
     }
 
     size_t idC = 0;
@@ -131,26 +136,32 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
         }
 
-        if(!cloudD->display.cloudVisible){
-            continue;
-        }
-
-        if(auto shader = cloudD->display.useVoxels ? voxelShader : cloudShader){
+        if(auto shader = cloudD->display.circles ? circlesCloudShader : pointsCloudShader){
             shader->use();
+            // transforms
             shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
             shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
             shader->set_uniform_matrix("model"sv, cloudD->model);
+            // camera
+            shader->set_uniform("camera_position", fboD.camera()->position().conv<float>());
+            // color
             shader->set_uniform("enable_unicolor", cloudD->display.forceCloudColor);
             shader->set_uniform("unicolor", cloudD->display.cloudColor);
-            shader->set_uniform("factor_unicolor", cloudD->display.factorUnicolor);
+            shader->set_uniform("factor_unicolor", cloudD->display.factorUnicolor);            
+            // geometry
+            shader->set_uniform("backFaceCulling", cloudD->display.backFaceCulling);
 
-            if(cloudD->display.useVoxels){
-                shader->set_uniform("hSize", cloudD->display.sizeVoxels);
+            if(cloudD->display.circles){
+                shader->set_uniform("squareSize", cloudD->display.squareSize);
+                shader->set_uniform("circleRadius", cloudD->display.circleRadius);
             }else{
-                shader->set_uniform("size_pt", cloudD->display.sizePoints);
-                shader->set_uniform("camera_position", fboD.camera()->position().conv<float>());
+                shader->set_uniform("pointSize", cloudD->display.pointSize);
             }
-            cloudD->cpD.draw();
+
+            if(cloudD->display.showCloud){
+                cloudD->cpD.draw();
+            }
+
         }else{
             Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n");
             break;
@@ -159,28 +170,33 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
         if(auto shader = solidShader){
 
             shader->use();
+            // transforms
             shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
             shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
             shader->set_uniform_matrix("model"sv, cloudD->model);
+            // color
             shader->set_uniform("enable_unicolor", true);
             shader->set_uniform("unicolor", cloudD->display.cloudColor);
-            cloudD->frustumD.draw();
-
+            if(cloudD->display.showCameraFrustum){
+                cloudD->frustumD.draw();
+            }
 
             // body tracking
-            for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
-                shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
-                for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
-                    const auto &jm = cloudD->jointsModels[ii][jj];
-                    if(std::get<0>(jm)){
-                        shader->set_uniform_matrix("model", std::get<1>(jm) * cloudD->model);
-                        cloudD->spD.draw();
+            if(cloudD->display.showBodyTracking){
+                for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
+                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                    for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
+                        const auto &jm = cloudD->jointsModels[ii][jj];
+                        if(std::get<0>(jm)){
+                            shader->set_uniform_matrix("model", std::get<1>(jm) * cloudD->model);
+                            cloudD->spD.draw();
+                        }
                     }
                 }
             }
 
             // filtering planes
-            if(cloudD->filters.filterDepthWithCloud){
+            if(cloudD->filters.filterDepthWithCloud && cloudD->display.showFilteringGizmos){
 
                 if(cloudD->filters.p1FMode != PlaneFilteringMode::None){
                     auto p1 = cloudD->filters.p1A;

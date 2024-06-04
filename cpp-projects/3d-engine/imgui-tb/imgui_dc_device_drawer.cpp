@@ -69,7 +69,7 @@ auto DCDeviceDrawer::draw(bool focusWindow) -> void{
 
 auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
     locker.lock();
-    lastFrame = frame;
+    lastFrame = frame;    
     locker.unlock();
 }
 
@@ -87,11 +87,11 @@ auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
         tool::io::CloudIO::save_cloud(path, frame->cloud);
         auto c = frame->cloud;
         for(size_t ii = 0; ii < c.size(); ++ii){
-            c.vertices[ii] += c.normals[ii]*0.2f;
+            c.colors[ii] += c.normals[ii];
         }
 
         auto nPath = path;
-        tool::String::replace_first(nPath, ".obj", "_.obj");
+        tool::String::replace_first(nPath, ".obj", "_normals_colors.obj");
         tool::io::CloudIO::save_cloud(nPath, c);
     }
 }

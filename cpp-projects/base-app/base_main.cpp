@@ -434,7 +434,12 @@ auto test_microphone() -> void{
     std::cout << "end test_microphone\n";
 }
 
-int main(){
+int main(int argc, char *argv[]){
+
+    std::cout << "argc " << argc << "\n";
+    for(int ii = 0; ii < argc; ++ii){
+        std::cout << "-> " << argv[ii] << "\n";
+    }
 
     std::cout << "start\n";
     Logger::init("./");

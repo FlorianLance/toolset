@@ -125,7 +125,8 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
             }
 
             if (ImGui::BeginMenu("Debug")){
-                if(ImGui::MenuItem("...")){
+                if(ImGui::MenuItem("Make it crash")){
+                    abort();
                 }
                 ImGui::EndMenu();
             }

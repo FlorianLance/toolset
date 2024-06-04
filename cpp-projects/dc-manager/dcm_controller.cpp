@@ -123,7 +123,7 @@ auto DCMController::set_connections() -> void{
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,                     model.get());
     s->update_filters_settings_signal.connect(              &DCMModel::update_filters,                      model.get());
     s->update_calibration_filters_settings_signal.connect(  &DCMModel::update_calibration_filters,          model.get());
-    s->update_filtering_mode_signal.connect(                &DCMModel::update_filtering_mode,               model.get());
+    // s->update_filtering_mode_signal.connect(                &DCMModel::update_filtering_mode,               model.get());
     s->update_device_settings_signal.connect(               &DCMModel::update_device_settings,              model.get());
     s->update_color_settings_signal.connect(                &DCMModel::update_color_settings,              model.get());
     s->update_delay_settings_signal.connect(                &DCMModel::update_delay_settings,              model.get());

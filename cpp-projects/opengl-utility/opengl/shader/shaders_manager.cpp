@@ -82,11 +82,17 @@ auto ShadersManager::add_shader(const std::string &alias, ShaderProgram&& shader
 auto ShadersManager::reload_shader(std::string_view alias) -> std::shared_ptr<ShaderProgram>{
 
     if(shaders.contains(alias)){
-        auto paths = shaders[alias]->shaders_file_paths();
+
+        // retrieve current paths before cleaning shaders
+        std::vector<std::string> shadersFilesPaths;
+        for(const auto &path : shaders[alias]->shaders_file_paths()){
+            shadersFilesPaths.push_back(path);
+        }
+
         shaders[alias]->clean();
         shaders[alias] = std::make_shared<ShaderProgram>();
         Logger::message(std::format("[ShadersM] Reload ShaderProgram with alias {}:\n", alias));
-        if(!shaders[alias]->load_from_files(std::move(paths))){
+        if(!shaders[alias]->load_from_files(shadersFilesPaths)){
             Logger::error(std::format("[ShadersM] Cannot reload ShaderProgram with alias {}:\n", alias));
             return nullptr;
         }

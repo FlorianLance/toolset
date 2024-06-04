@@ -551,27 +551,61 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
         return;
     }
 
+    bool updateCurrent = false;
     ImGui::Spacing();
-    if(ImGui::Button("Send all###device_send_all")){
+    ImGui::Text("Send to grabber:");
+    ImGui::SameLine();
+    if(ImGui::Button("Current###device_send_current")){
+        updateCurrent = true;
+    }        
+    ImGui::SameLine();
+    if(ImGui::Button("All###device_send_all")){
         for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
             DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
-    ImGui::Dummy(ImVec2{0,20});
+    ImGui::Separator();
+
+    // bool saveCurrent = false;
+    // static bool allInOne = true;
+    // static bool specifyName = true;
+    // ImGui::Text("Save to file:");
+    // ImGui::SameLine();
+    // if(ImGui::Button("Current###device_save_current")){
+    //     saveCurrent = true;
+    // }
+    // ImGui::SameLine();
+    // if(ImGui::Button("All###device_save_current")){
+    //     if(!specifyName){
+    //         DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::All, SType::Device, allInOne ? SFile::HostAllInOne : SFile::Host, 0);
+    //     }else{
+
+    //         if (ImGuiFileDialog::Instance()->Display("Save settings")) {
+    //             if (ImGuiFileDialog::Instance()->IsOk()){
+    //                 DCMSignals::get()->save_cloud_player_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+    //             }
+    //             ImGuiFileDialog::Instance()->Close();
+    //         }
+    //     }
+    // }
+
+    // if(ImGui::Checkbox("Specify name (if false, use computer name)", &specifyName)){}
+    // if(ImGui::Checkbox("All in one file", &allInOne)){}
+    // ImGui::Separator();
+
+    ImGui::Dummy(ImVec2{0,10});
 
     static ImGuiID tabId = 0;
     if(ImGuiUiDrawer::begin_tab_bar(&tabId, "Device_sub###device_sub_tabbar")){
 
         for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
-            bool updateDeviceList = false;
-
             auto currentDeviceType = settings.grabbersS[ii].device.configS.typeDevice;
-            auto update = DCUIDrawer::draw_dc_device_settings_tab_item(std::format("[{}]###device_{}_tabitem", ii, ii),
-                                                                       settings.grabbersS[ii].device,
-                updateDeviceList,
-                autoUpdate
+            bool update = false;
+            auto tabOpened = DCUIDrawer::draw_dc_device_settings_tab_item(std::format("[{}]###device_{}_tabitem", ii, ii),
+                settings.grabbersS[ii].device,
+                update
             );
 
             if(currentDeviceType != settings.grabbersS[ii].device.configS.typeDevice){
@@ -580,11 +614,10 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
                 DCMSignals::get()->color_settings_reset_signal(ii, settings.grabbersS[ii].color);
             }
 
-            if(update){
+            if(update || (updateCurrent && tabOpened)){
                 DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
             }
         }
-
         ImGui::EndTabBar();
     }
 
@@ -598,17 +631,47 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
         return;
     }
 
+    ImGui::Spacing();
+
+    bool updateCurrent = false;
+    bool updateAll = false;
+    ImGui::Text("Send to grabber:");
+    ImGui::SameLine();
+    if(ImGui::Button("Current###filters_send_current")){
+        updateCurrent = true;
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("All###filters_send_all")){
+        updateAll = true;
+    }
+
     int filteringMode = settings.useNormalFilteringSettings ? 0 : 1;
-    ImGui::Text("Use filtering mode:");
+    ImGui::Text("Filtering mode:");
     ImGui::SameLine();
     if(ImGui::RadioButton("Normal###filters_normal_mode", &filteringMode, 0)){
-        DCMSignals::get()->update_filtering_mode_signal(true);
+        settings.useNormalFilteringSettings = true;
+        updateAll = true;
     }
     ImGui::SameLine();
     if(ImGui::RadioButton("Calibration###filters_calibration_mode", &filteringMode, 1)){
-        DCMSignals::get()->update_filtering_mode_signal(false);
+        settings.useNormalFilteringSettings = false;
+        updateAll = true;
     }
     ImGui::Spacing();
+
+    if(updateAll){
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            if(settings.useNormalFilteringSettings){
+                DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].filters);
+            }else{
+                DCMSignals::get()->update_calibration_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        updateCurrent = false;
+    }
+
+    ImGui::Separator();
 
     static ImGuiId tabId1 = 0;
     if (ImGuiUiDrawer::begin_tab_bar(&tabId1, std::format("{}_sub_tabbar", base).c_str())){
@@ -620,15 +683,16 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
 
                 for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
-                    auto ret =  DCUIDrawer::draw_dc_filters_settings_tab_item(
-                            std::format("[{}]{}_normal_{}_tabitem", ii, base, ii),
+                    bool update = false;
+                    auto tabOpened =  DCUIDrawer::draw_dc_filters_settings_tab_item(
+                        std::format("[{}]{}_normal_{}_tabitem", ii, base, ii),
                         settings.grabbersS[ii].device.configS.mode,
                         settings.grabbersS[ii].filters,
-                        autoUpdate);
+                        update);
 
-                    settings.uiS.settingsFiltersNormalSubPanelDisplayed = std::get<0>(ret) || settings.uiS.settingsFiltersNormalSubPanelDisplayed;
+                    settings.uiS.settingsFiltersNormalSubPanelDisplayed = tabOpened || settings.uiS.settingsFiltersNormalSubPanelDisplayed;
 
-                    if(std::get<1>(ret)){
+                    if(update || (updateCurrent && tabOpened)){
                         DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].filters);
                     }
                 }
@@ -644,15 +708,16 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
 
                 for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
 
-                    auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
-                            std::format("[{}]{}_calibration_{}_tabitem", ii, base, ii),
+                    bool update = false;
+                    auto tabOpened = DCUIDrawer::draw_dc_filters_settings_tab_item(
+                        std::format("[{}]{}_calibration_{}_tabitem", ii, base, ii),
                         settings.grabbersS[ii].device.configS.mode,
                         settings.grabbersS[ii].calibrationFilters,
-                        autoUpdate);
+                        update);
 
-                    settings.uiS.settingsFiltersCalibrationSubPanelDisplayed = std::get<0>(ret) || settings.uiS.settingsFiltersCalibrationSubPanelDisplayed;
+                    settings.uiS.settingsFiltersCalibrationSubPanelDisplayed = tabOpened || settings.uiS.settingsFiltersCalibrationSubPanelDisplayed;
 
-                    if(std::get<1>(ret)){
+                    if(update || (updateCurrent && tabOpened)){
                         DCMSignals::get()->update_calibration_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
                     }
                 }
@@ -721,17 +786,21 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
 
     ImGui::Spacing();
     ImGui::Text("All grabbers");
-    ImGui::Indent();
+    ImGui::SameLine();
     if(ImGui::Button("Send###display_send_all")){
         DCMSignals::get()->update_scene_display_settings_signal(sceneDisplay);
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
+
+    ImGui::Indent();
+
     ImGui::Spacing();
 
-    ImGui::Text("Color");
-    ImGui::SameLine();
+    ImGui::Text("Colors:");
+    ImGui::Indent();
+
     if(ImGui::Button("Per camera###force_cloud_color_all")){
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
             grabbers[ii].cloudDisplay.forceCloudColor = true;
@@ -745,7 +814,7 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
-    ImGui::SameLine();
+
     auto factorUnicolor = grabbers.front().cloudDisplay.factorUnicolor;
     ImGui::SetNextItemWidth(100.f);
     if(ImGui::DragFloat("Color factor", &factorUnicolor, 0.01f, 0.f, 1.f)){
@@ -754,57 +823,132 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
-    ImGui::Spacing();    
+    ImGui::Unindent();
+    ImGui::Spacing();
 
-    ImGui::Text("Render");
-    ImGui::SameLine();
-    if(ImGui::Button("Use voxels###use_voxels_all")){
+    ImGui::Text("Geometry:");
+    ImGui::Indent();
+
+    if(ImGui::Button("Use backface culling###use_backfaceculling_all")){
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.useVoxels = true;
+            grabbers[ii].cloudDisplay.backFaceCulling = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Disable backface culling###disable_backfaceculling_all")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.backFaceCulling = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+
+    if(ImGui::Button("Use circles###use_circles_all")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.circles = true;
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Use points###use_points_all")){
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.useVoxels = false;
+            grabbers[ii].cloudDisplay.circles = false;
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
-    auto sizeVoxels = grabbers.front().cloudDisplay.sizeVoxels;
+
     ImGui::SetNextItemWidth(100.f);
-    if(ImGui::DragFloat("Size voxels###size_voxels_all", &sizeVoxels, 0.01f, 0.001f, 10.f, "%.3f")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.sizeVoxels = sizeVoxels;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+    {
+        ImGuiDragS  pointSizeD = {100.f, true, true, true, true, false};
+        ImGuiFloatS pointSizeFS = {5.f, 0.1f, 30.0f, 0.1f, 0.1f};
+        auto pointSizeV = grabbers.front().cloudDisplay.pointSize;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Point size","display_size_points_all", &pointSizeV, pointSizeFS, pointSizeD)){
+            for(size_t ii = 0; ii < grabbers.size(); ++ii){
+                grabbers[ii].cloudDisplay.pointSize = pointSizeV;
+                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            }
         }
     }
-    auto sizePoints = grabbers.front().cloudDisplay.sizePoints;
-    ImGui::SetNextItemWidth(100.f);
-    if(ImGui::DragFloat("Size points###size_points_all", &sizePoints, 0.1f, 0.1f, 30.f, "%.1f")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.sizePoints = sizePoints;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+
+    {
+        ImGuiDragS  squareSizeD = {100.f, true, true, true, true, false};
+        ImGuiFloatS squareSizeFS = {0.005f, 0.001f, 0.05f, 0.0001f, 0.001f};
+        float squareSizeV = grabbers.front().cloudDisplay.squareSize;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Square size","display_square_size_all", &squareSizeV, squareSizeFS, squareSizeD)){
+            for(size_t ii = 0; ii < grabbers.size(); ++ii){
+                grabbers[ii].cloudDisplay.squareSize = squareSizeV;
+                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            }
         }
     }
+
+    {
+        ImGuiDragS  circleRadiusD = {100.f, true, true, true, true, false};
+        ImGuiFloatS circleRadiusFS = {0.25f, 0.00f, 0.5f, 0.001f, 0.001f};
+        float circleRadiusV = grabbers.front().cloudDisplay.circleRadius;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Circle radius","display_circle_radius_all", &circleRadiusV, circleRadiusFS, circleRadiusD)){
+            for(size_t ii = 0; ii < grabbers.size(); ++ii){
+                grabbers[ii].cloudDisplay.circleRadius = circleRadiusV;
+                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            }
+        }
+    }
+
+    ImGui::Unindent();
     ImGui::Spacing();
 
-    ImGui::Text("Visibility");
-    ImGui::SameLine();
-    if(ImGui::Button("On###set_cloud_visible_all")){
+    ImGui::Text("Visibility:");
+    ImGui::Indent();
 
+    ImGui::Text("Clouds:");
+    ImGui::SameLine();
+    if(ImGui::Button("Show all###show_clouds_alls")){
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.cloudVisible = true;
+            grabbers[ii].cloudDisplay.showCloud = true;
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
     ImGui::SameLine();
-    if(ImGui::Button("Off###set_cloud_invisible_all")){
+    if(ImGui::Button("Hide all###hide_clouds_all")){
         for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.cloudVisible = false;
+            grabbers[ii].cloudDisplay.showCloud = false;
             DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
         }
     }
+
+    ImGui::Text("Cameras frustums:");
+    ImGui::SameLine();
+    if(ImGui::Button("Show all###show_frustums_alls")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.showCameraFrustum = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Hide all###hide_frustums_all")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.showCameraFrustum = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+
+    ImGui::Text("Filterings gizmos:");
+    ImGui::SameLine();
+    if(ImGui::Button("Show all###show_filtering_gizmos_alls")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.showFilteringGizmos = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Hide all###hide_filtering_gizmos_all")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            grabbers[ii].cloudDisplay.showFilteringGizmos = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        }
+    }
+
+    ImGui::Unindent();
     ImGui::Unindent();
 
 

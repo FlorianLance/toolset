@@ -128,15 +128,14 @@ auto cloud_generation_mode_combo(std::string_view label, const char* id, CloudGe
 
 
 
-auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &autoUpdate) -> std::tuple<bool,bool>{
+auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &update) -> bool{
 
-    static_cast<void>(autoUpdate);
+    update = false;
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
-        return {false, false};
+        return false;
     }
 
-    bool update = false;
 
     ImGuiUiDrawer::title2("DEPTH FILTERING");
     {
@@ -543,7 +542,7 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
 
     ImGui::EndTabItem();
 
-    return {true, update};
+    return true;
 }
 
 auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
@@ -554,7 +553,11 @@ auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabIt
 
     bool update = false;
 
-    if(ImGui::ColorEdit4("Background color###background_scene_color", display.backgroundColor.array.data())){
+    if(ImGui::Checkbox("Draw grid###scene_display_draw_grid", &display.drawGrid)){
+        update = true;
+    }
+
+    if(ImGui::ColorEdit4("Background color###scene_display_background_scene_color", display.backgroundColor.array.data())){
         update = true;
     }
 
@@ -581,9 +584,8 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
 
     bool update = false;
 
-    if(ImGui::Checkbox("Cloud visible###display_cloud_visible", &display.cloudVisible)){
-        update = true;
-    }
+    ImGui::Text("Colors:");
+    ImGui::Indent();
     if(ImGui::Checkbox("Force cloud color###display_force_cloud_color", &display.forceCloudColor)){
         update = true;
     }
@@ -595,24 +597,76 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
         update = true;
     }
 
-    ImGui::Separator();    
-    if(ImGui::Checkbox("Use voxels###display_use_voxels", &display.useVoxels)){
+    ImGui::Unindent();
+
+    ImGui::Separator();
+
+    ImGui::Text("Geometry:");
+    ImGui::Indent();
+    if(ImGui::Checkbox("Enable backface culling###enable_backface_culling", &display.backFaceCulling)){
+        update = true;
+    }
+
+    if(ImGui::Checkbox("Use circles###display_use_circles", &display.circles)){
         update = true;
     }
 
     ImGui::SetNextItemWidth(100.f);
-    if(ImGui::DragFloat("Size points###display_size_points", &display.sizePoints, 0.1f, 0.1f, 30.f, "%.1f")){
-        update = true;
+
+    {
+        ImGui::BeginDisabled(display.circles);
+
+        ImGuiDragS  pointSizeD = {100.f, true, true, true, true, false};
+        ImGuiFloatS pointSizeFS = {5.f, 0.1f, 30.0f, 0.1f, 0.1f};
+        float pointSizeV = display.pointSize;
+         if(ImGuiUiDrawer::draw_drag_float_with_buttons("Point size","display_size_points", &pointSizeV, pointSizeFS, pointSizeD)){
+            update = true;
+            display.pointSize = pointSizeV;
+        }
+
+         ImGui::EndDisabled();
     }
 
-    ImGuiDragS  voxelsD = {100.f, true, true, true, true, false};
-    ImGuiFloatS voxelFS = {0.005f, 0.001f, 0.05f, 0.0001f, 0.001f};
+    ImGui::BeginDisabled(!display.circles);
 
-    float sizeV = display.sizeVoxels;
-    if(ImGuiUiDrawer::draw_drag_float_with_buttons("Size voxel","display_size_voxels", &sizeV, voxelFS, voxelsD)){
-        update = true;
-        display.sizeVoxels = sizeV;
+    {
+        ImGuiDragS  squareSizeD = {100.f, true, true, true, true, false};
+        ImGuiFloatS squareSizeFS = {0.005f, 0.001f, 0.05f, 0.0001f, 0.001f};
+        float squareSizeV = display.squareSize;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Square size","display_square_size", &squareSizeV, squareSizeFS, squareSizeD)){
+            update = true;
+            display.squareSize = squareSizeV;
+        }
     }
+
+    {
+        ImGuiDragS  circleRadiusD = {100.f, true, true, true, true, false};
+        ImGuiFloatS circleRadiusFS = {0.25f, 0.00f, 0.5f, 0.001f, 0.001f};
+        float circleRadiusV = display.circleRadius;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Circle radius","display_circle_radius", &circleRadiusV, circleRadiusFS, circleRadiusD)){
+            update = true;
+            display.circleRadius = circleRadiusV;
+        }
+    }
+
+    ImGui::EndDisabled();
+    ImGui::Unindent();
+
+    ImGui::Text("Visibility:");
+    ImGui::Indent();
+    if(ImGui::Checkbox("Show cloud###display_show_cloud", &display.showCloud)){
+        update = true;
+    }
+    if(ImGui::Checkbox("Show camera frustum###display_show_camera_frustum", &display.showCameraFrustum)){
+        update = true;
+    }
+    if(ImGui::Checkbox("Show filtering gizmos###display_show_filtering_gizmos", &display.showFilteringGizmos)){
+        update = true;
+    }
+    if(ImGui::Checkbox("Show bodytracking###display_show_body_tracking", &display.showBodyTracking)){
+        update = true;
+    }
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -1243,23 +1297,22 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
 
 auto DCUIDrawer::draw_dc_device_settings_tab_item(
         const std::string &tabItemName,
-        cam::DCDeviceSettings &device,
-        bool &updateDeviceList,
-        bool &autoUpdate) -> bool{
+        cam::DCDeviceSettings &device, bool &update) -> bool{
+
+    update = false;
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
     }
 
-    bool update = false;
-    draw_dc_config(device.configS, updateDeviceList, update);
+    draw_dc_config(device.configS, update);
     draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);
     ImGui::EndTabItem();
 
-    return update;
+    return true;
 }
 
-auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDeviceList, bool &update) -> void{
+auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &update) -> void{
 
     ImGuiUiDrawer::title2("CONFIG");
     ImGui::Spacing();
@@ -1303,8 +1356,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &updateDevic
             update = true;
         }
     }
-    // updateDeviceList = ImGui::Button("Refresh devices list");
-    // ImGui::Unindent();
+
 
     ImGui::Text("Device id:");
     ImGui::SameLine();
@@ -1739,43 +1791,39 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
         }
     }
 
-    ImGui::BeginDisabled(!colors.autoExposureTime);
-    if(is_available(CST::Brightness, type)){
-        value = colors.brightness;
-        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Brightness", "color_brightness", &value, get_imgui_int_scale(CST::Brightness, type), ds)){
-            colors.brightness = value;
+    ImGui::BeginDisabled(colors.autoExposureTime);
+    if(is_available(CST::Exposure, type)){
+        value = colors.exposureTime;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Exposure", "color_exposure", &value, get_imgui_int_scale(CST::Exposure, type), ds)){
+            colors.exposureTime = static_cast<std::uint16_t>(value);
             update = true;
         }
         ImGui::Spacing();
     }
     ImGui::EndDisabled();
-
-    ImGui::BeginDisabled(colors.autoExposureTime);
-
-    if(is_available(CST::Exposure, type)){
-        value = colors.exposureTime;
-        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Exposure", "color_exposure", &value, get_imgui_int_scale(CST::Exposure, type), ds)){
-            colors.exposureTime = value;
-            update = true;
-        }
-        ImGui::Spacing();
-    }
 
     if(is_available(CST::Gain, type)){
         value = colors.gain;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("Gain", "color_gain", &value, get_imgui_int_scale(CST::Gain, type), ds)){
-            colors.gain = value;
+            colors.gain = static_cast<std::uint8_t>(value);
             update = true;
         }
         ImGui::Spacing();
     }
 
-    ImGui::EndDisabled();
+    if(is_available(CST::Brightness, type)){
+        value = colors.brightness;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Brightness", "color_brightness", &value, get_imgui_int_scale(CST::Brightness, type), ds)){
+            colors.brightness = static_cast<std::uint8_t>(value);
+            update = true;
+        }
+        ImGui::Spacing();
+    }
 
     if(is_available(CST::Contrast, type)){
         value = colors.contrast;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("Contrast", "color_contrast", &value, get_imgui_int_scale(CST::Contrast, type), ds)){
-            colors.contrast = value;
+            colors.contrast = static_cast<std::uint8_t>(value);
             update = true;
         }
         ImGui::Spacing();
@@ -1784,7 +1832,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
     if(is_available(CST::Saturation, type)){
         value = colors.saturation;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("Saturation", "color_saturation", &value, get_imgui_int_scale(CST::Saturation, type), ds)){
-            colors.saturation = value;
+            colors.saturation = static_cast<std::uint8_t>(value);
             update = true;
         }
         ImGui::Spacing();
@@ -1793,7 +1841,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
     if(is_available(CST::Sharpness, type)){
         value = colors.sharpness;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sharpness", "color_sharpness", &value, get_imgui_int_scale(CST::Sharpness, type), ds)){
-            colors.sharpness = value;
+            colors.sharpness = static_cast<std::uint8_t>(value);
             update = true;
         }
         ImGui::Spacing();
@@ -1809,7 +1857,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
     if(is_available(CST::White_balance, type)){
         value = colors.whiteBalance;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("White balance", "color_white_balance", &value, get_imgui_int_scale(CST::White_balance, type), ds)){
-            colors.whiteBalance = value;
+            colors.whiteBalance = static_cast<std::uint16_t>(value);
             update = true;
         }
         ImGui::Spacing();

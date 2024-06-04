@@ -47,6 +47,7 @@ TOOLSET_CPP_PROJECTS +=\
     scaner-grabber \
     scaner-manager \
     guardian \
+    realstream-export\
 
 # define functions
 defineTest(generate_variables) {
@@ -98,7 +99,6 @@ defineTest(generate_variables) {
 TOOLSET_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
 TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
 TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
-
 
 
 ########################################################### generate projects variables

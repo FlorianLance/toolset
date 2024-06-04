@@ -274,15 +274,14 @@ auto DCClientConnection::send_messages_loop() -> void{
 
         auto message = messagesToSend.pop_front();
         if(!message.has_value()){
-            m_udpSenderG.send_synchronisation_message();
             std::this_thread::sleep_for (std::chrono::milliseconds(1));
+            m_udpSenderG.send_synchronisation_message();            
             continue;
         }
 
         if(auto feedback = std::get_if<Feedback>(&message.value()); feedback != nullptr){
             Logger::message(std::format("[DCClientConnection] Send feedback of type [{}].\n", static_cast<int>(feedback->receivedMessageType)));
             m_udpSenderG.send_feedback_message(*feedback);
-            Logger::message("end Feedback\n");
         }
 
         if(auto frame = std::get_if<std::shared_ptr<cam::DCCompressedFrame>>(&message.value()); frame != nullptr){

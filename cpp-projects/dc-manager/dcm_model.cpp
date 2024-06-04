@@ -100,18 +100,18 @@ auto DCMModel::ask_calibration() -> void{
     DCMSignals::get()->calibrate_signal(std::move(models));
 }
 
-auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
-    if(settings.useNormalFilteringSettings != useNormalMode){
-        settings.useNormalFilteringSettings = useNormalMode;
-        for(const auto &grabber : settings.grabbersS){
-            if(useNormalMode){
-                sNetwork->update_filters_settings(grabber.id, grabber.filters);
-            }else{
-                sNetwork->update_filters_settings(grabber.id, grabber.calibrationFilters);
-            }
-        }
-    }
-}
+// auto DCMModel::update_filtering_mode(bool useNormalMode) -> void{
+//     if(settings.useNormalFilteringSettings != useNormalMode){
+//         settings.useNormalFilteringSettings = useNormalMode;
+//         for(const auto &grabber : settings.grabbersS){
+//             if(useNormalMode){
+//                 sNetwork->update_filters_settings(grabber.id, grabber.filters);
+//             }else{
+//                 sNetwork->update_filters_settings(grabber.id, grabber.calibrationFilters);
+//             }
+//         }
+//     }
+// }
 
 auto DCMModel::update_filters(size_t id, const cam::DCFiltersSettings &filters) -> void {
     settings.grabbersS[id].filters = filters;

@@ -55,10 +55,10 @@ auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DC
         auto visibilty = (ii == modelId) || (ii == sourceId) || allSelection;
 
         auto &cdC = cloudsD[ii]->display;
-        cdC.cloudVisible = m_settings.displayCalibrationCloud && visibilty;
+        cdC.showCloud = m_settings.displayCalibrationCloud && visibilty;
 
         auto &cdP = cloudsD[grabbersData->size()  + ii]->display;
-        cdP.cloudVisible = m_settings.displayProcessedCloud && visibilty;
+        cdP.showCloud = m_settings.displayProcessedCloud && visibilty;
     }
     m_redrawClouds = true;
 }
@@ -85,16 +85,20 @@ auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DC
 
     auto &cdC = cloudsD[idGrabber]->display;
     cdC.forceCloudColor = true;
-    cdC.cloudColor = cloudDisplay.cloudColor;
-    cdC.sizePoints = cloudDisplay.sizePoints;
-    cdC.useVoxels  = cloudDisplay.useVoxels;
-    cdC.sizeVoxels = cloudDisplay.sizeVoxels;
+    cdC.backFaceCulling = false;
+    cdC.cloudColor      = cloudDisplay.cloudColor;
+    cdC.circles         = cloudDisplay.circles;
+    cdC.pointSize       = cloudDisplay.pointSize;
+    cdC.squareSize      = cloudDisplay.squareSize;
+    cdC.circleRadius    = cloudDisplay.circleRadius;
 
-    auto &cdP = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
-    cdP.cloudColor = cloudDisplay.cloudColor * 0.5f;
-    cdP.sizePoints = cloudDisplay.sizePoints * 2.f;
-    cdP.useVoxels  = cloudDisplay.useVoxels;
-    cdP.sizeVoxels = cloudDisplay.sizeVoxels * 1.2f;
+    auto &cdP       = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
+    cdP.backFaceCulling = false;
+    cdP.cloudColor  = cloudDisplay.cloudColor * 0.5f;
+    cdP.pointSize   = cloudDisplay.pointSize * 2.f;
+    cdP.circles     = cloudDisplay.circles;
+    cdP.squareSize  = cloudDisplay.squareSize * 1.2f;
+    cdC.squareSize  = cloudDisplay.squareSize;
 
     m_redrawClouds = true;
 }

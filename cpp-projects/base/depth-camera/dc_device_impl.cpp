@@ -43,7 +43,7 @@ using namespace tool::cam;
 
 auto DCDeviceImpl::do_loop() -> void{
 
-    executor = std::make_unique<tf::Executor>();
+    executor = std::make_unique<tf::Executor>(1);
 
 
 
@@ -74,7 +74,9 @@ auto DCDeviceImpl::do_loop() -> void{
     auto filterInfraFromDepthT = taskf.emplace([&](){filter_infra_from_depth();}).name("filter_infra_from_depth");
     auto mixInfraWithBodyTrackingT = taskf.emplace([&](){mix_infra_with_body_tracking();}).name("mix_infra_with_body_tracking");
 
-    auto startUpdateCompressedFrameT = taskf.emplace([&](){}).name("start_update_compressed_frame");
+    auto startUpdateCompressedFrameT = taskf.emplace([&](){
+
+    }).name("start_update_compressed_frame");
     auto updateCompressedFrameColorT = taskf.emplace([&](){update_compressed_frame_color();}).name("update_compressed_frame_color");
     auto updateCompressedFrameDepthSizedColorT = taskf.emplace([&](){update_compressed_frame_depth_sized_color();}).name("update_compressed_frame_depth_sized_color");
     auto updateCompressedFrameDepthT = taskf.emplace([&](){update_compressed_frame_depth();}).name("update_compressed_frame_depth");
@@ -141,9 +143,6 @@ auto DCDeviceImpl::do_loop() -> void{
         }
     }).name("send_frame");
 
-
-
-
     filterDepthT.succeed(
         preprocessColorImageT, preprocessDepthSizedColorImageT, preprocessDepthImageT,
         preprocessInfraImageT, preprocessCloudImageT, preprocessBodyTrackingImageT
@@ -209,36 +208,37 @@ auto DCDeviceImpl::do_loop() -> void{
         update_from_data_settings();
 
         {
-            auto t = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
+            auto tCF = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
             captureSuccess = capture_frame(mInfos.timeout_ms());
             if(!captureSuccess){
                 dataIsValid = false;
                 continue;
             }
         }
+
         timeM.start("READ_IMAGES"sv);
         {
-            auto t = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
+            auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
             read_color_image(mInfos.has_color() && cDataS.capture_color());
         }
         {
-            auto t = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
+            auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
             read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
         }
         {
-            auto t = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
+            auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
             read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
         }
         {
-            auto t = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
+            auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
             read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
         }
         {
-            auto t = TimeDiffGuard(timeM, "READ_AUDIO"sv);
+            auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
             read_audio(cDataS.capture_audio() && mInfos.has_audio());
         }
         {
-            auto t = TimeDiffGuard(timeM, "READ_IMU"sv);
+            auto tRI = TimeDiffGuard(timeM, "READ_IMU"sv);
             read_IMU(cDataS.capture_imu());
         }
         timeM.end("READ_IMAGES"sv);
@@ -247,7 +247,7 @@ auto DCDeviceImpl::do_loop() -> void{
 
         if(captureSuccess && dataIsValid){
 
-            auto t = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
+            auto tPD = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
 
             // timeM.start("PROCESSING_DATA"sv);
             if(cDataS.client.generation.has_data_to_generate()){
@@ -262,109 +262,120 @@ auto DCDeviceImpl::do_loop() -> void{
             }
 
             {
-                auto t = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
+                auto tCCI = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
                 convert_color_image();
             }
             {
-                auto t = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
+                auto tRCI = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
                 resize_color_image_to_depth_size();
             }
             {
-                auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
+                auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
                 generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
             }
 
-            executor->run(taskf).wait();
+            // executor->run(taskf).wait();
 
-            // preprocess_color_image();
-            // preprocess_depth_sized_color_image();
-            // preprocess_depth_image();
-            // preprocess_infra_image();
-            // preprocess_cloud_image();
-            // preprocess_body_tracking_image();
+            {
+                auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
+                preprocess_color_image();
+                preprocess_depth_sized_color_image();
+                preprocess_depth_image();
+                preprocess_infra_image();
+                preprocess_cloud_image();
+                preprocess_body_tracking_image();
+            }
 
-            // timeM.start("FILTER_DEPTH"sv);
-            // filter_depth_basic();
-            // filter_depth_from_depth_sized_color();
-            // filter_depth_from_infra();
-            // filter_depth_from_cloud();
-            // filter_depth_from_body_tracking();
-            // filter_depth_complex();
-            // update_valid_depth_values();
-            // timeM.end("FILTER_DEPTH"sv);
+            {
+                auto tFD = TimeDiffGuard(timeM, "FILTER_DEPTH"sv);
+                filter_depth_basic();
+                filter_depth_from_depth_sized_color();
+                filter_depth_from_infra();
+                filter_depth_from_cloud();
+                filter_depth_from_body_tracking();
+                filter_depth_complex();
+                update_valid_depth_values();
+            }
 
-            // filter_depth_sized_color_from_depth();
-            // mix_depth_sized_color_with_body_tracking();
+            {
+                auto tFO = TimeDiffGuard(timeM, "FILTER_OTHER"sv);
+                filter_depth_sized_color_from_depth();
+                mix_depth_sized_color_with_body_tracking();
+                filter_infra_from_depth();
+                mix_infra_with_body_tracking();
+            }
 
-            // filter_infra_from_depth();
-            // mix_infra_with_body_tracking();
+            {
+                auto tUCF = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME"sv);
+                update_compressed_frame_color();
+                update_compressed_frame_depth_sized_color();
+                update_compressed_frame_depth();
+                update_compressed_frame_infra();
+                update_compressed_frame_cloud();
+                update_compressed_frame_audio();
+                update_compressed_frame_imu();
+                update_compressed_frame_bodies();
+                update_compressed_frame_calibration();
+            }
 
 
-            // update_compressed_frame_color();
-            // update_compressed_frame_depth_sized_color();
-            // update_compressed_frame_depth();
-            // update_compressed_frame_infra();
-            // update_compressed_frame_cloud();
-            // update_compressed_frame_audio();
-            // update_compressed_frame_imu();
-            // update_compressed_frame_bodies();
-            // update_compressed_frame_calibration();
+            {
+                auto tFCF = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
+                if(cFrame != nullptr){
+                    // set infos
+                    cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
+                    cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
+                    cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
+                    cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
+                    cFrame->mode               = settings.config.mode;
+                    cFrame->validVerticesCount = fData.validDepthValues;
 
-            // {
-                // auto tfcf = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
-                // if(cFrame != nullptr){
-                //     // set infos
-                //     cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
-                //     cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
-                //     cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
-                //     cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
-                //     cFrame->mode               = settings.config.mode;
-                //     cFrame->validVerticesCount = fData.validDepthValues;
+                    // add frame
+                    frames.add_compressed_frame(std::move(cFrame));
+                    cFrame = nullptr;
+                }
+            }
+            {
+                auto tSCF = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
+                if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+                    dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
+                }
+            }
 
-                //     // add frame
-                //     frames.add_compressed_frame(std::move(cFrame));
-                //     cFrame = nullptr;
-                // }
-            // }
-            // {
-                // auto tscf = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
-                // if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-                //     dcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
-                // }
-            // }
+            {
+                auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
+                update_frame_color();
+                update_frame_depth_sized_color();
+                update_frame_depth();
+                update_frame_infra();
+                update_frame_cloud();
+                update_frame_audio();
+                update_frame_imu();
+                update_frame_bodies();
+                update_frame_calibration();
+            }
 
-            // update_frame_color();
-            // update_frame_depth_sized_color();
-            // update_frame_depth();
-            // update_frame_infra();
-            // update_frame_cloud();
-            // update_frame_audio();
-            // update_frame_imu();
-            // update_frame_bodies();
-            // update_frame_calibration();
+            {
+                auto tFF = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
+                if(frame != nullptr){
 
-            // {
-            //     auto tff = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
-            //     if(frame != nullptr){
+                    // set infos
+                    frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
+                    frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
+                    frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
+                    frame->mode            = settings.config.mode;
 
-            //         // set infos
-            //         frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
-            //         frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
-            //         frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
-            //         frame->mode            = settings.config.mode;
+                    frames.add_frame(std::move(frame));
+                    frame = nullptr;
+                }
+            }
 
-            //         frames.add_frame(std::move(frame));
-            //         frame = nullptr;
-            //     }
-            // }
-
-            // {
-            //     auto tsf = TimeDiffGuard(timeM, "SEND_FRAME"sv);
-            //     if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-            //         dcDevice->new_frame_signal(std::move(frameToSend));
-            //     }
-            // }
-            // timeM.end("PROCESSING_DATA"sv);
+            {
+                auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
+                if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
+                    dcDevice->new_frame_signal(std::move(frameToSend));
+                }
+            }
         }
 
         if(captureSuccess){
@@ -1033,7 +1044,9 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
             }
 
             auto idV = std::get<1>(idC);
-            frame->cloud.vertices[idV] = fData.depthCloud[idD].template conv<float>()*0.001f;
+
+            Pt3f currentP = fData.depthCloud[idD].template conv<float>();
+            frame->cloud.vertices[idV] = currentP * 0.001f;
 
             if(addColors){
                 frame->cloud.colors[idV] = geo::Pt3f{
@@ -1050,48 +1063,56 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
                 frame->cloud.colors[idV] = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
             }
 
-            // A B C
-            // D I E
-            // F G H
-            const auto &idN   = fIndices.neighbours8Depth1D[idD];
-            const auto &idDVC = fIndices.depthVertexCorrrespondance;
-            const auto &v     = frame->cloud.vertices;
-            Vec3f normal{};
+            const auto &idN  = fIndices.neighbours8Depth1D[idD];
+            int idNA = (idN[0] != -1) ? ((frame->depth[idN[0]] != dc_invalid_depth_value) ? idN[0] : -1) : -1;
+            int idNB = (idN[1] != -1) ? ((frame->depth[idN[1]] != dc_invalid_depth_value) ? idN[1] : -1) : -1;
+            int idNC = (idN[2] != -1) ? ((frame->depth[idN[2]] != dc_invalid_depth_value) ? idN[2] : -1) : -1;
+            int idND = (idN[3] != -1) ? ((frame->depth[idN[3]] != dc_invalid_depth_value) ? idN[3] : -1) : -1;
+            int idNE = (idN[4] != -1) ? ((frame->depth[idN[4]] != dc_invalid_depth_value) ? idN[4] : -1) : -1;
+            int idNF = (idN[5] != -1) ? ((frame->depth[idN[5]] != dc_invalid_depth_value) ? idN[5] : -1) : -1;
+            int idNG = (idN[6] != -1) ? ((frame->depth[idN[6]] != dc_invalid_depth_value) ? idN[6] : -1) : -1;
+            int idNH = (idN[7] != -1) ? ((frame->depth[idN[7]] != dc_invalid_depth_value) ? idN[7] : -1) : -1;
 
-            const auto &vId = v[idV];
-            if(idN[0] != -1 && std::get<1>(idDVC[idN[0]]) != -1){
-                if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vId x vIA
-                    normal += cross(v[std::get<1>(idDVC[idN[3]])] - vId, v[std::get<1>(idDVC[idN[0]])] - vId);
-                }
-                if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIA x vIB
-                    normal += cross(v[std::get<1>(idDVC[idN[0]])] - vId, v[std::get<1>(idDVC[idN[1]])] - vId);
-                }
+            Vec3f normal{0,0,0};
+            int count = 0;
+            if(idNA != -1 && idNB != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNB].template conv<float>()), vec(currentP, fData.depthCloud[idNA].template conv<float>())));
+                ++count;
             }
-            if(idN[2] != -1 && std::get<1>(idDVC[idN[2]]) != -1){
-                if(idN[1] != -1 && std::get<1>(idDVC[idN[1]]) != -1){ // vIB x vIC
-                    normal += cross(v[std::get<1>(idDVC[idN[1]])] - vId, v[std::get<1>(idDVC[idN[2]])] - vId);
-                }
-                if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIC x vIE
-                    normal += cross(v[std::get<1>(idDVC[idN[2]])] - vId, v[std::get<1>(idDVC[idN[4]])] - vId);
-                }
+            if(idNB != -1 && idNC != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNC].template conv<float>()), vec(currentP, fData.depthCloud[idNB].template conv<float>())));
+                ++count;
             }
-            if(idN[7] != -1 && std::get<1>(idDVC[idN[7]]) != -1){
-                if(idN[4] != -1 && std::get<1>(idDVC[idN[4]]) != -1){ // vIE x vIH
-                    normal += cross(v[std::get<1>(idDVC[idN[4]])] - vId, v[std::get<1>(idDVC[idN[7]])] - vId);
-                }
-                if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIH x vIG
-                    normal += cross(v[std::get<1>(idDVC[idN[7]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
-                }
+            if(idNC != -1 && idNE != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNE].template conv<float>()), vec(currentP, fData.depthCloud[idNC].template conv<float>())));
+                ++count;
             }
-            if(idN[5] != -1 && std::get<1>(idDVC[idN[5]]) != -1){
-                if(idN[6] != -1 && std::get<1>(idDVC[idN[6]]) != -1){ // vIG x vIF
-                    normal += cross(v[std::get<1>(idDVC[idN[5]])] - vId, v[std::get<1>(idDVC[idN[6]])] - vId);
-                }
-                if(idN[3] != -1 && std::get<1>(idDVC[idN[3]]) != -1){ // vIF x vID
-                    normal += cross(v[std::get<1>(idDVC[idN[6]])] - vId, v[std::get<1>(idDVC[idN[3]])] - vId);
-                }
+            if(idNE != -1 && idNH != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNH].template conv<float>()), vec(currentP, fData.depthCloud[idNE].template conv<float>())));
+                ++count;
             }
-            frame->cloud.normals[idV] = normalize(normal);
+            if(idNH != -1 && idNG != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNH].template conv<float>())));
+                ++count;
+            }
+            if(idNG != -1 && idNF != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNF].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
+                ++count;
+            }
+            if(idNF != -1 && idND != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNF].template conv<float>())));
+                ++count;
+            }
+            if(idND != -1 && idNA != -1){
+                normal += normalize(cross(vec(currentP, fData.depthCloud[idNA].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
+                ++count;
+            }
+
+            if(count != 0){
+                frame->cloud.normals[idV] = normalize(normal);
+            }else{
+                frame->cloud.normals[idV] = Vec3f{0.f,0.f,-1.f};
+            }
         });
 
     }else{

@@ -34,6 +34,7 @@ namespace tool::io {
 
 struct BinaryFileSettings : public BaseSettings{
 
+
     auto init_from_file(const std::string &filePath) -> bool{
         return init_from_binary_file(filePath);
     }

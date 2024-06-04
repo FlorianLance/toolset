@@ -34,6 +34,8 @@
 #include "geometry/obb3.hpp"
 // #include "utility/bit_mask.hpp"
 
+// #include "json.hpp"
+
 namespace tool::cam {
 
 enum class PlaneFilteringMode : std::int8_t{
@@ -43,6 +45,15 @@ enum class PlaneFilteringMode : std::int8_t{
 };
 
 struct DCFiltersSettings : io::BinaryFileSettings{
+
+    // auto to_json() -> std::string{
+
+    //     return "";
+    // }
+
+    // auto from_json(std::string_view json) -> void{
+
+    // }
 
     // depth filtering
     // # basic

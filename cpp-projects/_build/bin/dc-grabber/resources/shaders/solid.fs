@@ -1,15 +1,15 @@
-#version 400
+#version 430 core
 
-uniform vec4 Color;
-
+// layout
 layout ( location = 0 ) out vec4 FragColor;
 
-// color
+// uniforms
+// # color
 uniform vec4 unicolor = vec4(1,0,0,1);
 uniform bool enable_unicolor = true;
-
+uniform vec4 Color;
 
 void main()
 {
-    FragColor = unicolor;//enable_unicolor ? unicolor : Color;
+    FragColor = enable_unicolor ? unicolor : Color;
 }

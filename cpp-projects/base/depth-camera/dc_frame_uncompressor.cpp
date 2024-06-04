@@ -47,6 +47,8 @@
 
 #include "thirdparty/taskflow/taskflow.hpp"
 
+#include "dc_frame_indices.hpp"
+
 
 using namespace tool;
 using namespace tool::geo;
@@ -69,13 +71,15 @@ struct DCFrameUncompressor::Impl{
     data::FastPForDecoder cloudDecoder;
 
     // processing data
+    DCModeInfos mInfos;
+    DCFrameIndices indices;
     std::uint8_t lastidDevice = 0;
     DCMode lastMode = DCMode::Invalid;
     std::unique_ptr<k4a::transformation> k4aTransformation = nullptr;
     Buffer<geo::Pt3<std::int16_t>> pointCloud;
-    Buffer<geo::Pt2<int>> depthVertexCorrrespondance;
     tf::Taskflow taskFlow;
     tf::Executor executor;
+
 
     // local task data
     DCCompressedFrame *cFrame = nullptr;
@@ -94,7 +98,7 @@ struct DCFrameUncompressor::Impl{
         auto cInfraImageT               = taskFlow.emplace([&](){compute_infra_image();}).name("compute_infra_image");
         auto cCloudT                    = taskFlow.emplace([&](){
             if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
-                                       compute_cloud_from_depth();
+                compute_cloud_from_depth();
             }else{
                 // ...
             }
@@ -126,13 +130,36 @@ struct DCFrameUncompressor::Impl{
 
         cDepthImageT.succeed(cDepthDataT);
         cInfraImageT.succeed(cInfraDataT);
+    }
 
+    auto reset_timings() -> void{
+        tResetCalibration = {};
+        tComputeColorImage = {};
+        tComputeDephtSizedColorImage = {};
+        tComputeBodiesIdMapImage = {};
+        tComputeDepthData = {};
+        tComputeDepthImage = {};
+        tComputeInfraData = {};
+        tComputeInfraImage = {};
+        tComputeCloud = {};
+        tComputeColoredCloud = {};
+        tTotal = {};
+    }
 
-        // copy audio
-        // copy imu
-        // copy bodies id map
-        // copy
+    auto display_timings() -> void{
 
+        std::cout << "TIMES: "
+                  << "rc [" << tResetCalibration.count() << "] "
+                  << "cci [" << tComputeColorImage.count() << "] "
+                  << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
+                  << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
+                  << "cdd [" << tComputeDepthData.count() << "] "
+                  << "cdi [" << tComputeDepthImage.count() << "] "
+                  << "cid [" << tComputeInfraData.count() << "] "
+                  << "cii [" << tComputeInfraImage.count() << "] "
+                  << "cc [" << tComputeCloud.count() << "] "
+                  << "ccc [" << tComputeColoredCloud.count() << "] "
+                  << "tot [" << tTotal.count() << "]\n";
     }
 
     auto do_work_task(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
@@ -152,38 +179,39 @@ struct DCFrameUncompressor::Impl{
 
         // run task
         auto tStart = Time::nanoseconds_since_epoch();
-        executor.run(taskFlow).wait();
-        tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
 
-        // std::cout << "TIMES: "
-        //           << "rc [" << tResetCalibration.count() << "] "
-        //           << "cci [" << tComputeColorImage.count() << "] "
-        //           << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
-        //           << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
-        //           << "cdd [" << tComputeDepthData.count() << "] "
-        //           << "cdi [" << tComputeDepthImage.count() << "] "
-        //           << "cid [" << tComputeInfraData.count() << "] "
-        //           << "cii [" << tComputeInfraImage.count() << "] "
-        //           << "cc [" << tComputeCloud.count() << "] "
-        //           << "ccc [" << tComputeColoredCloud.count() << "] "
-        //           << "tot [" << tTotal.count() << "]\n";
+        if(mInfos.mode() != cFrame->mode){
+            mInfos.initialize(cFrame->mode);
+            indices.initialize(mInfos);
+        }
+
+        // start computing
+        executor.run(taskFlow).wait();
+
+        tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
-    auto do_work(DCCompressedFrame *ncFrame, DCFrame &nFrame) -> void{
+    auto do_work(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
 
         // frame
-        nFrame.idCapture      = ncFrame->idCapture;
-        nFrame.afterCaptureTS = ncFrame->afterCaptureTS;
-        nFrame.receivedTS     = ncFrame->receivedTS;
+        frame.idCapture      = cFrame->idCapture;
+        frame.afterCaptureTS = cFrame->afterCaptureTS;
+        frame.receivedTS     = cFrame->receivedTS;
 
         // info
-        nFrame.mode = ncFrame->mode;
+        frame.mode = cFrame->mode;
 
-        // set frames
-        cFrame = ncFrame;
-        frame  = &nFrame;
+        // set data
+        this->gSettings  = gSettings;
+        this->cFrame    = cFrame;
+        this->frame     = &frame;
 
         auto tStart = Time::nanoseconds_since_epoch();
+
+        if(mInfos.mode() != cFrame->mode){
+            mInfos.initialize(cFrame->mode);
+            indices.initialize(mInfos);
+        }
 
         // start computing
         reset_calibration();
@@ -198,19 +226,6 @@ struct DCFrameUncompressor::Impl{
         create_colored_cloud();
 
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
-
-        // std::cout << "TIMES: "
-        //           << "rc [" << tResetCalibration.count() << "] "
-        //           << "cci [" << tComputeColorImage.count() << "] "
-        //           << "cdsci [" << tComputeDephtSizedColorImage.count() << "] "
-        //           << "cbimi [" << tComputeBodiesIdMapImage.count() << "] "
-        //           << "cdd [" << tComputeDepthData.count() << "] "
-        //           << "cdi [" << tComputeDepthImage.count() << "] "
-        //           << "cid [" << tComputeInfraData.count() << "] "
-        //           << "cii [" << tComputeInfraImage.count() << "] "
-        //           << "cc [" << tComputeCloud.count() << "] "
-        //           << "ccc [" << tComputeColoredCloud.count() << "] "
-        //           << "tot [" << tTotal.count() << "]\n";
     }
 
     std::chrono::microseconds tResetCalibration;
@@ -225,11 +240,10 @@ struct DCFrameUncompressor::Impl{
     std::chrono::microseconds tComputeColoredCloud;
     std::chrono::microseconds tTotal;
 
+
 private:
 
-
     auto reset_calibration() -> void{
-
 
         auto tStart = Time::nanoseconds_since_epoch();
         if(!cFrame->calibration.empty()){
@@ -280,148 +294,12 @@ private:
     }
 
     auto compute_depth_data() -> void{
+
         auto tStart = Time::nanoseconds_since_epoch();
         if(!cFrame->fpfDepth.empty() && gSettings.depth){
             depthDecoder.decode(
                 cFrame->fpfDepth, frame->depth
-            );
-
-            // test
-            frame->normals.resize_image(frame->depth.width, frame->depth.height);
-
-            std::int32_t id = 0;
-            for(int ii = 0; ii < frame->depth.width; ++ii){
-                for(int jj = 0; jj < frame->depth.height; ++jj){
-
-                    // A B C
-                    // D I E
-                    // F G H
-                    std::int32_t idA = -1;
-                    std::int32_t idD = -1;
-                    std::int32_t idF = -1;
-                    std::int32_t idC = -1;
-                    std::int32_t idE = -1;
-                    std::int32_t idH = -1;
-                    std::int32_t idB = -1;
-                    std::int32_t idG = -1;
-
-                    bool notOnLeft   = jj > 0;
-                    bool notOnRight  = jj < frame->depth.width - 1;
-                    bool notOnTop    = ii > 0;
-                    bool notOnBottom = ii < frame->depth.height-1;
-
-
-                    if(notOnLeft){
-                        idD = id - 1;
-                        if(notOnTop){
-                            idA = id - static_cast<int>(frame->depth.width)-1;
-                        }
-                        if(notOnBottom){
-                            idF = id + static_cast<int>(frame->depth.width)-1;
-                        }
-                    }
-                    if(notOnRight){
-                        idE = id + 1;
-                        if(notOnTop){
-                            idC = id - static_cast<int>(frame->depth.width) + 1;
-                        }
-                        if(notOnBottom){
-                            idH = id + static_cast<int>(frame->depth.width) + 1;
-                        }
-                    }
-                    if(notOnTop){
-                        idB = id - static_cast<int>(frame->depth.width);
-                    }
-                    if(notOnBottom){
-                        idG = id + static_cast<int>(frame->depth.width);
-                    }
-
-                    float dzdx = 0.f;
-                    float dzdy = 0.f;
-
-                    if(notOnLeft && notOnRight && notOnTop && notOnBottom){
-
-                        dzdx =
-                           ((frame->depth[idC]-frame->depth[idA])+
-                            (frame->depth[idE]-frame->depth[idD])+
-                            (frame->depth[idH]-frame->depth[idF]))/6.f;
-
-                        dzdy =
-                            ((frame->depth[idF]-frame->depth[idA])+
-                             (frame->depth[idG]-frame->depth[idB])+
-                             (frame->depth[idH]-frame->depth[idC]))/6.f;
-
-                        frame->normals[id] = normalize(Vec3f(dzdx, dzdy, -1.0f));
-
-                    }else{
-                        frame->normals[id] = normalize(Vec3f(0, 0, -1.0f));
-                    }
-                    // else if(!notOnLeft && notOnTop && notOnBottom){
-
-                    //     dzdx =
-                    //         ((frame->depth[idC]-frame->depth[idA])+
-                    //          (frame->depth[idE]-frame->depth[idD])+
-                    //          (frame->depth[idH]-frame->depth[idF]))/6.f;
-
-                    //     dzdy =
-                    //         ((frame->depth[idF]-frame->depth[idA])+
-                    //          (frame->depth[idG]-frame->depth[idB])+
-                    //          (frame->depth[idH]-frame->depth[idC]))/6.f;
-
-
-                    // }else if(!notOnRight && notOnTop && notOnBottom){
-
-                    // }else if(!notOnTop && notOnLeft && notOnRight){
-
-                    // }else if(!notOnBottom && notOnLeft && notOnRight){
-
-                    // }else if(!notOnLeft && !notOnTop){
-
-                    // }else if(!notOnRight && !notOnTop){
-
-                    // }else if(!notOnLeft && !notOnBottom){
-
-                    // }else if(!notOnRight && !notOnBottom){
-
-                    // }
-
-                    ++id;
-                }
-            }
-
-            // for(int x = 1; x < frame->depth.width-1; ++x) {
-            //     for(int y = 1; y < frame->depth.height-1; ++y) {
-
-            //         auto right = frame->depth.get(x+1, y);
-            //         auto left  = frame->depth.get(x-1, y);
-
-            //         auto up    = frame->depth.get(x, y+1);
-            //         auto down  = frame->depth.get(x, y-1);
-
-
-            //         float dzdx = 0.f;
-            //         if(right > 0 && left > 0){
-            //             dzdx = (right - left)*0.5f;
-            //         }else if(right > 0){
-            //             dzdx = right;
-            //         }else if(left > 0){
-            //             dzdx = left;
-            //         }
-
-            //         float dzdy = 0.f;
-            //         if(up > 0 && down > 0){
-            //             dzdy = (up - down)*0.5f;
-            //         }else if(right > 0){
-            //             dzdy = up;
-            //         }else if(down > 0){
-            //             dzdy = down;
-            //         }
-            //         frame->normals.get(x,y) = normalize(Vec3f(dzdx, dzdy, -1.0f));
-            //     }
-            // }
-
-
-
+            );          
         }
         tComputeDepthData = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
@@ -490,16 +368,12 @@ private:
 
         frame->cloud.resize(cFrame->validVerticesCount, true);
 
-        if(depthVertexCorrrespondance.size() < frame->depth.size()){
-            depthVertexCorrrespondance.resize(frame->depth.size());
-        }
-
         int currentValidId = 0;
         for(size_t id = 0; id < frame->depth.size(); ++id){
             if(frame->depth[id] != dc_invalid_depth_value){
-                depthVertexCorrrespondance[id] = {static_cast<int>(id), currentValidId++};
+                indices.depthVertexCorrrespondance[id] = {static_cast<int>(id), currentValidId++};
             }else{
-                depthVertexCorrrespondance[id] = {static_cast<int>(id), 0};
+                indices.depthVertexCorrrespondance[id] = {static_cast<int>(id), 0};
             }
         }
 
@@ -516,7 +390,8 @@ private:
             return;
         }
 
-        auto useColors = !frame->rgbaDepthSizedColor.empty() && (gSettings.cloudColorMode == CloudColorMode::FromDepthSizedColorImage);
+        auto useColors  = !frame->rgbaDepthSizedColor.empty() && (gSettings.cloudColorMode == CloudColorMode::FromDepthSizedColorImage);
+
 
         static constexpr std::array<Pt3f, 5> depthGradient ={
             Pt3f{0.f,0.f,1.f},
@@ -530,26 +405,17 @@ private:
         const auto diff = dRange(1) - dRange(0);
 
         auto tStart = Time::nanoseconds_since_epoch();
-        std::for_each(std::execution::par_unseq, std::begin(depthVertexCorrrespondance), std::begin(depthVertexCorrrespondance) + frame->depth.size(), [&](const geo::Pt2<int> &id){
+        std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::begin(indices.depthVertexCorrrespondance) + frame->depth.size(), [&](auto idC){
 
-            auto idD = id.x();
+            auto idD = std::get<0>(idC);
             if(frame->depth[idD] == dc_invalid_depth_value){
                 return;
-            }
+            }            
 
-            auto idV = id.y();
-            // frame->cloud.vertices[idV]= geo::Pt3f{
-            //     static_cast<float>(-pointCloud[idD].x()),
-            //     static_cast<float>(-pointCloud[idD].y()),
-            //     static_cast<float>( pointCloud[idD].z())
-            // }*0.001f;
-            frame->cloud.vertices[idV]= geo::Pt3f{
-                static_cast<float>(pointCloud[idD].x()),
-                static_cast<float>(pointCloud[idD].y()),
-                static_cast<float>(pointCloud[idD].z())
-            }*0.001f;
+            auto idV = std::get<1>(idC);
 
-            frame->cloud.normals[idV] = frame->normals[idD];
+            Pt3f currentP = pointCloud[idD].template conv<float>();
+            frame->cloud.vertices[idV] = currentP * 0.001f;
 
             if(useColors){
                 frame->cloud.colors[idV] = geo::Pt3f{
@@ -568,7 +434,67 @@ private:
                    col.x(),col.y(),col.z()
                 };
             }
+
+            // A B C
+            // D I E
+            // F G H
+
+            // 0 1 2
+            // 3 X 4
+            // 5 6 7
+
+            const auto &idN  = indices.neighbours8Depth1D[idD];
+            int idNA = (idN[0] != -1) ? ((frame->depth[idN[0]] != dc_invalid_depth_value) ? idN[0] : -1) : -1;
+            int idNB = (idN[1] != -1) ? ((frame->depth[idN[1]] != dc_invalid_depth_value) ? idN[1] : -1) : -1;
+            int idNC = (idN[2] != -1) ? ((frame->depth[idN[2]] != dc_invalid_depth_value) ? idN[2] : -1) : -1;
+            int idND = (idN[3] != -1) ? ((frame->depth[idN[3]] != dc_invalid_depth_value) ? idN[3] : -1) : -1;
+            int idNE = (idN[4] != -1) ? ((frame->depth[idN[4]] != dc_invalid_depth_value) ? idN[4] : -1) : -1;
+            int idNF = (idN[5] != -1) ? ((frame->depth[idN[5]] != dc_invalid_depth_value) ? idN[5] : -1) : -1;
+            int idNG = (idN[6] != -1) ? ((frame->depth[idN[6]] != dc_invalid_depth_value) ? idN[6] : -1) : -1;
+            int idNH = (idN[7] != -1) ? ((frame->depth[idN[7]] != dc_invalid_depth_value) ? idN[7] : -1) : -1;
+
+            Vec3f normal{0,0,0};
+            int count = 0;
+            if(idNA != -1 && idNB != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNB].template conv<float>()), vec(currentP, pointCloud[idNA].template conv<float>())));
+                ++count;
+            }
+            if(idNB != -1 && idNC != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNC].template conv<float>()), vec(currentP, pointCloud[idNB].template conv<float>())));
+                ++count;
+            }
+            if(idNC != -1 && idNE != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNE].template conv<float>()), vec(currentP, pointCloud[idNC].template conv<float>())));
+                ++count;
+            }
+            if(idNE != -1 && idNH != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNH].template conv<float>()), vec(currentP, pointCloud[idNE].template conv<float>())));
+                ++count;
+            }
+            if(idNH != -1 && idNG != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNG].template conv<float>()), vec(currentP, pointCloud[idNH].template conv<float>())));
+                ++count;
+            }
+            if(idNG != -1 && idNF != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNF].template conv<float>()), vec(currentP, pointCloud[idNG].template conv<float>())));
+                ++count;
+            }
+            if(idNF != -1 && idND != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idND].template conv<float>()), vec(currentP, pointCloud[idNF].template conv<float>())));
+                ++count;
+            }
+            if(idND != -1 && idNA != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNA].template conv<float>()), vec(currentP, pointCloud[idND].template conv<float>())));
+                ++count;
+            }
+
+            if(count != 0){
+                frame->cloud.normals[idV] = normalize(normal);
+            }else{
+                frame->cloud.normals[idV] = Vec3f{0.f,0.f,-1.f};
+            }
         });
+
 
         tComputeColoredCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
@@ -580,57 +506,11 @@ DCFrameUncompressor::~DCFrameUncompressor(){
 }
 
 auto DCFrameUncompressor::uncompress(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
-    // i->do_work(cFrame,frame);
+
+    i->reset_timings();
     i->do_work_task(gSettings,cFrame,frame);
+    // i->do_work(gSettings, cFrame, frame);
+    // i->display_timings();
     return true;
 }
 
-
-// auto DCFrameUncompressor::Impl::convert_to_cloud(
-//     DCMode mode,
-//     size_t validVerticesCount,
-//     ColoredCloudData &cloud,
-//     std::vector<Pt3<uint8_t>> &uncompressedColor,
-//     std::vector<std::uint16_t> &uncompressedVertices
-//     ) -> void{
-
-//     const auto vvc = validVerticesCount;
-//     update_id_array(vvc);
-
-//     // resize cloud if necessary
-//     cloud.resize(vvc);
-
-//     if(mode != DCMode::Merged){
-
-//         for_each(std::execution::par_unseq, std::begin(indicesValid1D), std::begin(indicesValid1D) + vvc, [&](size_t id){
-
-//             cloud.vertices[id] = Pt3f{
-//                 -(static_cast<float>(uncompressedVertices[        id]) - 4096),
-//                 -(static_cast<float>(uncompressedVertices[vvc   + id]) - 4096),
-//                 static_cast<float>(uncompressedVertices  [2*vvc + id])
-//             }*0.001f;
-
-//             cloud.colors[id] = Pt3f{
-//                   static_cast<float>(uncompressedColor[id].x()),
-//                   static_cast<float>(uncompressedColor[id].y()),
-//                   static_cast<float>(uncompressedColor[id].z())
-//             }/255.f;
-//         });
-//     }else{
-
-//         for_each(std::execution::par_unseq, std::begin(indicesValid1D), std::begin(indicesValid1D) + vvc, [&](size_t id){
-
-//             cloud.vertices[id] = Pt3f{
-//                 static_cast<float>(uncompressedVertices[        id])  -32768.f,
-//                 static_cast<float>(uncompressedVertices[vvc   + id])  -32768.f,
-//                 static_cast<float>(uncompressedVertices [2*vvc + id]) -32768.f,
-//             }*0.001f;
-
-//             cloud.colors[id] = Pt3f{
-//                   static_cast<float>(uncompressedColor[id].x()),
-//                   static_cast<float>(uncompressedColor[id].y()),
-//                   static_cast<float>(uncompressedColor[id].z())
-//             }/255.f;
-//         });
-//     }
-// }

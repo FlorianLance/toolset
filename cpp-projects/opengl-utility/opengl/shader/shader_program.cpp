@@ -461,6 +461,10 @@ auto ShaderProgram::clean() -> void{
 
 auto ShaderProgram::load_from_files(std::span<const std::string> shadersPaths) -> bool{
 
+    for(const auto& sh : shadersPaths){
+        Logger::message(std::format("s:{}\n", sh));
+    }
+
     m_shadersFilePaths.resize(shadersPaths.size());
     std::copy(shadersPaths.begin(), shadersPaths.end(), m_shadersFilePaths.begin());
 
@@ -477,7 +481,7 @@ auto ShaderProgram::load_from_files(std::span<const std::string> shadersPaths) -
 
         // check if exists
         if(!fs::exists(path)){
-            Logger::error(std::format("[ShaderProgram::load_from_files] Shader path {} doesn't exists.\n"sv, path.string()));
+            Logger::error(std::format("[ShaderProgram::load_from_files] Shader path [{}] [{}] doesn't exists.\n"sv, path.string(), shaderPath));
             return false;
         }
 

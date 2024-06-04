@@ -203,19 +203,14 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 auto DCGLeftPanelChildDrawer::draw_device_tab_item(
     cam::DCDeviceSettings &device) -> void {
 
-    auto signals = DCGSignals::get();
-
-    bool updateDeviceList = false;
-
-    auto update = DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",
+    bool update = false;
+    DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",
         device,
-        updateDeviceList,
-        m_autoUpdate
+        update
     );
 
-
     if(update){
-        signals->update_device_settings_signal(device);
+        DCGSignals::get()->update_device_settings_signal(device);
     }
 }
 
@@ -224,9 +219,10 @@ auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
     const cam::DCConfigSettings &config,
     cam::DCFiltersSettings &filters) -> void {
 
-    auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters, m_autoUpdate);
-    ui.settingsFiltersSubPanelDisplayed  = std::get<0>(ret);
-    if(std::get<1>(ret)){
+    bool update =false;
+    auto tabOpened = DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters, update);
+    ui.settingsFiltersSubPanelDisplayed  = tabOpened;
+    if(update){
         DCGSignals::get()->update_filters_signal(filters);
     }
 }

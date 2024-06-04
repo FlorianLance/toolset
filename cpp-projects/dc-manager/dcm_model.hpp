@@ -64,7 +64,7 @@ struct DCMModel{
     auto ask_calibration() -> void;
 
     // # settings
-    auto update_filtering_mode(bool useNormalMode) -> void;
+    // auto update_filtering_mode(bool useNormalMode) -> void;
     auto update_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
     auto update_calibration_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
     auto update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void;

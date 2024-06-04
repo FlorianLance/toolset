@@ -33,7 +33,9 @@
 namespace tool {
 
 struct DCSceneDisplaySettings{
+
     geo::Pt4f backgroundColor = {0.83f, 0.84f, 0.81f, 1.f};
+    bool drawGrid = true;
 
     // local
     int drawOnlyCloudId = -1;
@@ -44,13 +46,25 @@ struct DCSceneDisplaySettings{
 };
 
 struct DCCloudDisplaySettings{
-    bool cloudVisible = true;
+
+    bool showCloud = true;
+    bool showCameraFrustum = true;
+    bool showFilteringGizmos = true;
+    bool showBodyTracking = false;
+
+    // colors
     bool forceCloudColor = false;
-    geo::Pt4f cloudColor = {1.f,0.f,0.f, 1.f};
     float factorUnicolor = 0.65f;
-    bool useVoxels = false;
-    float sizePoints = 5.f;
-    float sizeVoxels = 0.002f;
+    geo::Pt4f cloudColor = {1.f,0.f,0.f, 1.f};
+
+    // geometry    
+    bool backFaceCulling = true;
+    bool circles = true; // if no points will be used
+    // # points
+    float pointSize = 5.f;
+    // # circles
+    float squareSize   = 0.003f;
+    float circleRadius = 0.25f;
 
     // i/o
     static auto default_init_for_grabber() -> DCCloudDisplaySettings;

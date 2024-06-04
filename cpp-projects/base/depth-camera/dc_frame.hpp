@@ -49,9 +49,6 @@ struct DCFrame : Frame{
     ImageBuffer<std::uint16_t> depth;           // depth-sized
     ImageBuffer<std::uint16_t> infra;           // depth-sized
 
-    // test
-    ImageBuffer<geo::Vec3f> normals;            // depth-sized
-
     geo::ColoredCloudData cloud;                // valid-vertices sized
 
     // binary encoding

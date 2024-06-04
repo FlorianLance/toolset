@@ -45,6 +45,13 @@ struct SingleRingBuffer{
         }
     }
 
+    auto current() const noexcept  -> ElementType{
+        if(currentId < buffers.size()){
+            return buffers[currentId];
+        }
+        return {};
+    }
+
     auto increment() noexcept -> void{
         currentId = (currentId + 1) % buffers.size();
     }
