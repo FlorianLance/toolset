@@ -34,6 +34,7 @@
 #include "boost_asio.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
+#include "data/checksum.hpp"
 
 using namespace std::chrono_literals;
 using namespace std::chrono;
@@ -61,7 +62,7 @@ UdpSender::~UdpSender(){
     clean_socket();
 }
 
-auto UdpSender::is_opened() const -> bool{
+auto UdpSender::is_opened() const noexcept -> bool{
     return i->socket != nullptr;
 }
 
@@ -93,8 +94,6 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
 
     }catch (const boost::system::system_error& error){
         Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}.\n", targetName, port));
-        // Logger::error(std::format("UdpSender::init_socket: Cannot resolve target name {} with writing port {}, error message: {}.\n",
-        //                           targetName, port, error.what()));
         clean_socket();
         return false;
     }
@@ -118,11 +117,11 @@ auto UdpSender::clean_socket() -> void{
     i->socket = nullptr;
 }
 
-auto UdpSender::send_packet_data(int8_t *packetData, size_t nbBytes) -> size_t{
+auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_t{
 
     size_t bytesNbSent=0;
     try{
-        bytesNbSent = i->socket->send_to(boost::asio::buffer(packetData, nbBytes), i->endpoint->endpoint());
+        bytesNbSent = i->socket->send_to(boost::asio::buffer(packetData.data(), packetData.size()), i->endpoint->endpoint());
     } catch (const boost::system::system_error& error) {
         Logger::error(std::format("UdpSender::send_data: Cannot sent data to endpoint {}, error message: {}.\n",
             i->endpoint->endpoint().address().to_string(),
@@ -133,22 +132,20 @@ auto UdpSender::send_packet_data(int8_t *packetData, size_t nbBytes) -> size_t{
 }
 
 auto UdpSender::send_mono_packet(Header &header) -> size_t{
-    return send_packet_data(packetBuffer.data(), header.totalSizeBytes);
+    return send_packet_data(std::span(packetBuffer.data(), header.totalSizeBytes));
 }
 
+auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t {
 
-auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t{
-
-    constexpr size_t sizePacketHeader = sizeof (Header);
-    size_t sizePacketData   = sizeUdpPacket - sizePacketHeader;
-
-    size_t nbPacketsNeeded = allPacketsNbBytes / sizePacketData;
-    size_t rest            = allPacketsNbBytes % sizePacketData;
+    static constexpr size_t sizePacketHeader = sizeof (Header);
+    size_t sizePacketData  = sizeUdpPacket - sizePacketHeader;
+    size_t nbPacketsNeeded = dataToSend.size() / sizePacketData;
+    size_t rest            = dataToSend.size() % sizePacketData;
     if(rest > 0){
         ++nbPacketsNeeded;
     }
 
-    header.totalSizeBytes     = static_cast<std::uint32_t>(nbPacketsNeeded * sizeof(Header) + allPacketsNbBytes);
+    header.totalSizeBytes     = static_cast<std::uint32_t>(nbPacketsNeeded * sizePacketHeader + dataToSend.size());
     header.totalNumberPackets = static_cast<std::uint32_t>(nbPacketsNeeded);
 
     size_t nbBytesSent = 0;
@@ -159,39 +156,42 @@ auto UdpSender::send_packets(Header &header, size_t allPacketsNbBytes) -> size_t
         if(idP < header.totalNumberPackets -1){
             header.currentPacketSizeBytes = static_cast<std::uint16_t>(sizeUdpPacket);
         }else{
-            header.currentPacketSizeBytes = static_cast<std::uint16_t>(rest + sizeof (Header));
+            header.currentPacketSizeBytes = static_cast<std::uint16_t>(rest + sizePacketHeader);
         }
         
         header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
 
-        // copy header
+        // copy data
+        auto dataS = std::span(dataToSend.data() + header.dataOffset, header.currentPacketSizeBytes - sizePacketHeader);
         std::copy(
-            reinterpret_cast<std::int8_t*>(&header),
-            reinterpret_cast<std::int8_t*>(&header) + sizeof(Header),
-            packetBuffer.begin()
+            dataS.begin(), dataS.end(),
+            packetBuffer.begin() + sizePacketHeader
         );
 
-        // copy data
+        // compute data checksum
+        header.checkSum = data::Checksum::gen_crc16(dataS);
+
+        // copy header
         std::copy(
-            bufferToSend.data() + header.dataOffset,
-            bufferToSend.data() + header.dataOffset + header.currentPacketSizeBytes - sizeof(Header),
-            packetBuffer.begin() + sizeof(Header)
+            reinterpret_cast<std::byte*>(&header),
+            reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
+            packetBuffer.begin()
         );
 
         // send packet
         if(!i->simulateFailure){
-            nbBytesSent += send_packet_data(packetBuffer.data(), header.currentPacketSizeBytes);
+            nbBytesSent += send_packet_data(std::span(packetBuffer.data(), header.currentPacketSizeBytes));
         }else{
             // failure simulation
             if(rand()%100 > i->percentageFailture){
-                nbBytesSent += send_packet_data(packetBuffer.data(), header.currentPacketSizeBytes);
+                nbBytesSent += send_packet_data(std::span(packetBuffer.data(), header.currentPacketSizeBytes));
             }else{
                 nbBytesSent += header.currentPacketSizeBytes;
             }
         }
 
         // update offset
-        header.dataOffset += header.currentPacketSizeBytes - sizeof(Header);
+        header.dataOffset += header.currentPacketSizeBytes - sizePacketHeader;
     }
     return nbBytesSent;
 }
@@ -206,11 +206,27 @@ auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
     i->percentageFailture   = percentage;
 }
 
-auto UdpSender::generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header{
+auto UdpSender::generate_header(MessageType type) -> Header{
+    Header header;
+    header.type  = type;
+    if(currentIdMessages.contains(header.type)){
+        header.idMessage = currentIdMessages[header.type]++;
+        if(header.idMessage > 1000000){
+            currentIdMessages[type] = 0;
+        }
+    }else{
+        currentIdMessages[header.type] = 0;
+        header.idMessage = 0;
+    }
+    return header;
+}
+
+
+auto UdpSender::generate_dataless_header(MessageType type) -> Header{
 
     Header header;
     header.type                     = type;
-    header.totalSizeBytes           = static_cast<std::uint32_t>(sizeof(Header) + messageNbBytes);
+    header.totalSizeBytes           = static_cast<std::uint32_t>(sizeof(Header));
     header.totalNumberPackets       = 1;
     header.currentPacketId          = 0;
     header.currentPacketSizeBytes   = static_cast<std::uint16_t>(header.totalSizeBytes);
@@ -219,7 +235,7 @@ auto UdpSender::generate_mono_packet(MessageType type, size_t messageNbBytes) ->
 
     if(currentIdMessages.contains(type)){
         header.idMessage = currentIdMessages[type]++;
-        if(header.idMessage > 1000000){
+        if(header.idMessage > 100000){
             currentIdMessages[type] = 0;
         }
     }else{
@@ -229,3 +245,4 @@ auto UdpSender::generate_mono_packet(MessageType type, size_t messageNbBytes) ->
 
     return header;
 }
+

@@ -33,15 +33,36 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/string.hpp"
+#include "data/json_utility.hpp"
 
 using namespace tool;
 using namespace tool::net;
+using namespace tool::data;
+using json = nlohmann::json;
 
 
-UdpServerNetworkSettings::UdpServerNetworkSettings(){
-    sType   = io::SettingsType::Server_network;
-    version = io::Version::v1_0;
+auto UdpServerNetworkSettings::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // ...
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[UdpServerNetworkSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    }
 }
+
+auto UdpServerNetworkSettings::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    // ...
+
+    return json;
+}
+
 
 auto UdpServerNetworkSettings::reset_interfaces() -> void{
 
@@ -57,12 +78,35 @@ auto UdpServerNetworkSettings::reset_interfaces() -> void{
     }
 }
 
+// auto UdpServerNetworkSettings::write_to_text() const -> std::string{
+//     std::vector<std::string> lines;
+//     lines.reserve(clientsInfo.size() + 1);
+
+//     // write version
+//     lines.push_back(BaseSettings::write_to_text());
+
+//     // write header
+//     lines.push_back("local/remote | id_interface | reading_port | sending_address | sending_port | ipv4/ipv6");
+
+//     for(const auto &clientInfo : clientsInfo){
+//         lines.push_back(std::format("{} {} {} {} {} {}\n",
+//                                     clientInfo.local ? "local"sv : "remote"sv,
+//                                     clientInfo.idReadingInterface,
+//                                     clientInfo.readingPort,
+//                                     clientInfo.sendingAdress,
+//                                     clientInfo.sendingPort,
+//                                     clientInfo.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
+//     }
+//     return String::join(lines);
+// }
+
+
 auto UdpServerNetworkSettings::initialize(const std::string &filePath) -> bool{
 
     reset_interfaces();
 
     if(filePath.length() > 0){
-        return init_from_file(this->filePath = filePath);
+        return load_from_file(this->filePath = filePath);
     }
 
     Logger::error("UdpServerNetworkSettings::initialize: Empty path.\n");
@@ -166,24 +210,4 @@ auto UdpServerNetworkSettings::init_from_text(std::string_view &text) -> void{
     }
 }
 
-auto UdpServerNetworkSettings::write_to_text() const -> std::string{
-    std::vector<std::string> lines;
-    lines.reserve(clientsInfo.size() + 1);
 
-    // write version
-    lines.push_back(BaseSettings::write_to_text());
-
-    // write header
-    lines.push_back("local/remote | id_interface | reading_port | sending_address | sending_port | ipv4/ipv6");
-
-    for(const auto &clientInfo : clientsInfo){
-        lines.push_back(std::format("{} {} {} {} {} {}\n",
-            clientInfo.local ? "local"sv : "remote"sv,
-            clientInfo.idReadingInterface,
-            clientInfo.readingPort,
-            clientInfo.sendingAdress,
-            clientInfo.sendingPort,
-            clientInfo.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
-    }
-    return String::join(lines);
-}

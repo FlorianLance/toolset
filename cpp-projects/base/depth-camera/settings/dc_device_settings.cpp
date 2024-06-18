@@ -32,8 +32,45 @@
 
 // utility
 #include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 
+using namespace tool;
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
+using namespace tool::cam;
+
+auto DCDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    Logger::message("2\n");
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // config
+    Logger::message("3\n");
+    configS.init_from_json(read_object(json, unreadCount, "config"sv));
+    // data
+    Logger::message("4\n");
+    dataS.init_from_json(read_object(json, unreadCount, "data"sv));
+
+    Logger::message("5\n");
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
+    }
+}
+
+auto DCDeviceSettings::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv,              io::BaseSettings::convert_to_json());
+    // config
+    add_value(json, "config"sv,            configS.convert_to_json());
+    // data
+    add_value(json, "data"sv,              dataS.convert_to_json());
+
+    return json;
+}
 
 auto DCDeviceSettings::default_init_for_grabber() -> DCDeviceSettings{
     DCDeviceSettings device;
@@ -47,39 +84,13 @@ auto DCDeviceSettings::default_init_for_manager() -> DCDeviceSettings{
     return device;
 }
 
-DCDeviceSettings::DCDeviceSettings(){
-    sType   = io::SettingsType::Device;
-    version = io::Version::v1_0;
-}
-
-auto DCDeviceSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void {
-
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCDeviceSettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
-    }
+auto DCDeviceSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void {
 
     BaseSettings::init_from_data(data, offset, sizeData);
     configS.init_from_data(data, offset, sizeData);
     dataS.init_from_data(data, offset, sizeData);
+    
+    version = io::SettingsVersion::LastVersion;
 }
 
-auto DCDeviceSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
-
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCDeviceSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
-    }
-
-    BaseSettings::write_to_data(data, offset, sizeData);
-    configS.write_to_data(data, offset, sizeData);
-    dataS.write_to_data(data, offset, sizeData);
-}
-
-auto DCDeviceSettings::total_data_size() const noexcept -> size_t{
-    return
-        BaseSettings::total_data_size() +
-        configS.total_data_size() +
-        dataS.total_data_size();
-}
 

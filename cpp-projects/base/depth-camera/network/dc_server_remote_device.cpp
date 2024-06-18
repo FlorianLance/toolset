@@ -48,7 +48,6 @@ struct DCServerRemoteDevice::Impl{
     DCServerUdpSender dcUdpSender;
     DCServerUdpReader dcUdpReader;
 
-    std::int64_t initTimstampNs;
     std::int64_t averageTimestampDiffNs = 0;
     static constexpr std::uint16_t maxSizeUpdMessage = 9000;
 };
@@ -106,13 +105,13 @@ auto DCServerRemoteDevice::init_remote_connection() -> void{
         static_cast<int>(i->infos.protocol))
     );
 
-    i->initTimstampNs = i->dcUdpSender.send_init_message(
+    i->dcUdpSender.send_init_binary_message(
         UdpNetworkSendingSettings(
             i->infos.readingAdress,
             i->infos.readingPort,
             i->maxSizeUpdMessage
         )
-    ).currentPacketTimestampNs;
+    );
 }
 
 auto DCServerRemoteDevice::clean() -> void{
@@ -120,7 +119,7 @@ auto DCServerRemoteDevice::clean() -> void{
     // clean sender
     // # disconnect client
     if(i->dcUdpSender.is_opened()){
-        i->dcUdpSender.send_command_message(Command::Disconnect);
+        i->dcUdpSender.send_command_binary_message(Command::Disconnect);
     }
     // # clean socket
     i->dcUdpSender.clean_socket();
@@ -144,34 +143,34 @@ auto DCServerRemoteDevice::apply_command(Command command) -> void{
 
     switch(command){
     case Command::Disconnect:
-        i->dcUdpSender.send_command_message(Command::Disconnect);
+        i->dcUdpSender.send_command_binary_message(Command::Disconnect);
         break;
     case Command::Quit:
-        i->dcUdpSender.send_command_message(Command::Quit);
+        i->dcUdpSender.send_command_binary_message(Command::Quit);
         break;
     case Command::Shutdown:
-        i->dcUdpSender.send_command_message(Command::Shutdown);
+        i->dcUdpSender.send_command_binary_message(Command::Shutdown);
         break;
     case Command::Restart:
-        i->dcUdpSender.send_command_message(Command::Restart);
+        i->dcUdpSender.send_command_binary_message(Command::Restart);
         break;
     }
 }
 
 auto DCServerRemoteDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
-    i->dcUdpSender.send_update_device_settings_message(deviceS);
+    i->dcUdpSender.send_update_device_settings_bson_message(deviceS);
 }
 
 auto DCServerRemoteDevice::update_color_settings(const cam::DCColorSettings &colorS) -> void{
-    i->dcUdpSender.send_update_color_settings_message(colorS);
+    i->dcUdpSender.send_update_color_settings_bson_message(colorS);
 }
 
 auto DCServerRemoteDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
-    i->dcUdpSender.send_update_filters_settings_message(filtersS);
+    i->dcUdpSender.send_update_filters_settings_bson_message(filtersS);
 }
 
 auto DCServerRemoteDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
-    i->dcUdpSender.send_delay_settings_message(delayS);
+    i->dcUdpSender.send_delay_settings_binary_message(delayS);
 }
 
 auto DCServerRemoteDevice::device_connected() const noexcept -> bool {

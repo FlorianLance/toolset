@@ -205,12 +205,15 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
         (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
         (newConfigS.synchMode                       != currConfigS.synchMode) ||
         // body tracking
-        (newConfigS.btEnabled              != currConfigS.btEnabled) ||
+        (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
         (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
         (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
         (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
         // others
-        (newConfigS.disableLED                      != currConfigS.disableLED);
+        (newConfigS.disableLED                      != currConfigS.disableLED) ||
+        // color - depth calibration
+        (newConfigS.colorAlignmentTr                != currConfigS.colorAlignmentTr) ||
+        (newConfigS.colorAlignmentRot               != currConfigS.colorAlignmentRot);
 
     bool closeDevice = false;
     bool stopReading = false;

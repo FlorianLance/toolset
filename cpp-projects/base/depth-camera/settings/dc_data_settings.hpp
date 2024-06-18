@@ -48,7 +48,10 @@ struct DCCaptureDataSettings{
     bool bodyTracking   = false;
     float btTemporalSmoothing = 0.f;
     bool audio          = false;
-    bool imu            = false;    
+    bool imu            = false;
+
+    auto init_from_json(const nlohmann::json &json) -> void;
+    auto convert_to_json() const -> nlohmann::json;
 };
 
 struct DCFrameCompressionSettings{
@@ -68,6 +71,9 @@ struct DCFrameCompressionSettings{
     [[nodiscard]] constexpr auto has_data_to_compress() const noexcept -> bool{
         return  calibration || color || depth || depthSizedColor || infra || bodyTracking || audio || imu || cloud;
     }
+
+    auto init_from_json(const nlohmann::json &json) -> void;
+    auto convert_to_json() const -> nlohmann::json;
 };
 
 struct DCFrameGenerationSettings{
@@ -90,6 +96,9 @@ struct DCFrameGenerationSettings{
     [[nodiscard]] constexpr auto has_data_to_generate() const noexcept -> bool{
         return  calibration || depth || infra || colorImage || depthSizedColorImage || depthImage || infraImage || cloud || imu || bodyTracking || audio;
     }
+
+    auto init_from_json(const nlohmann::json &json) -> void;
+    auto convert_to_json() const -> nlohmann::json;
 };
 
 struct DCClientDataActions{
@@ -102,7 +111,7 @@ struct DCServerDataActions{
     DCFrameGenerationSettings generation;
 };
 
-struct DCDataSettings : io::BinaryFileSettings{
+struct DCDataSettings : io::BaseSettings{
 
     [[nodiscard]] constexpr auto capture_color()              const noexcept -> bool{return client.capture.color;}
     [[nodiscard]] constexpr auto capture_depth()              const noexcept -> bool{return client.capture.depth;}
@@ -115,14 +124,18 @@ struct DCDataSettings : io::BinaryFileSettings{
     DCClientDataActions client;
     DCServerDataActions server;
 
-    DCDataSettings();
-    DCDataSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-        DCDataSettings::init_from_data(data, offset, sizeData);
+    DCDataSettings(){
+        sType   = io::SettingsType::Device_data;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCDataSettings(std::span<const std::uint8_t> jsonBinary){
+        DCDataSettings::init_from_json_binary(jsonBinary);
     }
 
-    // i/o
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-    auto total_data_size() const noexcept-> size_t override;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    // legacy
+    auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
 };
 }

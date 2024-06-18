@@ -32,8 +32,76 @@
 // local
 #include "utility/io_data.hpp"
 #include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
+
+auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // actions
+    openDevice                    = read_value<bool>(json, unreadCount, "open_device"sv);
+    startReading                  = read_value<bool>(json, unreadCount, "start_reading"sv);
+    // device
+    typeDevice                    = static_cast<DCType>(read_value<int>(json, unreadCount, "type_device"sv));
+    idDevice                      = read_value<std::uint32_t>(json, unreadCount, "id_device"sv);
+    mode                          = static_cast<DCMode>(read_value<int>(json, unreadCount, "mode"sv));
+
+    // synch
+    synchronizeColorAndDepth      = read_value<bool>(json, unreadCount, "synchronize_color_and_depth"sv);
+    delayBetweenColorAndDepthUsec = read_value<int>(json, unreadCount, "delay_between_color_and_depth_usec"sv);
+    synchMode                     = static_cast<DCSynchronisationMode>(read_value<int>(json, unreadCount, "synch_mode"sv));
+    subordinateDelayUsec          = read_value<int>(json, unreadCount, "subordinate_delay_usec"sv);
+    // body tracking
+    btEnabled                     = read_value<bool>(json, unreadCount, "bt_enabled"sv);
+    btOrientation                 = static_cast<DCBTSensorOrientation>(read_value<int>(json, unreadCount, "bt_orientation"sv));
+    btProcessingMode              = static_cast<DCBTProcessingMode>(read_value<int>(json, unreadCount, "bt_processing_mode"sv));
+    btGPUId                       = read_value<std::int8_t>(json, unreadCount, "bt_GPU_id"sv);
+    // misc
+    disableLED                    = read_value<bool>(json, unreadCount, "disable_LED"sv);
+    // color - depth calibration
+    data::read_array<float>(json, unreadCount, "color_alignment_tr"sv, colorAlignmentTr.array);
+    data::read_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRot.array);
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
+    }
+}
+
+auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
+
+    json json;
+    // base
+    add_value(json, "base"sv,                                   io::BaseSettings::convert_to_json());
+    // actions
+    add_value(json, "open_device"sv,                            openDevice);
+    add_value(json, "start_reading"sv,                          startReading);
+    // device
+    add_value(json, "type_device"sv,                            static_cast<int>(typeDevice));
+    add_value(json, "id_device"sv,                              idDevice);
+    add_value(json, "mode"sv,                                   static_cast<int>(mode));
+    // synch
+    add_value(json, "synchronize_color_and_depth"sv,            synchronizeColorAndDepth);
+    add_value(json, "delay_between_color_and_depth_usec"sv,     delayBetweenColorAndDepthUsec);
+    add_value(json, "synch_mode"sv,                             static_cast<int>(synchMode));
+    add_value(json, "subordinate_delay_usec"sv,                 subordinateDelayUsec);
+    // body tracking
+    add_value(json, "bt_enabled"sv,                             btEnabled);
+    add_value(json, "bt_orientation"sv,                         static_cast<int>(btOrientation));
+    add_value(json, "bt_processing_mode"sv,                     static_cast<int>(btProcessingMode));
+    add_value(json, "bt_GPU_id"sv,                              btGPUId);
+    // misc
+    add_value(json, "disable_LED"sv,                            disableLED);
+    // color - depth calibration
+    add_array<float>(json, "color_alignment_tr"sv,              colorAlignmentTr.array);
+    add_array<float>(json, "color_alignment_rot"sv,             colorAlignmentRot.array);
+
+    return json;
+}
 
 auto DCConfigSettings::default_init_for_grabber() -> DCConfigSettings{
     DCConfigSettings config;
@@ -49,17 +117,8 @@ auto DCConfigSettings::default_init_for_manager() -> DCConfigSettings{
     return config;
 }
 
-DCConfigSettings::DCConfigSettings(){
-    sType   = io::SettingsType::Device_config;
-    version = io::Version::v1_0;
-}
 
-auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
-
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCConfigSettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
-    }
+auto DCConfigSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void{
 
     BaseSettings::init_from_data(data, offset, sizeData);
     // actions
@@ -81,57 +140,12 @@ auto DCConfigSettings::init_from_data(std::int8_t const * const data, size_t &of
     read(btGPUId, data, offset, sizeData);
     // others
     read(disableLED, data, offset, sizeData);
-}
-
-auto DCConfigSettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
-
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCConfigSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
+    
+    if(version > io::SettingsVersion::v1_0){
+        // color - depth calibration
+        read(colorAlignmentTr, data, offset, sizeData);
+        read(colorAlignmentRot, data, offset, sizeData);
     }
-
-    BaseSettings::write_to_data(data, offset, sizeData);
-    // actions
-    write(openDevice, data, offset, sizeData);
-    write(startReading, data, offset, sizeData);
-    // device
-    write(typeDevice, data, offset, sizeData);
-    write(idDevice, data, offset, sizeData);
-    write(mode, data, offset, sizeData);
-    // synch
-    write(synchronizeColorAndDepth, data, offset, sizeData);
-    write(delayBetweenColorAndDepthUsec, data, offset, sizeData);
-    write(synchMode, data, offset, sizeData);
-    write(subordinateDelayUsec, data, offset, sizeData);
-    // body tracking
-    write(btEnabled, data, offset, sizeData);
-    write(btOrientation, data, offset, sizeData);
-    write(btProcessingMode, data, offset, sizeData);
-    write(btGPUId, data, offset, sizeData);
-    // other
-    write(disableLED, data, offset, sizeData);
-}
-
-auto DCConfigSettings::total_data_size() const noexcept -> size_t{
-    return
-        BaseSettings::total_data_size() +
-        // actions
-        sizeof(openDevice) +
-        sizeof(startReading) +
-        // device
-        sizeof(typeDevice) +
-        sizeof(idDevice) +
-        sizeof(mode) +
-        // synch
-        sizeof(synchronizeColorAndDepth) +
-        sizeof(delayBetweenColorAndDepthUsec) +
-        sizeof(synchMode) +
-        sizeof(subordinateDelayUsec) +
-        // body tracking
-        sizeof(btEnabled) +
-        sizeof(btOrientation) +
-        sizeof(btProcessingMode) +
-        sizeof(btGPUId) +
-        // other
-        sizeof(disableLED);
+    
+    version = io::SettingsVersion::LastVersion;
 }

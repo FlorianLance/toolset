@@ -29,15 +29,33 @@
 
 // local
 #include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 #include "utility/string.hpp"
 
 using namespace tool;
 using namespace tool::net;
+using namespace tool::data;
+using json = nlohmann::json;
 
 
-UdpClientNetworkSettings::UdpClientNetworkSettings(){
-    sType   = io::SettingsType::Client_network;
-    version = io::Version::v1_0;
+auto UdpClientNetworkSettings::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    //
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[UdpClientNetworkSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    }
+}
+
+auto UdpClientNetworkSettings::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    //
+    return json;
 }
 
 auto UdpClientNetworkSettings::initialize() -> bool{
@@ -71,11 +89,15 @@ auto UdpClientNetworkSettings::init_sending_settings(const UdpNetworkSendingSett
 
 auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
 
+    Logger::message("UdpClientNetworkSettings::init_from_text\n");
+
     // read version
     io::BaseSettings::init_from_text(text);
 
     // skip header
     auto line = String::advance_view_to_delim(text, "\n"sv);
+
+    Logger::message(line);
 
     if(auto values = String::split_view(line, " "sv); values.size() >= 2){
 
@@ -101,15 +123,15 @@ auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
     }
 }
 
-auto UdpClientNetworkSettings::write_to_text() const -> std::string{
-    return std::format(
-        "{} {} {} {} {}\n",
-        BaseSettings::write_to_text(), // write version
-        "id_interface | reading_port | ipv4/ipv6\n"sv, // write header
-        udpReadingInterfaceId,
-        udpReadingPort,
-        udpReadingPort
-    );
-}
+// auto UdpClientNetworkSettings::write_to_text() const -> std::string{
+//     return std::format(
+//         "{} {} {} {} {}\n",
+//         BaseSettings::write_to_text(), // write version
+//         "id_interface | reading_port | ipv4/ipv6\n"sv, // write header
+//         udpReadingInterfaceId,
+//         udpReadingPort,
+//         udpReadingPort
+//     );
+// }
 
 

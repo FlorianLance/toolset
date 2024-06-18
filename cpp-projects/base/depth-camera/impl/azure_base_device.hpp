@@ -72,7 +72,7 @@ struct AzureBaseDevice{
     auto resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData) -> std::span<ColorRGBA8>;
     auto generate_cloud() -> std::span<geo::Pt3<std::int16_t>>;
 
-private:
+private:    
 
     struct Impl;
     std::unique_ptr<Impl> i;

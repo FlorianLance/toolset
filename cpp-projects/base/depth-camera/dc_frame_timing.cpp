@@ -108,11 +108,13 @@ auto TimeDiffManager::display() -> void{
 }
 
 TimeDiffGuard::TimeDiffGuard(TimeDiffManager &t, std::string_view id) : m_id(id){
+    // Logger::log(id);
     m_t = &t;
     m_t->start(m_id);
 }
 
 TimeDiffGuard::~TimeDiffGuard(){
+    // Logger::log(std::format("end: {}", m_id));
     m_t->end(m_id);
 }
 

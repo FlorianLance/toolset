@@ -76,12 +76,14 @@ auto DCGSettings::initialize() -> bool{
     // # read network config file
     if(std::filesystem::exists(DCGPaths::hostNetwork)){
         netWorkFilePath = DCGPaths::hostNetwork.string();
+    }else if(std::filesystem::exists(DCGPaths::hostNetworkLegacy)){
+        netWorkFilePath = DCGPaths::hostNetworkLegacy.string();
     }else if(std::filesystem::exists(DCGPaths::defaultNetwork)){
         Logger::warning("Cannot find current host network file, use default instead.\n");
         netWorkFilePath = DCGPaths::defaultNetwork.string();
     }
     if(netWorkFilePath.length() > 0){
-        if(!networkS.init_from_file(netWorkFilePath)){
+        if(!networkS.load_from_file(netWorkFilePath)){
             return false;
         }
     }else{
@@ -108,11 +110,13 @@ auto DCGSettings::initialize() -> bool{
     // read filters settings file
     if(std::filesystem::exists(DCGPaths::hostFilters)){
         filtersFilePath = DCGPaths::hostFilters.string();
+    }else if(std::filesystem::exists(DCGPaths::hostFiltersLegacy)){
+        filtersFilePath = DCGPaths::hostFiltersLegacy.string();
     }else if(std::filesystem::exists(DCGPaths::defaultFilters)){
         filtersFilePath = DCGPaths::defaultFilters.string();
     }
     if(filtersFilePath.length() > 0){
-        filtersS.init_from_file(filtersFilePath);
+        filtersS.load_from_file(filtersFilePath);
     }else{
         Logger::error("No filters file found.\n");
     }
@@ -124,7 +128,7 @@ auto DCGSettings::initialize() -> bool{
         deviceFilePath = DCGPaths::defaultDevice.string();
     }
     if(deviceFilePath.length() > 0){
-        deviceS.init_from_file(deviceFilePath);
+        deviceS.load_from_file(deviceFilePath);
     }else{
         Logger::error("No device settings file found.\n");
     }
@@ -132,11 +136,13 @@ auto DCGSettings::initialize() -> bool{
     // read color settings file
     if(std::filesystem::exists(DCGPaths::hostColor)){
         colorFilePath = DCGPaths::hostColor.string();
+    }else if(std::filesystem::exists(DCGPaths::hostColorLegacy)){
+        colorFilePath = DCGPaths::hostColorLegacy.string();
     }else if(std::filesystem::exists(DCGPaths::defaultColor)){
         colorFilePath = DCGPaths::defaultColor.string();
     }
     if(colorFilePath.length() > 0){
-        colorS.init_from_file(colorFilePath);
+        colorS.load_from_file(colorFilePath);
     }else{
         Logger::error("No color settings file found.\n");
     }
@@ -144,11 +150,13 @@ auto DCGSettings::initialize() -> bool{
     // read model settings file
     if(std::filesystem::exists(DCGPaths::hostModel)){
         modelFilePath = DCGPaths::hostModel.string();
+    }else if(std::filesystem::exists(DCGPaths::hostModelLegacy)){
+        modelFilePath = DCGPaths::hostModelLegacy.string();
     }else if(std::filesystem::exists(DCGPaths::defaultModel)){
         modelFilePath = DCGPaths::defaultModel.string();
     }
     if(modelFilePath.length() > 0){
-        modelS.init_from_file(modelFilePath);
+        modelS.load_from_file(modelFilePath);
     }else{
         Logger::error("No calibration model file found.\n");
     }
@@ -158,9 +166,9 @@ auto DCGSettings::initialize() -> bool{
     return true;
 }
 
-auto DCGSettings::init_network_sending_settings(std::shared_ptr<net::UdpNetworkSendingSettings> networkSendingS) -> void{
+auto DCGSettings::init_network_sending_settings(UdpNetworkSendingSettings networkSendingS) -> void{
     auto lg = LogGuard("DCGSettings::init_network_sending_settings"sv);
-    networkS.init_sending_settings(*networkSendingS);
+    networkS.init_sending_settings(networkSendingS);
     triggers_init_network_sending_settings();
 }
 
@@ -270,17 +278,17 @@ auto DCGSettings::reset_device_settings() -> void{
 
 auto DCGSettings::save_device_settings_to_default_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_device_settings_to_default_file");
-    return deviceS.save_to_file(DCGPaths::defaultDevice.string());
+    return deviceS.save_to_json_str_file(DCGPaths::defaultDevice.string());
 }
 
 auto DCGSettings::save_device_settings_to_current_hostname_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_device_settings_to_current_hostname_file");
-    return deviceS.save_to_file(DCGPaths::hostDevice.string());
+    return deviceS.save_to_json_str_file(DCGPaths::hostDevice.string());
 }
 
 auto DCGSettings::load_default_device_settings_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_default_device_settings_file");
-    if(deviceS.init_from_file(DCGPaths::defaultDevice.string())){
+    if(deviceS.load_from_file(DCGPaths::defaultDevice.string())){
         triggers_device_settings();
         return true;
     }
@@ -289,7 +297,7 @@ auto DCGSettings::load_default_device_settings_file() -> bool{
 
 auto DCGSettings::load_current_hostname_device_settings_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_current_hostname_device_settings_file");
-    if(deviceS.init_from_file(DCGPaths::hostDevice.string())){
+    if(deviceS.load_from_file(DCGPaths::hostDevice.string())){
         triggers_device_settings();
         return true;
     }
@@ -304,17 +312,17 @@ auto DCGSettings::reset_filters() -> void{
 
 auto DCGSettings::save_filters_to_default_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_filters_to_default_file");
-    return filtersS.save_to_file(DCGPaths::defaultFilters.string());
+    return filtersS.save_to_json_str_file(DCGPaths::defaultFilters.string());
 }
 
 auto DCGSettings::save_filters_to_current_hostname_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_filters_to_current_hostname_file");
-    return filtersS.save_to_file(DCGPaths::hostFilters.string());
+    return filtersS.save_to_json_str_file(DCGPaths::hostFilters.string());
 }
 
 auto DCGSettings::load_default_filters_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_default_filters_file");
-    if(filtersS.init_from_file(DCGPaths::defaultFilters.string())){
+    if(filtersS.load_from_file(DCGPaths::defaultFilters.string())){
         triggers_filters_settings();
         return true;
     }
@@ -323,7 +331,7 @@ auto DCGSettings::load_default_filters_file() -> bool{
 
 auto DCGSettings::load_current_hostname_filters_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_current_hostname_filters_file");
-    if(filtersS.init_from_file(DCGPaths::hostFilters.string())){
+    if(filtersS.load_from_file(DCGPaths::hostFilters.string())){
         triggers_filters_settings();
         return true;
     }
@@ -338,17 +346,17 @@ auto DCGSettings::reset_color_settings() -> void{
 
 auto DCGSettings::save_color_settings_to_default_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_color_settings_to_default_file");
-    return colorS.save_to_file(DCGPaths::defaultColor.string());
+    return colorS.save_to_json_str_file(DCGPaths::defaultColor.string());
 }
 
 auto DCGSettings::save_color_settings_to_current_hostname_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_color_settings_to_current_hostname_file");
-    return colorS.save_to_file(DCGPaths::hostColor.string());
+    return colorS.save_to_json_str_file(DCGPaths::hostColor.string());
 }
 
 auto DCGSettings::load_default_settings_color_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_default_settings_color_file");
-    if(colorS.init_from_file(DCGPaths::defaultColor.string())){
+    if(colorS.load_from_file(DCGPaths::defaultColor.string())){
         triggers_color_settings();
         return true;
     }
@@ -357,7 +365,7 @@ auto DCGSettings::load_default_settings_color_file() -> bool{
 
 auto DCGSettings::load_current_hostname_color_settings_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_current_hostname_color_settings_file");
-    if(colorS.init_from_file(DCGPaths::hostColor.string())){
+    if(colorS.load_from_file(DCGPaths::hostColor.string())){
         triggers_color_settings();
         return true;
     }
@@ -372,17 +380,17 @@ auto DCGSettings::reset_model() -> void{
 
 auto DCGSettings::save_model_to_default_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_model_to_default_file");
-    return modelS.save_to_file(DCGPaths::defaultModel.string());
+    return modelS.save_to_json_str_file(DCGPaths::defaultModel.string());
 }
 
 auto DCGSettings::save_model_to_current_hostname_file() -> bool{
     auto lg = LogGuard("DCGSettings::save_model_to_current_hostname_file");
-    return modelS.save_to_file(DCGPaths::hostModel.string());
+    return modelS.save_to_json_str_file(DCGPaths::hostModel.string());
 }
 
 auto DCGSettings::load_default_model_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_default_model_file");
-    if(modelS.init_from_file(DCGPaths::defaultModel.string())){
+    if(modelS.load_from_file(DCGPaths::defaultModel.string())){
         triggers_model();
         return true;
     }
@@ -391,7 +399,7 @@ auto DCGSettings::load_default_model_file() -> bool{
 
 auto DCGSettings::load_current_hostname_model_file() -> bool{
     auto lg = LogGuard("DCGSettings::load_current_hostname_model_file");
-    if(modelS.init_from_file(DCGPaths::hostModel.string())){
+    if(modelS.load_from_file(DCGPaths::hostModel.string())){
         triggers_model();
         return true;
     }

@@ -30,40 +30,39 @@
 #include <format>
 
 // local
-#include "utility/io_data.hpp"
 #include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
+using namespace tool::cam;
 
-DCDelaySettings::DCDelaySettings(){
-    sType   = io::SettingsType::Delay;
-    version = io::Version::v1_0;
-}
+auto DCDelaySettings::init_from_json(const nlohmann::json &json) -> void{
 
-auto DCDelaySettings::init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void{
+    size_t unreadCount = 0;
+    // base
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // delay
+    delayMs   = read_value<std::int64_t>(json, unreadCount, "delay");
 
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCDelaySettings::init_from_data: Not enought data space for initializing data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[DCDelaySettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
-
-    BaseSettings::init_from_data(data, offset, sizeData);
-    read(delayMs, data, offset, sizeData);
 }
 
-auto DCDelaySettings::write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void{
+auto DCDelaySettings::convert_to_json() const -> nlohmann::json{
 
-    if(offset + total_data_size() > sizeData){
-        tool::Logger::error(std::format("DCDelaySettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-        return;
-    }
+    json json;
+    // base
+    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    // delay
+    add_value(json, "delay"sv,  delayMs);
 
-    BaseSettings::write_to_data(data, offset, sizeData);
-    write(delayMs, data, offset, sizeData);
+    return json;
 }
 
-auto DCDelaySettings::total_data_size() const noexcept -> size_t{
-    return
-        BaseSettings::total_data_size() +
-        sizeof(delayMs);
-}
+
+
+
+

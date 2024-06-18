@@ -40,7 +40,6 @@ LIBPNG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/libpng"
 LIBSOUNDIO_DIR                       = $$TOOLSET_CPP_THIRDPARTY_DIR"/libsoundio"
 LIBUSB_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/libusb"
 OPEN3D_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/Open3D-0.18"
-#OPENCV_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/opencv-3.4.7"
 OPENCV_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/opencv"
 QWT_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/qwt-6.2.0"
 SFML_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/SFML"
@@ -48,12 +47,12 @@ TURBOPFOR_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/TurboPFor-I
 FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
-#
 
 ########################################################## INCLUDES
 
 MODERN_JSON_INCLUDES = \
-    $$MODERN_JSON\
+    $$TOOLSET_CPP_THIRDPARTY_DIR\
+    $$MODERN_JSON_DIR\
 
 TURBOPFOR_INCLUDES = \
     $$TURBOPFOR_DIR"/include" \

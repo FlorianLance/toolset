@@ -291,9 +291,133 @@ auto dc_network_direct_player_export_test() -> void{
     delete__dc_network_direct_player(dcNetworkDirectPlayer);
 }
 
+#include "json.hpp"
+using json = nlohmann::json;
+
+auto test(const cam::DCFiltersSettings &f1) -> json{
+    return json{
+        {"min_widht_f",     f1.minWidthF},
+        {"max_widht_f",     f1.maxWidthF},
+        {"min_height_f",    f1.minHeightF},
+        {"max_height_f",    f1.maxHeightF},
+        {"min_depth_f",     f1.minDepthF},
+        {"max_depth_f",     f1.maxDepthF}
+    };
+}
 
 int main(int, char *[]){
 
+
+    cam::DCFiltersSettings f1;
+    std::cout << "b1:" << f1.minDepthF << "\n";
+    f1.minDepthF = 0.5f;
+
+    auto f1Str = f1.convert_to_json_str();
+
+    cam::DCFiltersSettings f2;
+    f2.init_from_json_str(f1Str);
+    std::cout << "b2:" << f2.minDepthF << "\n";
+
+    auto bin2 = f2.convert_to_json_binary();
+
+    std::cout << "size " << bin2.size() << "\n";
+
+    cam::DCFiltersSettings f3;
+    f3.init_from_json_binary(bin2);
+
+    std::cout << "b3:" << f3.minDepthF << "\n";
+
+    f3.save_to_json_str_file("D:/json_test.json");
+
+    cam::DCFiltersSettings f4;
+    f4.load_from_file("D:/json_test.json");
+
+    std::cout << "b4:" << f4.minDepthF << "\n";
+
+
+    f4.save_to_json_binary_file("D:/json_test.bson");
+
+    cam::DCFiltersSettings f5;
+    f5.load_from_file("D:/json_test.bson");
+    std::cout << "b5:" << f5.minDepthF << "\n";
+
+    return 0;
+
+
+    auto jsonF = test(f1);
+
+    // json j2
+    //     =  json{
+    //              {"min_widht_f",     f1.minWidthF},
+    //              {"max_widht_f",     f1.maxWidthF},
+    //              {"min_height_f",    f1.minHeightF},
+    //              {"max_height_f",    f1.maxHeightF},
+    //              {"min_depth_f",     f1.minDepthF},
+    //              {"max_depth_f",     f1.maxDepthF}
+    //             };
+
+    // auto b1 = json::to_bjdata(j2);
+    // auto b2 = json::to_bjdata(j2);
+    auto b3 = json::to_bson(jsonF);
+
+    json fff(json::from_bson(json::to_bson(jsonF)).dump(4));
+
+
+    std::cout << "jsonF " << jsonF.dump(4) << "\n" << json::from_bson(b3).dump(4) << "\n" << fff.dump(4) << "\n";
+    return 0 ;
+    // f1.minDepthF = 0.5;
+
+    auto str = f1.convert_to_json_str();
+    std::cout << "str " << str << "\n";
+
+    f1.convert_to_json_binary();
+
+    // cam::DCFiltersSettings f2;
+    // f2.init_from_json_binary(binary);
+    // // binary
+    // // auto str    = f.convert_to_json_str();
+
+    // std::cout << "b:" << f2.minDepthF << "\n";
+
+    // auto str = f2.convert_to_json_str();
+
+    // std::cout << "str:" << str << "\n";
+
+    // json v(str);
+    // std::cout << "-> " << v.dump() << "\n\n";
+
+    // for (auto& element : v) {
+    //     std::cout << element << '\n';
+    // }
+
+
+
+    // std::cout << "->->->\n";
+    // for (json::iterator it = v.begin(); it != v.end(); ++it) {
+    //     std::cout << it.key() << " : " << it.value() << "\n";
+    // }
+
+    return 0;
+
+
+    // std::string_view sstr = str;
+    // json v2(sstr);
+    // std::cout << "-> " << v2.dump() << "\n\n";
+
+
+
+    // std::cout << "cccc " << v2.contains("min_widht_f") << "\n";
+    // std::cout << "cccc " << v2.contains("max_widht_f") << "\n";
+    // std::cout << "cccc " << v2.contains("min_height_f") << "\n";
+
+    // cam::DCFiltersSettings f3;
+    // f3.init_from_json_str(str);
+
+
+
+    // std::cout << "str: " << f3.minDepthF << "\n";
+
+    return 0;
     // tool::StopWatch sw;
 
     // sw.start();

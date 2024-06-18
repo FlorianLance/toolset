@@ -62,10 +62,10 @@ struct DCCompressedFrame : Frame{
 
     // init
     auto init_from_file_stream(std::ifstream &file) -> void override;
-    auto init_from_data(std::span<const std::int8_t> data, size_t &offset) -> void override;
+    auto init_from_data(std::span<const std::byte> data, size_t &offset) -> void override;
     // write
     auto write_to_file_stream(std::ofstream &file) -> void override;
-    auto write_to_data(std::span<int8_t> data, size_t &offset) -> void override;
+    auto write_to_data(std::span<std::byte> data, size_t &offset) -> void override;
 
     // # legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;

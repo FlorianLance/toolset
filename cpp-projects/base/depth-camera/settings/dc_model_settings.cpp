@@ -30,14 +30,38 @@
 #include <format>
 
 // local
+#include "utility/logger.hpp"
+#include "data/json_utility.hpp"
+
 #include "utility/string.hpp"
 
-using namespace std::literals::string_view_literals;
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
 
-DCModelSettings::DCModelSettings(){
-    sType   = io::SettingsType::Model;
-    version = io::Version::v1_0;
+
+auto DCModelSettings::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // model
+    // read_array
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[DCModelSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    }
+}
+
+auto DCModelSettings::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    // model
+    add_array<float>(json, "transformation"sv,    transformation.array);
+
+    return json;
 }
 
 auto DCModelSettings::compute_full_transformation() const -> tool::geo::Mat4f{
@@ -62,13 +86,3 @@ auto DCModelSettings::init_from_text(std::string_view &text) -> void  {
     }
 }
 
-auto DCModelSettings::write_to_text() const -> std::string {
-    const auto &t = transformation;
-    return std::format("{}{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n",
-        BaseSettings::write_to_text(),
-        t.at(0),t.at(1),t.at(2),t.at(3),
-        t.at(4),t.at(5),t.at(6),t.at(7),
-        t.at(8),t.at(9),t.at(10),t.at(11),
-        t.at(12),t.at(13),t.at(14),t.at(15)
-    );
-}

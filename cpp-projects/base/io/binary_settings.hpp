@@ -32,29 +32,30 @@
 
 namespace tool::io {
 
-struct BinaryFileSettings : public BaseSettings{
+// struct BinaryFileSettings : public BaseSettings{
 
 
-    auto init_from_file(const std::string &filePath) -> bool{
-        return init_from_binary_file(filePath);
-    }
+//     auto init_from_file(const std::string &filePath) -> bool{
+//         return init_from_binary_file(filePath);
+//     }
 
-    auto save_to_file(const std::string &filePath) const -> bool{
-        return save_to_binary_file(filePath);
-    }
+//     auto save_to_file(const std::string &filePath) const -> bool{
+//         return save_to_binary_file(filePath);
+//     }
 
-    static auto save_to_file(const std::vector<BinaryFileSettings*> &settingsA, const std::string &filePath) -> bool{
-        return BaseSettings::save_to_binary_file(convert<BaseSettings>(settingsA), filePath);
-    }
+//     static auto save_to_file(const std::vector<BinaryFileSettings*> &settingsA, const std::string &filePath) -> bool{
+//         return BaseSettings::save_to_binary_file(convert<BaseSettings>(settingsA), filePath);
+//     }
 
-    static auto init_from_file(std::vector<BinaryFileSettings*> &settingsA, const std::string &filePath) -> bool{
-        auto s = convert<BaseSettings>(settingsA);
-        return BaseSettings::init_from_binary_file(s, filePath);
-    }
-};
+//     static auto init_from_file(std::vector<BinaryFileSettings*> &settingsA, const std::string &filePath) -> bool{
+//         auto s = convert<BaseSettings>(settingsA);
+//         return BaseSettings::init_from_binary_file(s, filePath);
+//     }
+// };
 
-struct BinarySettings : public BaseSettings{
-};
+// struct BinarySettings : public BaseSettings{
+
+// };
 
 }
 

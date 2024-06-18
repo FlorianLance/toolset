@@ -32,29 +32,29 @@
 
 namespace tool::io {
 
-struct TextSettings : public BaseSettings{
+// struct TextSettings : public BaseSettings{
 
-    auto init_from_file(const std::string &filePath) -> bool{
-        return init_from_text_file(filePath);
-    }
+//     auto init_from_file(const std::string &filePath) -> bool{
+//         return init_from_text_file(filePath);
+//     }
 
-    auto save_to_file(const std::string &filePath) const -> bool{
-        return save_to_text_file(filePath);
-    }
+//     auto save_to_file(const std::string &filePath) const -> bool{
+//         return save_to_text_file(filePath);
+//     }
 
-    static auto save_to_file(const std::vector<TextSettings*> &settingsA, const std::string &filePath) -> bool{
-        return BaseSettings::save_to_text_file(convert<BaseSettings>(settingsA), filePath);
-    }
+//     static auto save_to_file(const std::vector<TextSettings*> &settingsA, const std::string &filePath) -> bool{
+//         return BaseSettings::save_to_text_file(convert<BaseSettings>(settingsA), filePath);
+//     }
 
-    static auto init_from_file(std::vector<TextSettings*> &settingsA, const std::string &filePath) -> bool{
-        auto s = convert<BaseSettings>(settingsA);
-        return BaseSettings::init_from_text_file(s, filePath);
-    }
+//     static auto init_from_file(std::vector<TextSettings*> &settingsA, const std::string &filePath) -> bool{
+//         auto s = convert<BaseSettings>(settingsA);
+//         return BaseSettings::init_from_text_file(s, filePath);
+//     }
 
-private :
+// private :
 
-    virtual auto init_from_data(std::int8_t const * const, size_t &, size_t) -> void override {}
-    virtual auto write_to_data(std::int8_t * const, size_t &, size_t) const -> void override {}
-    virtual auto total_data_size() const noexcept-> size_t override {return 0;}
-};
+//     virtual auto init_from_data(std::int8_t const * const, size_t &, size_t) -> void override {}
+//     virtual auto write_to_data(std::int8_t * const, size_t &, size_t) const -> void override {}
+//     virtual auto total_data_size() const noexcept-> size_t override {return 0;}
+// };
 }

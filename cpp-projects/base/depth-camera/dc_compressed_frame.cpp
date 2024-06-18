@@ -50,7 +50,7 @@ auto buffer_bytes_size(const BinaryBuffer &iBuffer) -> size_t{
         sizeof(size_t) + iBuffer.size();
 }
 
-auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
+auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
     read(iBuffer.width, data, offset);
@@ -63,7 +63,7 @@ auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::int8_t> 
     }
 }
 
-auto read_buffer(BinaryBuffer &buffer, const std::span<const std::int8_t> data, size_t &offset) -> void{
+auto read_buffer(BinaryBuffer &buffer, const std::span<const std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
     size_t encodedDataSize = 0;
@@ -98,7 +98,7 @@ auto read_buffer(BinaryBuffer &buffer, std::ifstream &file) -> void{
     }
 }
 
-auto write_buffer(const BinaryImageBuffer &iBuffer, std::span<int8_t> data, size_t &offset) -> void{
+auto write_buffer(const BinaryImageBuffer &iBuffer, std::span<std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
     write(iBuffer.width,  data, offset);
@@ -109,7 +109,7 @@ auto write_buffer(const BinaryImageBuffer &iBuffer, std::span<int8_t> data, size
     }
 }
 
-auto write_buffer(const BinaryBuffer &buffer, std::span<int8_t> data, size_t &offset) -> void{
+auto write_buffer(const BinaryBuffer &buffer, std::span<std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
     write(buffer.size(), data, offset);
@@ -203,7 +203,7 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
 }
 
 
-auto DCCompressedFrame::init_from_data(std::span<const std::int8_t> data, size_t &offset) -> void{
+auto DCCompressedFrame::init_from_data(std::span<const std::byte> data, size_t &offset) -> void{
 
     // frame
     Frame::init_from_data( data, offset);
@@ -274,7 +274,7 @@ auto DCCompressedFrame::write_to_file_stream(std::ofstream &file) -> void{
     // }
 }
 
-auto DCCompressedFrame::write_to_data(std::span<int8_t> data, size_t &offset) -> void{
+auto DCCompressedFrame::write_to_data(std::span<std::byte> data, size_t &offset) -> void{
 
     // frame
     Frame::write_to_data(data, offset);

@@ -55,18 +55,19 @@ auto File::read_content(const std::string &filePath) -> std::optional<std::strin
     return {str};
 }
 
-auto File::write_text_content(const std::string &filePath, const std::string &text) -> bool{
+auto File::write_text_content(const std::string &filePath, std::string_view text) -> bool{
 
     std::ofstream file;
     file.open(filePath, std::ios::out);
     if(!file.is_open()){
         return false;
     }
+
     file.write(text.data(), text.size());
     return true;
 }
 
-auto File::write_binary_content(const std::string &filePath, const std::vector<int8_t> &data) -> bool{
+auto File::write_binary_content(const std::string &filePath, std::span<const std::int8_t> data) -> bool{
 
     std::ofstream file;
     file.open(filePath, std::ios::out | std::ios::binary);
@@ -76,6 +77,10 @@ auto File::write_binary_content(const std::string &filePath, const std::vector<i
 
     file.write(reinterpret_cast<const char*>(data.data()), data.size());
     return true;
+}
+
+auto File::write_binary_content(const std::string &filePath, std::span<const uint8_t> data) -> bool{
+    return write_binary_content(filePath, std::span<const std::int8_t>{reinterpret_cast<const std::int8_t*>(data.data()), data.size()});
 }
 
 auto File::execute_file(std::string_view filePath) -> bool{

@@ -28,10 +28,10 @@
 
 // local
 #include "geometry/matrix4.hpp"
-#include "io/text_settings.hpp"
+#include "io/settings.hpp"
 
 namespace tool::cam {
-struct DCModelSettings : io::TextSettings{
+struct DCModelSettings : io::BaseSettings{
 
     geo::Mat4f transformation = geo::Mat4f::identity();
 
@@ -40,11 +40,17 @@ struct DCModelSettings : io::TextSettings{
     geo::Vec3f translation = {};
     geo::Vec3f scaling = {1.f,1.f,1.f};
 
-    DCModelSettings();
+    DCModelSettings(){
+        sType   = io::SettingsType::Model;
+        version = io::SettingsVersion::LastVersion;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
     auto compute_full_transformation() const -> geo::Mat4f;
 
-    // i/o
+    // legacy
     auto init_from_text(std::string_view &text) -> void override;
-    auto write_to_text() const -> std::string override;
 };
 }

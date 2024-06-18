@@ -70,19 +70,24 @@ DCNetworkDirectPlayer::~DCNetworkDirectPlayer(){
     clean();
 }
 
-auto DCNetworkDirectPlayer::init_callbacks(NewFeedbackCB newFeedbackCB) -> void{
+auto DCNetworkDirectPlayer::init_callbacks(
+    LogMessageCB logCB,
+    NewFeedbackCB newFeedbackCB) -> void{
+    logMessageCBP  = std::make_unique<LogMessageCB>(logCB);
     newFeedbackCBP = std::make_unique<NewFeedbackCB>(newFeedbackCB);
 }
 
 auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePath) -> bool{
 
+    dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::initialize] Initialize from path: [{}]", networkSettingsFilePath));
+
     if(networkSettingsFilePath.empty()){
-        Logger::error("Network settings file with path is empty.\n");
+        dll_log_error("[DLL][DCNetworkDirectPlayer::initialize] Network settings file with path is empty.");
         return false;
     }
 
     if(!std::filesystem::exists(networkSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::initialize] Network settings file with path [{}] doesn't exist.\n", networkSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::initialize] Network settings file with path [{}] doesn't exist.", networkSettingsFilePath));
         return false;
     }
 
@@ -91,19 +96,18 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
         return false;
     }
 
-    Logger::message("Network infos:\n");
+    dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Network infos:");
     size_t id = 0;
     for(auto &info : serverNetworkS.clientsInfo){
-        Logger::message(std::format("ID:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].\n",
+        dll_log_message(std::format("ID:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].",
         id, info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
         ++id;
-
         info.startReadingThread = false;
     }
 
     auto nbConnections = serverNetworkS.clientsInfo.size();
     if(nbConnections == 0){
-        Logger::error("[DCNetworkDirectPlayer::initialize] No connection defined in network file.\n");
+        dll_log_error("[DLL][DCNetworkDirectPlayer::initialize] No connection defined in network file.");
         return false;
     }
 
@@ -162,12 +166,12 @@ auto DCNetworkDirectPlayer::clean() -> void{
 auto DCNetworkDirectPlayer::connect_to_devices() -> void{
 
     if(devices_nb() == 0){
-        Logger::error("[DCNetworkDirectPlayer::connect_to_devices] No devices available to be connected.\n");
+        dll_log_error("[DLL][DCNetworkDirectPlayer::connect_to_devices] No devices available to be connected.");
         return;
     }
 
     for(const auto &deviceD : devicesD){
-        Logger::message(std::format("Init connection with device: {}\n", deviceD.id));
+        dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::connect_to_devices] Init connection with device: {}", deviceD.id));
         serverNetwork.init_connection(deviceD.id);
     }
 }
@@ -195,23 +199,31 @@ auto DCNetworkDirectPlayer::is_device_connected(size_t idD) const noexcept -> bo
 auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSettingsPath) -> bool{
 
     if(deviceSettingsPath.length() == 0){
-        Logger::warning("Device settings file with path is empty.\n");
+        dll_log_warning("[DLL][DCNetworkDirectPlayer::update_device_settings] Device settings file with path is empty.");
         return false;
     }
 
     if(!std::filesystem::exists(deviceSettingsPath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_device_settings] Device settings file with path [{}] doesn't exist.\n", deviceSettingsPath));
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_device_settings] Device settings file with path [{}] doesn't exist.", deviceSettingsPath));
         return false;
     }
 
-    std::vector<io::BinaryFileSettings*> deviceSettingsFiles;
+    std::vector<io::BaseSettings*> deviceSettingsFiles;
     for(auto &grabberS : devicesD){
         deviceSettingsFiles.push_back(&grabberS.device);
     }
 
-    if(!io::BinaryFileSettings::init_from_file(deviceSettingsFiles, deviceSettingsPath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_device_settings] Error while reading device settings file with path [{}].\n", deviceSettingsPath));
+    if(!io::BaseSettings::load_multi_from_file(deviceSettingsFiles, deviceSettingsPath)){
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_device_settings] Error while reading device settings file with path [{}].\n", deviceSettingsPath));
         return false;
+    }
+
+    size_t idG = 0;
+    dll_log_message("[DLL][DCNetworkDirectPlayer::update_device_settings] Device settings files loaded:\n");
+    for(auto &grabberS : devicesD){
+        dll_log_message(std::format("[G{}][Config settings]\n{}", idG, grabberS.device.configS.convert_to_json_str()));
+        dll_log_message(std::format("[G{}][Data settings]\n{}", idG, grabberS.device.dataS.convert_to_json_str()));
+        ++idG;
     }
 
     // send settings
@@ -228,22 +240,22 @@ auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSett
 auto DCNetworkDirectPlayer::update_color_settings(const std::string &colorSettingsFilePath) -> bool{
 
     if(colorSettingsFilePath.length() == 0){
-        Logger::warning("Color settings file with path is empty.\n");
+        dll_log_warning("[DLL][DCNetworkDirectPlayer::update_color_settings] Color settings file with path is empty.\n");
         return true;
     }
 
     if(!std::filesystem::exists(colorSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_color_settings] Color settings file with path [{}] doesn't exist.\n", colorSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_color_settings] Color settings file with path [{}] doesn't exist.", colorSettingsFilePath));
         return false;
     }
 
-    std::vector<io::BinaryFileSettings*> colorSettingsFiles;
+    std::vector<io::BaseSettings*> colorSettingsFiles;
     for(auto &grabberS : devicesD){
         colorSettingsFiles.push_back(&grabberS.color);
     }
 
-    if(!io::BinaryFileSettings::init_from_file(colorSettingsFiles, colorSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_color_settings] Error while reading color settings file with path [{}].\n", colorSettingsFilePath));
+    if(!io::BaseSettings::load_multi_from_file(colorSettingsFiles, colorSettingsFilePath)){
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_color_settings] Error while reading color settings file with path [{}].", colorSettingsFilePath));
         return false;
     }
 
@@ -260,23 +272,31 @@ auto DCNetworkDirectPlayer::update_color_settings(const std::string &colorSettin
 auto DCNetworkDirectPlayer::update_filters_settings(const std::string &filtersSettingsFilePath) -> bool{
 
     if(filtersSettingsFilePath.length() == 0){
-        Logger::warning("Filters settings file with path is empty.\n");
+        dll_log_warning("[DLL][DCNetworkDirectPlayer::update_filters_settings] Filters settings file with path is empty.");
         return true;
     }
 
     if(!std::filesystem::exists(filtersSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_filters_settings] Filters settings file with path [{}] doesn't exist.\n", filtersSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_filters_settings] Filters settings file with path [{}] doesn't exist.", filtersSettingsFilePath));
         return false;
     }
 
-    std::vector<io::BinaryFileSettings*> filtersSettingsFiles;
+    std::vector<io::BaseSettings*> filtersSettingsFiles;
     for(auto &grabberS : devicesD){
         filtersSettingsFiles.push_back(&grabberS.filters);
     }
 
-    if(!io::BinaryFileSettings::init_from_file(filtersSettingsFiles, filtersSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_filters_settings] Error while reading filters settings file with path [{}].\n", filtersSettingsFilePath));
+    if(!io::BaseSettings::load_multi_from_file(filtersSettingsFiles, filtersSettingsFilePath)){
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_filters_settings] Error while reading filters settings file with path [{}].", filtersSettingsFilePath));
         return false;
+    }
+
+
+    size_t idG = 0;
+    dll_log_message("[DLL][DCNetworkDirectPlayer::update_filters_settings] Filters settings files loaded:\n");
+    for(auto &grabberS : devicesD){
+        dll_log_message(std::format("[G{}] Filters\n{}", idG, grabberS.filters.convert_to_json_str()));
+        ++idG;
     }
 
     // send settings
@@ -292,22 +312,22 @@ auto DCNetworkDirectPlayer::update_filters_settings(const std::string &filtersSe
 auto DCNetworkDirectPlayer::update_model_settings(const std::string &modelSettingsFilePath) -> bool{
 
     if(modelSettingsFilePath.length() == 0){
-        Logger::warning("Model settings file with path is empty.\n");
+        dll_log_warning("[DLL][DCNetworkDirectPlayer::update_model_settings] Model settings file with path is empty.");
         return true;
     }
 
     if(!std::filesystem::exists(modelSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_model_settings] Model settings file with path [{}] doesn't exist.\n", modelSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_model_settings] Model settings file with path [{}] doesn't exist.", modelSettingsFilePath));
         return false;
     }
 
-    std::vector<io::TextSettings*> modelsSettingsFiles;
+    std::vector<io::BaseSettings*> modelsSettingsFiles;
     for(auto &grabberS : devicesD){
         modelsSettingsFiles.push_back(&grabberS.model);
     }
 
-    if(!io::TextSettings::init_from_file(modelsSettingsFiles, modelSettingsFilePath)){
-        Logger::error(std::format("[DCNetworkDirectPlayer::update_model_settings] Error while reading model settings file with path [{}].\n", modelSettingsFilePath));
+    if(!io::BaseSettings::load_multi_from_file(modelsSettingsFiles, modelSettingsFilePath)){
+        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_model_settings] Error while reading model settings file with path [{}].", modelSettingsFilePath));
         return false;
     }
 
@@ -448,8 +468,8 @@ void delete__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlay
     delete dcNetworkDirectPlayer;
 }
 
-void init_callbacks__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, NewFeedbackCB newFeedbackCB){
-    dcNetworkDirectPlayer->init_callbacks(newFeedbackCB);
+void init_callbacks__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, LogMessageCB logCB, NewFeedbackCB newFeedbackCB){
+    dcNetworkDirectPlayer->init_callbacks(logCB, newFeedbackCB);
 }
 
 int initialize__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* networkSettingsFilePath){
@@ -482,10 +502,6 @@ int update_model_settings__dc_network_direct_player(DCNetworkDirectPlayer *dcNet
 
 int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
     return static_cast<int>(dcNetworkDirectPlayer->read_network_data(idD));
-}
-
-void process_feedbacks__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer){
-    // TODO: remove
 }
 
 int uncompress_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){

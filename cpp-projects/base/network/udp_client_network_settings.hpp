@@ -31,18 +31,11 @@
 
 // base
 #include "network/network_types.hpp"
-#include "io/text_settings.hpp"
+#include "io/settings.hpp"
 
 namespace tool::net {
 
-struct UdpClientNetworkSettings : io::TextSettings{
-
-    UdpClientNetworkSettings();
-    auto initialize() -> bool;
-    auto init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void;
-
-    auto is_connected_to_manager() const noexcept -> bool {return m_connectedToManager;}
-    auto disconnect_from_manager() -> void {m_connectedToManager = false;}
+struct UdpClientNetworkSettings : io::BaseSettings{
 
     // data
     size_t udpReadingInterfaceId = 0;
@@ -59,10 +52,24 @@ struct UdpClientNetworkSettings : io::TextSettings{
     size_t lastFrameIdSent = 0;
     std::chrono::nanoseconds lastFrameSentTS;
 
+    UdpClientNetworkSettings(){
+        sType   = io::SettingsType::Client_network;
+        version = io::SettingsVersion::LastVersion;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+
+    auto initialize() -> bool;
+    auto init_sending_settings(const UdpNetworkSendingSettings &sendingSettings) -> void;
+
+    auto is_connected_to_manager() const noexcept -> bool {return m_connectedToManager;}
+    auto disconnect_from_manager() -> void {m_connectedToManager = false;}
+
 private:
 
     auto init_from_text(std::string_view &text) -> void override;
-    auto write_to_text() const -> std::string override;
 
     // local
     bool m_connectedToManager = false;

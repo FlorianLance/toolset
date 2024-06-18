@@ -31,31 +31,73 @@
 #include "depth-camera/dc_compressed_frame.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
+#include "data/checksum.hpp"
 
 using namespace tool::cam;
 using namespace tool::net;
 using namespace std::chrono;
 
-
-auto DCClientUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
+auto DCClientUdpReader::process_packet(std::span<const std::byte> packet) -> void{
 
     auto headerData    = packet.first(sizeof(Header));
     auto dataToProcess = packet.subspan(sizeof(Header));
 
     Header header(headerData);
 
+    // check integrity
+    if(header.currentPacketSizeBytes != packet.size_bytes()){
+        // drop packet
+        Logger::error(std::format("[DCClientUdpReader::process_packet] Invalid packet size: [{}], expected: [{}]\n", header.currentPacketSizeBytes, packet.size_bytes()));
+        return;
+    }
+
+    if(header.checkSum != 0){
+        auto checksum = data::Checksum::gen_crc16(dataToProcess);
+        if(checksum != header.checkSum){
+            // drop packet
+            Logger::error(std::format("[DCClientUdpReader::process_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
+            return;
+        }
+    }
+
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::init_network_infos:{
         Logger::message("[DCClientUdpReader] init_network_infos message received.\n");
-        UdpNetworkSendingSettings initNetworkInfo;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(UdpNetworkSendingSettings), reinterpret_cast<std::int8_t*>(&initNetworkInfo));
-        init_network_infos_signal(std::move(header), std::make_shared<UdpNetworkSendingSettings>(std::move(initNetworkInfo)));
+        UdpNetworkSendingSettings network;
+        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(UdpNetworkSendingSettings), reinterpret_cast<std::byte*>(&network));
+        init_network_infos_signal(std::move(header), std::move(network));
+    }break;
+    case MessageType::delay:{
+
+        Logger::message("[DCClientUdpReader] delay message received.\n");
+        DCDelaySettings delay;
+        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCDelaySettings), reinterpret_cast<std::byte*>(&delay));
+        update_delay_signal(std::move(header), std::move(delay));
+
+    }break;
+    case MessageType::command:{
+
+        Logger::message("[DCClientUdpReader] command message received.\n");
+        Command command;
+        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Command), reinterpret_cast<std::byte*>(&command));
+        command_signal(std::move(header), command);
+
     }break;
     case MessageType::update_device_settings:{
-        Logger::message("[DCClientUdpReader] update_device_settings message received.\n");
-        DCDeviceSettings deviceSettings;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCDeviceSettings), reinterpret_cast<std::int8_t*>(&deviceSettings));
-        update_device_settings_signal(std::move(header), std::make_shared<DCDeviceSettings>(std::move(deviceSettings)));
+
+        deviceReception.update(header, dataToProcess, messagesBuffer);
+
+        if(auto info = deviceReception.message_fully_received(header); info.has_value()){
+            Logger::message("[DCClientUdpReader] update_device_settings message received.\n");
+            update_device_settings_signal(std::move(header), std::make_shared<cam::DCDeviceSettings>(
+                std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+            ));
+        }
+
+        if(auto nbMessageTimeout = deviceReception.check_message_timeout(); nbMessageTimeout != 0){
+            timeout_messages_signal(nbMessageTimeout);
+        }
+
     }break;
     case MessageType::update_filters:{
 
@@ -63,32 +105,31 @@ auto DCClientUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
 
         if(auto info = filtersReception.message_fully_received(header); info.has_value()){
             Logger::message("[DCClientUdpReader] update_filters message received.\n");
-            size_t offset = 0;
-            update_filters_signal(std::move(header), std::make_shared<cam::DCFiltersSettings>(info->messageData.data(), offset, info->messageData.size_bytes()));
+            update_filters_signal(std::move(header), std::make_shared<cam::DCFiltersSettings>(
+                std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+            ));
         }
 
-        if(auto nbMessageTimeout = filtersReception.check_timeout_frames(); nbMessageTimeout != 0){
+        if(auto nbMessageTimeout = filtersReception.check_message_timeout(); nbMessageTimeout != 0){
             timeout_messages_signal(nbMessageTimeout);
         }
 
     }break;
     case MessageType::update_color_settings:{
-        Logger::message("[DCClientUdpReader] update_color_settings message received.\n");
-        DCColorSettings colorSettings;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCColorSettings), reinterpret_cast<std::int8_t*>(&colorSettings));
-        update_color_settings_signal(std::move(header), std::make_shared<DCColorSettings>(std::move(colorSettings)));
-    }break;
-    case MessageType::delay:{
-        Logger::message("[DCClientUdpReader] delay message received.\n");
-        DCDelaySettings delaySettings;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCDelaySettings), reinterpret_cast<std::int8_t*>(&delaySettings));
-        update_delay_signal(std::move(header), delaySettings);
-    }break;
-    case MessageType::command:{
-        Logger::message("[DCClientUdpReader] command message received.\n");
-        Command command;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Command), reinterpret_cast<std::int8_t*>(&command));
-        command_signal(std::move(header), command);
+
+        colorReception.update(header, dataToProcess, messagesBuffer);
+
+        if(auto info = colorReception.message_fully_received(header); info.has_value()){
+            Logger::message("[DCClientUdpReader] update_color_settings message received.\n");
+            update_color_settings_signal(std::move(header), std::make_shared<cam::DCColorSettings>(
+                std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+            ));
+        }
+
+        if(auto nbMessageTimeout = colorReception.check_message_timeout(); nbMessageTimeout != 0){
+            timeout_messages_signal(nbMessageTimeout);
+        }
+
     }break;
     default:
         break;
@@ -96,7 +137,7 @@ auto DCClientUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
 }
 
 
-auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
+auto DCServerUdpReader::process_packet(std::span<const std::byte> packet) -> void{
 
     auto headerData    = packet.first(sizeof(Header));
     auto dataToProcess = packet.subspan(sizeof(Header));
@@ -110,6 +151,16 @@ auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
         return;
     }
 
+    if(header.checkSum != 0){
+        auto checksum = data::Checksum::gen_crc16(dataToProcess);
+        if(checksum != header.checkSum){
+            // drop packet
+            Logger::error(std::format("[DCServerUdpReader::process_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
+            return;
+        }
+    }
+
+
     switch (static_cast<MessageType>(header.type)) {
     case MessageType::synchro:{
         synchro.update_average_difference(header.currentPacketTimestampNs);
@@ -117,7 +168,7 @@ auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
     }break;
     case MessageType::feedback:{
         Feedback feedback;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::int8_t*>(&feedback));
+        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
         feedback_signal(std::move(header), feedback);
     }break;
     case MessageType::compressed_frame_data:{
@@ -149,7 +200,7 @@ auto DCServerUdpReader::process_packet(std::span<std::int8_t> packet) -> void{
             compressed_frame_signal(std::move(header), std::move(cFrame));
         }
 
-        if(auto nbMessageTimeout = cFramesReception.check_timeout_frames(); nbMessageTimeout != 0){
+        if(auto nbMessageTimeout = cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
             timeout_messages_signal(nbMessageTimeout);
         }
 

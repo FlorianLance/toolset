@@ -147,53 +147,53 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
         case SType::Device:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->device.init_from_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
+                    grabber->device.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allDevicesS;
+                std::vector<io::BaseSettings*> allDevicesS;
                 for(auto grabber : tGrabbers){
                     allDevicesS.push_back(&grabber->device);
                 }
-                io::BinaryFileSettings::init_from_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
+                io::BaseSettings::load_multi_from_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
             }
             break;
         case SType::Filters:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->filters.init_from_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
+                    grabber->filters.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allFilters;
+                std::vector<io::BaseSettings*> allFilters;
                 for(auto grabber : tGrabbers){
                     allFilters.push_back(&grabber->filters);
                 }
-                io::BinaryFileSettings::init_from_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
+                io::BaseSettings::load_multi_from_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
             }
             break;
         case SType::CalibrationFilters:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->calibrationFilters.init_from_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
+                    grabber->calibrationFilters.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allCalibrationFilters;
+                std::vector<io::BaseSettings*> allCalibrationFilters;
                 for(auto grabber : tGrabbers){
                     allCalibrationFilters.push_back(&grabber->calibrationFilters);
                 }
-                io::BinaryFileSettings::init_from_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
+                io::BaseSettings::load_multi_from_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
             }
             break;
         case SType::Color:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->color.init_from_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
+                    grabber->color.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allColors;
+                std::vector<io::BaseSettings*> allColors;
                 for(auto grabber : tGrabbers){
                     allColors.push_back(&grabber->color);
                 }
-                io::BinaryFileSettings::init_from_file(allColors, DCSettingsPaths::allGrabbersColor.string());
+                io::BaseSettings::load_multi_from_file(allColors, DCSettingsPaths::allGrabbersColor.string());
             }
             break;
         case SType::Model:
@@ -202,15 +202,15 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     if(file == SFile::Default){
                         grabber->model = DCModelSettings();
                     }else{
-                        grabber->model.init_from_file(DCSettingsPaths::grabbersModel[grabber->id].string());
+                        grabber->model.load_from_file(DCSettingsPaths::grabbersModel[grabber->id].string());
                     }
                 }
             }else{
-                std::vector<io::TextSettings*> allModels;
+                std::vector<io::BaseSettings*> allModels;
                 for(auto grabber : tGrabbers){
                     allModels.push_back(&grabber->model);
                 }
-                io::TextSettings::init_from_file(allModels, DCSettingsPaths::allGrabbersModel.string());
+                io::BaseSettings::load_multi_from_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
             break;
         }
@@ -220,69 +220,69 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
         case SType::Device:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->device.save_to_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
+                    grabber->device.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allDevicesS;
+                std::vector<io::BaseSettings*> allDevicesS;
                 for(auto grabber : tGrabbers){
                     allDevicesS.push_back(&grabber->device);
                 }
-                io::BinaryFileSettings::save_to_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
+                io::BaseSettings::save_multi_to_json_str_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
 
             }
             break;
         case SType::Filters:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->filters.save_to_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
+                    grabber->filters.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allFilters;
+                std::vector<io::BaseSettings*> allFilters;
                 for(auto grabber : tGrabbers){
                     allFilters.push_back(&grabber->filters);
                 }
-                io::BinaryFileSettings::save_to_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
+                io::BaseSettings::save_multi_to_json_str_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
             }
             break;
         case SType::CalibrationFilters:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->calibrationFilters.save_to_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
+                    grabber->calibrationFilters.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allCalibrationFilters;
+                std::vector<io::BaseSettings*> allCalibrationFilters;
                 for(auto grabber : tGrabbers){
                     allCalibrationFilters.push_back(&grabber->calibrationFilters);
                 }
-                io::BinaryFileSettings::save_to_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
+                io::BaseSettings::save_multi_to_json_str_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
             }
             break;
         case SType::Color:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
-                    grabber->color.save_to_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
+                    grabber->color.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BinaryFileSettings*> allColors;
+                std::vector<io::BaseSettings*> allColors;
                 for(auto grabber : tGrabbers){
                     allColors.push_back(&grabber->color);
                 }
-                io::BinaryFileSettings::save_to_file(allColors, DCSettingsPaths::allGrabbersColor.string());
+                io::BaseSettings::save_multi_to_json_str_file(allColors, DCSettingsPaths::allGrabbersColor.string());
             }
             break;
         case SType::Model:
             if(file != SFile::HostAllInOne){
                 for(auto grabber : tGrabbers){
                     if(file == SFile::Host){
-                        grabber->model.save_to_file(DCSettingsPaths::grabbersModel[grabber->id].string());
+                        grabber->model.save_to_json_str_file(DCSettingsPaths::grabbersModel[grabber->id].string());
                     }
                 }
             }else{
-                std::vector<io::TextSettings*> allModels;
+                std::vector<io::BaseSettings*> allModels;
                 for(auto grabber : tGrabbers){
                     allModels.push_back(&grabber->model);
                 }
-                io::TextSettings::save_to_file(allModels, DCSettingsPaths::allGrabbersModel.string());
+                io::BaseSettings::save_multi_to_json_str_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
             break;
         }

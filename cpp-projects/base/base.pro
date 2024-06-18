@@ -44,6 +44,7 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io        
+    data/json_utility.hpp \
     io/binary_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
@@ -163,7 +164,6 @@ HEADERS += \
     depth-camera/settings/dc_data_settings.hpp \
     depth-camera/settings/dc_color_settings.hpp \
     depth-camera/settings/dc_delay_settings.hpp \
-    depth-camera/settings/dc_actions_settings.hpp \
     depth-camera/settings/dc_display_settings.hpp \
     depth-camera/settings/dc_calibrator_settings.hpp \
     depth-camera/settings/dc_config_settings.hpp \
@@ -378,7 +378,6 @@ SOURCES += \
     depth-camera/settings/dc_model_settings.cpp \
     depth-camera/settings/dc_config_settings.cpp \
     depth-camera/settings/dc_color_settings.cpp \
-    depth-camera/settings/dc_actions_settings.cpp \
     depth-camera/settings/dc_display_settings.cpp \
     depth-camera/settings/dc_delay_settings.cpp \
     depth-camera/settings/dc_data_settings.cpp \
@@ -474,4 +473,3 @@ SOURCES += \
     thirdparty/libyuv/scale_uv.cc \
     thirdparty/libyuv/scale_win.cc \
     thirdparty/libyuv/video_common.cc \
-

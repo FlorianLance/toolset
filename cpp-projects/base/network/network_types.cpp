@@ -114,17 +114,17 @@ auto AverageSynch::update_average_difference(int64_t timestampNS) -> void{
     );
 }
 
-Header::Header(std::span<int8_t> packet){
+Header::Header(std::span<const std::byte> packet){
     if(packet.size_bytes() == sizeof(Header)){
-        std::copy(std::begin(packet), std::end(packet), reinterpret_cast<std::int8_t*>(this));
+        std::copy(std::begin(packet), std::end(packet), reinterpret_cast<std::byte*>(this));
     }else{
         Logger::error(std::format("[Header::Header] Invalid packet size, size: [{}], expected: [{}] \n", packet.size_bytes(),  sizeof(Header)));
     }
 }
 
-auto MultiPacketsUdpReception::update(const Header &header, std::span<const int8_t> dataToProcess, DoubleRingBuffer<int8_t> &rBuffer) -> void{
+auto UdpMessageReception::update(const Header &header, std::span<const std::byte> dataToProcess, DoubleRingBuffer<std::byte> &rBuffer) -> void{
 
-    if(!cFramesInfo.contains(header.idMessage)){
+    if(!infos.contains(header.idMessage)){
 
         // first packet of a new frame to be received
         UdpReceptionInfo info;
@@ -141,10 +141,10 @@ auto MultiPacketsUdpReception::update(const Header &header, std::span<const int8
         info.messageData = rBuffer.current_span(info.totalDataSizeBytes);
         rBuffer.increment();
 
-        cFramesInfo[header.idMessage] = std::move(info);
+        infos[header.idMessage] = std::move(info);
     }
 
-    UdpReceptionInfo &info = cFramesInfo[header.idMessage];
+    UdpReceptionInfo &info = infos[header.idMessage];
 
     if(header.currentPacketId == 0){
         // packet n°1 of the frame received
@@ -157,30 +157,30 @@ auto MultiPacketsUdpReception::update(const Header &header, std::span<const int8
     info.nbPacketsReceived++;
 }
 
-auto MultiPacketsUdpReception::check_timeout_frames() -> size_t{
+auto UdpMessageReception::check_message_timeout() -> size_t{
     // sanity remover
     auto ts = Time::nanoseconds_since_epoch();
     timeoutIdPacketsToRemove.clear();
-    for(const auto &info : cFramesInfo){
+    for(const auto &info : infos){
         if(Time::difference_ms(info.second.firstPacketReceivedTS, ts).count() > 1000){
             timeoutIdPacketsToRemove.push_back(info.first);
         }
     }
     for(const auto &idM : timeoutIdPacketsToRemove){
         {
-            const auto &info = cFramesInfo[idM];
-            Logger::warning(std::format("[MultiPacketsUdpReception::check] Frame [{}] dropped for timeout, packets received: [{}], expected: [{}].\n", idM, info.nbPacketsReceived, info.totalNumberOfPacket));
+            const auto &info = infos[idM];
+            Logger::warning(std::format("[MultiPacketsUdpReception::check_message_timeout] Message [{}] dropped for timeout, packets received: [{}], expected: [{}].\n"sv, idM, info.nbPacketsReceived, info.totalNumberOfPacket));
         }
-        cFramesInfo.erase(idM);
+        infos.erase(idM);
         messageReceived.set_current(0);
         messageReceived.increment();
     }
     return timeoutIdPacketsToRemove.size();
 }
 
-auto MultiPacketsUdpReception::message_fully_received(const Header &header) -> std::optional<UdpReceptionInfo>{
+auto UdpMessageReception::message_fully_received(const Header &header) -> std::optional<UdpReceptionInfo>{
 
-    const UdpReceptionInfo &info = cFramesInfo[header.idMessage];
+    const UdpReceptionInfo &info = infos[header.idMessage];
 
     std::optional<UdpReceptionInfo> oInfo = {};
     if(info.all_packets_received()){
@@ -193,19 +193,19 @@ auto MultiPacketsUdpReception::message_fully_received(const Header &header) -> s
             }else{
                 messageReceived.set_current(0);
                 messageReceived.increment();
-                Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] Message [{}] dropped, a newer message was sent before.\n", info.idMessage));
+                Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] Message [{}] dropped, a newer message was sent before.\n"sv, info.idMessage));
             }
         }else{
             messageReceived.set_current(0);
             messageReceived.increment();
-            Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] All packets for message [{}] received, but with invalid size: [{}], expected: [{}].\n", info.idMessage, info.totalBytesReceived, info.totalSizeBytes));
+            Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] All packets for message [{}] received, but with invalid size: [{}], expected: [{}].\n"sv, info.idMessage, info.totalBytesReceived, info.totalSizeBytes));
         }
-        cFramesInfo.erase(header.idMessage);
+        infos.erase(header.idMessage);
     }
     return oInfo;
 }
 
-auto MultiPacketsUdpReception::get_percentage_success() -> int{
+auto UdpMessageReception::get_percentage_success() -> int{
     int percentage = 0;
     auto span = messageReceived.span();
     percentage = static_cast<int>(

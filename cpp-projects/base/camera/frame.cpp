@@ -47,7 +47,7 @@ auto Frame::init_from_file_stream(std::ifstream &file) -> void{
     read(receivedTS,      file);
 }
 
-auto Frame::init_from_data(std::span<const int8_t> data, size_t &offset) -> void{
+auto Frame::init_from_data(std::span<const std::byte> data, size_t &offset) -> void{
     read(idDevice,       data, offset);
     read(idCapture,       data, offset);
     read(afterCaptureTS,  data, offset);
@@ -61,7 +61,7 @@ auto Frame::write_to_file_stream(std::ofstream &file) -> void{
     write(receivedTS,      file);
 }
 
-auto Frame::write_to_data(std::span<int8_t> data, size_t &offset) -> void{
+auto Frame::write_to_data(std::span<std::byte> data, size_t &offset) -> void{
     write(idDevice,       data, offset);
     write(idCapture,       data, offset);
     write(afterCaptureTS,  data, offset);

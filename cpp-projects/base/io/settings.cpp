@@ -27,73 +27,144 @@
 
 #include "settings.hpp"
 
-// std
-#include <filesystem>
-#include <fstream>
 
 // local
 #include "utility/io_file.hpp"
 #include "utility/io_data.hpp"
 #include "utility/string.hpp"
 #include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 
 using namespace std::literals::string_view_literals;
 using namespace tool::io;
+using namespace tool::data;
+using json = nlohmann::json;
 
-auto BaseSettings::init_from_binary_file(const std::string &filePath) -> bool{
-    Logger::message(std::format("Open [{}] binary file with path [{}]\n", type_description(),  filePath));
-    if(auto content = File::read_content(filePath); content.has_value()){        
+auto BaseSettings::save_to_json_binary_file(const std::string &filePath) -> bool{
 
-        if(content->size() != total_data_size()){
-            Logger::error(std::format("Input [{}] file with path [{}] of size [{}] different from expected [{}]\n",
-            type_description(), filePath, content->size(), total_data_size()));
-            return false;
-        }
-        size_t offset = 0;
-        init_from_data(reinterpret_cast<std::int8_t*>(content.value().data()), offset, content.value().size());
-    }else{
-        Logger::error(std::format("Cannot open [{}] file with path: [{}]\n", type_description(), filePath));
+    Logger::log(std::format("[BaseSettings::save_to_json_binary_file] Save [{}] settings to binary file with path [{}]\n", type_description(), filePath));
+    if(!File::write_binary_content(filePath, convert_to_json_binary())){
+        Logger::error(std::format("[BaseSettings::save_to_json_binary_file] Cannot save [{}] settings to binary file, impossible to open file with path: [{}]\n", type_description(), filePath));
         return false;
     }
-
     return true;
 }
 
-auto BaseSettings::init_from_text_file(const std::string &filePath) -> bool{
-    Logger::message(std::format("Open [{}] text file with path [{}]\n", type_description(),  filePath));
+auto BaseSettings::save_to_json_str_file(const std::string &filePath) -> bool{
+
+    Logger::log(std::format("[BaseSettings::save_to_json_str_file] Save [{}] settings to text file with path [{}]\n", type_description(), filePath));
+    if(!File::write_text_content(filePath, convert_to_json_str())){
+        Logger::error(std::format("[BaseSettings::save_to_json_str_file] Cannot save [{}] settings to text file, impossible to open file with path: [{}]\n", type_description(), filePath));
+        return false;
+    }
+    return true;
+}
+
+auto BaseSettings::load_from_json_binary_file(const std::string &filePath) -> bool{
+
+    Logger::log(std::format("[BaseSettings::load_from_json_binary_file] Load from [{}] settings binary file with path [{}]\n", type_description(),  filePath));
     if(auto content = File::read_content(filePath); content.has_value()){
-        std::string_view contentV = content.value();
-        init_from_text(contentV);
-    }else{
-        Logger::error(std::format("Cannot open [{}] file with path: [{}]\n", type_description(), filePath));
-        return false;
+        auto data = std::span<const uint8_t>(reinterpret_cast<const std::uint8_t*>(content.value().data()), content.value().size());
+        init_from_json_binary(data);
+        return true;
     }
 
-    return true;
+    Logger::error(std::format("[BaseSettings::load_from_json_binary_file] Cannot load [{}] settings from binary file, impossible to open file with path: [{}]\n", type_description(), filePath));
+    return false;
 }
 
-auto BaseSettings::save_to_text_file(const std::string &filePath) const -> bool{
-    Logger::message(std::format("Save [{}] to text file with path [{}]\n", type_description(),  filePath));
-    if(!File::write_text_content(filePath, write_to_text())){
-        Logger::error(std::format("Cannot save [{}] file with path: [{}]\n", type_description(), filePath));
-        return false;
+auto BaseSettings::load_from_json_str_file(const std::string &filePath) -> bool{
+
+    Logger::log(std::format("[BaseSettings::load_from_json_str_file] Init from [{}] settings text file with path [{}]\n", type_description(),  filePath));
+    if(auto content = File::read_content(filePath); content.has_value()){
+        init_from_json_str(content.value());
+        return true;
     }
-    return true;
+
+    Logger::error(std::format("[BaseSettings::load_from_json_str_file] Cannot load [{}] settings from text file, impossible to open file with path: [{}]\n", type_description(), filePath));
+    return false;
 }
 
+auto BaseSettings::convert_to_json_str() const -> std::string{
+    return convert_to_json().dump(4);
+}
 
-auto BaseSettings::save_to_binary_file(const std::string &filePath) const -> bool{
-    Logger::message(std::format("Save [{}] to binary file with path [{}]\n", type_description(),  filePath));
-    std::vector<std::int8_t> content;
-    content.resize(total_data_size());
+auto BaseSettings::convert_to_json_binary() const -> std::vector<std::uint8_t>{
+    return json::to_bson(convert_to_json());
+}
 
-    size_t offset = 0;
-    write_to_data(content.data(), offset, content.size());
-    if(!File::write_binary_content(filePath, content)){
-        Logger::error(std::format("Cannot save [{}] file with path: [{}]\n", type_description(), filePath));
-        return false;
+auto BaseSettings::init_from_json_binary(std::span<const std::uint8_t> jsonData) -> void{
+    init_from_json(json::from_bson(jsonData));
+}
+
+auto BaseSettings::init_from_json_str(std::string_view jsonStr) -> void{
+    init_from_json(json::parse(jsonStr));
+}
+
+auto BaseSettings::init_from_json(const nlohmann::json &json) -> void{
+    size_t unreadCount = 0;
+    sType   = static_cast<tool::io::SettingsType>(read_value<int>(json, unreadCount, "type"));
+    version = static_cast<tool::io::SettingsVersion>(read_value<int>(json, unreadCount, "version"));
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[BaseSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
-    return true;
+}
+
+auto BaseSettings::convert_to_json() const -> json{
+    return json{
+        {"type",    static_cast<int>(sType)},
+        {"version", static_cast<int>(version)},
+    };
+}
+
+auto BaseSettings::load_from_file(const std::string &filePath) -> bool{
+
+    Logger::message(std::format("Open [{}] file with path [{}]\n", type_description(),  filePath));
+
+    if(filePath.contains(".json")){
+        return load_from_json_str_file(filePath);
+    }else if(filePath.contains(".bson")){
+        return load_from_json_binary_file(filePath);
+    }else if(filePath.contains(".config")){
+
+        Logger::message(std::format("Read legacy file [{}]\n", type_description()));
+
+        size_t offset = 0;
+        if(auto content = File::read_content(filePath); content.has_value()){
+            switch(sType){
+            case SettingsType::Device:
+                init_from_data(reinterpret_cast<std::byte*>(content.value().data()), offset, content.value().size());
+                return true;
+            case SettingsType::Color:
+                init_from_data(reinterpret_cast<std::byte*>(content.value().data()), offset, content.value().size());
+                return true;
+            case SettingsType::Filters:
+                init_from_data(reinterpret_cast<std::byte*>(content.value().data()), offset, content.value().size());
+                return true;
+            case SettingsType::Model:{
+                std::string_view contentV = content.value();
+                init_from_text(contentV);
+                return true;
+            }break;
+            case SettingsType::Client_network:{
+                std::string_view contentV = content.value();
+                init_from_text(contentV);
+                return true;
+            }break;
+            case SettingsType::Server_network:{
+                std::string_view contentV = content.value();
+                init_from_text(contentV);
+                return true;
+            }break;
+            default:
+                return false;
+            }
+        }
+    }
+    Logger::error("[BaseSettings::init_from_file] Cannot read file.\n");
+
+    return false;
 }
 
 auto BaseSettings::init_from_text(std::string_view &text) -> void{
@@ -106,64 +177,131 @@ auto BaseSettings::init_from_text(std::string_view &text) -> void{
     }
     if(text.starts_with("Version: "sv)){
         if(auto values = String::split_view(text, " "sv); values.size() == 2){
-            version = static_cast<Version>(String::to_int(values[1]));
+            version = static_cast<SettingsVersion>(String::to_int(values[1]));
         }
         text = String::advance_view_to_delim(text, "\n"sv);
     }
 }
 
-auto BaseSettings::write_to_text() const -> std::string{
-    return std::format("Type: {}\nVersion: {}\n", static_cast<int>(sType), static_cast<int>(version));
-}
-
-auto BaseSettings::init_from_data(const int8_t * const data, size_t &offset, size_t sizeData) -> void{
-    // if(offset + total_data_size() > sizeData){
-    //     tool::Logger::error(std::format("BaseSettings::init_from_data: Not enought data space for initializing from data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-    //     return;
-    // }
+auto BaseSettings::init_from_data(const std::byte * const data, size_t &offset, size_t sizeData) -> void{
     read(sType, data, offset, sizeData);
     read(version, data, offset, sizeData);
 }
 
-auto BaseSettings::write_to_data(int8_t * const data, size_t &offset, size_t sizeData) const -> void{
 
-    // std::cout << "B:" << total_data_size() << " "<< offset << " " << sizeData << "\n";
-    // if(offset + total_data_size() > sizeData){
-    //     tool::Logger::error(std::format("BaseSettings::write_to_data: Not enought data space for writing to data: [{}] required [{}]\n", sizeData-offset, total_data_size()));
-    //     return;
-    // }
-    write(sType, data, offset, sizeData);
-    write(version, data, offset, sizeData);
-}
+auto BaseSettings::load_multi_from_json_txt_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
 
-auto BaseSettings::total_data_size() const noexcept -> size_t{
-    return
-        sizeof(sType) +
-        sizeof(version);
-}
-
-auto BaseSettings::save_to_text_file(const std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool{
-
-    if(settingsA.size() == 0){
-        Logger::error("Input multi settings array  is empty.\n");
+    if(settingsA.empty()){
+        Logger::error("Input multi settings array is empty.\n");
         return false;
     }
-    std::string content;
-    std::vector<std::string> contents;
-    for(const auto settings : settingsA){
-        contents.push_back(settings->write_to_text());
+
+    // read  content
+    auto content = File::read_content(filePath);
+    if(!content.has_value()){
+        Logger::error(std::format("Cannot read file with path [{}].\n", filePath));
+        return false;
     }
-    if(!File::write_text_content(filePath, std::format("{}%%%{}", contents.size(), String::join(contents, "%%%")))){
-        Logger::error(std::format("Cannot write multi settings array to path [{}].\n", filePath));
+    if(content.value().length() == 0){
+        Logger::error(std::format("File with path [{}] is empty.\n", filePath));
+        return false;
+    }
+
+    std::string_view contentV = content.value();
+
+    auto jData = json::parse(contentV);
+    if(jData.contains("settings"sv)){
+        json::array_t arr = jData["settings"sv];
+        if(arr.size() == settingsA.size()){
+            for(size_t idS = 0; idS < arr.size(); ++idS){
+                settingsA[idS]->init_from_json(arr[idS]);
+            }
+        }else{
+            return false;
+        }
+    }else{
+        return false;
+    }
+
+    // ...
+
+    return true;
+}
+
+auto BaseSettings::save_multi_to_json_str_file(std::span<BaseSettings *> settingsA, const std::string &filePath) -> bool{
+
+    auto firstT = settingsA.front()->type();
+    for(const auto &settings : settingsA){
+        if(settings->type() != firstT){
+            Logger::error("[BaseSettings::save_multi_to_json_str_file] ...");
+            return false;
+        }
+    }
+
+    json json;
+    json::array_t arr;
+    for(const auto &settings : settingsA){
+        arr.push_back(settings->convert_to_json());
+    }
+    json["settings"sv] = arr;
+
+    Logger::log(std::format("Save {}] multi settings to text file with path [{}]\n", settingsA.front()->type_description(), filePath));
+    if(!File::write_text_content(filePath, json.dump(4))){
+        Logger::error(std::format("[BaseSettings::save_multi_to_json_str_file] Cannot save [{}] multi settings to json str file, impossible to open file with path: [{}]\n", settingsA.front()->type_description(), filePath));
         return false;
     }
     return true;
 }
 
-auto BaseSettings::init_from_text_file(std::vector<BaseSettings *> &settingsA, const std::string &filePath) -> bool{
+auto BaseSettings::load_multi_from_file(std::span<BaseSettings *> settingsA, const std::string &filePath) -> bool{
 
-    if(settingsA.size() == 0){
-        Logger::error("Input multi settings array  is empty.\n");
+    auto firstT = settingsA.front()->type();
+    for(const auto &settings : settingsA){
+        if(settings->type() != firstT){
+            Logger::error("[BaseSettings::load_multi_from_file] ...");
+            return false;
+        }
+    }
+
+    Logger::message(std::format("Open multi [{}] file with path [{}]\n", settingsA.front()->type_description(),  filePath));
+
+    if(filePath.contains(".json")){
+        return load_multi_from_json_txt_file(settingsA, filePath);
+    }else if(filePath.contains(".bson")){
+        // return load_from_json_binary_file(filePath);
+    }else if(filePath.contains(".config")){
+
+        Logger::message(std::format("Read legacy file [{}]\n", settingsA.front()->type_description()));
+        switch(firstT){
+        case SettingsType::Device:
+            return init_from_binary_file(settingsA, filePath);
+        case SettingsType::Color:
+            return init_from_binary_file(settingsA, filePath);
+        case SettingsType::Filters:
+            return init_from_binary_file(settingsA, filePath);
+        case SettingsType::Model:{
+            return init_from_text_file(settingsA, filePath);
+        }break;
+        case SettingsType::Client_network:{
+            return init_from_text_file(settingsA, filePath);
+        }break;
+        case SettingsType::Server_network:{
+            return init_from_text_file(settingsA, filePath);
+        }break;
+        default:
+            return false;
+        }
+
+    }
+    Logger::error("[BaseSettings::load_multi_from_file] Cannot read file.\n");
+    return false;
+}
+
+
+auto BaseSettings::init_from_text_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
+
+    if(settingsA.empty()){
+        Logger::error("Input multi settings arra  is empty.\n");
         return false;
     }
 
@@ -199,39 +337,9 @@ auto BaseSettings::init_from_text_file(std::vector<BaseSettings *> &settingsA, c
     return true;
 }
 
-auto BaseSettings::save_to_binary_file(const std::vector<BaseSettings *> &settingsA, const std::string &filePath) -> bool{
+auto BaseSettings::init_from_binary_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
 
-    if(settingsA.size() == 0){
-        Logger::error("Input multi settings array is empty.\n");
-        return false;
-    }
-
-    std::vector<std::int8_t> content;
-    size_t totalDataSize = sizeof(std::int16_t) + settingsA.size() * sizeof(size_t);
-    for(const auto settings : settingsA){
-        totalDataSize += settings->total_data_size();
-    }
-    content.resize(totalDataSize);
-    auto data = content.data();
-
-    size_t offset = 0;
-    std::int16_t nbParts = static_cast<std::int16_t>(settingsA.size());
-    write(nbParts, data, offset, totalDataSize);
-
-    for(const auto settings : settingsA){
-        settings->write_to_data(data, offset, totalDataSize);
-    }
-
-    if(!File::write_binary_content(filePath, content)){
-        Logger::error(std::format("Cannot write multi settings array to path [{}].\n", filePath));
-        return false;
-    }
-    return true;
-}
-
-auto BaseSettings::init_from_binary_file(std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool{
-
-    if(settingsA.size() == 0){
+    if(settingsA.empty()){
         Logger::error("Input multi settings array is empty.\n");
         return false;
     }
@@ -248,7 +356,7 @@ auto BaseSettings::init_from_binary_file(std::vector<BaseSettings*> &settingsA, 
     }
 
     // read nb of elements
-    auto data = reinterpret_cast<std::int8_t*>(content.value().data());
+    auto data = reinterpret_cast<std::byte*>(content.value().data());
     std::int16_t nbParts = 0;
     size_t offset = 0;
     size_t sizeData = content.value().size();
@@ -266,4 +374,143 @@ auto BaseSettings::init_from_binary_file(std::vector<BaseSettings*> &settingsA, 
 
     return true;
 }
+
+
+// auto BaseSettings::init_from_binary_file(const std::string &filePath) -> bool{
+//     Logger::message(std::format("Open [{}] binary file with path [{}]\n", type_description(),  filePath));
+//     if(auto content = File::read_content(filePath); content.has_value()){
+
+
+
+//         if(content->size() > total_data_size()){
+//             Logger::error(std::format("Input [{}] file with path [{}] of size [{}] different from expected [{}]\n",
+//             type_description(), filePath, content->size(), total_data_size()));
+//             return false;
+//         }
+//         size_t offset = 0;
+//         init_from_data(reinterpret_cast<std::int8_t*>(content.value().data()), offset, content.value().size());
+//     }else{
+//         Logger::error(std::format("Cannot open [{}] file with path: [{}]\n", type_description(), filePath));
+//         return false;
+//     }
+
+//     return true;
+// }
+
+// auto BaseSettings::init_from_text_file(const std::string &filePath) -> bool{
+//     Logger::message(std::format("Open [{}] text file with path [{}]\n", type_description(),  filePath));
+//     if(auto content = File::read_content(filePath); content.has_value()){
+//         std::string_view contentV = content.value();
+//         init_from_text(contentV);
+//     }else{
+//         Logger::error(std::format("Cannot open [{}] file with path: [{}]\n", type_description(), filePath));
+//         return false;
+//     }
+
+//     return true;
+// }
+
+// auto BaseSettings::save_to_text_file(const std::string &filePath) const -> bool{
+//     Logger::message(std::format("Save [{}] to text file with path [{}]\n", type_description(),  filePath));
+//     if(!File::write_text_content(filePath, write_to_text())){
+//         Logger::error(std::format("Cannot save [{}] file with path: [{}]\n", type_description(), filePath));
+//         return false;
+//     }
+//     return true;
+// }
+
+
+// auto BaseSettings::save_to_binary_file(const std::string &filePath) const -> bool{
+//     Logger::message(std::format("Save [{}] to binary file with path [{}]\n", type_description(),  filePath));
+//     std::vector<std::int8_t> content;
+//     content.resize(total_data_size());
+
+//     size_t offset = 0;
+//     write_to_data(content.data(), offset, content.size());
+//     if(!File::write_binary_content(filePath, content)){
+//         Logger::error(std::format("Cannot save [{}] file with path: [{}]\n", type_description(), filePath));
+//         return false;
+//     }
+//     return true;
+// }
+
+
+
+// auto BaseSettings::write_to_text() const -> std::string{
+//     return std::format("Type: {}\nVersion: {}\n", static_cast<int>(sType), static_cast<int>(version));
+// }
+
+// auto BaseSettings::write_to_data(int8_t * const data, size_t &offset, size_t sizeData) const -> void{
+
+//     write(sType, data, offset, sizeData);
+//     write(version, data, offset, sizeData);
+// }
+
+// auto BaseSettings::total_data_size() const noexcept -> size_t{
+//     return
+//         sizeof(sType) +
+//         sizeof(version);
+// }
+
+// auto BaseSettings::save_to_text_file(const std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool{
+
+//     if(settingsA.size() == 0){
+//         Logger::error("Input multi settings array  is empty.\n");
+//         return false;
+//     }
+//     std::string content;
+//     std::vector<std::string> contents;
+//     for(const auto settings : settingsA){
+//         contents.push_back(settings->write_to_text());
+//     }
+//     if(!File::write_text_content(filePath, std::format("{}%%%{}", contents.size(), String::join(contents, "%%%")))){
+//         Logger::error(std::format("Cannot write multi settings array to path [{}].\n", filePath));
+//         return false;
+//     }
+//     return true;
+// }
+
+
+// auto BaseSettings::save_to_binary_file(const std::vector<BaseSettings *> &settingsA, const std::string &filePath) -> bool{
+
+//     if(settingsA.size() == 0){
+//         Logger::error("Input multi settings array is empty.\n");
+//         return false;
+//     }
+
+//     std::vector<std::int8_t> content;
+//     size_t totalDataSize = sizeof(std::int16_t) + settingsA.size() * sizeof(size_t);
+//     for(const auto settings : settingsA){
+//         totalDataSize += settings->total_data_size();
+//     }
+//     content.resize(totalDataSize);
+//     auto data = content.data();
+
+//     size_t offset = 0;
+//     std::int16_t nbParts = static_cast<std::int16_t>(settingsA.size());
+//     write(nbParts, data, offset, totalDataSize);
+
+//     for(const auto settings : settingsA){
+//         settings->write_to_data(data, offset, totalDataSize);
+//     }
+
+//     if(!File::write_binary_content(filePath, content)){
+//         Logger::error(std::format("Cannot write multi settings array to path [{}].\n", filePath));
+//         return false;
+//     }
+//     return true;
+// }
+
+
+
+// auto BaseSettings::write_binary_content_to_file(const std::string &filePath, std::span<const uint8_t> content) -> bool{
+
+//     Logger::message(std::format("Save [{}] to binary file with path [{}]\n", type_description(),  filePath));
+//     if(!File::write_binary_content(filePath, content)){
+//         Logger::error(std::format("Cannot save [{}], impossible to open file with path: [{}]\n", type_description(), filePath));
+//         return false;
+//     }
+
+//     return true;
+// }
 

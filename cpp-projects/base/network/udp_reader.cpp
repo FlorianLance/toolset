@@ -58,7 +58,8 @@ struct UdpReader::Impl{
     std::atomic_bool readingThreadStarted = false;
 
     // packets
-    DoubleRingBuffer<char> packetsRingBuffer;
+    // DoubleRingBuffer<char> packetsRingBuffer;
+    DoubleRingBuffer<std::uint8_t> packetsRingBuffer;
 };
 
 UdpReader::UdpReader() : i(std::make_unique<Impl>()){
@@ -175,7 +176,7 @@ auto UdpReader::is_connected() const noexcept -> bool{
     return i->connected;
 }
 
-auto UdpReader::process_packet(std::span<std::int8_t> packet) -> void{
+auto UdpReader::process_packet(std::span<const std::byte> packet) -> void{
     static_cast<void>(packet);
 }
 
@@ -212,7 +213,7 @@ auto UdpReader::read_packet() -> size_t{
         return 0;
     }
 
-    process_packet(std::span<std::int8_t>(reinterpret_cast<std::int8_t*>(buffer.data()), nbBytesReceived));
+    process_packet(std::span(reinterpret_cast<const std::byte*>(buffer.data()), nbBytesReceived));
 
     return nbBytesReceived;
 }

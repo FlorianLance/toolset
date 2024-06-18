@@ -32,7 +32,7 @@
 
 namespace tool::cam {
 
-    struct DCDeviceSettings : io::BinaryFileSettings{
+    struct DCDeviceSettings : io::BaseSettings{
 
         DCConfigSettings configS;
         DCDataSettings dataS;
@@ -40,18 +40,18 @@ namespace tool::cam {
         static auto default_init_for_grabber() -> DCDeviceSettings;
         static auto default_init_for_manager() -> DCDeviceSettings;
 
-        DCDeviceSettings();
-        DCDeviceSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-            DCDeviceSettings::init_from_data(data, offset, sizeData);
+        DCDeviceSettings(){
+            sType   = io::SettingsType::Device;
+            version = io::SettingsVersion::LastVersion;
+        }
+        DCDeviceSettings(std::span<const std::uint8_t> jsonBinary){
+            DCDeviceSettings::init_from_json_binary(jsonBinary);
         }
 
-        // i/o
-        auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-        auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-        auto total_data_size() const noexcept -> size_t override;
+        auto init_from_json(const nlohmann::json &json) -> void override;
+        auto convert_to_json() const -> nlohmann::json override;
 
-        static auto save_array_to_file(const std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;
-        static auto init_array_from_file(std::vector<DCDeviceSettings> &devicesA, const std::string &filePath) -> bool;
+        // legacy
+        auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
     };
-
 }

@@ -26,52 +26,55 @@
 
 #pragma once
 
-// std
-#include <vector>
-#include <string>
-
 // local
 #include "io_enum.hpp"
 
-namespace tool::io {
+// thirdparty
+#include "json.hpp"
 
-enum class Version : std::uint16_t{
-    v1_0,
-    Undefined,
-    SizeEnum
-};
+namespace tool::io {
 
 using namespace std::literals::string_view_literals;
 
 struct BaseSettings{
 
-    SettingsType sType = SettingsType::Undefined;
-    Version version = Version::Undefined;
+    SettingsType sType      = SettingsType::Undefined;
+    SettingsVersion version = SettingsVersion::Undefined;
 
+    constexpr auto type() const noexcept    -> SettingsType {return sType;};
+    auto type_description() const noexcept  -> std::string_view {return settings_name(sType);}
     virtual ~BaseSettings(){}
 
+    // json
+    // # save to
+    virtual auto save_to_json_binary_file(const std::string &filePath = "./settings.bjson") -> bool;
+    virtual auto save_to_json_str_file(const std::string &filePath = "./settings.json") -> bool;    
+    // # load from
+    auto load_from_file(const std::string &filePath) -> bool;
+    // # convert
+    virtual auto convert_to_json() const -> nlohmann::json;
+    auto convert_to_json_str()      const -> std::string;
+    auto convert_to_json_binary()   const  -> std::vector<std::uint8_t>;
+    // # init
+    virtual auto init_from_json(const nlohmann::json &json) -> void;
+    auto init_from_json_binary(std::span<const std::uint8_t> jsonData) -> void;
+    auto init_from_json_str(std::string_view jsonStr) -> void;
+
+    static auto save_multi_to_json_str_file(std::span<BaseSettings*> settingsA, const std::string &filePath = "./settings.json") -> bool;
+    static auto load_multi_from_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
+
 protected:
-    virtual auto init_from_binary_file(const std::string &filePath) -> bool;
-    virtual auto init_from_text_file(const std::string &filePath) -> bool;
 
-    virtual auto save_to_text_file(const std::string &filePath) const -> bool;
-    virtual auto save_to_binary_file(const std::string &filePath) const -> bool;
+    virtual auto load_from_json_binary_file(const std::string &filePath) -> bool;
+    virtual auto load_from_json_str_file(const std::string &filePath) -> bool;
+    static auto load_multi_from_json_txt_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
 
+    // legacy
     virtual auto init_from_text(std::string_view &text) -> void;
-    virtual auto write_to_text() const -> std::string;;
+    virtual auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void;
+    static auto init_from_text_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
+    static auto init_from_binary_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
 
-    virtual auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void;
-    virtual auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void;
-    virtual auto total_data_size() const noexcept -> size_t;
-
-    constexpr auto type() const noexcept -> SettingsType {return sType;};
-    auto type_description() const noexcept -> std::string_view {return settings_name(sType);}
-
-    static auto save_to_text_file(const std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;
-    static auto init_from_text_file(std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;
-
-    static auto save_to_binary_file(const std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;
-    static auto init_from_binary_file(std::vector<BaseSettings*> &settingsA, const std::string &filePath) -> bool;
 };
 
 }

@@ -1507,6 +1507,28 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &update) -> 
 
     ImGui::Spacing();
     ImGui::Separator();
+    ImGui::Text("Color-depth alignment:");
+    ImGui::Indent();
+
+    ImGui::Text("Translation (mm):");
+    auto trPtr = config.colorAlignmentTr.array.data();
+    if(ImGuiUiDrawer::draw_drag_float_with_buttons("x","col_depth_alignment_tr_x", trPtr, alignColDepthTrFs, modelTrDs)){
+        update = true;
+    }
+    ImGui::SameLine();
+    if(ImGuiUiDrawer::draw_drag_float_with_buttons("y","col_depth_alignment_tr_y", trPtr+1, alignColDepthTrFs, modelTrDs)){
+        update = true;
+    }
+    ImGui::SameLine();
+    if(ImGuiUiDrawer::draw_drag_float_with_buttons("z","col_depth_alignment_tr_z", trPtr+2, alignColDepthTrFs, modelTrDs)){
+        update = true;
+    }
+
+
+    ImGui::Unindent();
+
+    ImGui::Spacing();
+    ImGui::Separator();
     ImGui::Text("Misc:");
     ImGui::Indent();
 

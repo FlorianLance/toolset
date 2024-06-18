@@ -27,32 +27,37 @@
 #pragma once
 
 // local
-#include "io/text_settings.hpp"
+#include "io/settings.hpp"
 #include "network/network_types.hpp"
 
 namespace tool::net {
 
-struct UdpServerNetworkSettings : io::TextSettings{
-
-    UdpServerNetworkSettings();
-
-    /**
-     * @brief Populate ipv4 and ipv6 network interfaces
-     */
-    auto reset_interfaces() -> void;
-
-    auto initialize(const std::string &filePath) -> bool;
-    auto add_client(const net::ReadSendNetworkInfos &clientInfo) -> void;
-    auto update_client(size_t idC, const net::ReadSendNetworkInfos &nClientInfo) -> void;
+struct UdpServerNetworkSettings : io::BaseSettings{
 
     std::string filePath;
     std::vector<net::Interface> ipv4Interfaces = {};
     std::vector<net::Interface> ipv6Interfaces = {};
     std::vector<net::ReadSendNetworkInfos> clientsInfo;
 
+    UdpServerNetworkSettings(){
+        sType   = io::SettingsType::Server_network;
+        version = io::SettingsVersion::LastVersion;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    /**
+     * @brief Populate ipv4 and ipv6 network interfaces
+     */
+    auto reset_interfaces() -> void;
+    auto initialize(const std::string &filePath) -> bool;
+    auto add_client(const net::ReadSendNetworkInfos &clientInfo) -> void;
+    auto update_client(size_t idC, const net::ReadSendNetworkInfos &nClientInfo) -> void;
+
 private:
 
+    // legacy
     auto init_from_text(std::string_view &text) -> void override;
-    auto write_to_text() const -> std::string override;
 };
 }

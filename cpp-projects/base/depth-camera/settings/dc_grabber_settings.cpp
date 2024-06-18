@@ -50,27 +50,27 @@ auto DCMGrabberSettings::initialize(size_t idG, const net::ReadSendNetworkInfos 
     network.protocol      = grabberInfos.protocol;
 
     // read filters settings file
-    if(!filters.init_from_file(filtersFilePath =  DCSettingsPaths::get_filters_settings_file_path(idG))){
-        Logger::error(std::format("[DCMGrabberSettings] No filters settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
+    if(!filters.load_from_file(filtersFilePath = DCSettingsPaths::get_filters_settings_file_path(idG))){
+        Logger::error(std::format("[DCMGrabberSettings] No filters settings file found for grabber n°[{}]], default parameters used instead {}.\n", idG, filtersFilePath));
     }
 
     // read calibration filters settings file
-    if(!calibrationFilters.init_from_file(calibrationFiltersFilePath =  DCSettingsPaths::get_calibration_filters_settings_file_path(idG))){
+    if(!calibrationFilters.load_from_file(calibrationFiltersFilePath =  DCSettingsPaths::get_calibration_filters_settings_file_path(idG))){
         Logger::error(std::format("[DCMGrabberSettings] No calibration filters settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
     }
 
     // read calibration filters settings file
-    if(!device.init_from_file(deviceFilePath = DCSettingsPaths::get_device_settings_file_path(idG))){
+    if(!device.load_from_file(deviceFilePath = DCSettingsPaths::get_device_settings_file_path(idG))){
         Logger::error(std::format("[DCMGrabberSettings] No device settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
     }
 
     // read color settings file
-    if(!color.init_from_file(colorFilePath = DCSettingsPaths::get_color_settings_file_path(idG))){
+    if(!color.load_from_file(colorFilePath = DCSettingsPaths::get_color_settings_file_path(idG))){
         Logger::error(std::format("[DCMGrabberSettings] No color settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
     }
 
     // read model settings file
-    if(!model.init_from_file(modelFilePath =  DCSettingsPaths::get_model_settings_file_path(idG))){
+    if(!model.load_from_file(modelFilePath =  DCSettingsPaths::get_model_settings_file_path(idG))){
         Logger::error(std::format("[DCMGrabberSettings] No model settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
     }
 

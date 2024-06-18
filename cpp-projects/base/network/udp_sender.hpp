@@ -38,31 +38,29 @@ public:
     UdpSender();
     ~UdpSender();
 
-    auto is_opened() const -> bool;
-
-    // socket
     auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol) -> bool;
     auto clean_socket() -> void;
 
-    // send
-    auto send_packet_data(std::int8_t *packetData, size_t nbBytes) -> size_t;
-    auto send_mono_packet(Header &header) -> size_t;
-    auto send_packets(Header &header, size_t allPacketsNbBytes) -> size_t;
-
+    auto is_opened() const noexcept -> bool;
     auto update_size_packets(size_t newUdpPacketSize) -> void;
-
     auto simulate_failure(bool enabled, int percentage) -> void;
 
 protected:
 
-    auto generate_mono_packet(MessageType type, size_t messageNbBytes) -> Header;
+    auto send_mono_packet(Header &header) -> size_t;
+    auto send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t;
+
+    auto generate_dataless_header(MessageType type) -> Header;
+    auto generate_header(MessageType type) -> Header;
 
     size_t sizeUdpPacket = 9000;
-    std::vector<std::int8_t> packetBuffer;
-    std::vector<std::int8_t> bufferToSend;
+    std::vector<std::byte> packetBuffer;
+    std::vector<std::byte> bufferToSend;
     umap<MessageType, std::int32_t> currentIdMessages;
 
 private:
+
+    auto send_packet_data(std::span<const std::byte> packetData) -> size_t;
 
     struct Impl;
     std::unique_ptr<Impl> i;

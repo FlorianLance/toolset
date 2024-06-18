@@ -68,19 +68,15 @@ struct UdpNetworkSendingSettings{
     std::uint16_t maxSizeUdpPacket;
 };
 
-
-
 struct Feedback{
     MessageType receivedMessageType;
     FeedbackType feedback;
 };
 
 struct Framerate{
-
     Framerate();
     auto add_frame() -> void;
     auto get_framerate() -> float;
-
 private:
     static constexpr size_t nbMaxValues = 1000;
     SingleRingBuffer<std::chrono::nanoseconds> rTimes;
@@ -107,7 +103,7 @@ private:
 struct Header{
 
     Header() = default;
-    Header(std::span<std::int8_t> packet);
+    Header(std::span<const std::byte> packet);
 
     std::int64_t currentPacketTimestampNs = 0;
     std::uint32_t totalSizeBytes = 0;
@@ -127,13 +123,12 @@ struct Header{
     }
 };
 
-
 struct UdpReceptionInfo{
 
     std::int32_t idMessage = 0;
     std::chrono::nanoseconds firstPacketReceivedTS = {};
     std::chrono::nanoseconds firstPacketSentTS = {};
-    std::span<std::int8_t> messageData = {};
+    std::span<std::byte> messageData = {};
 
     size_t totalBytesReceived   = 0;
     size_t nbPacketsReceived    = 0;
@@ -152,50 +147,22 @@ struct UdpReceptionInfo{
     }
 };
 
-struct MultiPacketsUdpReception{
+struct UdpMessageReception{
 
-    MultiPacketsUdpReception(){
+    UdpMessageReception(){
         messageReceived.resize(100, 1);
     }
 
-    auto update(const Header &header, std::span<const std::int8_t> data, DoubleRingBuffer<std::int8_t> &rBuffer) -> void;
-    auto check_timeout_frames() -> size_t;
+    auto update(const Header &header, std::span<const std::byte> data, DoubleRingBuffer<std::byte> &rBuffer) -> void;
+    auto check_message_timeout() -> size_t;
     auto message_fully_received(const Header &header) -> std::optional<UdpReceptionInfo>;
     auto get_percentage_success() -> int;
 
-    umap<std::int32_t, UdpReceptionInfo> cFramesInfo;
+    umap<std::int32_t, UdpReceptionInfo> infos;
     Buffer<std::int32_t> timeoutIdPacketsToRemove;
     std::chrono::nanoseconds lastFullMessageSentTS = {};
 
-    SingleRingBuffer<std::int8_t> messageReceived;
-};
-
-
-struct UdpMonoPacketData{
-
-    static auto copy_only_header_to_data(const Header &header, std::vector<std::int8_t> &outputData) -> void{
-
-        if(outputData.size() < header.totalSizeBytes){
-            outputData.resize(header.totalSizeBytes);
-        }
-
-        auto headerD = reinterpret_cast<const std::int8_t*>(&header);
-        std::copy(headerD, headerD + sizeof(Header), outputData.begin());
-    }
-
-    template <typename T>
-    static auto copy_to_data(const Header &header, const T* dataP, std::vector<int8_t> &data) -> void{
-
-        auto messageData = reinterpret_cast<const std::int8_t *>(dataP);
-        size_t dataSize = header.totalSizeBytes - sizeof(Header);
-        if(data.size() < dataSize){
-            data.resize(dataSize);
-        }
-
-        auto headerD = reinterpret_cast<const std::int8_t*>(&header);
-        std::copy(headerD,      headerD     + sizeof(Header),   data.begin());
-        std::copy(messageData,  messageData + dataSize,         data.begin() + sizeof(Header));
-    }
+    SingleRingBuffer<std::uint8_t> messageReceived;
 };
 
 

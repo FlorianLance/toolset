@@ -28,15 +28,17 @@
 
 // std
 #include <string>
-#include <vector>
+#include <span>
 #include <optional>
 
 namespace tool{
 
 struct File{
     static auto read_content(const std::string &filePath) -> std::optional<std::string>;
-    static auto write_text_content(const std::string &filePath, const std::string &text) -> bool;
-    static auto write_binary_content(const std::string &filePath, const std::vector<std::int8_t> &data) -> bool;
+    static auto write_text_content(const std::string &filePath, std::string_view text) -> bool;
+
+    static auto write_binary_content(const std::string &filePath, std::span<const std::int8_t> data) -> bool;
+    static auto write_binary_content(const std::string &filePath, std::span<const std::uint8_t> data) -> bool;
 
     static auto execute_file(std::string_view filePath) -> bool;
 };

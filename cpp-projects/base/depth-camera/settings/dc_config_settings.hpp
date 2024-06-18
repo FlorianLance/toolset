@@ -26,50 +26,55 @@
 #pragma once
 
 // local
+#include "io/settings.hpp"
 #include "depth-camera/dc_enums.hpp"
-#include "io/binary_settings.hpp"
+#include "geometry/matrix3.hpp"
+#include "geometry/point3.hpp"
 
 namespace tool::cam {
 
-struct DCConfigSettings : io::BinaryFileSettings{
+struct DCConfigSettings : io::BaseSettings{
     
     // actions
     bool openDevice   = true;
     bool startReading    = true;
-
     // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;
     // std::string strIdDevice = "";
     DCMode mode = dc_default_mode(typeDevice);
-
     // synch
     bool synchronizeColorAndDepth = true;
     int delayBetweenColorAndDepthUsec = 0;
     DCSynchronisationMode synchMode = DCSynchronisationMode::Standalone;
     int subordinateDelayUsec = 0;
-
     // body tracking
     bool btEnabled = false;
     DCBTSensorOrientation btOrientation = DCBTSensorOrientation::default_orientation;
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::GPU_DIRECTML;
     std::int8_t btGPUId = 0;    
-
     // misc
     bool disableLED = false;
+    // color - depth calibration
+    tool::geo::Pt3f colorAlignmentTr = {0,0,0};
+    tool::geo::Mat3f colorAlignmentRot = geo::Mat3f::identity();
 
     static auto default_init_for_grabber() -> DCConfigSettings;
     static auto default_init_for_manager() -> DCConfigSettings;
 
-    DCConfigSettings();
-    DCConfigSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-        DCConfigSettings::init_from_data(data, offset, sizeData);
+    DCConfigSettings(){
+        sType   = io::SettingsType::Device_config;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCConfigSettings(std::span<const std::uint8_t> jsonBinary){
+        DCConfigSettings::init_from_json_binary(jsonBinary);
     }
 
-    // i/o
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-    auto total_data_size() const noexcept-> size_t override;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    // legacy
+    auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
 };
 
 

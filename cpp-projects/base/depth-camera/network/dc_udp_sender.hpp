@@ -40,9 +40,9 @@ namespace tool::net {
 class DCClientUdpSender : public UdpSender{
 public:
 
-    auto send_synchronisation_message() -> bool;
-    auto send_feedback_message(Feedback feedback) -> bool;
-    auto send_compressed_frame_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool;
+    auto send_synchronisation_binary_message() -> bool;
+    auto send_feedback_binary_message(Feedback feedback) -> bool;
+    auto send_compressed_frame_binary_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool;
 
 private:
     size_t idLastFrameMutliPacketsMessageSent = 0;
@@ -51,12 +51,15 @@ private:
 class DCServerUdpSender : public UdpSender{
 public:
 
-    auto send_init_message(const UdpNetworkSendingSettings &network) -> Header;
-    auto send_update_device_settings_message(const cam::DCDeviceSettings &device) -> Header;
-    auto send_update_color_settings_message(const cam::DCColorSettings &color) -> Header;
-    auto send_delay_settings_message(cam::DCDelaySettings delay) -> Header;
-    auto send_command_message(net::Command command) -> Header;
-    auto send_update_filters_settings_message(const cam::DCFiltersSettings &filters) -> bool;
+    // binary
+    auto send_init_binary_message(const UdpNetworkSendingSettings &network) -> bool;
+    auto send_delay_settings_binary_message(cam::DCDelaySettings delay) -> bool;
+    auto send_command_binary_message(net::Command command) -> bool;
+
+    // json binary
+    auto send_update_device_settings_bson_message(const cam::DCDeviceSettings &device) -> bool;
+    auto send_update_filters_settings_bson_message(const cam::DCFiltersSettings &filters) -> bool;
+    auto send_update_color_settings_bson_message(const cam::DCColorSettings &color) -> bool;
 
 private:
     size_t idLastMasksFiltersMessageSent = 0;

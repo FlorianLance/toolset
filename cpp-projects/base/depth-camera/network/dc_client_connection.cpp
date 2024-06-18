@@ -39,11 +39,22 @@ using namespace std::chrono;
 auto DCClientConnection::init_connections() -> void{
 
     // connections
-    m_udpReaderG.init_network_infos_signal.connect([&](Header h, std::shared_ptr<UdpNetworkSendingSettings> message){
+    m_udpReaderG.init_network_infos_signal.connect([&](Header h, UdpNetworkSendingSettings message){
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_initNetworkInfosMessage  = {std::move(h), message};
     });
+    m_udpReaderG.update_delay_signal.connect([&](Header h, cam::DCDelaySettings message){
+        // from reader thread:
+        std::lock_guard l(m_readerL);
+        m_updateDelayMessage  = {std::move(h), message};
+    });
+    m_udpReaderG.command_signal.connect([&](Header h, Command message){
+        // from reader thread:
+        std::lock_guard l(m_readerL);
+        m_commandMessage  = {std::move(h), message};
+    });
+
     m_udpReaderG.update_device_settings_signal.connect([&](Header h, std::shared_ptr<cam::DCDeviceSettings> message){
         // from reader thread:
         std::lock_guard l(m_readerL);
@@ -58,17 +69,6 @@ auto DCClientConnection::init_connections() -> void{
         // from reader thread:
         std::lock_guard l(m_readerL);
         m_updateFiltersMessage  = {std::move(h), message};
-    });
-    m_udpReaderG.update_delay_signal.connect([&](Header h, cam::DCDelaySettings message){
-        // from reader thread:
-        std::lock_guard l(m_readerL);
-        m_updateDelayMessage  = {std::move(h), message};
-    });
-
-    m_udpReaderG.command_signal.connect([&](Header h, Command message){
-        // from reader thread:
-        std::lock_guard l(m_readerL);
-        m_commandMessage  = {std::move(h), message};
     });
     m_udpReaderG.timeout_packet_signal.connect([&](){
         Logger::warning("Packet timeout\n");
@@ -150,7 +150,13 @@ auto DCClientConnection::update() -> void{
 
     // check if messages received
     auto initNetworkInfosM = std::move(m_initNetworkInfosMessage);
-    m_initNetworkInfosMessage.second = nullptr;
+    m_initNetworkInfosMessage.second = std::nullopt;
+
+    auto commandMessageM = std::move(m_commandMessage);
+    m_commandMessage.second = std::nullopt;
+
+    auto updateDelayMessageM = std::move(m_updateDelayMessage);
+    m_updateDelayMessage.second = std::nullopt;
 
     auto updateDeviceSettingsMessageM = std::move(m_updateDeviceSettingsMessage);
     m_updateDeviceSettingsMessage.second = nullptr;
@@ -161,17 +167,41 @@ auto DCClientConnection::update() -> void{
     auto updateFiltersMessageM = std::move(m_updateFiltersMessage);
     m_updateFiltersMessage.second = nullptr;
 
-    auto commandMessageM = std::move(m_commandMessage);
-    m_commandMessage.second = std::nullopt;
-
-    auto updateDelayMessageM = std::move(m_updateDelayMessage);
-    m_updateDelayMessage.second = std::nullopt;
-
     m_readerL.unlock();
 
-    if(initNetworkInfosM.second){     
-        receive_init_network_sending_settings_signal(initNetworkInfosM.second);
+    if(initNetworkInfosM.second.has_value()){
+        receive_init_network_sending_settings_signal(std::move(initNetworkInfosM.second.value()));
     }
+
+    if(updateDelayMessageM.second.has_value()){
+        send_feedback({MessageType::delay, FeedbackType::message_received});
+        receive_delay_signal(updateDelayMessageM.second.value());
+    }
+
+    if(commandMessageM.second.has_value()){
+
+        switch(commandMessageM.second.value()){
+        case Command::Shutdown:
+            send_feedback({MessageType::command, FeedbackType::shutdown});
+            shutdown_signal();
+            break;
+        case Command::Restart:
+            send_feedback({MessageType::command, FeedbackType::restart});
+            restart_signal();
+            break;
+        case Command::Disconnect:
+            send_feedback({MessageType::command, FeedbackType::disconnect});
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            disconnect_sender();
+            disconnect_signal();
+            break;
+        case Command::Quit:
+            send_feedback({MessageType::command, FeedbackType::quit});
+            quit_signal();
+            break;
+        }
+    }
+
 
     if(updateDeviceSettingsMessageM.second){
         send_feedback({MessageType::update_device_settings, FeedbackType::message_received});
@@ -188,34 +218,7 @@ auto DCClientConnection::update() -> void{
         receive_filters_signal(updateFiltersMessageM.second);        
     }
 
-    if(updateDelayMessageM.second.has_value()){
-        send_feedback({MessageType::delay, FeedbackType::message_received});
-        receive_delay_signal(updateDelayMessageM.second.value());
-    }
 
-    if(commandMessageM.second.has_value()){
-
-        switch(commandMessageM.second.value()){
-            case Command::Shutdown:
-                send_feedback({MessageType::command, FeedbackType::shutdown});
-                shutdown_signal();
-                break;
-            case Command::Restart:
-                send_feedback({MessageType::command, FeedbackType::restart});
-                restart_signal();
-                break;
-            case Command::Disconnect:
-                send_feedback({MessageType::command, FeedbackType::disconnect});
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                disconnect_sender();
-                disconnect_signal();
-                break;
-            case Command::Quit:
-                send_feedback({MessageType::command, FeedbackType::quit});
-                quit_signal();
-                break;
-        }
-    }
 }
 
 auto DCClientConnection::disconnect_sender() -> void{
@@ -275,20 +278,20 @@ auto DCClientConnection::send_messages_loop() -> void{
         auto message = messagesToSend.pop_front();
         if(!message.has_value()){
             std::this_thread::sleep_for (std::chrono::milliseconds(1));
-            m_udpSenderG.send_synchronisation_message();            
+            m_udpSenderG.send_synchronisation_binary_message();            
             continue;
         }
 
         if(auto feedback = std::get_if<Feedback>(&message.value()); feedback != nullptr){
             Logger::message(std::format("[DCClientConnection] Send feedback of type [{}].\n", static_cast<int>(feedback->receivedMessageType)));
-            m_udpSenderG.send_feedback_message(*feedback);
+            m_udpSenderG.send_feedback_binary_message(*feedback);
         }
 
         if(auto frame = std::get_if<std::shared_ptr<cam::DCCompressedFrame>>(&message.value()); frame != nullptr){
 
             auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
-
-            if(m_udpSenderG.send_compressed_frame_message((*frame))){
+            
+            if(m_udpSenderG.send_compressed_frame_binary_message((*frame))){
                 m_lastFrameIdSent = (*frame)->idCapture;
             }
 
@@ -297,8 +300,8 @@ auto DCClientConnection::send_messages_loop() -> void{
 
             m_lastFrameSentTS = afterSendintFrameTS;
         }
-
-        m_udpSenderG.send_synchronisation_message();
+        
+        m_udpSenderG.send_synchronisation_binary_message();
     }
 }
 

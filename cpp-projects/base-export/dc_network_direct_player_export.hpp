@@ -33,7 +33,9 @@
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
 
+typedef void (__stdcall * LogMessageCB)(const char*, int);
 typedef void (__stdcall * NewFeedbackCB)(int,int,int);
+
 
 namespace tool::cam{
 
@@ -72,12 +74,25 @@ struct DCNetworkDirectPlayer{
     std::vector<size_t> ids;
 
     // callbacks
+    std::unique_ptr<LogMessageCB> logMessageCBP = nullptr;
     std::unique_ptr<NewFeedbackCB> newFeedbackCBP = nullptr;
 
     DCNetworkDirectPlayer();
     ~DCNetworkDirectPlayer();
 
-    auto init_callbacks(NewFeedbackCB newFeedbackCB) -> void;
+    auto dll_log_message(const std::string &message) -> void{
+        (*logMessageCBP)(message.c_str(),0);
+    }
+    auto dll_log_warning(const std::string &message) -> void{
+        (*logMessageCBP)(message.c_str(),1);
+    }
+    auto dll_log_error(const std::string &message) -> void{
+        (*logMessageCBP)(message.c_str(),2);
+    }
+
+    auto init_callbacks(
+        LogMessageCB logCB,
+        NewFeedbackCB newFeedbackCB) -> void;
     auto initialize(const std::string &networkSettingsFilePath) -> bool;
 
     // function to be called in a while loop in a dedicated thread
@@ -123,11 +138,12 @@ private:
 extern "C"{
 DECL_EXPORT tool::cam::DCNetworkDirectPlayer* create__dc_network_direct_player();
 DECL_EXPORT void delete__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
-DECL_EXPORT void init_callbacks__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, NewFeedbackCB newFeedbackCB);
+DECL_EXPORT void init_callbacks__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer,
+    LogMessageCB logCB,
+    NewFeedbackCB newFeedbackCB);
 
 DECL_EXPORT int initialize__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* networkSettingsFilePath);
 DECL_EXPORT int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
-DECL_EXPORT void process_feedbacks__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT int uncompress_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
 // actions
 DECL_EXPORT void connect_to_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);

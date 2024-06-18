@@ -55,25 +55,36 @@ struct DCSettingsPaths{
 
     static inline std::filesystem::path defaultNetwork;
     static inline std::filesystem::path hostNetwork;
+    static inline std::filesystem::path hostNetworkLegacy;
 
     static inline std::filesystem::path defaultDevice;
     static inline std::filesystem::path allGrabbersDevice;
+    static inline std::filesystem::path allGrabbersDeviceLegacy;
     static inline std::vector<std::filesystem::path> grabbersDevice;
+    static inline std::vector<std::filesystem::path> grabbersDeviceLegacy;
 
     static inline std::filesystem::path defaultFilters;
     static inline std::filesystem::path allGrabbersFilters;
+    static inline std::filesystem::path allGrabbersFiltersLegacy;
     static inline std::vector<std::filesystem::path> grabbersFilters;
+    static inline std::vector<std::filesystem::path> grabbersFiltersLegacy;
 
     static inline std::filesystem::path defaultCalibrationFilters;
     static inline std::filesystem::path allGrabbersCalibrationFilters;
+    static inline std::filesystem::path allGrabbersCalibrationFiltersLegacy;
     static inline std::vector<std::filesystem::path> grabbersCalibrationFilters;
+    static inline std::vector<std::filesystem::path> grabbersCalibrationFiltersLegacy;
 
     static inline std::filesystem::path defaultColor;
     static inline std::filesystem::path allGrabbersColor;
+    static inline std::filesystem::path allGrabbersColorLegacy;
     static inline std::vector<std::filesystem::path> grabbersColor;
+    static inline std::vector<std::filesystem::path> grabbersColorLegacy;
 
     static inline std::filesystem::path allGrabbersModel;
+    static inline std::filesystem::path allGrabbersModelLegacy;
     static inline std::vector<std::filesystem::path> grabbersModel;
+    static inline std::vector<std::filesystem::path> grabbersModelLegacy;
 
 };
 }

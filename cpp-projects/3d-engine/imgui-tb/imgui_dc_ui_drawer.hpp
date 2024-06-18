@@ -108,6 +108,8 @@ public:
     static inline ImGuiFloatS modelTrFs  = {0.f, -10.f, 10.f, 0.001f, 0.001f, "%.3f"};
     static inline ImGuiFloatS modelScFs  = {1.f, -100.f, 100.f, 0.01f, 0.01f, "%.3f"};
 
+    static inline ImGuiFloatS alignColDepthTrFs  = {0.f, -50.f, 50.f, 1.f, 0.1f, "%.1f"};
+
     static inline std::vector<std::string> devicesNames = {
         "dev_0", "dev_1", "dev_2", "dev_3", "dev_4", "dev_5", "dev_6", "dev_7", "dev_8", "dev_9"};
     static inline std::vector<cam::DCMode> k4Modes = cam::dc_get_device_modes(cam::DCType::AzureKinect);

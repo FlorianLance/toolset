@@ -49,20 +49,23 @@ class DCClientUdpReader : public UdpReader{
 public:
 
     // signals
-    SSS<Header, std::shared_ptr<UdpNetworkSendingSettings>> init_network_infos_signal;
-    SSS<Header, std::shared_ptr<cam::DCDeviceSettings>> update_device_settings_signal;
-    SSS<Header, std::shared_ptr<cam::DCColorSettings>> update_color_settings_signal;
-    SSS<Header, std::shared_ptr<cam::DCFiltersSettings>> update_filters_signal;
+    SSS<Header, UdpNetworkSendingSettings> init_network_infos_signal;
     SSS<Header, cam::DCDelaySettings> update_delay_signal;
     SSS<Header, Command> command_signal;
 
+    SSS<Header, std::shared_ptr<cam::DCDeviceSettings>> update_device_settings_signal;
+    SSS<Header, std::shared_ptr<cam::DCColorSettings>> update_color_settings_signal;
+    SSS<Header, std::shared_ptr<cam::DCFiltersSettings>> update_filters_signal;
+
 protected:
 
-    auto process_packet(std::span<std::int8_t>) -> void override;
+    auto process_packet(std::span<const std::byte> packet) -> void override;
 
 private:
 
-    MultiPacketsUdpReception filtersReception;
+    UdpMessageReception deviceReception;
+    UdpMessageReception filtersReception;
+    UdpMessageReception colorReception;
 };
 
 
@@ -78,14 +81,14 @@ public:
 
 protected:
 
-    auto process_packet(std::span<std::int8_t> packet) -> void override;
+    auto process_packet(std::span<const std::byte> packet) -> void override;
 
 private:
 
     AverageSynch synchro;
     Framerate framerate;
     AverageLatency latency;
-    MultiPacketsUdpReception cFramesReception;
+    UdpMessageReception cFramesReception;
 };
 
 

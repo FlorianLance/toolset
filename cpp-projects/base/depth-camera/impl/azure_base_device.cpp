@@ -26,6 +26,7 @@
 
 #include "azure_base_device.hpp"
 
+
 // k4a
 #include "azure_utility.hpp"
 #include "thirdparty/k4a/k4amicrophonelistener.h"
@@ -74,6 +75,23 @@ struct AzureBaseDevice::Impl{
     static auto generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t;
     static auto set_property_value(k4a::device *dev, k4a_color_control_command_t pId, std::int32_t value, bool manual) -> void;
     static auto update_k4_body(DCBody &body, const k4abt_body_t &k4aBody) -> void;
+
+    static auto log(void *context,
+        k4a_log_level_t level,
+        const char *file,
+        const int line,
+        const char *message) -> void{
+
+        // std::cout << "[[[[[[[[[[[[[[[[[ line " << line << " message " << message << "\n";
+    }
+    // typedef void(k4a_logging_message_cb_t)(void *context,
+    //                                        k4a_log_level_t level,
+    //                                        const char *file,
+    //                                        const int line,
+    //                                        const char *message);
+
+
+
 };
 
 auto AzureBaseDevice::Impl::generate_config(bool synchInConnected, bool synchOutConnected, const DCConfigSettings &config) -> k4a_device_configuration_t{
@@ -178,6 +196,15 @@ AzureBaseDevice::AzureBaseDevice() : i(std::make_unique<Impl>()){
     auto lg = LogGuard("AzureBaseDevice::AzureBaseDevice"sv);
 
     i->deviceCount = k4a::device::get_installed_count();
+
+    // k4a_set_debug_message_handler(i->log, this, K4A_LOG_LEVEL_ERROR);
+
+    // typedef void(k4a_logging_message_cb_t)(void *context,
+    //                                        k4a_log_level_t level,
+    //                                        const char *file,
+    //                                        const int line,
+    //                                        const char *message);
+
     // if(i->devicesList.empty()){
 
     //     std::cout << "list device\n";
@@ -387,7 +414,14 @@ auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
         i->device->start_cameras(&i->k4aConfig);
 
         Logger::message("Retrieve calibration\n");
-        i->calibration     = i->device->get_calibration(i->k4aConfig.depth_mode, i->k4aConfig.color_resolution);
+        i->calibration = i->device->get_calibration(i->k4aConfig.depth_mode, i->k4aConfig.color_resolution);
+
+        // specify color-depth alignment
+        i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[0] += configS.colorAlignmentTr.x();
+        i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1] += configS.colorAlignmentTr.y();
+        i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2] += configS.colorAlignmentTr.z();
+
+
         i->transformation  = k4a::transformation(i->calibration);
 
         display_calibration(i->calibration);
@@ -403,6 +437,8 @@ auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
         Logger::message(std::format("      width: {}\n",            c.depth_camera_calibration.resolution_width));
         Logger::message(std::format("      height: {}\n",           c.depth_camera_calibration.resolution_height));
         Logger::message(std::format("      metric radius: {}\n",    c.depth_camera_calibration.metric_radius));
+
+
 
         Logger::message("Start imu\n");
         i->device->start_imu();

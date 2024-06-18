@@ -33,6 +33,7 @@
 namespace tool::cam{
 
 struct Frame{
+
     std::uint8_t idDevice       = 0;
     std::int32_t idCapture      = 0;
     std::int64_t afterCaptureTS = 0;
@@ -41,8 +42,8 @@ struct Frame{
     virtual ~Frame(){}
     virtual auto data_size() const noexcept -> size_t;
     virtual auto init_from_file_stream(std::ifstream &file) -> void;
-    virtual auto init_from_data(std::span<const std::int8_t> data, size_t &offset) -> void;
+    virtual auto init_from_data(std::span<const std::byte> data, size_t &offset) -> void;
     virtual auto write_to_file_stream(std::ofstream &file) -> void;
-    virtual auto write_to_data(std::span<std::int8_t> data, size_t &offset) -> void;
+    virtual auto write_to_data(std::span<std::byte> data, size_t &offset) -> void;
 };
 }

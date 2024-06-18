@@ -748,6 +748,11 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
         Logger::message("Generate k4a calibration.\n");
         i->k4aCalibration = i->k4a_convert_calibration(mInfos, i->calibrationParam);
 
+        // specify color-depth alignment
+        i->k4aCalibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[0] += configS.colorAlignmentTr.x();
+        i->k4aCalibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1] += configS.colorAlignmentTr.y();
+        i->k4aCalibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2] += configS.colorAlignmentTr.z();
+
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
         i->device = nullptr;

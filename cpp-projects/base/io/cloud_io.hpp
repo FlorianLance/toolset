@@ -39,6 +39,28 @@
 
 namespace tool::io {
 
+
+// struct ImageIO{
+
+//     static auto save_image(const std::string &path, std::span<std::uint16_t> data, size_t width, size_t height, std::uint16_t min, std::uint16_t max, std::span<geo::Pt3f> gradient) -> bool{
+
+//         std::ofstream file;
+//         file.open(path);
+//         if(!file.is_open()){
+//             //Logger::error(std::format("[ImageIO::save_image] Cannot open file from path {}.\n", path));
+//             return false;
+//         }
+
+//         const auto diff = max - min;
+
+//         // file << std::format(vLine2, v1, v2);
+
+
+//         return true;
+//     }
+// };
+
+
 using namespace std::string_view_literals;
 class CloudIO{
 

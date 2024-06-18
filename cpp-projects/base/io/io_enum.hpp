@@ -33,6 +33,14 @@ namespace tool::io {
 
 using namespace std::literals::string_view_literals;
 
+enum class SettingsVersion : std::uint16_t{
+    v1_0=0,
+    v1_9,
+    LastVersion = v1_9,
+    Undefined,
+    SizeEnum
+};
+
 enum class SettingsType : std::int32_t{
     Client_network, Server_network,
     Filters, Color, Model, Delay,

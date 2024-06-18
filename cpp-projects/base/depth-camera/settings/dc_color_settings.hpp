@@ -28,7 +28,7 @@
 
 // local
 #include "depth-camera/dc_enums.hpp"
-#include "io/binary_settings.hpp"
+#include "io/settings.hpp"
 
 namespace tool::cam {
 
@@ -169,7 +169,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
     return {};
 }
 
-struct DCColorSettings : io::BinaryFileSettings{
+struct DCColorSettings : io::BaseSettings{
 
     std::uint16_t whiteBalance              = 4500;
     std::uint16_t exposureTime              = 0;
@@ -187,17 +187,19 @@ struct DCColorSettings : io::BinaryFileSettings{
     bool autoWhiteBalance                   = true;
     bool hdr                                = true;
 
-    DCColorSettings();
-    DCColorSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-        DCColorSettings::init_from_data(data, offset, sizeData);
+    DCColorSettings(){
+        sType   = io::SettingsType::Color;
+        version = io::SettingsVersion::LastVersion;
     }
-
-    // i/o
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-    auto total_data_size() const noexcept -> size_t override;
-
+    DCColorSettings(std::span<const std::uint8_t> jsonBinary){
+        DCColorSettings::init_from_json_binary(jsonBinary);
+    }
     auto set_default_values(DCType type) -> void;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
 
+
+    // legacy
+    auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
 };
 }

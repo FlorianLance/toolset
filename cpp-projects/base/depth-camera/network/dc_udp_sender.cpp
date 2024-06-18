@@ -33,186 +33,204 @@
 
 // local
 #include "utility/logger.hpp"
-#include "data/checksum.hpp"
-
+#include "utility/time.hpp"
 
 using namespace tool::net;
 
-auto DCServerUdpSender::send_init_message(const UdpNetworkSendingSettings &network) -> Header{
+auto DCServerUdpSender::send_init_binary_message(const UdpNetworkSendingSettings &network) -> bool{
 
     if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_init_message: sender not opened, message canceled.\n");
-        return {};
-    }
-
-    // init header
-    Header header = generate_mono_packet(MessageType::init_network_infos, sizeof(UdpNetworkSendingSettings));
-
-    // init data
-    UdpMonoPacketData::copy_to_data<net::UdpNetworkSendingSettings>(header, &network, packetBuffer);
-    // header.checkSum = data::Checksum::gen_crc16(reinterpret_cast<std::uint8_t*>(packetBuffer.data()), header.total_size_data_bytes());
-
-    // send data
-    send_mono_packet(header);
-
-    return header;
-}
-
-auto DCServerUdpSender::send_update_device_settings_message(const cam::DCDeviceSettings &device) -> Header{
-
-    if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_update_device_settings_message: sender not opened, message canceled.\n");
-        return {};
-    }
-
-    // init header
-    Header header = generate_mono_packet(MessageType::update_device_settings, sizeof(cam::DCDeviceSettings));
-
-    // init data
-    UdpMonoPacketData::copy_to_data(header, &device, packetBuffer);
-
-
-    // send data
-    send_mono_packet(header);
-
-    return header;
-}
-
-auto DCServerUdpSender::send_update_color_settings_message(const cam::DCColorSettings &color) -> Header{
-
-    if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_update_color_settings_message: sender not opened, message canceled.\n");
-        return {};
-    }
-
-    // init header
-    Header header = generate_mono_packet(MessageType::update_color_settings, sizeof(cam::DCColorSettings));
-
-    // init data
-    UdpMonoPacketData::copy_to_data<cam::DCColorSettings>(header, &color, packetBuffer);
-
-
-    // send data
-    send_mono_packet(header);
-
-    return header;
-}
-
-auto DCServerUdpSender::send_delay_settings_message(cam::DCDelaySettings delay) -> Header{
-
-    if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_delay_settings_message: sender not opened, message canceled.\n");
-        return {};
-    }
-
-    // init header
-    Header header = generate_mono_packet(MessageType::delay, sizeof(cam::DCDelaySettings));
-
-    // init data
-    UdpMonoPacketData::copy_to_data<cam::DCDelaySettings>(header, &delay, packetBuffer);
-
-
-    // send data
-    send_mono_packet(header);
-
-    return header;
-}
-
-auto DCServerUdpSender::send_command_message(net::Command command) -> Header{
-
-    if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_command_message: sender not opened, message canceled.\n");
-        return {};
-    }
-
-    // init header
-    Header header = generate_mono_packet(MessageType::command, sizeof(Command));
-
-    // init data
-    UdpMonoPacketData::copy_to_data<net::Command>(header, &command, packetBuffer);    
-
-
-    // send data
-    send_mono_packet(header);
-
-    return header;
-}
-
-auto DCServerUdpSender::send_update_filters_settings_message(const cam::DCFiltersSettings &filters) -> bool{
-
-    if(!is_opened()){
-        Logger::error("DCServerUdpSender::send_update_filters_settings_message: sender not opened, message canceled.\n");
+        Logger::error("[DCServerUdpSender::send_init_binary_message] Sender not opened, message canceled.\n"sv);
         return false;
     }
 
     // init header
-    Header header;
-    header.type      = MessageType::update_filters;
-    if(currentIdMessages.contains(header.type)){
-        header.idMessage = currentIdMessages[header.type]++;
-    }else{
-        currentIdMessages[header.type] = 0;
-        header.idMessage = 0;
-    }
+    Header header = generate_header(MessageType::init_network_infos);
 
-
-    // init data
-    auto totalDataSizeBytes = filters.total_data_size();
-    if(bufferToSend.size() < totalDataSizeBytes){
-        bufferToSend.resize(totalDataSizeBytes);
-    }
-
-    size_t offset = 0;
-    filters.write_to_data(bufferToSend.data(), offset, totalDataSizeBytes);
+    // convert to data
+    auto bData = std::span(reinterpret_cast<const std::byte*>(&network), sizeof(UdpNetworkSendingSettings));
 
     // send data
-    size_t nbBytesSent = send_packets(header, totalDataSizeBytes);
+    size_t nbBytesSent = send_data(header, bData);
     if(nbBytesSent != header.totalSizeBytes){
-        Logger::error(std::format("K4SMUdpSender::send_update_filters_settings_message: Invalid nb of bytes send, {} instead of {}.\n",
-                nbBytesSent, header.totalSizeBytes));
+        Logger::error(std::format("[DCServerUdpSender::send_feedback_binary_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
         return false;
     }
 
     return true;
 }
 
-auto DCClientUdpSender::send_synchronisation_message() -> bool{
+
+auto DCServerUdpSender::send_delay_settings_binary_message(cam::DCDelaySettings delay) -> bool{
 
     if(!is_opened()){
-        Logger::error("DCClientUdpSender::send_synchronisation_message: sender not opened, message canceled.\n");
+        Logger::error("[DCServerUdpSender::send_delay_settings_binary_message] Sender not opened, message canceled.\n"sv);
         return false;
     }
 
     // init header
-    Header header = generate_mono_packet(MessageType::synchro, 0);
+    Header header = generate_header(MessageType::delay);
 
-    // init data
-    UdpMonoPacketData::copy_only_header_to_data(header, packetBuffer);
+    // convert to data
+    auto bData = std::span(reinterpret_cast<const std::byte*>(&delay), sizeof(cam::DCDelaySettings));
 
+    // send data
+    size_t nbBytesSent = send_data(header, bData);
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_feedback_binary_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
+}
+
+auto DCClientUdpSender::send_synchronisation_binary_message() -> bool{
+
+    if(!is_opened()){
+        Logger::error("[DCClientUdpSender::send_synchronisation_binary_message] Sender not opened, message canceled.\n"sv);
+        return false;
+    }
+
+    // init header
+    Header header = generate_dataless_header(MessageType::synchro);
+
+    // copy data
+    if(packetBuffer.size() < header.totalSizeBytes){
+        packetBuffer.resize(header.totalSizeBytes);
+    }
+    auto headerD = reinterpret_cast<const std::byte*>(&header);
+    std::copy(headerD, headerD + sizeof(Header), packetBuffer.begin());
 
     // send data
     return send_mono_packet(header) != 0;
 }
 
-auto DCClientUdpSender::send_feedback_message(Feedback feedback) -> bool{
+auto DCClientUdpSender::send_feedback_binary_message(Feedback feedback) -> bool{
 
     if(!is_opened()){
-        Logger::error("DCClientUdpSender::send_feedback_message: sender not opened, message canceled.\n");
+        Logger::error("[DCClientUdpSender::send_feedback_binary_message] Sender not opened, message canceled.\n");
         return false;
     }
 
     // init header
-    Header header = generate_mono_packet(MessageType::feedback, sizeof(Feedback));    
+    Header header = generate_header(MessageType::feedback);
 
-    // init data
-    UdpMonoPacketData::copy_to_data<Feedback>(header, &feedback, packetBuffer);
-
+    // convert to data
+    auto bData = std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback));
 
     // send data
-    return send_mono_packet(header) != 0;
+    size_t nbBytesSent = send_data(header, bData);
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_feedback_binary_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
 }
 
-auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool{
+auto DCServerUdpSender::send_command_binary_message(net::Command command) -> bool{
+
+    if(!is_opened()){
+        Logger::error("[DCServerUdpSender::send_command_binary_message] Sender not opened, message canceled.\n"sv);
+        return false;
+    }
+
+    // init header
+    Header header = generate_header(MessageType::command);
+
+    // convert to data
+    auto bData = std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command));
+
+    // send data
+    size_t nbBytesSent = send_data(header, bData);
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_command_binary_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
+}
+
+
+auto DCServerUdpSender::send_update_device_settings_bson_message(const cam::DCDeviceSettings &device) -> bool{
+
+    if(!is_opened()){
+        Logger::error("[DCServerUdpSender::send_update_device_settings_bson_message] Sender not opened, message canceled.\n"sv);
+        return false;
+    }
+
+    // init header
+    Header header = generate_header(MessageType::update_device_settings);
+
+    // convert to data
+    auto bData = device.convert_to_json_binary();
+
+    // send data
+    size_t nbBytesSent = send_data(header, std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_update_device_settings_bson_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
+}
+
+
+auto DCServerUdpSender::send_update_filters_settings_bson_message(const cam::DCFiltersSettings &filters) -> bool{
+
+    if(!is_opened()){
+        Logger::error("[DCServerUdpSender::send_update_filters_settings_bson_message] Sender not opened, message canceled.\n"sv);
+        return false;
+    }
+
+    // init header
+    Header header = generate_header(MessageType::update_filters);
+
+    // convert to data
+    auto bData = filters.convert_to_json_binary();
+
+    // send data
+    size_t nbBytesSent = send_data(header, std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_update_filters_settings_bson_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
+}
+
+auto DCServerUdpSender::send_update_color_settings_bson_message(const cam::DCColorSettings &color) -> bool{
+
+    if(!is_opened()){
+        Logger::error("[DCServerUdpSender::send_update_color_settings_bson_message] Sender not opened, message canceled.\n"sv);
+        return false;
+    }
+
+    // init header
+    Header header = generate_header(MessageType::update_color_settings);
+
+    // convert to data
+    auto bData = color.convert_to_json_binary();
+
+    // send data
+    size_t nbBytesSent = send_data(header, std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+    if(nbBytesSent != header.totalSizeBytes){
+        Logger::error(std::format("[DCServerUdpSender::send_update_color_settings_bson_message] Invalid nb of bytes send, {} instead of {}.\n"sv,
+            nbBytesSent, header.totalSizeBytes));
+        return false;
+    }
+
+    return true;
+}
+
+
+auto DCClientUdpSender::send_compressed_frame_binary_message(std::shared_ptr<cam::DCCompressedFrame> frame) -> bool{
 
     if(!is_opened()){
         return false;
@@ -230,16 +248,16 @@ auto DCClientUdpSender::send_compressed_frame_message(std::shared_ptr<cam::DCCom
     }
 
     size_t offset = 0;
-    frame->write_to_data(std::span<std::int8_t>(bufferToSend.data(), totalDataSizeBytes), offset);
+    auto bData = std::span(bufferToSend.data(), totalDataSizeBytes);
+    frame->write_to_data(bData, offset);
 
     // send data
-    size_t nbBytesSent = send_packets(header, totalDataSizeBytes);
+    size_t nbBytesSent = send_data(header, bData);
     if(nbBytesSent != header.totalSizeBytes){
-        Logger::error(std::format("DCClientUdpSender::send_compressed_frame_message: Invalid nb of bytes send, {} instead of {}.\n",
+        Logger::error(std::format("[DCClientUdpSender::send_compressed_frame_binary_message] Invalid nb of bytes send, {} instead of {}.\n",
             nbBytesSent, header.totalSizeBytes));
         return false;
     }
-
 
     ++idLastFrameMutliPacketsMessageSent;
     return true;

@@ -28,8 +28,10 @@
 
 #include <iostream>
 
+#define K4A_ENABLE_LOG_TO_STDOUT = 0
+#define K4A_LOG_LEVEL = 'c'
+
 // k4a
-// #include "k4a/k4a.h"
 #include <k4a/k4atypes.h>
 
 // kabt

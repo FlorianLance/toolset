@@ -27,7 +27,7 @@
 #pragma once
 
 // local
-#include "io/binary_settings.hpp"
+#include "io/settings.hpp"
 #include "graphics/color/rgb.hpp"
 #include "depth-camera/dc_enums.hpp"
 #include "geometry/point3.hpp"
@@ -44,16 +44,7 @@ enum class PlaneFilteringMode : std::int8_t{
     Below
 };
 
-struct DCFiltersSettings : io::BinaryFileSettings{
-
-    // auto to_json() -> std::string{
-
-    //     return "";
-    // }
-
-    // auto from_json(std::string_view json) -> void{
-
-    // }
+struct DCFiltersSettings : io::BaseSettings{
 
     // depth filtering
     // # basic
@@ -107,16 +98,20 @@ struct DCFiltersSettings : io::BinaryFileSettings{
     // infra filtering
     bool invalidateInfraFromDepth   = false;
 
-    DCFiltersSettings();
-    DCFiltersSettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-        DCFiltersSettings::init_from_data(data, offset, sizeData);
+    DCFiltersSettings(){
+        sType   = io::SettingsType::Filters;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCFiltersSettings(std::span<const std::uint8_t> jsonBinary){
+        DCFiltersSettings::init_from_json_binary(jsonBinary);
     }
     static auto default_init_for_calibration() -> DCFiltersSettings;
 
-    // i/o
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-    auto total_data_size() const noexcept -> size_t override;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    // legacy
+    auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
 };
 
 }

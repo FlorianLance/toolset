@@ -27,6 +27,8 @@
 
 // std
 #include <cstdint>
+#include <cstddef>
+#include <span>
 
 #pragma once
 
@@ -34,7 +36,11 @@ namespace tool::data{
 
 struct Checksum{
 
-    [[nodiscard]][[maybe_unused]] static auto gen_crc16(const uint8_t *data, uint16_t size) -> std::uint16_t{
+    [[nodiscard]][[maybe_unused]] static auto gen_crc16(std::span<const std::byte> data) -> std::uint16_t{
+        return gen_crc16(reinterpret_cast<const std::uint8_t*>(data.data()), data.size_bytes());
+    }
+
+    [[nodiscard]][[maybe_unused]] static auto gen_crc16(const std::uint8_t *data, std::uint16_t size) -> std::uint16_t{
 
         static constexpr std::uint16_t cr16 = 0x8005;
 

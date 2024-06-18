@@ -1063,12 +1063,13 @@ auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
         auto s = String::split_path_and_filename(filePath.value());
         if(s.second.contains("default")){
             ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{1.f,0.5f,0.15f,1.f});
-        }else{
+            return;
+        }else if(!filePath.value().empty()){
             ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{0,1.f,0,1.f});
+            return;
         }
-    }else{
-        ImGui::Text("No file loaded.");
     }
+    ImGuiUiDrawer::text("No file loaded."sv, geo::Pt4f{1.f,0.0f,0.0f,1.f});
 }
 
 auto DCMLeftPanelChildDrawer::draw_infos_tab_item(const DCMSettings &settings) -> void{

@@ -148,8 +148,7 @@ auto DCServerNetwork::update_color_settings(size_t idG, const cam::DCColorSettin
     }
 }
 
-auto DCServerNetwork::update_filters_settings(size_t idG, const cam::DCFiltersSettings &filters) -> void {
-    if(idG < i->devices.size()){
+auto DCServerNetwork::update_filters_settings(size_t idG, const cam::DCFiltersSettings &filters) -> void { if(idG < i->devices.size()){
         i->devices[idG]->update_filters_settings(filters);
     }else{
         Logger::error(std::format("[DCServerNetwork::send_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idG, i->devices.size()));

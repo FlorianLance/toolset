@@ -60,9 +60,9 @@ public:
 
 protected:
 
-    virtual auto process_packet(std::span<std::int8_t> packet) -> void;
+    virtual auto process_packet(std::span<const std::byte> packet) -> void;
     
-    DoubleRingBuffer<std::int8_t> messagesBuffer;
+    DoubleRingBuffer<std::byte> messagesBuffer;
 
 private :
 

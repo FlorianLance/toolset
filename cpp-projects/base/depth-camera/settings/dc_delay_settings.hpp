@@ -26,21 +26,24 @@
 #pragma once
 
 // local
-#include "io/binary_settings.hpp"
+#include "io/settings.hpp"
 
 namespace tool::cam {
 
-struct DCDelaySettings : io::BinarySettings{
+struct DCDelaySettings : io::BaseSettings{
+
     std::int64_t delayMs = 0;
 
-    DCDelaySettings();
-    DCDelaySettings(std::int8_t const * const data, size_t &offset, size_t sizeData){
-        DCDelaySettings::init_from_data(data, offset, sizeData);
+    DCDelaySettings(){
+        sType   = io::SettingsType::Delay;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCDelaySettings(std::span<const std::uint8_t> jsonBinary){
+        DCDelaySettings::init_from_json_binary(jsonBinary);
     }
 
-    auto init_from_data(std::int8_t const * const data, size_t &offset, size_t sizeData) -> void override;
-    auto write_to_data(std::int8_t * const data, size_t &offset, size_t sizeData) const -> void override;
-    auto total_data_size() const noexcept -> size_t override;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
 };
 
 }

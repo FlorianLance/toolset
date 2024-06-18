@@ -26,11 +26,8 @@
 
 #pragma once
 
-
 // local
 #include "imgui_dc_clouds_scene_drawer.hpp"
-
-#include <iostream>
 
 namespace tool::graphics {
 
@@ -43,7 +40,6 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
     auto draw_only_clouds() -> void;
 
     auto update_filters_settings(size_t id, const cam::DCFiltersSettings &filters) -> void {
-        std::cout << "update_filters_settings " << id << "\n";
         DCCloudsSceneDrawer::update_filters_settings(id, filters);
     }
 
