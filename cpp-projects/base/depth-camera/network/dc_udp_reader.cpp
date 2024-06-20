@@ -191,7 +191,11 @@ auto DCServerUdpReader::process_packet(std::span<const std::byte> packet) -> voi
             // add average diff to capture timestamp
             cFrame->afterCaptureTS += synchro.averageDiffNs;
 
+            // update framerate
             framerate.add_frame();
+
+            // update bandwitdh
+            bandwidth.add_size(info->totalBytesReceived);
 
             // update latency
             latency.update_average_latency(Time::difference_micro_s(nanoseconds(cFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
@@ -204,7 +208,7 @@ auto DCServerUdpReader::process_packet(std::span<const std::byte> packet) -> voi
             timeout_messages_signal(nbMessageTimeout);
         }
 
-        status_signal(UdpReceivedStatus{cFramesReception.get_percentage_success(), framerate.get_framerate(), latency.averageLatency});
+        status_signal(UdpReceivedStatus{cFramesReception.get_percentage_success(), framerate.get_framerate(), latency.averageLatency, bandwidth.get_bandwidth()});
 
     }break;  
     default:

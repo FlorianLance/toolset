@@ -229,3 +229,24 @@ auto AverageLatency::update_average_latency(int64_t latency) -> void{
         1.0 * std::accumulate(std::begin(span), std::end(span), std::int64_t{0}) / nbMaxValues
     );
 }
+
+AverageBandwidth::AverageBandwidth(){
+    bytesReceived.resize(nbMaxValues, {std::chrono::nanoseconds(0), 0});
+}
+
+auto AverageBandwidth::add_size(size_t nbBytes) -> void{
+    bytesReceived.set_current({Time::nanoseconds_since_epoch(), nbBytes});
+    bytesReceived.increment();
+}
+
+auto AverageBandwidth::get_bandwidth() -> size_t{
+
+    size_t total = 0;
+    auto currentTimestampNS = Time::nanoseconds_since_epoch();
+    for(const auto &time : bytesReceived.span()){
+        if(Time::difference_ms(std::get<0>(time), currentTimestampNS).count() < 1000){
+            total += std::get<1>(time);
+        }
+    }
+    return total;
+}

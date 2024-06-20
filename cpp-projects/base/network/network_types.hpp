@@ -84,6 +84,17 @@ private:
     SingleRingBuffer<std::chrono::nanoseconds> rTimes;
 };
 
+struct AverageBandwidth{
+    AverageBandwidth();
+    auto add_size(size_t nbBytes) -> void;
+    auto get_bandwidth() -> size_t;
+private:
+    static constexpr size_t nbMaxValues = 1000;
+    SingleRingBuffer<std::tuple<std::chrono::nanoseconds, size_t>> bytesReceived;
+};
+
+
+
 struct AverageSynch{
     AverageSynch();
     auto update_average_difference(std::int64_t timestampNS) -> void;
@@ -172,6 +183,7 @@ struct UdpReceivedStatus{
     int percentageSuccess = 0;    
     float framerate = 0.f;
     std::int64_t latency = 0;
+    size_t bandwidthBytes = 0;
 };
 
 }

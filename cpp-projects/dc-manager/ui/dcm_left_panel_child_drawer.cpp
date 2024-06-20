@@ -409,6 +409,13 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
         }
         ImGui::Unindent();
 
+        ImGui::Text("Bandwidth (Mb/s)):");
+        ImGui::Indent();
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.bandwidthBytes/1000000));
+        }
+        ImGui::Unindent();
+
         ImGui::Text("Total latency (from capture to reception) (µs):");
         ImGui::Indent();
         for(size_t ii = 0; ii < grabbersS.size(); ++ii){

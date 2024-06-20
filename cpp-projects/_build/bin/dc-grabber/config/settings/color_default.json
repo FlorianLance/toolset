@@ -1,5 +1,5 @@
 {
-    "auto_exposure_time": true,
+    "auto_exposure_time": false,
     "auto_white_balance": false,
     "backlight_compensation": false,
     "base": {
