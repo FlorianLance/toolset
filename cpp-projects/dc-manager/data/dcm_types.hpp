@@ -29,16 +29,16 @@
 
 namespace tool{
 
-enum SAction{
-    Reset,Load,Save
+enum class SAction : int {
+    Reset, Load, Save
 };
-enum STarget{
-    All,Individual
+enum class STarget : int {
+    Irrelevant, All,Individual
 };
-enum SType{
-    Device ,Filters, CalibrationFilters, Color, Model
+enum class SType : int {
+    Device ,Filters, CalibrationFilters, Color, Model, Network
 };
-enum SFile{
+enum class SFile : int {
     Irrelevant, Default, Host, HostAllInOne
 };
 

@@ -51,7 +51,7 @@ auto DCFiltersSettings::init_from_json(const nlohmann::json &json) -> void{
     // base
     io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
     // depth filtering
-    minDepthF                     = read_value<float>(json, unreadCount, "min_widht_f");
+    minWidthF                     = read_value<float>(json, unreadCount, "min_widht_f");
     maxWidthF                     = read_value<float>(json, unreadCount, "max_widht_f");
     minHeightF                    = read_value<float>(json, unreadCount, "min_height_f");
     maxHeightF                    = read_value<float>(json, unreadCount, "max_height_f");

@@ -142,11 +142,12 @@ auto DCGController::set_connections() -> void{
     dev->update_device_name_signal.connect(                          [&](int deviceId, std::string deviceName){
         tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName); // TODO: move to settings/states ?
     });
+    s->save_current_network_settings_signal.connect(                 &Sett::save_current_network_settings_file,             sett);
     s->reset_device_settings_signal.connect(                         &Sett::reset_device_settings,                          sett);
     s->save_device_settings_to_default_file_signal.connect(          &Sett::save_device_settings_to_default_file,           sett);
     s->save_device_settings_to_current_hostname_file_signal.connect( &Sett::save_device_settings_to_current_hostname_file,  sett);
     s->load_default_device_settings_file_signal.connect(             &Sett::load_default_device_settings_file,              sett);
-    s->load_current_hostname_device_settings_file_signal.connect(    &Sett::load_current_hostname_device_settings_file,     sett);
+    s->load_current_hostname_device_settings_file_signal.connect(    &Sett::load_current_hostname_device_settings_file,     sett);    
     // s->mouse_pressed_depth_direct_signal.connect(                    &Sett::update_filters_depth_mask,                      sett);
     s->reset_filters_signal.connect(                                 &Sett::reset_filters,                                  sett);
     s->save_filters_to_default_file_signal.connect(                  &Sett::save_filters_to_default_file,                   sett);

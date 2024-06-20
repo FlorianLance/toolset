@@ -48,6 +48,14 @@ auto DCGMainMenuBarDrawer::draw() -> void{
     if (ImGui::BeginMainMenuBar()){
 
         if (ImGui::BeginMenu("Settings")){
+
+            if (ImGui::BeginMenu("Network")){
+                if(ImGui::MenuItem("Save current network file###save_current_network")){
+                    DCGSignals::get()->save_current_network_settings_signal();
+                }
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Device")){
                 if(ImGui::MenuItem("Reset device settings")){
                     DCGSignals::get()->reset_device_settings_signal();

@@ -52,6 +52,7 @@ struct UdpServerNetworkSettings : io::BaseSettings{
      */
     auto reset_interfaces() -> void;
     auto initialize(const std::string &filePath) -> bool;
+    auto default_initialize() -> void;
     auto add_client(const net::ReadSendNetworkInfos &clientInfo) -> void;
     auto update_client(size_t idC, const net::ReadSendNetworkInfos &nClientInfo) -> void;
 

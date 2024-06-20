@@ -270,6 +270,11 @@ auto DCGSettings::disconnect() -> void{
     networkS.disconnect_from_manager();
 }
 
+auto DCGSettings::save_current_network_settings_file() -> void{
+    auto lg = LogGuard("DCGSettings::save_current_network_settings_file");
+    networkS.save_to_json_str_file(DCGPaths::hostNetwork.string());
+}
+
 auto DCGSettings::reset_device_settings() -> void{
     auto lg = LogGuard("DCGSettings::reset_device_settings");
     deviceS = cam::DCDeviceSettings::default_init_for_grabber();

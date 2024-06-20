@@ -58,6 +58,8 @@ struct ReadSendNetworkInfos{
     int sendingPort;
     Protocol protocol = Protocol::unknow;
     bool startReadingThread = true;
+    // runtime
+    bool isLocalhost = false;
 };
 
 struct UdpNetworkSendingSettings{

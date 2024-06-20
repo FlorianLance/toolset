@@ -82,6 +82,8 @@ public:
     // i/o
     // # data
     SSS<std::string> save_cloud_to_file_signal;
+    // # network
+    SSS<> save_current_network_settings_signal;
     // # device
     SSS<> reset_device_settings_signal;
     SSS<> save_device_settings_to_default_file_signal;

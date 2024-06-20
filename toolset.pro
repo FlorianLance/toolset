@@ -35,9 +35,8 @@ SUBDIRS =\
     3d-engine \
     qt-utility qt-utility-app \
     nodes demos \
-    #scaner-component scaner-grabber guardian scaner-manager \
-    dc-grabber dc-manager \
-    #dc-monitoring \
+    #scaner-component scaner-grabber  scaner-manager \
+    guardian dc-grabber dc-manager dc-monitoring \
 
 # where to find the sub projects
 ## toolset
@@ -59,9 +58,10 @@ qt-utility-app.subdir           = cpp-projects/qt-utility-app
 nodes.subdir                    = cpp-projects/nodes
 ### demos
 demos.subdir                    = cpp-projects/demos
-scaner-component.subdir         = cpp-projects/scaner-component
-scaner-grabber.subdir           = cpp-projects/scaner-grabber
-scaner-manager.subdir           = cpp-projects/scaner-manager
+### depth-camera
+# scaner-component.subdir         = cpp-projects/scaner-component
+# scaner-grabber.subdir           = cpp-projects/scaner-grabber
+# scaner-manager.subdir           = cpp-projects/scaner-manager
 guardian.subdir                 = cpp-projects/guardian
 dc-grabber.subdir               = cpp-projects/dc-grabber
 dc-manager.subdir               = cpp-projects/dc-manager
@@ -84,11 +84,12 @@ qt-utility.depends              = opengl-utility
 qt-utility-app.depends          = qt-utility
 ### nodes
 nodes.depends                   = base
-scaner-component.depends        = base
 demos.depends                   = 3d-engine
-scaner-grabber.depends          = qt-utility
+### depth-camera
+# scaner-component.depends        = base
+# scaner-grabber.depends          = qt-utility
+# scaner-manager.depends          = qt-utility
 guardian.depends                = qt-utility
-scaner-manager.depends          = qt-utility
 dc-grabber.depends              = 3d-engine
 dc-manager.depends              = 3d-engine
 dc-monitoring.depends           = qt-utility

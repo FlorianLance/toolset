@@ -71,6 +71,8 @@ struct DCGSettings{
     auto disconnect() -> void;
 
     // io
+    // # network settings
+    auto save_current_network_settings_file() -> void;
     // # device settings
     auto reset_device_settings() -> void;
     auto save_device_settings_to_default_file() -> bool;

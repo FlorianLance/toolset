@@ -37,13 +37,19 @@ using namespace tool::net;
 using namespace tool::data;
 using json = nlohmann::json;
 
-
 auto UdpClientNetworkSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
     io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
-    //
+    // network
+    udpReadingInterfaceId   = read_value<size_t>(json, unreadCount, "id_interface");
+    udpReadingPort          = read_value<int>(json, unreadCount, "reading_port");
+    protocol                = (read_value<std::string>(json, unreadCount, "protocol") == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
+
+    const auto &interfaces = (protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+    udpReadingInterface = interfaces[udpReadingInterfaceId];
+
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[UdpClientNetworkSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
@@ -54,7 +60,11 @@ auto UdpClientNetworkSettings::convert_to_json() const -> nlohmann::json{
     json json;
     // base
     add_value(json, "base"sv, io::BaseSettings::convert_to_json());
-    //
+    // network
+    add_value(json, "id_interface"sv,   udpReadingInterfaceId);
+    add_value(json, "reading_port"sv,   udpReadingPort);
+    add_value(json, "protocol"sv,       (protocol == Protocol::ipv6) ? "ipv6" : "ipv4");
+
     return json;
 }
 
@@ -123,15 +133,6 @@ auto UdpClientNetworkSettings::init_from_text(std::string_view &text) -> void{
     }
 }
 
-// auto UdpClientNetworkSettings::write_to_text() const -> std::string{
-//     return std::format(
-//         "{} {} {} {} {}\n",
-//         BaseSettings::write_to_text(), // write version
-//         "id_interface | reading_port | ipv4/ipv6\n"sv, // write header
-//         udpReadingInterfaceId,
-//         udpReadingPort,
-//         udpReadingPort
-//     );
-// }
+
 
 

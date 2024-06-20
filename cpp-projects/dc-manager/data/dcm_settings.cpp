@@ -76,7 +76,7 @@ auto DCMSettings::initialize() -> bool{
 
     // init network
     if(!networkS.initialize(DCSettingsPaths::get_network_settings_file_path())){
-        return false;
+        networkS.default_initialize();
     }
 
     // init grabbers paths
@@ -108,7 +108,7 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
         for(auto &grabber : grabbersS){
             tGrabbers.push_back(&grabber);
         }
-    }else{
+    }else if (target == STarget::Individual){
         tGrabbers.push_back(&grabbersS[id]);
     }
 
@@ -140,7 +140,9 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                 grabber->model = DCModelSettings();
             }
             break;
-        }
+        case SType::Network:
+            break;
+        }                
         break;
     case SAction::Load:
         switch(type){
@@ -213,6 +215,8 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                 io::BaseSettings::load_multi_from_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
             break;
+        case SType::Network:
+            break;
         }
         break;
     case SAction::Save:
@@ -284,6 +288,9 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                 }
                 io::BaseSettings::save_multi_to_json_str_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
+            break;
+        case SType::Network:
+            networkS.save_to_json_str_file(DCSettingsPaths::hostNetwork.string());
             break;
         }
         break;

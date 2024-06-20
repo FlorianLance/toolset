@@ -90,6 +90,14 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
     if (ImGui::BeginMainMenuBar()){
 
         if (ImGui::BeginMenu("Settings")){
+
+            if (ImGui::BeginMenu("Network")){
+                if(ImGui::MenuItem("Save current network file###save_current_network")){
+                    DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Irrelevant, SType::Network, SFile::Irrelevant, 0);
+                }
+                ImGui::EndMenu();
+            }
+
             draw_device_sub_menu();
             draw_color_sub_menu();
             draw_filters_sub_menu();
