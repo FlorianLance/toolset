@@ -54,11 +54,11 @@ auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const DCMUiSettings &uiS) -
             }
 
             if((m_recordingTabOpened = ImGuiUiDrawer::begin_tab_item("Recorder###display_recorder_tabitem"))){
-                recorderD.draw();
+                recorderD.draw(uiS.focusWindow);
                 ImGui::EndTabItem();
             }
             if((m_playerTabOpened = ImGuiUiDrawer::begin_tab_item("Player###display_player_tabitem"))){
-                playerD.draw();
+                playerD.draw(uiS.focusWindow);
                 ImGui::EndTabItem();
             }
             if((m_calibrationTabOpened = ImGuiUiDrawer::begin_tab_item("Calibrator###calibrator_direct_tabitem"))){

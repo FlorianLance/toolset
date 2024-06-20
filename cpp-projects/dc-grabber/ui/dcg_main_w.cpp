@@ -118,7 +118,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Recorder###recorder_tabitem")){;
-                    recorderD.draw();
+                    recorderD.draw(model->settings.displayS.focusWindow);
                     ImGui::EndTabItem();
                 }
 

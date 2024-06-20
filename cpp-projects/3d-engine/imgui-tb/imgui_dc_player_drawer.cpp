@@ -59,14 +59,13 @@ auto DCPlayerDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) 
     }
 }
 
-auto DCPlayerDrawer::draw() -> void{
+auto DCPlayerDrawer::draw(bool focusWindow) -> void{
 
     if(m_redrawClouds || has_to_redraw_clouds()){
         draw_clouds_to_fbo();
     }
     m_redrawClouds = false;
 
-    bool focusWindow = false;
 
     // draw data
     static ImGuiID tabId = 0;

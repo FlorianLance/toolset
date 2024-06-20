@@ -35,7 +35,7 @@ struct DCPlayerDrawer : public DCCloudsSceneDrawer{
 
     auto initialize(const std::vector<cam::DCModelSettings> &models) -> void;
     auto set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto draw() -> void;
+    auto draw(bool focusWindow) -> void;
 
 private:
 

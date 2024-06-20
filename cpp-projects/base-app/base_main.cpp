@@ -434,6 +434,102 @@ auto test_microphone() -> void{
     std::cout << "end test_microphone\n";
 }
 
+#include "depth-camera/dc_frame_indices.hpp"
+#include <execution>
+
+auto process_kvid() -> void{
+
+    DCVideo video;
+    video.load_from_file("E:/newtournage intro generique1.kvid");
+
+    DCFrameGenerationSettings settings;
+    settings.calibration = true;
+    settings.cloud = false;
+
+
+    bool initialized = false;
+    tool::cam::DCFrameIndices fIndices;
+    tool::cam::DCModeInfos mInfos;
+
+    tool::cam::DCFrameCompressor compressor;
+
+    std::cout << "START\n" << std::endl;
+
+    for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
+        for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
+            DCFrame frame;
+            // std::cout << "uncompress " << idC << " " << idF << "\n";
+            video.uncompress_frame(settings, idC, idF, frame);
+
+            auto ccc = video.get_compressed_frame(idC, idF);
+            int v = ccc.lock().get()->validVerticesCount;
+
+            if(!initialized){
+                mInfos.initialize(frame.mode);
+                fIndices.initialize(mInfos);
+                initialized = true;
+
+                std::cout << "cloud " << (int) frame.mode  << " " << frame.calibration.size() << " " << frame.depth.size() << " " << frame.rgbaDepthSizedColor.size() << " " <<  frame.cloud.empty() << std::endl;
+            }
+
+            std::vector<bool> filteringM(frame.depth.size(), false);
+
+            if(idC == 0 && idF == 10){
+
+            }
+
+            for(size_t idL = 0; idL < 3; ++idL){
+                std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
+                    if(frame.depth[id] ==  dc_invalid_depth_value){
+                        return;
+                    }
+                    std::uint8_t count = 0;
+                    for(auto cId : fIndices.neighbours8Depth1D[id]){
+                        if(frame.depth[cId] != dc_invalid_depth_value){
+                            ++count;
+                        }
+                    }
+                    filteringM[id] = count >= 6;
+                });
+
+
+                for(size_t id = 0; id < filteringM.size(); ++id){
+                    if(!filteringM[id]){
+                        frame.depth[id] = dc_invalid_depth_value;
+                    }
+                }
+            }
+
+            size_t idValid = 0;
+            for(size_t id = 0; id < filteringM.size(); ++id){
+                if(filteringM[id]){
+                    ++idValid;
+                }
+            }
+
+            auto cFrame = std::make_shared<DCCompressedFrame>();
+            compressor.compress(frame, 100, cFrame.get());
+            cFrame->validVerticesCount = idValid;
+
+
+            // std::cout << "ccloud " << cFrame->calibration.size() << " " << (int)cFrame->mode << " "<< cFrame->fpfDepth.size() << " " << cFrame->validVerticesCount << " " << v <<  "\n";
+            video.replace_compressed_frame(idC, idF, std::move(cFrame));
+            // fIndices.neighbours8Depth1D;
+            // frame.depth.values;
+
+
+
+            // // fIndices
+            // frame.mode;
+            // frame.calibration;
+            // frame.depth
+
+
+        }
+    }
+    video.save_to_file("E:/newtournage intro generique1-m2.kvid");
+}
+
 int main(int argc, char *argv[]){
 
     std::cout << "argc " << argc << "\n";
@@ -453,7 +549,8 @@ int main(int argc, char *argv[]){
         std::cerr << error;
     });
 
-    test_microphone();
+    // test_microphone();
+    process_kvid();
     // test_femto_mega();
 
     return 0;

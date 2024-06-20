@@ -35,8 +35,6 @@ struct DCGDisplaySettingsSettings{
     bool focusWindow = false;
     int currentWindow = 3;
 
-    bool settingsFiltersSubPanelDisplayed = false;
-
     DCSceneDisplaySettings sceneDisplay = DCSceneDisplaySettings::default_init_for_grabber();
     DCCloudDisplaySettings cloudDisplay = DCCloudDisplaySettings::default_init_for_grabber();
 };

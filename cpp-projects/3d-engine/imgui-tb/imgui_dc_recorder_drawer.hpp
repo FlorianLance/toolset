@@ -35,7 +35,7 @@ struct DCRecorderDrawer : public DCCloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
     auto set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto draw() -> void;
+    auto draw(bool focusWindow) -> void;
 
 private:
 

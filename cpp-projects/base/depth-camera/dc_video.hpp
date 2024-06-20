@@ -88,6 +88,8 @@ public:
     auto remove_compressed_frames_until(size_t idCamera, size_t idFrame) -> void;
     auto remove_compressed_frames_after(size_t idCamera, size_t idFrame) -> void;
     auto remove_all_compressed_frames(size_t idCamera) noexcept -> void;
+    // # replace
+    auto replace_compressed_frame(size_t idCamera, size_t idFrame, std::shared_ptr<DCCompressedFrame> frame) -> void;
 
 
     // # calibration

@@ -30,7 +30,5 @@ namespace tool {
 
 struct DCMUiSettings{
     bool focusWindow = false;
-    bool settingsFiltersNormalSubPanelDisplayed = false;
-    bool settingsFiltersCalibrationSubPanelDisplayed = false;
 };
 }

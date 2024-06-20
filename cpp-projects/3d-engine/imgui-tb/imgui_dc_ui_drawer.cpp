@@ -128,15 +128,13 @@ auto cloud_generation_mode_combo(std::string_view label, const char* id, CloudGe
 
 
 
-auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &update) -> bool{
-
-    update = false;
+auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters) -> std::tuple<bool, bool>{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
-        return false;
+        return {false, false};
     }
 
-
+    bool update = false;
     ImGuiUiDrawer::title2("DEPTH FILTERING");
     {
         ImGui::Text("Basic filtering:");
@@ -542,10 +540,10 @@ auto DCUIDrawer::draw_dc_filters_settings_tab_item(const std::string &tabItemNam
 
     ImGui::EndTabItem();
 
-    return true;
+    return {true, update};
 }
 
-auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display)  -> bool {
 
     if (!ImGui::BeginTabItem(tabItemName.c_str())){
         return false;
@@ -564,19 +562,12 @@ auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabIt
     ImGui::Spacing();
     ImGui::Separator();
 
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###scene_display_update_button")){
-        manualUpdate = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###scene_display_auto_update_cb", &autoUpdate)){}
-
     ImGui::EndTabItem();
 
-    return (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
-auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate)  -> bool {
+auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display)  -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -671,21 +662,13 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
     ImGui::Spacing();
     ImGui::Separator();
 
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###display_cloud_update_button")){
-        manualUpdate = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###display_cloud_auto_update_cb", &autoUpdate)){}
-
     ImGui::EndTabItem();
 
-    return (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
-auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model) -> bool{
 
-    static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -785,8 +768,7 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
 auto DCUIDrawer::draw_dc_recorder_tab_item(
     const std::string &tabItemName,
     cam::DCVideoRecorderStates &rStates,
-    cam::DCVideoRecorderSettings &rSettings,
-    bool &autoUpdate) -> bool{
+    cam::DCVideoRecorderSettings &rSettings) -> bool{
 
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
@@ -915,27 +897,15 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     }
     ImGui::Unindent();
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###recording_update_button")){
-        manualUpdate = true;
-    }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###recording_auto_update_cb", &autoUpdate)){}
-
-
     ImGui::EndTabItem();
 
-    return (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
 auto DCUIDrawer::draw_dc_player_tab_item(
     const std::string &tabItemName,
     cam::DCVideoPlayerStates &pStates,
-    cam::DCVideoPlayerSettings &pSettings,
-    bool &autoUpdate) -> bool{
+    cam::DCVideoPlayerSettings &pSettings) -> bool{
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
         return false;
@@ -1026,17 +996,73 @@ auto DCUIDrawer::draw_dc_player_tab_item(
         update = true;
     }
 
-    bool manualUpdate = false;
-    if(ImGui::Button("Update###player_update_button")){
-        manualUpdate = true;
+    ImGui::Text("Frame generation:");
+    ImGui::Indent();
+    {
+        ImGui::Text("Data:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("calibration###player_gen_calibration", &pSettings.generation.calibration)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###player_gen_depth", &pSettings.generation.depth)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("infra###player_gen_infra", &pSettings.generation.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("cloud###player_gen_cloud", &pSettings.generation.cloud)){
+            update = true;
+        }
+        cloud_color_mode_combo("Cloud color mode"sv, "###player_cloud_color_mode", pSettings.generation.cloudColorMode, update);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###player_cloud_gen_mode", pSettings.generation.cloudGenMode, update);
+
+
+        if(ImGui::Checkbox("body tracking###player_gen_body_tracking", &pSettings.generation.bodyTracking)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("imu###player_gen_imu", &pSettings.generation.imu)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###player_gen_audio", &pSettings.generation.audio)){
+            update = true;
+        }
+
+        ImGui::Unindent();
+
+        ImGui::Text("Images:");
+        ImGui::Indent();
+        if(ImGui::Checkbox("color###player_gen_color_image", &pSettings.generation.colorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth sized color###player_gen_depth_sized_color_image", &pSettings.generation.depthSizedColorImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("depth###player_gen_depth_image", &pSettings.generation.depthImage)){
+            update = true;
+        }
+
+        if(ImGui::Checkbox("infra###player_gen_infra_image", &pSettings.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id map###player_gen_bodies_id_map_image", &pSettings.generation.bodyIdMapImage)){
+            update = true;
+        }
+        ImGui::Unindent();
     }
-    ImGui::SameLine();
-    if(ImGui::Checkbox("Auto update###player_auto_update_cb", &autoUpdate)){}
+    ImGui::Unindent();
 
 
     ImGui::EndTabItem();
 
-    return (update && autoUpdate) || manualUpdate;
+    return update;
 }
 
 auto DCUIDrawer::draw_dc_calibrator_tab_item(
@@ -1044,8 +1070,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
     bool useNormalFilteringSettings,
     cam::DCCalibratorStates &cStates,
     DCCalibratorDrawerSettings &cdSettings,
-    cam::DCCalibratorSettings &cSettings,
-    bool &autoUpdate) -> bool {
+    cam::DCCalibratorSettings &cSettings) -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
         return false;
@@ -1296,29 +1321,31 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
 }
 
 auto DCUIDrawer::draw_dc_device_settings_tab_item(
-        const std::string &tabItemName,
-        cam::DCDeviceSettings &device, bool &update) -> bool{
+    const std::string &tabItemName,
+    cam::DCDeviceSettings &device) -> std::tuple<bool,bool>{
 
-    update = false;
+    bool update = false;
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
-        return false;
+        return {false, update};
     }
 
-    draw_dc_config(device.configS, update);
-    draw_dc_data_settings(device.configS.typeDevice, device.dataS, update);
+    update |= draw_dc_config(device.configS);
+    update |= draw_dc_data_settings(device.configS.typeDevice, device.dataS);
     ImGui::EndTabItem();
 
-    return true;
+    return {true, update};
 }
 
-auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &update) -> void{
+auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
 
     ImGuiUiDrawer::title2("CONFIG");
     ImGui::Spacing();
 
     ImGui::Text("Device:");
     ImGui::Indent();
+
+    bool update = false;
 
     if(ImGui::Checkbox("Open###settings_open_device", &config.openDevice)){
         update = true;
@@ -1538,13 +1565,17 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config, bool &update) -> 
 
     ImGui::Unindent();
     ImGui::Spacing();
+
+    return update;
 }
 
 
 
-auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &update) -> void{
+auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data) -> bool{
 
     ImGuiUiDrawer::title2("DATA");
+
+    bool update = false;
 
     ImGui::Text("Capture:");
     ImGui::Indent();
@@ -1713,7 +1744,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
 
 
     if(!m_isManager){
-        return;
+        return update;
     }
 
     ImGui::Text("Frame generation (manager):");
@@ -1779,6 +1810,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     }
     ImGui::Unindent();
 
+    return update;
 }
 
 auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIntS{
@@ -1791,10 +1823,9 @@ auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIn
     return intS;
 }
 
-auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors, bool &autoUpdate) -> bool{
+auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> bool{
 
     using CST = ColorSettingsType;
-    static_cast<void>(autoUpdate);
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;

@@ -74,6 +74,8 @@ auto DCFrameCompressor::compress(DCFrame &frame, int jpegQuality, DCCompressedFr
     cFrame->mode               = frame.mode;
     cFrame->validVerticesCount = frame.cloud.size();
 
+    cFrame->calibration        = frame.calibration;
+
     // rgba color
     if(!frame.rgbaColor.empty()){
         i->colorEncoder.encode(frame.rgbaColor, cFrame->jpegRGBA8Color, jpegQuality);

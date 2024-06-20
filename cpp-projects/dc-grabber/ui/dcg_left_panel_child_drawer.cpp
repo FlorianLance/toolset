@@ -46,8 +46,6 @@ using namespace tool::cam;
 
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGSettings &settings, DCGStates &states) -> void {
 
-    settings.displayS.settingsFiltersSubPanelDisplayed = false;
-
     if(ImGui::BeginChild("###settings_child2", ImVec2(size.x(), size.y()), true, windowFlags)){
         if (ImGui::BeginTabBar("###settings_tabbar")){
             draw_client_info_tab_item(settings);
@@ -202,14 +200,7 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 
 auto DCGLeftPanelChildDrawer::draw_device_tab_item(
     cam::DCDeviceSettings &device) -> void {
-
-    bool update = false;
-    DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",
-        device,
-        update
-    );
-
-    if(update){
+    if(std::get<1>(DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",device))){
         DCGSignals::get()->update_device_settings_signal(device);
     }
 }
@@ -219,17 +210,14 @@ auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
     const cam::DCConfigSettings &config,
     cam::DCFiltersSettings &filters) -> void {
 
-    bool update =false;
-    auto tabOpened = DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters, update);
-    ui.settingsFiltersSubPanelDisplayed  = tabOpened;
-    if(update){
+    if(std::get<1>(DCUIDrawer::draw_dc_filters_settings_tab_item("Filters###filters_tabitem", config.mode, filters))){
         DCGSignals::get()->update_filters_signal(filters);
     }
 }
 
 auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(cam::DCType type, cam::DCColorSettings &colors) -> void{
 
-    if(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors)){
         DCGSignals::get()->update_color_settings_signal(colors);
     }
 }
@@ -246,10 +234,10 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
     }
 
     if (ImGui::BeginTabBar("###display_tabbar")){
-        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", dcDisplaySettings.sceneDisplay, m_autoUpdate)){
+        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", dcDisplaySettings.sceneDisplay)){
             DCGSignals::get()->update_scene_display_settings_signal(dcDisplaySettings.sceneDisplay);
         }
-        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", dcDisplaySettings.cloudDisplay, m_autoUpdate)){
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", dcDisplaySettings.cloudDisplay)){
             DCGSignals::get()->update_cloud_display_settings_signal(0, dcDisplaySettings.cloudDisplay);
         }
         ImGui::EndTabBar();
@@ -263,7 +251,7 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
 }
 
 auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void {
-    if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings)){
         DCGSignals::get()->update_recorder_settings_signal(recSetings);
     }
 
@@ -290,7 +278,7 @@ auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCVideoRecorderStates
 
 auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &model) -> void {
 
-    if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model, m_autoUpdate)){
+    if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model)){
         DCGSignals::get()->update_model_settings_signal(0, model);
     }
 }

@@ -84,22 +84,18 @@ public:
         m_isManager = true;
     }
 
-    static auto draw_dc_config(cam::DCConfigSettings &config, bool &updateP) -> void;
-    static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data, bool &updateP) -> void;
-    static auto draw_dc_device_settings_tab_item(
-        const std::string &tabItemName,
-        cam::DCDeviceSettings &device,
-        bool &update
-    ) -> bool;
+    static auto draw_dc_config(cam::DCConfigSettings &config) -> bool;
+    static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data) -> bool;
+    static auto draw_dc_device_settings_tab_item( const std::string &tabItemName, cam::DCDeviceSettings &device) -> std::tuple<bool,bool>;
 
-    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors, bool &autoUpdate) -> bool;
-    static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters, bool &update) -> bool;
-    static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display, bool &autoUpdate) -> bool;
-    static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model, bool &autoUpdate) -> bool;
-    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings, bool &autoUpdate) -> bool;
-    static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings, bool &autoUpdate) -> bool;
-    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings, bool &autoUpdate) -> bool;
+    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> bool;
+    static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters) -> std::tuple<bool, bool>;
+    static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display) -> bool;
+    static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display) -> bool;
+    static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model) -> bool;
+    static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> bool;
+    static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> bool;
+    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};
     static inline ImGuiDragS  modelTrDs  = {45.f, true, true, false, true, true};

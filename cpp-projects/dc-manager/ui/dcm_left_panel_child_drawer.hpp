@@ -73,7 +73,6 @@ private:
     auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
 
     // ui
-    bool autoUpdate = true;
     int guiCurrentFiltersTypeSelection = 0;
     int guiCurrentFromFiltersSelection = 0;
     int guiCurrentTargetFiltersSelection = 0;

@@ -285,6 +285,14 @@ auto DCVideo::remove_all_compressed_frames(size_t idCamera) noexcept -> void{
     }
 }
 
+auto DCVideo::replace_compressed_frame(size_t idCamera, size_t idFrame, std::shared_ptr<DCCompressedFrame> frame) -> void{
+    if(idCamera < nb_cameras()){
+        if(idFrame < nb_frames(idCamera)){
+            m_camerasCompressedFrames[idCamera].frames[idFrame] = std::move(frame);
+        }
+    }
+}
+
 auto DCVideo::get_transform(size_t idCamera) const -> tool::geo::Mat4d{
     if(idCamera < nb_cameras()){
         return m_camerasTransforms[idCamera];

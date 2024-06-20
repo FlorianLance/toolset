@@ -47,7 +47,8 @@ TOOLSET_CPP_PROJECTS +=\
     scaner-grabber \
     scaner-manager \
     guardian \
-    realstream-export\
+    realstream-editor \
+    realstream-export \
 
 # define functions
 defineTest(generate_variables) {

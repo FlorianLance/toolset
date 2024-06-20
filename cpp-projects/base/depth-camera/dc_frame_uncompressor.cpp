@@ -255,8 +255,15 @@ private:
                 lastidDevice = cFrame->idDevice;
                 lastMode     = cFrame->mode;
 
-                // device specifics here (TODO)                                
-                k4aTransformation = std::make_unique<k4a::transformation>(*reinterpret_cast<k4a::calibration*>(frame->calibration.get_data()));
+                // device specifics here (TODO)
+                k4a::calibration calibration = *reinterpret_cast<k4a::calibration*>(frame->calibration.get_data());
+
+                // specify color-depth alignment
+                // calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[0] += 100.f;
+                // calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1] += 0.f;
+                // calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2] += 0.f;
+
+                k4aTransformation = std::make_unique<k4a::transformation>(calibration);//*reinterpret_cast<k4a::calibration*>(frame->calibration.get_data()));
             }
         }
         tResetCalibration = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());

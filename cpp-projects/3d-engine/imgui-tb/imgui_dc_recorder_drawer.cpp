@@ -60,11 +60,7 @@ auto DCRecorderDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame
     }
 }
 
-auto DCRecorderDrawer::draw() -> void{
-
-
-
-    bool focusWindow = false;
+auto DCRecorderDrawer::draw(bool focusWindow) -> void{
 
     // draw data
     static ImGuiID tabId = 0;
