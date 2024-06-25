@@ -48,20 +48,17 @@ DCDevice::DCDevice(DCType type): i(std::make_unique<Impl>()){
     if(type == DCType::AzureKinect){
         auto lg = LogGuard("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
         i->dd = std::make_unique<AzureKinectDeviceImpl>();
-        i->dd->dcDevice = this;
     }else if(type == DCType::FemtoBolt){
         auto lg = LogGuard("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
         i->dd = std::make_unique<FemtoBoltDeviceImpl>();
-        i->dd->dcDevice = this;
     }else if(type == DCType::FemtoMega){
         auto lg = LogGuard("DCDevice::DCDevice FemtoMegaDeviceImpl"sv);
         i->dd = std::make_unique<FemtoMegaDeviceImpl>();
-        i->dd->dcDevice = this;
     }else if(type == DCType::Recording){
         auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
         i->dd = std::make_unique<RecordingDeviceImpl>();
-        i->dd->dcDevice = this;
-    }    
+    }
+    i->dd->set_parent_device(this);
 }
 
 DCDevice::~DCDevice(){
@@ -126,7 +123,7 @@ auto DCDevice::is_opened() const noexcept -> bool{
 }
 
 auto DCDevice::is_reading() const noexcept -> bool{
-    return i->dd->readFramesFromCameras;
+    return i->dd->is_reading_frames_from_camera();
 }
 
 
@@ -164,7 +161,11 @@ auto DCDevice::start_reading(const DCConfigSettings &configS) -> bool{
     if(is_reading() || !is_opened()){
         return false;
     }
-    return i->dd->start_reading(configS);
+    if(i->dd->start(configS)){
+        i->dd->start_reading_thread();
+        return true;
+    }
+    return false;
 }
 
 auto DCDevice::stop_reading() -> void{
@@ -173,7 +174,8 @@ auto DCDevice::stop_reading() -> void{
     if(!is_reading() || !is_opened()){
         return;
     }
-    i->dd->stop_reading();
+    i->dd->stop_reading_thread();
+    i->dd->stop();
 }
 
 auto DCDevice::set_color_settings(const DCColorSettings &colorS) -> void{    

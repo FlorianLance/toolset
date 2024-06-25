@@ -32,6 +32,7 @@
 
 // local
 #include "depth-camera/dc_frame_uncompressor.hpp"
+#include "utility/logger.hpp"
 
 using namespace tool::cam;
 

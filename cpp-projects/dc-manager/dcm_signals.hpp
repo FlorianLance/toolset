@@ -52,6 +52,9 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_direct_signal;
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
+    SSS<std::string> save_all_current_clouds_signal;
+    SSS<size_t, std::string> save_current_cloud_signal;
+
     // network
     SSS<size_t> init_connection_signal;
     SSS<> reset_network_signal;

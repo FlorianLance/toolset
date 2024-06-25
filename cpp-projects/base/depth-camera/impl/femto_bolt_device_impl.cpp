@@ -47,27 +47,20 @@ auto FemtoBoltDeviceImpl::update_from_colors_settings() -> void{
 }
 
 auto FemtoBoltDeviceImpl::open(uint32_t deviceId) -> bool{
-    return orbbecD->open_device(settings.config.idDevice = deviceId);
+    return orbbecD->open(settings.config.idDevice = deviceId);
 }
 
-auto FemtoBoltDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool{
-
+auto FemtoBoltDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
     initialize(newConfigS);
-
-    if(orbbecD->start_pipeline(mInfos, settings.config)){
-        start_reading_thread();
-        return true;
-    }
-
-    return false;
+    return orbbecD->start(mInfos, settings.config);
 }
 
-auto FemtoBoltDeviceImpl::stop_reading() -> void{
-    stop_reading_thread();
+auto FemtoBoltDeviceImpl::stop() -> void{
+    orbbecD->stop();
 }
 
 auto FemtoBoltDeviceImpl::close() -> void{
-    orbbecD->close_device();
+    orbbecD->close();
 }
 
 auto FemtoBoltDeviceImpl::is_opened() const noexcept -> bool{

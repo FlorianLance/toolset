@@ -37,9 +37,11 @@
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "imgui/extra/ImGuiFileDialog.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 // local
 #include "dcm_signals.hpp"
+
 
 using namespace tool;
 using namespace tool::cam;
@@ -395,31 +397,35 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::Text("Status:");
     ImGui::Indent();
     {
-        ImGui::Text("Percentage success (/100):");
+
+        ImGui::Text("Network");
+        ImGui::Text("# Percentage success (/100):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", ii, grabbersS[ii].receivedStatus.percentageSuccess));
+        for(size_t ii = 0; ii < grabbersS.size(); ++ii){            
+            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", ii, grabbersS[ii].receivedNetworkStatus.percentageSuccess));
         }
         ImGui::Unindent();
 
-        ImGui::Text("Framerate (fps):");
+        ImGui::Text("# Bandwidth (Mb/s)):");
         ImGui::Indent();
         for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.framerate));
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedNetworkStatus.bandwidthBytes/1000000));
         }
         ImGui::Unindent();
 
-        ImGui::Text("Bandwidth (Mb/s)):");
+        ImGui::Text("Data");
+        ImGui::Text("# Framerate (fps):");
         ImGui::Indent();
         for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.bandwidthBytes/1000000));
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedDataStatus.framerate));
         }
         ImGui::Unindent();
+
 
         ImGui::Text("Total latency (from capture to reception) (µs):");
         ImGui::Indent();
         for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedStatus.latency));
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedDataStatus.latency));
         }
         ImGui::Unindent();
     }
@@ -571,6 +577,76 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
         }
     }
     ImGui::Separator();
+
+    ImGui::Text("Apply profiles:");
+    ImGui::SameLine();
+    if(ImGui::Button("Remote grabber###remote_grabber_profile_device")){
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            settings.grabbersS[ii].device.apply_remote_grabber_profile();
+        }
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Only manager###only_manager_profile_device")){
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            settings.grabbersS[ii].device.apply_only_manager_profile();
+        }
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+    }
+
+    ImGui::Separator();
+
+
+    static std::string order = "";
+    if(order.empty()){
+        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            if(ii != 0){
+                order += ";";
+            }
+            order += std::to_string(ii);
+        }
+    }
+    // = "0;1;2;3;4;5;6;7;8;9";
+    if(ImGui::Button("Apply settings for camera order")){
+        auto values = String::split(order, ';');
+        if(values.size() == settings.grabbersS.size()){
+            std::set<int> allIds;
+            std::vector<size_t> ids;
+            for(const auto &value : values){
+                int id = std::stoi(value);
+                if(id >= 0 && !allIds.contains(id)){
+                    allIds.insert(id);
+                    ids.push_back(static_cast<size_t>(id));
+                }else{
+                    Logger::error("Invalid order cameras ids.");
+                    ids.clear();
+                    break;
+                }
+            }
+
+            if(!ids.empty()){
+                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+                    settings.grabbersS[ii].device.update_with_device_id(ii, ids[ii]);
+                }
+                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+                    DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                }
+            }
+        }else{
+            Logger::error("Invalid order cameras count.");
+        }
+    }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(150.f);
+    ImGui::InputText("###cameras order", &order);
+
 
     // bool saveCurrent = false;
     // static bool allInOne = true;
@@ -1005,13 +1081,32 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings
         return;
     }
 
+    bool updateCurrent = false;
+    ImGui::Spacing();
+    ImGui::Text("Send to grabber:");
+    ImGui::SameLine();
+    if(ImGui::Button("Current###color_send_current")){
+        updateCurrent = true;
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("All###color_send_all")){
+        for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+    }
+    ImGui::Separator();
+
+
     static ImGuiID tabId = 0;
     if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###color_tabbar")){
         return;
     }
 
-    for(size_t ii = 0; ii < grabbers.size(); ++ii){        
-        if(DCUIDrawer::draw_dc_colors_settings_tab_item(std::format("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color)){
+    for(size_t ii = 0; ii < grabbers.size(); ++ii){
+
+        auto ret = DCUIDrawer::draw_dc_colors_settings_tab_item(std::format("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color);
+        if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
             DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
         }
     }

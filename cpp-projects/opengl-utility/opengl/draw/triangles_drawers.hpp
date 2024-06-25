@@ -97,7 +97,7 @@ class ModelMeshDrawer2 : public HierarchyDrawer2{
 public:
     ModelMeshDrawer2() : HierarchyDrawer2(DrawerType::Triangles){}
     auto initialize(const graphics::ModelMesh &modelMesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;
-    auto update_bones(const graphics::ModelMesh &modelMesh) -> void{}
+    auto update_bones(const graphics::ModelMesh &modelMesh) -> void{static_cast<void>(modelMesh);}
 };
 
 }

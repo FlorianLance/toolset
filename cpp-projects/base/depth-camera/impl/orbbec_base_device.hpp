@@ -46,9 +46,10 @@ struct OrbbecBaseDevice{
     auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
 
     // actions
-    auto open_device(uint32_t deviceId) -> bool;
-    auto start_pipeline(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
-    auto close_device() -> void;
+    auto open(uint32_t deviceId) -> bool;
+    auto start(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
+    auto stop() -> void;
+    auto close() -> void;
 
     // getters
     auto is_opened() const noexcept -> bool;

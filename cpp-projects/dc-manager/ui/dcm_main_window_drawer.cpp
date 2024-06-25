@@ -29,7 +29,6 @@
 
 // base
 #include "utility/logger.hpp"
-#include "utility/format.hpp"
 #include "utility/io_file.hpp"
 #include "utility/string.hpp"
 
@@ -92,6 +91,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
         if (ImGui::BeginMenu("Settings")){
 
             if (ImGui::BeginMenu("Network")){
+
                 if(ImGui::MenuItem("Save current network file###save_current_network")){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Irrelevant, SType::Network, SFile::Irrelevant, 0);
                 }
@@ -102,6 +102,27 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
             draw_color_sub_menu();
             draw_filters_sub_menu();
             draw_model_sub_menu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Recordings")){
+            if (ImGui::BeginMenu("All###recording_all")){
+                if(ImGui::MenuItem("Save all current clouds files")){
+                 Logger::message("Save all current clouds\n");
+                    ImGuiFileDialog::Instance()->OpenDialog("Save all current clouds", "Choose base name file to save", ".obj", ".");
+                }
+                ImGui::EndMenu();
+            }
+
+            for(size_t ii = 0; ii < m_nbGrabbers; ++ii){
+                if (ImGui::BeginMenu(std::format("Grabber{}###recording_grabber_{}", ii, ii).c_str())){
+                    if(ImGui::MenuItem(std::format("Save current cloud###save_current_cloud_recording_{}", ii).c_str())){
+                        ImGuiFileDialog::Instance()->OpenDialog(std::format("Save current cloud {}",ii), "Choose file to save", ".obj", ".");
+                    }
+                    ImGui::EndMenu();
+                }
+            }
+
             ImGui::EndMenu();
         }
 
@@ -144,6 +165,27 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
         }
         ImGui::EndMainMenuBar();
     }
+
+    ImGuiWindowFlags flags = 0;
+    // dialogs
+    if (ImGuiFileDialog::Instance()->Display("Save all current clouds", flags, ImVec2(500,200))) {
+
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Save all current cloudsl\n");
+            DCMSignals::get()->save_all_current_clouds_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    for(size_t ii = 0; ii < m_nbGrabbers; ++ii){
+        if (ImGuiFileDialog::Instance()->Display(std::format("Save current cloud {}",ii), flags,  ImVec2(500,200))) {
+            if (ImGuiFileDialog::Instance()->IsOk()){
+                Logger::message((std::format("Save current cloud {}\n",ii)));
+                DCMSignals::get()->save_current_cloud_signal(ii, ImGuiFileDialog::Instance()->GetFilePathName());
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+    }
 }
 
 auto DCMMainWindowDrawer::draw_device_sub_menu() -> void{
@@ -182,29 +224,25 @@ auto DCMMainWindowDrawer::draw_device_sub_menu() -> void{
 
 
         for(size_t ii = 0; ii < m_nbGrabbers; ++ii){
-            if (ImGui::BeginMenu(fmt("Grabber{}###device_grabber_{}", ii, ii).c_str())){
+            if (ImGui::BeginMenu(std::format("Grabber{}###device_grabber_{}", ii, ii).c_str())){
 
-                if(ImGui::MenuItem(fmt("Reset settings###reset_device_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Reset settings###reset_device_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Reset, STarget::Individual, SType::Device, SFile::Irrelevant, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Save settings to default file###save_default_device_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save settings to default file###save_default_device_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, SType::Device, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem("Save all settings to a single hostname file###save_all_grabber_device_all_in_one")){
-                    DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::All, SType::Device, SFile::HostAllInOne, 0);
-                }
-
-                if(ImGui::MenuItem(fmt("Save settings to current hostname grabber file###save_hostname_grabber_device_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save settings to current hostname grabber file###save_hostname_grabber_device_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, SType::Device, SFile::Host, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load settings from default file###load_default_device_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load settings from default file###load_default_device_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, SType::Device, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load settings from current hostname grabber file###load_hostname_grabber_device_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load settings from current hostname grabber file###load_hostname_grabber_device_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, SType::Device, SFile::Host, ii);
                 }
 
@@ -251,25 +289,25 @@ auto DCMMainWindowDrawer::draw_color_sub_menu() -> void{
         }
 
         for(size_t ii = 0; ii < m_nbGrabbers; ++ii){
-            if (ImGui::BeginMenu(fmt("Grabber{}###color_grabber_{}", ii, ii).c_str())){
+            if (ImGui::BeginMenu(std::format("Grabber{}###color_grabber_{}", ii, ii).c_str())){
 
-                if(ImGui::MenuItem(fmt("Reset settings###reset_color_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Reset settings###reset_color_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Reset, STarget::Individual, SType::Color, SFile::Irrelevant, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Save settings to default file###save_default_color_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save settings to default file###save_default_color_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, SType::Color, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Save settings to current hostname grabber file###save_hostname_grabber_color_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save settings to current hostname grabber file###save_hostname_grabber_color_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, SType::Color, SFile::Host, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load settings from default file###load_default_color_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load settings from default file###load_default_color_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, SType::Color, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load settings from current hostname grabber file###load_hostname_grabber_color_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load settings from current hostname grabber file###load_hostname_grabber_color_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, SType::Color, SFile::Host, ii);
                 }
 
@@ -317,25 +355,25 @@ auto DCMMainWindowDrawer::draw_filters_sub_menu() -> void {
         }
 
         for(size_t ii = 0; ii < static_cast<size_t>(nbG); ++ii){
-            if (ImGui::BeginMenu(fmt("Grabber{}###filters_grabber_{}", ii, ii).c_str())){
+            if (ImGui::BeginMenu(std::format("Grabber{}###filters_grabber_{}", ii, ii).c_str())){
 
-                if(ImGui::MenuItem(fmt("Reset filters###reset_filters_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Reset filters###reset_filters_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Reset, STarget::Individual, type, SFile::Irrelevant, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Save filters to default file###save_default_filters_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save filters to default file###save_default_filters_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, type, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Save filters to current hostname grabber file###save_hostname_grabber_filters_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Save filters to current hostname grabber file###save_hostname_grabber_filters_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::Individual, type, SFile::Host, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load filters from default file###load_default_filters_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load filters from default file###load_default_filters_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, type, SFile::Default, ii);
                 }
 
-                if(ImGui::MenuItem(fmt("Load filters from current hostname grabber file###load_hostname_grabber_filters_", ii).c_str())){
+                if(ImGui::MenuItem(std::format("Load filters from current hostname grabber file###load_hostname_grabber_filters_{}", ii).c_str())){
                     DCMSignals::get()->process_settings_action_signal(SAction::Load, STarget::Individual, type, SFile::Host, ii);
                 }
 

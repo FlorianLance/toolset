@@ -625,7 +625,7 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(Pt2f parentSize, const std
 
 
         BinPack2D::CanvasArray<const gl::Texture2D*> canvasArray = BinPack2D::UniformCanvasArrayBuilder<const gl::Texture2D*>(
-            static_cast<float>(parentSize.x()),static_cast<float>(parentSize.y()),1
+            static_cast<int>(parentSize.x()),static_cast<int>(parentSize.y()),1
         ).Build();
         BinPack2D::ContentAccumulator<const gl::Texture2D*> remainder;
 

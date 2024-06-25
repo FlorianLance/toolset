@@ -29,11 +29,10 @@
 // std
 #include <format>
 #include <mutex>
-#include <execution>
 
 // local
 #include "utility/logger.hpp"
-
+#include "io/cloud_io.hpp"
 #include "dc_grabber_data_processing.hpp"
 #include "dc_video.hpp"
 
@@ -99,7 +98,7 @@ auto DCServerData::clean() -> void{
 auto DCServerData::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> void {
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::new_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::new_compressed_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
     }
 
@@ -110,7 +109,7 @@ auto DCServerData::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressed
 auto DCServerData::new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void {
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::new_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::new_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
     }
     i->grabbersDataProcessing[idC]->new_frame(frame);
@@ -123,7 +122,7 @@ auto DCServerData::nb_grabbers() const noexcept -> size_t{
 auto DCServerData::get_frame(size_t idC) -> std::shared_ptr<DCFrame>{
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::get_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::get_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return nullptr;
     }
     return i->grabbersDataProcessing[idC]->get_frame();
@@ -133,7 +132,7 @@ auto DCServerData::get_frame(size_t idC) -> std::shared_ptr<DCFrame>{
 auto DCServerData::get_compressed_frame(size_t idC) -> std::shared_ptr<DCCompressedFrame>{
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::get_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::get_compressed_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return nullptr;
     }
     return i->grabbersDataProcessing[idC]->get_compressed_frame();
@@ -143,7 +142,7 @@ auto DCServerData::get_compressed_frame(size_t idC) -> std::shared_ptr<DCCompres
 auto DCServerData::invalid_last_frame(size_t idC) -> void {
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::invalid_last_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::invalid_last_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
     }
     i->grabbersDataProcessing[idC]->invalid_frame();
@@ -153,7 +152,7 @@ auto DCServerData::invalid_last_compressed_frame(size_t idC) -> void {
 
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::invalid_last_compressed_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::invalid_last_compressed_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
     }
     i->grabbersDataProcessing[idC]->invalid_compressed_frame();
@@ -162,7 +161,7 @@ auto DCServerData::invalid_last_compressed_frame(size_t idC) -> void {
 auto DCServerData::update_device_settings(size_t idC, const DCDeviceSettings &deviceS) -> void {
 
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::update_device_settings] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::update_device_settings] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;
     }
     i->grabbersDataProcessing[idC]->update_device_data_settings(deviceS.dataS);
@@ -170,10 +169,25 @@ auto DCServerData::update_device_settings(size_t idC, const DCDeviceSettings &de
 
 auto DCServerData::uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>{
     if(idC >= i->grabbersDataProcessing.size()){
-        Logger::error(std::format("[DCServerData::uncompress_frame] Invalid frame id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        Logger::error(std::format("[DCServerData::uncompress_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return nullptr;
     }
     return i->grabbersDataProcessing[idC]->uncompress(frame);
+}
+
+
+auto DCServerData::save_current_cloud(size_t idC, const std::string &path) -> bool{
+    if(idC >= i->grabbersDataProcessing.size()){
+        Logger::error(std::format("[DCServerData::save_current_cloud] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
+        return false;
+    }
+
+    Logger::message(std::format("save_current_cloud {} {} {}\n", idC, path, i->grabbersDataProcessing[idC]->get_frame() != nullptr));
+    if(auto frame = i->grabbersDataProcessing[idC]->get_frame(); frame != nullptr){
+        Logger::message(std::format("cloud {}\n", frame->cloud.size()));
+        return io::CloudIO::save_cloud(path, frame->cloud);
+    }
+    return false;
 }
 
 // auto DCServerData::process_data(size_t idC) -> bool{

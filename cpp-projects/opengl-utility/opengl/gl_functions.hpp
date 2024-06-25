@@ -90,7 +90,7 @@ struct GL{
     static auto vertex_array_attrib_format(GLuint vaobj, GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset) -> void;
     static auto vertex_array_attrib_binding(GLuint vaobj, GLuint attribindex, GLuint bindingindex) -> void;
 
-    // prgram
+    // program
     static auto create_program() -> GLuint;
     static auto delete_program(GLuint program) -> void;
     static auto link_program(GLuint program) -> void;
@@ -98,10 +98,11 @@ struct GL{
     static auto use_program(GLuint program) -> void;
     static auto attach_shader(GLuint program, GLuint shader) -> void;
     static auto detach_shader(GLuint program, GLuint shader) -> void;
+    static auto get_shader_info_log(GLuint shader, GLsizei maxLength, GLsizei *length, GLchar *infoLog) -> void;
     // # introspection
     static auto get_active_uniform_block_iv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params) -> void;
     static auto get_program_iv(GLuint program, GLenum pname, GLint *params) -> void;
-    static auto get_attached_shaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders) -> void;
+    static auto get_attached_shaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders) -> void;    
     // shader
     static auto create_shader(GLenum shaderType) -> GLuint;
     static auto delete_shader(GLuint shader) -> void;

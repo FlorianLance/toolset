@@ -76,21 +76,13 @@ struct AzureBaseDevice::Impl{
     static auto set_property_value(k4a::device *dev, k4a_color_control_command_t pId, std::int32_t value, bool manual) -> void;
     static auto update_k4_body(DCBody &body, const k4abt_body_t &k4aBody) -> void;
 
-    static auto log(void *context,
-        k4a_log_level_t level,
-        const char *file,
-        const int line,
-        const char *message) -> void{
-
-        // std::cout << "[[[[[[[[[[[[[[[[[ line " << line << " message " << message << "\n";
-    }
-    // typedef void(k4a_logging_message_cb_t)(void *context,
-    //                                        k4a_log_level_t level,
-    //                                        const char *file,
-    //                                        const int line,
-    //                                        const char *message);
-
-
+    // static auto log(void *context,
+    //     k4a_log_level_t level,
+    //     const char *file,
+    //     const int line,
+    //     const char *message) -> void{
+    //     // std::cout << "[[[[[[[[[[[[[[[[[ line " << line << " message " << message << "\n";
+    // }
 
 };
 
@@ -297,9 +289,9 @@ auto AzureBaseDevice::update_from_data_settings(const DCDataSettings &dataS) -> 
     }
 }
 
-auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
+auto AzureBaseDevice::open(uint32_t deviceId) -> bool{
 
-    auto lg = LogGuard("AzureBaseDevice::open_device"sv);
+    auto lg = LogGuard("AzureBaseDevice::open"sv);
 
     try {
         if(i->device != nullptr){
@@ -398,9 +390,9 @@ auto AzureBaseDevice::open_device(uint32_t deviceId) -> bool{
     return true;
 }
 
-auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
+auto AzureBaseDevice::start(const DCConfigSettings &configS) -> bool{
 
-    auto lg = LogGuard("AzureBaseDevice::start_device"sv);
+    auto lg = LogGuard("AzureBaseDevice::start"sv);
 
     Logger::message("Start device.\n");
     i->capture = std::make_unique<k4a::capture>();
@@ -463,9 +455,9 @@ auto AzureBaseDevice::start_device(const DCConfigSettings &configS) -> bool{
     return true;
 }
 
-auto AzureBaseDevice::stop_device() -> void{
+auto AzureBaseDevice::stop() -> void{
 
-    auto lg = LogGuard("AzureBaseDevice::stop_device"sv);
+    auto lg = LogGuard("AzureBaseDevice::stop"sv);
 
     Logger::message("Stop device.\n");
     if(i->bodyTracker != nullptr){
@@ -484,9 +476,9 @@ auto AzureBaseDevice::stop_device() -> void{
     Logger::message("Device stopped.\n");
 }
 
-auto AzureBaseDevice::close_device() -> void{
+auto AzureBaseDevice::close() -> void{
 
-    auto lg = LogGuard("AzureBaseDevice::close_device"sv);
+    auto lg = LogGuard("AzureBaseDevice::close"sv);
 
     Logger::message("Close device.\n");
 

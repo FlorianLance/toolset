@@ -66,7 +66,8 @@ struct DCServerNetwork{
     // signals
     SSS<size_t, std::int64_t> remote_synchro_signal;
     SSS<size_t, net::Feedback> remote_feedback_signal;
-    SSS<size_t, net::UdpReceivedStatus> remote_status_signal;
+    SSS<size_t, net::UdpDataStatus> remote_data_status_signal;
+    SSS<size_t, net::UdpNetworkStatus> remote_network_status_signal;
 
     SSS<size_t, std::shared_ptr<cam::DCFrame>> local_frame_signal;
     SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;

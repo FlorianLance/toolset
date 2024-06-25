@@ -63,13 +63,13 @@ public:
     SSS<std::int64_t> remote_synchro_signal;
     SSS<net::Feedback> remote_feedback_signal;
     SSS<std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
-    SSS<UdpReceivedStatus> remote_status_signal;
+    SSS<UdpNetworkStatus> remote_network_status_signal;
 
 private:
 
     auto receive_feedback(Header h, Feedback message) -> void;
     auto receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void;
-    auto receive_status(net::UdpReceivedStatus status) -> void;
+    auto receive_network_status(net::UdpNetworkStatus status) -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

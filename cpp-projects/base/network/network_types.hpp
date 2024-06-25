@@ -178,12 +178,14 @@ struct UdpMessageReception{
     SingleRingBuffer<std::uint8_t> messageReceived;
 };
 
+struct UdpNetworkStatus{
+    int percentageSuccess = 0;
+    size_t bandwidthBytes = 0;
+};
 
-struct UdpReceivedStatus{
-    int percentageSuccess = 0;    
+struct UdpDataStatus{
     float framerate = 0.f;
     std::int64_t latency = 0;
-    size_t bandwidthBytes = 0;
 };
 
 }

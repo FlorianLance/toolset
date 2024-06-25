@@ -70,9 +70,27 @@ struct DCDeviceImpl{
     virtual auto open(std::uint32_t deviceId) -> bool{static_cast<void>(deviceId); return false;}
     virtual auto open(std::string_view deviceId) -> bool{static_cast<void>(deviceId); return false;}
     virtual auto open_file(const std::string &path) -> bool{static_cast<void>(path); return false;}
-    virtual auto start_reading(const DCConfigSettings &newConfigS) -> bool = 0;
-    virtual auto stop_reading() -> void = 0;
+    virtual auto start(const DCConfigSettings &newConfigS) -> bool = 0;
+    virtual auto stop() -> void = 0;
     virtual auto close() -> void = 0;
+
+    // reading thread
+    auto start_reading_thread() -> void;
+    auto stop_reading_thread() -> void;
+    auto is_reading_frames_from_camera() const noexcept -> bool{return readFramesFromCameras;}
+
+    // reading steps
+    auto loop_initialization() -> void;
+    auto read_settings() -> void;
+    auto read_images() -> void;
+    auto init_frames() -> void;
+    auto resize_and_convert() -> void;
+    auto preprocess() -> void;
+    auto filter() -> void;
+    auto update_compressed_frame() -> void;
+    auto update_frame() -> void;
+
+    auto process_data() -> void;
 
     // settings
     auto set_data_settings(const DCDataSettings &dataS) -> void;
@@ -89,22 +107,22 @@ struct DCDeviceImpl{
     auto get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>;
     auto get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>;
 
-    DCDevice *dcDevice = nullptr;
-    std::atomic_bool readFramesFromCameras = false;
+
+    // misc
+    auto set_parent_device(DCDevice *dcDevice) -> void;
+
+    // signals
+    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
+    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
 
 protected:
 
-    auto do_loop() -> void;
-
-    // initialization
     auto initialize(const DCConfigSettings &newConfig) -> void;
+
+    // initialization    
     virtual auto initialize_device_specific() -> void{}
     virtual auto update_from_colors_settings() -> void{}
     virtual auto update_from_data_settings() -> void{}
-
-    // thread
-    auto start_reading_thread() -> void;
-    auto stop_reading_thread() -> void;
 
     // read data
     virtual auto read_calibration() -> void{}
@@ -201,9 +219,12 @@ protected:
     data::JpegDecoder jpegColorDecoder;
 
     // threads/tasks
+    std::atomic_bool readFramesFromCameras = false;
     std::unique_ptr<std::thread> loopT = nullptr;
-    std::unique_ptr<tf::Executor> executor = nullptr;
-    std::unique_ptr<tf::Taskflow> processDataTF = nullptr;
+    // std::unique_ptr<tf::Executor> executor = nullptr;
+    // std::unique_ptr<tf::Taskflow> processDataTF = nullptr;
+
+
 
 private:
 
@@ -213,10 +234,13 @@ private:
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
     auto erode(std::uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void;
 
+    // other
+    DCDevice *pDcDevice = nullptr;
+
     // tasks
-    auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
-    auto process_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
-    auto process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> std::unique_ptr<tf::Taskflow>;
+    // auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+    // auto process_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+    // auto process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> std::unique_ptr<tf::Taskflow>;
 };
 }
 

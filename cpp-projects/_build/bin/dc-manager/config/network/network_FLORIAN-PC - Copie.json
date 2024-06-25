@@ -1,0 +1,56 @@
+{
+    "base": {
+        "type": 1,
+        "version": 1
+    },
+    "clients": [
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8889,
+            "sending_address": "localhost",
+            "sending_port": 8888,
+            "type": "remote"
+        },
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8891,
+            "sending_address": "localhost",
+            "sending_port": 8890,
+            "type": "remote"
+        },
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8893,
+            "sending_address": "localhost",
+            "sending_port": 8892,
+            "type": "remote"
+        },
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8895,
+            "sending_address": "localhost",
+            "sending_port": 8894,
+            "type": "remote"
+        },
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8897,
+            "sending_address": "localhost",
+            "sending_port": 8896,
+            "type": "remote"
+        },
+        {
+            "id_reading_interface": 0,
+            "protocol": "ipv6",
+            "reading_port": 8899,
+            "sending_address": "localhost",
+            "sending_port": 8898,
+            "type": "remote"
+        }
+    ]
+}

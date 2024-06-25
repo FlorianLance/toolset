@@ -56,6 +56,7 @@ public:
     static auto warning(const QString &warning, bool triggersSignal = true, bool saveToFile = true) -> void;
     static auto error(const QString &error, bool triggersSignal = true, bool saveToFile = true) -> void;
     static auto log(const QString &log, bool triggersSignal = true, bool saveToFile = true) -> void;
+    static auto log_title(const QString &log, int level) -> void;
 
     static auto set_html_ui_type_message_color(MessageType type, const QColor &col) -> void;
 

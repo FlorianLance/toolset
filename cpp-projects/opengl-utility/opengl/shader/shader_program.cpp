@@ -268,7 +268,7 @@ auto ShaderProgram::debug_display() -> void{
     }
     Logger::message("[attribs]:\n");
     for(const auto& attrib : attribs){
-        // Logger::message(std::format("  -{}\n", attrib));
+        Logger::message(std::format("  -{}\n", attrib.first));
     }
     Logger::message("[uniforms]:\n");
     for(const auto& uniform : uniforms){
@@ -559,7 +559,7 @@ auto ShaderProgram::create_shader_from_source_code(GLuint &shader, ShaderType sh
     GL::get_shader_iv(shader, GL_COMPILE_STATUS, &compilationStatus);
     if(compilationStatus == GL_FALSE){
 
-        glGetShaderInfoLog(shader, m_infoLog.size(), nullptr, m_infoLog.data());
+        GL::get_shader_info_log(shader, static_cast<GLsizei>(m_infoLog.size()), nullptr, m_infoLog.data());
 
         Logger::error(std::format("[ShaderProgram::create_shader_from_source_code] Shader compilation failed: {} \n"sv, std::string_view(m_infoLog)));
         clean();

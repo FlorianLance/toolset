@@ -62,6 +62,8 @@ public:
     auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
     // auto process_data(size_t idC) -> bool;
 
+    auto save_current_cloud(size_t idC, const std::string &path) -> bool;
+
 private:
 
     struct Impl;

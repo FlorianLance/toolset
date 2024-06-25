@@ -72,7 +72,7 @@ auto RecordingDeviceImpl::open_file(const std::string &path) -> bool{
 //     return orbbecD->open_device(settings.config.idDevice = deviceId);
 // }
 
-auto RecordingDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool{
+auto RecordingDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
 
     DCConfigSettings configs = newConfigS;
     initialize(configs);
@@ -81,7 +81,7 @@ auto RecordingDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> b
     return true;
 }
 
-auto RecordingDeviceImpl::stop_reading() -> void{
+auto RecordingDeviceImpl::stop() -> void{
     playerD.stop_video();
 }
 

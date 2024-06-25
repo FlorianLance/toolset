@@ -111,9 +111,14 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
             static_cast<GLsizei>(frame->rgbInfra.height), 3, reinterpret_cast<uint8_t *>(frame->rgbInfra.get_data()));
     }
 
-    if(frame->cloud.is_valid()){
-        cpD.update(frame->cloud);
-        cpD.set_indice_count(frame->cloud.vertices.size());
+    if(!frame->cloud.empty()){
+        if(frame->cloud.is_valid()){
+            cpD.update(frame->cloud);
+            cpD.set_indice_count(frame->cloud.vertices.size());
+            // Logger::message(std::format("{} {} {}\n", frame->cloud.vertices.size(), frame->cloud.normals.size(), frame->cloud.normals.size()));
+        }else{
+            Logger::error("[DCCloudDrawer::init_from_frame] Invalid cloud\n");
+        }
     }
     
     nbBodies = frame->bodyTracking.size();

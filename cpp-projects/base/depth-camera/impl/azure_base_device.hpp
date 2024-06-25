@@ -47,10 +47,10 @@ struct AzureBaseDevice{
     auto update_from_data_settings(const DCDataSettings &dataS) -> void;
 
     // actions
-    auto open_device(uint32_t deviceId) -> bool;
-    auto start_device(const DCConfigSettings &configS) -> bool;
-    auto stop_device() -> void;
-    auto close_device() -> void;
+    auto open(uint32_t deviceId) -> bool;
+    auto start(const DCConfigSettings &configS) -> bool;
+    auto stop() -> void;
+    auto close() -> void;
 
     // getters
     auto is_opened() const noexcept -> bool;

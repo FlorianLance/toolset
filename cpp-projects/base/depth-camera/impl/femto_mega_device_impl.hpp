@@ -38,8 +38,8 @@ struct FemtoMegaDeviceImpl : public DCDeviceImpl{
 
     // actions
     auto open(uint32_t deviceId) -> bool override final;
-    auto start_reading(const DCConfigSettings &newConfigS) -> bool override final;
-    auto stop_reading() -> void override final;
+    auto start(const DCConfigSettings &newConfigS) -> bool override final;
+    auto stop() -> void override final;
     auto close() -> void override final;
 
     // getters

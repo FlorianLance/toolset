@@ -77,7 +77,8 @@ public:
     SSS<Header, Feedback> feedback_signal;
     SSS<Header, std::shared_ptr<cam::DCCompressedFrame>> compressed_frame_signal;
 
-    SSS<UdpReceivedStatus> status_signal;
+    SSS<UdpNetworkStatus> network_status_signal;
+
 
 protected:
 
@@ -86,9 +87,7 @@ protected:
 private:
 
     AverageSynch synchro;
-    Framerate framerate;
     AverageBandwidth bandwidth;
-    AverageLatency latency;
     UdpMessageReception cFramesReception;
 };
 

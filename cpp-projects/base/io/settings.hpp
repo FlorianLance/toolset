@@ -57,8 +57,8 @@ struct BaseSettings{
     auto convert_to_json_binary()   const  -> std::vector<std::uint8_t>;
     // # init
     virtual auto init_from_json(const nlohmann::json &json) -> void;
-    auto init_from_json_binary(std::span<const std::uint8_t> jsonData) -> void;
-    auto init_from_json_str(std::string_view jsonStr) -> void;
+    auto init_from_json_binary(std::span<const std::uint8_t> jsonData) -> bool;
+    auto init_from_json_str(std::string_view jsonStr) -> bool;
 
     static auto save_multi_to_json_str_file(std::span<BaseSettings*> settingsA, const std::string &filePath = "./settings.json") -> bool;
     static auto load_multi_from_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;

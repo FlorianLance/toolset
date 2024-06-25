@@ -217,7 +217,7 @@ auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
 
 auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(cam::DCType type, cam::DCColorSettings &colors) -> void{
 
-    if(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors)){
+    if(std::get<1>(DCUIDrawer::draw_dc_colors_settings_tab_item("Colors###colors_tabitem", type, colors))){
         DCGSignals::get()->update_color_settings_signal(colors);
     }
 }

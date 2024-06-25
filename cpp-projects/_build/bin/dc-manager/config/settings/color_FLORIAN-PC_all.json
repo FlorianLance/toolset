@@ -19,8 +19,8 @@
             "white_balance": 4500
         },
         {
-            "auto_exposure_time": true,
-            "auto_white_balance": true,
+            "auto_exposure_time": false,
+            "auto_white_balance": false,
             "backlight_compensation": false,
             "base": {
                 "type": 3,
@@ -28,17 +28,17 @@
             },
             "brightness": 128,
             "contrast": 5,
-            "exposure_time": 0,
+            "exposure_time": 33330,
             "gain": 128,
             "hdr": true,
             "powerline_frequency": 1,
             "saturation": 32,
-            "sharpness": 4,
+            "sharpness": 2,
             "white_balance": 4500
         },
         {
-            "auto_exposure_time": true,
-            "auto_white_balance": true,
+            "auto_exposure_time": false,
+            "auto_white_balance": false,
             "backlight_compensation": false,
             "base": {
                 "type": 3,
@@ -46,17 +46,17 @@
             },
             "brightness": 128,
             "contrast": 5,
-            "exposure_time": 0,
+            "exposure_time": 33330,
             "gain": 128,
             "hdr": true,
             "powerline_frequency": 1,
             "saturation": 32,
-            "sharpness": 4,
+            "sharpness": 2,
             "white_balance": 4500
         },
         {
-            "auto_exposure_time": true,
-            "auto_white_balance": true,
+            "auto_exposure_time": false,
+            "auto_white_balance": false,
             "backlight_compensation": false,
             "base": {
                 "type": 3,
@@ -64,12 +64,12 @@
             },
             "brightness": 128,
             "contrast": 5,
-            "exposure_time": 0,
+            "exposure_time": 33330,
             "gain": 128,
             "hdr": true,
             "powerline_frequency": 1,
             "saturation": 32,
-            "sharpness": 4,
+            "sharpness": 2,
             "white_balance": 4500
         }
     ]

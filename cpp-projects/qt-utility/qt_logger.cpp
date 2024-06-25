@@ -281,6 +281,12 @@ auto QtLogger::log(const QString &log, bool triggersSignal, bool saveToFile) -> 
     }
 }
 
+auto QtLogger::log_title(const QString &log, int level) -> void{
+    if(auto logger = QtLogger::get(); logger == nullptr){
+        insert_to_log_file(QString("<h%1>%2</h%1>").arg(QString::number(level), to_html_paragraph(QtLogger::MessageType::log, log, false)));
+    }
+}
+
 auto QtLogger::insert_to_log_file(QStringView message, bool flush) -> void{
 
     std::unique_lock<std::mutex> lock(QtLogger::Impl::locker);

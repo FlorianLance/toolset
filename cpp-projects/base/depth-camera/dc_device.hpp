@@ -76,7 +76,6 @@ public:
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
     sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
-    sigslot::signal<DCImuSample> new_imu_sample_signal;
 
 private:
 

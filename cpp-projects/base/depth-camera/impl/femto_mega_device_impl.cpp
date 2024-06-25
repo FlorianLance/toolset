@@ -53,27 +53,20 @@ auto FemtoMegaDeviceImpl::update_from_colors_settings() -> void{
 }
 
 auto FemtoMegaDeviceImpl::open(uint32_t deviceId) -> bool{
-    return orbbecD->open_device(settings.config.idDevice = deviceId);
+    return orbbecD->open(settings.config.idDevice = deviceId);
 }
 
-auto FemtoMegaDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool{
-
+auto FemtoMegaDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
     initialize(newConfigS);
-
-    if(orbbecD->start_pipeline(mInfos, settings.config)){
-        start_reading_thread();
-        return true;
-    }
-
-    return false;
+    return orbbecD->start(mInfos, settings.config);
 }
 
-auto FemtoMegaDeviceImpl::stop_reading() -> void{
-    stop_reading_thread();
+auto FemtoMegaDeviceImpl::stop() -> void{
+    orbbecD->stop();
 }
 
 auto FemtoMegaDeviceImpl::close() -> void {
-    return orbbecD->close_device();
+    return orbbecD->close();
 }
 
 auto FemtoMegaDeviceImpl::is_opened() const noexcept -> bool{

@@ -221,8 +221,8 @@ auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSett
     size_t idG = 0;
     dll_log_message("[DLL][DCNetworkDirectPlayer::update_device_settings] Device settings files loaded:\n");
     for(auto &grabberS : devicesD){
-        dll_log_message(std::format("[G{}][Config settings]\n{}", idG, grabberS.device.configS.convert_to_json_str()));
-        dll_log_message(std::format("[G{}][Data settings]\n{}", idG, grabberS.device.dataS.convert_to_json_str()));
+        dll_log_message(std::format("[G{}][Config]\n{}", idG, grabberS.device.configS.convert_to_json_str()));
+        dll_log_message(std::format("[G{}][Data]\n{}", idG, grabberS.device.dataS.convert_to_json_str()));
         ++idG;
     }
 
@@ -257,6 +257,13 @@ auto DCNetworkDirectPlayer::update_color_settings(const std::string &colorSettin
     if(!io::BaseSettings::load_multi_from_file(colorSettingsFiles, colorSettingsFilePath)){
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_color_settings] Error while reading color settings file with path [{}].", colorSettingsFilePath));
         return false;
+    }
+
+    size_t idG = 0;
+    dll_log_message("[DLL][DCNetworkDirectPlayer::update_color_settings] Color settings files loaded:\n");
+    for(auto &grabberS : devicesD){
+        dll_log_message(std::format("[G{}][Color]\n{}", idG, grabberS.color.convert_to_json_str()));
+        ++idG;
     }
 
     // send settings
@@ -331,7 +338,13 @@ auto DCNetworkDirectPlayer::update_model_settings(const std::string &modelSettin
         return false;
     }
 
-    // ...
+    size_t idG = 0;
+    dll_log_message("[DLL][DCNetworkDirectPlayer::update_model_settings] Model settings files loaded:\n");
+    for(auto &grabberS : devicesD){
+        dll_log_message(std::format("[G{}][Model]\n{}", idG, grabberS.model.convert_to_json_str()));
+        ++idG;
+    }
+
 
     return true;
 }
@@ -534,11 +547,11 @@ int copy_current_frame_vertices__dc_network_direct_player(DCNetworkDirectPlayer 
 }
 
 int copy_current_frame_vertices_vfx__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform){
-    return dcNetworkDirectPlayer->copy_current_frame_vertices(
+    return static_cast<int>(dcNetworkDirectPlayer->copy_current_frame_vertices(
         idD,
         std::span<tool::geo::Pt3f>(positions, verticesCount),
         std::span<tool::geo::Pt3f>(colors, verticesCount),
         std::span<tool::geo::Pt3f>(normals, verticesCount),
         applyModelTransform == 1
-    );
+    ));
 }

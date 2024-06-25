@@ -104,6 +104,10 @@ auto DrawersManager::get_id(std::string_view alias) const -> size_t{
 }
 
 auto DrawersManager::draw(std::string_view alias, gl::ShaderProgram *shader) -> void{
+
+
+    static_cast<void>(shader);
+
     if(auto drawer = drawers2.get_element_ptr(alias); drawer){
         drawer->draw();
         // drawer->draw(shader);

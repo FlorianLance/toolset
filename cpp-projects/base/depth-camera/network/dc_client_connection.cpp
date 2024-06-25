@@ -74,6 +74,7 @@ auto DCClientConnection::init_connections() -> void{
         Logger::warning("Packet timeout\n");
     });
     m_udpReaderG.timeout_messages_signal.connect([&](size_t count){
+        static_cast<void>(count);
         // Logger::warning(std::format("Messages dropped for timeout [{}]\n", count));
     });
 }

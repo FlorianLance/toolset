@@ -465,9 +465,8 @@ constexpr auto invert(const RowVec<acc,dim> &p) noexcept -> RowVec<acc,dim>{
 
 template <typename acc, int dim>
 constexpr auto sum(const RowVec<acc,dim> &vec)  noexcept -> acc{
-    return std::accumulate(vec.array.begin(), vec.array.end(), 0);
+    return std::accumulate(vec.array.begin(), vec.array.end(), acc{0});
 }
-
 
 template <typename acc, int dim>
 constexpr auto dot(const RowVec<acc, dim> &l, const RowVec<acc, dim> &r) noexcept -> acc {

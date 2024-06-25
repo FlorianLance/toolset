@@ -753,6 +753,17 @@ auto GL::detach_shader(GLuint program, GLuint shader) -> void{
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDetachShader.xhtml
 }
 
+auto GL::get_shader_info_log(GLuint shader, GLsizei maxLength, GLsizei *length, GLchar *infoLog) -> void{
+    // Returns the information log for a shader object
+    glGetShaderInfoLog(
+        shader,     // Specifies the shader object whose information log is to be queried.
+        maxLength,  // Specifies the size of the character buffer for storing the returned information log.
+        length,     // Returns the length of the string returned in infoLog (excluding the null terminator).
+        infoLog     // Specifies an array of characters that is used to return the information log.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetShaderInfoLog.xhtml
+}
+
 auto GL::get_active_uniform_block_iv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params) -> void{
     // Query information about an active uniform block.
     glGetActiveUniformBlockiv(

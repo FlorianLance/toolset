@@ -27,6 +27,7 @@
 #pragma once
 
 // local
+#include "thirdparty/sigslot/signal.hpp"
 #include "network/network_types.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
@@ -36,6 +37,8 @@
 
 namespace tool::net {
 
+template<typename ...arg>
+using SSS = sigslot::signal<arg...>;
 
 enum class DCServerType{
     local,remote,undefined
@@ -55,6 +58,12 @@ public:
 
     virtual constexpr auto type() const noexcept -> DCServerType {return DCServerType::undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}
+
+
+    SSS<UdpDataStatus> data_status_signal;
+
+    Framerate framerate;
+    AverageLatency latency;
 };
 
 

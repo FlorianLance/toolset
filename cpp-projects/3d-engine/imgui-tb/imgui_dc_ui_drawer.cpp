@@ -1673,7 +1673,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     ImGui::Spacing();
 
     if(m_isManager){
-        ImGui::Text("Frame generation (grabber):");
+        ImGui::Text("Frame generation (client):");
     }else{
         ImGui::Text("Frame generation:");
     }
@@ -1747,7 +1747,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         return update;
     }
 
-    ImGui::Text("Frame generation (manager):");
+    ImGui::Text("Frame generation (server):");
     ImGui::Indent();
     {
         ImGui::Text("Data:");
@@ -1823,15 +1823,16 @@ auto get_imgui_int_scale(ColorSettingsType sType, DCType dType) -> tool::ImGuiIn
     return intS;
 }
 
-auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> bool{
+auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> std::tuple<bool,bool>{
 
     using CST = ColorSettingsType;
 
+    bool update = false;
+
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
-        return false;
+        return {false, update};
     }
 
-    bool update = false;
     int value;
     ImGuiDragS ds;
     ds.widthDrag = 100.f;
@@ -2000,7 +2001,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
 
     ImGui::EndTabItem();
 
-    return update;
+    return {true, update};
 }
 
 

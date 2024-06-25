@@ -46,29 +46,21 @@ auto AzureKinectDeviceImpl::update_from_colors_settings() -> void {
     azureD->update_from_colors_settings(settings.color);
 }
 
-auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {    
-    return azureD->open_device(settings.config.idDevice = deviceId);
+auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {
+    return azureD->open(settings.config.idDevice = deviceId);
 }
 
-auto AzureKinectDeviceImpl::start_reading(const DCConfigSettings &newConfigS) -> bool {
-
+auto AzureKinectDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool {
     initialize(newConfigS);
-
-    if(azureD->start_device(settings.config)){
-        start_reading_thread();
-        return true;
-    }
-
-    return false;
+    return azureD->start(settings.config);
 }
 
-auto AzureKinectDeviceImpl::stop_reading() -> void{
-    stop_reading_thread();
-    azureD->stop_device();
+auto AzureKinectDeviceImpl::stop() -> void{
+    azureD->stop();
 }
 
-auto AzureKinectDeviceImpl::close() -> void{    
-    azureD->close_device();
+auto AzureKinectDeviceImpl::close() -> void{
+    azureD->close();
 }
 
 auto AzureKinectDeviceImpl::is_opened() const noexcept -> bool{

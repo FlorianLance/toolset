@@ -456,9 +456,9 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettin
 }
 
 
-auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
+auto OrbbecBaseDevice::open(uint32_t deviceId) -> bool{
 
-    auto lg = LogGuard("OrbbecBaseDevice::open_device"sv);
+    auto lg = LogGuard("OrbbecBaseDevice::open"sv);
 
     Logger::message("### Open device ###\n");
 
@@ -562,9 +562,9 @@ auto OrbbecBaseDevice::open_device(uint32_t deviceId) -> bool{
     return true;
 }
 
-auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
+auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
 
-    auto lg = LogGuard("OrbbecBaseDevice::start_pipeline"sv);
+    auto lg = LogGuard("OrbbecBaseDevice::start"sv);
 
     //i->deviceType = mInfos.device();
 
@@ -777,23 +777,25 @@ auto OrbbecBaseDevice::start_pipeline(const DCModeInfos &mInfos, const DCConfigS
     return true;
 }
 
-auto OrbbecBaseDevice::close_device() -> void{
+auto OrbbecBaseDevice::stop() -> void{
 
-    Logger::message("### Close device ###\n");
+    auto lg = LogGuard("OrbbecBaseDevice::stop"sv);
 
     if(i->pipe != nullptr){
-        Logger::message("Stop pipe\n");
+        Logger::message("Stop pipeline\n");
         i->pipe->stop();
 
-        Logger::message("Destroy pipe\n");
+        Logger::message("Destroy pipeline\n");
         i->pipe = nullptr;
     }
+}
+
+auto OrbbecBaseDevice::close() -> void{
+
+    auto lg = LogGuard("OrbbecBaseDevice::close"sv);
 
     Logger::message("Clean device\n");
-    i->device     = nullptr;
-
-    Logger::message("### Device closed ###\n");
-
+    i->device = nullptr;
 }
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{

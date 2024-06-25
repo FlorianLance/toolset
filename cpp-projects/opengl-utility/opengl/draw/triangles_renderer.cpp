@@ -342,6 +342,7 @@ auto TrianglesRenderer::update_data(
             return false;
         }
 
+        static_cast<void>(bonesoffset);
         // if((tangentsOffset + tangents.size()*4) <= m_nbVertices*4){
         //     bonesB.update_data(
         //         reinterpret_cast<const GLfloat*>(tangents.data()),

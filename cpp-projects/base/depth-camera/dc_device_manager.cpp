@@ -104,9 +104,6 @@ auto DCDeviceManager::initialize_device(DCType typeDevice) -> void {
     i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){
         new_compressed_frame_signal(std::move(frame));
     });
-    i->device->new_imu_sample_signal.connect([&](DCImuSample sample){
-        new_imu_sample_signal(sample);
-    });
 }
 
 auto DCDeviceManager::is_device_initialized() const noexcept -> bool{

@@ -125,12 +125,13 @@ auto DCMController::set_connections() -> void{
     s->update_calibration_filters_settings_signal.connect(  &DCMModel::update_calibration_filters,          model.get());
     // s->update_filtering_mode_signal.connect(                &DCMModel::update_filtering_mode,               model.get());
     s->update_device_settings_signal.connect(               &DCMModel::update_device_settings,              model.get());
-    s->update_color_settings_signal.connect(                &DCMModel::update_color_settings,              model.get());
-    s->update_delay_settings_signal.connect(                &DCMModel::update_delay_settings,              model.get());
+    s->update_color_settings_signal.connect(                &DCMModel::update_color_settings,               model.get());
+    s->update_delay_settings_signal.connect(                &DCMModel::update_delay_settings,               model.get());
 
     serverNet->remote_synchro_signal.connect(               &DCMModel::update_synchro,                      model.get());
     serverNet->remote_feedback_signal.connect(              &DCMModel::add_feedback,                        model.get());
-    serverNet->remote_status_signal.connect(                &DCMModel::update_status,                       model.get());
+    serverNet->remote_network_status_signal.connect(        &DCMModel::update_network_status,               model.get());
+    serverNet->remote_data_status_signal.connect(           &DCMModel::update_data_status,                  model.get());
 
     s->reset_network_signal.connect(                        &DCMModel::reset_network,                       model.get());
 
@@ -224,6 +225,10 @@ auto DCMController::set_connections() -> void{
     // to controller
     view->gl()->update_signal.connect(                   &DCMController::update,                     this);
     view->gl()->draw_imgui_signal.connect(               &DCMController::draw_ui,                    this);
+
+    // s->save_current_cloud_signal.connect(&ServerData::save_current_cloud,                         serverData);
+    s->save_current_cloud_signal.connect(&DirectD::save_current_cloud,                         directD);
+
 
     //    s->use_normal_filtering_for_all_signal.connect(     &K4SMModel::use_normal_filtering_for_all,      model.get());
     //    s->use_calibration_filtering_for_all_signal.connect(&K4SMModel::use_calibration_filtering_for_all, model.get());

@@ -29,6 +29,7 @@
 
 // local
 #include "depth-camera/dc_device_manager.hpp"
+#include "utility/time.hpp"
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -46,7 +47,25 @@ DCServerLocalDevice::~DCServerLocalDevice(){
 
 auto DCServerLocalDevice::initialize(const ReadSendNetworkInfos &infos) -> bool{
     i->deviceM = std::make_unique<DCDeviceManager>();
-    i->deviceM->new_frame_signal.connect(&DCServerLocalDevice::local_frame_signal, this);
+
+    i->deviceM->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+
+        if(frame){
+
+            // update framerate
+            framerate.add_frame();
+
+            // update latency
+            latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(frame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+
+            // send frame
+            local_frame_signal(std::move(frame));
+
+            // send status
+            data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
+        }
+    });
+
     return true;
 }
 

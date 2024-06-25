@@ -451,49 +451,67 @@ private:
             // 5 6 7
 
             const auto &idN  = indices.neighbours8Depth1D[idD];
-            int idNA = (idN[0] != -1) ? ((frame->depth[idN[0]] != dc_invalid_depth_value) ? idN[0] : -1) : -1;
+            // int idNA = (idN[0] != -1) ? ((frame->depth[idN[0]] != dc_invalid_depth_value) ? idN[0] : -1) : -1;
             int idNB = (idN[1] != -1) ? ((frame->depth[idN[1]] != dc_invalid_depth_value) ? idN[1] : -1) : -1;
-            int idNC = (idN[2] != -1) ? ((frame->depth[idN[2]] != dc_invalid_depth_value) ? idN[2] : -1) : -1;
+            // int idNC = (idN[2] != -1) ? ((frame->depth[idN[2]] != dc_invalid_depth_value) ? idN[2] : -1) : -1;
             int idND = (idN[3] != -1) ? ((frame->depth[idN[3]] != dc_invalid_depth_value) ? idN[3] : -1) : -1;
             int idNE = (idN[4] != -1) ? ((frame->depth[idN[4]] != dc_invalid_depth_value) ? idN[4] : -1) : -1;
-            int idNF = (idN[5] != -1) ? ((frame->depth[idN[5]] != dc_invalid_depth_value) ? idN[5] : -1) : -1;
+            // int idNF = (idN[5] != -1) ? ((frame->depth[idN[5]] != dc_invalid_depth_value) ? idN[5] : -1) : -1;
             int idNG = (idN[6] != -1) ? ((frame->depth[idN[6]] != dc_invalid_depth_value) ? idN[6] : -1) : -1;
-            int idNH = (idN[7] != -1) ? ((frame->depth[idN[7]] != dc_invalid_depth_value) ? idN[7] : -1) : -1;
+            // int idNH = (idN[7] != -1) ? ((frame->depth[idN[7]] != dc_invalid_depth_value) ? idN[7] : -1) : -1;
 
             Vec3f normal{0,0,0};
             int count = 0;
-            if(idNA != -1 && idNB != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNB].template conv<float>()), vec(currentP, pointCloud[idNA].template conv<float>())));
+            if(idNB != -1 && idNE != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNE].template conv<float>()), vec(currentP, pointCloud[idNB].template conv<float>())));
                 ++count;
             }
-            if(idNB != -1 && idNC != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNC].template conv<float>()), vec(currentP, pointCloud[idNB].template conv<float>())));
+            if(idNE != -1 && idNG != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNG].template conv<float>()), vec(currentP, pointCloud[idNE].template conv<float>())));
                 ++count;
             }
-            if(idNC != -1 && idNE != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNE].template conv<float>()), vec(currentP, pointCloud[idNC].template conv<float>())));
+            if(idNG != -1 && idND != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idND].template conv<float>()), vec(currentP, pointCloud[idNG].template conv<float>())));
                 ++count;
             }
-            if(idNE != -1 && idNH != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNH].template conv<float>()), vec(currentP, pointCloud[idNE].template conv<float>())));
+            if(idND != -1 && idNB != -1){
+                normal += normalize(cross(vec(currentP, pointCloud[idNB].template conv<float>()), vec(currentP, pointCloud[idND].template conv<float>())));
                 ++count;
             }
-            if(idNH != -1 && idNG != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNG].template conv<float>()), vec(currentP, pointCloud[idNH].template conv<float>())));
-                ++count;
-            }
-            if(idNG != -1 && idNF != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNF].template conv<float>()), vec(currentP, pointCloud[idNG].template conv<float>())));
-                ++count;
-            }
-            if(idNF != -1 && idND != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idND].template conv<float>()), vec(currentP, pointCloud[idNF].template conv<float>())));
-                ++count;
-            }
-            if(idND != -1 && idNA != -1){
-                normal += normalize(cross(vec(currentP, pointCloud[idNA].template conv<float>()), vec(currentP, pointCloud[idND].template conv<float>())));
-                ++count;
-            }
+
+
+            // if(idNA != -1 && idNB != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNB].template conv<float>()), vec(currentP, pointCloud[idNA].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNB != -1 && idNC != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNC].template conv<float>()), vec(currentP, pointCloud[idNB].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNC != -1 && idNE != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNE].template conv<float>()), vec(currentP, pointCloud[idNC].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNE != -1 && idNH != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNH].template conv<float>()), vec(currentP, pointCloud[idNE].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNH != -1 && idNG != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNG].template conv<float>()), vec(currentP, pointCloud[idNH].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNG != -1 && idNF != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNF].template conv<float>()), vec(currentP, pointCloud[idNG].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idNF != -1 && idND != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idND].template conv<float>()), vec(currentP, pointCloud[idNF].template conv<float>())));
+            //     ++count;
+            // }
+            // if(idND != -1 && idNA != -1){
+            //     normal += normalize(cross(vec(currentP, pointCloud[idNA].template conv<float>()), vec(currentP, pointCloud[idND].template conv<float>())));
+            //     ++count;
+            // }
 
             if(count != 0){
                 frame->cloud.normals[idV] = normalize(normal);

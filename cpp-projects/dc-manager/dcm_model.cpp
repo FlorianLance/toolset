@@ -84,8 +84,12 @@ auto DCMModel::update_synchro(size_t id, int64_t averageDiffNs) -> void{
     settings.grabbersS[id].synchroAverageDiff = averageDiffNs;
 }
 
-auto DCMModel::update_status(size_t id, net::UdpReceivedStatus status) -> void{
-    settings.grabbersS[id].receivedStatus = status;
+auto DCMModel::update_network_status(size_t id, net::UdpNetworkStatus status) -> void{
+    settings.grabbersS[id].receivedNetworkStatus = status;
+}
+
+auto DCMModel::update_data_status(size_t id, net::UdpDataStatus status) -> void{
+    settings.grabbersS[id].receivedDataStatus = status;
 }
 
 auto DCMModel::add_default_device() -> void{
@@ -185,14 +189,17 @@ auto DCMModel::update() -> void{
         // check if new frame uncompressed
         if(auto lastFrame = sData.get_frame(ii); lastFrame != nullptr){
 
-            // update last frame id
-            settings.grabbersS[ii].network.lastFrameIdReceived = lastFrame->idCapture;
+            if(settings.grabbersS[ii].network.lastFrameIdReceived != lastFrame->idCapture){
 
-            // send it
-            DCMSignals::get()->new_frame_signal(ii, lastFrame);
+                // update last frame id
+                settings.grabbersS[ii].network.lastFrameIdReceived = lastFrame->idCapture;
 
-            // invalidate it
-            sData.invalid_last_frame(ii);
+                // send it
+                DCMSignals::get()->new_frame_signal(ii, lastFrame);
+
+                // invalidate it
+                // sData.invalid_last_frame(ii);
+            }
         }
     }
 

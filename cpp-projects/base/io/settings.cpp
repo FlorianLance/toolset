@@ -65,8 +65,11 @@ auto BaseSettings::load_from_json_binary_file(const std::string &filePath) -> bo
     Logger::log(std::format("[BaseSettings::load_from_json_binary_file] Load from [{}] settings binary file with path [{}]\n", type_description(),  filePath));
     if(auto content = File::read_content(filePath); content.has_value()){
         auto data = std::span<const uint8_t>(reinterpret_cast<const std::uint8_t*>(content.value().data()), content.value().size());
-        init_from_json_binary(data);
-        return true;
+        if(init_from_json_binary(data)){
+            return true;
+        }
+        Logger::error(std::format("[BaseSettings::load_from_json_binary_file] Cannot load [{}] settings from binary file, impossible to read file with path: [{}]\n", type_description(), filePath));
+        return false;
     }
 
     Logger::error(std::format("[BaseSettings::load_from_json_binary_file] Cannot load [{}] settings from binary file, impossible to open file with path: [{}]\n", type_description(), filePath));
@@ -77,8 +80,11 @@ auto BaseSettings::load_from_json_str_file(const std::string &filePath) -> bool{
 
     Logger::log(std::format("[BaseSettings::load_from_json_str_file] Init from [{}] settings text file with path [{}]\n", type_description(),  filePath));
     if(auto content = File::read_content(filePath); content.has_value()){
-        init_from_json_str(content.value());
-        return true;
+        if(init_from_json_str(content.value())){
+            return true;
+        }
+        Logger::error(std::format("[BaseSettings::load_from_json_str_file] Cannot load [{}] settings from text file, impossible to parse file with path: [{}]\n", type_description(), filePath));
+        return false;
     }
 
     Logger::error(std::format("[BaseSettings::load_from_json_str_file] Cannot load [{}] settings from text file, impossible to open file with path: [{}]\n", type_description(), filePath));
@@ -93,12 +99,24 @@ auto BaseSettings::convert_to_json_binary() const -> std::vector<std::uint8_t>{
     return json::to_bson(convert_to_json());
 }
 
-auto BaseSettings::init_from_json_binary(std::span<const std::uint8_t> jsonData) -> void{
-    init_from_json(json::from_bson(jsonData));
+auto BaseSettings::init_from_json_binary(std::span<const std::uint8_t> jsonData) -> bool{
+    try {
+        init_from_json(json::from_bson(jsonData));
+        return true;
+    }catch (const json::parse_error& e){
+        Logger::error(std::format("BaseSettings::init_from_json_str] Error while reading JSON string [{}] for settings [{}]\n", e.what(), type_description()));
+    }
+    return false;
 }
 
-auto BaseSettings::init_from_json_str(std::string_view jsonStr) -> void{
-    init_from_json(json::parse(jsonStr));
+auto BaseSettings::init_from_json_str(std::string_view jsonStr) -> bool{
+    try {
+        init_from_json(json::parse(jsonStr));
+        return true;
+    }catch (const json::parse_error& e){
+        Logger::error(std::format("BaseSettings::init_from_json_str] Error while reading JSON string [{}] for settings [{}]\n", e.what(), type_description()));
+    }
+    return false;
 }
 
 auto BaseSettings::init_from_json(const nlohmann::json &json) -> void{

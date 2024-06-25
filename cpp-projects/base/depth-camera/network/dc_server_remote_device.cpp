@@ -88,7 +88,7 @@ auto DCServerRemoteDevice::initialize(const ReadSendNetworkInfos &infos) -> bool
     });
     i->dcUdpReader.feedback_signal.connect(&DCServerRemoteDevice::receive_feedback, this);
     i->dcUdpReader.compressed_frame_signal.connect(&DCServerRemoteDevice::receive_compressed_frame, this);
-    i->dcUdpReader.status_signal.connect(&DCServerRemoteDevice::receive_status, this);
+    i->dcUdpReader.network_status_signal.connect(&DCServerRemoteDevice::receive_network_status, this);
 
     return true;
 }
@@ -127,8 +127,8 @@ auto DCServerRemoteDevice::clean() -> void{
     // clean reader
     // # remove connections
     i->dcUdpReader.feedback_signal.disconnect(&DCServerRemoteDevice::receive_feedback, this);
-    i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);    
-    i->dcUdpReader.status_signal.disconnect(&DCServerRemoteDevice::receive_status, this);
+    i->dcUdpReader.compressed_frame_signal.disconnect(&DCServerRemoteDevice::receive_compressed_frame, this);
+    i->dcUdpReader.network_status_signal.disconnect(&DCServerRemoteDevice::receive_network_status, this);
 
     i->remoteDeviceConnected = false;
     // # stop reading loop
@@ -212,15 +212,26 @@ auto DCServerRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
     remote_feedback_signal(std::move(message));
 }
 
-auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void{
+auto DCServerRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> cFrame) -> void{
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
-    if(compressedFrame){
-        remote_frame_signal(std::move(compressedFrame));
+    if(cFrame){
+
+        // update framerate
+        framerate.add_frame();
+
+        // update latency
+        latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(cFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+
+        // send frame
+        remote_frame_signal(std::move(cFrame));
+
+        // send status
+        data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
     }
 }
 
-auto DCServerRemoteDevice::receive_status(UdpReceivedStatus status) -> void{
-    remote_status_signal(status);
+auto DCServerRemoteDevice::receive_network_status(UdpNetworkStatus status) -> void{
+    remote_network_status_signal(status);
 }

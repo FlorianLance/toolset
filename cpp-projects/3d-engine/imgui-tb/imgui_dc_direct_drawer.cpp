@@ -29,6 +29,9 @@
 // std
 #include <format>
 
+// base
+#include "io/cloud_io.hpp"
+
 // local
 #include "imgui_ui_drawer.hpp"
 
@@ -114,5 +117,9 @@ auto DCDirectDrawer::draw_only_clouds() -> void{
 
         ImGui::EndTabBar();
     }
+}
+
+auto DCDirectDrawer::save_current_cloud(size_t idC, const std::string &path) -> void{
+    io::CloudIO::save_cloud(path, cloudsD[idC]->lastFrame->cloud);
 }
 

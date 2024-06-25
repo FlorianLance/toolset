@@ -43,6 +43,8 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
         DCCloudsSceneDrawer::update_filters_settings(id, filters);
     }
 
+    auto save_current_cloud(size_t idC, const std::string &path) -> void;
+
 private:
 
     auto redraw_clouds_to_fbo() -> void;

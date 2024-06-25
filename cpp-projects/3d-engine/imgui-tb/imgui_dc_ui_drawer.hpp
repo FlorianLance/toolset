@@ -88,7 +88,7 @@ public:
     static auto draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &data) -> bool;
     static auto draw_dc_device_settings_tab_item( const std::string &tabItemName, cam::DCDeviceSettings &device) -> std::tuple<bool,bool>;
 
-    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> bool;
+    static auto draw_dc_colors_settings_tab_item(const std::string &tabItemName, cam::DCType type, cam::DCColorSettings &colors) -> std::tuple<bool,bool>;
     static auto draw_dc_filters_settings_tab_item(const std::string &tabItemName, cam::DCMode mode, cam::DCFiltersSettings &filters) -> std::tuple<bool, bool>;
     static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, DCSceneDisplaySettings &display) -> bool;
     static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display) -> bool;

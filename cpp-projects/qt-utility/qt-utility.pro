@@ -46,6 +46,7 @@ include(../ts-dependencies.pri)
 HEADERS += \
     # global    
     gui/widgets/base_qt_sfml_gl_widget.hpp \
+    gui/widgets/logger_w.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
     qt_logger.hpp \
@@ -102,6 +103,7 @@ HEADERS += \
 SOURCES += \
     # global    
     gui/widgets/base_qt_sfml_gl_widget.cpp \
+    gui/widgets/logger_w.cpp \
     qt_highlighting.cpp \
     qt_logger.cpp \
     qt_str.cpp \
