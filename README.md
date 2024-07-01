@@ -10,14 +10,10 @@ List of libraries:
 List of applications:
 * [demos](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/demos) : demos app using 3d-engine library
 * Volumetric video streaming/recording pipeline from depth cameras:
-  * Kinect2:
-     * [scaner-component](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/scaner-component) : base components used in grabber and manager
-     * [scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/scaner-grabber) : client program for fetching Kinect2 data to be sent to UDP
-     * [scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/scaner-manager) : server program for getting scaner-grabber data from UDP (settings and calibration)
      * [guardian](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/guardian)  : app for managing scaner-grabber execution 
-  * Azure Kinect/Femto bolt:
-     * [dc-scaner-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-grabber)
-     * [dc-scaner-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-manager)
+  * Azure Kinect/Femto bolt/Mega:
+     * [dc-grabber](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-grabber)
+     * [dc-manager](https://github.com/FlorianLance/toolset/tree/main/cpp-projects/dc-manager)
    
 
 ![k4-scaner-grabber](https://github.com/FlorianLance/toolset/assets/1221777/4da392e9-0d2b-49e4-bb06-5e0554de6600)
