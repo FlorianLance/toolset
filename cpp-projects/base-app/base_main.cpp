@@ -213,15 +213,15 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
                     }
                 }
 
-                auto cFrame = frameCompressor.compress(*frame, 80);
-                DCCompressedFrame *ptr = cFrame.release();
-                // cFrame.release();
-                auto s_ptr = std::shared_ptr<DCCompressedFrame>(ptr);
-                std::cout << "idCapture : " << s_ptr->idCapture << "\n";
-                std::cout << "vertices : " << s_ptr->validVerticesCount << "\n";
-                std::cout << "fpfColoredCloud : " << s_ptr->fpfColoredCloud.size() << "\n";
+                // auto cFrame = frameCompressor.compress(*frame, 80);
+                // DCCompressedFrame *ptr = cFrame.release();
+                // // cFrame.release();
+                // auto s_ptr = std::shared_ptr<DCCompressedFrame>(ptr);
+                // std::cout << "idCapture : " << s_ptr->idCapture << "\n";
+                // std::cout << "vertices : " << s_ptr->validVerticesCount << "\n";
+                // std::cout << "fpfColoredCloud : " << s_ptr->fpfColoredCloud.size() << "\n";
 
-                video.add_compressed_frame(idC, std::move(s_ptr));
+                // video.add_compressed_frame(idC, std::move(s_ptr));
             }
         }
 
@@ -436,11 +436,13 @@ auto test_microphone() -> void{
 
 #include "depth-camera/dc_frame_indices.hpp"
 #include <execution>
+#include "utility/string.hpp"
 
 auto process_kvid() -> void{
 
     DCVideo video;
-    video.load_from_file("E:/newtournage intro generique1.kvid");
+    std::string path = "E:/newtournage outro1b.kvid";
+    video.load_from_file(path);
 
     DCFrameGenerationSettings settings;
     settings.calibration = true;
@@ -456,7 +458,9 @@ auto process_kvid() -> void{
     std::cout << "START\n" << std::endl;
 
     for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
+        std::cout << "CAMERA " << idC << "\n";
         for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
+            std::cout << idF << " " << std::flush;
             DCFrame frame;
             // std::cout << "uncompress " << idC << " " << idF << "\n";
             video.uncompress_frame(settings, idC, idF, frame);
@@ -473,10 +477,6 @@ auto process_kvid() -> void{
             }
 
             std::vector<bool> filteringM(frame.depth.size(), false);
-
-            if(idC == 0 && idF == 10){
-
-            }
 
             for(size_t idL = 0; idL < 3; ++idL){
                 std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
@@ -508,8 +508,8 @@ auto process_kvid() -> void{
             }
 
             auto cFrame = std::make_shared<DCCompressedFrame>();
-            compressor.compress(frame, 100, cFrame.get());
-            cFrame->validVerticesCount = idValid;
+            // compressor.compress(frame, 100, cFrame.get());
+            // cFrame->validVerticesCount = idValid;
 
 
             // std::cout << "ccloud " << cFrame->calibration.size() << " " << (int)cFrame->mode << " "<< cFrame->fpfDepth.size() << " " << cFrame->validVerticesCount << " " << v <<  "\n";
@@ -527,7 +527,9 @@ auto process_kvid() -> void{
 
         }
     }
-    video.save_to_file("E:/newtournage intro generique1-m2.kvid");
+
+    String::replace_first(path, ".kvid", "-flo-modified.kvid");
+    video.save_to_file(path);
 }
 
 int main(int argc, char *argv[]){

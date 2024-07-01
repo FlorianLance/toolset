@@ -1,0 +1,103 @@
+{
+    "base": {
+        "type": 6,
+        "version": 1
+    },
+    "config": {
+        "base": {
+            "type": 7,
+            "version": 1
+        },
+        "bt_GPU_id": 0,
+        "bt_enabled": false,
+        "bt_orientation": 0,
+        "bt_processing_mode": 4,
+        "color_alignment_rot": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "color_alignment_tr": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "delay_between_color_and_depth_usec": 0,
+        "disable_LED": false,
+        "id_device": 1,
+        "mode": 3,
+        "open_device": true,
+        "start_reading": true,
+        "subordinate_delay_usec": 1120,
+        "synch_mode": 2,
+        "synchronize_color_and_depth": true,
+        "type_device": 0
+    },
+    "data": {
+        "base": {
+            "type": 8,
+            "version": 1
+        },
+        "client_capture": {
+            "audio": false,
+            "body_tracking": false,
+            "bt_temporal_smoothing": 0.0,
+            "color": true,
+            "depth": true,
+            "imu": false,
+            "infra": false
+        },
+        "client_compression": {
+            "audio": false,
+            "body_id_map": false,
+            "body_tracking": false,
+            "calibration": true,
+            "cloud": false,
+            "cloud_color_mode": 1,
+            "color": false,
+            "dept_sized_color": true,
+            "depth": true,
+            "imu": false,
+            "infra": false,
+            "jpeg_compression_rate": 80
+        },
+        "client_generation": {
+            "audio": false,
+            "body_id_map_image": false,
+            "body_tracking": false,
+            "calibration": false,
+            "cloud": false,
+            "cloud_color_mode": 1,
+            "cloud_gen_mode": 0,
+            "color_image": false,
+            "depth": false,
+            "depth_image": false,
+            "depth_sized_color_image": false,
+            "imu": false,
+            "infra": false,
+            "infra_image": false
+        },
+        "server_generation": {
+            "audio": false,
+            "body_id_map_image": false,
+            "body_tracking": false,
+            "calibration": true,
+            "cloud": false,
+            "cloud_color_mode": 1,
+            "cloud_gen_mode": 0,
+            "color_image": false,
+            "depth": true,
+            "depth_image": false,
+            "depth_sized_color_image": true,
+            "imu": false,
+            "infra": false,
+            "infra_image": false
+        }
+    }
+}

@@ -99,7 +99,7 @@ struct DCNetworkDirectPlayer{
     auto read_network_data(size_t idDevice) -> size_t;
 
     // call every frame
-    auto uncompress_frame(size_t idDevice) -> bool;
+    auto retrieve_last_frame(size_t idDevice) -> bool;
 
     // actions
     auto connect_to_devices() -> void;
@@ -143,8 +143,9 @@ DECL_EXPORT void init_callbacks__dc_network_direct_player(tool::cam::DCNetworkDi
     NewFeedbackCB newFeedbackCB);
 
 DECL_EXPORT int initialize__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, const char* networkSettingsFilePath);
+DECL_EXPORT int is_local__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
 DECL_EXPORT int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
-DECL_EXPORT int uncompress_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
+DECL_EXPORT int retrieve_last_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD);
 // actions
 DECL_EXPORT void connect_to_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);
 DECL_EXPORT void disconnect_from_devices__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer);

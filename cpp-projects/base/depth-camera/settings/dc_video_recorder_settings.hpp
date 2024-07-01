@@ -38,6 +38,7 @@ namespace tool::cam {
 struct DCVideoRecorderSettings{
     int cameraMaxFramesToRecord = 10000;
     double maxDurationS = 500.;
+    DCFrameCompressionSettings compression;
     DCFrameGenerationSettings generation;
     // std::vector<bool> camerasToRecord;
 };

@@ -28,6 +28,7 @@
 
 
 // local
+#include "settings/dc_data_settings.hpp"
 #include "dc_frame.hpp"
 #include "dc_compressed_frame.hpp"
 
@@ -38,8 +39,8 @@ struct DCFrameCompressor{
     DCFrameCompressor();
     ~DCFrameCompressor();
 
-    auto compress(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void;
-    auto compress(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>;
+    auto compress(const DCFrameCompressionSettings &fcS, DCFrame &frame) -> std::unique_ptr<DCCompressedFrame>;
+    auto compress(const DCFrameCompressionSettings &fcS, DCFrame &frame, DCCompressedFrame *cFrame) -> void;
 
 private:
     struct Impl;

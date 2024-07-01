@@ -48,8 +48,10 @@ public:
 
     // frames
     auto uncompress_frame(size_t idCamera, DCFrame &frame) -> bool;
-    auto add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> frame) -> void;
-    auto add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void;
+    auto add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> cFrame) -> void;
+    auto add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> cFrame) -> void;
+    auto add_frame_to_default_camera(std::shared_ptr<DCFrame> frame) -> void;
+    auto add_frame(size_t idCamera, std::shared_ptr<DCFrame> frame) -> void;
 
     // recordings
     auto is_recording() const noexcept -> bool;

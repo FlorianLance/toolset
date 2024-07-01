@@ -160,6 +160,7 @@ auto DCMController::set_connections() -> void{
     s->update_model_settings_signal.connect(                &Rec::update_model,                             recorder);
     calibration->validated_calibration_signal.connect(      &Rec::update_model,                             recorder);
     s->new_compressed_frame_signal.connect(                 &Rec::add_compressed_frame,                     recorder);
+    s->new_frame_signal.connect(                            &Rec::add_frame,                                recorder);
     s->start_recorder_signal.connect(                       &Rec::start_recording,                          recorder);
     s->stop_recorder_signal.connect(                        &Rec::stop_recording,                           recorder);
     s->reset_recorder_signal.connect(                       &Rec::reset_recording,                          recorder);

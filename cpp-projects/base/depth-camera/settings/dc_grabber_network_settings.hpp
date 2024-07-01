@@ -44,5 +44,6 @@ struct DCMGrabberNetworkSettings{
     net::Protocol protocol;
 
     size_t lastFrameIdReceived = 0;
+    size_t lastCompressedFrameIdReceived = 0;
 };
 }

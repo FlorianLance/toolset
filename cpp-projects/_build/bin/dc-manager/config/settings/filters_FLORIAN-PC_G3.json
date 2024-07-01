@@ -20,22 +20,22 @@
     },
     "do_erosion": true,
     "do_local_diff_filtering": true,
-    "do_min_neighbours_filtering": false,
+    "do_min_neighbours_filtering": true,
     "erosion_connectivity": 3,
-    "erosion_loops": 3,
+    "erosion_loops": 2,
     "filter_color": [
         0.0,
         0.5,
         0.07999999821186066
     ],
     "filter_depth_with_body_tracking": false,
-    "filter_depth_with_cloud": false,
+    "filter_depth_with_cloud": true,
     "filter_depth_with_color": false,
     "filter_depth_with_infra": false,
     "invalidate_color_from_depth": true,
     "invalidate_infra_from_depth": false,
     "keep_only_bigger_cluster": false,
-    "keep_only_points_inside_OOB": true,
+    "keep_only_points_inside_OOB": false,
     "local_diff_connectivity": 0,
     "max_depth_f": 0.8610000014305115,
     "max_diff_color": [
@@ -45,7 +45,7 @@
     ],
     "max_distance_after_closest_point": 0.20000000298023224,
     "max_height_f": 0.9200000166893005,
-    "max_local_diff": 10.0,
+    "max_local_diff": 15.0,
     "max_sphere_distance": 1000.0,
     "max_widht_f": 1.0,
     "min_depth_f": 0.0,
@@ -53,7 +53,7 @@
     "min_neighbours_connectivity": 2,
     "min_neighbours_loops": 1,
     "min_widht_f": 0.0,
-    "nb_min_neighbours": 1,
+    "nb_min_neighbours": 5,
     "plane1_A": [
         1.0,
         1.0,
@@ -71,10 +71,10 @@
     ],
     "plane_filtering_mode": 0,
     "remove_after_closest_point": false,
-    "remove_from_point_distance": false,
+    "remove_from_point_distance": true,
     "sphere": [
         0.0,
         0.0,
-        1.0
+        1.5
     ]
 }

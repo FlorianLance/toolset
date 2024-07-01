@@ -459,7 +459,7 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
         grid.convert_to_cloud(final.cloud);
 
         // compress frame
-        m_camerasCompressedFrames.front().frames[idF] = compressor.compress(final, 90);
+        //m_camerasCompressedFrames.front().frames[idF] = compressor.compress(final, 90);
     }
 
     m_camerasTransforms.front() = geo::Mat4d::identity();

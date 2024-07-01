@@ -170,38 +170,58 @@ auto DCMModel::update() -> void{
     read_feedbacks();
 
     // read compressed frames
+    std::vector<std::shared_ptr<cam::DCCompressedFrame>> cFrames(sData.nb_grabbers(), nullptr);
+    for(size_t ii = 0; ii < sData.nb_grabbers(); ++ii){
+        // check if new frame uncompressed
+        if(auto get_compressed_frame = sData.get_compressed_frame(ii); get_compressed_frame != nullptr){
+            cFrames[ii] = get_compressed_frame;
+        }
+    }
     for(size_t ii = 0; ii < sData.nb_grabbers(); ++ii){
 
-        // check if new compressed frame received
-        if(auto lastCompressedFrame =  sData.get_compressed_frame(ii); lastCompressedFrame != nullptr){
+        if(cFrames[ii]){
 
-            // send it
-            DCMSignals::get()->new_compressed_frame_signal(ii, lastCompressedFrame);
+            if(settings.grabbersS[ii].network.lastCompressedFrameIdReceived != cFrames[ii]->idCapture){
 
-            // invalidate it
-            sData.invalid_last_compressed_frame(ii);
+                // update last compresesd frame id
+                settings.grabbersS[ii].network.lastCompressedFrameIdReceived = cFrames[ii]->idCapture;
+
+                // send it
+                DCMSignals::get()->new_compressed_frame_signal(ii, std::move(cFrames[ii]));
+
+                // invalidate it
+                // sData.invalid_last_compressed_frame(ii);
+            }
         }
     }
 
     // read frames
+    std::vector<std::shared_ptr<cam::DCFrame>> frames(sData.nb_grabbers(), nullptr);
     for(size_t ii = 0; ii < sData.nb_grabbers(); ++ii){
-
         // check if new frame uncompressed
         if(auto lastFrame = sData.get_frame(ii); lastFrame != nullptr){
+            frames [ii] = lastFrame;
+        }
+    }
+    // send frames
+    for(size_t ii = 0; ii < sData.nb_grabbers(); ++ii){
 
-            if(settings.grabbersS[ii].network.lastFrameIdReceived != lastFrame->idCapture){
+        if(frames[ii]){
+
+            if(settings.grabbersS[ii].network.lastFrameIdReceived != frames[ii]->idCapture){
 
                 // update last frame id
-                settings.grabbersS[ii].network.lastFrameIdReceived = lastFrame->idCapture;
+                settings.grabbersS[ii].network.lastFrameIdReceived = frames[ii]->idCapture;
 
                 // send it
-                DCMSignals::get()->new_frame_signal(ii, lastFrame);
+                DCMSignals::get()->new_frame_signal(ii, std::move(frames[ii]));
 
                 // invalidate it
                 // sData.invalid_last_frame(ii);
             }
         }
     }
+
 
     // update
     calibration.update();

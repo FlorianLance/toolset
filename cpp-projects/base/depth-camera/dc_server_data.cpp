@@ -150,7 +150,6 @@ auto DCServerData::invalid_last_frame(size_t idC) -> void {
 
 auto DCServerData::invalid_last_compressed_frame(size_t idC) -> void {
 
-
     if(idC >= i->grabbersDataProcessing.size()){
         Logger::error(std::format("[DCServerData::invalid_last_compressed_frame] Invalid camera id {}, only {} grabbers.\n", idC, i->grabbersDataProcessing.size()));
         return;

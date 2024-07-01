@@ -1,0 +1,18 @@
+{
+    "auto_exposure_time": false,
+    "auto_white_balance": false,
+    "backlight_compensation": false,
+    "base": {
+        "type": 3,
+        "version": 1
+    },
+    "brightness": 128,
+    "contrast": 5,
+    "exposure_time": 33330,
+    "gain": 128,
+    "hdr": true,
+    "powerline_frequency": 1,
+    "saturation": 32,
+    "sharpness": 2,
+    "white_balance": 4500
+}

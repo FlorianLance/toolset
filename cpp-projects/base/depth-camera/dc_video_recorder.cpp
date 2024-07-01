@@ -28,6 +28,7 @@
 
 
 // local
+#include "dc_frame_compressor.hpp"
 #include "utility/time.hpp"
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
@@ -47,6 +48,7 @@ struct DCVideoRecorder::Impl{
     DCVideoRecorderSettings settings;
     DCVideo videoResource;
 
+    DCFrameCompressor compressor;
 };
 
 DCVideoRecorder::DCVideoRecorder(): i(std::make_unique<Impl>()){
@@ -90,17 +92,17 @@ auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
     return i->videoResource.uncompress_frame(i->settings.generation, idCamera, i->currentCompressedFrames[idCamera].get(), frame);
 }
 
-auto DCVideoRecorder::add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> frame) -> void{
-    add_compressed_frame(0, std::move(frame));
+auto DCVideoRecorder::add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> cFrame) -> void{
+    add_compressed_frame(0, std::move(cFrame));
 }
 
-auto DCVideoRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void{
+auto DCVideoRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> cFrame) -> void{
 
     if(!is_recording() || idCamera >= i->videoResource.nb_cameras()){
         return;
     }
 
-    if(i->recordingStartTimestamp.count() > frame->receivedTS){
+    if(i->recordingStartTimestamp.count() > cFrame->receivedTS){
         Logger::error("[DCRecorder::add_compressed_frame] Invalid frame timestamp.\n");
         return;
     }
@@ -108,12 +110,39 @@ auto DCVideoRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCo
     if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
 
         // add frame to video
-        i->videoResource.add_compressed_frame(idCamera, std::move(frame));
+        i->videoResource.add_compressed_frame(idCamera, std::move(cFrame));
 
         // update video duration
         i->states.duration = i->videoResource.duration_ms();
 
         ++i->states.nbFramesRecorded[idCamera];        
+    }
+}
+
+auto DCVideoRecorder::add_frame_to_default_camera(std::shared_ptr<DCFrame> frame) -> void{
+    add_frame(0, std::move(frame));
+}
+
+auto DCVideoRecorder::add_frame(size_t idCamera, std::shared_ptr<DCFrame> frame) -> void{
+
+    if(!is_recording() || idCamera >= i->videoResource.nb_cameras()){
+        return;
+    }
+
+    if(i->recordingStartTimestamp.count() > frame->receivedTS){
+        Logger::error("[DCRecorder::add_frame] Invalid frame timestamp.\n");
+        return;
+    }
+
+    if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
+
+        // add frame to video
+        i->videoResource.add_compressed_frame(idCamera, i->compressor.compress(i->settings.compression, *frame));
+
+        // update video duration
+        i->states.duration = i->videoResource.duration_ms();
+
+        ++i->states.nbFramesRecorded[idCamera];
     }
 }
 
@@ -200,10 +229,8 @@ auto DCVideoRecorder::reset_recording() -> void {
     std::fill(std::begin(i->states.currentFrames),      std::end(i->states.currentFrames), 0);
 }
 
-#include <iostream>
 auto DCVideoRecorder::update_settings(DCVideoRecorderSettings recordingsS) noexcept -> void{
     i->settings = recordingsS;
-    std::cout << "update recording\n";
 }
 
 auto DCVideoRecorder::update_model(size_t id, const DCModelSettings &model) -> void{

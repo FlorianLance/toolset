@@ -35,6 +35,7 @@ using namespace tool::cam;
 using namespace tool::net;
 
 struct DCServerLocalDevice::Impl{
+        ReadSendNetworkInfos infos;
     std::unique_ptr<DCDeviceManager>  deviceM = nullptr;
 };
 
@@ -46,6 +47,10 @@ DCServerLocalDevice::~DCServerLocalDevice(){
 }
 
 auto DCServerLocalDevice::initialize(const ReadSendNetworkInfos &infos) -> bool{
+
+
+    i->infos = infos;
+
     i->deviceM = std::make_unique<DCDeviceManager>();
 
     i->deviceM->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
@@ -66,10 +71,19 @@ auto DCServerLocalDevice::initialize(const ReadSendNetworkInfos &infos) -> bool{
         }
     });
 
+    if(i->infos.startReadingThread){
+
+    }
+
     return true;
 }
 
 auto DCServerLocalDevice::clean() -> void {
+
+    // if(i->infos.startReadingThread){
+
+    // }
+
     i->deviceM = nullptr;
 }
 

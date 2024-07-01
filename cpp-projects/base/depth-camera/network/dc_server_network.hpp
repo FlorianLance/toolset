@@ -60,6 +60,7 @@ struct DCServerNetwork{
 
     auto devices_nb() const noexcept -> size_t;
     auto device_connected(size_t idG) const noexcept -> bool;
+    auto is_local(size_t idG) const -> bool;
 
     auto read_data_from_network(size_t idG) -> size_t;
 

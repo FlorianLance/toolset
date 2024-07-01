@@ -30,7 +30,7 @@
         ],
         "delay_between_color_and_depth_usec": 0,
         "disable_LED": false,
-        "id_device": 2,
+        "id_device": 0,
         "mode": 3,
         "open_device": true,
         "start_reading": true,

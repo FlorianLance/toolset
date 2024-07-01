@@ -78,6 +78,7 @@ struct DCDeviceImpl{
     auto start_reading_thread() -> void;
     auto stop_reading_thread() -> void;
     auto is_reading_frames_from_camera() const noexcept -> bool{return readFramesFromCameras;}
+    // read_frame
 
     // reading steps
     auto loop_initialization() -> void;
@@ -89,7 +90,6 @@ struct DCDeviceImpl{
     auto filter() -> void;
     auto update_compressed_frame() -> void;
     auto update_frame() -> void;
-
     auto process_data() -> void;
 
     // settings

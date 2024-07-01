@@ -30,9 +30,6 @@
 #include <filesystem>
 #include <execution>
 
-// base
-#include "utility/logger.hpp"
-
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -91,10 +88,12 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
         return false;
     }
 
-    // clean
+    // initialize network
     if(!serverNetworkS.initialize(networkSettingsFilePath)){
         return false;
-    }
+    }    
+    dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Network settings file loaded:\n");
+    dll_log_message(std::format("[Network]\n{}", serverNetworkS.convert_to_json_str()));
 
     dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Network infos:");
     size_t id = 0;
@@ -118,7 +117,7 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
     devicesD.resize(nbConnections);
     for(size_t idD = 0; idD < nbConnections; ++idD){
         devicesD[idD].id = idD;
-        devicesD[idD].frameLocker = std::make_unique<std::mutex>();
+        devicesD[idD].frameLocker   = std::make_unique<std::mutex>();
         devicesD[idD].feedbackLocker = std::make_unique<std::mutex>();
     }
 
@@ -126,7 +125,7 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
 }
 
 
-auto DCNetworkDirectPlayer::uncompress_frame(size_t idDevice) -> bool{
+auto DCNetworkDirectPlayer::retrieve_last_frame(size_t idDevice) -> bool{
 
     if(idDevice >= devicesD.size()){
         return false;
@@ -489,6 +488,10 @@ int initialize__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectP
     return dcNetworkDirectPlayer->initialize(networkSettingsFilePath) ? 1 : 0;
 }
 
+int is_local__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
+    return dcNetworkDirectPlayer->serverNetwork.is_local(idD) ? 1 : 0;
+}
+
 void connect_to_devices__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer){
     dcNetworkDirectPlayer->connect_to_devices();
 }
@@ -517,8 +520,8 @@ int read_network_data__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer
     return static_cast<int>(dcNetworkDirectPlayer->read_network_data(idD));
 }
 
-int uncompress_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
-    return static_cast<int>(dcNetworkDirectPlayer->uncompress_frame(idD)) ? 1 : 0;
+int retrieve_last_frame__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
+    return static_cast<int>(dcNetworkDirectPlayer->retrieve_last_frame(idD)) ? 1 : 0;
 }
 
 void copy_transform__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD, float *transformData){

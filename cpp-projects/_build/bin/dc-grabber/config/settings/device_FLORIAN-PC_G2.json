@@ -30,8 +30,8 @@
         ],
         "delay_between_color_and_depth_usec": 0,
         "disable_LED": false,
-        "id_device": 3,
-        "mode": 3,
+        "id_device": 7,
+        "mode": 4,
         "open_device": true,
         "start_reading": true,
         "subordinate_delay_usec": 320,
@@ -41,7 +41,7 @@
     },
     "data": {
         "base": {
-            "type": 8,
+            "type": -1063256064,
             "version": 1
         },
         "client_capture": {
@@ -71,14 +71,14 @@
             "audio": false,
             "body_id_map_image": false,
             "body_tracking": false,
-            "calibration": true,
-            "cloud": true,
+            "calibration": false,
+            "cloud": false,
             "cloud_color_mode": 1,
             "cloud_gen_mode": 0,
             "color_image": false,
-            "depth": true,
+            "depth": false,
             "depth_image": false,
-            "depth_sized_color_image": true,
+            "depth_sized_color_image": false,
             "imu": false,
             "infra": false,
             "infra_image": false
@@ -88,7 +88,7 @@
             "body_id_map_image": false,
             "body_tracking": false,
             "calibration": true,
-            "cloud": true,
+            "cloud": false,
             "cloud_color_mode": 1,
             "cloud_gen_mode": 0,
             "color_image": false,

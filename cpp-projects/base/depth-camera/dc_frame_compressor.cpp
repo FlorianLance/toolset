@@ -63,7 +63,13 @@ DCFrameCompressor::DCFrameCompressor() : i(std::make_unique<Impl>()){
 DCFrameCompressor::~DCFrameCompressor(){
 }
 
-auto DCFrameCompressor::compress(DCFrame &frame, int jpegQuality, DCCompressedFrame *cFrame) -> void{
+auto DCFrameCompressor::compress(const DCFrameCompressionSettings &fcS, DCFrame &frame) -> std::unique_ptr<DCCompressedFrame>{
+    auto cFrame = std::make_unique<DCCompressedFrame>();
+    compress(fcS, frame, cFrame.get());
+    return cFrame;
+}
+
+auto DCFrameCompressor::compress(const DCFrameCompressionSettings &fcS, DCFrame &frame, DCCompressedFrame *cFrame) -> void{
 
     // frame
     cFrame->idCapture          = frame.idCapture;
@@ -74,96 +80,47 @@ auto DCFrameCompressor::compress(DCFrame &frame, int jpegQuality, DCCompressedFr
     cFrame->mode               = frame.mode;
     cFrame->validVerticesCount = frame.cloud.size();
 
-    cFrame->calibration        = frame.calibration;
-
-    // rgba color
-    if(!frame.rgbaColor.empty()){
-        i->colorEncoder.encode(frame.rgbaColor, cFrame->jpegRGBA8Color, jpegQuality);
-    }
-
-    // rgba depth-sized color
-    if(!frame.rgbaDepthSizedColor.empty()){
-        i->depthSizedColorEncoder.encode(frame.rgbaDepthSizedColor, cFrame->jpegRGBA8DepthSizedColor, jpegQuality);
-    }
-
-    // gray bodies id
-    if(!frame.depth.empty()){
-        i->bodiesIdEncoder.encode(frame.grayBodiesIdMap, cFrame->jpegG8BodiesIdMap, jpegQuality);
+    // calibration
+    if(fcS.calibration && !frame.calibration.empty()){
+        cFrame->calibration = frame.calibration;
+    }else{
+        cFrame->calibration.clear();
     }
 
     // depth
-    if(!frame.depth.empty()){
+    if(fcS.depth && !frame.depth.empty()){
         i->depthEncoder.encode(frame.depth, cFrame->fpfDepth);
     }
 
     // infra
-    if(!frame.infra.empty()){
+    if(fcS.infra && !frame.infra.empty()){
         i->infraEncoder.encode(frame.infra, cFrame->fpfInfra);
     }
 
-    // cloud
-    if(!frame.cloud.empty()){
+    // rgba depth-sized color
+    if(fcS.depthSizedColor && !frame.rgbaDepthSizedColor.empty()){
+        i->depthSizedColorEncoder.encode(frame.rgbaDepthSizedColor, cFrame->jpegRGBA8DepthSizedColor, fcS.jpegCompressionRate);
+    }
 
-        // update id
-        size_t sizeCloud = frame.cloud.size();
-        if(i->indices1D.size() < sizeCloud){
-            i->indices1D.resize(sizeCloud);
-        }
-        std::iota(std::begin(i->indices1D), std::begin(i->indices1D) + sizeCloud, 0);
+    // rgba color
+    if(fcS.color && !frame.rgbaColor.empty()){
+        i->colorEncoder.encode(frame.rgbaColor, cFrame->jpegRGBA8Color, fcS.jpegCompressionRate);
+    }
 
-        // resize cloud data
-        // data mapping: XXYYZZRGB0
-        i->processedCloud.resize(sizeCloud *10);
-
-        auto s8 = std::span<std::uint8_t>(
-            reinterpret_cast<std::uint8_t*>(i->processedCloud.get_data()),
-            i->processedCloud.size()/4
-        );
-        auto s16 = std::span<std::uint16_t>(
-            reinterpret_cast<std::uint16_t*>(i->processedCloud.get_data()),
-            i->processedCloud.size()/2
-        );
-
-        if(frame.mode != DCMode::Merged){
-            std::for_each(std::execution::par_unseq, std::begin(i->indices1D), std::begin(i->indices1D) + sizeCloud, [&](size_t id){
-                s16[id]               = static_cast<std::uint16_t>(-frame.cloud.vertices[id].x()*1000.f + 4096); // X
-                s16[sizeCloud   + id] = static_cast<std::uint16_t>(-frame.cloud.vertices[id].y()*1000.f + 4096); // Y
-                s16[2*sizeCloud + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].z()*1000.f);         // Z
-                s8[6*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].x()*255.f);
-                s8[7*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].y()*255.f);
-                s8[8*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].z()*255.f);
-            });
-        }else{
-            std::for_each(std::execution::par_unseq, std::begin(i->indices1D), std::begin(i->indices1D) + sizeCloud, [&](size_t id){
-                s16[id]               = static_cast<std::uint16_t>(frame.cloud.vertices[id].x()*1000.f + 32768); // X
-                s16[sizeCloud   + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].y()*1000.f + 32768); // Y
-                s16[2*sizeCloud + id] = static_cast<std::uint16_t>(frame.cloud.vertices[id].z()*1000.f + 32768); // Z
-                s8[6*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].x()*255.f);
-                s8[7*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].y()*255.f);
-                s8[8*sizeCloud + id]  = static_cast<std::uint8_t>(frame.cloud.colors[id].z()*255.f);
-            });
-        }
-
-        i->cloudEncoder.encode(
-            i->processedCloud,
-            cFrame->fpfColoredCloud
-        );
+    // gray bodies id
+    if(fcS.bodyIdMap && !frame.grayBodiesIdMap.empty()){
+        i->bodiesIdEncoder.encode(frame.grayBodiesIdMap, cFrame->jpegG8BodiesIdMap, fcS.jpegCompressionRate);
     }
 
     // imu
-    cFrame->imu = frame.imu;
+    if(fcS.imu && !frame.imu.empty()){
+        cFrame->imu = frame.imu;
+    }
 
     // audio
-    cFrame->audioFrames = frame.audioFrames;
-
-    // bodies
-    // ...
-}
-
-auto DCFrameCompressor::compress(DCFrame &frame, int jpegQuality) -> std::unique_ptr<DCCompressedFrame>{
-    auto cFrame = std::make_unique<DCCompressedFrame>();
-    compress(frame, jpegQuality, cFrame.get());
-    return cFrame;
+    if(fcS.audio && !frame.audioFrames.empty()){
+        cFrame->audioFrames = frame.audioFrames;
+    }
 }
 
 

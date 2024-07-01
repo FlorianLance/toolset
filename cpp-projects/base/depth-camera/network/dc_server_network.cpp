@@ -179,12 +179,19 @@ auto DCServerNetwork::device_connected(size_t idG) const noexcept -> bool{
     return false;
 }
 
+auto DCServerNetwork::is_local(size_t idG) const -> bool{
+    if(idG < i->devices.size()){
+        return i->devices[idG]->type() == DCServerType::local;
+    }
+    return false;
+}
+
 auto DCServerNetwork::read_data_from_network(size_t idG) -> size_t{
 
     if(idG < i->devices.size()){
         if(i->devices[idG]->type() == DCServerType::remote){
             return dynamic_cast<DCServerRemoteDevice*>(i->devices[idG].get())->read_data_from_network();
-        }else{
+        }else if(i->devices[idG]->type() == DCServerType::local){
             // ...
         }
     }

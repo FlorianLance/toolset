@@ -1,41 +1,41 @@
 {
     "OOB_position": [
-        0.0,
-        0.0,
-        0.0
+        0.028999999165534973,
+        0.2639999985694885,
+        1.6139999628067017
     ],
     "OOB_rotation": [
-        0.0,
+        44.61000061035156,
         0.0,
         0.0
     ],
     "OOB_size": [
-        1.0,
-        1.0,
-        1.0
+        1.9900000095367432,
+        1.8300000429153442,
+        1.5299999713897705
     ],
     "base": {
         "type": 2,
         "version": 1
     },
-    "do_erosion": false,
+    "do_erosion": true,
     "do_local_diff_filtering": true,
-    "do_min_neighbours_filtering": false,
+    "do_min_neighbours_filtering": true,
     "erosion_connectivity": 3,
-    "erosion_loops": 1,
+    "erosion_loops": 2,
     "filter_color": [
         0.0,
         0.5,
         0.07999999821186066
     ],
     "filter_depth_with_body_tracking": false,
-    "filter_depth_with_cloud": false,
+    "filter_depth_with_cloud": true,
     "filter_depth_with_color": false,
     "filter_depth_with_infra": false,
-    "invalidate_color_from_depth": false,
+    "invalidate_color_from_depth": true,
     "invalidate_infra_from_depth": false,
     "keep_only_bigger_cluster": false,
-    "keep_only_points_inside_OOB": false,
+    "keep_only_points_inside_OOB": true,
     "local_diff_connectivity": 0,
     "max_depth_f": 1.0,
     "max_diff_color": [
@@ -44,16 +44,16 @@
         0.5
     ],
     "max_distance_after_closest_point": 0.20000000298023224,
-    "max_height_f": 1.0,
-    "max_local_diff": 10.0,
+    "max_height_f": 0.8840000033378601,
+    "max_local_diff": 15.0,
     "max_sphere_distance": 1000.0,
     "max_widht_f": 1.0,
     "min_depth_f": 0.0,
-    "min_height_f": 0.0,
+    "min_height_f": 0.08100000023841858,
     "min_neighbours_connectivity": 2,
     "min_neighbours_loops": 1,
     "min_widht_f": 0.0,
-    "nb_min_neighbours": 1,
+    "nb_min_neighbours": 5,
     "plane1_A": [
         1.0,
         1.0,
@@ -71,10 +71,10 @@
     ],
     "plane_filtering_mode": 0,
     "remove_after_closest_point": false,
-    "remove_from_point_distance": false,
+    "remove_from_point_distance": true,
     "sphere": [
         0.0,
         0.0,
-        1.0
+        1.5
     ]
 }

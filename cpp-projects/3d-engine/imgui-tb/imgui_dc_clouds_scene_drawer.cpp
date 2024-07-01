@@ -52,24 +52,12 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
         cloudD->initialize();
     }
 
-    gridD.initialize(1.f,1.f, 10, 20, true);
+    gridD.initialize(1.f,1.f, 20, 20, true);
     sphereD.initialize(0.05f);
-
-    // trianglesLinesD.resize(nbDrawers);
-    // for(auto &d : trianglesLinesD){
-    //     d = std::make_unique<gl::TriangleLinesDrawer>();
-    //     d->initialize(true);
-    // }
     trianglesLinesD.initialize(true);
 
-    // oobLinesD.resize(nbDrawers);
     geo::OBB3<float> obb;
-    // for(auto &d : oobLinesD){
-    //     d = std::make_unique<gl::OrientedBoundingBoxLinesDrawer>();
-    //     d->initialize(true, obb);
-    // }
     oobLinesD.initialize(true, obb);
-
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -177,12 +165,12 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             // color
             shader->set_uniform("enable_unicolor", true);
             shader->set_uniform("unicolor", cloudD->display.cloudColor);
-            if(cloudD->display.showCameraFrustum){
+            if(cloudD->display.showCameraFrustum && cloudD->display.showCloud){
                 cloudD->frustumD.draw();
             }
 
             // body tracking
-            if(cloudD->display.showBodyTracking){
+            if(cloudD->display.showBodyTracking && cloudD->display.showCloud){
                 for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
                     shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
                     for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
@@ -196,7 +184,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
             // filtering planes
-            if(cloudD->filters.filterDepthWithCloud && cloudD->display.showFilteringGizmos){
+            if(cloudD->filters.filterDepthWithCloud && cloudD->display.showFilteringGizmos && cloudD->display.showCloud){
 
                 if(cloudD->filters.p1FMode != PlaneFilteringMode::None){
                     auto p1 = cloudD->filters.p1A;

@@ -84,21 +84,26 @@ auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const cam::DCMod
 auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCCloudDisplaySettings &cloudDisplay) -> void{
 
     auto &cdC = cloudsD[idGrabber]->display;
-    cdC.forceCloudColor = true;
-    cdC.backFaceCulling = false;
-    cdC.cloudColor      = cloudDisplay.cloudColor;
-    cdC.circles         = cloudDisplay.circles;
-    cdC.pointSize       = cloudDisplay.pointSize;
-    cdC.squareSize      = cloudDisplay.squareSize;
-    cdC.circleRadius    = cloudDisplay.circleRadius;
+    cdC.forceCloudColor     = true;
+    cdC.backFaceCulling     = false;
+    cdC.cloudColor          = cloudDisplay.cloudColor;
+    cdC.circles             = cloudDisplay.circles;
+    cdC.pointSize           = cloudDisplay.pointSize;
+    cdC.squareSize          = cloudDisplay.squareSize;
+    cdC.circleRadius        = cloudDisplay.circleRadius;
+    cdC.showCameraFrustum   = false;
+    cdC.showFilteringGizmos = false;
 
     auto &cdP       = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
-    cdP.backFaceCulling = false;
-    cdP.cloudColor  = cloudDisplay.cloudColor * 0.5f;
-    cdP.pointSize   = cloudDisplay.pointSize * 2.f;
-    cdP.circles     = cloudDisplay.circles;
-    cdP.squareSize  = cloudDisplay.squareSize * 1.2f;
-    cdC.squareSize  = cloudDisplay.squareSize;
+    cdP.forceCloudColor     = true;
+    cdP.backFaceCulling     = false;
+    cdP.cloudColor          = cdC.cloudColor * 0.5f;
+    cdP.pointSize           = cdC.pointSize * 2.f;
+    cdP.circles             = cdC.circles;
+    cdP.squareSize          = cdC.squareSize * 1.2f;
+    cdP.circleRadius        = cdC.circleRadius * 1.2f;
+    cdP.showCameraFrustum   = false;
+    cdP.showFilteringGizmos = false;
 
     m_redrawClouds = true;
 }
