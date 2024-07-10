@@ -67,7 +67,7 @@ struct DCMSettings{
     cam::DCVideoRecorderSettings recorderS;
     cam::DCVideoPlayerSettings playerS;
     cam::DCCalibratorSettings calibratorS;
-    std::vector<cam::DCMGrabberSettings> grabbersS;
+    std::vector<cam::DCGrabberSettings> grabbersS;
     // net
     net::UdpServerNetworkSettings networkS;
     // graphics

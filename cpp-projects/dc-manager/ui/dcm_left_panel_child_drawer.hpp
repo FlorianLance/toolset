@@ -53,21 +53,21 @@ private:
 
     auto draw_grabbers_ui(DCMSettings &settings, DCMStates &states) -> void;
     // tab items
-    auto draw_commands_tab_item(const net::UdpServerNetworkSettings &networkS, std::vector<cam::DCMGrabberSettings> &grabbersS) -> void;
+    auto draw_commands_tab_item(const net::UdpServerNetworkSettings &networkS, std::vector<cam::DCGrabberSettings> &grabbersS) -> void;
     auto draw_settings_tab_item(DCMSettings &settings) -> void;
     auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
     auto draw_logs_tab_item() -> void;
     auto draw_infos_tab_item(const DCMSettings &settings) -> void;
     // sub tab items
     // # command
-    auto draw_all_commands_tab_item(const net::UdpServerNetworkSettings &networkS, std::vector<cam::DCMGrabberSettings> &grabbersS) -> void;
-    auto draw_individual_commands_tab_item(cam::DCMGrabberSettings &grabberS) -> void;
+    auto draw_all_commands_tab_item(const net::UdpServerNetworkSettings &networkS, std::vector<cam::DCGrabberSettings> &grabbersS) -> void;
+    auto draw_individual_commands_tab_item(cam::DCGrabberSettings &grabberS) -> void;
     // # settings
     auto draw_device_tab_item(DCMSettings &settings) -> void;
     auto draw_filters_tab_item(DCMSettings &settings) -> void;
-    auto draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
-    auto draw_calibration_tab_item( std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
-    auto draw_color_tab_item(std::vector<cam::DCMGrabberSettings> &grabbers) -> void;
+    auto draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<cam::DCGrabberSettings> &grabbers) -> void;
+    auto draw_calibration_tab_item( std::vector<cam::DCGrabberSettings> &grabbers) -> void;
+    auto draw_color_tab_item(std::vector<cam::DCGrabberSettings> &grabbers) -> void;
     auto draw_recorder_tab_item(cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> void;
     auto draw_player_tab_item(cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> void;
     auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;

@@ -70,6 +70,7 @@ auto DCDeviceImpl::start_reading_thread() -> void{
         loop_initialization();
         while(readFramesFromCameras){
             auto tf = TimeDiffGuard(timeM, "LOOP_ITERATION"sv);
+            // LogGuard g("Read frame.\n"sv);
             read_settings();
             read_images();
             process_data();

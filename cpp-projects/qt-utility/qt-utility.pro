@@ -47,6 +47,7 @@ HEADERS += \
     # global    
     gui/widgets/base_qt_sfml_gl_widget.hpp \
     gui/widgets/logger_w.hpp \
+    qstring_unordered_map.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
     qt_logger.hpp \

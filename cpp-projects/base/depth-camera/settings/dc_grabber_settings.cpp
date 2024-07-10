@@ -37,7 +37,7 @@
 
 using namespace tool::cam;
 
-auto DCMGrabberSettings::initialize(size_t idG, const net::ReadSendNetworkInfos &grabberInfos) -> void{
+auto DCGrabberSettings::initialize(size_t idG, const net::ReadSendNetworkInfos &grabberInfos) -> void{
 
     this->id = idG;
 

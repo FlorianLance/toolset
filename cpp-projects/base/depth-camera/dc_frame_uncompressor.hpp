@@ -39,6 +39,7 @@ struct DCFrameUncompressor{
     DCFrameUncompressor();
     ~DCFrameUncompressor();
 
+    auto initialize(DCCompressedFrame *cFrame) -> void;
     auto uncompress(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
 
 private:

@@ -41,6 +41,7 @@
 #include "settings/dc_data_settings.hpp"
 
 using namespace tool::cam;
+using namespace std::chrono;
 
 DCVideo &DCVideo::operator=(const DCVideo &other){
 
@@ -157,7 +158,10 @@ auto DCVideo::camera_last_frame_received_timestamp(size_t idCamera) const noexce
 }
 
 auto DCVideo::duration_ms() const noexcept -> double {
-    using namespace std::chrono;
+
+    if(nb_cameras() == 0){
+        return 0.0;
+    }
     auto lfc = last_frame_received_timestamp();
     auto ffc = first_frame_received_timestamp();
     if(lfc != -1&& ffc != -1 ){
@@ -167,7 +171,6 @@ auto DCVideo::duration_ms() const noexcept -> double {
 }
 
 auto DCVideo::get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t t2) noexcept -> double{
-    using namespace std::chrono;
     return duration_cast<microseconds>(nanoseconds(std::max(t1,t2)) - nanoseconds(std::min(t1,t2))).count() / 1000.0;
 }
 
@@ -181,9 +184,7 @@ auto DCVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const n
     if(nb_frames(idCamera) == 0){
         Logger::error("[DCVolumetricVideo::closest_frame_id_from_time] No frame available.\n"sv);
         return -1;
-    }
-
-    using namespace std::chrono;
+    }    
 
     auto framesPtr = get_compressed_frames_ptr(idCamera);
     if(framesPtr->nb_frames() == 1){

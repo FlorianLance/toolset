@@ -316,7 +316,7 @@ auto DCMLeftPanelChildDrawer::draw_ui_tab_item(DCMUiSettings &ui) -> void {
     }
 }
 
-auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS)  -> void {
+auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCGrabberSettings> &grabbersS)  -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Commands###settings_commands_tabitem")){
         return;
@@ -338,7 +338,7 @@ auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const UdpServerNetworkSetti
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCMGrabberSettings> &grabbersS) -> void{
+auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkSettings &networkS, std::vector<DCGrabberSettings> &grabbersS) -> void{
 
     using namespace  std::chrono;
 
@@ -470,7 +470,7 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const UdpServerNetworkS
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCMGrabberSettings &grabberS) -> void{
+auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCGrabberSettings &grabberS) -> void{
 
     if (!ImGuiUiDrawer::begin_tab_item(std::format("[{}]###{}_settings_commands_tabitem", grabberS.id, grabberS.id).c_str())){
         return;
@@ -851,7 +851,7 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<DCMGrabberSettings> &grabbers) -> void {
+auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<DCGrabberSettings> &grabbers) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Display###display_settings_tabitem")){
         return;
@@ -1044,7 +1044,7 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::EndTabItem();
 }
 
-auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DCMGrabberSettings> &grabbers) -> void {
+auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DCGrabberSettings> &grabbers) -> void {
 
 
     if (!ImGuiUiDrawer::begin_tab_item("Calibration###calibration_settings_tabitem")){
@@ -1074,7 +1074,7 @@ auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DC
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCMGrabberSettings> &grabbers) -> void{
+auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCGrabberSettings> &grabbers) -> void{
 
     static constexpr std::string_view base = "###settings_colors";
     if (!ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_tabitem", base).c_str())){

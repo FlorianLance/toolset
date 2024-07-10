@@ -49,6 +49,11 @@ struct Interface{
     static auto list_local_interfaces(Protocol protocol) -> std::vector<Interface>;
 };
 
+struct DeviceInitInfos{
+
+};
+
+
 struct ReadSendNetworkInfos{
     bool local = false;
     size_t idReadingInterface = 0;

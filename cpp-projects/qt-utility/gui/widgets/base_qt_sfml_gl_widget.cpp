@@ -29,6 +29,7 @@
 
 // Qt
 #include <QKeyEvent>
+#include <QWindow>
 
 // opengl-utility
 #include "opengl/gl_functions.hpp"
@@ -79,7 +80,7 @@ auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
     settings.depthBits = 24;
     settings.stencilBits = 8;
     settings.antialiasingLevel = 4;
-    settings.attributeFlags = sf::ContextSettings::Debug;
+    settings.attributeFlags = sf::ContextSettings::Core;
 
     // init window
     sf::RenderWindow::create(reinterpret_cast<sf::WindowHandle>(winId()), settings);
@@ -117,9 +118,11 @@ auto BaseQtSfmlGlWidget::paintEvent(QPaintEvent *) -> void{
     display();
 }
 
+
 auto BaseQtSfmlGlWidget::resizeEvent(QResizeEvent *event) -> void{
 
-    m_screen.resize(static_cast<unsigned int>(event->size().width()),static_cast<unsigned int>(event->size().height()));
+    QScreen *screen = this->window()->windowHandle()->screen();
+    m_screen.resize(static_cast<unsigned int>(event->size().width()),static_cast<unsigned int>(event->size().height()), screen->devicePixelRatio());
     m_camera.update_projection();
 
     if(!m_windowInitialized){

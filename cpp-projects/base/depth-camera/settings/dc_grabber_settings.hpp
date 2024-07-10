@@ -39,7 +39,7 @@
 
 namespace tool::cam {
 
-struct DCMGrabberSettings{
+struct DCGrabberSettings{
 
     auto initialize(size_t idC, const net::ReadSendNetworkInfos &clientInfos) -> void;
 

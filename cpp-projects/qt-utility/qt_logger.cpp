@@ -200,90 +200,96 @@ auto QtLogger::to_html_paragraph(QtLogger::MessageType type, QStringView text, b
     }
 
     if(!addTimestamp){
-        return u"<p> <font color=\"%1\"> %2 </font></p>"_s.arg(colorCode, text);
+        return u"<p><font color=\"%1\"> %2 </font></p>"_s.arg(colorCode, text);
     }else{
-        return u"<p> [%1] <font color=\"%2\"> %3 </font></p>"_s.arg(
-            QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - QtLogger::Impl::epochStart).count()),
+        return u"<p><font color=\"%1\">[%2] %3 </font></p>"_s.arg(
             colorCode,
+            QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - QtLogger::Impl::epochStart).count()),            
             text
         );
     }
 }
 
-auto QtLogger::message(const QString &message, bool triggersSignal, bool saveToFile) -> void{
+auto QtLogger::message(const QString &message, bool triggersSignal, bool saveToFile, bool addTimeStamp) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
+        auto htmlMessage = to_html_paragraph(MessageType::normal, message, addTimeStamp);
+        if(saveToFile){
+            insert_to_log_file(htmlMessage);
+        }
         if(triggersSignal){
-            emit QtLogger::Impl::logger->message_signal(
-                to_html_paragraph(MessageType::normal, message, false)
-            );
             if(QtLogger::Impl::displayConsole){
                 qDebug() << message;
             }
-        }
-
-        if(saveToFile){
-            insert_to_log_file(to_html_paragraph(MessageType::normal, message, true));
+            emit QtLogger::Impl::logger->message_signal(std::move(htmlMessage));
         }
     }
 }
 
-auto QtLogger::warning(const QString &warning, bool triggersSignal, bool saveToFile) -> void{
+auto QtLogger::warning(const QString &warning, bool triggersSignal, bool saveToFile, bool addTimeStamp) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
+        auto htmlWarning = to_html_paragraph(MessageType::warning, warning, addTimeStamp);
+        if(saveToFile){
+            insert_to_log_file(htmlWarning);
+        }
         if(triggersSignal){
-            emit QtLogger::Impl::logger->warning_signal(
-                to_html_paragraph(MessageType::warning, warning, false)
-            );
             if(QtLogger::Impl::displayConsole){
-                qWarning() << warning;
+                qDebug() << warning;
             }
-        }
-
-        if(saveToFile){
-            insert_to_log_file(to_html_paragraph(MessageType::warning, warning, true));
+            emit QtLogger::Impl::logger->warning_signal(std::move(htmlWarning));
         }
     }
 }
 
-auto QtLogger::error(const QString &error, bool triggersSignal, bool saveToFile) -> void{
+auto QtLogger::error(const QString &error, bool triggersSignal, bool saveToFile, bool addTimeStamp) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
+        auto htmlError = to_html_paragraph(MessageType::error, error, addTimeStamp);
+        if(saveToFile){
+            insert_to_log_file(htmlError);
+        }
         if(triggersSignal){
-            emit QtLogger::Impl::logger->error_signal(
-                to_html_paragraph(MessageType::error, error, false)
-            );
             if(QtLogger::Impl::displayConsole){
                 qDebug() << error;
             }
-        }
-
-        if(saveToFile){
-            insert_to_log_file(to_html_paragraph(MessageType::error, error, true));
+            emit QtLogger::Impl::logger->error_signal(std::move(htmlError));
         }
     }
 }
 
-auto QtLogger::log(const QString &log, bool triggersSignal, bool saveToFile) -> void{
+auto QtLogger::log(const QString &log, bool triggersSignal) -> void{
 
     if(auto logger = QtLogger::get(); logger != nullptr){
 
-        if(triggersSignal){
-            emit QtLogger::Impl::logger->log_signal(to_html_paragraph(MessageType::log, log, false));
-        }
+        auto htmlLog = to_html_paragraph(MessageType::log, log, true);
+        insert_to_log_file(htmlLog);
 
-        if(saveToFile){
-            insert_to_log_file(to_html_paragraph(MessageType::log, log, true));
+        if(triggersSignal){
+            emit QtLogger::Impl::logger->log_signal(std::move(htmlLog));
         }
     }
 }
 
-auto QtLogger::log_title(const QString &log, int level) -> void{
-    if(auto logger = QtLogger::get(); logger == nullptr){
-        insert_to_log_file(QString("<h%1>%2</h%1>").arg(QString::number(level), to_html_paragraph(QtLogger::MessageType::log, log, false)));
+auto QtLogger::log_title(const QString &log, int level, bool triggersSignal) -> void{
+
+    if(auto logger = QtLogger::get(); logger != nullptr){
+
+        auto htmlLog = u"<h%1>%2</h%1>"_s.arg(QString::number(level), to_html_paragraph(QtLogger::MessageType::log, log, false));
+        insert_to_log_file(htmlLog);
+
+        if(triggersSignal){
+            emit QtLogger::Impl::logger->log_signal(std::move(htmlLog));
+        }
+    }
+}
+
+auto QtLogger::set_log_background_color(const QString &color) -> void{
+    if(auto logger = QtLogger::get(); logger != nullptr){
+        insert_to_log_file(u"<body style=\"background-color:%1;\">"_s.arg(color));
     }
 }
 

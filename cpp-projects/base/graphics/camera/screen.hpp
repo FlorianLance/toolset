@@ -36,27 +36,24 @@ class Screen{
 
 public:
 
-    constexpr Screen(unsigned int width = 800, unsigned int height = 800, int xPos = 0, int yPos = 0) : m_size(width,height), m_position(xPos,yPos){
+    constexpr Screen(unsigned int width = 800, unsigned int height = 800, int xPos = 0, int yPos = 0, double pixelRatio = 1.0) : m_size(width,height), m_position(xPos,yPos), m_pixelRatio(pixelRatio){
     }    
 
-    constexpr auto resize(unsigned int width, unsigned int height) noexcept -> void{
+    constexpr auto resize(unsigned int width, unsigned int height, double pixelRatio = 1.0) noexcept -> void{
         m_size = {width, height};
+        m_pixelRatio = pixelRatio;
     }
 
     constexpr auto width() const noexcept -> unsigned int{
-        return m_size.x();
+        return static_cast<unsigned int>(m_size.x()*m_pixelRatio);
     }
 
     constexpr auto height() const noexcept -> unsigned int{
-        return m_size.y();
+        return static_cast<unsigned int>(m_size.y()*m_pixelRatio);
     }
 
     constexpr auto size_pixels() const noexcept -> unsigned int{
-        return m_size.x() * m_size.y();
-    }
-
-    constexpr auto size() const noexcept -> geo::Pt2<unsigned int>{
-        return m_size;
+        return width() * height();
     }
 
     constexpr auto x_pos() const noexcept -> int{
@@ -74,6 +71,7 @@ public:
 private:
     geo::Pt2<unsigned int> m_size = {800,800};
     geo::Pt2<int> m_position = {0,0};
+    double m_pixelRatio = 1.0;
 };
 }
 

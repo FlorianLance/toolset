@@ -85,6 +85,7 @@ struct OrbbecBaseDevice::Impl{
 
     // device
     DCType deviceType;
+    std::string lastAddress;
     // static inline std::unique_ptr<ob::Context> context = nullptr;
     std::unique_ptr<ob::Context> context = nullptr;
     std::shared_ptr<ob::Device> device          = nullptr;
@@ -113,6 +114,21 @@ struct OrbbecBaseDevice::Impl{
     auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration;
+
+    auto init_context() -> void{
+        context = std::make_unique<ob::Context>();
+        context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
+            if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
+                Logger::error(logMsg);
+            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
+                Logger::warning(logMsg);
+            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
+                Logger::message(logMsg);
+            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
+                //Logger::log(logMsg);
+            }
+        });
+    }
 };
 
 auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, bool value) -> void{
@@ -390,20 +406,8 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
 OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>()){
 
     i->deviceType = deviceType;
-    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
-
-    i->context = std::make_unique<ob::Context>();
-    i->context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
-        if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
-            Logger::error(logMsg);
-        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
-            Logger::warning(logMsg);
-        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
-            Logger::message(logMsg);
-        }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
-            Logger::log(logMsg);
-        }
-    });
+    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);    
+    i->init_context();
 }
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
@@ -415,7 +419,6 @@ OrbbecBaseDevice::~OrbbecBaseDevice(){
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::query_devices"sv);
-
     i->context->enableNetDeviceEnumeration(ethernet);
 
     auto devicesFound = i->context->queryDeviceList();
@@ -473,8 +476,12 @@ auto OrbbecBaseDevice::open(uint32_t deviceId) -> bool{
     try {
 
         if(i->deviceType == DCType::FemtoMega){
-            Logger::message(std::format("Retrieve from ip adress: {}.\n",std::format("192.168.{}.2", deviceId+1)));
-            i->device     = i->context->createNetDevice(std::format("192.168.{}.2", deviceId+1).c_str() , 8090);
+
+            auto newAdress = std::format("192.168.{}.2", deviceId+1);
+            Logger::message(std::format("Retrieve from ip adress: {}.\n",newAdress));
+            i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
+            i->lastAddress = newAdress;
+
         }else{
             Logger::message("Retrieve from devices list.\n");
             i->device     = i->deviceList[deviceId];
@@ -781,6 +788,7 @@ auto OrbbecBaseDevice::stop() -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::stop"sv);
 
+    Logger::message("Stop orbbec device\n");
     if(i->pipe != nullptr){
         Logger::message("Stop pipeline\n");
         i->pipe->stop();
@@ -791,11 +799,10 @@ auto OrbbecBaseDevice::stop() -> void{
 }
 
 auto OrbbecBaseDevice::close() -> void{
-
     auto lg = LogGuard("OrbbecBaseDevice::close"sv);
-
-    Logger::message("Clean device\n");
+    Logger::message("Destroy orbbec device\n");
     i->device = nullptr;
+    Logger::message("Orbbec device destroyed\n");
 }
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
@@ -881,11 +888,12 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
     if(i->frameSet != nullptr){
 
         // auto lg = LogGuard("OrbbecBaseDevice::read_depth_image\n"sv);
-        try{
-            i->depthImage = i->frameSet->depthFrame();
-        }catch(...){
-            Logger::log("THROW\n"sv);
-        }
+        i->depthImage = i->frameSet->depthFrame();
+        // try{
+        //     i->depthImage = i->frameSet->depthFrame();
+        // }catch(...){
+        //     Logger::log("THROW\n"sv);
+        // }
         if(i->depthImage != nullptr){
             return  std::span<std::uint16_t>{
                 reinterpret_cast<std::uint16_t*>(i->depthImage->data()),

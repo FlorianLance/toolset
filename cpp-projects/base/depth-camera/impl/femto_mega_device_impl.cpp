@@ -66,7 +66,12 @@ auto FemtoMegaDeviceImpl::stop() -> void{
 }
 
 auto FemtoMegaDeviceImpl::close() -> void {
-    return orbbecD->close();
+
+    orbbecD->close();
+    orbbecD = nullptr;
+
+    orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
+    orbbecD->query_devices("Femto Mega"sv, true);
 }
 
 auto FemtoMegaDeviceImpl::is_opened() const noexcept -> bool{

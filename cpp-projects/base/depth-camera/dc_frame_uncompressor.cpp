@@ -132,6 +132,15 @@ struct DCFrameUncompressor::Impl{
         cInfraImageT.succeed(cInfraDataT);
     }
 
+    auto initialize(DCCompressedFrame *initCFrame) -> void{
+        mInfos.initialize(initCFrame->mode);
+        indices.initialize(mInfos);
+        cFrame = initCFrame;
+        DCFrame initFrame;
+        frame = &initFrame;
+        reset_calibration();
+    }
+
     auto reset_timings() -> void{
         tResetCalibration = {};
         tComputeColorImage = {};
@@ -528,6 +537,10 @@ private:
 DCFrameUncompressor::DCFrameUncompressor() : i(std::make_unique<Impl>()){}
 
 DCFrameUncompressor::~DCFrameUncompressor(){
+}
+
+auto DCFrameUncompressor::initialize(DCCompressedFrame *cFrame) -> void{
+    i->initialize(cFrame);
 }
 
 auto DCFrameUncompressor::uncompress(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{

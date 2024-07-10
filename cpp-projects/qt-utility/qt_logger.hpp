@@ -52,11 +52,13 @@ public:
     static auto init(QString logDirectoryPath = "", QString logFileName = QSL("default_log.html"), bool displayConsole = false, bool copyPreviousLog = true) -> void;
     static auto clean() -> void;
 
-    static auto message(const QString &message, bool triggersSignal = true, bool saveToFile = true) -> void;
-    static auto warning(const QString &warning, bool triggersSignal = true, bool saveToFile = true) -> void;
-    static auto error(const QString &error, bool triggersSignal = true, bool saveToFile = true) -> void;
-    static auto log(const QString &log, bool triggersSignal = true, bool saveToFile = true) -> void;
-    static auto log_title(const QString &log, int level) -> void;
+    static auto message(const QString &message, bool triggersSignal = true, bool saveToFile = true, bool addTimeStamp = true) -> void;
+    static auto warning(const QString &warning, bool triggersSignal = true, bool saveToFile = true, bool addTimeStamp = true) -> void;
+    static auto error(const QString &error, bool triggersSignal = true, bool saveToFile = true, bool addTimeStamp = true) -> void;
+    static auto log(const QString &log, bool triggersSignal = false) -> void;
+    static auto log_title(const QString &log, int level, bool triggersSignal = false) -> void;
+
+    static auto set_log_background_color(const QString &color) -> void;
 
     static auto set_html_ui_type_message_color(MessageType type, const QColor &col) -> void;
 

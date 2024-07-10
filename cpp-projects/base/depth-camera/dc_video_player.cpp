@@ -18,11 +18,7 @@ struct DCPlayerData{
     std::vector<size_t> camerasFrameId;
     std::vector<std::shared_ptr<DCCompressedFrame>> camerasCompressedFrame;
     std::vector<std::shared_ptr<DCFrame>> camerasFrame;
-
     std::vector<size_t> ids;
-
-    DCModeInfos mInfos;
-    DCFrameIndices indices;
 
     auto initialize(const DCVideo &nVideo) -> void{
 
@@ -34,14 +30,20 @@ struct DCPlayerData{
         camerasCompressedFrame.resize(nbDevices);
         camerasFrame.resize(nbDevices);
 
+
         std::fill(std::begin(camerasFrameId),         std::end(camerasFrameId), 0);
         std::fill(std::begin(camerasCompressedFrame), std::end(camerasCompressedFrame), nullptr);
         std::fill(std::begin(camerasFrame),           std::end(camerasFrame), nullptr);
+
+        ids.resize(1024*1024);
+        std::iota(ids.begin(), ids.end(), 0);
     }
 
     auto load_from_file(std::string_view path) -> bool{
 
         if(video.load_from_file(path)){
+
+
             size_t nbDevices = video.nb_cameras();
             camerasFrameId.resize(nbDevices);
             camerasCompressedFrame.resize(nbDevices);
@@ -53,6 +55,33 @@ struct DCPlayerData{
             for(auto &cameraFrame : camerasFrame){
                 cameraFrame = std::make_shared<DCFrame>();
             }
+
+            for(size_t idD = 0; idD < nbDevices; ++idD){
+
+                if(auto cFrame = video.get_compressed_frame(idD, 0).lock(); cFrame){
+
+                    auto firstMode = cFrame->mode;
+                    for(size_t idF = 1; idF < video.nb_frames(idD); ++idF){
+                        if(firstMode != video.get_compressed_frame(idD, idF).lock()->mode){
+                            tool::Logger::error("[DCPlayerData::load_from_file] Inconsistent modes for cameras.\n");
+                            return false;
+                        }
+                    }
+
+                    if(auto uncompressor = video.uncompressor(idD); uncompressor != nullptr){
+                        uncompressor->initialize(cFrame.get());
+                    }else{
+                        tool::Logger::error("[DCPlayerData::load_from_file] Invalid uncompressor.\n");
+                    }
+
+                }else{
+                    tool::Logger::error("[DCPlayerData::load_from_file] Invalid nb of frames.\n");
+                    return false;
+                }
+            }
+
+            ids.resize(1024*1024);
+            std::iota(ids.begin(), ids.end(), 0);
 
             // std::cout << "VIDEO " << video.nb_cameras() << " " << video.duration_ms() << "\n";
             // for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
@@ -406,14 +435,6 @@ auto DCVideoPlayer::update() -> void{
         }
     });
 
-    // std::puts(std::format("end uncompress {}\n",sw.ellapsed_milli_s()).c_str());
-
-    if(!i->data.camerasFrame.empty()){
-        if(i->data.camerasFrame.front()->mode != i->data.mInfos.mode()){
-            i->data.mInfos.initialize(i->data.camerasFrame.front()->mode);
-            i->data.indices.initialize(i->data.mInfos);
-        }
-    }
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
@@ -660,6 +681,8 @@ auto DCVideoPlayer::load_from_file(std::string_view path) -> bool{
             model.transformation = i->data.video.get_transform(ii).conv<float>();
             models.push_back(model);
         }
+
+        // send models
         initialize_signal(std::move(models));
 
         return true;

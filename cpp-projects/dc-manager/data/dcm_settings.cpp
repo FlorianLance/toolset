@@ -102,8 +102,8 @@ auto DCMSettings::host_name() -> std::string{
 }
 
 auto DCMSettings::process_settings_action(SAction action, STarget target, SType type, SFile file, size_t id) -> void{
-
-    std::vector<DCMGrabberSettings*> tGrabbers;
+    
+    std::vector<DCGrabberSettings*> tGrabbers;
     if(target == STarget::All){
         for(auto &grabber : grabbersS){
             tGrabbers.push_back(&grabber);
