@@ -26,6 +26,7 @@
 
 #include "imgui_dc_calibrator_drawer.hpp"
 
+using namespace tool::cam;
 using namespace tool::graphics;
 
 auto DCCalibratorDrawer::initialize(size_t nbGrabbers) -> void{
@@ -33,9 +34,9 @@ auto DCCalibratorDrawer::initialize(size_t nbGrabbers) -> void{
 
     for(size_t ii = 0; ii < nbGrabbers; ++ii){
         auto &cdC = cloudsD[ii]->display;
-        cdC.forceCloudColor = true;
+        cdC.forceColor = true;
         auto &cdP = cloudsD[nbGrabbers  + ii]->display;
-        cdP.forceCloudColor = true;
+        cdP.forceColor = true;
     }
 }
 
@@ -55,10 +56,10 @@ auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DC
         auto visibilty = (ii == modelId) || (ii == sourceId) || allSelection;
 
         auto &cdC = cloudsD[ii]->display;
-        cdC.showCloud = m_settings.displayCalibrationCloud && visibilty;
+        cdC.showCapture = m_settings.displayCalibrationCloud && visibilty;
 
         auto &cdP = cloudsD[grabbersData->size()  + ii]->display;
-        cdP.showCloud = m_settings.displayProcessedCloud && visibilty;
+        cdP.showCapture = m_settings.displayProcessedCloud && visibilty;
     }
     m_redrawClouds = true;
 }
@@ -81,12 +82,12 @@ auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const cam::DCMod
     m_redrawClouds = true;
 }
 
-auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCCloudDisplaySettings &cloudDisplay) -> void{
+auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCDeviceDisplaySettings &cloudDisplay) -> void{
 
     auto &cdC = cloudsD[idGrabber]->display;
-    cdC.forceCloudColor     = true;
+    cdC.forceColor     = true;
     cdC.backFaceCulling     = false;
-    cdC.cloudColor          = cloudDisplay.cloudColor;
+    cdC.unicolor          = cloudDisplay.unicolor;
     cdC.circles             = cloudDisplay.circles;
     cdC.pointSize           = cloudDisplay.pointSize;
     cdC.squareSize          = cloudDisplay.squareSize;
@@ -95,9 +96,9 @@ auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DC
     cdC.showFilteringGizmos = false;
 
     auto &cdP       = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
-    cdP.forceCloudColor     = true;
+    cdP.forceColor     = true;
     cdP.backFaceCulling     = false;
-    cdP.cloudColor          = cdC.cloudColor * 0.5f;
+    cdP.unicolor          = cdC.unicolor * 0.5f;
     cdP.pointSize           = cdC.pointSize * 2.f;
     cdP.circles             = cdC.circles;
     cdP.squareSize          = cdC.squareSize * 1.2f;

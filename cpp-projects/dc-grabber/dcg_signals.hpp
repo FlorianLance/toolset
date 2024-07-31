@@ -26,8 +26,6 @@
 **                                                                            **
 ********************************************************************************/
 
-// std
-#include <memory>
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
@@ -38,7 +36,7 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
-#include "network/udp_client_network_settings.hpp"
+#include "network/settings/udp_server_settings.hpp"
 
 // local
 #include "data/dcg_ui_settings.hpp"
@@ -59,7 +57,7 @@ public:
     SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
     // network
-    SSS<net::UdpClientNetworkSettings*> init_network_sending_settings_signal;
+    SSS<net::UdpServerSettings*> init_network_sending_settings_signal;
 
     // recording
     SSS<> start_recorder_signal;
@@ -72,9 +70,9 @@ public:
     // settings
     SSS<const cam::DCDeviceSettings&> update_device_settings_signal;
     SSS<const cam::DCColorSettings&> update_color_settings_signal;
-    SSS<size_t,const DCCloudDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<size_t,const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
-    SSS<const DCSceneDisplaySettings&> update_scene_display_settings_signal;
+    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<cam::DCDelaySettings> update_delay_settings_signal;
     SSS<const cam::DCFiltersSettings&> update_filters_signal;
     SSS<ui::DCGDisplaySettingsSettings*> update_grabber_display_settings_signal;

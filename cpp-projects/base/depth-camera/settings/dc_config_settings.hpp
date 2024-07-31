@@ -33,7 +33,7 @@
 
 namespace tool::cam {
 
-struct DCConfigSettings : io::BaseSettings{
+struct DCConfigSettings : io::Settings{
     
     // actions
     bool openDevice   = true;

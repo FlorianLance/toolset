@@ -29,7 +29,8 @@
 // base
 #include "depth-camera/settings/dc_display_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
-#include "depth-camera/dc_frame.hpp"
+#include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 
 // opengl
 #include "opengl/texture/texture_2d_tbo.hpp"
@@ -66,10 +67,17 @@ struct DCCloudDrawer{
     gl::SphereTrianglesDrawer spD;
     gl::FrustumDrawerLinesDrawer frustumD;
 
+    // gl::LinesDrawer2 normalsD;
+    // Buffer<GLuint> normalsIndices;
+    // Buffer<geo::Pt3f> normalsP;
+    // Buffer<geo::Pt3f> normalsC;
+
+
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
-    cam::DCFiltersSettings filters;
-    DCCloudDisplaySettings display;
+    cam::DCFiltersSettings filtersS;
+    cam::DCDeviceSettings deviceS;
+    cam::DCDeviceDisplaySettings display;
 
     // init
     auto initialize() -> void;

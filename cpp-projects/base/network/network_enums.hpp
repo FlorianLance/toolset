@@ -36,6 +36,13 @@ enum class Protocol : std::uint8_t{
     ipv4, ipv6, unknow
 };
 
+enum class Command : std::int8_t{
+    quit = 0,
+    shutdown,
+    restart,
+    disconnect
+};
+
 enum class FeedbackType : std::int8_t{
     message_received = 0,
     timeout,
@@ -43,6 +50,7 @@ enum class FeedbackType : std::int8_t{
     quit,
     shutdown,
     restart,
+    undefined,
     SizeEnum
 };
 
@@ -58,6 +66,7 @@ TFeedbackTypes
     {FeedbackType::quit,                "quit"sv},
     {FeedbackType::shutdown,            "shutdown"sv},
     {FeedbackType::restart,             "restart"sv},
+    {FeedbackType::undefined,           "undefined"sv},
 }};
 
 [[nodiscard]] [[maybe_unused]] static constexpr auto to_string(FeedbackType m) -> Name{
@@ -68,50 +77,6 @@ TFeedbackTypes
     return static_cast<std::int8_t>(m);
 }
 
-enum class MessageType : std::int8_t {
-    init_network_infos = 0,
-    update_device_settings,
-    update_color_settings,
-    update_filters,
-    compressed_frame_data,
-    command,
-    feedback,
-    delay,
-    synchro,
-    ping,
-    undefined,
-    // filter_mask
-    SizeEnum
-};
 
-using TMessageTypes = std::tuple<
-    MessageType,                                Name>;
-static constexpr TupleArray<MessageType::SizeEnum, TMessageTypes> MessageTypes = {{
-    TMessageTypes
-    {MessageType::init_network_infos,           "init_network_infos"sv},
-    {MessageType::update_device_settings,       "update_device_settings"sv},
-    {MessageType::update_color_settings,        "update_color_settings"sv},
-    {MessageType::update_filters,               "update_filters"sv},
-    {MessageType::compressed_frame_data,        "compressed_frame_data"sv},
-    {MessageType::command,                      "command"sv},
-    {MessageType::feedback,                     "feedback"sv},
-    {MessageType::delay,                        "delay"sv},
-    {MessageType::synchro,                      "synchro"sv},
-    {MessageType::ping,                         "ping"sv},
-}};
 
-[[nodiscard]] [[maybe_unused]] static constexpr auto to_string(MessageType m) -> Name{
-    return MessageTypes.at<0,1>(m);
-}
-
-[[nodiscard]] [[maybe_unused]] static constexpr auto to_i8(MessageType m) -> std::int8_t{
-    return static_cast<std::int8_t>(m);
-}
-
-enum class Command : std::int8_t{
-    Quit = 0,
-    Shutdown,
-    Restart,
-    Disconnect
-};
 }

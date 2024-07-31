@@ -26,33 +26,6 @@
 
 #include "dc_display_settings.hpp"
 
-// local
-//#include "utility/io_data.hpp"
-
 using namespace tool;
 
-
-auto DCSceneDisplaySettings::default_init_for_grabber() -> DCSceneDisplaySettings{
-    DCSceneDisplaySettings display;
-    // TODO
-    return display;
-}
-
-auto DCSceneDisplaySettings::default_init_for_manager() -> DCSceneDisplaySettings{
-    DCSceneDisplaySettings display;
-    // TODO
-    return display;
-}
-
-auto DCCloudDisplaySettings::default_init_for_grabber() -> DCCloudDisplaySettings{
-    DCCloudDisplaySettings display;
-    // TODO
-    return display;
-}
-
-auto DCCloudDisplaySettings::default_init_for_manager() -> DCCloudDisplaySettings{
-    DCCloudDisplaySettings display;
-    // TODO
-    return display;
-}
 

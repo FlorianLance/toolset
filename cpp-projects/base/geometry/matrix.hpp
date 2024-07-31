@@ -216,13 +216,6 @@ struct Matrix{
                 pt.x() * at(0,1) + pt.y() * at(1,1) + pt.z() * at(2,1) + at(3,1),
                 pt.x() * at(0,2) + pt.y() * at(1,2) + pt.z() * at(2,2) + at(3,2)
             }};
-
-            //    return {{
-            //        m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z(),
-            //        m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z(),
-            //        m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z()
-            //    }};
-
         }else if constexpr(_cols == 4){
             return{{
                 pt.x() * at(0,0) + pt.y() * at(1,0) + pt.z() * at(2,0) + pt.w() * at(3,0),

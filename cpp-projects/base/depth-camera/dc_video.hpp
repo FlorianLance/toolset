@@ -28,8 +28,8 @@
 #pragma once
 
 // local
-#include "dc_compressed_frames.hpp"
-#include "dc_frame_uncompressor.hpp"
+#include "frame/dc_frame_uncompressor.hpp"
+#include "frame/dc_compressed_frame_buffer.hpp"
 
 namespace tool::cam{
 
@@ -63,7 +63,7 @@ public:
     auto min_nb_frames() const noexcept -> size_t;
     auto closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t;
     auto get_compressed_frame(size_t idCamera, size_t idFrame) -> std::weak_ptr<DCCompressedFrame>;
-    auto get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrames*;
+    auto get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrameBuffer*;
     auto uncompressor(size_t idCamera) noexcept -> DCFrameUncompressor*;
     // # audio
     auto total_audio_frames_size(size_t idCamera) const -> size_t;
@@ -102,7 +102,7 @@ public:
 protected:
 
     std::vector<std::unique_ptr<DCFrameUncompressor>> m_camerasUncompressors;
-    std::vector<DCCompressedFrames> m_camerasCompressedFrames;
+    std::vector<DCCompressedFrameBuffer> m_camerasCompressedFrames;
     std::vector<geo::Mat4d> m_camerasTransforms;
 
 private:

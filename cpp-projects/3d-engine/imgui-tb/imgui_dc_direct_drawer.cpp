@@ -54,22 +54,26 @@ auto DCDirectDrawer::redraw_clouds_to_fbo() -> void{
         // store visibility
         std::vector<int> cloudsVisibility;
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
-            cloudsVisibility.push_back(cloudsD[ii]->display.showCloud ? 1 : 0);
+            cloudsVisibility.push_back(cloudsD[ii]->display.showCapture ? 1 : 0);
         }
 
         // display only current grabber id cloud if per tab
         if(!m_allTabOpened){
             for(size_t ii = 0; ii < cloudsD.size(); ++ii){
-                if(cloudsD[ii]->display.showCloud){
-                    cloudsD[ii]->display.showCloud = ii == m_currentTabOpened;
+                if(cloudsD[ii]->display.showCapture){
+                    cloudsD[ii]->display.showCapture = ii == m_currentTabOpened;
                 }
             }
         }
+
+        set_frustum_display_state(m_allTabOpened);
+        set_gizmo_display_state(!m_allTabOpened);
+
         draw_clouds_to_fbo();
 
         // restore visibility
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
-            cloudsD[ii]->display.showCloud = cloudsVisibility[ii] == 1;
+            cloudsD[ii]->display.showCapture = cloudsVisibility[ii] == 1;
         }
     }
     m_redrawClouds = false;
@@ -77,6 +81,7 @@ auto DCDirectDrawer::redraw_clouds_to_fbo() -> void{
 
 
 auto DCDirectDrawer::draw(bool focus) -> void{
+
 
     redraw_clouds_to_fbo();
 

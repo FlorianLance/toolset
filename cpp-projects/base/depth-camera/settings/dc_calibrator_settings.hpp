@@ -32,7 +32,7 @@
 #include <format>
 
 // local
-#include "depth-camera/dc_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 
 namespace tool::cam {
 

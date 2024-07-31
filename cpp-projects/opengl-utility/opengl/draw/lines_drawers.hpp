@@ -41,6 +41,15 @@ public:
     auto update(std::span<const geo::Pt3f,2> vertices, std::span<const geo::Pt3f> colors = {}) -> void;
 };
 
+class LinesDrawer2 : public BaseDrawer{
+public:
+    LinesDrawer2() : BaseDrawer(DrawerType::Lines){}
+    auto initialize(bool dynamic,  std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> void;
+    auto update(std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> void;
+};
+
+
+
 class AxesLinesDrawer : public BaseDrawer{
 public:
     AxesLinesDrawer() : BaseDrawer(DrawerType::Lines){}

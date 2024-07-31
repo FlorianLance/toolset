@@ -34,13 +34,13 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
+#include "settings/dc_device_data_settings.hpp"
 #include "settings/dc_color_settings.hpp"
-#include "settings/dc_data_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_config_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
-#include "dc_compressed_frame.hpp"
-#include "dc_frame.hpp"
+#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 
 namespace tool::cam {
 
@@ -59,7 +59,7 @@ public:
 
     // settings
     auto set_color_settings(const DCColorSettings &colorS) -> void;
-    auto set_data_settings(const DCDataSettings &dataS) -> void;
+    auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_delay_settings(const DCDelaySettings &delayS) -> void;
 

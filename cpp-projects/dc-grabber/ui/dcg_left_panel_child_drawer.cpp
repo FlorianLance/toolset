@@ -128,8 +128,8 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(DCGSettings &settings) -
 
     ImGui::Text("UDP sending:");
     ImGui::Indent();
-    ImGuiUiDrawer::text(fmt("IP address: {}", settings.networkS.udpSendingAdress));
-    ImGuiUiDrawer::text(fmt("Port: {}", settings.networkS.udpSendingPort));
+    ImGuiUiDrawer::text(fmt("IP address: {}", settings.networkS.clientConnectionSettings.address));
+    ImGuiUiDrawer::text(fmt("Port: {}", settings.networkS.clientConnectionSettings.port));
     ImGui::Unindent();   
 
     ImGui::Separator();

@@ -42,20 +42,20 @@ DCNetworkDirectPlayer::DCNetworkDirectPlayer(){
     std::iota(std::begin(ids), std::end(ids), 0);
 
     // set connections
-    serverNetwork.remote_feedback_signal.connect([&](size_t idCamera, net::Feedback feedback){
+    clientDevices.remote_feedback_signal.connect([&](size_t idCamera, net::Feedback feedback){
         if(newFeedbackCBP != nullptr){
             (*newFeedbackCBP)(static_cast<int>(idCamera), static_cast<int>(feedback.receivedMessageType), static_cast<int>(feedback.feedback));
         }
     });
 
-    serverNetwork.remote_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCCompressedFrame> cFrame){
+    clientDevices.remote_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCCompressedFrame> cFrame){
         devicesD[idCamera].frameLocker->lock();
         devicesD[idCamera].lastCompressedFrame = std::move(cFrame);
         devicesD[idCamera].frameLocker->unlock();
         devicesD[idCamera].nbFramesReceived++;
     });
 
-    serverNetwork.local_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCFrame> frame){
+    clientDevices.local_frame_signal.connect([&](size_t idCamera, std::shared_ptr<cam::DCFrame> frame){
         devicesD[idCamera].frameLocker->lock();
         devicesD[idCamera].lastFrame = std::move(frame);
         devicesD[idCamera].frameLocker->unlock();
@@ -89,29 +89,31 @@ auto DCNetworkDirectPlayer::initialize(const std::string &networkSettingsFilePat
     }
 
     // initialize network
-    if(!serverNetworkS.initialize(networkSettingsFilePath)){
+    if(!clientDevicesSettings.initialize(networkSettingsFilePath)){
         return false;
     }    
     dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Network settings file loaded:\n");
-    dll_log_message(std::format("[Network]\n{}", serverNetworkS.convert_to_json_str()));
+    dll_log_message(std::format("[Network]\n{}", clientDevicesSettings.convert_to_json_str()));
 
     dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Network infos:");
     size_t id = 0;
-    for(auto &info : serverNetworkS.clientsInfo){
-        dll_log_message(std::format("ID:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].",
-        id, info.idReadingInterface, info.readingAdress, info.readingPort, info.sendingAdress, info.sendingPort));
-        ++id;
-        info.startReadingThread = false;
+    for(auto &deviceS : clientDevicesSettings.connectionsS){
+        if(auto rDev = dynamic_cast<DCRemoteDeviceConnectionSettings*>(deviceS.get())){
+            dll_log_message(std::format("ID:[{}] RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}].",
+                id, rDev->serverS.idReadingInterface, rDev->serverS.readingAdress, rDev->serverS.readingPort, rDev->serverS.sendingAdress, rDev->serverS.sendingPort));
+            ++id;
+            rDev->serverS.startReadingThread = false;
+        }
     }
 
-    auto nbConnections = serverNetworkS.clientsInfo.size();
+    auto nbConnections = clientDevicesSettings.connectionsS.size();
     if(nbConnections == 0){
         dll_log_error("[DLL][DCNetworkDirectPlayer::initialize] No connection defined in network file.");
         return false;
     }
 
-    serverNetwork.initialize(serverNetworkS.clientsInfo);
-    serverData.initialize(serverNetwork.devices_nb(), false);
+    clientDevices.initialize(clientDevicesSettings);
+    clientProicessing.initialize(clientDevices.devices_nb(), false);
 
     devicesD.clear();
     devicesD.resize(nbConnections);
@@ -139,13 +141,19 @@ auto DCNetworkDirectPlayer::retrieve_last_frame(size_t idDevice) -> bool{
         deviceD.lastCompressedFrame = nullptr;
         deviceD.frameLocker->unlock();
 
-        deviceD.frameToDisplay = serverData.uncompress_frame(deviceD.id, std::move(cFrame));
+        // send to video recorder
+        // ...
+        
+        deviceD.frameToDisplay = clientProicessing.uncompress_frame(deviceD.id, std::move(cFrame));
         return true;
 
     }else if(deviceD.lastFrame != nullptr){
         auto frame = std::move(deviceD.lastFrame);
         deviceD.lastFrame = nullptr;
         deviceD.frameLocker->unlock();
+
+        // send to video recorder
+        // ...
 
         deviceD.frameToDisplay = std::move(frame);
         return true;
@@ -157,8 +165,8 @@ auto DCNetworkDirectPlayer::retrieve_last_frame(size_t idDevice) -> bool{
 }
 
 auto DCNetworkDirectPlayer::clean() -> void{
-    serverNetwork.clean();
-    serverData.clean();
+    clientDevices.clean();
+    clientProicessing.clean();
     devicesD.clear();
 }
 
@@ -171,28 +179,28 @@ auto DCNetworkDirectPlayer::connect_to_devices() -> void{
 
     for(const auto &deviceD : devicesD){
         dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::connect_to_devices] Init connection with device: {}", deviceD.id));
-        serverNetwork.init_connection(deviceD.id);
+        clientDevices.init_connection(deviceD.id);
     }
 }
 
 auto DCNetworkDirectPlayer::disconnect_from_devices() -> void{
     for(const auto &deviceD : devicesD){
-        serverNetwork.apply_command(deviceD.id, Command::Disconnect);
+        clientDevices.apply_command(deviceD.id, Command::disconnect);
     }
 }
 
 auto DCNetworkDirectPlayer::shutdown_devices() -> void{
     for(const auto &deviceD : devicesD){
-        serverNetwork.apply_command(deviceD.id, Command::Quit);
+        clientDevices.apply_command(deviceD.id, Command::quit);
     }
 }
 
 auto DCNetworkDirectPlayer::devices_nb() const noexcept -> size_t{
-    return serverNetwork.devices_nb();
+    return clientDevices.devices_nb();
 }
 
 auto DCNetworkDirectPlayer::is_device_connected(size_t idD) const noexcept -> bool{
-    return serverNetwork.device_connected(idD);
+    return clientDevices.device_connected(idD);
 }
 
 auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSettingsPath) -> bool{
@@ -206,13 +214,13 @@ auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSett
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_device_settings] Device settings file with path [{}] doesn't exist.", deviceSettingsPath));
         return false;
     }
-
-    std::vector<io::BaseSettings*> deviceSettingsFiles;
+    
+    std::vector<io::Settings*> deviceSettingsFiles;
     for(auto &grabberS : devicesD){
         deviceSettingsFiles.push_back(&grabberS.device);
     }
-
-    if(!io::BaseSettings::load_multi_from_file(deviceSettingsFiles, deviceSettingsPath)){
+    
+    if(!io::Settings::load_multi_from_file(deviceSettingsFiles, deviceSettingsPath)){
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_device_settings] Error while reading device settings file with path [{}].\n", deviceSettingsPath));
         return false;
     }
@@ -228,9 +236,9 @@ auto DCNetworkDirectPlayer::update_device_settings(const std::string &deviceSett
     // send settings
     for(auto &grabberS : devicesD){
         if(is_device_connected(grabberS.id)){
-            serverNetwork.update_device_settings(grabberS.id, grabberS.device);
+            clientDevices.update_device_settings(grabberS.id, grabberS.device);
         }
-        serverData.update_device_settings(grabberS.id, grabberS.device);
+        clientProicessing.update_device_settings(grabberS.id, grabberS.device);
     }
 
     return true;
@@ -247,13 +255,13 @@ auto DCNetworkDirectPlayer::update_color_settings(const std::string &colorSettin
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_color_settings] Color settings file with path [{}] doesn't exist.", colorSettingsFilePath));
         return false;
     }
-
-    std::vector<io::BaseSettings*> colorSettingsFiles;
+    
+    std::vector<io::Settings*> colorSettingsFiles;
     for(auto &grabberS : devicesD){
         colorSettingsFiles.push_back(&grabberS.color);
     }
-
-    if(!io::BaseSettings::load_multi_from_file(colorSettingsFiles, colorSettingsFilePath)){
+    
+    if(!io::Settings::load_multi_from_file(colorSettingsFiles, colorSettingsFilePath)){
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_color_settings] Error while reading color settings file with path [{}].", colorSettingsFilePath));
         return false;
     }
@@ -268,7 +276,7 @@ auto DCNetworkDirectPlayer::update_color_settings(const std::string &colorSettin
     // send settings
     for(auto &grabberS : devicesD){
         if(is_device_connected(grabberS.id)){
-            serverNetwork.update_color_settings(grabberS.id, grabberS.color);
+            clientDevices.update_color_settings(grabberS.id, grabberS.color);
         }
     }
 
@@ -286,13 +294,13 @@ auto DCNetworkDirectPlayer::update_filters_settings(const std::string &filtersSe
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_filters_settings] Filters settings file with path [{}] doesn't exist.", filtersSettingsFilePath));
         return false;
     }
-
-    std::vector<io::BaseSettings*> filtersSettingsFiles;
+    
+    std::vector<io::Settings*> filtersSettingsFiles;
     for(auto &grabberS : devicesD){
         filtersSettingsFiles.push_back(&grabberS.filters);
     }
-
-    if(!io::BaseSettings::load_multi_from_file(filtersSettingsFiles, filtersSettingsFilePath)){
+    
+    if(!io::Settings::load_multi_from_file(filtersSettingsFiles, filtersSettingsFilePath)){
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_filters_settings] Error while reading filters settings file with path [{}].", filtersSettingsFilePath));
         return false;
     }
@@ -308,7 +316,7 @@ auto DCNetworkDirectPlayer::update_filters_settings(const std::string &filtersSe
     // send settings
     for(auto &grabberS : devicesD){
         if(is_device_connected(grabberS.id)){
-            serverNetwork.update_filters_settings(grabberS.id, grabberS.filters);
+            clientDevices.update_filters_settings(grabberS.id, grabberS.filters);
         }
     }
 
@@ -326,13 +334,13 @@ auto DCNetworkDirectPlayer::update_model_settings(const std::string &modelSettin
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_model_settings] Model settings file with path [{}] doesn't exist.", modelSettingsFilePath));
         return false;
     }
-
-    std::vector<io::BaseSettings*> modelsSettingsFiles;
+    
+    std::vector<io::Settings*> modelsSettingsFiles;
     for(auto &grabberS : devicesD){
         modelsSettingsFiles.push_back(&grabberS.model);
     }
-
-    if(!io::BaseSettings::load_multi_from_file(modelsSettingsFiles, modelSettingsFilePath)){
+    
+    if(!io::Settings::load_multi_from_file(modelsSettingsFiles, modelSettingsFilePath)){
         dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::update_model_settings] Error while reading model settings file with path [{}].", modelSettingsFilePath));
         return false;
     }
@@ -356,12 +364,12 @@ auto DCNetworkDirectPlayer::update_delay(size_t idD, cam::DCDelaySettings delayS
 
     devicesD[idD].delay = delayS;
     if(is_device_connected(idD)){
-        serverNetwork.update_delay_settings(idD, devicesD[idD].delay);
+        clientDevices.update_delay_settings(idD, devicesD[idD].delay);
     }
 }
 
 auto DCNetworkDirectPlayer::read_network_data(size_t idDevice) -> size_t{
-    return serverNetwork.read_data_from_network(idDevice);
+    return clientDevices.read_data_from_network(idDevice);
 }
 
 auto DCNetworkDirectPlayer::current_frame_id(size_t idD) -> size_t{
@@ -438,7 +446,6 @@ auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<ge
         auto tr = device_model(idD);
 
         if(applyModelTransform){
-
             std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];
                 positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
@@ -452,7 +459,6 @@ auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<ge
                 normals[id].x() *= -1.f;
             });
         }else{
-
             std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];;
                 positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
@@ -461,9 +467,7 @@ auto DCNetworkDirectPlayer::copy_current_frame_vertices(size_t idD, std::span<ge
                 colors[id] = {
                     col.x(), col.y(), col.z()
                 };
-
-                const auto &norm = frame->cloud.normals[id];
-                normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
+                normals[id] = frame->cloud.normals[id];
                 normals[id].x() *= -1.f;
             });
         }
@@ -489,7 +493,7 @@ int initialize__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectP
 }
 
 int is_local__dc_network_direct_player(tool::cam::DCNetworkDirectPlayer *dcNetworkDirectPlayer, int idD){
-    return dcNetworkDirectPlayer->serverNetwork.is_local(idD) ? 1 : 0;
+    return dcNetworkDirectPlayer->clientDevices.is_local(idD) ? 1 : 0;
 }
 
 void connect_to_devices__dc_network_direct_player(DCNetworkDirectPlayer *dcNetworkDirectPlayer){

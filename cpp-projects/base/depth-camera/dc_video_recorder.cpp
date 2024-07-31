@@ -28,10 +28,10 @@
 
 
 // local
-#include "dc_frame_compressor.hpp"
 #include "utility/time.hpp"
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
+#include "depth-camera/frame/dc_frame_compressor.hpp"
 
 using namespace tool::cam;
 using namespace std::chrono;

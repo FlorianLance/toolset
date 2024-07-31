@@ -44,16 +44,12 @@ auto DCDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    Logger::message("2\n");
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // config
-    Logger::message("3\n");
     configS.init_from_json(read_object(json, unreadCount, "config"sv));
     // data
-    Logger::message("4\n");
     dataS.init_from_json(read_object(json, unreadCount, "data"sv));
 
-    Logger::message("5\n");
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
     }
@@ -63,7 +59,7 @@ auto DCDeviceSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv,              io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv,              io::Settings::convert_to_json());
     // config
     add_value(json, "config"sv,            configS.convert_to_json());
     // data
@@ -72,114 +68,50 @@ auto DCDeviceSettings::convert_to_json() const -> nlohmann::json{
     return json;
 }
 
-auto DCDeviceSettings::apply_remote_grabber_profile() -> void{
-    // client
-    // # capture
-    dataS.client.capture.color                      = true;
-    dataS.client.capture.depth                      = true;
-    dataS.client.capture.infra                      = false;
-    dataS.client.capture.audio                      = false;
-    dataS.client.capture.imu                        = false;
-    dataS.client.capture.bodyTracking               = false;
-    // # generation
-    dataS.client.generation.calibration             = false;
-    dataS.client.generation.depth                   = false;
-    dataS.client.generation.depthSizedColorImage    = false;
-    dataS.client.generation.cloud                   = false;
-    dataS.client.generation.depthImage              = false;
-    dataS.client.generation.infra                   = false;
-    dataS.client.generation.infraImage              = false;
-    dataS.client.generation.colorImage              = false;
-    dataS.client.generation.bodyIdMapImage          = false;
-    dataS.client.generation.bodyTracking            = false;
-    dataS.client.generation.imu                     = false;
-    dataS.client.generation.audio                   = false;
-    dataS.client.generation.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.client.generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-    // # compression
-    dataS.client.compression.jpegCompressionRate    = 80;
-    dataS.client.compression.calibration            = true;
-    dataS.client.compression.depth                  = true;
-    dataS.client.compression.depthSizedColor        = true;
-    dataS.client.compression.color                  = false;
-    dataS.client.compression.infra                  = false;
-    dataS.client.compression.bodyIdMap              = false;
-    dataS.client.compression.cloud                  = false;
-    dataS.client.compression.bodyTracking           = false;
-    dataS.client.compression.audio                  = false;
-    dataS.client.compression.imu                    = false;
-    dataS.client.compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
+auto DCDeviceSettings::apply_remote_profile() -> void{
+
     // server
+    dataS.server.apply_remote_profile();
+
+    // client
     // # generation
-    dataS.server.generation.calibration             = true;
-    dataS.server.generation.depth                   = true;
-    dataS.server.generation.depthSizedColorImage    = true;
-    dataS.server.generation.cloud                   = true;
-    dataS.server.generation.infra                   = false;
-    dataS.server.generation.colorImage              = false;
-    dataS.server.generation.depthImage              = false;
-    dataS.server.generation.infraImage              = false;
-    dataS.server.generation.bodyIdMapImage          = false;
-    dataS.server.generation.bodyTracking            = false;
-    dataS.server.generation.imu                     = false;
-    dataS.server.generation.audio                   = false;
-    dataS.server.generation.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.server.generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
+    dataS.clientGeneration.calibration             = true;
+    dataS.clientGeneration.depth                   = true;
+    dataS.clientGeneration.depthSizedColorImage    = true;
+    dataS.clientGeneration.cloud                   = true;
+    dataS.clientGeneration.infra                   = false;
+    dataS.clientGeneration.colorImage              = false;
+    dataS.clientGeneration.depthImage              = false;
+    dataS.clientGeneration.infraImage              = false;
+    dataS.clientGeneration.bodyIdMapImage          = false;
+    dataS.clientGeneration.bodyTracking            = false;
+    dataS.clientGeneration.imu                     = false;
+    dataS.clientGeneration.audio                   = false;
+    dataS.clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
+    dataS.clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
 }
 
-auto DCDeviceSettings::apply_only_manager_profile() -> void{
-    // client
-    // # capture
-    dataS.client.capture.color                      = true;
-    dataS.client.capture.depth                      = true;
-    dataS.client.capture.infra                      = false;
-    dataS.client.capture.audio                      = false;
-    dataS.client.capture.imu                        = false;
-    dataS.client.capture.bodyTracking               = false;
-    // # generation
-    dataS.client.generation.calibration             = true;
-    dataS.client.generation.depth                   = true;
-    dataS.client.generation.depthSizedColorImage    = true;
-    dataS.client.generation.cloud                   = true;
-    dataS.client.generation.depthImage              = true;
-    dataS.client.generation.infra                   = false;
-    dataS.client.generation.infraImage              = false;
-    dataS.client.generation.colorImage              = false;
-    dataS.client.generation.bodyIdMapImage          = false;
-    dataS.client.generation.bodyTracking            = false;
-    dataS.client.generation.imu                     = false;
-    dataS.client.generation.audio                   = false;
-    dataS.client.generation.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.client.generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-    // # compression
-    dataS.client.compression.jpegCompressionRate    = 80;
-    dataS.client.compression.calibration            = false;
-    dataS.client.compression.depth                  = false;
-    dataS.client.compression.depthSizedColor        = false;
-    dataS.client.compression.color                  = false;
-    dataS.client.compression.infra                  = false;
-    dataS.client.compression.bodyIdMap              = false;
-    dataS.client.compression.cloud                  = false;
-    dataS.client.compression.bodyTracking           = false;
-    dataS.client.compression.audio                  = false;
-    dataS.client.compression.imu                    = false;
-    dataS.client.compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
+auto DCDeviceSettings::apply_local_profile() -> void{
+
     // server
+    dataS.server.apply_local_profile();
+
+    // client
     // # generation
-    dataS.server.generation.calibration             = false;
-    dataS.server.generation.depth                   = false;
-    dataS.server.generation.depthSizedColorImage    = false;
-    dataS.server.generation.cloud                   = false;
-    dataS.server.generation.infra                   = false;
-    dataS.server.generation.colorImage              = false;
-    dataS.server.generation.depthImage              = false;
-    dataS.server.generation.infraImage              = false;
-    dataS.server.generation.bodyIdMapImage          = false;
-    dataS.server.generation.bodyTracking            = false;
-    dataS.server.generation.imu                     = false;
-    dataS.server.generation.audio                   = false;
-    dataS.server.generation.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.server.generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
+    dataS.clientGeneration.calibration             = false;
+    dataS.clientGeneration.depth                   = false;
+    dataS.clientGeneration.depthSizedColorImage    = false;
+    dataS.clientGeneration.cloud                   = false;
+    dataS.clientGeneration.infra                   = false;
+    dataS.clientGeneration.colorImage              = false;
+    dataS.clientGeneration.depthImage              = false;
+    dataS.clientGeneration.infraImage              = false;
+    dataS.clientGeneration.bodyIdMapImage          = false;
+    dataS.clientGeneration.bodyTracking            = false;
+    dataS.clientGeneration.imu                     = false;
+    dataS.clientGeneration.audio                   = false;
+    dataS.clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
+    dataS.clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
 }
 
 auto DCDeviceSettings::update_with_device_id(size_t order, size_t id) -> void{
@@ -208,8 +140,8 @@ auto DCDeviceSettings::default_init_for_manager() -> DCDeviceSettings{
 }
 
 auto DCDeviceSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void {
-
-    BaseSettings::init_from_data(data, offset, sizeData);
+    
+    Settings::init_from_data(data, offset, sizeData);
     configS.init_from_data(data, offset, sizeData);
     dataS.init_from_data(data, offset, sizeData);
     

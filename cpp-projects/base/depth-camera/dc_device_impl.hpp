@@ -26,24 +26,21 @@
 
 #pragma once
 
-// taskflow
-#include "thirdparty/taskflow/taskflow.hpp"
 
 // local
-#include "dc_frame_indices.hpp"
-#include "dc_frame_data.hpp"
-#include "dc_frame_timing.hpp"
-#include "dc_device.hpp"
-
+#include "utility/time_diff.hpp"
 #include "data/fastpfor_encoding.hpp"
 #include "data/jpeg_encoding.hpp"
+#include "frame/dc_frame_indices.hpp"
+#include "frame/dc_frame_data.hpp"
+#include "dc_device.hpp"
 
 namespace tool::cam {
 
 
 struct DCSettings{
     DCConfigSettings config;
-    DCDataSettings data;
+    DCDeviceDataSettings data;
     DCFiltersSettings filters;
     DCColorSettings color;
     DCDelaySettings delay;
@@ -93,7 +90,7 @@ struct DCDeviceImpl{
     auto process_data() -> void;
 
     // settings
-    auto set_data_settings(const DCDataSettings &dataS) -> void;
+    auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_color_settings(const DCColorSettings &colorS) -> void;
     auto set_delay_settings(const DCDelaySettings &delayS) -> void;
@@ -202,7 +199,7 @@ protected:
 
     // current settings
     DCFiltersSettings cFiltersS;
-    DCDataSettings cDataS;
+    DCDeviceDataSettings cDataS;
     DCDelaySettings cDelayS;
 
     // profiling

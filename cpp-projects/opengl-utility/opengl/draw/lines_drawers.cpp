@@ -65,6 +65,28 @@ auto LineDrawer2::update(std::span<const Pt3f, 2> vertices, std::span<const Pt3f
     }
 }
 
+auto LinesDrawer2::initialize(bool dynamic, std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> void{
+    auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
+    if(dynamic){
+        lm->indicesBufferUsage   = GL_DYNAMIC_STORAGE_BIT;
+        lm->positionBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
+        lm->colorBufferUsage     = GL_DYNAMIC_STORAGE_BIT;
+    }
+    lm->initialize(!colors.empty());
+    if(!lm->load_data(indices, vertices, colors)){
+        Logger::error("[LinesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto LinesDrawer2::update(std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> void{
+    auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
+    if(!lm->update_data(indices, 0, vertices, 0, colors, 0)){
+        Logger::error("[LinesDrawer::update] Error during update.\n"sv);
+        return;
+    }
+}
+
+
 auto AxesLinesDrawer::initialize(float length) -> void{
 
     static constexpr std::array<GLuint,6> indices = {
@@ -252,6 +274,10 @@ auto FrustumDrawerLinesDrawer::initialize(bool dynamic, float fovy, float ar, fl
 
 auto FrustumDrawerLinesDrawer::update(float fovy, float ar, float nearDist, float farDist) -> void{
 
+    if(nearDist > farDist){
+        nearDist = farDist;
+    }
+
     float dy   = nearDist * tanf( deg_2_rad(fovy) / 2.0f );
     float dx   = ar * dy;
     float fdy  = farDist * tanf( deg_2_rad(fovy) / 2.0f );
@@ -334,3 +360,4 @@ auto OrientedBoundingBoxLinesDrawer::update(const geo::OBB3<float> &obb) -> void
         Logger::error("[OrientedBoundingBoxLinesDrawer::update] Error during update.\n"sv);
     }
 }
+

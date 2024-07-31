@@ -166,7 +166,7 @@ auto DCGSettings::initialize() -> bool{
     return true;
 }
 
-auto DCGSettings::init_network_sending_settings(UdpNetworkSendingSettings networkSendingS) -> void{
+auto DCGSettings::init_network_sending_settings(UdpConnectionSettings networkSendingS) -> void{
     auto lg = LogGuard("DCGSettings::init_network_sending_settings"sv);
     networkS.init_sending_settings(networkSendingS);
     triggers_init_network_sending_settings();

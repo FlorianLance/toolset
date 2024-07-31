@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "network/udp_server_network_settings.hpp"
+#include "depth-camera/settings/dc_client_connection_settings.hpp"
 #include "depth-camera/settings/dc_calibrator_settings.hpp"
 #include "depth-camera/settings/dc_video_player_settings.hpp"
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"
@@ -41,6 +41,7 @@
 #include <imgui/imgui.h>
 
 namespace tool {
+
 
 struct DCMSettings{
 
@@ -63,13 +64,15 @@ struct DCMSettings{
     bool useNormalFilteringSettings = true;
     DCMUiSettings uiS;    
     // camera
-    DCSceneDisplaySettings sceneDisplayS;
+    cam::DCSceneDisplaySettings sceneDisplayS;
     cam::DCVideoRecorderSettings recorderS;
     cam::DCVideoPlayerSettings playerS;
     cam::DCCalibratorSettings calibratorS;
+    
+    
+    cam::DCClientConnectionSettings devicesConnectionsS;
     std::vector<cam::DCGrabberSettings> grabbersS;
-    // net
-    net::UdpServerNetworkSettings networkS;
+
     // graphics
     graphics::DCCalibratorDrawerSettings calibratorDrawerS;
 

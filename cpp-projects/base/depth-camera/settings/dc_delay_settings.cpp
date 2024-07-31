@@ -42,7 +42,7 @@ auto DCDelaySettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // delay
     delayMs   = read_value<std::int64_t>(json, unreadCount, "delay");
 
@@ -55,7 +55,7 @@ auto DCDelaySettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv, io::Settings::convert_to_json());
     // delay
     add_value(json, "delay"sv,  delayMs);
 

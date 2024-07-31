@@ -61,4 +61,10 @@ struct Time{
     }
 };
 
+struct TimeElem{
+    std::chrono::nanoseconds start      = std::chrono::nanoseconds{0};
+    std::chrono::nanoseconds end        = std::chrono::nanoseconds{0};
+    std::chrono::nanoseconds lastDiff   = std::chrono::nanoseconds{0};
+};
+
 }

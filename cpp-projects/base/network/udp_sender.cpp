@@ -30,8 +30,12 @@
 // std
 #include <format>
 
+// boost
+#include <boost/asio/ip/udp.hpp>
+#include <boost/asio/ip/host_name.hpp>
+#include <boost/asio/io_service.hpp>
+
 // local
-#include "boost_asio.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
 #include "data/checksum.hpp"
@@ -45,31 +49,47 @@ using namespace tool;
 using namespace tool::net;
 
 struct UdpSender::Impl{
+
+    // udp connection
     io_service ioService;
     std::unique_ptr<ip::udp::socket> socket = nullptr;
     boost::asio::ip::basic_resolver_results<ip::udp> endpoint;
-    std::string solvedAdress;
+    std::atomic_bool connected = false;
 
+    // packet data
+    size_t sizeUdpPacket = 9000;
+    std::vector<std::byte> packetBuffer;
+    umap<MessageTypeId, std::int32_t> currentIdMessages;
+
+    // failure simulatiojn
     bool simulateFailure = false;
     int percentageFailture = 0;
 };
 
 UdpSender::UdpSender(): i(std::make_unique<Impl>()){
-    update_size_packets(sizeUdpPacket);
+    update_size_packets(i->sizeUdpPacket);
 }
 
 UdpSender::~UdpSender(){
-    clean_socket();
+
+    if(is_connected()){
+        clean_socket();
+    }
 }
 
-auto UdpSender::is_opened() const noexcept -> bool{
-    return i->socket != nullptr;
+auto UdpSender::is_connected() const noexcept -> bool{
+    return i->connected;
 }
 
 auto UdpSender::init_socket(std::string targetName, std::string port, Protocol protocol) -> bool{
 
-    // init socket and service
+    // reset socket if necessary
+    if(is_connected()){
+        clean_socket();
+    }
+
     try{
+        // open socket
         i->socket = std::make_unique<ip::udp::socket>(i->ioService);
         i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
         i->socket->set_option(detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ 5 });
@@ -77,8 +97,8 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
         i->socket->set_option(ip::udp::socket::send_buffer_size(9000*1000));
         i->socket->set_option(ip::udp::socket::receive_buffer_size(9000*1000));
 
+        // init resolver
         ip::udp::resolver resolver(i->ioService);
-
         if(ip::host_name() == targetName){
             i->endpoint = resolver.resolve(ip::udp::resolver::query(
                 protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(),
@@ -88,8 +108,8 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
             i->endpoint = resolver.resolve(ip::udp::resolver::query(
                 protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(),
                 targetName,
-                port)
-            );
+                port
+            ));
         }
 
     }catch (const boost::system::system_error& error){
@@ -98,6 +118,7 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
         return false;
     }
 
+    connection_state_signal(i->connected = true);
     return true;
 }
 
@@ -110,11 +131,17 @@ auto UdpSender::clean_socket() -> void{
             std::this_thread::sleep_for (std::chrono::milliseconds(300));
             i->socket->close();
         }catch (const boost::system::system_error& error){
-            Logger::error(std::format("UdpSender: Cannot shutdown socket with adress {}, error message: {}.\n",
-                i->solvedAdress, error.what()));
+            Logger::error(std::format("[UdpSender::clean_socket] Cannot shutdown socket with adress {}, error message: {}.\n",
+                i->endpoint->endpoint().address().to_string(),
+                error.what())
+            );
         }
     }
     i->socket = nullptr;
+
+    if(i->connected){
+        connection_state_signal(i->connected = false);
+    }
 }
 
 auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_t{
@@ -123,7 +150,7 @@ auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_
     try{
         bytesNbSent = i->socket->send_to(boost::asio::buffer(packetData.data(), packetData.size()), i->endpoint->endpoint());
     } catch (const boost::system::system_error& error) {
-        Logger::error(std::format("UdpSender::send_data: Cannot sent data to endpoint {}, error message: {}.\n",
+        Logger::error(std::format("[UdpSender::send_packet_data] Cannot sent data to endpoint {}, error message: {}.\n",
             i->endpoint->endpoint().address().to_string(),
             error.what())
         );
@@ -131,14 +158,14 @@ auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_
     return bytesNbSent;
 }
 
-auto UdpSender::send_mono_packet(Header &header) -> size_t{
-    return send_packet_data(std::span(packetBuffer.data(), header.totalSizeBytes));
-}
+// auto UdpSender::send_mono_packet(Header &header) -> size_t{
+//     return send_packet_data(std::span(packetBuffer.data(), header.totalSizeBytes));
+// }
 
 auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t {
 
     static constexpr size_t sizePacketHeader = sizeof (Header);
-    size_t sizePacketData  = sizeUdpPacket - sizePacketHeader;
+    size_t sizePacketData  = i->sizeUdpPacket - sizePacketHeader;
     size_t nbPacketsNeeded = dataToSend.size() / sizePacketData;
     size_t rest            = dataToSend.size() % sizePacketData;
     if(rest > 0){
@@ -154,7 +181,7 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
         header.currentPacketId = static_cast<std::uint16_t>(idP);
 
         if(idP < header.totalNumberPackets -1){
-            header.currentPacketSizeBytes = static_cast<std::uint16_t>(sizeUdpPacket);
+            header.currentPacketSizeBytes = static_cast<std::uint16_t>(i->sizeUdpPacket);
         }else{
             header.currentPacketSizeBytes = static_cast<std::uint16_t>(rest + sizePacketHeader);
         }
@@ -165,7 +192,7 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
         auto dataS = std::span(dataToSend.data() + header.dataOffset, header.currentPacketSizeBytes - sizePacketHeader);
         std::copy(
             dataS.begin(), dataS.end(),
-            packetBuffer.begin() + sizePacketHeader
+            i->packetBuffer.begin() + sizePacketHeader
         );
 
         // compute data checksum
@@ -175,16 +202,16 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
         std::copy(
             reinterpret_cast<std::byte*>(&header),
             reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
-            packetBuffer.begin()
+            i->packetBuffer.begin()
         );
 
         // send packet
         if(!i->simulateFailure){
-            nbBytesSent += send_packet_data(std::span(packetBuffer.data(), header.currentPacketSizeBytes));
+            nbBytesSent += send_packet_data(std::span(i->packetBuffer.data(), header.currentPacketSizeBytes));
         }else{
             // failure simulation
             if(rand()%100 > i->percentageFailture){
-                nbBytesSent += send_packet_data(std::span(packetBuffer.data(), header.currentPacketSizeBytes));
+                nbBytesSent += send_packet_data(std::span(i->packetBuffer.data(), header.currentPacketSizeBytes));
             }else{
                 nbBytesSent += header.currentPacketSizeBytes;
             }
@@ -197,8 +224,8 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
 }
 
 auto UdpSender::update_size_packets(size_t newUdpPacketSize) -> void{
-    sizeUdpPacket = newUdpPacketSize;
-    packetBuffer.resize(sizeUdpPacket);
+    i->sizeUdpPacket = newUdpPacketSize;
+    i->packetBuffer.resize(i->sizeUdpPacket);
 }
 
 auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
@@ -206,23 +233,55 @@ auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
     i->percentageFailture   = percentage;
 }
 
-auto UdpSender::generate_header(MessageType type) -> Header{
+auto UdpSender::send_message(MessageTypeId messageType, std::span<const std::byte> data) -> size_t{
+
+    if(!is_connected()){
+        Logger::error("[UdpSender::send_message] Sender not opened, message canceled.\n"sv);
+        return 0;
+    }
+
+    // init header
+    if(!data.empty()){
+
+        Header header = generate_header(messageType);
+
+        // send data
+        size_t nbBytesSent = send_data(header, std::span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
+        if(nbBytesSent != header.totalSizeBytes){
+            Logger::error(std::format("[UdpSender::send_message] Invalid nb of bytes send, {} instead of {}.\n"sv, nbBytesSent, header.totalSizeBytes));
+        }
+
+        return nbBytesSent;
+
+    }else{
+
+        Header header = generate_dataless_header(messageType);
+
+        // copy data
+        auto headerD = reinterpret_cast<const std::byte*>(&header);
+        std::copy(headerD, headerD + sizeof(Header), i->packetBuffer.begin());
+
+        return send_packet_data(std::span(i->packetBuffer.data(), header.totalSizeBytes));
+    }
+}
+
+auto UdpSender::generate_header(MessageTypeId type) -> Header{
     Header header;
     header.type  = type;
-    if(currentIdMessages.contains(header.type)){
-        header.idMessage = currentIdMessages[header.type]++;
+    if(i->currentIdMessages.contains(header.type)){
+        header.idMessage = i->currentIdMessages[header.type]++;
         if(header.idMessage > 1000000){
-            currentIdMessages[type] = 0;
+            i->currentIdMessages[type] = 0;
         }
     }else{
-        currentIdMessages[header.type] = 0;
+        i->currentIdMessages[header.type] = 0;
         header.idMessage = 0;
     }
     return header;
 }
 
 
-auto UdpSender::generate_dataless_header(MessageType type) -> Header{
+auto UdpSender::generate_dataless_header(MessageTypeId type) -> Header{
 
     Header header;
     header.type                     = type;
@@ -233,13 +292,13 @@ auto UdpSender::generate_dataless_header(MessageType type) -> Header{
     header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
     header.dataOffset               = 0;
 
-    if(currentIdMessages.contains(type)){
-        header.idMessage = currentIdMessages[type]++;
+    if(i->currentIdMessages.contains(type)){
+        header.idMessage = i->currentIdMessages[type]++;
         if(header.idMessage > 100000){
-            currentIdMessages[type] = 0;
+            i->currentIdMessages[type] = 0;
         }
     }else{
-        currentIdMessages[type] = 0;
+        i->currentIdMessages[type] = 0;
         header.idMessage = 0;
     }
 

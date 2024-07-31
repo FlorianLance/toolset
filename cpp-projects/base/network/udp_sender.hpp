@@ -27,6 +27,7 @@
 #pragma once
 
 // local
+#include "thirdparty/sigslot/signal.hpp"
 #include "network_types.hpp"
 
 namespace tool::net{
@@ -40,27 +41,25 @@ public:
 
     auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol) -> bool;
     auto clean_socket() -> void;
+    [[nodiscard]] auto is_connected() const noexcept -> bool;
 
-    auto is_opened() const noexcept -> bool;
     auto update_size_packets(size_t newUdpPacketSize) -> void;
     auto simulate_failure(bool enabled, int percentage) -> void;
 
-protected:
+    auto send_message(MessageTypeId messageType, std::span<const std::byte> data = {}) -> size_t;
 
-    auto send_mono_packet(Header &header) -> size_t;
-    auto send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t;
-
-    auto generate_dataless_header(MessageType type) -> Header;
-    auto generate_header(MessageType type) -> Header;
-
-    size_t sizeUdpPacket = 9000;
-    std::vector<std::byte> packetBuffer;
-    std::vector<std::byte> bufferToSend;
-    umap<MessageType, std::int32_t> currentIdMessages;
+    // signals
+    sigslot::signal<bool> connection_state_signal;
 
 private:
 
+    // headers
+    auto generate_dataless_header(MessageTypeId type) -> Header;
+    auto generate_header(MessageTypeId type) -> Header;
+    // data
+    auto send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t;
     auto send_packet_data(std::span<const std::byte> packetData) -> size_t;
+
 
     struct Impl;
     std::unique_ptr<Impl> i;

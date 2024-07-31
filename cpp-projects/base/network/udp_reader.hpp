@@ -27,9 +27,8 @@
 #pragma once
 
 // local
-#include "utility/ring_buffer.hpp"
 #include "thirdparty/sigslot/signal.hpp"
-#include "network_enums.hpp"
+#include "network_types.hpp"
 
 namespace tool::net{
 
@@ -40,33 +39,31 @@ public:
     UdpReader();
     ~UdpReader();
 
-    // slots
-    auto init_connection(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
-    auto clean_connection() -> void;
-    auto is_connected() const noexcept -> bool;
+    // socket
+    auto init_socket(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
+    auto clean_socket() -> void;
+    [[nodiscard]] auto is_connected() const noexcept -> bool;
+
+    auto read_data() -> size_t;
 
     // reading thread
     auto start_reading_thread() -> void;
     auto stop_reading_thread() -> void;
-    auto is_reading_thread_started() const noexcept -> bool;
-
-    // packets
-    auto read_packet() -> size_t;
+    [[nodiscard]] auto is_reading_thread_started() const noexcept -> bool;
 
     // signals
+    // # from main thread
     sigslot::signal<bool> connection_state_signal;
+    // # from reading thread if enabled
     sigslot::signal<> timeout_packet_signal;
-    sigslot::signal<size_t> timeout_messages_signal;
-
-protected:
-
-    virtual auto process_packet(std::span<const std::byte> packet) -> void;
-    
-    DoubleRingBuffer<std::byte> messagesBuffer;
+    sigslot::signal<> invalid_packet_size_signal;
+    sigslot::signal<> invalid_checksum_signal;
+    sigslot::signal<EndPoint, Header, std::span<const std::byte>> packed_received_signal;
 
 private :
 
     auto read_data_thread() -> void;
+    auto read_packet() -> size_t;
 
     static constexpr size_t packetSize = 9000;
     static constexpr size_t receiveBufferSize = packetSize * 50;

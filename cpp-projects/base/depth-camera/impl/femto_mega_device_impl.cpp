@@ -53,7 +53,8 @@ auto FemtoMegaDeviceImpl::update_from_colors_settings() -> void{
 }
 
 auto FemtoMegaDeviceImpl::open(uint32_t deviceId) -> bool{
-    return orbbecD->open(settings.config.idDevice = deviceId);
+    settings.config.idDevice = deviceId;
+    return orbbecD->open(settings.config);
 }
 
 auto FemtoMegaDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{

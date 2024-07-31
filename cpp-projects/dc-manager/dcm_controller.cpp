@@ -62,7 +62,7 @@ auto DCMController::initialize() -> bool{
         return false;
     }
     // # view
-    view->initialize(model->sNetwork->devices_nb());
+    view->initialize(model->clientDevices.devices_nb());
 
     model->trigger_settings();
 
@@ -79,13 +79,13 @@ auto DCMController::set_connections() -> void{
     using PlayerD       = graphics::DCPlayerDrawer;
     using CalibD        = graphics::DCCalibratorDrawer;
     // # model
-    using Rec           = cam::DCVideoRecorder;
-    using Player        = cam::DCVideoPlayer;
-    using Calib         = cam::DCCalibrator;
-    using ServerData    = cam::DCServerData;
-    using ServerNet     = net::DCServerNetwork;
-    using Settings      = DCMSettings;
-    using States        = DCMStates;
+    using Rec               = cam::DCVideoRecorder;
+    using Player            = cam::DCVideoPlayer;
+    using Calib             = cam::DCCalibrator;
+    using ClientProcessing  = cam::DCClientProcessing;
+    using ClientDevices     = cam::DCClientDevices;
+    using Settings          = DCMSettings;
+    using States            = DCMStates;
 
     // pointers
     auto s              = DCMSignals::get();
@@ -97,13 +97,13 @@ auto DCMController::set_connections() -> void{
     auto playerD        = &middleD->playerD;
     auto calibrationD   = &middleD->calibratorD;
     // # model
-    auto serverNet      = model->sNetwork.get();
-    auto serverData     = &model->sData;
-    auto settings       = &model->settings;
-    auto states         = &model->states;
-    auto recorder       = &model->recorder;
-    auto player         = &model->player;
-    auto calibration    = &model->calibration;
+    auto clientDevices      = &model->clientDevices;
+    auto clientProcessing   = &model->clientProcessing;
+    auto settings           = &model->settings;
+    auto states             = &model->states;
+    auto recorder           = &model->recorder;
+    auto player             = &model->player;
+    auto calibration        = &model->calibration;
 
     // from logger
     Logger::get()->message_signal.connect([&](std::string message){
@@ -123,29 +123,27 @@ auto DCMController::set_connections() -> void{
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,                     model.get());
     s->update_filters_settings_signal.connect(              &DCMModel::update_filters,                      model.get());
     s->update_calibration_filters_settings_signal.connect(  &DCMModel::update_calibration_filters,          model.get());
-    // s->update_filtering_mode_signal.connect(                &DCMModel::update_filtering_mode,               model.get());
     s->update_device_settings_signal.connect(               &DCMModel::update_device_settings,              model.get());
     s->update_color_settings_signal.connect(                &DCMModel::update_color_settings,               model.get());
     s->update_delay_settings_signal.connect(                &DCMModel::update_delay_settings,               model.get());
 
-    serverNet->remote_synchro_signal.connect(               &DCMModel::update_synchro,                      model.get());
-    serverNet->remote_feedback_signal.connect(              &DCMModel::add_feedback,                        model.get());
-    serverNet->remote_network_status_signal.connect(        &DCMModel::update_network_status,               model.get());
-    serverNet->remote_data_status_signal.connect(           &DCMModel::update_data_status,                  model.get());
+    clientDevices->remote_synchro_signal.connect(               &DCMModel::update_synchro,                      model.get());
+    clientDevices->remote_feedback_signal.connect(              &DCMModel::add_feedback,                        model.get());
+    clientDevices->remote_network_status_signal.connect(        &DCMModel::update_network_status,               model.get());
+    clientDevices->remote_data_status_signal.connect(           &DCMModel::update_data_status,                  model.get());
 
     s->reset_network_signal.connect(                        &DCMModel::reset_network,                       model.get());
 
     // # server network
-    s->init_connection_signal.connect(                      &ServerNet::init_connection,                    serverNet);
-    s->command_signal.connect(                              &ServerNet::apply_command,                      serverNet);
+    s->init_connection_signal.connect(                      &ClientDevices::init_connection,                    clientDevices);
+    s->command_signal.connect(                              &ClientDevices::apply_command,                      clientDevices);
 
     // # server data
-    serverNet->remote_frame_signal.connect(                 &ServerData::new_compressed_frame,              serverData);
-    serverNet->local_frame_signal.connect(                  &ServerData::new_frame,                         serverData);
+    clientDevices->remote_frame_signal.connect(                 &ClientProcessing::new_compressed_frame,              clientProcessing);
+    clientDevices->local_frame_signal.connect(                  &ClientProcessing::new_frame,                         clientProcessing);
 
     // # settings
     s->process_settings_action_signal.connect(              &Settings::process_settings_action,             settings);
-    // s->mouse_pressed_depth_direct_signal.connect(       &Settings::update_filters_depth_mask,settings);
     s->color_settings_reset_signal.connect(                 &Settings::update_color_settings_from_device,   settings);
     s->update_model_settings_signal.connect(                &Settings::update_model,                        settings);
     calibration->validated_calibration_signal.connect(      &Settings::update_model,                        settings);
@@ -202,6 +200,7 @@ auto DCMController::set_connections() -> void{
     calibration->validated_calibration_signal.connect(   &DirectD::update_model_settings,            directD);
     s->new_frame_signal.connect(                         &DirectD::set_frame,                        directD);
     s->update_filters_settings_signal.connect(           &DirectD::update_filters_settings,          directD);
+    s->update_device_settings_signal.connect(            &DirectD::update_device_settings,           directD);
     // # recorder drawer
     s->update_scene_display_settings_signal.connect(     &RecD::update_scene_display_settings,       recorderD);
     s->update_cloud_display_settings_signal.connect(     &RecD::update_cloud_display_settings,       recorderD);

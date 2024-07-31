@@ -44,7 +44,7 @@ auto DCColorSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv, io::Settings::convert_to_json());
     // colors
     add_value(json, "white_balance"sv,             whiteBalance);
     add_value(json, "exposure_time"sv,             exposureTime);
@@ -66,7 +66,7 @@ auto DCColorSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // colors
     whiteBalance                  = read_value<std::uint16_t>(json, unreadCount, "white_balance"sv);
     exposureTime                  = read_value<std::uint16_t>(json, unreadCount, "exposure_time"sv);
@@ -102,8 +102,8 @@ auto DCColorSettings::set_default_values(DCType type) -> void{
 }
 
 auto DCColorSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void {
-
-    BaseSettings::init_from_data(data, offset, sizeData);
+    
+    Settings::init_from_data(data, offset, sizeData);
     read(autoExposureTime, data, offset, sizeData);
     read(exposureTime, data, offset, sizeData);
     read(brightness, data, offset, sizeData);

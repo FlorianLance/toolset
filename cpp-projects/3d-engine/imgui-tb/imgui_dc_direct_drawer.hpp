@@ -39,10 +39,6 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;
 
-    auto update_filters_settings(size_t id, const cam::DCFiltersSettings &filters) -> void {
-        DCCloudsSceneDrawer::update_filters_settings(id, filters);
-    }
-
     auto save_current_cloud(size_t idC, const std::string &path) -> void;
 
 private:

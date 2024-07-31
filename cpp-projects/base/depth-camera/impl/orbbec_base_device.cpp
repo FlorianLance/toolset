@@ -117,17 +117,18 @@ struct OrbbecBaseDevice::Impl{
 
     auto init_context() -> void{
         context = std::make_unique<ob::Context>();
-        context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
-            if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
-                Logger::error(logMsg);
-            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
-                Logger::warning(logMsg);
-            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
-                Logger::message(logMsg);
-            }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
-                //Logger::log(logMsg);
-            }
-        });
+        context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+        // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
+        //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
+        //         Logger::error(logMsg);
+        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
+        //         Logger::warning(logMsg);
+        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
+        //         Logger::message(logMsg);
+        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
+        //         //Logger::log(logMsg);
+        //     }
+        // });
     }
 };
 
@@ -459,15 +460,15 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettin
 }
 
 
-auto OrbbecBaseDevice::open(uint32_t deviceId) -> bool{
+auto OrbbecBaseDevice::open(const DCConfigSettings &configS) -> bool{
 
     auto lg = LogGuard("OrbbecBaseDevice::open"sv);
 
     Logger::message("### Open device ###\n");
 
-    Logger::message(std::format("Open device with id [{}]\n", deviceId));
+    Logger::message(std::format("Open device with id [{}]\n", configS.idDevice));    
     if(i->deviceType != DCType::FemtoMega){
-        if(deviceId >= i->deviceList.size()){
+        if(configS.idDevice >= i->deviceList.size()){
             Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
             return false;
         }
@@ -477,15 +478,96 @@ auto OrbbecBaseDevice::open(uint32_t deviceId) -> bool{
 
         if(i->deviceType == DCType::FemtoMega){
 
-            auto newAdress = std::format("192.168.{}.2", deviceId+1);
+            auto newAdress = std::format("192.168.{}.2", configS.idDevice+1);
             Logger::message(std::format("Retrieve from ip adress: {}.\n",newAdress));
             i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
             i->lastAddress = newAdress;
 
         }else{
             Logger::message("Retrieve from devices list.\n");
-            i->device     = i->deviceList[deviceId];
+            i->device     = i->deviceList[configS.idDevice];
         }
+
+        // Update the configuration items of the configuration file, and keep the original configuration for other items
+        auto synchConfig = i->device->getMultiDeviceSyncConfig();
+        Logger::message(std::format("CURRENT SYNC CONFIG BEFORE:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
+            (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
+
+        // // check if changes
+        // // and if changes reboot device
+
+        // switch (configS.synchMode) {
+        // case DCSynchronisationMode::Standalone:
+
+        //     Logger::message("### STANDALONE ###\n");
+        //     // The device does not synchronize with other devices.
+        //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized.
+        //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
+        //     synchConfig.triggerOutEnable        = false;
+        //     synchConfig.trigger2ImageDelayUs    = 0;
+        //     break;
+        // case DCSynchronisationMode::Main:
+
+        //     Logger::message("### PRIMARY ###\n");
+        //     // The device is the primary device in the multi-device system, it will output the trigger signal via VSYNC_OUT pin on synchronization port by default.
+        //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref depthDelayUs or @ref trigger2ImageDelayUs.
+        //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_PRIMARY;
+        //     synchConfig.trigger2ImageDelayUs    = 0;
+        //     synchConfig.colorDelayUs            = 0;
+        //     synchConfig.depthDelayUs            = 0;
+        //     synchConfig.triggerOutEnable        = true;
+        //     synchConfig.triggerOutDelayUs       = 0;
+        //     break;
+
+        // case DCSynchronisationMode::Subordinate:
+
+        //     Logger::message("### SUBORDINATE ###\n");
+        //     // The device is the secondary device in the multi-device system, it will receive the trigger signal via VSYNC_IN pin on synchronization port. It
+        //     // will out the trigger signal via VSYNC_OUT pin on synchronization port by default.
+        //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref
+        //     // depthDelayUs or @ref trigger2ImageDelayUs.
+        //     // After starting the stream, the device will wait for the trigger signal to start capturing images, and will stop capturing images when the trigger
+        //     // signal is stopped.
+        //     // The frequency of the trigger signal should be same as the frame rate of the stream profile which is set when starting the stream.
+        //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_SECONDARY;
+        //     synchConfig.trigger2ImageDelayUs    = configS.subordinateDelayUsec;
+        //     synchConfig.colorDelayUs            = configS.subordinateDelayUsec;
+        //     synchConfig.depthDelayUs            = configS.subordinateDelayUsec;
+        //     synchConfig.triggerOutEnable        = true;
+        //     synchConfig.triggerOutDelayUs       = 0;
+
+        //     break;
+        // default:
+        //     Logger::message("### DEFAULT ###\n");
+        //     // The device does not synchronize with other devices,
+        //     // The Color and Depth can be set to different frame rates.
+        //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
+
+        //     if(configS.synchronizeColorAndDepth){
+        //         synchConfig.colorDelayUs            = 0;
+        //         synchConfig.depthDelayUs            = 0;
+        //     }else{
+        //         synchConfig.colorDelayUs            = 0;
+        //         synchConfig.depthDelayUs            = configS.delayBetweenColorAndDepthUsec;
+        //     }
+
+        //     synchConfig.triggerOutEnable        = false;
+        //     synchConfig.trigger2ImageDelayUs    = 0;
+
+        //     break;
+        // }
+
+
+
+        // i->device->setMultiDeviceSyncConfig(synchConfig);
+        // // i->device->reboot();
+
+        // std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+        // synchConfig = i->device->getMultiDeviceSyncConfig();
+        // Logger::message(std::format("SYNC CONFIG AFTER:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
+        //                             (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
+
 
         Logger::message("Retrieve sensor list.\n");
         i->sensorList = i->device->getSensorList();
@@ -564,7 +646,7 @@ auto OrbbecBaseDevice::open(uint32_t deviceId) -> bool{
         return false;
     }
 
-    Logger::message("### Device opened ###\n");
+
 
     return true;
 }
@@ -683,47 +765,7 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
         //     }
         // }
 
-        // Update the configuration items of the configuration file, and keep the original configuration for other items
-        auto currSynchConfig = i->device->getMultiDeviceSyncConfig();
 
-        switch (configS.synchMode) {
-        case DCSynchronisationMode::Standalone:
-            // The device does not synchronize with other devices.
-            // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized.
-            currSynchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
-            currSynchConfig.triggerOutEnable        = false;
-            currSynchConfig.triggerOutDelayUs       = 0;
-            break;
-        case DCSynchronisationMode::Main:
-            // The device is the primary device in the multi-device system, it will output the trigger signal via VSYNC_OUT pin on synchronization port by default.
-            // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref depthDelayUs or @ref trigger2ImageDelayUs.
-            currSynchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_PRIMARY;
-            currSynchConfig.triggerOutEnable        = true;
-            currSynchConfig.triggerOutDelayUs       = configS.subordinateDelayUsec;
-            break;
-        case DCSynchronisationMode::Subordinate:
-            // The device is the secondary device in the multi-device system, it will receive the trigger signal via VSYNC_IN pin on synchronization port. It
-            // will out the trigger signal via VSYNC_OUT pin on synchronization port by default.
-            // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref
-            // depthDelayUs or @ref trigger2ImageDelayUs.
-            // After starting the stream, the device will wait for the trigger signal to start capturing images, and will stop capturing images when the trigger
-            // signal is stopped.
-            // The frequency of the trigger signal should be same as the frame rate of the stream profile which is set when starting the stream.
-            currSynchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_SECONDARY;
-            currSynchConfig.triggerOutEnable        = true;
-            currSynchConfig.triggerOutDelayUs       = configS.subordinateDelayUsec;
-            break;
-        default:
-            // The device does not synchronize with other devices,
-            // The Color and Depth can be set to different frame rates.
-            currSynchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
-            currSynchConfig.triggerOutEnable        = false;
-            currSynchConfig.triggerOutDelayUs       = 0;
-            break;
-        }
-
-        currSynchConfig.colorDelayUs = 0;
-        currSynchConfig.depthDelayUs = 0;
 
         // disable align mode
         Logger::message("Disable align mode.\n");
@@ -780,6 +822,8 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
     i->k4aTransformation = std::make_unique<k4a::transformation>(i->k4aCalibration);
 
     Logger::message("### Pipeline started ###.\n");
+
+
 
     return true;
 }
@@ -889,11 +933,7 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
 
         // auto lg = LogGuard("OrbbecBaseDevice::read_depth_image\n"sv);
         i->depthImage = i->frameSet->depthFrame();
-        // try{
-        //     i->depthImage = i->frameSet->depthFrame();
-        // }catch(...){
-        //     Logger::log("THROW\n"sv);
-        // }
+
         if(i->depthImage != nullptr){
             return  std::span<std::uint16_t>{
                 reinterpret_cast<std::uint16_t*>(i->depthImage->data()),

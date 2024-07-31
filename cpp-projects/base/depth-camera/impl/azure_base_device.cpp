@@ -283,9 +283,9 @@ auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS)
     }
 }
 
-auto AzureBaseDevice::update_from_data_settings(const DCDataSettings &dataS) -> void{
+auto AzureBaseDevice::update_from_data_settings(const DCDeviceDataSettings &dataS) -> void{
     if(i->bodyTracker != nullptr){
-        i->bodyTracker->set_temporal_smoothing(dataS.client.capture.btTemporalSmoothing);
+        i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
     }
 }
 

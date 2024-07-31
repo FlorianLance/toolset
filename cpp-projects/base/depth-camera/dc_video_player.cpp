@@ -8,7 +8,7 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
-#include "dc_frame_indices.hpp"
+// #include "frame/dc_frame_indices.hpp"
 
 using namespace tool::cam;
 
@@ -580,7 +580,6 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
     if(auto frame = current_frame(idCamera); frame != nullptr){
 
         auto verticesCountToCopy = std::min(frame->cloud.size(), positions.size());
-
         auto tr = video()->get_transform(idCamera).conv<float>();
 
         if(applyModelTransform){
@@ -592,7 +591,6 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
                 colors[id] = {
                     col.x(), col.y(), col.z()
                 };
-
                 const auto &norm = frame->cloud.normals[id];
                 normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
                 normals[id].x() *= -1.f;
@@ -610,7 +608,6 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
                 normals[id].x() *= -1.f;
             });
         }
-
         return verticesCountToCopy;
     }
     return 0;

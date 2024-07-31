@@ -52,7 +52,7 @@ public:
         std::span<const geo::Pt3f> colors = {}
     ) -> bool;
     auto update_data(
-        std::span<const geo::Pt3<GLuint>> indices,  size_t indicesOffset,
+        std::span<const GLuint> indices,            size_t indicesOffset,
         std::span<const geo::Pt3f> vertices,        size_t verticesOffset = 0,
         std::span<const geo::Pt3f> colors = {},     size_t colorsOffset   = 0) -> bool;
 

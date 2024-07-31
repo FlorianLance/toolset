@@ -1,6 +1,5 @@
 
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -37,17 +36,10 @@
 
 using namespace tool::cam;
 
-auto DCGrabberSettings::initialize(size_t idG, const net::ReadSendNetworkInfos &grabberInfos) -> void{
+auto DCGrabberSettings::initialize(size_t idG) -> void{
 
     this->id = idG;
-
-    // init network
-    network.name          = std::format("G{}", idG);
-    network.sendingAdress = grabberInfos.sendingAdress;
-    network.readingAdress = grabberInfos.readingAdress;
-    network.sendingPort   = grabberInfos.sendingPort;
-    network.readingPort   = grabberInfos.readingPort;
-    network.protocol      = grabberInfos.protocol;
+    name = std::format("G{}", idG);
 
     // read filters settings file
     if(!filters.load_from_file(filtersFilePath = DCSettingsPaths::get_filters_settings_file_path(idG))){
@@ -74,6 +66,21 @@ auto DCGrabberSettings::initialize(size_t idG, const net::ReadSendNetworkInfos &
         Logger::error(std::format("[DCMGrabberSettings] No model settings file found for grabber n°[{}]], default parameters used instead.\n", idG));
     }
 
+    static constexpr std::array<geo::Pt4f, 12> colors = {
+        geo::Pt4f{1.0f,0.0f,0.0f, 1.0f},
+        {0.0f,1.0f,0.0f, 1.0f},
+        {0.0f,0.0f,1.0f, 1.0f},
+        {1.0f,1.0f,0.0f, 1.0f},
+        {0.0f,1.0f,1.0f, 1.0f},
+        {1.0f,0.0f,1.0f, 1.0f},
+        {0.5f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,0.5f, 1.0f},
+        {0.5f,0.0f,0.5f, 1.0f},
+        {1.0f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,1.0f, 1.0f},
+        {1.0f,0.0f,0.5f, 1.0f},
+    };
+
     // display
-    cloudDisplay.cloudColor = cloudsColors[idG];
+    cloudDisplay.unicolor = colors[idG];
 }

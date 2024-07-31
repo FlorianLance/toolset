@@ -169,7 +169,7 @@ static constexpr DCColorSettingsTypes k4ColorSettingsP = {{
     return {};
 }
 
-struct DCColorSettings : io::BaseSettings{
+struct DCColorSettings : io::Settings{
 
     std::uint16_t whiteBalance              = 4500;
     std::uint16_t exposureTime              = 0;

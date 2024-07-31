@@ -36,14 +36,14 @@ namespace tool::io {
 
 using namespace std::literals::string_view_literals;
 
-struct BaseSettings{
+struct Settings{
 
     SettingsType sType      = SettingsType::Undefined;
     SettingsVersion version = SettingsVersion::Undefined;
 
     constexpr auto type() const noexcept    -> SettingsType {return sType;};
     auto type_description() const noexcept  -> std::string_view {return settings_name(sType);}
-    virtual ~BaseSettings(){}
+    virtual ~Settings(){}
 
     // json
     // # save to
@@ -60,20 +60,20 @@ struct BaseSettings{
     auto init_from_json_binary(std::span<const std::uint8_t> jsonData) -> bool;
     auto init_from_json_str(std::string_view jsonStr) -> bool;
 
-    static auto save_multi_to_json_str_file(std::span<BaseSettings*> settingsA, const std::string &filePath = "./settings.json") -> bool;
-    static auto load_multi_from_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
+    static auto save_multi_to_json_str_file(std::span<Settings*> settingsA, const std::string &filePath = "./settings.json") -> bool;
+    static auto load_multi_from_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool;
 
 protected:
 
     virtual auto load_from_json_binary_file(const std::string &filePath) -> bool;
     virtual auto load_from_json_str_file(const std::string &filePath) -> bool;
-    static auto load_multi_from_json_txt_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
+    static auto load_multi_from_json_txt_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool;
 
     // legacy
     virtual auto init_from_text(std::string_view &text) -> void;
     virtual auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void;
-    static auto init_from_text_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
-    static auto init_from_binary_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool;
+    static auto init_from_text_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool;
+    static auto init_from_binary_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool;
 
 };
 

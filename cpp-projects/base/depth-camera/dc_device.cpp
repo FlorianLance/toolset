@@ -183,7 +183,7 @@ auto DCDevice::set_color_settings(const DCColorSettings &colorS) -> void{
     i->dd->set_color_settings(colorS);
 }
 
-auto DCDevice::set_data_settings(const DCDataSettings &dataS) -> void{
+auto DCDevice::set_data_settings(const DCDeviceDataSettings &dataS) -> void{
     auto lg = LogGuard("DCDevice::set_data_settings"sv);
     i->dd->set_data_settings(dataS);
 }

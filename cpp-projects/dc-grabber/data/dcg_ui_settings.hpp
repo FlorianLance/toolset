@@ -35,7 +35,7 @@ struct DCGDisplaySettingsSettings{
     bool focusWindow = false;
     int currentWindow = 3;
 
-    DCSceneDisplaySettings sceneDisplay = DCSceneDisplaySettings::default_init_for_grabber();
-    DCCloudDisplaySettings cloudDisplay = DCCloudDisplaySettings::default_init_for_grabber();
+    cam::DCSceneDisplaySettings sceneDisplay;
+    cam::DCDeviceDisplaySettings cloudDisplay;
 };
 }

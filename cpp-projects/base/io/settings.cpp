@@ -40,7 +40,7 @@ using namespace tool::io;
 using namespace tool::data;
 using json = nlohmann::json;
 
-auto BaseSettings::save_to_json_binary_file(const std::string &filePath) -> bool{
+auto Settings::save_to_json_binary_file(const std::string &filePath) -> bool{
 
     Logger::log(std::format("[BaseSettings::save_to_json_binary_file] Save [{}] settings to binary file with path [{}]\n", type_description(), filePath));
     if(!File::write_binary_content(filePath, convert_to_json_binary())){
@@ -50,7 +50,7 @@ auto BaseSettings::save_to_json_binary_file(const std::string &filePath) -> bool
     return true;
 }
 
-auto BaseSettings::save_to_json_str_file(const std::string &filePath) -> bool{
+auto Settings::save_to_json_str_file(const std::string &filePath) -> bool{
 
     Logger::log(std::format("[BaseSettings::save_to_json_str_file] Save [{}] settings to text file with path [{}]\n", type_description(), filePath));
     if(!File::write_text_content(filePath, convert_to_json_str())){
@@ -60,7 +60,7 @@ auto BaseSettings::save_to_json_str_file(const std::string &filePath) -> bool{
     return true;
 }
 
-auto BaseSettings::load_from_json_binary_file(const std::string &filePath) -> bool{
+auto Settings::load_from_json_binary_file(const std::string &filePath) -> bool{
 
     Logger::log(std::format("[BaseSettings::load_from_json_binary_file] Load from [{}] settings binary file with path [{}]\n", type_description(),  filePath));
     if(auto content = File::read_content(filePath); content.has_value()){
@@ -76,7 +76,7 @@ auto BaseSettings::load_from_json_binary_file(const std::string &filePath) -> bo
     return false;
 }
 
-auto BaseSettings::load_from_json_str_file(const std::string &filePath) -> bool{
+auto Settings::load_from_json_str_file(const std::string &filePath) -> bool{
 
     Logger::log(std::format("[BaseSettings::load_from_json_str_file] Init from [{}] settings text file with path [{}]\n", type_description(),  filePath));
     if(auto content = File::read_content(filePath); content.has_value()){
@@ -91,15 +91,15 @@ auto BaseSettings::load_from_json_str_file(const std::string &filePath) -> bool{
     return false;
 }
 
-auto BaseSettings::convert_to_json_str() const -> std::string{
+auto Settings::convert_to_json_str() const -> std::string{
     return convert_to_json().dump(4);
 }
 
-auto BaseSettings::convert_to_json_binary() const -> std::vector<std::uint8_t>{
+auto Settings::convert_to_json_binary() const -> std::vector<std::uint8_t>{
     return json::to_bson(convert_to_json());
 }
 
-auto BaseSettings::init_from_json_binary(std::span<const std::uint8_t> jsonData) -> bool{
+auto Settings::init_from_json_binary(std::span<const std::uint8_t> jsonData) -> bool{
     try {
         init_from_json(json::from_bson(jsonData));
         return true;
@@ -109,7 +109,7 @@ auto BaseSettings::init_from_json_binary(std::span<const std::uint8_t> jsonData)
     return false;
 }
 
-auto BaseSettings::init_from_json_str(std::string_view jsonStr) -> bool{
+auto Settings::init_from_json_str(std::string_view jsonStr) -> bool{
     try {
         init_from_json(json::parse(jsonStr));
         return true;
@@ -119,7 +119,7 @@ auto BaseSettings::init_from_json_str(std::string_view jsonStr) -> bool{
     return false;
 }
 
-auto BaseSettings::init_from_json(const nlohmann::json &json) -> void{
+auto Settings::init_from_json(const nlohmann::json &json) -> void{
     size_t unreadCount = 0;
     sType   = static_cast<tool::io::SettingsType>(read_value<int>(json, unreadCount, "type"));
     version = static_cast<tool::io::SettingsVersion>(read_value<int>(json, unreadCount, "version"));
@@ -129,14 +129,14 @@ auto BaseSettings::init_from_json(const nlohmann::json &json) -> void{
     }
 }
 
-auto BaseSettings::convert_to_json() const -> json{
+auto Settings::convert_to_json() const -> json{
     return json{
         {"type",    static_cast<int>(sType)},
         {"version", static_cast<int>(version)},
     };
 }
 
-auto BaseSettings::load_from_file(const std::string &filePath) -> bool{
+auto Settings::load_from_file(const std::string &filePath) -> bool{
 
     Logger::message(std::format("Open [{}] file with path [{}]\n", type_description(),  filePath));
 
@@ -165,12 +165,12 @@ auto BaseSettings::load_from_file(const std::string &filePath) -> bool{
                 init_from_text(contentV);
                 return true;
             }break;
-            case SettingsType::Client_network:{
+            case SettingsType::Udp_server:{
                 std::string_view contentV = content.value();
                 init_from_text(contentV);
                 return true;
             }break;
-            case SettingsType::Server_network:{
+            case SettingsType::Dc_client_connection:{
                 std::string_view contentV = content.value();
                 init_from_text(contentV);
                 return true;
@@ -185,7 +185,7 @@ auto BaseSettings::load_from_file(const std::string &filePath) -> bool{
     return false;
 }
 
-auto BaseSettings::init_from_text(std::string_view &text) -> void{
+auto Settings::init_from_text(std::string_view &text) -> void{
 
     if(text.starts_with("Type: "sv)){
         if(auto values = String::split_view(text, " "sv); values.size() == 2){
@@ -201,13 +201,13 @@ auto BaseSettings::init_from_text(std::string_view &text) -> void{
     }
 }
 
-auto BaseSettings::init_from_data(const std::byte * const data, size_t &offset, size_t sizeData) -> void{
+auto Settings::init_from_data(const std::byte * const data, size_t &offset, size_t sizeData) -> void{
     read(sType, data, offset, sizeData);
     read(version, data, offset, sizeData);
 }
 
 
-auto BaseSettings::load_multi_from_json_txt_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
+auto Settings::load_multi_from_json_txt_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool{
 
     if(settingsA.empty()){
         Logger::error("Input multi settings array is empty.\n");
@@ -246,7 +246,7 @@ auto BaseSettings::load_multi_from_json_txt_file(std::span<BaseSettings*> settin
     return true;
 }
 
-auto BaseSettings::save_multi_to_json_str_file(std::span<BaseSettings *> settingsA, const std::string &filePath) -> bool{
+auto Settings::save_multi_to_json_str_file(std::span<Settings *> settingsA, const std::string &filePath) -> bool{
 
     auto firstT = settingsA.front()->type();
     for(const auto &settings : settingsA){
@@ -271,7 +271,7 @@ auto BaseSettings::save_multi_to_json_str_file(std::span<BaseSettings *> setting
     return true;
 }
 
-auto BaseSettings::load_multi_from_file(std::span<BaseSettings *> settingsA, const std::string &filePath) -> bool{
+auto Settings::load_multi_from_file(std::span<Settings *> settingsA, const std::string &filePath) -> bool{
 
     auto firstT = settingsA.front()->type();
     for(const auto &settings : settingsA){
@@ -300,10 +300,10 @@ auto BaseSettings::load_multi_from_file(std::span<BaseSettings *> settingsA, con
         case SettingsType::Model:{
             return init_from_text_file(settingsA, filePath);
         }break;
-        case SettingsType::Client_network:{
+        case SettingsType::Udp_server:{
             return init_from_text_file(settingsA, filePath);
         }break;
-        case SettingsType::Server_network:{
+        case SettingsType::Dc_client_connection:{
             return init_from_text_file(settingsA, filePath);
         }break;
         default:
@@ -316,7 +316,7 @@ auto BaseSettings::load_multi_from_file(std::span<BaseSettings *> settingsA, con
 }
 
 
-auto BaseSettings::init_from_text_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
+auto Settings::init_from_text_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool{
 
     if(settingsA.empty()){
         Logger::error("Input multi settings arra  is empty.\n");
@@ -355,7 +355,7 @@ auto BaseSettings::init_from_text_file(std::span<BaseSettings*> settingsA, const
     return true;
 }
 
-auto BaseSettings::init_from_binary_file(std::span<BaseSettings*> settingsA, const std::string &filePath) -> bool{
+auto Settings::init_from_binary_file(std::span<Settings*> settingsA, const std::string &filePath) -> bool{
 
     if(settingsA.empty()){
         Logger::error("Input multi settings array is empty.\n");

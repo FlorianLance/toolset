@@ -84,7 +84,7 @@ auto DCGController::set_connections() -> void{
 
     // aliases
     using Sett   = DCGSettings;
-    using CCo    = net::DCClientConnection;
+    using CCo    = net::DCUdpServer;
     using Rec    = cam::DCVideoRecorder;
     using RecD   = graphics::DCRecorderDrawer;
     using DevD   = graphics::DCDeviceDrawer;
@@ -119,25 +119,25 @@ auto DCGController::set_connections() -> void{
     });
 
     // to app
-    CCo::shutdown_signal.connect([&](){system("c:\\windows\\system32\\shutdown /s");});
-    CCo::quit_signal.connect(&DCGView::exit, view.get());
-    CCo::restart_signal.connect([&](){system("c:\\windows\\system32\\shutdown /R");});
+    con->shutdown_signal.connect([&](){system("c:\\windows\\system32\\shutdown /s");});
+    con->quit_signal.connect(&DCGView::exit, view.get());
+    con->restart_signal.connect([&](){system("c:\\windows\\system32\\shutdown /R");});
 
     // to model
     // # network
     s->init_network_sending_settings_signal.connect(                 &CCo::init_sender,                                     con);
     s->ping_server_signal.connect(                                   &CCo::ping_server,                                     con);
-    s->debug_device_send_signal.connect(                             &CCo::dummy_device_trigger,                            con);
+    // s->debug_device_send_signal.connect(                             &CCo::dummy_device_trigger,                            con);
     s->sending_failure_signal.connect(                               &CCo::simulate_sending_failure,                        con);
 
     dev->new_compressed_frame_signal.connect(                        &CCo::send_frame,                                      con);
     // # settings
-    CCo::receive_init_network_sending_settings_signal.connect(       &Sett::init_network_sending_settings,                  sett);
-    CCo::receive_filters_signal.connect(                             &Sett::update_filters,                                 sett);
-    CCo::receive_device_settings_signal.connect(                     &Sett::update_device_settings,                         sett);
-    CCo::receive_color_settings_signal.connect(                      &Sett::update_color_settings,                          sett);
-    CCo::receive_delay_signal.connect(                               &Sett::update_delay,                                   sett);
-    CCo::disconnect_signal.connect(                                  &Sett::disconnect,                                     sett);
+    con->receive_init_server_client_connection_signal.connect(       &Sett::init_network_sending_settings,                  sett);
+    con->receive_filters_signal.connect(                             &Sett::update_filters,                                 sett);
+    con->receive_device_settings_signal.connect(                     &Sett::update_device_settings,                         sett);
+    con->receive_color_settings_signal.connect(                      &Sett::update_color_settings,                          sett);
+    con->receive_delay_settings_signal.connect(                               &Sett::update_delay,                                   sett);
+    con->disconnect_signal.connect(                                  &Sett::disconnect,                                     sett);
     dev->new_imu_sample_signal.connect(                              &Sett::update_imu_sample,                              sett);
     dev->update_device_name_signal.connect(                          [&](int deviceId, std::string deviceName){
         tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName); // TODO: move to settings/states ?
@@ -187,6 +187,7 @@ auto DCGController::set_connections() -> void{
     s->update_cloud_display_settings_signal.connect(                 &DevD::update_cloud_display_settings,                  devD);
     s->update_model_settings_signal.connect(                         &graphics::DCCloudsSceneDrawer::update_model_settings,          devD);
     s->update_filters_signal.connect(                                &DevD::update_filters_settings,                        devD);
+    s->update_device_settings_signal.connect(                        &DevD::update_device_settings,                        devD);
     // # recorder
     s->update_scene_display_settings_signal.connect(                 &RecD::update_scene_display_settings,                  recD);
     s->update_cloud_display_settings_signal.connect(                 &RecD::update_cloud_display_settings,                  recD);

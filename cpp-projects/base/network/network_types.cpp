@@ -68,51 +68,16 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
 }
 
 
-UdpNetworkSendingSettings::UdpNetworkSendingSettings(std::string ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket) : port(port), maxSizeUdpPacket(maxSizeUdpPacket) {
+// UdpNetworkSendingSettings::UdpNetworkSendingSettings(std::string_view ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket) : port(port), maxSizeUdpPacket(maxSizeUdpPacket) {
 
-    std::fill(ipAdress.begin(), ipAdress.end(), ' ');
-    if(ipAdressStr.size() <= 45){
-        std::copy(std::begin(ipAdressStr), std::end(ipAdressStr), ipAdress.begin());
-    }
-}
+//     std::fill(ipAdress.begin(), ipAdress.end(), ' ');
+//     if(ipAdressStr.size() <= 45){
+//         std::copy(std::begin(ipAdressStr), std::end(ipAdressStr), ipAdress.begin());
+//     }else{
+//         Logger::error(std::format("UdpNetworkSendingSettings::UdpNetworkSendingSettings invalid ip adresss: [{}]\n", ipAdressStr));
+//     }
+// }
 
-Framerate::Framerate(){
-    rTimes.resize(nbMaxValues, std::chrono::nanoseconds(0));
-}
-
-auto Framerate::add_frame() -> void{
-    rTimes.set_current(Time::nanoseconds_since_epoch());
-    rTimes.increment();
-}
-
-auto Framerate::get_framerate() -> float{
-    size_t count = 0;
-
-    auto currentTimestampNS = Time::nanoseconds_since_epoch();
-    for(const auto time : rTimes.span()){
-        if(Time::difference_ms(time, currentTimestampNS).count() < 5000){
-            ++count;
-        }
-    }
-
-    return count / 5.f;
-}
-
-AverageSynch::AverageSynch(){
-    diffNs.resize(nbMaxValues, std::chrono::nanoseconds(0));
-}
-
-auto AverageSynch::update_average_difference(int64_t timestampNS) -> void{
-
-    auto currentTimestampNS = Time::nanoseconds_since_epoch();
-    diffNs.set_current(currentTimestampNS - nanoseconds(timestampNS));
-    diffNs.increment();
-
-    auto span = diffNs.span();
-    averageDiffNs = static_cast<std::int64_t>(
-        1.0 * std::accumulate(std::begin(span), std::end(span), nanoseconds(0)).count() / nbMaxValues
-    );
-}
 
 Header::Header(std::span<const std::byte> packet){
     if(packet.size_bytes() == sizeof(Header)){
@@ -215,38 +180,3 @@ auto UdpMessageReception::get_percentage_success() -> int{
 }
 
 
-AverageLatency::AverageLatency(){
-    latencies.resize(nbMaxValues, 0);
-}
-
-auto AverageLatency::update_average_latency(int64_t latency) -> void{
-
-    latencies.set_current(latency);
-    latencies.increment();
-
-    auto span = latencies.span();
-    averageLatency = static_cast<std::int64_t>(
-        1.0 * std::accumulate(std::begin(span), std::end(span), std::int64_t{0}) / nbMaxValues
-    );
-}
-
-AverageBandwidth::AverageBandwidth(){
-    bytesReceived.resize(nbMaxValues, {std::chrono::nanoseconds(0), 0});
-}
-
-auto AverageBandwidth::add_size(size_t nbBytes) -> void{
-    bytesReceived.set_current({Time::nanoseconds_since_epoch(), nbBytes});
-    bytesReceived.increment();
-}
-
-auto AverageBandwidth::get_bandwidth() -> size_t{
-
-    size_t total = 0;
-    auto currentTimestampNS = Time::nanoseconds_since_epoch();
-    for(const auto &time : bytesReceived.span()){
-        if(Time::difference_ms(std::get<0>(time), currentTimestampNS).count() < 1000){
-            total += std::get<1>(time);
-        }
-    }
-    return total;
-}

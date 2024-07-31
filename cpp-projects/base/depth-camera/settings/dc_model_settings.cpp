@@ -44,7 +44,7 @@ auto DCModelSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // model
     read_array<float>(json, unreadCount, "transformation"sv, transformation.array);
 
@@ -57,7 +57,7 @@ auto DCModelSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv, io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv, io::Settings::convert_to_json());
     // model
     add_array<float>(json, "transformation"sv,    transformation.array);
 
@@ -69,8 +69,8 @@ auto DCModelSettings::compute_full_transformation() const -> tool::geo::Mat4f{
 }
 
 auto DCModelSettings::init_from_text(std::string_view &text) -> void  {
-
-    io::BaseSettings::init_from_text(text);
+    
+    io::Settings::init_from_text(text);
 
     size_t id = 0;
     for(const auto &line : String::split_view(text, "\n"sv)){

@@ -75,23 +75,21 @@ auto DCMSettings::initialize() -> bool{
     }
 
     // init network
-    if(!networkS.initialize(DCSettingsPaths::get_network_settings_file_path())){
-        networkS.default_initialize();
+    if(!devicesConnectionsS.initialize(DCSettingsPaths::get_network_settings_file_path())){
+        devicesConnectionsS.default_initialize();
     }
 
     // init grabbers paths
-    DCSettingsPaths::initialize_grabbers(networkS.clientsInfo.size());
+    DCSettingsPaths::initialize_grabbers(devicesConnectionsS.connectionsS.size());
 
     // init grabbers settings
-    size_t idC = 0;
-    grabbersS.resize(networkS.clientsInfo.size());
-    for(const auto &clientInfo : networkS.clientsInfo){
-        grabbersS[idC].initialize(idC, clientInfo);
-        ++idC;
+    grabbersS.resize(devicesConnectionsS.connectionsS.size());
+    for(size_t idC = 0; idC < devicesConnectionsS.connectionsS.size(); ++idC){
+        grabbersS[idC].initialize(idC);
     }
 
     // calibration
-    calibratorS.initialize(networkS.clientsInfo.size());
+    calibratorS.initialize(devicesConnectionsS.connectionsS.size());
 
     return true;
 }
@@ -152,11 +150,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->device.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allDevicesS;
+                std::vector<io::Settings*> allDevicesS;
                 for(auto grabber : tGrabbers){
                     allDevicesS.push_back(&grabber->device);
                 }
-                io::BaseSettings::load_multi_from_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
+                io::Settings::load_multi_from_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
             }
             break;
         case SType::Filters:
@@ -165,11 +163,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->filters.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allFilters;
+                std::vector<io::Settings*> allFilters;
                 for(auto grabber : tGrabbers){
                     allFilters.push_back(&grabber->filters);
                 }
-                io::BaseSettings::load_multi_from_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
+                io::Settings::load_multi_from_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
             }
             break;
         case SType::CalibrationFilters:
@@ -178,11 +176,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->calibrationFilters.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allCalibrationFilters;
+                std::vector<io::Settings*> allCalibrationFilters;
                 for(auto grabber : tGrabbers){
                     allCalibrationFilters.push_back(&grabber->calibrationFilters);
                 }
-                io::BaseSettings::load_multi_from_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
+                io::Settings::load_multi_from_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
             }
             break;
         case SType::Color:
@@ -191,11 +189,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->color.load_from_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allColors;
+                std::vector<io::Settings*> allColors;
                 for(auto grabber : tGrabbers){
                     allColors.push_back(&grabber->color);
                 }
-                io::BaseSettings::load_multi_from_file(allColors, DCSettingsPaths::allGrabbersColor.string());
+                io::Settings::load_multi_from_file(allColors, DCSettingsPaths::allGrabbersColor.string());
             }
             break;
         case SType::Model:
@@ -208,11 +206,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     }
                 }
             }else{
-                std::vector<io::BaseSettings*> allModels;
+                std::vector<io::Settings*> allModels;
                 for(auto grabber : tGrabbers){
                     allModels.push_back(&grabber->model);
                 }
-                io::BaseSettings::load_multi_from_file(allModels, DCSettingsPaths::allGrabbersModel.string());
+                io::Settings::load_multi_from_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
             break;
         case SType::Network:
@@ -227,11 +225,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->device.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultDevice : DCSettingsPaths::grabbersDevice[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allDevicesS;
+                std::vector<io::Settings*> allDevicesS;
                 for(auto grabber : tGrabbers){
                     allDevicesS.push_back(&grabber->device);
                 }
-                io::BaseSettings::save_multi_to_json_str_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
+                io::Settings::save_multi_to_json_str_file(allDevicesS, DCSettingsPaths::allGrabbersDevice.string());
 
             }
             break;
@@ -241,11 +239,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->filters.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultFilters : DCSettingsPaths::grabbersFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allFilters;
+                std::vector<io::Settings*> allFilters;
                 for(auto grabber : tGrabbers){
                     allFilters.push_back(&grabber->filters);
                 }
-                io::BaseSettings::save_multi_to_json_str_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
+                io::Settings::save_multi_to_json_str_file(allFilters, DCSettingsPaths::allGrabbersFilters.string());
             }
             break;
         case SType::CalibrationFilters:
@@ -254,11 +252,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->calibrationFilters.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultCalibrationFilters : DCSettingsPaths::grabbersCalibrationFilters[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allCalibrationFilters;
+                std::vector<io::Settings*> allCalibrationFilters;
                 for(auto grabber : tGrabbers){
                     allCalibrationFilters.push_back(&grabber->calibrationFilters);
                 }
-                io::BaseSettings::save_multi_to_json_str_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
+                io::Settings::save_multi_to_json_str_file(allCalibrationFilters, DCSettingsPaths::allGrabbersCalibrationFilters.string());
             }
             break;
         case SType::Color:
@@ -267,11 +265,11 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     grabber->color.save_to_json_str_file((file == SFile::Default ? DCSettingsPaths::defaultColor : DCSettingsPaths::grabbersColor[grabber->id]).string());
                 }
             }else{
-                std::vector<io::BaseSettings*> allColors;
+                std::vector<io::Settings*> allColors;
                 for(auto grabber : tGrabbers){
                     allColors.push_back(&grabber->color);
                 }
-                io::BaseSettings::save_multi_to_json_str_file(allColors, DCSettingsPaths::allGrabbersColor.string());
+                io::Settings::save_multi_to_json_str_file(allColors, DCSettingsPaths::allGrabbersColor.string());
             }
             break;
         case SType::Model:
@@ -282,15 +280,15 @@ auto DCMSettings::process_settings_action(SAction action, STarget target, SType 
                     }
                 }
             }else{
-                std::vector<io::BaseSettings*> allModels;
+                std::vector<io::Settings*> allModels;
                 for(auto grabber : tGrabbers){
                     allModels.push_back(&grabber->model);
                 }
-                io::BaseSettings::save_multi_to_json_str_file(allModels, DCSettingsPaths::allGrabbersModel.string());
+                io::Settings::save_multi_to_json_str_file(allModels, DCSettingsPaths::allGrabbersModel.string());
             }
             break;
         case SType::Network:
-            networkS.save_to_json_str_file(DCSettingsPaths::hostNetwork.string());
+            devicesConnectionsS.save_to_json_str_file(DCSettingsPaths::hostNetwork.string());
             break;
         }
         break;

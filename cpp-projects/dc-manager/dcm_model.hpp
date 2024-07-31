@@ -30,8 +30,8 @@
 #include <deque>
 
 // base
-#include "depth-camera/network/dc_server_network.hpp"
-#include "depth-camera/dc_server_data.hpp"
+#include "depth-camera/client/dc_client_devices.hpp"
+#include "depth-camera/client/dc_client_processing.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
 #include "depth-camera/dc_video_player.hpp"
 #include "depth-camera/dc_calibrator.hpp"
@@ -59,25 +59,23 @@ struct DCMModel{
     auto update_network_status(size_t id, net::UdpNetworkStatus status) -> void;
 
     //
-    auto add_default_device() -> void;
+    // auto add_default_device() -> void;
 
     // action
     auto ask_calibration() -> void;
 
     // # settings
-    // auto update_filtering_mode(bool useNormalMode) -> void;
     auto update_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
     auto update_calibration_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
     auto update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void;
     auto update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void;
     auto update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void;
 
-
     DCMSettings settings;
     DCMStates states;
 
-    std::unique_ptr<net::DCServerNetwork> sNetwork = nullptr;
-    cam::DCServerData sData;
+    cam::DCClientDevices clientDevices;
+    cam::DCClientProcessing clientProcessing;
     cam::DCVideoRecorder recorder;
     cam::DCVideoPlayer player;
     cam::DCCalibrator calibration;

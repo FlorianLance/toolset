@@ -567,7 +567,7 @@ auto DCUIDrawer::draw_dc_scene_display_setings_tab_item(const std::string &tabIt
     return update;
 }
 
-auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCCloudDisplaySettings &display)  -> bool {
+auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, DCDeviceDisplaySettings &display)  -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
@@ -577,10 +577,10 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
 
     ImGui::Text("Colors:");
     ImGui::Indent();
-    if(ImGui::Checkbox("Force cloud color###display_force_cloud_color", &display.forceCloudColor)){
+    if(ImGui::Checkbox("Force cloud color###display_force_cloud_color", &display.forceColor)){
         update = true;
     }
-    if(ImGui::ColorEdit4("Cloud color###display_cloud_color", display.cloudColor.array.data())){
+    if(ImGui::ColorEdit4("Cloud color###display_cloud_color", display.unicolor.array.data())){
         update = true;
     }
     ImGui::SetNextItemWidth(100.f);
@@ -645,7 +645,7 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
 
     ImGui::Text("Visibility:");
     ImGui::Indent();
-    if(ImGui::Checkbox("Show cloud###display_show_cloud", &display.showCloud)){
+    if(ImGui::Checkbox("Show cloud###display_show_cloud", &display.showCapture)){
         update = true;
     }
     if(ImGui::Checkbox("Show camera frustum###display_show_camera_frustum", &display.showCameraFrustum)){
@@ -1465,6 +1465,11 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
     ImGui::Text("Synch:");
     ImGui::Indent();
 
+    if(config.typeDevice != DCType::AzureKinect){
+        ImGui::Text("### Use Orbbec viewer software instead ###");
+        ImGui::BeginDisabled(true);
+    }
+
     ImGui::Text("Mode:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100.f);
@@ -1494,6 +1499,8 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
         update          = true;
     }
     ImGui::Unindent();
+
+    ImGui::EndDisabled();
 
 
     ImGui::Spacing();
@@ -1580,34 +1587,34 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     ImGui::Text("Capture:");
     ImGui::Indent();
     {
-        if(ImGui::Checkbox("color###cap_color", &data.client.capture.color)){
+        if(ImGui::Checkbox("color###cap_color", &data.server.capture.color)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###cap_depth", &data.client.capture.depth)){
+        if(ImGui::Checkbox("depth###cap_depth", &data.server.capture.depth)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("infra###cap_infra", &data.client.capture.infra)){
+        if(ImGui::Checkbox("infra###cap_infra", &data.server.capture.infra)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("audio###cap_audio", &data.client.capture.audio)){
+        if(ImGui::Checkbox("audio###cap_audio", &data.server.capture.audio)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("imu###cap_imu", &data.client.capture.imu)){
+        if(ImGui::Checkbox("imu###cap_imu", &data.server.capture.imu)){
             update = true;
         }
 
-        if(ImGui::Checkbox("body tracking###cap_body_tracking", &data.client.capture.bodyTracking)){
+        if(ImGui::Checkbox("body tracking###cap_body_tracking", &data.server.capture.bodyTracking)){
             update = true;
         }
         ImGui::SameLine();
         ImGui::Text("| temporal smoothing: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(75.f);
-        if(ImGui::SliderFloat("###cap_temp_smoothing", &data.client.capture.btTemporalSmoothing, 0.f, 1.f)){
+        if(ImGui::SliderFloat("###cap_temp_smoothing", &data.server.capture.btTemporalSmoothing, 0.f, 1.f)){
             update = true;
         }
     }
@@ -1622,50 +1629,50 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         ImGui::Text("JPEG quality: ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(75.f);
-        int compressionRate = data.client.compression.jpegCompressionRate;
+        int compressionRate = data.server.compression.jpegCompressionRate;
         if(ImGui::SliderInt("###com_jpeg_compression_rate", &compressionRate, 5, 100)){
-            data.client.compression.jpegCompressionRate = compressionRate;
+            data.server.compression.jpegCompressionRate = compressionRate;
             update = true;
         }
 
-        if(ImGui::Checkbox("calibration###com_calibration", &data.client.compression.calibration)){
+        if(ImGui::Checkbox("calibration###com_calibration", &data.server.compression.calibration)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###com_depth", &data.client.compression.depth)){
+        if(ImGui::Checkbox("depth###com_depth", &data.server.compression.depth)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth sized color###com_depthSizedColor", &data.client.compression.depthSizedColor)){
+        if(ImGui::Checkbox("depth sized color###com_depthSizedColor", &data.server.compression.depthSizedColor)){
             update = true;
         }
 
-        if(ImGui::Checkbox("color###com_color", &data.client.compression.color)){
+        if(ImGui::Checkbox("color###com_color", &data.server.compression.color)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("infra###com_infra", &data.client.compression.infra)){
+        if(ImGui::Checkbox("infra###com_infra", &data.server.compression.infra)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###com_bodies_id_map", &data.client.compression.bodyIdMap)){
+        if(ImGui::Checkbox("bodies id map###com_bodies_id_map", &data.server.compression.bodyIdMap)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("cloud###com_cloud", &data.client.compression.cloud)){
+        if(ImGui::Checkbox("cloud###com_cloud", &data.server.compression.cloud)){
             update = true;
         }
-        cloud_color_mode_combo("Cloud color mode"sv, "###com_cloud_color_mode", data.client.compression.cloudColorMode, update);
+        cloud_color_mode_combo("Cloud color mode"sv, "###com_cloud_color_mode", data.server.compression.cloudColorMode, update);
 
-        if(ImGui::Checkbox("body tracking###com_body_tracking", &data.client.compression.bodyTracking)){
+        if(ImGui::Checkbox("body tracking###com_body_tracking", &data.server.compression.bodyTracking)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("audio###com_audio", &data.client.compression.audio)){
+        if(ImGui::Checkbox("audio###com_audio", &data.server.compression.audio)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("imu###com_imu", &data.client.compression.imu)){
+        if(ImGui::Checkbox("imu###com_imu", &data.server.compression.imu)){
             update = true;
         }
     }
@@ -1682,36 +1689,36 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     {
         ImGui::Text("Data:");
         ImGui::Indent();
-        if(ImGui::Checkbox("calibration###gen_client_calibration", &data.client.generation.calibration)){
+        if(ImGui::Checkbox("calibration###gen_client_calibration", &data.server.generation.calibration)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###gen_client_depth", &data.client.generation.depth)){
+        if(ImGui::Checkbox("depth###gen_client_depth", &data.server.generation.depth)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("infra###gen_client_infra", &data.client.generation.infra)){
+        if(ImGui::Checkbox("infra###gen_client_infra", &data.server.generation.infra)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("cloud###gen_client_gen_cloud", &data.client.generation.cloud)){
+        if(ImGui::Checkbox("cloud###gen_client_gen_cloud", &data.server.generation.cloud)){
             update = true;
         }
-        cloud_color_mode_combo("Cloud color mode"sv, "###gen_client_cloud_color_mode", data.client.generation.cloudColorMode, update);
+        cloud_color_mode_combo("Cloud color mode"sv, "###gen_client_cloud_color_mode", data.server.generation.cloudColorMode, update);
 
         if(m_isManager){
-            cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_client_cloud_gen_mode", data.client.generation.cloudGenMode, update);
+            cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_client_cloud_gen_mode", data.server.generation.cloudGenMode, update);
         }
 
-        if(ImGui::Checkbox("body tracking###gen_client_body_tracking", &data.client.generation.bodyTracking)){
+        if(ImGui::Checkbox("body tracking###gen_client_body_tracking", &data.server.generation.bodyTracking)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("imu###gen_client_imu", &data.client.generation.imu)){
+        if(ImGui::Checkbox("imu###gen_client_imu", &data.server.generation.imu)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("audio###gen_client_audio", &data.client.generation.audio)){
+        if(ImGui::Checkbox("audio###gen_client_audio", &data.server.generation.audio)){
             update = true;
         }
 
@@ -1719,23 +1726,23 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
 
         ImGui::Text("Images:");
         ImGui::Indent();
-        if(ImGui::Checkbox("color###gen_client_color_image", &data.client.generation.colorImage)){
+        if(ImGui::Checkbox("color###gen_client_color_image", &data.server.generation.colorImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth sized color###gen_client_depth_sized_color_image", &data.client.generation.depthSizedColorImage)){
+        if(ImGui::Checkbox("depth sized color###gen_client_depth_sized_color_image", &data.server.generation.depthSizedColorImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###gen_client_depth_image", &data.client.generation.depthImage)){
+        if(ImGui::Checkbox("depth###gen_client_depth_image", &data.server.generation.depthImage)){
             update = true;
         }
 
-        if(ImGui::Checkbox("infra###gen_client_infra_image", &data.client.generation.infraImage)){
+        if(ImGui::Checkbox("infra###gen_client_infra_image", &data.server.generation.infraImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###gen_client_bodies_id_map_image", &data.client.generation.bodyIdMapImage)){
+        if(ImGui::Checkbox("bodies id map###gen_client_bodies_id_map_image", &data.server.generation.bodyIdMapImage)){
             update = true;
         }
         ImGui::Unindent();
@@ -1752,34 +1759,34 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     {
         ImGui::Text("Data:");
         ImGui::Indent();
-        if(ImGui::Checkbox("calibration###gen_server_calibration", &data.server.generation.calibration)){
+        if(ImGui::Checkbox("calibration###gen_server_calibration", &data.clientGeneration.calibration)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###gen_server_depth", &data.server.generation.depth)){
+        if(ImGui::Checkbox("depth###gen_server_depth", &data.clientGeneration.depth)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("infra###gen_server_infra", &data.server.generation.infra)){
+        if(ImGui::Checkbox("infra###gen_server_infra", &data.clientGeneration.infra)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("cloud###gen_server_gen_cloud", &data.server.generation.cloud)){
+        if(ImGui::Checkbox("cloud###gen_server_gen_cloud", &data.clientGeneration.cloud)){
             update = true;
         }
-        cloud_color_mode_combo("Cloud color mode"sv, "###gen_server_cloud_color_mode", data.server.generation.cloudColorMode, update);
-        cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_server_cloud_gen_mode", data.server.generation.cloudGenMode, update);
-
-
-        if(ImGui::Checkbox("body tracking###gen_server_gen_body_tracking", &data.server.generation.bodyTracking)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("imu###gen_server_gen_imu", &data.server.generation.imu)){
+        cloud_color_mode_combo("Cloud color mode"sv, "###gen_server_cloud_color_mode", data.clientGeneration.cloudColorMode, update);
+        cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_server_cloud_gen_mode", data.clientGeneration.cloudGenMode, update);
+        
+        
+        if(ImGui::Checkbox("body tracking###gen_server_gen_body_tracking", &data.clientGeneration.bodyTracking)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("audio###gen_server_gen_audio", &data.server.generation.audio)){
+        if(ImGui::Checkbox("imu###gen_server_gen_imu", &data.clientGeneration.imu)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("audio###gen_server_gen_audio", &data.clientGeneration.audio)){
             update = true;
         }
 
@@ -1787,23 +1794,23 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
 
         ImGui::Text("Images:");
         ImGui::Indent();
-        if(ImGui::Checkbox("color###gen_server_gen_color_image", &data.server.generation.colorImage)){
+        if(ImGui::Checkbox("color###gen_server_gen_color_image", &data.clientGeneration.colorImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth sized color###gen_server_gen_depth_sized_color_image", &data.server.generation.depthSizedColorImage)){
+        if(ImGui::Checkbox("depth sized color###gen_server_gen_depth_sized_color_image", &data.clientGeneration.depthSizedColorImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("depth###gen_server_gen_depth_image", &data.server.generation.depthImage)){
+        if(ImGui::Checkbox("depth###gen_server_gen_depth_image", &data.clientGeneration.depthImage)){
             update = true;
         }
-
-        if(ImGui::Checkbox("infra###gen_server_gen_infra_image", &data.server.generation.infraImage)){
+        
+        if(ImGui::Checkbox("infra###gen_server_gen_infra_image", &data.clientGeneration.infraImage)){
             update = true;
         }
         ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###gen_server_gen_bodies_id_map_image", &data.server.generation.bodyIdMapImage)){
+        if(ImGui::Checkbox("bodies id map###gen_server_gen_bodies_id_map_image", &data.clientGeneration.bodyIdMapImage)){
             update = true;
         }
         ImGui::Unindent();

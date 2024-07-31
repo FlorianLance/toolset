@@ -38,7 +38,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 #include "io/cloud_io.hpp"
 
-#include "depth-camera/dc_frame_compressor.hpp"
+#include "depth-camera/frame/dc_frame_compressor.hpp"
 
 using namespace tool;
 using namespace tool::geo;
@@ -434,7 +434,7 @@ auto test_microphone() -> void{
     std::cout << "end test_microphone\n";
 }
 
-#include "depth-camera/dc_frame_indices.hpp"
+#include "depth-camera/frame/dc_frame_indices.hpp"
 #include <execution>
 #include "utility/string.hpp"
 

@@ -37,7 +37,7 @@
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/dc_types.hpp"
-#include "network/udp_client_network_settings.hpp"
+#include "network/settings/udp_server_settings.hpp"
 
 // local
 #include "dcg_ui_settings.hpp"
@@ -49,7 +49,7 @@ struct DCGSettings{
     auto initialize() -> bool;
 
     // settings
-    auto init_network_sending_settings(net::UdpNetworkSendingSettings networkSendingS) -> void;
+    auto init_network_sending_settings(net::UdpConnectionSettings networkSendingS) -> void;
     auto update_delay(cam::DCDelaySettings delayS) -> void;
     auto update_filters(std::shared_ptr<cam::DCFiltersSettings> filtersS) -> void;
     auto update_device_settings(std::shared_ptr<cam::DCDeviceSettings> deviceS) -> void;
@@ -101,7 +101,7 @@ struct DCGSettings{
     static auto host_name() -> std::string;
 
     // settings
-    net::UdpClientNetworkSettings networkS;
+    net::UdpServerSettings networkS;
     cam::DCDeviceSettings deviceS = cam::DCDeviceSettings::default_init_for_grabber();
     cam::DCFiltersSettings filtersS;
     cam::DCColorSettings colorS;

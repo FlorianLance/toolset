@@ -32,31 +32,31 @@
 
 namespace tool::cam {
 
-    struct DCDeviceSettings : io::BaseSettings{
+struct DCDeviceSettings : io::Settings{
 
-        DCConfigSettings configS;
-        DCDataSettings dataS;
+    DCConfigSettings configS;
+    DCDataSettings dataS;
 
-        static auto default_init_for_grabber() -> DCDeviceSettings;
-        static auto default_init_for_manager() -> DCDeviceSettings;
+    static auto default_init_for_grabber() -> DCDeviceSettings;
+    static auto default_init_for_manager() -> DCDeviceSettings;
 
-        DCDeviceSettings(){
-            sType   = io::SettingsType::Device;
-            version = io::SettingsVersion::LastVersion;
-        }
-        DCDeviceSettings(std::span<const std::uint8_t> jsonBinary){
-            DCDeviceSettings::init_from_json_binary(jsonBinary);
-        }
+    DCDeviceSettings(){
+        sType   = io::SettingsType::Device;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCDeviceSettings(std::span<const std::uint8_t> jsonBinary){
+        DCDeviceSettings::init_from_json_binary(jsonBinary);
+    }
 
-        auto init_from_json(const nlohmann::json &json) -> void override;
-        auto convert_to_json() const -> nlohmann::json override;
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
 
-        // apply/update
-        auto apply_remote_grabber_profile() -> void;
-        auto apply_only_manager_profile() -> void;
-        auto update_with_device_id(size_t order, size_t id) -> void;
+    // apply/update
+    auto apply_remote_profile() -> void;
+    auto apply_local_profile() -> void;
+    auto update_with_device_id(size_t order, size_t id) -> void;
 
-        // legacy
-        auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
-    };
+    // legacy
+    auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
+};
 }

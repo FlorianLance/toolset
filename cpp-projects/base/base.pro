@@ -43,9 +43,14 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
-    # io        
-    data/json_utility.hpp \
-    io/binary_settings.hpp \
+    # io            
+    depth-camera/frame/dc_compressed_frame_buffer.hpp \
+    depth-camera/frame/dc_frame_processor.hpp \
+    depth-camera/settings/dc_capture_settings.hpp \
+    depth-camera/settings/dc_client_connection_settings.hpp \
+    depth-camera/settings/dc_device_data_settings.hpp \
+    depth-camera/settings/dc_frame_compression_settings.hpp \
+    depth-camera/settings/dc_frame_generation_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
     io/io_enum.hpp \
@@ -117,39 +122,47 @@ HEADERS += \
     graphics/camera/screen.hpp \
     # network
     network/boost_asio.hpp \
-    network/udp_server_network_settings.hpp \
-    network/udp_client_network_settings.hpp \
+    network/settings/remote_server_settings.hpp \
+    network/settings/udp_connection_settings.hpp \
+    network/udp_client.hpp \
+    network/udp_server.hpp \
     network/network_enums.hpp \
     network/network_types.hpp \
     network/tcp_reader.hpp \
     network/tcp_sender.hpp \
     network/tcp_server.hpp \
     network/udp_reader.hpp \
-    network/udp_sender.hpp \
+    network/udp_sender.hpp \    
+    ## settings
+    network/settings/udp_server_settings.hpp \
     # camera
     camera/frame.hpp \
-    # depth-camera
-    depth-camera/dc_compressed_frame.hpp \
-    depth-camera/dc_frame_compressor.hpp \
-    depth-camera/dc_frame_uncompressor.hpp \
-    depth-camera/dc_grabber_data_processing.hpp \
+    # depth-camera    
     depth-camera/dc_device_manager.hpp \
-    depth-camera/dc_server_data.hpp \
     depth-camera/dc_device.hpp \
-    depth-camera/dc_enums.hpp \
-    depth-camera/dc_frame.hpp \
+    depth-camera/dc_enums.hpp \    
     depth-camera/dc_packed_data.hpp \
     depth-camera/dc_types.hpp \
     depth-camera/dc_player_settings.hpp \
     depth-camera/dc_calibrator.hpp \
-    depth-camera/dc_device_impl.hpp \
-    depth-camera/dc_compressed_frames.hpp \
-    depth-camera/dc_frame_data.hpp \
-    depth-camera/dc_frame_indices.hpp \
-    depth-camera/dc_frame_timing.hpp \
+    depth-camera/dc_device_impl.hpp \    
     depth-camera/dc_video.hpp \
     depth-camera/dc_video_player.hpp \
     depth-camera/dc_video_recorder.hpp \
+    ## frame
+    depth-camera/frame/dc_frame_data.hpp \
+    depth-camera/frame/dc_frame_indices.hpp \
+    depth-camera/frame/dc_frame.hpp \
+    depth-camera/frame/dc_compressed_frame.hpp \
+    depth-camera/frame/dc_frame_compressor.hpp \
+    depth-camera/frame/dc_frame_uncompressor.hpp \
+    ## client
+    depth-camera/client/dc_client.hpp \
+    depth-camera/client/dc_client_processing.hpp \
+    depth-camera/client/dc_client_device.hpp \
+    depth-camera/client/dc_client_devices.hpp \
+    depth-camera/client/dc_client_local_device.hpp \
+    depth-camera/client/dc_client_remote_device.hpp \
     ## states
     depth-camera/states/dc_video_player_states.hpp \
     depth-camera/states/dc_video_recorder_states.hpp \
@@ -170,13 +183,9 @@ HEADERS += \
     depth-camera/settings/dc_filters_settings.hpp \
     depth-camera/settings/dc_model_settings.hpp \
     ## network
-    depth-camera/network/dc_client_connection.hpp \
-    depth-camera/network/dc_server_network.hpp \
-    depth-camera/network/dc_udp_reader.hpp \
-    depth-camera/network/dc_udp_sender.hpp \
-    depth-camera/network/dc_server_device.hpp \
-    depth-camera/network/dc_server_local_device.hpp \
-    depth-camera/network/dc_server_remote_device.hpp \
+    depth-camera/network/dc_network_enums.hpp \
+    depth-camera/network/dc_network_types.hpp \
+    depth-camera/network/dc_udp_server.hpp \
     ## impl
     depth-camera/impl/recording_device_impl.hpp \
     depth-camera/impl/k2_config_files.hpp \
@@ -197,7 +206,7 @@ HEADERS += \
     exvr/ex_experiment.hpp \
     exvr/ex_resource.hpp \
     exvr/ex_component.hpp \
-    # utility    
+    # utility        
     utility/algorithm.hpp \
     utility/array.hpp \
     utility/benchmark.hpp \
@@ -229,6 +238,8 @@ HEADERS += \
     utility/tuple_array.hpp \
     utility/time.hpp \
     utility/io_file.hpp \
+    utility/monitoring.hpp \
+    utility/time_diff.hpp \
     # algorithms
     algorithms/marching_cube.hpp \
     # data
@@ -236,6 +247,7 @@ HEADERS += \
     data/jpeg_encoding.hpp \
     data/FastDifferentialCoding/fastdelta.h \
     data/checksum.hpp \
+    data/json_utility.hpp \    
     # tests
     tests/marching_cube_test.hpp \
     # thirdparty
@@ -300,7 +312,14 @@ HEADERS += \
 
 
 SOURCES += \
-    # io
+    # io    
+    depth-camera/client/dc_client.cpp \
+    depth-camera/frame/dc_compressed_frame_buffer.cpp \
+    depth-camera/frame/dc_frame_processor.cpp \
+    depth-camera/settings/dc_capture_settings.cpp \
+    depth-camera/settings/dc_client_connection_settings.cpp \
+    depth-camera/settings/dc_frame_compression_settings.cpp \
+    depth-camera/settings/dc_frame_generation_settings.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -322,14 +341,17 @@ SOURCES += \
     ## camera
     graphics/camera/camera.cpp \
     # geometry    
-    geometry/cloud.cpp \    
+    geometry/cloud.cpp \
     geometry/vertices.cpp \
     geometry/voxel_grid.cpp \
     # network
-    network/udp_server_network_settings.cpp \
-    network/udp_client_network_settings.cpp \
     network/network_types.cpp \
+    ## settings    
+    network/settings/remote_server_settings.cpp \
+    network/settings/udp_connection_settings.cpp \
+    network/settings/udp_server_settings.cpp \
     # utility    
+    network/udp_server.cpp \
     utility/benchmark.cpp \
     utility/cmd_args.cpp \
     utility/decimal.cpp \
@@ -338,6 +360,8 @@ SOURCES += \
     utility/paths.cpp \
     utility/string.cpp \
     utility/stop_watch.cpp \
+    utility/monitoring.cpp \
+    utility/time_diff.cpp \
     # network
     network/tcp_reader.cpp \
     network/tcp_sender.cpp \
@@ -346,33 +370,30 @@ SOURCES += \
     network/udp_sender.cpp \
     # camera
     camera/frame.cpp \
-    # depth-camera
+    # depth-camera            
     depth-camera/dc_video_player.cpp \
     depth-camera/dc_video_recorder.cpp \
-    depth-camera/dc_compressed_frame.cpp \
-    depth-camera/dc_frame_compressor.cpp \
-    depth-camera/dc_frame_uncompressor.cpp \
-    depth-camera/dc_grabber_data_processing.cpp \
-    depth-camera/dc_device_manager.cpp \
-    depth-camera/dc_server_data.cpp \
-    depth-camera/dc_frame.cpp \
+    depth-camera/dc_device_manager.cpp \    
     depth-camera/dc_packed_data.cpp \
     depth-camera/dc_calibrator.cpp \
     depth-camera/dc_device.cpp \
-    depth-camera/dc_device_impl.cpp \
-    depth-camera/dc_compressed_frames.cpp \
-    depth-camera/dc_frame_data.cpp \
-    depth-camera/dc_frame_indices.cpp \
-    depth-camera/dc_frame_timing.cpp \
+    depth-camera/dc_device_impl.cpp \    
     depth-camera/dc_types.cpp \
     depth-camera/dc_video.cpp \
+    ## frame
+    depth-camera/frame/dc_compressed_frame.cpp \
+    depth-camera/frame/dc_frame_compressor.cpp \
+    depth-camera/frame/dc_frame_uncompressor.cpp \
+    depth-camera/frame/dc_frame.cpp \
+    depth-camera/frame/dc_frame_data.cpp \
+    depth-camera/frame/dc_frame_indices.cpp \
+    ## client
+    depth-camera/client/dc_client_processing.cpp \
+    depth-camera/client/dc_client_devices.cpp \
+    depth-camera/client/dc_client_local_device.cpp \
+    depth-camera/client/dc_client_remote_device.cpp \
     ## network
-    depth-camera/network/dc_client_connection.cpp \
-    depth-camera/network/dc_server_network.cpp \
-    depth-camera/network/dc_udp_reader.cpp \
-    depth-camera/network/dc_udp_sender.cpp \
-    depth-camera/network/dc_server_local_device.cpp \
-    depth-camera/network/dc_server_remote_device.cpp \
+    depth-camera/network/dc_udp_server.cpp \
     ## settings
     depth-camera/settings/dc_filters_settings.cpp \
     depth-camera/settings/dc_model_settings.cpp \

@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "depth-camera/dc_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 
 // local
 #include "imgui_dc_clouds_scene_drawer.hpp"
@@ -44,8 +44,12 @@ struct DCDeviceDrawer : public DCCloudsSceneDrawer{
 
     auto save_cloud(const std::string &path) -> void;
 
-    auto update_filters_settings(const cam::DCFiltersSettings &filters) -> void {
-        DCCloudsSceneDrawer::update_filters_settings(0, filters);
+    auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void {
+        DCCloudsSceneDrawer::update_filters_settings(0, filtersS);
+    }
+
+    auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void {
+        DCCloudsSceneDrawer::update_device_settings(0, deviceS);
     }
 
 private:

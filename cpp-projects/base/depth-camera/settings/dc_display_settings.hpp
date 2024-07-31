@@ -28,9 +28,8 @@
 
 // local
 #include "geometry/point4.hpp"
-//#include "io/binary_settings.hpp"
 
-namespace tool {
+namespace tool::cam {
 
 struct DCSceneDisplaySettings{
 
@@ -39,23 +38,19 @@ struct DCSceneDisplaySettings{
 
     // local
     int drawOnlyCloudId = -1;
-
-    // i/o
-    static auto default_init_for_grabber() -> DCSceneDisplaySettings;
-    static auto default_init_for_manager() -> DCSceneDisplaySettings;
 };
 
-struct DCCloudDisplaySettings{
+struct DCDeviceDisplaySettings{
 
-    bool showCloud = true;
+    bool showCapture = true;
     bool showCameraFrustum = true;
     bool showFilteringGizmos = true;
     bool showBodyTracking = false;
 
     // colors
-    bool forceCloudColor = false;
+    bool forceColor = false;
     float factorUnicolor = 0.65f;
-    geo::Pt4f cloudColor = {1.f,0.f,0.f, 1.f};
+    geo::Pt4f unicolor = {1.f,0.f,0.f, 1.f};
 
     // geometry    
     bool backFaceCulling = true;
@@ -65,10 +60,6 @@ struct DCCloudDisplaySettings{
     // # circles
     float squareSize   = 0.003f;
     float circleRadius = 0.25f;
-
-    // i/o
-    static auto default_init_for_grabber() -> DCCloudDisplaySettings;
-    static auto default_init_for_manager() -> DCCloudDisplaySettings;
 };
 
 }

@@ -44,7 +44,7 @@ enum class PlaneFilteringMode : std::int8_t{
     Below
 };
 
-struct DCFiltersSettings : io::BaseSettings{
+struct DCFiltersSettings : io::Settings{
 
     // depth filtering
     // # basic

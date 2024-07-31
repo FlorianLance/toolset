@@ -27,19 +27,19 @@ out vec4 vFragColorVs;
 
 void main(){
 
-	vec4 wP = model * (vec4(aPos, 1.0));
-	vec4 wN = (model * vec4(aNorm, 1.0));
-	vec3 dd = normalize(wP.xyz-camera_position);
-	float dotV = dot(dd, wN.xyz);
-	
-	if(!backFaceCulling || dotV < 0){
-		gl_Position = projection* view * wP;
-		discardVertex = 0;
-	}else{
-		discardVertex = 1;
-	}
-	
-	vFragColorVs = enable_unicolor ? mix(unicolor,vec4(aColor, 1.0), factor_unicolor) : vec4(aColor, 1.0);	
+    vec4 wP = model * (vec4(aPos, 1.0));
+    vec4 wN = (model * vec4(aNorm, 1.0));
+    vec3 dd = normalize(wP.xyz-camera_position);
+    float dotV = dot(dd, wN.xyz);
+
+    if(!backFaceCulling || dotV < 0){
+            gl_Position = projection* view * wP;
+            discardVertex = 0;
+    }else{
+            discardVertex = 1;
+    }
+
+    vFragColorVs = enable_unicolor ? mix(unicolor,vec4(aColor, 1.0), factor_unicolor) : vec4(aColor, 1.0);
     float l = sqrt(length(wP.xyz-camera_position.xyz));
     gl_PointSize = pointSize/(l);
 }

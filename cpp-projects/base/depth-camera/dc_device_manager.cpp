@@ -193,14 +193,15 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
 
     bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
     bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
-    bool cameraSettingsChanged =
-        // device
-        (newConfigS.mode                            != currConfigS.mode) ||
-        // synch
+    bool syncChanged  =
         (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
         (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
         (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
-        (newConfigS.synchMode                       != currConfigS.synchMode) ||
+        (newConfigS.synchMode                       != currConfigS.synchMode);
+    bool cameraSettingsChanged =
+        syncChanged ||
+        // device
+        (newConfigS.mode                            != currConfigS.mode) ||
         // body tracking
         (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
         (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
@@ -250,7 +251,7 @@ auto DCDeviceManager::update_device_settings_async(const DCDeviceSettings &devic
     i->deviceS = deviceS;
 
     // set device data settings
-    i->device->set_data_settings(i->deviceS.dataS);
+    i->device->set_data_settings(i->deviceS.dataS.server);
 
     // open device camera
     auto idDevice = i->deviceS.configS.idDevice;

@@ -31,7 +31,7 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
-#include "depth-camera/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_compressed_frame.hpp"
 
 // local
 #include "data/dcm_types.hpp"
@@ -100,9 +100,9 @@ public:
     // settings
     SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
     SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
-    SSS<size_t, const DCCloudDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<size_t, const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
-    SSS<const DCSceneDisplaySettings&> update_scene_display_settings_signal;    
+    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
     SSS<size_t, cam::DCColorSettings> color_settings_reset_signal;
     // # filters

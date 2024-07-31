@@ -31,7 +31,7 @@
 #include "io/settings.hpp"
 
 namespace tool::cam {
-struct DCModelSettings : io::BaseSettings{
+struct DCModelSettings : io::Settings{
 
     geo::Mat4f transformation = geo::Mat4f::identity();
 

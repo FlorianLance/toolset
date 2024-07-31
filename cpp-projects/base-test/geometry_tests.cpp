@@ -865,7 +865,7 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 }
 
 #include "geometry/cloud.hpp"
-#include "depth-camera/dc_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 #include "geometry/voxel_grid.hpp"
 
 template <typename acc, int _rows, int _cols>

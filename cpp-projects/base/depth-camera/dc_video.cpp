@@ -35,16 +35,14 @@
 #include "utility/logger.hpp"
 #include "utility/io_fstream.hpp"
 #include "geometry/voxel_grid.hpp"
-#include "dc_frame_compressor.hpp"
-#include "dc_frame_uncompressor.hpp"
-
-#include "settings/dc_data_settings.hpp"
+#include "frame/dc_frame_compressor.hpp"
+#include "frame/dc_frame_uncompressor.hpp"
 
 using namespace tool::cam;
 using namespace std::chrono;
 
 DCVideo &DCVideo::operator=(const DCVideo &other){
-
+    
     m_camerasCompressedFrames = other.m_camerasCompressedFrames;
     for(size_t id = 0; id < other.m_camerasUncompressors.size(); ++id){
         m_camerasUncompressors.push_back(std::make_unique<DCFrameUncompressor>());
@@ -57,7 +55,7 @@ DCVideo &DCVideo::operator=(const DCVideo &other){
 auto DCVideo::initialize(size_t nbDevices) -> void{
 
     clean();
-
+    
     m_camerasCompressedFrames.resize(nbDevices);
     m_camerasUncompressors.resize(nbDevices);
     for(auto &uncompressor : m_camerasUncompressors){
@@ -177,12 +175,12 @@ auto DCVideo::get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t t2) noexc
 auto DCVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t{
 
     if(idCamera >= nb_cameras()){
-        Logger::error("[DCVolumetricVideo::closest_frame_id_from_time] Camera id invalid.\n"sv);
+        Logger::error("[DCVideo::closest_frame_id_from_time] Camera id invalid.\n"sv);
         return -1;
     }
 
     if(nb_frames(idCamera) == 0){
-        Logger::error("[DCVolumetricVideo::closest_frame_id_from_time] No frame available.\n"sv);
+        Logger::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
         return -1;
     }    
 
@@ -214,11 +212,11 @@ auto DCVideo::nb_frames(size_t idCamera) const noexcept -> size_t{
 }
 
 auto DCVideo::min_nb_frames() const noexcept  -> size_t {
-
+    
     if(m_camerasCompressedFrames.empty()){
         return 0;
     }
-
+    
     size_t minFrames = m_camerasCompressedFrames.front().nb_frames();
     for(auto &frames : m_camerasCompressedFrames){
         if(minFrames > frames.nb_frames()){
@@ -228,11 +226,11 @@ auto DCVideo::min_nb_frames() const noexcept  -> size_t {
     return minFrames;
 }
 
-auto DCVideo::get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrames*{
+auto DCVideo::get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrameBuffer*{
     if(idCamera < nb_cameras()){
         return &m_camerasCompressedFrames[idCamera];
     }
-    Logger::error(std::format("[DCVolumetricVideo::get_compressed_frames_ptr] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
+    Logger::error(std::format("[DCVideo::get_compressed_frames_ptr] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
     return nullptr;
 }
 
@@ -264,7 +262,7 @@ auto DCVideo::keep_only_one_camera(size_t idCamera) -> void{
 auto DCVideo::keep_only_cameras_from_id(const std::vector<size_t> &ids) -> void{
 
     std::vector<std::unique_ptr<DCFrameUncompressor>> uncompressors;
-    std::vector<DCCompressedFrames> framesPerCamera;
+    std::vector<DCCompressedFrameBuffer> framesPerCamera;
 
     for(const auto &id : ids){
         uncompressors.push_back(std::move(m_camerasUncompressors[id]));
@@ -298,7 +296,7 @@ auto DCVideo::get_transform(size_t idCamera) const -> tool::geo::Mat4d{
     if(idCamera < nb_cameras()){
         return m_camerasTransforms[idCamera];
     }
-    Logger::error("[DCVolumetricVideo::get_transform] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras());
+    Logger::error(std::format("[DCVideo::get_transform] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
     return geo::Mat4d::identity();
 }
 
@@ -307,33 +305,33 @@ auto DCVideo::set_transform(size_t idCamera, geo::Mat4d tr) -> void{
         m_camerasTransforms[idCamera] = tr;
         return;
     }
-    Logger::error("[DCVolumetricVideo::set_transform]Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras());
+    Logger::error(std::format("[DCVideo::set_transform] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
 }
 
 auto DCVideo::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void{
     if(idCamera >= nb_cameras()){
         m_camerasCompressedFrames.resize(idCamera+1);
     }
-
+    
     m_camerasCompressedFrames[idCamera].add_compressed_frame(std::move(frame));
 }
 
 auto DCVideo::save_to_file(std::string_view path) -> bool{
 
     if(path.length() == 0){
-        Logger::error("[DCVolumetricVideo::save_to_file] Empty path.\n");
+        Logger::error("[DCVideo::save_to_file] Empty path.\n");
         return false;
     }
 
     if(count_frames_from_all_cameras() == 0){
-        Logger::error("[DCVolumetricVideo::save_to_file] No available frames to save.\n");
+        Logger::error("[DCVideo::save_to_file] No available frames to save.\n");
         return false;
     }
 
     std::ofstream file;
     file.open(path.data(), std::ios_base::binary);
     if(!file.is_open()){
-        Logger::error(std::format("[DCVolumetricVideo::save_to_file] Cannot save compressed frames to {}.\n", path));
+        Logger::error(std::format("[DCVideo::save_to_file] Cannot save compressed frames to {}.\n", path));
         return false;
     }
     file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
@@ -344,7 +342,7 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
         write_file(file);
         success = true;
     }catch(const std::exception &e){
-        Logger::error(std::format("[DCVolumetricVideo::save_to_file] Error happend during writing file [{}].\n", e.what()));
+        Logger::error(std::format("[DCVideo::save_to_file] Error happend during writing file [{}].\n", e.what()));
     }
     file.close();
 
@@ -354,14 +352,14 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
 auto DCVideo::load_from_file(std::string_view path) -> bool{
 
     if(path.length() == 0){
-        Logger::error("[DCVolumetricVideo::load_from_file] Empty path.\n");
+        Logger::error("[DCVideo::load_from_file] Empty path.\n");
         return false;
     }
 
     // open file
     std::ifstream file(path.data(), std::ios_base::binary);    
     if(!file.is_open()){
-        Logger::error(std::format("[DCVolumetricVideo::load_from_file] Cannot open compressed frames file: [{}].\n", path));
+        Logger::error(std::format("[DCVideo::load_from_file] Cannot open compressed frames file: [{}].\n", path));
         return false;
     }
     file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
@@ -374,7 +372,7 @@ auto DCVideo::load_from_file(std::string_view path) -> bool{
     try{
         success = read_file(file);
     }catch(const std::exception &e){
-        Logger::error(std::format("[DCVolumetricVideo::load_from_file] Error happend during reading file [{}].\n", e.what()));
+        Logger::error(std::format("[DCVideo::load_from_file] Error happend during reading file [{}].\n", e.what()));
         return false;
     }
 
@@ -389,25 +387,25 @@ auto DCVideo::uncompressor(size_t idCamera) noexcept -> DCFrameUncompressor*{
 }
 
 auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
-
+    
     if(m_camerasCompressedFrames.empty()){
         return;
     }
-
+    
     if(m_camerasCompressedFrames.front().frames.empty()){
         return;
     }
 
     for(const auto &cData : m_camerasCompressedFrames){
         if(!cData.check_same_mode_for_every_frame()){
-            Logger::error("[DCVolumetricVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            Logger::error("[DCVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
             return;
         }
     }
     auto mode = m_camerasCompressedFrames.front().first_frame_ptr()->mode;
     for(const auto &cData : m_camerasCompressedFrames){
         if(cData.first_frame_ptr()->mode != mode){
-            Logger::error("[DCVolumetricVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            Logger::error("[DCVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
             return;
         }
     }
@@ -416,7 +414,7 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
 
     DCFrameCompressor compressor;
     for(size_t idF = 0; idF < nb_frames(0); ++idF){
-
+        
         auto c0Frame = m_camerasCompressedFrames.front().frames[idF].get();
         auto c0Time  = c0Frame->receivedTS;
         auto c0TimeMs= std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(c0Time - c0FirstFrameTS));
@@ -464,7 +462,7 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
     }
 
     m_camerasTransforms.front() = geo::Mat4d::identity();
-
+    
     m_camerasCompressedFrames.resize(1);
     m_camerasUncompressors.resize(1);
 }
@@ -527,12 +525,12 @@ auto DCVideo::total_audio_frames_size(size_t idCamera) const -> size_t{
         }
         return total;
     }
-    Logger::error("[DCVolumetricVideo::total_audio_frames_size] Invalid camera id.\n");
+    Logger::error("[DCVideo::total_audio_frames_size] Invalid camera id.\n");
     return 0;
 }
 
 auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<std::vector<float> > &audioBuffer) -> void{
-
+    
     auto camData = &m_camerasCompressedFrames[idCamera];
 
     size_t samplesCount = 0;
@@ -564,7 +562,7 @@ auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<std::v
 }
 
 auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<float> &audioBuffer) -> void{
-
+    
     auto camData = &m_camerasCompressedFrames[idCamera];
 
     size_t samplesCount = 0;
@@ -604,7 +602,7 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
         read_legacy_cloud_video_file(file);
         return true;
     }else if(videoType != 2){
-        Logger::error("[DCVolumetricVideo::read_file] Invalid video type.\n");
+        Logger::error("[DCVideo::read_file] Invalid video type.\n");
         return false;
     }    
 
@@ -622,7 +620,7 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
         read(nbFrames, file);
 
         if(nbFrames > 0){
-
+            
             auto &cameraCompressedFrames = m_camerasCompressedFrames[currentC];
             cameraCompressedFrames.frames.reserve(nbFrames);
 

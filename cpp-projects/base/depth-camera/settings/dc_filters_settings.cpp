@@ -49,7 +49,7 @@ auto DCFiltersSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // depth filtering
     minWidthF                     = read_value<float>(json, unreadCount, "min_widht_f");
     maxWidthF                     = read_value<float>(json, unreadCount, "max_widht_f");
@@ -110,7 +110,7 @@ auto DCFiltersSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv,                               io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv,                               io::Settings::convert_to_json());
     // depth filtering
     // # basic
     add_value(json, "min_widht_f"sv,                        minWidthF);
@@ -167,8 +167,8 @@ auto DCFiltersSettings::convert_to_json() const -> nlohmann::json{
 }
 
 auto DCFiltersSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void{
-
-    BaseSettings::init_from_data(data, offset, sizeData);
+    
+    Settings::init_from_data(data, offset, sizeData);
     read(minWidthF, data, offset, sizeData);
     read(maxWidthF, data, offset, sizeData);
     read(minHeightF, data, offset, sizeData);

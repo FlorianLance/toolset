@@ -49,73 +49,22 @@ struct Interface{
     static auto list_local_interfaces(Protocol protocol) -> std::vector<Interface>;
 };
 
-struct DeviceInitInfos{
+struct EndPoint{
 
+    EndPoint() = default;
+    EndPoint(const std::string &address, unsigned short port) : address(address), port(port){
+        id = std::format("{}_{}", address, port);
+    }
+
+    std::string address;
+    unsigned short port = 0;
+    std::string id;
 };
-
-
-struct ReadSendNetworkInfos{
-    bool local = false;
-    size_t idReadingInterface = 0;
-    std::string readingAdress;
-    int readingPort;
-    std::string sendingAdress;
-    int sendingPort;
-    Protocol protocol = Protocol::unknow;
-    bool startReadingThread = true;
-    // runtime
-    bool isLocalhost = false;
-};
-
-struct UdpNetworkSendingSettings{
-    UdpNetworkSendingSettings() = default;
-    UdpNetworkSendingSettings(std::string ipAdressStr, uint16_t port, uint16_t maxSizeUdpPacket);
-    std::array<char, 45> ipAdress;
-    std::uint16_t port;
-    std::uint16_t maxSizeUdpPacket;
-};
+ using MessageTypeId = std::int8_t;
 
 struct Feedback{
-    MessageType receivedMessageType;
-    FeedbackType feedback;
-};
-
-struct Framerate{
-    Framerate();
-    auto add_frame() -> void;
-    auto get_framerate() -> float;
-private:
-    static constexpr size_t nbMaxValues = 1000;
-    SingleRingBuffer<std::chrono::nanoseconds> rTimes;
-};
-
-struct AverageBandwidth{
-    AverageBandwidth();
-    auto add_size(size_t nbBytes) -> void;
-    auto get_bandwidth() -> size_t;
-private:
-    static constexpr size_t nbMaxValues = 1000;
-    SingleRingBuffer<std::tuple<std::chrono::nanoseconds, size_t>> bytesReceived;
-};
-
-
-
-struct AverageSynch{
-    AverageSynch();
-    auto update_average_difference(std::int64_t timestampNS) -> void;
-    std::int64_t averageDiffNs = 0;
-private:
-    static constexpr size_t nbMaxValues = 1000;    
-    SingleRingBuffer<std::chrono::nanoseconds> diffNs;
-};
-
-struct AverageLatency{
-    AverageLatency();
-    auto update_average_latency(std::int64_t latency) -> void;
-    std::int64_t averageLatency = 0;
-private:
-    static constexpr size_t nbMaxValues = 100;
-    SingleRingBuffer<std::int64_t> latencies;
+    MessageTypeId receivedMessageType = 0;
+    FeedbackType feedback = FeedbackType::undefined;
 };
 
 struct Header{
@@ -131,7 +80,7 @@ struct Header{
     std::uint16_t currentPacketId = 0;
     std::uint16_t currentPacketSizeBytes = 0;
     std::uint32_t checkSum = 0;
-    MessageType type = MessageType::undefined;
+    MessageTypeId type = 0;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{
         return totalNumberPackets * sizeof(Header);
@@ -183,14 +132,5 @@ struct UdpMessageReception{
     SingleRingBuffer<std::uint8_t> messageReceived;
 };
 
-struct UdpNetworkStatus{
-    int percentageSuccess = 0;
-    size_t bandwidthBytes = 0;
-};
-
-struct UdpDataStatus{
-    float framerate = 0.f;
-    std::int64_t latency = 0;
-};
 
 }

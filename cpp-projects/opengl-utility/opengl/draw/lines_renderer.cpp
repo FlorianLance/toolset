@@ -202,7 +202,7 @@ auto LinesRenderer::load_data(std::span<const GLuint> indices, std::span<const g
 
 
 auto LinesRenderer::update_data(
-    std::span<const geo::Pt3<GLuint>> indices,  size_t indicesOffset,
+    std::span<const GLuint> indices,  size_t indicesOffset,
     std::span<const geo::Pt3f> vertices,        size_t verticesOffset,
     std::span<const geo::Pt3f> colors,          size_t colorsOffset) -> bool{
 

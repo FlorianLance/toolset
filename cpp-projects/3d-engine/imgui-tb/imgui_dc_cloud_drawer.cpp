@@ -26,8 +26,6 @@
 
 #include "imgui_dc_cloud_drawer.hpp"
 
-// base
-#include "utility/logger.hpp"
 
 using namespace tool::graphics;
 using namespace tool::geo;
@@ -51,6 +49,11 @@ auto DCCloudDrawer::initialize() -> void {
     cpD.set_indice_count(0);
 
     frustumD.initialize(true);
+
+    // normalsIndices.resize(initData.size()*2);
+    // std::iota(normalsIndices.begin(), normalsIndices.end(), 0);
+    // normalsD.initialize(true, normalsIndices, initData, initData);
+    // normalsD.set_indice_count(0);
 }
 
 auto DCCloudDrawer::reset() -> void{
@@ -69,11 +72,9 @@ auto DCCloudDrawer::reset() -> void{
     depthT.init_or_update_8ui(100,100,3, reset3.data());
     infraT.init_or_update_8ui(100,100,3, reset3.data());
 
-    // clean cloud drawer
-    // std::vector<Pt3f> initData(1024*1024);
-    // cpD.initialize(true, initData, initData, {});
+
     cpD.set_indice_count(0);
-    // cpD.clean();
+    // normalsD.set_indice_count(0);
 }
 
 
@@ -87,7 +88,8 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     auto range = cam::dc_depth_range(dr);
     auto hFov = dc_depth_h_fov(dr);
     auto vFov = dc_depth_v_fov(dr);
-    frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x(), range.y());
+    auto diff   = range.y() - range.x();
+    frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x() + filtersS.minDepthF*diff, range.x() + filtersS.maxDepthF*diff);
 
     if(!frame->rgbaDepthSizedColor.empty()){
         colorT.init_or_update_8ui(
@@ -111,15 +113,26 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
             static_cast<GLsizei>(frame->rgbInfra.height), 3, reinterpret_cast<uint8_t *>(frame->rgbInfra.get_data()));
     }
 
-    if(!frame->cloud.empty()){
-        if(frame->cloud.is_valid()){
-            cpD.update(frame->cloud);
-            cpD.set_indice_count(frame->cloud.vertices.size());
-            // Logger::message(std::format("{} {} {}\n", frame->cloud.vertices.size(), frame->cloud.normals.size(), frame->cloud.normals.size()));
-        }else{
-            Logger::error("[DCCloudDrawer::init_from_frame] Invalid cloud\n");
-        }
+    if(frame->cloud.is_valid()){
+        cpD.update(frame->cloud);
+        cpD.set_indice_count(frame->cloud.vertices.size());
+
+        // if(!frame->cloud.normals.empty()){
+        //     normalsP.resize(frame->cloud.vertices.size()*2);
+        //     normalsC.resize(frame->cloud.vertices.size()*2);
+
+        //     for(size_t id = 0; id < frame->cloud.vertices.size(); ++ id){
+        //         normalsP[2*id]   = frame->cloud.vertices[id];
+        //         normalsP[2*id+1] = frame->cloud.vertices[id] + frame->cloud.normals[id] * 0.07f;
+        //         normalsC[2*id]   = frame->cloud.colors[id];
+        //         normalsC[2*id+1] = {0,1,0};//frame->cloud.colors[id];
+        //     }
+
+        //     normalsD.update(normalsIndices, normalsP, normalsC);
+        //     normalsD.set_indice_count(frame->cloud.vertices.size()*2);
+        // }
     }
+
     
     nbBodies = frame->bodyTracking.size();
     if(jointsModels.size() < nbBodies){

@@ -26,7 +26,6 @@
 
 #include "udp_reader.hpp"
 
-
 // boost
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -36,6 +35,7 @@
 
 // local
 #include "utility/logger.hpp"
+#include "data/checksum.hpp"
 
 using namespace boost::asio;
 using namespace boost::asio::detail;
@@ -58,14 +58,12 @@ struct UdpReader::Impl{
     std::atomic_bool readingThreadStarted = false;
 
     // packets
-    // DoubleRingBuffer<char> packetsRingBuffer;
-    DoubleRingBuffer<std::uint8_t> packetsRingBuffer;
+    DoubleRingBuffer<std::uint8_t> packetsRingBuffer;    
+
 };
 
 UdpReader::UdpReader() : i(std::make_unique<Impl>()){
-
-    i->packetsRingBuffer.resize(10000, packetSize);
-    messagesBuffer.resize(100, 0);
+    i->packetsRingBuffer.resize(10000, packetSize);    
 }
 
 UdpReader::~UdpReader(){
@@ -74,20 +72,20 @@ UdpReader::~UdpReader(){
         stop_reading_thread();
     }
     if(is_connected()){
-        clean_connection();
+        clean_socket();
     }
 }
 
-auto UdpReader::init_connection(std::string readingAdress, int port, Protocol protocol) -> bool{
+auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
 
     if(is_reading_thread_started()){
-        Logger::error(std::format("[UdpReader::init_connection] Cannot init socket while reading thread is still active.\n"));
+        Logger::error(std::format("[UdpReader::init_socket] Cannot init socket while reading thread is still active.\n"));
         return false;
     }
 
     // reset socket if necessary
     if(i->connected){
-        clean_connection();
+        clean_socket();
     }
 
     try {
@@ -103,9 +101,8 @@ auto UdpReader::init_connection(std::string readingAdress, int port, Protocol pr
         i->socket->bind(i->endPoint);
 
     }catch (const boost::system::system_error &error){
-        Logger::error(std::format("[UdpReader::init_connection] Cannot bind endpoint {}, {}, error message: {}.\n",
-            readingAdress, port, error.what()));
-        clean_connection();
+        Logger::error(std::format("[UdpReader::init_socket] Cannot bind endpoint [{}], [{}], error message: [{}].\n", readingAdress, port, error.what()));
+        clean_socket();
         return false;
     }
 
@@ -113,7 +110,7 @@ auto UdpReader::init_connection(std::string readingAdress, int port, Protocol pr
     return true;
 }
 
-auto UdpReader::clean_connection() -> void{
+auto UdpReader::clean_socket() -> void{
 
     if(i->socket){
         try {
@@ -122,7 +119,7 @@ auto UdpReader::clean_connection() -> void{
             std::this_thread::sleep_for (std::chrono::milliseconds(75));
             i->socket->close();
         }catch (const boost::system::system_error &error){
-            Logger::error(std::format("[UdpReader::clean_connection] Cannot shutdown socket, error message: {}.\n", error.what()));
+            Logger::error(std::format("[UdpReader::clean_socket] Cannot shutdown socket, error message: [{}].\n", error.what()));
         }
     }
     i->socket = nullptr;
@@ -176,47 +173,16 @@ auto UdpReader::is_connected() const noexcept -> bool{
     return i->connected;
 }
 
-auto UdpReader::process_packet(std::span<const std::byte> packet) -> void{
-    static_cast<void>(packet);
+auto UdpReader::read_data() -> size_t{
+
+    if(is_reading_thread_started()){
+        Logger::error("[UdpReader::read_data] Reading thread is started, data cannot be read from main thread.\n");
+        return 0;
+    }
+
+    return read_packet();
 }
 
-auto UdpReader::read_packet() -> size_t{
-
-    if(!i->connected){
-        return 0;
-    }
-
-    auto buffer = i->packetsRingBuffer.current_span(packetSize);
-
-    size_t nbBytesReceived = 0;
-    udp::endpoint senderEndpoint;
-    try {
-        // receive data
-        nbBytesReceived = i->socket->receive_from(
-            boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
-            senderEndpoint
-        );
-        i->packetsRingBuffer.increment();
-
-    } catch (const boost::system::system_error &error) {
-        if(error.code() == boost::asio::error::timed_out){
-            // timeout_packet_signal();
-        }else{
-            Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: {}\n", error.what());
-            connection_state_signal(i->connected = false);
-        }
-        return 0;
-    }
-
-    if(nbBytesReceived == 0){
-        Logger::warning("[UdpReader::read_packet] No bytes received.");
-        return 0;
-    }
-
-    process_packet(std::span(reinterpret_cast<const std::byte*>(buffer.data()), nbBytesReceived));
-
-    return nbBytesReceived;
-}
 
 auto UdpReader::read_data_thread() -> void{
 
@@ -228,4 +194,68 @@ auto UdpReader::read_data_thread() -> void{
 
     i->readingThreadStarted = false;
 }
+
+
+auto UdpReader::read_packet() -> size_t{
+
+    if(!i->connected){
+        return 0;
+    }
+
+    auto buffer = i->packetsRingBuffer.current_span(packetSize);
+
+    size_t nbBytesReceived = 0;
+    udp::endpoint senderEndpoint;
+
+
+    try {
+        // receive data
+        nbBytesReceived = i->socket->receive_from(
+            boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
+            senderEndpoint
+        );
+        i->packetsRingBuffer.increment();
+
+    } catch (const boost::system::system_error &error) {
+        if(error.code() == boost::asio::error::timed_out){
+            timeout_packet_signal();
+        }else{
+            Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: [{}]\n", error.what());            
+        }
+        return 0;
+    }
+
+    if(nbBytesReceived == 0){
+        Logger::warning("[UdpReader::read_packet] No bytes received.");
+        return 0;
+    }
+
+    auto packet        = std::span(reinterpret_cast<const std::byte*>(buffer.data()), nbBytesReceived);
+    auto headerData    = packet.first(sizeof(Header));
+    auto dataToProcess = packet.subspan(sizeof(Header));
+    Header header(headerData);
+
+    // check packet size
+    if(header.currentPacketSizeBytes != packet.size_bytes()){
+        invalid_packet_size_signal();
+        Logger::error(std::format("[UdpReader::read_packet] Invalid packet size: [{}], expected: [{}]\n", header.currentPacketSizeBytes, packet.size_bytes()));
+        return 0;
+    }
+
+    // check packet checksum
+    if(header.checkSum != 0){
+        auto checksum = data::Checksum::gen_crc16(dataToProcess);
+        if(checksum != header.checkSum){
+            invalid_checksum_signal();
+            Logger::error(std::format("[UdpReader::read_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
+            return 0;
+        }
+    }
+
+    // send received packet
+    packed_received_signal(EndPoint(senderEndpoint.address().to_string(), senderEndpoint.port()), std::move(header), dataToProcess);
+
+    return nbBytesReceived;
+}
+
 

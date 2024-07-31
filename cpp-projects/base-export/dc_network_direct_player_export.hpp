@@ -28,8 +28,8 @@
 
 
 // base
-#include "depth-camera/dc_server_data.hpp"
-#include "depth-camera/network/dc_server_network.hpp"
+#include "depth-camera/client/dc_client_processing.hpp"
+#include "depth-camera/client/dc_client_devices.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
 
@@ -63,11 +63,11 @@ struct DeviceData{
 struct DCNetworkDirectPlayer{
 
     // network
-    net::DCServerNetwork serverNetwork;
-    net::UdpServerNetworkSettings serverNetworkS;
+    cam::DCClientDevices clientDevices;
+    cam::DCClientConnectionSettings clientDevicesSettings;
 
     // data
-    DCServerData serverData;
+    DCClientProcessing clientProicessing;
     std::vector<DeviceData> devicesD;
 
     // state

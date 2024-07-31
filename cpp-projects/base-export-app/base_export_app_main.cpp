@@ -436,7 +436,7 @@ auto test_multi_device() -> void{
         devices.push_back(std::make_unique<cam::AzureKinectDeviceImpl>());
 
         cam::DCDeviceSettings ds;
-        ds.apply_remote_grabber_profile();
+        ds.apply_remote_profile();
 
         Logger::message("open\n");
         if(devices.back()->open(idD)){

@@ -44,7 +44,7 @@ struct AzureBaseDevice{
     // initialization
     auto initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> void;
     auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
-    auto update_from_data_settings(const DCDataSettings &dataS) -> void;
+    auto update_from_data_settings(const DCDeviceDataSettings &dataS) -> void;
 
     // actions
     auto open(uint32_t deviceId) -> bool;

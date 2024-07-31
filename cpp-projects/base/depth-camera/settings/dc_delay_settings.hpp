@@ -30,7 +30,7 @@
 
 namespace tool::cam {
 
-struct DCDelaySettings : io::BaseSettings{
+struct DCDelaySettings : io::Settings{
 
     std::int64_t delayMs = 0;
 

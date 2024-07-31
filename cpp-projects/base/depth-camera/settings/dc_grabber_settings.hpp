@@ -28,8 +28,7 @@
 #pragma once
 
 // local
-#include "network/network_types.hpp"
-#include "dc_grabber_network_settings.hpp"
+#include "depth-camera/network/dc_network_types.hpp"
 #include "dc_filters_settings.hpp"
 #include "dc_device_settings.hpp"
 #include "dc_color_settings.hpp"
@@ -41,11 +40,12 @@ namespace tool::cam {
 
 struct DCGrabberSettings{
 
-    auto initialize(size_t idC, const net::ReadSendNetworkInfos &clientInfos) -> void;
+    auto initialize(size_t idC) -> void;
 
     size_t id = 0;
-    DCMGrabberNetworkSettings network;
+    std::string name = "0 xxx.xxx.xxx";
 
+    // settings
     DCFiltersSettings filters;
     DCFiltersSettings calibrationFilters = DCFiltersSettings::default_init_for_calibration();
     DCDeviceSettings device;
@@ -53,31 +53,23 @@ struct DCGrabberSettings{
     DCModelSettings model;
     DCDelaySettings delay;
 
+    // settings files path
     std::string filtersFilePath;
     std::string calibrationFiltersFilePath;
     std::string deviceFilePath;
     std::string colorFilePath;
     std::string modelFilePath;
 
-    DCCloudDisplaySettings cloudDisplay;
+    // display
+    DCDeviceDisplaySettings cloudDisplay;
 
+    // monitoring infos
+    bool connected = false;
     std::int64_t synchroAverageDiff = 0;
     net::UdpNetworkStatus receivedNetworkStatus;
     net::UdpDataStatus receivedDataStatus;
+    size_t lastFrameIdReceived = 0;
+    size_t lastCompressedFrameIdReceived = 0;
 
-    static const inline std::vector<geo::Pt4f> cloudsColors = {
-        {1.0f,0.0f,0.0f, 1.0f},
-        {0.0f,1.0f,0.0f, 1.0f},
-        {0.0f,0.0f,1.0f, 1.0f},
-        {1.0f,1.0f,0.0f, 1.0f},
-        {0.0f,1.0f,1.0f, 1.0f},
-        {1.0f,0.0f,1.0f, 1.0f},
-        {0.5f,0.5f,0.0f, 1.0f},
-        {0.0f,0.5f,0.5f, 1.0f},
-        {0.5f,0.0f,0.5f, 1.0f},
-        {1.0f,0.5f,0.0f, 1.0f},
-        {0.0f,0.5f,1.0f, 1.0f},
-        {1.0f,0.0f,0.5f, 1.0f},
-    };
 };
 }

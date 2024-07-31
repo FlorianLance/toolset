@@ -47,6 +47,7 @@ HEADERS += \
     test_k2_device.hpp \
     test_ob_device.hpp \
     test_ob_utility.hpp \
+    test_udp_server.hpp \
     test_volumetric_video_player.hpp
 
 SOURCES += \

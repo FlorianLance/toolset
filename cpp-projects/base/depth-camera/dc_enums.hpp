@@ -652,4 +652,14 @@ enum class DCConnectivity : std::int8_t{
     Connectivity_8
 };
 
+enum class CloudColorMode : std::int8_t{
+    FromDepthData = 0,          // use a gradient level to generate colors corresponding to depth
+    FromDepthSizedColorImage    // use colors from deph-sized color image
+};
+
+enum class CloudGenerationMode : std::int8_t{
+    FromDepth = 0,
+    FromDecodedCloud
+};
+
 }

@@ -42,7 +42,7 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::BaseSettings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // actions
     openDevice                    = read_value<bool>(json, unreadCount, "open_device"sv);
     startReading                  = read_value<bool>(json, unreadCount, "start_reading"sv);
@@ -76,7 +76,7 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
 
     json json;
     // base
-    add_value(json, "base"sv,                                   io::BaseSettings::convert_to_json());
+    add_value(json, "base"sv,                                   io::Settings::convert_to_json());
     // actions
     add_value(json, "open_device"sv,                            openDevice);
     add_value(json, "start_reading"sv,                          startReading);
@@ -120,7 +120,7 @@ auto DCConfigSettings::default_init_for_manager() -> DCConfigSettings{
 
 auto DCConfigSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void{
 
-    BaseSettings::init_from_data(data, offset, sizeData);
+    Settings::init_from_data(data, offset, sizeData);
     // actions
     read(openDevice, data, offset, sizeData);
     read(startReading, data, offset, sizeData);

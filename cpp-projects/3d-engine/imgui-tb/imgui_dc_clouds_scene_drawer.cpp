@@ -47,9 +47,10 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
 
     fboD.init();
     cloudsD.resize(nbDrawers);
+
     for(auto &cloudD : cloudsD){
         cloudD = std::make_unique<DCCloudDrawer>();
-        cloudD->initialize();
+        cloudD->initialize();                
     }
 
     gridD.initialize(1.f,1.f, 20, 20, true);
@@ -112,6 +113,10 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             shader->set_uniform("enable_unicolor", true);
             shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
             gridD.draw();
+
+            // shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f},(fboD.camera()->position() + fboD.camera()->direction() * 1.0).conv<float>()));
+            // shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
+            // sphereD.draw();
         }
     }
 
@@ -132,9 +137,11 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             shader->set_uniform_matrix("model"sv, cloudD->model);
             // camera
             shader->set_uniform("camera_position", fboD.camera()->position().conv<float>());
+            shader->set_uniform("camera_direction", fboD.camera()->direction().conv<float>());
+            //shader->set_uniform_matrix("transposed_inverse_model"sv, transpose(inverse(cloudD->model)));
             // color
-            shader->set_uniform("enable_unicolor", cloudD->display.forceCloudColor);
-            shader->set_uniform("unicolor", cloudD->display.cloudColor);
+            shader->set_uniform("enable_unicolor", cloudD->display.forceColor);
+            shader->set_uniform("unicolor", cloudD->display.unicolor);
             shader->set_uniform("factor_unicolor", cloudD->display.factorUnicolor);            
             // geometry
             shader->set_uniform("backFaceCulling", cloudD->display.backFaceCulling);
@@ -145,9 +152,9 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }else{
                 shader->set_uniform("pointSize", cloudD->display.pointSize);
             }
-
-            if(cloudD->display.showCloud){
-                cloudD->cpD.draw();
+            
+            if(cloudD->display.showCapture){
+                cloudD->cpD.draw();                
             }
 
         }else{
@@ -161,16 +168,21 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             // transforms
             shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
             shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, cloudD->model);
+            shader->set_uniform_matrix("model"sv, cloudD->model);            
+
             // color
             shader->set_uniform("enable_unicolor", true);
-            shader->set_uniform("unicolor", cloudD->display.cloudColor);
-            if(cloudD->display.showCameraFrustum && cloudD->display.showCloud){
+            shader->set_uniform("unicolor", cloudD->display.unicolor);
+            if(cloudD->display.showCameraFrustum && cloudD->display.showCapture && m_displayFrustum){
                 cloudD->frustumD.draw();
+                // shader->set_uniform("enable_unicolor", false);
+                // cloudD->normalsD.draw();
+                // shader->set_uniform("enable_unicolor", true);
             }
 
+
             // body tracking
-            if(cloudD->display.showBodyTracking && cloudD->display.showCloud){
+            if(cloudD->display.showBodyTracking && cloudD->display.showCapture){
                 for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
                     shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
                     for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
@@ -183,13 +195,14 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                 }
             }
 
-            // filtering planes
-            if(cloudD->filters.filterDepthWithCloud && cloudD->display.showFilteringGizmos && cloudD->display.showCloud){
 
-                if(cloudD->filters.p1FMode != PlaneFilteringMode::None){
-                    auto p1 = cloudD->filters.p1A;
-                    auto p2 = cloudD->filters.p1B;
-                    auto p3 = cloudD->filters.p1C;
+            // filtering planes
+            if(cloudD->filtersS.filterDepthWithCloud && cloudD->display.showFilteringGizmos && cloudD->display.showCapture && m_displayGizmos){
+
+                if(cloudD->filtersS.p1FMode != PlaneFilteringMode::None){
+                    auto p1 = cloudD->filtersS.p1A;
+                    auto p2 = cloudD->filtersS.p1B;
+                    auto p3 = cloudD->filtersS.p1C;
                     Pt3f meanPt    = (p1+p2+p3)/3.f;
 
                     shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
@@ -224,19 +237,19 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                     }
                 }
 
-                if(cloudD->filters.removeFromPointDistance){
+                if(cloudD->filtersS.removeFromPointDistance){
 
-                    auto sp = cloudD->filters.pSphere;
+                    auto sp = cloudD->filtersS.pSphere;
                     shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
                     sphereD.draw();
                 }
 
-                if(cloudD->filters.keepOnlyPointsInsideOOB){
+                if(cloudD->filtersS.keepOnlyPointsInsideOOB){
 
                     shader->set_uniform_matrix("model",  cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,0.5f, 1.f});
-                    oobLinesD.update(cloudD->filters.oob);
+                    oobLinesD.update(cloudD->filtersS.oob);
                     oobLinesD.draw();
                 }
             }
@@ -524,7 +537,7 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
     }
 }
 
-auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DCCloudDisplaySettings &cloudDisplay) -> void{
+auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DCDeviceDisplaySettings &cloudDisplay) -> void{
     if(idCloud < cloudsD.size()){
         cloudsD[idCloud]->display = cloudDisplay;
         m_redrawClouds = true;
@@ -544,10 +557,31 @@ auto DCCloudsSceneDrawer::update_model_settings(size_t idCloud, const cam::DCMod
     m_redrawClouds = true;
 }
 
-// #include <iostream>
-auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filters) -> void {
-    cloudsD[idCloud]->filters = filters;
-    // oobLinesD[idCloud]->update(filters.oob);
+auto DCCloudsSceneDrawer::update_device_settings(size_t idCloud, const cam::DCDeviceSettings &deviceS) -> void{
+    cloudsD[idCloud]->deviceS = deviceS;
+
+    // auto mode = cloudsD[idCloud]->deviceS.configS.mode;
+    // auto dr = cam::dc_depth_resolution(mode);
+    // auto dRange = cam::dc_depth_range(mode);
+    // auto diff   = dRange.y() - dRange.x();
+    // auto hFov = dc_depth_h_fov(dr);
+    // auto vFov = dc_depth_v_fov(dr);
+    // cloudsD[idCloud]->frustumD.update(vFov, hFov/vFov, dRange.x() + cloudsD[idCloud]->filtersS.minDepthF * diff, dRange.x() + cloudsD[idCloud]->filtersS.maxDepthF * diff);
+
+    m_redrawClouds = true;
+}
+
+auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filtersS) -> void {
+    cloudsD[idCloud]->filtersS = filtersS;
+
+    // auto mode = cloudsD[idCloud]->deviceS.configS.mode;
+    // auto dr = cam::dc_depth_resolution(mode);
+    // auto dRange = cam::dc_depth_range(mode);
+    // auto diff   = dRange.y() - dRange.x();
+    // auto hFov = dc_depth_h_fov(dr);
+    // auto vFov = dc_depth_v_fov(dr);
+    // cloudsD[idCloud]->frustumD.update(vFov, hFov/vFov, dRange.x() + cloudsD[idCloud]->filtersS.minDepthF * diff, dRange.x() + cloudsD[idCloud]->filtersS.maxDepthF * diff);
+
     m_redrawClouds = true;
 }
 

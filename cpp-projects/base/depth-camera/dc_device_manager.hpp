@@ -32,8 +32,8 @@
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_color_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
-#include "dc_frame.hpp"
-#include "dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
+#include "depth-camera/frame/dc_compressed_frame.hpp"
 
 namespace tool::cam {
 

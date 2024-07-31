@@ -28,7 +28,7 @@
 
 // std
 #include <execution>
-#include <iostream>
+// #include <iostream>
 
 // opencv
 #include <opencv2/imgproc.hpp>
@@ -36,6 +36,7 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
+#include "utility/vector.hpp"
 #include "graphics/color/color_utility.hpp"
 
 using namespace tool::geo;
@@ -537,7 +538,7 @@ auto DCDeviceImpl::update_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && cDataS.client.generation.colorImage){
+    if(!fData.color.empty() && cDataS.generation.colorImage){
         frame->rgbaColor.width  = mInfos.color_width();
         frame->rgbaColor.height = mInfos.color_height();
         frame->rgbaColor.resize(mInfos.color_size());
@@ -554,7 +555,7 @@ auto DCDeviceImpl::update_frame_depth_sized_color() -> void{
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && cDataS.client.generation.depthSizedColorImage){
+    if(!fData.depthSizedColor.empty() && cDataS.generation.depthSizedColorImage){
         frame->rgbaDepthSizedColor.width  = mInfos.depth_width();
         frame->rgbaDepthSizedColor.height = mInfos.depth_height();
         frame->rgbaDepthSizedColor.resize(mInfos.depth_size());
@@ -577,7 +578,7 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         return;
     }
 
-    if(cDataS.client.generation.depth){
+    if(cDataS.generation.depth){
         frame->depth.width  = mInfos.depth_width();
         frame->depth.height = mInfos.depth_height();
         frame->depth.resize(mInfos.depth_size());
@@ -586,7 +587,7 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         frame->depth.reset();
     }
 
-    if(cDataS.client.generation.depthImage){
+    if(cDataS.generation.depthImage){
 
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
@@ -639,7 +640,7 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         return;
     }
 
-    if(cDataS.client.generation.infra){
+    if(cDataS.generation.infra){
         frame->infra.width  = mInfos.infra_width();
         frame->infra.height = mInfos.infra_height();
         frame->infra.resize(mInfos.infra_size());
@@ -648,7 +649,7 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         frame->infra.reset();
     }
 
-    if(cDataS.client.generation.infraImage){
+    if(cDataS.generation.infraImage){
 
         frame->rgbInfra.width  = mInfos.infra_width();
         frame->rgbInfra.height = mInfos.infra_height();
@@ -680,13 +681,13 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && !fData.depthCloud.empty() && cDataS.client.generation.cloud){
+    if(!fData.depth.empty() && !fData.depthCloud.empty() && cDataS.generation.cloud){
 
         frame->cloud.vertices.resize(fData.validDepthValues);
         frame->cloud.colors.resize(fData.validDepthValues);
         frame->cloud.normals.resize(fData.validDepthValues);
 
-        bool addColors = !fData.depthSizedColor.empty() && cDataS.client.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+        bool addColors = !fData.depthSizedColor.empty() && cDataS.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
         static constexpr std::array<Pt3f,5> depthGradient ={
@@ -720,95 +721,26 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
                 frame->cloud.colors[idV] = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
             }
 
-            const auto &idN  = fIndices.neighbours8Depth1D[idD];
-            // int idNA = (idN[0] != -1) ? ((fData.depth[idN[0]] != dc_invalid_depth_value) ? idN[0] : -1) : -1;
-            int idNB = (idN[1] != -1) ? ((fData.depth[idN[1]] != dc_invalid_depth_value) ? idN[1] : -1) : -1;
-            // int idNC = (idN[2] != -1) ? ((fData.depth[idN[2]] != dc_invalid_depth_value) ? idN[2] : -1) : -1;
-            int idND = (idN[3] != -1) ? ((fData.depth[idN[3]] != dc_invalid_depth_value) ? idN[3] : -1) : -1;
-            int idNE = (idN[4] != -1) ? ((fData.depth[idN[4]] != dc_invalid_depth_value) ? idN[4] : -1) : -1;
-            // int idNF = (idN[5] != -1) ? ((fData.depth[idN[5]] != dc_invalid_depth_value) ? idN[5] : -1) : -1;
-            int idNG = (idN[6] != -1) ? ((fData.depth[idN[6]] != dc_invalid_depth_value) ? idN[6] : -1) : -1;
-            // int idNH = (idN[7] != -1) ? ((fData.depth[idN[7]] != dc_invalid_depth_value) ? idN[7] : -1) : -1;
             // A B C
-            // D   E
+            // D I E
             // F G H
 
-            Vec3f normal{0,0,0};
-            int count = 0;
-            if(idNB != -1 && idNE != -1){
-                normal += normalize(cross(vec(currentP, fData.depthCloud[idNE].template conv<float>()), vec(currentP, fData.depthCloud[idNB].template conv<float>())));
-                ++count;
-            }
-            if(idNE != -1 && idNG != -1){
-                normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNE].template conv<float>())));
-                ++count;
-            }
-            if(idNG != -1 && idND != -1){
-                normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
-                ++count;
-            }
-            if(idND != -1 && idNB != -1){
-                normal += normalize(cross(vec(currentP, fData.depthCloud[idNB].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
-                ++count;
-            }
-            // if(idNH != -1 && idNG != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNH].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNG != -1 && idNF != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNF].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNF != -1 && idND != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNF].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idND != -1 && idNA != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNA].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
-            //     ++count;
-            // }
+            // 0 1 2
+            // 3 X 4
+            // 5 6 7
 
+            const auto &idN  = fIndices.neighbours8Depth1D[idD];
 
-            // Vec3f normal{0,0,0};
-            // int count = 0;
-            // if(idNA != -1 && idNB != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNB].template conv<float>()), vec(currentP, fData.depthCloud[idNA].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNB != -1 && idNC != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNC].template conv<float>()), vec(currentP, fData.depthCloud[idNB].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNC != -1 && idNE != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNE].template conv<float>()), vec(currentP, fData.depthCloud[idNC].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNE != -1 && idNH != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNH].template conv<float>()), vec(currentP, fData.depthCloud[idNE].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNH != -1 && idNG != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNH].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNG != -1 && idNF != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNF].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idNF != -1 && idND != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNF].template conv<float>())));
-            //     ++count;
-            // }
-            // if(idND != -1 && idNA != -1){
-            //     normal += normalize(cross(vec(currentP, fData.depthCloud[idNA].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
-            //     ++count;
-            // }
+            float cD = fData.depth[idD];
+            float dB = (idN[1] != -1) ? ((fData.depth[idN[1]] != dc_invalid_depth_value) ? fData.depth[idN[1]] : cD) : cD;
+            float dD = (idN[3] != -1) ? ((fData.depth[idN[3]] != dc_invalid_depth_value) ? fData.depth[idN[3]] : cD) : cD;
+            float dE = (idN[4] != -1) ? ((fData.depth[idN[4]] != dc_invalid_depth_value) ? fData.depth[idN[4]] : cD) : cD;
+            float dG = (idN[6] != -1) ? ((fData.depth[idN[6]] != dc_invalid_depth_value) ? fData.depth[idN[6]] : cD) : cD;
 
-            if(count != 0){
-                frame->cloud.normals[idV] = normalize(normal);
-            }else{
-                frame->cloud.normals[idV] = Vec3f{0.f,0.f,-1.f};
-            }
+            auto hV = normalize(Vec3f(dE-dD,0,-2));
+            auto vV = normalize(Vec3f(0,dG-dB,-2));
+            frame->cloud.normals[idV] = normalize(hV+vV);
+
         });
 
     }else{
@@ -823,7 +755,7 @@ auto DCDeviceImpl::update_frame_imu() -> void{
         return;
     }
 
-    if(!fData.binaryIMU.empty() && cDataS.client.generation.imu){
+    if(!fData.binaryIMU.empty() && cDataS.generation.imu){
         frame->imu.resize(fData.binaryIMU.size());
         std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), frame->imu.begin());
     }else{
@@ -838,7 +770,7 @@ auto DCDeviceImpl::update_frame_bodies() -> void{
         return;
     }
 
-    if(!fData.bodies.empty() && cDataS.client.generation.bodyTracking){
+    if(!fData.bodies.empty() && cDataS.generation.bodyTracking){
         frame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), frame->bodyTracking.begin());
     }else{
@@ -847,7 +779,7 @@ auto DCDeviceImpl::update_frame_bodies() -> void{
 
 
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && cDataS.client.generation.bodyIdMapImage){
+    if(!fData.bodiesIdMap.empty() && cDataS.generation.bodyIdMapImage){
         frame->grayBodiesIdMap.width  = mInfos.depth_width();
         frame->grayBodiesIdMap.height = mInfos.depth_height();
         frame->grayBodiesIdMap.resize(mInfos.depth_size());
@@ -864,7 +796,7 @@ auto DCDeviceImpl::update_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && cDataS.client.generation.calibration){
+    if(!fData.binaryCalibration.empty() && cDataS.generation.calibration){
         frame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), frame->calibration.begin());
     }else{
@@ -880,7 +812,7 @@ auto DCDeviceImpl::update_frame_audio() -> void{
         return;
     }
 
-    if(cDataS.client.generation.audio && (fData.audioChannels.first != 0) && !fData.audioChannels.second.empty()){
+    if(cDataS.generation.audio && (fData.audioChannels.first != 0) && !fData.audioChannels.second.empty()){
         size_t nbFrames = fData.audioChannels.second.size() / fData.audioChannels.first;
         frame->audioFrames.resize(nbFrames);
         auto audioFrom = fData.audioChannels.second.data();
@@ -897,13 +829,13 @@ auto DCDeviceImpl::update_compressed_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && cDataS.client.compression.color){
+    if(!fData.color.empty() && cDataS.compression.color){
         if(!jpegColorEncoder.encode(
                 mInfos.color_width(),
                 mInfos.color_height(),
                 fData.color,
                 cFrame->jpegRGBA8Color,
-                cDataS.client.compression.jpegCompressionRate
+                cDataS.compression.jpegCompressionRate
             )){
             cFrame->jpegRGBA8Color.reset();
         }
@@ -919,14 +851,14 @@ auto DCDeviceImpl::update_compressed_frame_depth_sized_color() -> void{
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && cDataS.client.compression.depthSizedColor){
+    if(!fData.depthSizedColor.empty() && cDataS.compression.depthSizedColor){
 
         if(!jpegDepthSizedColorEncoder.encode(
                 mInfos.depth_width(),
                 mInfos.depth_height(),
                 fData.depthSizedColor,
                 cFrame->jpegRGBA8DepthSizedColor,
-                cDataS.client.compression.jpegCompressionRate
+                cDataS.compression.jpegCompressionRate
             )){
             cFrame->jpegRGBA8DepthSizedColor.reset();
         }
@@ -943,7 +875,7 @@ auto DCDeviceImpl::update_compressed_frame_depth() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && cDataS.client.compression.depth){
+    if(!fData.depth.empty() && cDataS.compression.depth){
 
         fastPForDepthEncoder.encode(
             mInfos.depth_width(),
@@ -964,7 +896,7 @@ auto DCDeviceImpl::update_compressed_frame_infra() -> void{
         return;
     }
 
-    if(!fData.infra.empty() && cDataS.client.compression.infra){
+    if(!fData.infra.empty() && cDataS.compression.infra){
 
         fastPForInfraEncoder.encode(
             mInfos.infra_width(),
@@ -985,7 +917,7 @@ auto DCDeviceImpl::update_compressed_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && cDataS.client.compression.calibration){
+    if(!fData.binaryCalibration.empty() && cDataS.compression.calibration){
         cFrame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
     }else{
@@ -1001,7 +933,7 @@ auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
         return;
     }
 
-    if(!fData.depthCloud.empty() && !fData.depth.empty() && cDataS.client.compression.cloud){
+    if(!fData.depthCloud.empty() && !fData.depth.empty() && cDataS.compression.cloud){
 
         Buffer<std::uint16_t> processedCloudData;
 
@@ -1017,7 +949,7 @@ auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
 
         auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
 
-        bool addColors = !fData.depthSizedColor.empty() && cDataS.client.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+        bool addColors = !fData.depthSizedColor.empty() && cDataS.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
 
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
@@ -1073,7 +1005,7 @@ auto DCDeviceImpl::update_compressed_frame_audio() -> void{
         return;
     }
 
-    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && cDataS.client.compression.audio){
+    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && cDataS.compression.audio){
 
         size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
         cFrame->audioFrames.resize(audioSize);
@@ -1094,7 +1026,7 @@ auto DCDeviceImpl::update_compressed_frame_imu() -> void{
         return;
     }
 
-    if(!fData.binaryIMU.empty() && cDataS.client.compression.imu){
+    if(!fData.binaryIMU.empty() && cDataS.compression.imu){
         cFrame->imu.resize(fData.binaryIMU.size());
         std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
     }else{
@@ -1110,7 +1042,7 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // body tracking
-    if(!fData.bodies.empty() && cDataS.client.compression.bodyTracking){
+    if(!fData.bodies.empty() && cDataS.compression.bodyTracking){
         cFrame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
     }else{
@@ -1118,14 +1050,14 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && cDataS.client.compression.bodyIdMap){
+    if(!fData.bodiesIdMap.empty() && cDataS.compression.bodyIdMap){
 
         if(!jpegBodiesIdEncoder.encode(
             mInfos.depth_width(),
             mInfos.depth_height(),
             fData.bodiesIdMap,
             cFrame->jpegG8BodiesIdMap,
-            cDataS.client.compression.jpegCompressionRate
+            cDataS.compression.jpegCompressionRate
         )){
             cFrame->jpegG8BodiesIdMap.reset();
         }
@@ -1137,21 +1069,21 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
 
 auto DCDeviceImpl::check_data_validity() -> bool {
 
-    if(mInfos.has_color() && settings.data.capture_color()){
+    if(mInfos.has_color() && settings.data.capture.color){
         if(fData.rawColor.empty()){
             Logger::log("Invalid raw color, frame canceled.\n");
             return false;
         }
     }
 
-    if(mInfos.has_depth() && settings.data.capture_depth()){
+    if(mInfos.has_depth() && settings.data.capture.depth){
         if(fData.depth.empty()){
             Logger::log("Invalid depth, frame canceled.\n");
             return false;
         }
     }
 
-    if(mInfos.has_infra() && settings.data.capture_infra()){
+    if(mInfos.has_infra() && settings.data.capture.infra){
         if(fData.infra.empty()){
             Logger::log("Invalid infra, frame canceled.\n");
             return false;
@@ -1160,7 +1092,6 @@ auto DCDeviceImpl::check_data_validity() -> bool {
 
     return true;
 }
-
 
 auto DCDeviceImpl::maximum_local_depth_difference(const DCFrameIndices &ids, std::span<uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void{
 
@@ -1410,10 +1341,7 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
 }
 
 
-
-
-
-auto DCDeviceImpl::set_data_settings(const DCDataSettings &dataS) -> void {
+auto DCDeviceImpl::set_data_settings(const DCDeviceDataSettings &dataS) -> void {
     parametersM.lock();
     settings.data = dataS;
     parametersM.unlock();
@@ -1492,27 +1420,27 @@ auto DCDeviceImpl::read_images() -> void{
     auto tRI = TimeDiffGuard(timeM, "READ_IMAGES"sv);
     {
         auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
-        read_color_image(mInfos.has_color() && cDataS.capture_color());
+        read_color_image(mInfos.has_color() && cDataS.capture.color);
     }
     {
         auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
-        read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
+        read_depth_image(mInfos.has_depth() && cDataS.capture.depth);
     }
     {
         auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
-        read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
+        read_infra_image(mInfos.has_infra() && cDataS.capture.infra);
     }
     {
         auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-        read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
+        read_body_tracking(cDataS.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
     }
     {
         auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
-        read_audio(cDataS.capture_audio() && mInfos.has_audio());
+        read_audio(cDataS.capture.audio && mInfos.has_audio());
     }
     {
         auto tRI = TimeDiffGuard(timeM, "READ_IMU"sv);
-        read_IMU(cDataS.capture_imu());
+        read_IMU(cDataS.capture.imu);
     }
 
     dataIsValid = check_data_validity();
@@ -1522,12 +1450,12 @@ auto DCDeviceImpl::init_frames() -> void{
 
     if(captureSuccess && dataIsValid){
 
-        if(cDataS.client.generation.has_data_to_generate()){
+        if(cDataS.generation.has_data_to_generate()){
             frame = std::make_shared<DCFrame>();
         }else{
             frame = nullptr;
         }
-        if(cDataS.client.compression.has_data_to_compress()){
+        if(cDataS.compression.has_data_to_compress()){
             cFrame = std::make_shared<DCCompressedFrame>();
         }else{
             cFrame = nullptr;
@@ -1548,7 +1476,7 @@ auto DCDeviceImpl::resize_and_convert() -> void{
         }
         {
             auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-            generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
+            generate_cloud(cDataS.capture_cloud() || cFiltersS.filterDepthWithCloud);
         }
     }
 }
@@ -1624,12 +1552,12 @@ auto DCDeviceImpl::process_data() -> void{
 
     if(captureSuccess && dataIsValid){
 
-        if(cDataS.client.generation.has_data_to_generate()){
+        if(cDataS.generation.has_data_to_generate()){
             frame = std::make_shared<DCFrame>();
         }else{
             frame = nullptr;
         }
-        if(cDataS.client.compression.has_data_to_compress()){
+        if(cDataS.compression.has_data_to_compress()){
             cFrame = std::make_shared<DCCompressedFrame>();
         }else{
             cFrame = nullptr;
@@ -1645,7 +1573,7 @@ auto DCDeviceImpl::process_data() -> void{
         }
         {
             auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-            generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
+            generate_cloud(cDataS.capture_cloud() || cFiltersS.filterDepthWithCloud);
         }
 
         {
@@ -2458,4 +2386,58 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 
 //     }
 
+// }
+
+
+// if(idNH != -1 && idNG != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNH].template conv<float>())));
+//     ++count;
+// }
+// if(idNG != -1 && idNF != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNF].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
+//     ++count;
+// }
+// if(idNF != -1 && idND != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNF].template conv<float>())));
+//     ++count;
+// }
+// if(idND != -1 && idNA != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNA].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
+//     ++count;
+// }
+
+
+// Vec3f normal{0,0,0};
+// int count = 0;
+// if(idNA != -1 && idNB != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNB].template conv<float>()), vec(currentP, fData.depthCloud[idNA].template conv<float>())));
+//     ++count;
+// }
+// if(idNB != -1 && idNC != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNC].template conv<float>()), vec(currentP, fData.depthCloud[idNB].template conv<float>())));
+//     ++count;
+// }
+// if(idNC != -1 && idNE != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNE].template conv<float>()), vec(currentP, fData.depthCloud[idNC].template conv<float>())));
+//     ++count;
+// }
+// if(idNE != -1 && idNH != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNH].template conv<float>()), vec(currentP, fData.depthCloud[idNE].template conv<float>())));
+//     ++count;
+// }
+// if(idNH != -1 && idNG != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNG].template conv<float>()), vec(currentP, fData.depthCloud[idNH].template conv<float>())));
+//     ++count;
+// }
+// if(idNG != -1 && idNF != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNF].template conv<float>()), vec(currentP, fData.depthCloud[idNG].template conv<float>())));
+//     ++count;
+// }
+// if(idNF != -1 && idND != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idND].template conv<float>()), vec(currentP, fData.depthCloud[idNF].template conv<float>())));
+//     ++count;
+// }
+// if(idND != -1 && idNA != -1){
+//     normal += normalize(cross(vec(currentP, fData.depthCloud[idNA].template conv<float>()), vec(currentP, fData.depthCloud[idND].template conv<float>())));
+//     ++count;
 // }

@@ -47,7 +47,7 @@ DCGView::DCGView(size_t idGrabber){
     context.minorVersion      = 6;
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
-    const std::string numVersion = "1.9";
+    const std::string numVersion = "2.1";
     m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id{} v{}", idGrabber, numVersion), screen,context);
     m_glW->init();
 }

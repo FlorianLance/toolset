@@ -47,7 +47,8 @@ auto FemtoBoltDeviceImpl::update_from_colors_settings() -> void{
 }
 
 auto FemtoBoltDeviceImpl::open(uint32_t deviceId) -> bool{
-    return orbbecD->open(settings.config.idDevice = deviceId);
+    settings.config.idDevice = deviceId;
+    return orbbecD->open(settings.config);
 }
 
 auto FemtoBoltDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
