@@ -37,34 +37,59 @@
 
 namespace tool::cam {
 
-struct DCClientDeviceSettings{
+struct DCClientDeviceSettings : public io::Settings{
 
+    DCClientDeviceSettings(){
+        sType   = io::SettingsType::Dc_client_device;
+        version = io::SettingsVersion::LastVersion;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    DCDeviceConnectionSettings2 connectionS;
     DCFiltersSettings filtersS;
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
     DCDeviceSettings deviceS;
     DCColorSettings colorS;
     DCModelSettings modelS;
-    DCDelaySettings delayS;
-
-    // display
-    DCDeviceDisplaySettings deviceDisplayS;
+    DCDelaySettings delayS;   
+    DCDeviceDisplaySettings displayS;
 
     // runtime
+    // # paths
     std::string filtersFilePath;
     std::string calibrationFiltersFilePath;
     std::string deviceFilePath;
     std::string colorFilePath;
     std::string modelFilePath;
     // std::string delayFilePath;
-
-    // monitoring infos
+    // # states
     bool connected = false;
+    size_t lastFrameIdReceived = 0;
+    size_t lastCompressedFrameIdReceived = 0;
+    // # monitoring infos
     std::int64_t synchroAverageDiff = 0;
     net::UdpNetworkStatus receivedNetworkStatus;
     net::UdpDataStatus receivedDataStatus;
-    size_t lastFrameIdReceived = 0;
-    size_t lastCompressedFrameIdReceived = 0;
+
 };
+
+struct DCClientSettings : public io::Settings{
+
+    DCClientSettings();
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    // settings
+    Buffer<DCClientDeviceSettings> devicesS;
+
+    // runtime
+    std::vector<net::Interface> ipv4Interfaces = {};
+    std::vector<net::Interface> ipv6Interfaces = {};
+};
+
 
 class DCClient{
 public:
@@ -72,7 +97,7 @@ public:
     DCClient();
     ~DCClient();
 
-    auto initialize(const std::string &connectionSettingsPath) -> bool;
+    auto initialize(const std::string &clientSettingsPath) -> bool;
     auto clean() -> void;
     auto update() -> void;
 
@@ -111,7 +136,7 @@ public:
     auto trigger_all_device_display_settings() -> void;
 
     Buffer<std::unique_ptr<DCClientDevice>> devices;
-    Buffer<DCClientDeviceSettings> devicesS;
+    DCClientSettings clientS;
 
     // signals
     SSS<size_t, std::string> feedback_received_signal;
@@ -124,7 +149,6 @@ private:
 
     auto read_feedbacks() -> void;
 
-    DCClientConnectionSettings m_connectionSettings;
     DCClientProcessing m_processing;
 
     bool m_useNormalFilteringSettings = true;

@@ -33,7 +33,39 @@
 
 namespace tool::cam {
 
+enum class DCDeviceConnectionType : std::int8_t{
+    Remote, Local
+};
+
+struct DCDeviceConnectionSettings2 : io::Settings{
+
+    DCDeviceConnectionSettings2(){
+        sType   = io::SettingsType::Dc_client_connection;
+        version = io::SettingsVersion::LastVersion;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    // all
+    DCDeviceConnectionType connectionType;
+
+    // remote
+    size_t idReadingInterface = 0;
+    int readingPort;
+    std::string sendingAddress;
+    int sendingPort;
+    net::Protocol protocol = net::Protocol::unknow;
+
+    // # runtime
+    std::string readingAddress;
+    bool startReadingThread = true;
+    bool isLocalhost = false;
+};
+
+
 struct DCDeviceConnectionSettings{
+
     bool isLocal = false;
     virtual ~DCDeviceConnectionSettings(){}
 };

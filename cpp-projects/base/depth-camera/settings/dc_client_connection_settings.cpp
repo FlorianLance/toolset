@@ -41,6 +41,47 @@ using namespace tool::cam;
 using namespace tool::data;
 using json = nlohmann::json;
 
+
+auto DCDeviceConnectionSettings2::init_from_json(const nlohmann::json &json) -> void{
+
+    size_t unreadCount = 0;
+    // base
+    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    // local
+    connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCDeviceConnectionType::Remote : DCDeviceConnectionType::Local;
+    if(connectionType == DCDeviceConnectionType::Remote){
+        idReadingInterface  = read_value<size_t>(json, unreadCount, "id_reading_interface"sv);
+        readingPort         = read_value<int>(json, unreadCount, "reading_port"sv);
+        sendingAddress       = read_value<std::string>(json, unreadCount, "sending_address"sv);
+        sendingPort         = read_value<int>(json, unreadCount, "sending_port"sv);
+        protocol            = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
+    }
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[DCDeviceConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    }
+}
+
+auto DCDeviceConnectionSettings2::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv, io::Settings::convert_to_json());
+    // local
+    add_value(json, "connection_type"sv, (connectionType == DCDeviceConnectionType::Remote) ? "Remote"sv : "Local"sv);
+    if(connectionType == DCDeviceConnectionType::Remote){
+        add_value(json, "id_reading_interface"sv,     idReadingInterface);
+        add_value(json, "reading_port"sv,             readingPort);
+        add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
+        add_value(json, "sending_port"sv,             sendingPort);
+        add_value(json, "protocol"sv,                 (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
+    }
+
+    return json;
+}
+
+
+
 auto DCClientConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
     
     connectionsS.clear();
@@ -271,3 +312,5 @@ auto DCClientConnectionSettings::init_from_text(std::string_view &text) -> void{
 //         serverInfo.isLocalhost = true;
 //     }
 // }
+
+
