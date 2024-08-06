@@ -26,9 +26,19 @@
 
 #pragma once
 
+// base
+#include "depth-camera/settings/dc_calibrator_settings.hpp"
+
 namespace tool {
 
 struct DCMUiSettings{
+
     bool focusWindow = false;
+    cam::DCCalibratorDrawerSettings calibratorDrawerS;
+
+    static constexpr geo::Pt4f selectedC            = geo::Pt4f{1.0f, 1.0f, 1.0f, 1.0f};
+    static constexpr geo::Pt4f connectedSelectedC   = geo::Pt4f{0.0f, 1.0f, 0.0f, 1.0f};
+    static constexpr geo::Pt4f unselectedC          = geo::Pt4f{0.6f, 0.6f, 0.6f, 1.0f};
+    static constexpr geo::Pt4f connectedUnselectedC = geo::Pt4f{0.0f, 0.6f, 0.0f, 1.0f};
 };
 }

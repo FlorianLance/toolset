@@ -49,7 +49,7 @@ public:
     auto calibration_grabber_data(size_t idGrabber) const  -> const DCCalibratorGrabberData*;
 
     // registration
-    auto is_registering() const -> bool {return m_states.isRegistering;}
+    auto is_registering() const -> bool {return states.isRegistering;}
     auto start_registering() -> void;
     auto stop_registering() -> void;
     auto reset_registering() -> void;    
@@ -63,11 +63,13 @@ public:
     auto validate_calibration() -> void;
 
     // settings
-    auto update_settings(const DCCalibratorSettings &calibrationS) -> void;
+    auto update_settings(const DCCalibratorSettings &calibratorS) -> void;
+    auto trigger_data_updated() -> void;
+
+    cam::DCCalibratorSettings settings;
+    cam::DCCalibratorStates states;
 
     // signals
-    auto send_data_updated_signal() -> void;
-    sigslot::signal<DCCalibratorStates> states_updated_signal;
     sigslot::signal<size_t, DCModelSettings> new_calibration_signal;
     sigslot::signal<size_t, DCModelSettings> validated_calibration_signal;
     sigslot::signal<int, int, std::vector<DCCalibratorGrabberData>*> data_updated_signal;
@@ -75,13 +77,10 @@ public:
 private :
 
     auto add_to_calibration_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;
-    auto add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;
-
-    DCCalibratorStates m_states;
-    std::vector<std::optional<DCModelSettings>> m_calibrations;
+    auto add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;   
 
     struct Impl;
-    std::unique_ptr<Impl> m_p;
+    std::unique_ptr<Impl> i;
 };
 
 }

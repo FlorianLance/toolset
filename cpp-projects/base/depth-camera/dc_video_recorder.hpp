@@ -67,8 +67,10 @@ public:
     // i/o
     auto save_to_file(std::string_view path) -> bool;
 
+    DCVideoRecorderSettings settings;
+    DCVideoRecorderStates states;
+
     // signals
-    sigslot::signal<DCVideoRecorderStates> states_updated_signal;
     sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
 
 private:

@@ -93,7 +93,6 @@ auto Logger::no_file_init(bool doFormat) -> void{
 
 auto Logger::init(std::string_view logDirectoryPath, std::string_view logFileName, bool doFormat) -> bool{
 
-
     if(logDirectoryPath.length() == 0 || logFileName.length() == 0){
         std::cerr << "[LOGGER-ERROR] Empty path or filename." << std::endl;
         return false;

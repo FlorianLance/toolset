@@ -50,8 +50,8 @@ DCMView::DCMView(){
 DCMView::~DCMView(){
 }
 
-auto DCMView::initialize(int nbGrabbers) -> void{
-    mainW.initialize(nbGrabbers);
+auto DCMView::initialize(int nbDevices) -> void{
+    mainW.initialize(nbDevices);
 }
 
 auto DCMView::start() -> void{
@@ -59,7 +59,7 @@ auto DCMView::start() -> void{
 }
 
 auto DCMView::draw(geo::Pt2f size, DCMModel *model) -> void{
-    mainW.draw(size, model->settings, model->states);
+    mainW.draw(size, model);
 }
 
 auto DCMView::exit() -> void{

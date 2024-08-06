@@ -105,6 +105,12 @@ struct DCCalibratorSettings{
     int icpMaxIteration = 30; // Maximum iteration before iteration stops.
 };
 
+struct DCCalibratorDrawerSettings{
+    bool displayCalibrationCloud = true;
+    bool displayProcessedCloud = true;
+};
+
+
 struct DCCalibratorGrabberData{
 
     size_t id;
@@ -121,12 +127,3 @@ struct DCCalibratorGrabberData{
 
 }
 
-namespace tool::graphics{
-
-struct DCCalibratorDrawerSettings{
-
-    bool displayCalibrationCloud = true;
-    bool displayProcessedCloud = true;
-};
-
-}

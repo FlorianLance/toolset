@@ -26,12 +26,8 @@
 
 #pragma once
 
-// std
-#include <deque>
-
 // base
-#include "depth-camera/client/dc_client_devices.hpp"
-#include "depth-camera/client/dc_client_processing.hpp"
+#include "depth-camera/client/dc_client.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
 #include "depth-camera/dc_video_player.hpp"
 #include "depth-camera/dc_calibrator.hpp"
@@ -39,6 +35,8 @@
 // local
 #include "data/dcm_settings.hpp"
 #include "data/dcm_states.hpp"
+#include "data/dcm_types.hpp"
+#include "data/dcm_ui_settings.hpp"
 
 namespace tool {
 
@@ -46,46 +44,34 @@ struct DCMModel{
 
     DCMModel();
     ~DCMModel();
+
+    static auto host_name() -> std::string;
+
     auto initialize() -> bool;
     auto clean() -> void;
     auto update() -> void;
-    auto trigger_settings() -> void;
 
-    // network
-    auto reset_network() -> void;
-    auto add_feedback(size_t id, net::Feedback feedback) -> void;
-    auto update_synchro(size_t id, std::int64_t averageDiffNs) -> void;
-    auto update_data_status(size_t id, net::UdpDataStatus status) -> void;
-    auto update_network_status(size_t id, net::UdpNetworkStatus status) -> void;
+    auto process_settings_action(SettingsAction sAction) -> void;
 
-    //
-    // auto add_default_device() -> void;
-
-    // action
+    // calibration
     auto ask_calibration() -> void;
 
-    // # settings
-    auto update_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
-    auto update_calibration_filters(size_t id, const cam::DCFiltersSettings& filters) -> void;
-    auto update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void;
-    auto update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void;
-    auto update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void;
+    // settings
+    // # update
+    auto update_filters(size_t idC, const cam::DCFiltersSettings& filters) -> void;
+    auto update_calibration_filters(size_t idC, const cam::DCFiltersSettings& calibrationFilters) -> void;
+    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
+    auto update_color_settings(size_t idC, const cam::DCColorSettings &colorS) -> void;
+    auto update_delay_settings(size_t idC, const cam::DCDelaySettings &delayS) -> void;
+    // # triggers
+    auto trigger_settings() -> void;
 
-    DCMSettings settings;
-    DCMStates states;
+    // ui
+    DCMUiSettings uiSettings;
 
-    cam::DCClientDevices clientDevices;
-    cam::DCClientProcessing clientProcessing;
+    cam::DCClient client;
     cam::DCVideoRecorder recorder;
     cam::DCVideoPlayer player;
-    cam::DCCalibrator calibration;
-
-private:
-
-    auto read_feedbacks() -> void;
-
-    std::mutex readMessagesL;
-    std::deque<std::pair<size_t, net::Feedback>> messages;
-    std::vector<std::pair<size_t, net::Feedback>> messagesR;
+    cam::DCCalibrator calibrator;
 };
 }

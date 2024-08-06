@@ -39,15 +39,13 @@ namespace tool::cam {
 
 struct DCClientDeviceSettings : public io::Settings{
 
-    DCClientDeviceSettings(){
-        sType   = io::SettingsType::Dc_client_device;
-        version = io::SettingsVersion::LastVersion;
-    }
+    DCClientDeviceSettings();
+    auto set_id(size_t idC) -> void;
 
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
-    DCDeviceConnectionSettings2 connectionS;
+    DCDeviceConnectionSettings connectionS;
     DCFiltersSettings filtersS;
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
     DCDeviceSettings deviceS;
@@ -57,7 +55,9 @@ struct DCClientDeviceSettings : public io::Settings{
     DCDeviceDisplaySettings displayS;
 
     // runtime
-    // # paths
+    size_t id = 0;
+    std::string name = "0 xxx.xxx.xxx";
+    // # legacy paths
     std::string filtersFilePath;
     std::string calibrationFiltersFilePath;
     std::string deviceFilePath;
@@ -83,9 +83,12 @@ struct DCClientSettings : public io::Settings{
     auto convert_to_json() const -> nlohmann::json override;
 
     // settings
+    DCSceneDisplaySettings sceneDisplayS;
     Buffer<DCClientDeviceSettings> devicesS;
+    bool useNormalFilteringSettings = true;
 
     // runtime
+    std::string filePath;
     std::vector<net::Interface> ipv4Interfaces = {};
     std::vector<net::Interface> ipv6Interfaces = {};
 };
@@ -112,6 +115,7 @@ public:
 
     // settings
     // # load
+    auto load_network_settings_file(const std::string &settingsFilePath) -> bool;
     // ## per device
     auto load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
     auto load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
@@ -135,8 +139,7 @@ public:
     auto trigger_all_models_settings() -> void;
     auto trigger_all_device_display_settings() -> void;
 
-    Buffer<std::unique_ptr<DCClientDevice>> devices;
-    DCClientSettings clientS;
+    DCClientSettings settings;
 
     // signals
     SSS<size_t, std::string> feedback_received_signal;
@@ -147,11 +150,12 @@ public:
 
 private:
 
+    auto generate_clients() -> void;
     auto read_feedbacks() -> void;
 
+    Buffer<std::unique_ptr<DCClientDevice>> m_devices;
     DCClientProcessing m_processing;
 
-    bool m_useNormalFilteringSettings = true;
     std::mutex m_readMessagesL;
     std::deque<std::pair<size_t, net::Feedback>> m_messages;
     std::vector<std::pair<size_t, net::Feedback>> m_messagesR;

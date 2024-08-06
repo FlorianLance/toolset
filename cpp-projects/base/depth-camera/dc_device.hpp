@@ -42,7 +42,26 @@
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 
+#include "settings/dc_device_settings.hpp"
+
 namespace tool::cam {
+
+class DCDevice2{
+public:
+
+    DCDevice2();
+    ~DCDevice2();
+
+    auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
+
+private:
+
+    auto thread_loop() -> void;
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
+};
+
 
 class DCDevice{
 public:

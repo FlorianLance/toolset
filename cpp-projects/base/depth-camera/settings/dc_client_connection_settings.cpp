@@ -42,7 +42,7 @@ using namespace tool::data;
 using json = nlohmann::json;
 
 
-auto DCDeviceConnectionSettings2::init_from_json(const nlohmann::json &json) -> void{
+auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
@@ -62,7 +62,7 @@ auto DCDeviceConnectionSettings2::init_from_json(const nlohmann::json &json) -> 
     }
 }
 
-auto DCDeviceConnectionSettings2::convert_to_json() const -> nlohmann::json{
+auto DCDeviceConnectionSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
@@ -81,8 +81,7 @@ auto DCDeviceConnectionSettings2::convert_to_json() const -> nlohmann::json{
 }
 
 
-
-auto DCClientConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
+auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
     
     connectionsS.clear();
 
@@ -111,7 +110,7 @@ auto DCClientConnectionSettings::init_from_json(const nlohmann::json &json) -> v
 
             if(!isLocal){
                 // local
-                auto dcCRDS = std::make_unique<DCRemoteDeviceConnectionSettings>();
+                auto dcCRDS = std::make_unique<DCDeprecatedRemoteDeviceConnectionSettings>();
                 dcCRDS->serverS.init_from_json(devicesJson["device"sv]);
 
                 const auto &interfaces = (dcCRDS->serverS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
@@ -133,7 +132,7 @@ auto DCClientConnectionSettings::init_from_json(const nlohmann::json &json) -> v
                 connectionsS.push_back(std::move(dcCRDS));
             }else{
                 // remote
-                auto dcCLDS = std::make_unique<DCLocalDeviceConnectionSettings>();
+                auto dcCLDS = std::make_unique<DCDeprecatedLocalDeviceConnectionSettings>();
                 // ...
                 
                 connectionsS.push_back(std::move(dcCLDS));
@@ -146,7 +145,7 @@ auto DCClientConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     }
 }
 
-auto DCClientConnectionSettings::convert_to_json() const -> nlohmann::json{
+auto DCDeprecatedClientConnectionSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
 
@@ -159,9 +158,9 @@ auto DCClientConnectionSettings::convert_to_json() const -> nlohmann::json{
         nlohmann::json devJson;
         add_value(devJson, "type"sv, dev->isLocal ? "local"sv : "remote"sv);
 
-        if(auto remote = dynamic_cast<DCRemoteDeviceConnectionSettings*>(dev.get())){
+        if(auto remote = dynamic_cast<DCDeprecatedRemoteDeviceConnectionSettings*>(dev.get())){
             add_value(devJson, "device"sv, remote->serverS.convert_to_json());
-        }else if(auto local = dynamic_cast<DCLocalDeviceConnectionSettings*>(dev.get())){
+        }else if(auto local = dynamic_cast<DCDeprecatedLocalDeviceConnectionSettings*>(dev.get())){
             // ...
         }
 
@@ -172,7 +171,8 @@ auto DCClientConnectionSettings::convert_to_json() const -> nlohmann::json{
     return json;
 }
 
-auto DCClientConnectionSettings::reset_interfaces() -> void{
+
+auto DCDeprecatedClientConnectionSettings::initialize(const std::string &filePath) -> bool{
 
     // retrieve interfaces
     ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
@@ -184,11 +184,6 @@ auto DCClientConnectionSettings::reset_interfaces() -> void{
     if(ipv6Interfaces.size() == 0){
         Logger::warning("[DCClientConnectionSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
     }
-}
-
-auto DCClientConnectionSettings::initialize(const std::string &filePath) -> bool{
-
-    reset_interfaces();
 
     if(filePath.length() > 0){
         return load_from_file(this->filePath = filePath);
@@ -198,13 +193,8 @@ auto DCClientConnectionSettings::initialize(const std::string &filePath) -> bool
     return false;
 }
 
-auto DCClientConnectionSettings::default_initialize() -> void{
-    reset_interfaces();
-    connectionsS.resize(1);
-}
 
-
-auto DCClientConnectionSettings::init_from_text(std::string_view &text) -> void{
+auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text) -> void{
 
     // read version
     io::Settings::init_from_text(text);
@@ -220,7 +210,7 @@ auto DCClientConnectionSettings::init_from_text(std::string_view &text) -> void{
             
             if(values[0] != "local"sv){
 
-                auto devS = std::make_unique<DCRemoteDeviceConnectionSettings>();
+                auto devS = std::make_unique<DCDeprecatedRemoteDeviceConnectionSettings>();
                 devS->serverS.readingPort    = String::to_int(values[2]);
 
                 // read protocol
@@ -259,7 +249,7 @@ auto DCClientConnectionSettings::init_from_text(std::string_view &text) -> void{
                 connectionsS.push_back(std::move(devS));
 
             }else{
-                auto devS = std::make_unique<DCLocalDeviceConnectionSettings>();
+                auto devS = std::make_unique<DCDeprecatedLocalDeviceConnectionSettings>();
                 
                 connectionsS.push_back(std::move(devS));
             }

@@ -32,16 +32,22 @@
 using namespace tool;
 using namespace std::string_view_literals;
 
-auto DCSettingsPaths::initialize(const std::filesystem::path &base_, const std::string &hostName_) -> void{
+auto DCSettingsPaths::initialize(const std::filesystem::path &base_, const std::string &hostName_, const std::string &logName_) -> void{
 
     base                                = base_;
     hostName                            = hostName_;
+    logName                             = logName_; //std::format("dcm_manager_{}.html"sv, hostName);
+
     configPath                          = base       / "config/"sv;
     settingsPath                        = configPath / "settings/"sv;
+    outputPath                          = base       / "output/"sv;
+
+    defaultClient                       = settingsPath / "client_default.json"sv;
+    client                              = settingsPath / std::format("client_{}.json"sv, hostName);
+
+    // legacy
     networkPath                         = configPath / "network/"sv;
     calibrationPath                     = configPath / "calibration/"sv;
-
-    outputPath                          = base       / "output/"sv;
 
     defaultNetwork                      = networkPath / "network_default.json"sv;
     hostNetwork                         = networkPath / std::format("network_{}.json"sv, hostName);
@@ -66,7 +72,6 @@ auto DCSettingsPaths::initialize(const std::filesystem::path &base_, const std::
     allGrabbersModel                    = calibrationPath / std::format("model_{}_all.json"sv, hostName);
     allGrabbersModelLegacy              = calibrationPath / std::format("model_{}_all.config"sv, hostName);
 
-    logName                             = std::format("dcm_manager_{}.html"sv, hostName);
 }
 
 auto DCSettingsPaths::initialize_grabbers(size_t nbConnections) -> void{
@@ -96,6 +101,18 @@ auto DCSettingsPaths::initialize_grabbers(size_t nbConnections) -> void{
         grabbersColorLegacy.push_back(                settingsPath    / std::format("color_{}_G{}.config", hostName, ii));
         grabbersModelLegacy.push_back(                calibrationPath / std::format("model_{}_G{}.config", hostName, ii));
     }
+}
+
+auto DCSettingsPaths::get_client_settings_file_path() -> std::string{
+    if(std::filesystem::exists(client)){
+        return client.string();
+    }else if(std::filesystem::exists(defaultClient)){
+        Logger::warning(std::format("Cannot find current client settings file [{}], use default instead.\n", defaultClient.string()));
+        return defaultClient.string();
+    }else{
+        Logger::warning(std::format("Cannot find default client settings file [{}].\n", defaultClient.string()));
+    }
+    return {};
 }
 
 auto DCSettingsPaths::get_network_settings_file_path() -> std::string{

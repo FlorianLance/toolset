@@ -30,6 +30,7 @@
 // local
 #include "dcm_left_panel_child_drawer.hpp"
 #include "dcm_middle_panel_child_drawer.hpp"
+#include "dcm_model.hpp"
 
 namespace tool::graphics {
 
@@ -38,20 +39,21 @@ class DCMMainWindowDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> bool;
-    auto draw(geo::Pt2f size, DCMSettings &settings, DCMStates &states) -> void;
+    auto draw(geo::Pt2f size, DCMModel *model) -> void;
 
 private:
 
     auto draw_menu()-> void;
-    auto draw_device_sub_menu() -> void;
-    auto draw_color_sub_menu() -> void;
-    auto draw_filters_sub_menu() -> void;
-    auto draw_model_sub_menu() -> void;
+    // auto draw_device_sub_menu() -> void;
+    // auto draw_color_sub_menu() -> void;
+    // auto draw_filters_sub_menu() -> void;
+    // auto draw_model_sub_menu() -> void;
 
     // ui
     bool m_showDemoWindow = false;
     bool m_showMetricsWindow = false;
-    size_t m_nbGrabbers = 0;
+    size_t m_nbDevices = 0;
+    SettingsAction m_currentAction;
 
 public:
 

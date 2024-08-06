@@ -30,7 +30,7 @@
 // local
 #include "depth-camera/dc_device_manager.hpp"
 #include "utility/time.hpp"
-#include "utility/logger.hpp"
+
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -46,35 +46,31 @@ DCClientLocalDevice::~DCClientLocalDevice(){
     DCClientLocalDevice::clean();
 }
 
-auto DCClientLocalDevice::initialize(DCDeviceConnectionSettings *deviceS) -> bool{
+auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool{
     
-    if(auto devS = dynamic_cast<DCLocalDeviceConnectionSettings*>(deviceS)){
+    static_cast<void>(connectionS);
 
-        i->deviceM = std::make_unique<DCDeviceManager>();
-        i->deviceM->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    i->deviceM = std::make_unique<DCDeviceManager>();
+    i->deviceM->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
 
-            if(frame){
+        if(frame){
 
-                // update framerate
-                framerate.add_frame();
+            // update framerate
+            framerate.add_frame();
 
-                // update latency
-                latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(frame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+            // update latency
+            latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(frame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
 
-                // send frame
-                local_frame_signal(std::move(frame));
+            // send frame
+            local_frame_signal(std::move(frame));
 
-                // send status
-                data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
-            }
-        });
+            // send status
+            data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
+        }
+    });
 
-        return true;
+    return true;
 
-    }else{
-        Logger::error("[DCClientLocalDevice::initialize] Invalid settings file.");
-        return false;
-    }
 }
 
 auto DCClientLocalDevice::clean() -> void {

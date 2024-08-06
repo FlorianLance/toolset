@@ -27,11 +27,20 @@
 
 #include "dcm_model.hpp"
 
+// base
+#include "depth-camera/settings/dc_settings_paths.hpp"
+#include "utility/logger.hpp"
+
+// 3d-engine
+#include "imgui/extra/ImGuiFileDialog.h"
+
+
 // local
 #include "dcm_signals.hpp"
 
 using namespace tool;
 using namespace cam;
+using namespace tool::net;
 
 DCMModel::DCMModel(){
 }
@@ -41,176 +50,239 @@ DCMModel::~DCMModel(){
 }
 
 auto DCMModel::clean() -> void {
-
-    // clean network first
-    clientDevices.clean();
-    clientProcessing.clean();
-
+    client.clean();
 }
 
 auto DCMModel::initialize() -> bool{
 
-    if(!settings.initialize()){
-        return false;
-    }
-    reset_network();
+    // check if path exist
+    if(std::filesystem::exists(DCSettingsPaths::client)){
+        if(!client.initialize(DCSettingsPaths::client.string())){
+            return false;
+        }
+    }else if(std::filesystem::exists(DCSettingsPaths::defaultClient)){
+        if(!client.initialize(DCSettingsPaths::defaultClient.string())){
+            return false;
+        }
+    }else{
 
-    size_t nbConnections = clientDevices.devices_nb();
-    clientProcessing.initialize(nbConnections, true);
+        // legacy
+        std::string networkFilePath;
+        if(std::filesystem::exists(DCSettingsPaths::hostNetwork)){
+            networkFilePath = DCSettingsPaths::hostNetwork.string();
+        }else if(std::filesystem::exists(DCSettingsPaths::hostNetworkLegacy)){
+            networkFilePath = DCSettingsPaths::hostNetworkLegacy.string();
+        }else if(std::filesystem::exists(DCSettingsPaths::defaultNetwork)){
+            networkFilePath = DCSettingsPaths::defaultNetwork.string();
+        }else{
+            Logger::error("[DCMModel::initialize] No client or network file path found\n");
+            return false;
+        }
+
+        if(!client.load_network_settings_file(networkFilePath)){
+            return false;
+        }
+
+        DCSettingsPaths::initialize_grabbers(client.devices_nb());
+
+        for(auto &deviceClientS : client.settings.devicesS){
+            // read filters settings file
+            if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = DCSettingsPaths::get_filters_settings_file_path(deviceClientS.id))){
+                Logger::error(std::format("[DCMModel] No filters settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.filtersFilePath));
+            }
+            // read calibration filters settings file
+            if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  DCSettingsPaths::get_calibration_filters_settings_file_path(deviceClientS.id))){
+                Logger::error(std::format("[DCMModel] No calibration settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.calibrationFiltersFilePath));
+            }
+            // read device settings file
+            if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = DCSettingsPaths::get_device_settings_file_path(deviceClientS.id))){
+                Logger::error(std::format("[DCMModel] No device file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.deviceFilePath));
+            }
+            // read color settings file
+            if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = DCSettingsPaths::get_color_settings_file_path(deviceClientS.id))){
+                Logger::error(std::format("[DCMModel] No color file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.colorFilePath));
+            }
+            // read model settings file
+            if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  DCSettingsPaths::get_model_settings_file_path(deviceClientS.id))){
+                Logger::error(std::format("[DCMModel] No model file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.modelFilePath));
+            }
+        }
+    }
+
+    size_t nbConnections = client.devices_nb();
     recorder.initialize(nbConnections);
-    calibration.initialize(nbConnections);
+    calibrator.initialize(nbConnections);
+
     return true;
 }
 
-
 auto DCMModel::trigger_settings() -> void{
-    settings.trigger_all_models();
-    settings.trigger_all_cloud_display();
+    client.trigger_all_models_settings();
+    client.trigger_all_device_display_settings();
 }
-
-auto DCMModel::reset_network() -> void{
-    clientDevices.initialize(settings.devicesConnectionsS);
-}
-
-auto DCMModel::add_feedback(size_t id, net::Feedback feedback) -> void{
-    readMessagesL.lock();
-    messages.emplace_back(id, feedback);
-    readMessagesL.unlock();
-}
-
-auto DCMModel::update_synchro(size_t id, int64_t averageDiffNs) -> void{
-    settings.grabbersS[id].synchroAverageDiff = averageDiffNs;
-}
-
-auto DCMModel::update_network_status(size_t id, net::UdpNetworkStatus status) -> void{
-    settings.grabbersS[id].receivedNetworkStatus = status;
-}
-
-auto DCMModel::update_data_status(size_t id, net::UdpDataStatus status) -> void{
-    settings.grabbersS[id].receivedDataStatus = status;
-}
-
-// auto DCMModel::add_default_device() -> void{
-//     settings.add_default_device();
-// }
 
 auto DCMModel::ask_calibration() -> void{
-    std::vector<cam::DCModelSettings> models;
-    for(const auto &grabberS : settings.grabbersS){
-        models.push_back(grabberS.model);
+    std::vector<cam::DCModelSettings> models;    
+    for(const auto &devS : client.settings.devicesS){
+        models.push_back(devS.modelS);
     }
     DCMSignals::get()->calibrate_signal(std::move(models));
 }
 
-auto DCMModel::update_filters(size_t id, const cam::DCFiltersSettings &filters) -> void {
-    settings.grabbersS[id].filters = filters;
-    if(settings.useNormalFilteringSettings){
-        clientDevices.update_filters_settings(id, settings.grabbersS[id].filters);
-    }
+auto DCMModel::update_filters(size_t idC, const cam::DCFiltersSettings &filters) -> void {
+    client.update_filters(idC, filters);
 }
 
-auto DCMModel::update_calibration_filters(size_t id, const cam::DCFiltersSettings &filters) -> void{
-    settings.grabbersS[id].calibrationFilters = filters;
-    if(!settings.useNormalFilteringSettings){
-        clientDevices.update_filters_settings(id, settings.grabbersS[id].calibrationFilters);
-    }
+auto DCMModel::update_calibration_filters(size_t idC, const cam::DCFiltersSettings &calibrationFilters) -> void{
+    client.update_calibration_filters(idC, calibrationFilters);
 }
 
-auto DCMModel::update_device_settings(size_t idG, const cam::DCDeviceSettings &deviceS) -> void {
-    clientDevices.update_device_settings(idG, deviceS);
-    clientProcessing.update_device_settings(idG, deviceS);
+auto DCMModel::update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void {
+    client.update_device_settings(idC, deviceS);
 }
 
-auto DCMModel::update_color_settings(size_t idG, const cam::DCColorSettings &colorS) -> void{
-    clientDevices.update_color_settings(idG, colorS);
+auto DCMModel::update_color_settings(size_t idC, const cam::DCColorSettings &colorS) -> void{
+    client.update_color_settings(idC, colorS);
 }
 
-auto DCMModel::update_delay_settings(size_t idG, const cam::DCDelaySettings &delayS) -> void{
-    clientDevices.update_delay_settings(idG, delayS);
-}
-
-auto DCMModel::read_feedbacks() -> void{
-
-    if(readMessagesL.try_lock()){
-        auto size = messages.size();
-        if(size != 0){
-            for(size_t ii = 0; ii < size; ++ii){
-                messagesR.push_back(messages.front());
-                messages.pop_front();
-            }
-        }
-        readMessagesL.unlock();
-    }
-
-    for(const auto &message : messagesR){
-        settings.grabbersS[message.first].connected = clientDevices.device_connected(message.first);
-        DCMSignals::get()->feedback_received_signal(message.first, std::format("Valid [{}] received\n", to_string(static_cast<tool::net::DCMessageType>(message.second.receivedMessageType))));
-    }
-    messagesR.clear();
+auto DCMModel::update_delay_settings(size_t idC, const cam::DCDelaySettings &delayS) -> void{
+    client.update_delay_settings(idC, delayS);
 }
 
 auto DCMModel::update() -> void{
-
-    // read messages from network
-    read_feedbacks();
-
-    // read compressed frames
-    std::vector<std::shared_ptr<cam::DCCompressedFrame>> cFrames(clientProcessing.nb_frame_processors(), nullptr);
-    for(size_t ii = 0; ii < clientProcessing.nb_frame_processors(); ++ii){
-        // check if new frame uncompressed
-        if(auto get_compressed_frame = clientProcessing.get_compressed_frame(ii); get_compressed_frame != nullptr){
-            cFrames[ii] = get_compressed_frame;
-        }
-    }
-    for(size_t ii = 0; ii < clientProcessing.nb_frame_processors(); ++ii){
-
-        if(cFrames[ii]){
-
-            if(settings.grabbersS[ii].lastCompressedFrameIdReceived != cFrames[ii]->idCapture){
-
-                // update last compresesd frame id
-                settings.grabbersS[ii].lastCompressedFrameIdReceived = cFrames[ii]->idCapture;
-
-                // send it
-                DCMSignals::get()->new_compressed_frame_signal(ii, std::move(cFrames[ii]));
-
-                // invalidate it
-                // sData.invalid_last_compressed_frame(ii);
-            }
-        }
-    }
-
-    // read frames
-    std::vector<std::shared_ptr<cam::DCFrame>> frames(clientProcessing.nb_frame_processors(), nullptr);
-    for(size_t ii = 0; ii < clientProcessing.nb_frame_processors(); ++ii){
-        // check if new frame uncompressed
-        if(auto lastFrame = clientProcessing.get_frame(ii); lastFrame != nullptr){
-            frames[ii] = lastFrame;
-        }
-    }
-
-    // send frames
-    for(size_t ii = 0; ii < clientProcessing.nb_frame_processors(); ++ii){
-
-        if(frames[ii]){
-
-            if(settings.grabbersS[ii].lastFrameIdReceived != frames[ii]->idCapture){
-
-                // update last frame id
-                settings.grabbersS[ii].lastFrameIdReceived = frames[ii]->idCapture;
-
-                // send it
-                DCMSignals::get()->new_frame_signal(ii, std::move(frames[ii]));
-
-                // invalidate it
-                // sData.invalid_last_frame(ii);
-            }
-        }
-    }
-
-
-    // update
-    calibration.update();
+    client.update();
+    calibrator.update();
     player.update();
     recorder.update();
+}
+
+auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
+
+    std::string path;
+
+    if(sAction.action == SAction::Save){
+
+        if(sAction.type == SType::Global){
+            if(sAction.file == SFile::Normal){
+                path = DCSettingsPaths::client.string();
+            }else if(sAction.file == SFile::Default){
+                path = DCSettingsPaths::defaultClient.string();
+            }else if(sAction.file == SFile::Specific){
+                path = sAction.path;
+            }
+        }
+
+        if(!path.empty()){
+            client.settings.save_to_json_str_file(path);
+        }
+
+    }else if(sAction.action == SAction::Load){
+
+        if(sAction.type == SType::Global){
+
+            if(sAction.file == SFile::Normal){
+                if(std::filesystem::exists(DCSettingsPaths::client)){
+                    path = DCSettingsPaths::client.string();
+                }
+            }else if(sAction.file == SFile::Default){
+                if(std::filesystem::exists(DCSettingsPaths::defaultClient)){
+                    path = DCSettingsPaths::defaultClient.string();
+                }
+            }else if(sAction.file == SFile::Specific){
+                path = sAction.path;
+            }
+
+            if(!path.empty()){
+                clean();
+                if(client.initialize(path)){
+                    size_t nbConnections = client.devices_nb();
+                    recorder.initialize(nbConnections);
+                    calibrator.initialize(nbConnections);
+                }
+            }
+        }else {
+
+            path = sAction.path;
+
+            DCClientSettings cSettings;
+            if(cSettings.load_from_file(path)){
+
+                if(sAction.target == STarget::All){
+                    if(cSettings.devicesS.size() == client.devices_nb()) {
+                        for(size_t id = 0; id < client.devices_nb(); ++id){
+                            if(sAction.type == SType::Device){
+                                client.update_device_settings(id, cSettings.devicesS[id].deviceS);
+                            }else if(sAction.type == SType::Filters){
+                                client.update_filters(id, cSettings.devicesS[id].filtersS);
+                            }else if(sAction.type == SType::CalibrationFilters){
+                                client.update_calibration_filters(id, cSettings.devicesS[id].calibrationFiltersS);
+                            }else if(sAction.type == SType::Color){
+                                client.update_color_settings(id, cSettings.devicesS[id].colorS);
+                            }else if(sAction.type == SType::Model){
+                                client.update_model_settings(id, cSettings.devicesS[id].modelS);
+                            }
+                        }
+                    }else{
+                        Logger::error(std::format("Cannot load sub settings from file [{}] for all devices, incompatible number of devices, current: [{}], from file: [{}]\n", path, cSettings.devicesS.size(), client.devices_nb()));
+                    }
+
+                }else if(sAction.target == STarget::Individual){
+                    if(sAction.id < cSettings.devicesS.size()){
+                        if(sAction.type == SType::Device){
+                            client.update_device_settings(sAction.id, cSettings.devicesS[sAction.id].deviceS);
+                        }else if(sAction.type == SType::Filters){
+                            client.update_filters(sAction.id, cSettings.devicesS[sAction.id].filtersS);
+                        }else if(sAction.type == SType::CalibrationFilters){
+                            client.update_calibration_filters(sAction.id, cSettings.devicesS[sAction.id].calibrationFiltersS);
+                        }else if(sAction.type == SType::Color){
+                            client.update_color_settings(sAction.id, cSettings.devicesS[sAction.id].colorS);
+                        }else if(sAction.type == SType::Model){
+                            client.update_model_settings(sAction.id, cSettings.devicesS[sAction.id].modelS);
+                        }
+
+                    }else{
+                        Logger::error(std::format("Cannot load sub settings with id [{}] from file [{}], not enough devices from avaiable: [{}]\n", sAction.id, path, cSettings.devicesS.size()));
+                    }
+                }
+            }else{
+                // ...
+            }
+        }
+        // ...
+    }else if(sAction.action == SAction::Reset){
+
+        if(sAction.target == STarget::All){
+
+            for(size_t id = 0; id < client.devices_nb(); ++id){
+                if(sAction.type == SType::Device){
+                    client.update_device_settings(id, DCDeviceSettings());
+                }else if(sAction.type == SType::Filters){
+                    client.update_filters(id, DCFiltersSettings());
+                }else if(sAction.type == SType::CalibrationFilters){
+                    client.update_calibration_filters(id, DCFiltersSettings::default_init_for_calibration());
+                }else if(sAction.type == SType::Color){
+                    client.update_color_settings(id, DCColorSettings());
+                }else if(sAction.type == SType::Model){
+                    client.update_model_settings(id, DCModelSettings());
+                }
+            }
+
+        }else if(sAction.target == STarget::Individual){
+            if(sAction.type == SType::Device){
+                client.update_device_settings(sAction.id, DCDeviceSettings());
+            }else if(sAction.type == SType::Filters){
+                client.update_filters(sAction.id, DCFiltersSettings());
+            }else if(sAction.type == SType::CalibrationFilters){
+                client.update_calibration_filters(sAction.id, DCFiltersSettings::default_init_for_calibration());
+            }else if(sAction.type == SType::Color){
+                client.update_color_settings(sAction.id, DCColorSettings());
+            }else if(sAction.type == SType::Model){
+                client.update_model_settings(sAction.id, DCModelSettings());
+            }
+        }
+    }
+}
+
+auto DCMModel::host_name() -> std::string{
+    return Host::get_name();
 }

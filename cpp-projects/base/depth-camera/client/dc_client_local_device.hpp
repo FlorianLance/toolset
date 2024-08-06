@@ -43,7 +43,7 @@ public:
     DCClientLocalDevice();
     ~DCClientLocalDevice() override;
     
-    auto initialize(DCDeviceConnectionSettings *deviceS) -> bool override;
+    auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto clean() -> void override;
 
     auto apply_command(net::Command command) -> void override;

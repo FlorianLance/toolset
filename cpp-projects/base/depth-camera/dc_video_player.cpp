@@ -8,11 +8,12 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/stop_watch.hpp"
-// #include "frame/dc_frame_indices.hpp"
+
 
 using namespace tool::cam;
 
-struct DCPlayerData{
+
+struct DCVideoPlayer::Impl{
 
     DCVideo video;
     std::vector<size_t> camerasFrameId;
@@ -157,7 +158,7 @@ struct DCPlayerData{
     auto update_current_compressed_frames(double timeMs) -> void{
         for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
             if(auto idF = video.closest_frame_id_from_time(idC, timeMs); idF != -1){
-                if(idF != camerasFrameId[idC]){ 
+                if(idF != camerasFrameId[idC]){
                     camerasCompressedFrame[idC] = video.get_compressed_frame(idC, idF).lock();
                     camerasFrameId[idC]         = idF;
                 }
@@ -182,21 +183,20 @@ struct DCPlayerData{
         return false;
     }
 
-
     auto remove_empty_cameras() -> void{
         tool::Logger::error("[DCPlayerData::remove_empty_cameras] Not implemented.\n");
 
-        // for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
-        //     Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->data.video.nb_frames(ii)));
+        // for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
+        //     Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->video.nb_frames(ii)));
 
-        //     for(size_t jj = 0; jj < i->data.video.nb_frames(ii); ++jj){
-        //         auto nbV = i->data.video.get_compressed_frames_ptr(ii)->valid_vertices_count(ii);
+        //     for(size_t jj = 0; jj < i->video.nb_frames(ii); ++jj){
+        //         auto nbV = i->video.get_compressed_frames_ptr(ii)->valid_vertices_count(ii);
         //         Logger::message(std::format(" {}",nbV));
         //     }
         // }
 
         // size_t idC = 0;
-        // for(const auto &ccf : i->data.camerasCompressedFrame){
+        // for(const auto &ccf : i->camerasCompressedFrame){
         //     if(ccf != nullptr){
         //         Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
         //     }
@@ -234,7 +234,6 @@ struct DCPlayerData{
 
     }
 
-
     auto merge_before(DCVideo &other) -> void{
         static_cast<void>(other);
         tool::Logger::error("[DCPlayerData::merge_before] Not implemented.\n");
@@ -259,12 +258,6 @@ private:
     tool::StopWatch stopWatch;
 };
 
-struct DCVideoPlayer::Impl{
-    DCPlayerData data;
-    DCVideoPlayerStates states;
-    DCVideoPlayerSettings settings;
-};
-
 DCVideoPlayer::DCVideoPlayer(): i(std::make_unique<Impl>()){
 }
 
@@ -277,21 +270,21 @@ auto DCVideoPlayer::set_video(const DCVideo &video) -> void{
     stop_video();
 
     // init data with new video
-    i->data.initialize(video);
+    i->initialize(video);
 
     // reset custom times
-    i->settings.startTimeMs = -1.0;
-    i->settings.endTimeMs   = -1.0;
+    settings.startTimeMs = -1.0;
+    settings.endTimeMs   = -1.0;
 
     // update player states
-    i->states.isStarted = false;
+    states.isStarted = false;
     update_states();
 
     // retrieve models and send them
     std::vector<DCModelSettings> models;
-    for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
+    for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
         DCModelSettings model;
-        model.transformation = i->data.video.get_transform(ii).conv<float>();
+        model.transformation = i->video.get_transform(ii).conv<float>();
         models.push_back(model);
     }
     initialize_signal(std::move(models));
@@ -299,11 +292,11 @@ auto DCVideoPlayer::set_video(const DCVideo &video) -> void{
 
 
 auto DCVideoPlayer::is_started() const noexcept -> bool{
-    return i->states.isStarted;
+    return states.isStarted;
 }
 
 auto DCVideoPlayer::is_playing() const noexcept -> bool{
-    return i->data.is_started();
+    return states.isPlaying;
 }
 
 auto DCVideoPlayer::start_video() noexcept -> void{
@@ -313,11 +306,11 @@ auto DCVideoPlayer::start_video() noexcept -> void{
         return;
     }
 
-    i->states.isStarted = true;
+    states.isStarted = true;
 
-    i->data.start_playing();
+    i->start_playing();
     if(start_time_ms() > 0.0){
-        i->data.set_current_time(start_time_ms());
+        i->set_current_time(start_time_ms());
     }
 
     update_states();
@@ -325,8 +318,8 @@ auto DCVideoPlayer::start_video() noexcept -> void{
 
 auto DCVideoPlayer::stop_video() noexcept -> void{
 
-    i->states.isStarted = false;
-    i->data.reset_playing();
+    states.isStarted = false;
+    i->reset_playing();
     update_states();
 }
 
@@ -336,7 +329,7 @@ auto DCVideoPlayer::pause_video() noexcept -> void{
         return;
     }
 
-    i->data.stop_playing();
+    i->stop_playing();
     update_states();
 }
 
@@ -346,38 +339,38 @@ auto DCVideoPlayer::unpause_video() noexcept -> void{
         return;
     }
 
-    i->data.start_playing();
+    i->start_playing();
     update_states();
 }
 
 auto DCVideoPlayer::go_to_start_time() noexcept -> void{
-    i->data.set_current_time(start_time_ms());
+    i->set_current_time(start_time_ms());
     update_states();
 }
 
 auto DCVideoPlayer::go_to_end_time() noexcept -> void{
-    i->data.set_current_time(end_time_ms());
+    i->set_current_time(end_time_ms());
     update_states();
 }
 
 auto DCVideoPlayer::is_looping() const noexcept -> bool {
-    return i->settings.doLoop;
+    return settings.doLoop;
 }
 
 auto DCVideoPlayer::duration_ms() const noexcept -> double{
-    return i->data.video.duration_ms();
+    return i->video.duration_ms();
 }
 
 auto DCVideoPlayer::start_time_ms() const noexcept -> double{
-    if((i->settings.startTimeMs > 0.0) && (i->settings.startTimeMs < duration_ms())){
-        return i->settings.startTimeMs;
+    if((settings.startTimeMs > 0.0) && (settings.startTimeMs < duration_ms())){
+        return settings.startTimeMs;
     }
     return 0.0;
 }
 
 auto DCVideoPlayer::end_time_ms() const noexcept -> double{
-    if((i->settings.endTimeMs > 0.0) && (i->settings.endTimeMs < duration_ms())){
-        return i->settings.endTimeMs;
+    if((settings.endTimeMs > 0.0) && (settings.endTimeMs < duration_ms())){
+        return settings.endTimeMs;
     }
     return duration_ms();
 }
@@ -393,12 +386,12 @@ auto DCVideoPlayer::set_current_time(double timeMs) noexcept -> void{
         timeMs = end_time_ms();
     }
 
-    i->data.set_current_time(timeMs);
+    i->set_current_time(timeMs);
     update_states();
 }
 
 auto DCVideoPlayer::current_time_ms() const noexcept -> double{
-    return i->data.current_time_ms();
+    return i->current_time_ms();
 }
 
 auto DCVideoPlayer::update() -> void{
@@ -415,10 +408,10 @@ auto DCVideoPlayer::update() -> void{
     }
 
     // store current ids
-    std::vector<size_t> currentCamerasFrameId = i->data.camerasFrameId;
+    std::vector<size_t> currentCamerasFrameId = i->camerasFrameId;
 
     // retrieve current frames to uncompress
-    i->data.update_current_compressed_frames(cTime);
+    i->update_current_compressed_frames(cTime);
 
     // uncompress frames
     std::vector<bool> uncompressResults(video()->nb_cameras(), false);
@@ -429,24 +422,23 @@ auto DCVideoPlayer::update() -> void{
     sw.start();
     std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t id){
         if(video()->nb_frames(id) != 0){
-            if(i->data.current_frame_id(id) == 0 || (i->data.current_frame_id(id) != currentCamerasFrameId[id])){
-                uncompressResults[id] = i->data.uncompress_frame(i->settings.generation, id);
+            if(i->current_frame_id(id) == 0 || (i->current_frame_id(id) != currentCamerasFrameId[id])){
+                uncompressResults[id] = i->uncompress_frame(settings.generation, id);
             }
         }
     });
-
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
         if(uncompressResults[idC]){
 
-            auto cloudSize = i->data.camerasFrame[idC]->cloud.size();
-            if(i->data.ids.size() != cloudSize){
-                i->data.ids.resize(cloudSize);
-                std::iota(std::begin(i->data.ids), std::end(i->data.ids), 0);
+            auto cloudSize = i->camerasFrame[idC]->cloud.size();
+            if(i->ids.size() != cloudSize){
+                i->ids.resize(cloudSize);
+                std::iota(std::begin(i->ids), std::end(i->ids), 0);
             }
 
-            new_frame_signal(idC, i->data.camerasFrame[idC]);
+            new_frame_signal(idC, i->camerasFrame[idC]);
         }
     }
 
@@ -455,17 +447,17 @@ auto DCVideoPlayer::update() -> void{
 
 auto DCVideoPlayer::remove_until_current_frame() -> void{
 
-    for(size_t idC = 0; idC < i->data.video.nb_cameras(); ++idC){
-        i->data.video.remove_compressed_frames_until(idC, current_frame_id(idC));
+    for(size_t idC = 0; idC < i->video.nb_cameras(); ++idC){
+        i->video.remove_compressed_frames_until(idC, current_frame_id(idC));
     }    
-    i->data.set_current_time(0.0);
+    i->set_current_time(0.0);
     update_states();
 }
 
 auto DCVideoPlayer::remove_after_current_frame() -> void{
 
-    for(size_t idC = 0; idC < i->data.video.nb_cameras(); ++idC){
-        i->data.video.remove_compressed_frames_after(idC, current_frame_id(idC));
+    for(size_t idC = 0; idC < i->video.nb_cameras(); ++idC){
+        i->video.remove_compressed_frames_after(idC, current_frame_id(idC));
     }
     update_states();
 }
@@ -479,39 +471,39 @@ auto DCVideoPlayer::merge() -> void{
 
 auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
 
-    if(i->data.video.nb_cameras() < 1){
+    if(i->video.nb_cameras() < 1){
         return;
     }
 
-    i->data.video.merge_all_cameras(i->settings.generation, voxelSize, minBound, maxBound);
-    i->data.camerasCompressedFrame = {nullptr};
-    i->data.camerasFrame = {nullptr};
+    i->video.merge_all_cameras(settings.generation, voxelSize, minBound, maxBound);
+    i->camerasCompressedFrame = {nullptr};
+    i->camerasFrame = {nullptr};
 
     update_states();
 
     std::vector<DCModelSettings> models(1);
-    models.front().transformation = i->data.video.get_transform(0).conv<float>();
+    models.front().transformation = i->video.get_transform(0).conv<float>();
     initialize_signal(std::move(models));
 }
 
 auto DCVideoPlayer::remove_empty_cameras() -> void{
-    i->data.remove_empty_cameras();
+    i->remove_empty_cameras();
     update_states();
 }
 
 auto DCVideoPlayer::update_settings(const DCVideoPlayerSettings &playerS) noexcept -> void {
-    i->settings = playerS;
+    settings = playerS;
 }
 
 auto DCVideoPlayer::current_frame_id(size_t idCamera) const -> size_t{
-    return i->data.current_frame_id(idCamera);
+    return i->current_frame_id(idCamera);
 }
 
 auto DCVideoPlayer::current_compressed_frame_cloud_size(size_t idCamera) -> size_t{
 
-    if(idCamera < i->data.camerasCompressedFrame.size()){
-        if(i->data.camerasCompressedFrame[idCamera] != nullptr){
-            return i->data.camerasCompressedFrame[idCamera]->validVerticesCount;
+    if(idCamera < i->camerasCompressedFrame.size()){
+        if(i->camerasCompressedFrame[idCamera] != nullptr){
+            return i->camerasCompressedFrame[idCamera]->validVerticesCount;
         }
     }
     return 0;
@@ -519,17 +511,17 @@ auto DCVideoPlayer::current_compressed_frame_cloud_size(size_t idCamera) -> size
 
 auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
 
-    if(idCamera < i->data.camerasFrame.size()){
-        if(i->data.camerasFrame[idCamera] != nullptr){
-            return i->data.camerasFrame[idCamera]->cloud.size();
+    if(idCamera < i->camerasFrame.size()){
+        if(i->camerasFrame[idCamera] != nullptr){
+            return i->camerasFrame[idCamera]->cloud.size();
         }
     }
     return 0;
 }
 
 auto DCVideoPlayer::current_frame(size_t idCamera) -> std::shared_ptr<DCFrame>{
-    if(idCamera < i->data.camerasFrame.size()){
-        return i->data.camerasFrame[idCamera];
+    if(idCamera < i->camerasFrame.size()){
+        return i->camerasFrame[idCamera];
     }
     return nullptr;
 }
@@ -549,7 +541,7 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshDa
         auto tr = video()->get_transform(idCamera).conv<float>();
 
         if(applyModelTransform){
-            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+            std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];
                 vertices[id].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
                 vertices[id].col = geo::Pt4<std::uint8_t>{
@@ -560,7 +552,7 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshDa
                 };
             });
         }else{
-            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+            std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
                 vertices[id].pos = frame->cloud.vertices[id];
                 vertices[id].col = geo::Pt4<std::uint8_t>{
                     static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
@@ -583,7 +575,7 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
         auto tr = video()->get_transform(idCamera).conv<float>();
 
         if(applyModelTransform){
-            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+            std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];
                 positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
                 positions[id].x() *= -1.f;
@@ -596,7 +588,7 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
                 normals[id].x() *= -1.f;
             });
         }else{
-            std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + verticesCountToCopy, [&](size_t id){
+            std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
                 const auto &pt = frame->cloud.vertices[id];;
                 positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
                 positions[id].x() *= -1.f;
@@ -635,12 +627,12 @@ auto DCVideoPlayer::copy_all_current_clouds(std::span<DCVertexMeshData> vertices
         auto tr = video()->get_transform(idD).conv<float>();
         auto frame = current_frame(idD);
 
-        if(i->data.ids.size() < frame->cloud.size()){
-            i->data.ids.resize(frame->cloud.size());
-            std::iota(std::begin(i->data.ids), std::end(i->data.ids), 0);
+        if(i->ids.size() < frame->cloud.size()){
+            i->ids.resize(frame->cloud.size());
+            std::iota(std::begin(i->ids), std::end(i->ids), 0);
         }
 
-        std::for_each(std::execution::par_unseq, std::begin(i->data.ids), std::begin(i->data.ids) + frame->cloud.size(), [&](size_t idV){
+        std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + frame->cloud.size(), [&](size_t idV){
 
             const auto &pt = frame->cloud.vertices[idV];
             if(applyModelTransform){
@@ -662,20 +654,21 @@ auto DCVideoPlayer::copy_all_current_clouds(std::span<DCVertexMeshData> vertices
 
 
 auto DCVideoPlayer::video() -> DCVideo* {
-    return &i->data.video;
+    return &i->video;
 }
 
 auto DCVideoPlayer::load_from_file(std::string_view path) -> bool{
 
-    if(i->data.load_from_file(path)){
+    Logger::message("load_from_file\n");
+    if(i->load_from_file(path)){
 
         go_to_start_time();
 
         // retrieve models and send them
         std::vector<DCModelSettings> models;
-        for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
+        for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
             DCModelSettings model;
-            model.transformation = i->data.video.get_transform(ii).conv<float>();
+            model.transformation = i->video.get_transform(ii).conv<float>();
             models.push_back(model);
         }
 
@@ -689,31 +682,29 @@ auto DCVideoPlayer::load_from_file(std::string_view path) -> bool{
 }
 
 auto DCVideoPlayer::save_to_file(std::string_view path) -> bool{
-    return i->data.video.save_to_file(path);
+    return i->video.save_to_file(path);
 }
 
 auto DCVideoPlayer::merge_before(DCVideo &other) -> void{
-    i->data.merge_before(other);
+    i->merge_before(other);
     update_states();
 }
 
 auto DCVideoPlayer::update_states() noexcept -> void{
 
-    if(i->states.nbFrames.size() != i->data.video.nb_cameras()){
-        i->states.nbFrames.resize(i->data.video.nb_cameras());
-        i->states.currentFrames.resize(i->data.video.nb_cameras());
+    if(states.nbFrames.size() != i->video.nb_cameras()){
+        states.nbFrames.resize(i->video.nb_cameras());
+        states.currentFrames.resize(i->video.nb_cameras());
     }
 
-    for(size_t ii = 0; ii < i->data.video.nb_cameras(); ++ii){
-        i->states.nbFrames[ii]      = i->data.video.nb_frames(ii);
-        i->states.currentFrames[ii] = current_frame_id(ii);
+    for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
+        states.nbFrames[ii]      = i->video.nb_frames(ii);
+        states.currentFrames[ii] = current_frame_id(ii);
     }
 
-    i->states.isPlaying   = i->data.is_started();
-    i->states.duration    = video()->duration_ms();
-    i->states.currentTime = current_time_ms();
-
-    states_updated_signal(i->states);
+    states.isPlaying   = i->is_started();
+    states.duration    = video()->duration_ms();
+    states.currentTime = current_time_ms();
 }
 
 auto DCVideoPlayer::save_cloud_to_file(std::string_view path) -> bool{

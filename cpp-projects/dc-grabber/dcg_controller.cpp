@@ -166,9 +166,6 @@ auto DCGController::set_connections() -> void{
     s->update_color_settings_signal.connect(                         &DevM::update_color_settings,                          dev);
     s->update_delay_settings_signal.connect(                         &DevM::update_delay_settings,                          dev);
 
-    // # states
-    rec->states_updated_signal.connect(                              &States::update_recorder_states,                       states);
-
     // # recorder
     s->update_recorder_settings_signal.connect(                      &Rec::update_settings,                                 rec);
     s->update_model_settings_signal.connect(                         &Rec::update_model,                                    rec);

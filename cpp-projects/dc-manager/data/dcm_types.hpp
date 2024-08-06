@@ -26,20 +26,43 @@
 
 #pragma once
 
+// std
+#include <string>
 
 namespace tool{
 
 enum class SAction : int {
-    Reset, Load, Save
+    Reset, Load, Save, Add_server, Remove_server
 };
 enum class STarget : int {
     Irrelevant, All,Individual
 };
 enum class SType : int {
-    Device ,Filters, CalibrationFilters, Color, Model, Network
+    Global, Device, Filters, CalibrationFilters, Color, Model
 };
 enum class SFile : int {
-    Irrelevant, Default, Host, HostAllInOne
+    Irrelevant, Default, Normal, Specific
+};
+
+struct SettingsAction{
+    SAction action;
+    STarget target;
+    SType type;
+    SFile file;
+    size_t id;
+    bool valid = false;
+    bool hasPath = false;
+    std::string path = "";
+
+    auto update(SAction action, STarget target, SType type, SFile file, size_t id = 0) -> void{
+        this->action = action;
+        this->target = target;
+        this->type = type;
+        this->file = file;
+        this->id = id;
+        path = "";
+        valid = true;
+    }
 };
 
 }

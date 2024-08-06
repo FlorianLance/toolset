@@ -48,7 +48,7 @@ enum class DCClientType{
 class DCClientDevice{
 public:
     virtual ~DCClientDevice(){}
-    virtual auto initialize(DCDeviceConnectionSettings *deviceS) -> bool{static_cast<void>(deviceS);return false;}
+    virtual auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool{static_cast<void>(connectionS);return false;}
     virtual auto clean() -> void{}
 
     virtual auto apply_command(net::Command command) -> void{static_cast<void>(command);}

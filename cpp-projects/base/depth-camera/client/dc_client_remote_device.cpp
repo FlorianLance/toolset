@@ -44,7 +44,7 @@ using namespace tool::cam;
 struct DCClientRemoteDevice::Impl{
 
     // connection
-    RemoteServerSettings remoteServerS;
+    DCDeviceConnectionSettings remoteServerS;
     bool remoteDeviceConnected = false;
 
     // send
@@ -70,39 +70,34 @@ DCClientRemoteDevice::~DCClientRemoteDevice(){
     DCClientRemoteDevice::clean();
 }
 
-auto DCClientRemoteDevice::initialize(DCDeviceConnectionSettings *deviceS) -> bool {
+auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool {
 
-    if(auto devS = dynamic_cast<DCRemoteDeviceConnectionSettings*>(deviceS)){
+    i->remoteServerS = connectionS;
 
-        i->remoteServerS = devS->serverS;
-
-        // init reader
-        Logger::message(std::format("DCClientRemoteDevice init reader: {} {} {}\n", i->remoteServerS.readingAdress, std::to_string(i->remoteServerS.readingPort), static_cast<int>(i->remoteServerS.protocol)));
-        if(!i->udpReader.init_socket(i->remoteServerS.readingAdress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
-            Logger::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
-            return false;
-        }
-
-        if(i->remoteServerS.startReadingThread){
-            i->udpReader.start_reading_thread();
-        }
-
-        // init sender
-        Logger::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.sendingAdress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
-        if(!i->udpSender.init_socket(i->remoteServerS.sendingAdress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
-            Logger::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
-            return false;
-        }
-
-        // set connection
-        i->udpReader.packed_received_signal.connect(&DCClientRemoteDevice::process_received_packet, this);
-
-        return true;
-
-    }else{
-        Logger::error("[DCClientRemoteDevice::initialize] Invalid settings file.");
+    // init reader
+    Logger::message(std::format("DCClientRemoteDevice init reader: {} {} {}\n", i->remoteServerS.readingAddress, std::to_string(i->remoteServerS.readingPort), static_cast<int>(i->remoteServerS.protocol)));
+    if(!i->udpReader.init_socket(i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
+        Logger::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
+
+    if(i->remoteServerS.startReadingThread){
+        i->udpReader.start_reading_thread();
+    }
+
+    // init sender
+    Logger::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.sendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
+    if(!i->udpSender.init_socket(i->remoteServerS.sendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
+        Logger::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
+        return false;
+    }
+
+    // set connection
+    i->udpReader.packed_received_signal.connect(&DCClientRemoteDevice::process_received_packet, this);
+
+    return true;
+
+
 }
 
 auto DCClientRemoteDevice::init_remote_connection() -> void{
@@ -110,15 +105,15 @@ auto DCClientRemoteDevice::init_remote_connection() -> void{
     Logger::message(
         std::format("DCServerRemoteDevice: init remote connection infos: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] PRO:[{}].\n",
         i->remoteServerS.idReadingInterface,
-        i->remoteServerS.readingAdress,
+        i->remoteServerS.readingAddress,
         i->remoteServerS.readingPort,
-        i->remoteServerS.sendingAdress,
+        i->remoteServerS.sendingAddress,
         i->remoteServerS.sendingPort,
         static_cast<int>(i->remoteServerS.protocol))
     );
 
     UdpConnectionSettings connectionSettings;
-    connectionSettings.address          = i->remoteServerS.readingAdress;
+    connectionSettings.address          = i->remoteServerS.readingAddress;
     connectionSettings.port             = i->remoteServerS.readingPort;
     connectionSettings.maxPacketSize    = i->maxSizeUpdMessage;
 

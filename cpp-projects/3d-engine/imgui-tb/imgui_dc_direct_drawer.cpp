@@ -79,9 +79,7 @@ auto DCDirectDrawer::redraw_clouds_to_fbo() -> void{
     m_redrawClouds = false;
 }
 
-
 auto DCDirectDrawer::draw(bool focus) -> void{
-
 
     redraw_clouds_to_fbo();
 

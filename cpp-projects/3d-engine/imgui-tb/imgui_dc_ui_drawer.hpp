@@ -95,7 +95,7 @@ public:
     static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model) -> bool;
     static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> bool;
     static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> bool;
-    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> bool;
+    static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, cam::DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> bool;
 
     static inline ImGuiDragS  modelRotDs = {45.f, true, true, false, true, true};
     static inline ImGuiDragS  modelTrDs  = {45.f, true, true, false, true, true};

@@ -51,6 +51,5 @@ private:
 
     std::unique_ptr<DCMModel> model = nullptr;
     std::unique_ptr<DCMView> view = nullptr;
-
 };
 }

@@ -198,3 +198,236 @@ auto DCDevice::set_delay_settings(const DCDelaySettings &delayS) -> void{
     i->dd->set_delay_settings(delayS);
 }
 
+
+struct DeviceAction{
+    bool cleanDevice   = false;
+    bool createDevice  = false;
+    bool closeDevice   = false;
+    bool openDevice    = false;
+    bool loopDataReset = false;
+    // bool readData      = false;
+};
+
+struct DCDevice2::Impl{
+
+    // settings
+    DCDeviceSettings deviceS;
+    DCFiltersSettings filters;
+    DCColorSettings colorsS;
+    DCDataSettings dataS;
+    DCDelaySettings delayS;
+
+    // device
+    std::unique_ptr<DCDeviceImpl> device = nullptr;
+
+    // threads/tasks
+    std::unique_ptr<std::thread> loopT = nullptr;
+
+    // states
+    std::atomic_bool isDeviceInitializedS   = false;
+    std::atomic_bool isOpenedS              = false;
+    std::atomic_bool readDataS              = false;
+
+    // actions
+    bool doLoopA = false;
+    std::mutex locker;
+    std::optional<DeviceAction> dAction      = std::nullopt;
+};
+
+DCDevice2::DCDevice2(): i(std::make_unique<Impl>()){
+
+    // start thread
+    i->loopT = std::make_unique<std::thread>(&DCDevice2::thread_loop, this);
+}
+
+DCDevice2::~DCDevice2(){
+
+    // stop thread
+    i->doLoopA = false;
+    if(i->loopT->joinable()){
+        i->loopT->join();
+    }
+    i->loopT = nullptr;
+}
+
+auto DCDevice2::update_device_settings(const DCDeviceSettings &deviceS) -> void{
+
+    const auto &newConfigS  = deviceS.configS;
+    const auto &currConfigS = i->deviceS.configS;
+
+    // if(deviceChanged && i->device != nullptr){
+    //     for(size_t ii = 0; ii < i->device->nb_devices(); ++ii){
+    //         update_device_name_signal(static_cast<int>(ii), std::format("Cam {}", ii));
+    //     }
+    // }
+
+    bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
+
+    bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
+
+    bool syncChanged  =
+        (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
+        (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
+        (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
+        (newConfigS.synchMode                       != currConfigS.synchMode);
+
+    bool cameraSettingsChanged =
+        syncChanged ||
+        // device
+        (newConfigS.mode                            != currConfigS.mode) ||
+        // body tracking
+        (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
+        (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
+        (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
+        (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
+        // others
+        (newConfigS.disableLED                      != currConfigS.disableLED) ||
+        // color - depth calibration
+        (newConfigS.colorAlignmentTr                != currConfigS.colorAlignmentTr) ||
+        (newConfigS.colorAlignmentRot               != currConfigS.colorAlignmentRot);
+
+
+    // device must be deleted
+    DeviceAction dAction;
+    dAction.cleanDevice     = (i->device != nullptr) && deviceChanged;
+    // device must be created
+    dAction.createDevice    =  ((i->device == nullptr) && (newConfigS.typeDevice != DCType::Undefined)) || deviceChanged;
+    // device must be closed
+    dAction.closeDevice     = !newConfigS.openDevice || deviceIdChanged || syncChanged || dAction.cleanDevice;
+    // device must be opened
+    dAction.openDevice      = newConfigS.openDevice;
+    // loop data must be reset
+    dAction.loopDataReset   = cameraSettingsChanged || dAction.createDevice || dAction.openDevice;
+
+    // replace current config
+    i->locker.lock();
+    i->deviceS = deviceS;
+    i->locker.unlock();
+
+    // update reading data state
+    i->readDataS = newConfigS.startReading;
+}
+
+auto DCDevice2::thread_loop() -> void{
+
+    i->doLoopA = true;
+
+    while(i->doLoopA){
+
+        i->locker.lock();
+        auto dAction = i->dAction;
+        i->locker.unlock();
+
+        if(dAction.has_value()){
+
+            // close device
+            if(i->isDeviceInitializedS && i->isOpenedS && dAction->closeDevice){
+                i->device->stop();
+                i->device->close();
+                i->isOpenedS = false;
+            }
+
+            // clean device
+            if(i->isDeviceInitializedS && dAction->cleanDevice){
+                i->device = nullptr;
+                i->isDeviceInitializedS = false;
+            }
+
+            // create device
+            if(!i->isDeviceInitializedS && dAction->createDevice){
+                auto type = i->deviceS.configS.typeDevice;
+                if(type == DCType::AzureKinect){
+                    auto lg = LogGuard("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
+                    i->device = std::make_unique<AzureKinectDeviceImpl>();
+                }else if(type == DCType::FemtoBolt){
+                    auto lg = LogGuard("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
+                    i->device = std::make_unique<FemtoBoltDeviceImpl>();
+                }else if(type == DCType::FemtoMega){
+                    auto lg = LogGuard("DCDevice::DCDevice FemtoMegaDeviceImpl"sv);
+                    i->device = std::make_unique<FemtoMegaDeviceImpl>();
+                }else if(type == DCType::Recording){
+                    auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
+                    i->device = std::make_unique<RecordingDeviceImpl>();
+                }else{
+                    // ...
+                    break;
+                }
+                // device->set_parent_device(this);
+                i->isDeviceInitializedS = true;
+
+                // update_device_name_signal(idDevice, std::format("Id:{} Num:{}", idDevice, i->device->device_name()));
+
+                // // set connections
+                // i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+                //     new_frame_signal(std::move(frame));
+                // });
+                // i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){
+                //     new_compressed_frame_signal(std::move(frame));
+                // });
+            }
+
+            // open device
+            if(i->isDeviceInitializedS && !i->isOpenedS && dAction->openDevice){
+
+                bool canOpenDevice = true;
+                if(i->deviceS.configS.typeDevice != DCType::FemtoMega){
+                    auto deviceCount = i->device->nb_devices();
+                    if(deviceCount == 0){
+                        canOpenDevice = false;
+                        Logger::error("[DCDevice::open] No device found\n");
+                    } else if(i->deviceS.configS.idDevice >= deviceCount){
+                        canOpenDevice = false;
+                        Logger::error(std::format("[DCDevice::open] Invalid device id: [{}], available: [{}]\n", i->deviceS.configS.idDevice, deviceCount));
+                    }
+                }
+
+                if(canOpenDevice){
+                    if(i->device->open(i->deviceS.configS.idDevice)){
+
+                        // if(deviceChanged){
+                        //     tool::Logger::message("Device changed, colors settings set to default.\n");
+                        //     i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                        //     color_settings_reset_signal(i->colorsS);
+                        // }
+
+                        // set current settings
+                        i->device->set_color_settings(i->colorsS);
+                        i->device->set_filters_settings(i->filters);
+                        i->device->set_data_settings(i->deviceS.dataS.server);
+                        i->device->set_delay_settings(i->delayS);
+
+                        i->isOpenedS = true;
+
+                        // update_device_name_signal(idDevice, std::format("Id:{} Num:{}", idDevice, i->device->device_name()));
+                    }
+                }
+            }
+
+            // reset loop data
+            if(i->isDeviceInitializedS && i->isOpenedS && dAction->loopDataReset){
+                i->device->loop_initialization();
+            }
+
+            dAction = std::nullopt;
+        }
+
+
+        // if(readData){
+
+        // }
+
+        // if(openDevice && !isOpened){
+
+        // }else if(!openDevice && isOpened){
+
+        // }
+
+        // if(initDevice && !isDeviceInitialized){
+
+        // }else if(!initDevice && isDeviceInitialized){
+
+        // }
+
+    }
+}
+

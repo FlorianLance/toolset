@@ -33,9 +33,22 @@ namespace tool {
 
 struct DCSettingsPaths{
 
-    static auto initialize(const std::filesystem::path &base_, const std::string &hostName_) -> void;
-    static auto initialize_grabbers(size_t nbConnections) -> void;
+    static auto initialize(const std::filesystem::path &base_, const std::string &hostName_, const std::string &logName_) -> void;
+    static auto get_client_settings_file_path() -> std::string;
 
+    static inline std::string hostName;
+    static inline std::string logName;
+
+    static inline std::filesystem::path base;
+    static inline std::filesystem::path configPath;
+    static inline std::filesystem::path settingsPath;
+    static inline std::filesystem::path outputPath;
+
+    static inline std::filesystem::path defaultClient;
+    static inline std::filesystem::path client;    
+
+    // legacy
+    static auto initialize_grabbers(size_t nbConnections) -> void;
     static auto get_network_settings_file_path() -> std::string;
     static auto get_filters_settings_file_path(size_t idG) -> std::string;
     static auto get_calibration_filters_settings_file_path(size_t idG) -> std::string;
@@ -43,15 +56,8 @@ struct DCSettingsPaths{
     static auto get_color_settings_file_path(size_t idG) -> std::string;
     static auto get_model_settings_file_path(size_t idG) -> std::string;
 
-    static inline std::filesystem::path base;
-    static inline std::filesystem::path configPath;
-    static inline std::filesystem::path settingsPath;
     static inline std::filesystem::path networkPath;
     static inline std::filesystem::path calibrationPath;
-    static inline std::filesystem::path outputPath;
-
-    static inline std::string hostName;
-    static inline std::string logName;
 
     static inline std::filesystem::path defaultNetwork;
     static inline std::filesystem::path hostNetwork;
@@ -85,6 +91,5 @@ struct DCSettingsPaths{
     static inline std::filesystem::path allGrabbersModelLegacy;
     static inline std::vector<std::filesystem::path> grabbersModel;
     static inline std::vector<std::filesystem::path> grabbersModelLegacy;
-
 };
 }

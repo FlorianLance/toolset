@@ -37,9 +37,9 @@ enum class DCDeviceConnectionType : std::int8_t{
     Remote, Local
 };
 
-struct DCDeviceConnectionSettings2 : io::Settings{
+struct DCDeviceConnectionSettings : io::Settings{
 
-    DCDeviceConnectionSettings2(){
+    DCDeviceConnectionSettings(){
         sType   = io::SettingsType::Dc_client_connection;
         version = io::SettingsVersion::LastVersion;
     }
@@ -64,56 +64,49 @@ struct DCDeviceConnectionSettings2 : io::Settings{
 };
 
 
-struct DCDeviceConnectionSettings{
 
+// DEPRECATED
+
+
+struct DCDeprecatedDeviceConnectionSettings{
     bool isLocal = false;
-    virtual ~DCDeviceConnectionSettings(){}
+    virtual ~DCDeprecatedDeviceConnectionSettings(){}
 };
-
-struct DCLocalDeviceConnectionSettings : public DCDeviceConnectionSettings{
-
-    DCLocalDeviceConnectionSettings(){
-        DCDeviceConnectionSettings::isLocal = true;
+struct DCDeprecatedLocalDeviceConnectionSettings : public DCDeprecatedDeviceConnectionSettings{
+    DCDeprecatedLocalDeviceConnectionSettings(){
+        DCDeprecatedDeviceConnectionSettings::isLocal = true;
     }
 };
+struct DCDeprecatedRemoteDeviceConnectionSettings : public DCDeprecatedDeviceConnectionSettings{
 
-struct DCRemoteDeviceConnectionSettings : public DCDeviceConnectionSettings{
-
-    DCRemoteDeviceConnectionSettings(){
-        DCDeviceConnectionSettings::isLocal = false;
+    DCDeprecatedRemoteDeviceConnectionSettings(){
+        DCDeprecatedDeviceConnectionSettings::isLocal = false;
     }
     net::RemoteServerSettings serverS;
 };
 
+struct DCDeprecatedClientConnectionSettings : io::Settings{
 
-struct DCClientConnectionSettings : io::Settings{
-
-    std::vector<std::unique_ptr<DCDeviceConnectionSettings>> connectionsS;
+    std::vector<std::unique_ptr<DCDeprecatedDeviceConnectionSettings>> connectionsS;
 
     // runtime
     std::string filePath;
     std::vector<net::Interface> ipv4Interfaces = {};
     std::vector<net::Interface> ipv6Interfaces = {};
 
-    DCClientConnectionSettings(){
+    DCDeprecatedClientConnectionSettings(){
         sType   = io::SettingsType::Dc_client_connection;
         version = io::SettingsVersion::LastVersion;
     }
 
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
-
-
-    auto reset_interfaces() -> void;
     auto initialize(const std::string &filePath) -> bool;
-    auto default_initialize() -> void;
-
-    // auto add_server(const net::ReadSendNetworkInfos &clientInfo) -> void;
-    // auto update_server(size_t idC, const net::ReadSendNetworkInfos &nClientInfo) -> void;
 
 private:
 
     // legacy
     auto init_from_text(std::string_view &text) -> void override;
 };
+
 }

@@ -88,11 +88,13 @@ public:
     auto load_from_file(std::string_view path) -> bool;
     auto save_to_file(std::string_view path) -> bool;
     auto merge_before(DCVideo &other) -> void;
-    auto save_cloud_to_file(std::string_view path) -> bool;        
+    auto save_cloud_to_file(std::string_view path) -> bool;
+
+    cam::DCVideoPlayerSettings settings;
+    cam::DCVideoPlayerStates states;
 
     // signals
     sigslot::signal<std::vector<DCModelSettings>> initialize_signal;
-    sigslot::signal<DCVideoPlayerStates> states_updated_signal;
     sigslot::signal<size_t, std::shared_ptr<DCFrame>> new_frame_signal;
 
 private:

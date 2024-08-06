@@ -37,6 +37,33 @@ using namespace tool::cam;
 using namespace tool::data;
 using json = nlohmann::json;
 
+DCClientDeviceSettings::DCClientDeviceSettings(){
+    sType   = io::SettingsType::Dc_client_device;
+    version = io::SettingsVersion::LastVersion;
+}
+
+auto DCClientDeviceSettings::set_id(size_t idC) -> void{
+
+    static constexpr std::array<geo::Pt4f, 12> colors = {
+        geo::Pt4f{1.0f,0.0f,0.0f, 1.0f},
+        {0.0f,1.0f,0.0f, 1.0f},
+        {0.0f,0.0f,1.0f, 1.0f},
+        {1.0f,1.0f,0.0f, 1.0f},
+        {0.0f,1.0f,1.0f, 1.0f},
+        {1.0f,0.0f,1.0f, 1.0f},
+        {0.5f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,0.5f, 1.0f},
+        {0.5f,0.0f,0.5f, 1.0f},
+        {1.0f,0.5f,0.0f, 1.0f},
+        {0.0f,0.5f,1.0f, 1.0f},
+        {1.0f,0.0f,0.5f, 1.0f},
+    };
+
+    id   = idC;
+    name = std::format("D{}", id);
+    displayS.unicolor = colors[id];
+}
+
 auto DCClientDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
@@ -103,6 +130,7 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
 
         DCClientDeviceSettings clientDevice;
         clientDevice.init_from_json(read_object(clientDeviceJson, unreadCount, "client_device"sv));
+        clientDevice.set_id(devicesS.size());
 
         auto &connectionS = clientDevice.connectionS;
         if(connectionS.connectionType == DCDeviceConnectionType::Remote){
@@ -163,63 +191,17 @@ auto DCClient::initialize(const std::string &clientSettingsPath) -> bool{
     if(devices_nb() != 0){
         clean();
     }
-
-    if(!clientS.load_from_file(clientSettingsPath)){
+    
+    if(!settings.load_from_file(clientSettingsPath)){
         return false;
     }
 
-    // init other settings    
-    m_processing.initialize(clientS.devicesS.size(), true);
+    // init other settings
+    m_processing.initialize(settings.devicesS.size(), true);
 
-    size_t idDevice = 0;
-    for(auto &clientDeviceS : clientS.devicesS){
+    generate_clients();
 
-        std::unique_ptr<DCClientDevice> device = nullptr;
-        if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
 
-            Logger::message("[DCClient::initialize] Create local device.\n"sv);
-            auto lDevice = std::make_unique<DCClientLocalDevice>();
-            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
-                m_processing.new_frame(idDevice, std::move(frame));
-            });
-            device = std::move(lDevice);
-
-        }else if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
-
-            Logger::message("[DCClient::initialize] Create remote device.\n"sv);
-            auto rDevice = std::make_unique<DCClientRemoteDevice>();
-
-            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
-                m_readMessagesL.lock();
-                m_messages.emplace_back(idDevice, feedback);
-                m_readMessagesL.unlock();
-            });
-            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t averageTimestampDiffNs){
-                clientS.devicesS[idDevice].synchroAverageDiff = averageTimestampDiffNs;
-            });
-            rDevice->remote_network_status_signal.connect([this,idDevice](net::UdpNetworkStatus status){
-                clientS.devicesS[idDevice].receivedNetworkStatus = status;
-            });
-            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
-                m_processing.new_compressed_frame(idDevice, std::move(cFrame));
-            });
-            device = std::move(rDevice);
-        }
-
-        device->data_status_signal.connect([this,idDevice](net::UdpDataStatus status){
-            clientS.devicesS[idDevice].receivedDataStatus = status;
-        });
-
-        Logger::message("[DCClient::initialize] Initialize device.\n"sv);
-        // if(!device->initialize(connectionS.get())){
-        //     Logger::error("[DCClient::initialize] Cannot initialize device.\n"sv);
-        //     continue;
-        // }
-
-        Logger::message("[DCClient::initialize] Add device to list.\n"sv);
-        devices.push_back(std::move(device));
-        ++idDevice;
-    }
     return true;
 }
 
@@ -229,9 +211,9 @@ auto DCClient::load_device_settings_file(size_t idC, const std::string &settings
         Logger::error(std::format("[DCClient::load_device_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return false;
     }
-
-    if(clientS.devicesS[idC].deviceS.load_from_file(settingsFilePath)){
-        clientS.devicesS[idC].deviceFilePath = settingsFilePath;
+    
+    if(settings.devicesS[idC].deviceS.load_from_file(settingsFilePath)){
+        settings.devicesS[idC].deviceFilePath = settingsFilePath;
     }else{
         Logger::error(std::format("[DCClient::load_device_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n", idC));
         return false;
@@ -246,9 +228,9 @@ auto DCClient::load_filters_settings_file(size_t idC, const std::string &setting
         Logger::error(std::format("[DCClient::load_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return false;
     }
-
-    if(clientS.devicesS[idC].filtersS.load_from_file(settingsFilePath)){
-        clientS.devicesS[idC].filtersFilePath = settingsFilePath;
+    
+    if(settings.devicesS[idC].filtersS.load_from_file(settingsFilePath)){
+        settings.devicesS[idC].filtersFilePath = settingsFilePath;
     }else{
         Logger::error(std::format("[DCClient::load_filters_settings_file] No device settings file found for device n°[{}]], default parameters used instead.\n", idC));
         return false;
@@ -263,9 +245,9 @@ auto DCClient::load_calibration_filters_settings_file(size_t idC, const std::str
         Logger::error(std::format("[DCClient::load_calibration_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return false;
     }
-
-    if(clientS.devicesS[idC].calibrationFiltersS.load_from_file(settingsFilePath)){
-        clientS.devicesS[idC].calibrationFiltersFilePath = settingsFilePath;
+    
+    if(settings.devicesS[idC].calibrationFiltersS.load_from_file(settingsFilePath)){
+        settings.devicesS[idC].calibrationFiltersFilePath = settingsFilePath;
     }else{
         Logger::error(std::format("[DCClient::load_calibration_filters_settings_file] No device settings file found for device n°[{}]], default parameters used instead.\n", idC));
         return false;
@@ -280,9 +262,9 @@ auto DCClient::load_color_filters_settings_file(size_t idC, const std::string &s
         Logger::error(std::format("[DCClient::load_color_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return false;
     }
-
-    if(clientS.devicesS[idC].colorS.load_from_file(settingsFilePath)){
-        clientS.devicesS[idC].colorFilePath = settingsFilePath;
+    
+    if(settings.devicesS[idC].colorS.load_from_file(settingsFilePath)){
+        settings.devicesS[idC].colorFilePath = settingsFilePath;
     }else{
         Logger::error(std::format("[DCClient::load_color_filters_settings_file] No device settings file found for device n°[{}]], default parameters used instead.\n", idC));
         return false;
@@ -294,7 +276,7 @@ auto DCClient::load_color_filters_settings_file(size_t idC, const std::string &s
 auto DCClient::load_device_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
 
     std::vector<io::Settings*> settingsFiles;
-    for(auto &deviceS : clientS.devicesS){
+    for(auto &deviceS : settings.devicesS){
         settingsFiles.push_back(&deviceS.deviceS);
     }
 
@@ -309,7 +291,7 @@ auto DCClient::load_device_multi_settings_file(const std::string &multiSettingsF
 auto DCClient::load_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
 
     std::vector<io::Settings*> settingsFiles;
-    for(auto &deviceS : clientS.devicesS){
+    for(auto &deviceS : settings.devicesS){
         settingsFiles.push_back(&deviceS.filtersS);
     }
 
@@ -324,7 +306,7 @@ auto DCClient::load_filters_multi_settings_file(const std::string &multiSettings
 auto DCClient::load_calibration_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
 
     std::vector<io::Settings*> settingsFiles;
-    for(auto &deviceS : clientS.devicesS){
+    for(auto &deviceS : settings.devicesS){
         settingsFiles.push_back(&deviceS.calibrationFiltersS);
     }
 
@@ -339,7 +321,7 @@ auto DCClient::load_calibration_filters_multi_settings_file(const std::string &m
 auto DCClient::load_color_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
 
     std::vector<io::Settings*> settingsFiles;
-    for(auto &deviceS : clientS.devicesS){
+    for(auto &deviceS : settings.devicesS){
         settingsFiles.push_back(&deviceS.colorS);
     }
 
@@ -353,13 +335,13 @@ auto DCClient::load_color_filters_multi_settings_file(const std::string &multiSe
 
 auto DCClient::clean() -> void{
 
-    for(auto &device : devices){
+    for(auto &device : m_devices){
         device->clean();
     }
     m_processing.clean();
 
-    devices.clear();
-    clientS.devicesS.clear();
+    m_devices.clear();
+    settings.devicesS.clear();
 }
 
 auto DCClient::update() -> void{
@@ -387,12 +369,12 @@ auto DCClient::update() -> void{
     // send frames
     for(size_t idC = 0; idC < m_processing.nb_frame_processors(); ++idC){
 
-        if(cFrames[idC]){            
-
-            if(clientS.devicesS[idC].lastCompressedFrameIdReceived != cFrames[idC]->idCapture){
+        if(cFrames[idC]){
+            
+            if(settings.devicesS[idC].lastCompressedFrameIdReceived != cFrames[idC]->idCapture){
 
                 // update last compresesd frame id
-                clientS.devicesS[idC].lastCompressedFrameIdReceived = cFrames[idC]->idCapture;
+                settings.devicesS[idC].lastCompressedFrameIdReceived = cFrames[idC]->idCapture;
 
                 // send it
                 new_compressed_frame_signal(idC, std::move(cFrames[idC]));
@@ -403,11 +385,11 @@ auto DCClient::update() -> void{
         }
 
         if(frames[idC]){
-
-            if(clientS.devicesS[idC].lastFrameIdReceived != frames[idC]->idCapture){
+            
+            if(settings.devicesS[idC].lastFrameIdReceived != frames[idC]->idCapture){
 
                 // update last frame id
-                clientS.devicesS[idC].lastFrameIdReceived = frames[idC]->idCapture;
+                settings.devicesS[idC].lastFrameIdReceived = frames[idC]->idCapture;
 
                 // send it
                 new_frame_signal(idC, std::move(frames[idC]));
@@ -420,19 +402,19 @@ auto DCClient::update() -> void{
 }
 
 auto DCClient::devices_nb() const noexcept -> size_t{
-    return devices.size();
+    return m_devices.size();
 }
 
 auto DCClient::device_connected(size_t idC) const noexcept -> bool{
     if(idC < devices_nb()){
-        return devices[idC]->device_connected();
+        return m_devices[idC]->device_connected();
     }
     return false;
 }
 
 auto DCClient::device_type(size_t idC) const noexcept -> DCClientType{
     if(idC < devices_nb()){
-        return devices[idC]->type();
+        return m_devices[idC]->type();
     }
     return DCClientType::undefined;
 }
@@ -443,8 +425,8 @@ auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
         return;
     }
 
-    if(devices[idC]->type() == DCClientType::remote){
-        dynamic_cast<DCClientRemoteDevice*>(devices[idC].get())->init_remote_connection();
+    if(m_devices[idC]->type() == DCClientType::remote){
+        dynamic_cast<DCClientRemoteDevice*>(m_devices[idC].get())->init_remote_connection();
     }
 }
 
@@ -455,11 +437,55 @@ auto DCClient::read_network_data_from_remote_device(size_t idC) -> size_t{
         return 0;
     }
 
-    if(devices[idC]->type() == DCClientType::remote){
-        return dynamic_cast<DCClientRemoteDevice*>(devices[idC].get())->read_data_from_network();
+    if(m_devices[idC]->type() == DCClientType::remote){
+        return dynamic_cast<DCClientRemoteDevice*>(m_devices[idC].get())->read_data_from_network();
     }
 
     return 0;
+}
+
+auto DCClient::load_network_settings_file(const std::string &settingsFilePath) -> bool{
+
+    Logger::message("LOAD LEGACY\n");
+    if(devices_nb() != 0){
+        clean();
+    }
+
+    DCDeprecatedClientConnectionSettings dS;
+    if(!dS.initialize(settingsFilePath)){
+        return false;
+    }
+    settings.sType          = io::SettingsType::Dc_client_connection;
+    settings.version        = io::SettingsVersion::LastVersion;
+    settings.filePath       = dS.filePath;
+
+    settings.ipv4Interfaces = dS.ipv4Interfaces;
+    settings.ipv6Interfaces = dS.ipv6Interfaces;
+    settings.devicesS.resize(dS.connectionsS.size());
+
+    for(size_t idD = 0; idD < settings.devicesS.size(); ++idD){
+        auto &coS = settings.devicesS[idD].connectionS;
+        if(dS.connectionsS[idD]->isLocal){
+            coS.connectionType = DCDeviceConnectionType::Local;
+        }else{
+            auto *remoteC = dynamic_cast<DCDeprecatedRemoteDeviceConnectionSettings*>(dS.connectionsS[idD].get());
+            coS.connectionType      = DCDeviceConnectionType::Remote;
+            coS.idReadingInterface  = remoteC->serverS.idReadingInterface;
+            coS.readingPort         = remoteC->serverS.readingPort;
+            coS.sendingAddress      = remoteC->serverS.sendingAdress;
+            coS.sendingPort         = remoteC->serverS.sendingPort;
+            coS.protocol            = remoteC->serverS.protocol;
+            coS.startReadingThread  = remoteC->serverS.startReadingThread;
+        }
+        settings.devicesS[idD].set_id(idD);
+    }
+
+    // init other settings
+    m_processing.initialize(settings.devicesS.size(), true);
+
+    generate_clients();
+
+    return true;
 }
 
 auto DCClient::apply_command(size_t idC, net::Command command) -> void{
@@ -468,15 +494,15 @@ auto DCClient::apply_command(size_t idC, net::Command command) -> void{
         return;
     }
 
-    devices[idC]->apply_command(command);
+    m_devices[idC]->apply_command(command);
 }
 
 auto DCClient::use_normal_filters() -> void{
-    m_useNormalFilteringSettings = true;
+    settings.useNormalFilteringSettings = true;
 }
 
 auto DCClient::use_calibration_filters() -> void{
-    m_useNormalFilteringSettings = false;
+    settings.useNormalFilteringSettings = false;
 }
 
 auto DCClient::update_filters(size_t idC, const DCFiltersSettings &filtersS) -> void{
@@ -485,10 +511,10 @@ auto DCClient::update_filters(size_t idC, const DCFiltersSettings &filtersS) -> 
         Logger::error(std::format("[DCClient::update_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
-
-    clientS.devicesS[idC].filtersS = filtersS;
-    if(m_useNormalFilteringSettings){
-        devices[idC]->update_filters_settings(clientS.devicesS[idC].filtersS);
+    
+    settings.devicesS[idC].filtersS = filtersS;
+    if(settings.useNormalFilteringSettings){
+        m_devices[idC]->update_filters_settings(settings.devicesS[idC].filtersS);
     }
 }
 
@@ -498,10 +524,10 @@ auto DCClient::update_calibration_filters(size_t idC, const DCFiltersSettings &f
         Logger::error(std::format("[DCClient::update_calibration_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
-
-    clientS.devicesS[idC].calibrationFiltersS = filtersS;
-    if(!m_useNormalFilteringSettings){
-        devices[idC]->update_filters_settings(clientS.devicesS[idC].calibrationFiltersS);
+    
+    settings.devicesS[idC].calibrationFiltersS = filtersS;
+    if(!settings.useNormalFilteringSettings){
+        m_devices[idC]->update_filters_settings(settings.devicesS[idC].calibrationFiltersS);
     }
 }
 
@@ -511,10 +537,10 @@ auto DCClient::update_device_settings(size_t idC, const DCDeviceSettings &device
         Logger::error(std::format("[DCClient::update_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
-
-
-    clientS.devicesS[idC].deviceS = deviceS;
-    devices[idC]->update_device_settings(clientS.devicesS[idC].deviceS);
+        
+    settings.devicesS[idC].deviceS = deviceS;
+    m_devices[idC]->update_device_settings(settings.devicesS[idC].deviceS);
+    m_processing.update_device_settings(idC, deviceS);
 }
 
 auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) -> void{
@@ -523,9 +549,9 @@ auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) 
         Logger::error(std::format("[DCClient::update_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
-
-    clientS.devicesS[idC].colorS = colorS;
-    devices[idC]->update_color_settings(clientS.devicesS[idC].colorS);
+    
+    settings.devicesS[idC].colorS = colorS;
+    m_devices[idC]->update_color_settings(settings.devicesS[idC].colorS);
 }
 
 auto DCClient::update_delay_settings(size_t idC, const DCDelaySettings &delayS) -> void{
@@ -534,25 +560,77 @@ auto DCClient::update_delay_settings(size_t idC, const DCDelaySettings &delayS) 
         Logger::error(std::format("[DCClient::update_delay_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
-
-    clientS.devicesS[idC].delayS = delayS;
-    devices[idC]->update_delay_settings(clientS.devicesS[idC].delayS);
+    
+    settings.devicesS[idC].delayS = delayS;
+    m_devices[idC]->update_delay_settings(settings.devicesS[idC].delayS);
 }
 
 auto DCClient::update_model_settings(size_t idC, const DCModelSettings &modelS) -> void{
-    clientS.devicesS[idC].modelS = modelS;
-    update_model_settings_signal(idC, clientS.devicesS[idC].modelS);
+    settings.devicesS[idC].modelS = modelS;
+    update_model_settings_signal(idC, settings.devicesS[idC].modelS);
 }
 
 auto DCClient::trigger_all_models_settings() -> void{
-    for(size_t idC = 0; idC < clientS.devicesS.size(); ++idC){
-        update_model_settings_signal(idC, clientS.devicesS[idC].modelS);
+    for(size_t idC = 0; idC < settings.devicesS.size(); ++idC){
+        update_model_settings_signal(idC, settings.devicesS[idC].modelS);
     }
 }
 
 auto DCClient::trigger_all_device_display_settings() -> void{
-    for(size_t idC = 0; idC < clientS.devicesS.size(); ++idC){
-        update_device_display_settings_signal(idC, clientS.devicesS[idC].deviceDisplayS);
+    for(size_t idC = 0; idC < settings.devicesS.size(); ++idC){
+        update_device_display_settings_signal(idC, settings.devicesS[idC].displayS);
+    }
+}
+
+auto DCClient::generate_clients() -> void{
+
+    size_t idDevice = 0;
+    for(auto &clientDeviceS : settings.devicesS){
+
+        std::unique_ptr<DCClientDevice> device = nullptr;
+        if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
+
+            Logger::message("[DCClient::initialize] Create local device.\n"sv);
+            auto lDevice = std::make_unique<DCClientLocalDevice>();
+            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
+                m_processing.new_frame(idDevice, std::move(frame));
+            });
+            device = std::move(lDevice);
+
+        }else if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
+
+            Logger::message("[DCClient::initialize] Create remote device.\n"sv);
+            auto rDevice = std::make_unique<DCClientRemoteDevice>();
+            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
+                m_readMessagesL.lock();
+                m_messages.emplace_back(idDevice, feedback);
+                m_readMessagesL.unlock();
+            });
+            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t averageTimestampDiffNs){
+                settings.devicesS[idDevice].synchroAverageDiff = averageTimestampDiffNs;
+            });
+            rDevice->remote_network_status_signal.connect([this,idDevice](net::UdpNetworkStatus status){
+                settings.devicesS[idDevice].receivedNetworkStatus = status;
+            });
+            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
+                m_processing.new_compressed_frame(idDevice, std::move(cFrame));
+            });
+            device = std::move(rDevice);
+        }
+
+        device->data_status_signal.connect([this,idDevice](net::UdpDataStatus status){
+            settings.devicesS[idDevice].receivedDataStatus = status;
+        });
+
+        Logger::message("[DCClient::initialize] Initialize device.\n"sv);
+        if(!device->initialize(clientDeviceS.connectionS)){
+            Logger::error("[DCClient::initialize] Cannot initialize device.\n"sv);
+            continue;
+        }
+
+        Logger::message("[DCClient::initialize] Add device to list.\n"sv);
+        m_devices.push_back(std::move(device));
+        ++idDevice;
     }
 }
 
@@ -576,8 +654,8 @@ auto DCClient::read_feedbacks() -> void{
             // ...
             continue;
         }
-
-        devicesS[message.first].connected = devices[message.first]->device_connected();
+        
+        settings.devicesS[message.first].connected = m_devices[message.first]->device_connected();
         feedback_received_signal(message.first, std::format("Valid [{}] received\n", to_string(static_cast<tool::net::DCMessageType>(message.second.receivedMessageType))));
     }
     m_messagesR.clear();

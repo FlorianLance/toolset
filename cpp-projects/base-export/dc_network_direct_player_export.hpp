@@ -28,10 +28,11 @@
 
 
 // base
-#include "depth-camera/client/dc_client_processing.hpp"
-#include "depth-camera/client/dc_client_devices.hpp"
+// #include "depth-camera/client/dc_client_processing.hpp"
+// #include "depth-camera/client/dc_client_devices.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/client/dc_client.hpp"
 
 typedef void (__stdcall * LogMessageCB)(const char*, int);
 typedef void (__stdcall * NewFeedbackCB)(int,int,int);
@@ -40,13 +41,13 @@ typedef void (__stdcall * NewFeedbackCB)(int,int,int);
 namespace tool::cam{
 
 struct DeviceData{
-    bool connected = false;
+    // bool connected = false;
     size_t id = 0;
-    cam::DCFiltersSettings filters;
-    cam::DCDeviceSettings device = cam::DCDeviceSettings::default_init_for_manager();
-    cam::DCColorSettings color;
-    cam::DCModelSettings model;
-    cam::DCDelaySettings delay;
+    // cam::DCFiltersSettings filters;
+    // cam::DCDeviceSettings device = cam::DCDeviceSettings::default_init_for_manager();
+    // cam::DCColorSettings color;
+    // cam::DCModelSettings model;
+    // cam::DCDelaySettings delay;
 
     std::unique_ptr<std::mutex> feedbackLocker = nullptr;
     size_t nbFeedbacksReceived =0;
@@ -62,12 +63,14 @@ struct DeviceData{
 
 struct DCNetworkDirectPlayer{
 
+    cam::DCClient client;
+
     // network
-    cam::DCClientDevices clientDevices;
-    cam::DCClientConnectionSettings clientDevicesSettings;
+    // cam::DCClientDevices clientDevices;
+    // cam::DCClientConnectionSettings clientDevicesSettings;
 
     // data
-    DCClientProcessing clientProicessing;
+    // DCClientProcessing clientProicessing;
     std::vector<DeviceData> devicesD;
 
     // state

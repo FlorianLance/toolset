@@ -56,42 +56,27 @@ auto from_eigen_mat(const Eigen::Matrix4d_u &eMat) -> Mat4f {
 
 struct DCCalibrator::Impl{
 
-    auto process_cloud(const geo::ColoredCloudData &cloud) -> geo::ColoredCloudData;
-    auto set_model_cloud(size_t idModel, const DCModelSettings &modelTr) -> bool;
-    auto set_source_cloud(size_t idSource, const DCModelSettings &sourceTr) -> bool;
-    auto do_RANSAC(unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult;
-    auto do_ICP() const -> open3d::pipelines::registration::RegistrationResult;
+    auto process_cloud(const DCCalibratorSettings &settings, const geo::ColoredCloudData &cloud) -> geo::ColoredCloudData;
+    auto set_model_cloud(const DCCalibratorSettings &settings, size_t idModel, const DCModelSettings &modelTr) -> bool;
+    auto set_source_cloud(const DCCalibratorSettings &settings, size_t idSource, const DCModelSettings &sourceTr) -> bool;
+    auto do_RANSAC(const DCCalibratorSettings &settings, unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult;
+    auto do_ICP(const DCCalibratorSettings &settings) const -> open3d::pipelines::registration::RegistrationResult;
+    auto compute_charmfer_distance_between_with_current_source(const geo::Mat4f &model) -> double;
 
     static auto best_registration_results(const std::vector<std::tuple<open3d::pipelines::registration::RegistrationResult, double>> &results) -> std::tuple<open3d::pipelines::registration::RegistrationResult, double>;
     static auto compute_new_model(const open3d::pipelines::registration::RegistrationResult &result, const geo::Mat4f &model) -> geo::Mat4f;
     static auto convert_to_opend3d_pc(const ColoredCloudData &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>;
 
-    DCCalibratorSettings settings;
+    std::mt19937 gen;
     std::vector<DCCalibratorGrabberData> grabbersData;
     geo::ColoredCloudData modelCloud;
     geo::ColoredCloudData sourceCloud;
 
-    auto compute_charmfer_distance_between_with_current_source(const geo::Mat4f &model){
-
-        // The chamfer command is used to compute the Chamfer distance between two point clouds.
-        // The Chamfer distance is computed by summing the squared distances between nearest neighbor correspondences of two point clouds.
-        auto sc = sourceCloud;
-        sc.vertices.apply_transformation(model);
-
-        auto pcSourceCloud = convert_to_opend3d_pc(sc);
-        double sum = 0.0;
-        auto distances = m_modelPcCloud->ComputePointCloudDistance(*pcSourceCloud);
-        for(auto distance : distances){
-            sum += distance*distance;
-        }
-        return sum;
-    }
-
-    std::mt19937 gen;
+    std::vector<std::optional<DCModelSettings>> calibrations;
 
 private:
 
-    auto preprocess_features(const ColoredCloudData &cloud) -> std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>;
+    auto preprocess_features(const DCCalibratorSettings &settings, const ColoredCloudData &cloud) -> std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>;
 
     std::shared_ptr<open3d::geometry::PointCloud> m_modelPcCloud = nullptr;
     std::shared_ptr<open3d::pipelines::registration::Feature> m_modelFpfh = nullptr;
@@ -99,7 +84,7 @@ private:
     std::shared_ptr<open3d::pipelines::registration::Feature> m_sourceFpfh = nullptr;
 };
 
-auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModelSettings &modelTr) -> bool{
+auto DCCalibrator::Impl::set_model_cloud(const DCCalibratorSettings &settings, size_t idModel, const DCModelSettings &modelTr) -> bool{
 
     // retrieve model cloud
     modelCloud = settings.useProcessed ?
@@ -112,7 +97,7 @@ auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModelSettings &
     // process features
     m_modelPcCloud = nullptr;
     m_modelFpfh    = nullptr;
-    std::tie(m_modelPcCloud, m_modelFpfh) = preprocess_features(modelCloud);
+    std::tie(m_modelPcCloud, m_modelFpfh) = preprocess_features(settings, modelCloud);
     if(!m_modelPcCloud->HasPoints()){
         return false;
     }
@@ -120,7 +105,7 @@ auto DCCalibrator::Impl::set_model_cloud(size_t idModel, const DCModelSettings &
     return true;
 }
 
-auto DCCalibrator::Impl::set_source_cloud(size_t idSource, const DCModelSettings &sourceTr) -> bool{
+auto DCCalibrator::Impl::set_source_cloud(const DCCalibratorSettings &settings, size_t idSource, const DCModelSettings &sourceTr) -> bool{
 
     // retrieve source cloud
     sourceCloud = settings.useProcessed ?
@@ -133,7 +118,7 @@ auto DCCalibrator::Impl::set_source_cloud(size_t idSource, const DCModelSettings
     // process features
     m_sourcePcCloud = nullptr;
     m_sourceFpfh    = nullptr;
-    std::tie(m_sourcePcCloud, m_sourceFpfh) = preprocess_features(sourceCloud);
+    std::tie(m_sourcePcCloud, m_sourceFpfh) = preprocess_features(settings, sourceCloud);
 
     if(!m_sourcePcCloud->HasPoints()){
         return false;
@@ -142,7 +127,7 @@ auto DCCalibrator::Impl::set_source_cloud(size_t idSource, const DCModelSettings
     return true;
 }
 
-auto DCCalibrator::Impl::process_cloud(const geo::ColoredCloudData &cloud) -> ColoredCloudData{
+auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, const geo::ColoredCloudData &cloud) -> ColoredCloudData{
 
     if(!cloud.has_vertices()){
         return {};
@@ -177,7 +162,7 @@ auto DCCalibrator::Impl::process_cloud(const geo::ColoredCloudData &cloud) -> Co
 }
 
 
-auto DCCalibrator::Impl::preprocess_features(const ColoredCloudData &cloud) ->
+auto DCCalibrator::Impl::preprocess_features(const DCCalibratorSettings &settings, const ColoredCloudData &cloud) ->
 
     std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>{
 
@@ -200,7 +185,7 @@ auto DCCalibrator::Impl::preprocess_features(const ColoredCloudData &cloud) ->
 }
 
 
-auto DCCalibrator::Impl::do_RANSAC(unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult{
+auto DCCalibrator::Impl::do_RANSAC(const DCCalibratorSettings &settings, unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult{
 
     // set registration parameters
     auto correspondence_checker_edge_length = open3d::pipelines::registration::CorrespondenceCheckerBasedOnEdgeLength(settings.ransac.similaritiesThreshold);
@@ -225,7 +210,7 @@ auto DCCalibrator::Impl::do_RANSAC(unsigned int seed) const -> open3d::pipelines
     );
 }
 
-auto DCCalibrator::Impl::do_ICP() const -> open3d::pipelines::registration::RegistrationResult{
+auto DCCalibrator::Impl::do_ICP(const DCCalibratorSettings &settings) const -> open3d::pipelines::registration::RegistrationResult{
     return open3d::pipelines::registration::RegistrationICP(
         *m_sourcePcCloud,
         *m_modelPcCloud,
@@ -280,47 +265,65 @@ auto DCCalibrator::Impl::convert_to_opend3d_pc(const ColoredCloudData &cloud) ->
     return pcd;
 }
 
-DCCalibrator::DCCalibrator(): m_p(std::make_unique<Impl>()){}
+auto DCCalibrator::Impl::compute_charmfer_distance_between_with_current_source(const Mat4f &model) -> double {
+
+    // The chamfer command is used to compute the Chamfer distance between two point clouds.
+    // The Chamfer distance is computed by summing the squared distances between nearest neighbor correspondences of two point clouds.
+    auto sc = sourceCloud;
+    sc.vertices.apply_transformation(model);
+
+    auto pcSourceCloud = convert_to_opend3d_pc(sc);
+    double sum = 0.0;
+    auto distances = m_modelPcCloud->ComputePointCloudDistance(*pcSourceCloud);
+    for(auto distance : distances){
+        sum += distance*distance;
+    }
+    return sum;
+}
+
+DCCalibrator::DCCalibrator(): i(std::make_unique<Impl>()){}
 
 DCCalibrator::~DCCalibrator(){}
 
 auto DCCalibrator::initialize(size_t nbGrabbers) -> void{
 
-    m_p->grabbersData.resize(nbGrabbers);
-    for(size_t ii = 0; ii < m_p->grabbersData.size(); ++ii){
-        m_p->grabbersData[ii].id = ii;
-        m_calibrations.push_back(std::nullopt);
-        m_states.nbFramesRegistered.push_back(0);
+    settings.initialize(nbGrabbers);
+
+    i->grabbersData.resize(nbGrabbers);
+    for(size_t ii = 0; ii < i->grabbersData.size(); ++ii){
+        i->grabbersData[ii].id = ii;
+        i->calibrations.push_back(std::nullopt);
+        states.nbFramesRegistered.push_back(0);
     }
 
 }
 
 auto DCCalibrator::nb_frames_registered(size_t idGrabber) const noexcept -> size_t{
-    return m_p->grabbersData[idGrabber].frames.size();
+    return i->grabbersData[idGrabber].frames.size();
 }
 
 auto DCCalibrator::size_all_calibration_cloud() const noexcept -> size_t{
     size_t total = 0;
-    for(const auto &grabberData : m_p->grabbersData){
+    for(const auto &grabberData : i->grabbersData){
         total += grabberData.calibrationCloud.size();
     }
     return total;
 }
 
 auto DCCalibrator::calibration_grabber_data(size_t idGrabber) const -> const DCCalibratorGrabberData*{
-    if(idGrabber < m_p->grabbersData.size()){
-        return &m_p->grabbersData.at(idGrabber);
+    if(idGrabber < i->grabbersData.size()){
+        return &i->grabbersData.at(idGrabber);
     }
     return nullptr;
 }
 
 auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void{
 
-    if(!m_states.isRegistering){
+    if(!states.isRegistering){
         return;
     }
 
-    if(m_states.elapsedTime.count() <= m_p->settings.timeToWaitBeforeRegisteringMs){
+    if(states.elapsedTime.count() <= settings.timeToWaitBeforeRegisteringMs){
         return;
     }
 
@@ -330,7 +333,7 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
         return;
     }
 
-    auto &grabberData = m_p->grabbersData[idCloud];
+    auto &grabberData = i->grabbersData[idCloud];
     if(grabberData.frames.size() > 0){
         if(grabberData.frames.back()->idCapture == frame->idCapture){
             Logger::error("[DCCalibrator] Previous cloud already added.\n");
@@ -338,42 +341,42 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
         }
     }
 
-    m_states.nbFramesRegistered[idCloud]++;
+    states.nbFramesRegistered[idCloud]++;
     grabberData.frames.push_back(frame);
 
     add_to_calibration_cloud(idCloud, cloud);
-    add_to_proccessed_cloud(idCloud, m_p->process_cloud(cloud));
-    send_data_updated_signal();
+    add_to_proccessed_cloud(idCloud, i->process_cloud(settings, cloud));
+    trigger_data_updated();
 }
 
 auto DCCalibrator::process_all_frames() -> void{
 
-    for(auto &grabberData : m_p->grabbersData){
+    for(auto &grabberData : i->grabbersData){
         grabberData.calibrationCloud.clear();
         grabberData.processedCloud.clear();
 
         for(auto &frame : grabberData.frames){
             add_to_calibration_cloud(grabberData.id, frame->cloud);
-            add_to_proccessed_cloud(grabberData.id, m_p->process_cloud(frame->cloud));
+            add_to_proccessed_cloud(grabberData.id, i->process_cloud(settings, frame->cloud));
         }
     }
-    send_data_updated_signal();
+    trigger_data_updated();
 }
 
 auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool{
 
-    size_t idModel = m_p->settings.modelSelectionId;
-    if(m_states.nbFramesRegistered[idModel] == 0){
+    size_t idModel = settings.modelSelectionId;
+    if(states.nbFramesRegistered[idModel] == 0){
         Logger::error(std::format("[DCCalibrator] No frames registered for model with id [{}], calibration aborted.\n",idModel));
         return false;
     }
 
     std::vector<size_t> idSources;
-    if(m_p->settings.sourceSelectionId == m_p->settings.models.size()){
+    if(settings.sourceSelectionId == settings.models.size()){
 
-        for(size_t ii = 0; ii < m_p->settings.models.size(); ++ii){
+        for(size_t ii = 0; ii < settings.models.size(); ++ii){
             if(ii != idModel){
-                if(m_states.nbFramesRegistered[ii] == 0){
+                if(states.nbFramesRegistered[ii] == 0){
                     Logger::warning(std::format("[DCCalibrator] No frames registered for source with id [{}], source removed from calibration list.\n", ii));
                     continue;
                 }
@@ -383,8 +386,8 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         }
     }else{
 
-        if(m_p->settings.sourceSelectionId != idModel){
-            idSources.push_back(m_p->settings.sourceSelectionId);
+        if(settings.sourceSelectionId != idModel){
+            idSources.push_back(settings.sourceSelectionId);
         }else{
             Logger::error("[DCCalibrator] Source must be different from model, calibration aborted.\n");
             return false;
@@ -401,13 +404,13 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
     //     Logger::message(std::format("source {}\n", s));
     // }
 
-    if(!m_p->set_model_cloud(idModel, models[idModel])){
+    if(!i->set_model_cloud(settings, idModel, models[idModel])){
         Logger::error("[DCCalibrator] Model cloud is empty, calibration aborted.\n");
         return false;
     }
 
     Logger::message("Start calibration.\n");
-    for(auto &calibration : m_calibrations){
+    for(auto &calibration : i->calibrations){
         calibration = std::nullopt;
     }
 
@@ -420,7 +423,7 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
             continue;
         }
 
-        if(!m_p->set_source_cloud(idSource, models[idSource])){
+        if(!i->set_source_cloud(settings, idSource, models[idSource])){
             Logger::error("[DCCalibrator] Source cloud is empty, source ignored.\n");
             return false;
         }
@@ -428,20 +431,20 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         // do registration
         Logger::message(std::format("Register cloud [{}]\n",idSource));
         std::vector<std::tuple<open3d::pipelines::registration::RegistrationResult, double>> results;
-        if(m_p->settings.doRansac){
+        if(settings.doRansac){
             // RANSAC
             std::uniform_int_distribution<> dist(0, 100000);
-            for(size_t ii = 0; ii < m_p->settings.ransac.nbTries; ++ii){
-                auto result    = m_p->do_RANSAC(dist(m_p->gen));
+            for(size_t ii = 0; ii < settings.ransac.nbTries; ++ii){
+                auto result    = i->do_RANSAC(settings, dist(i->gen));
                 auto resMat    = from_eigen_mat(result.transformation_);
-                auto distance  = m_p->compute_charmfer_distance_between_with_current_source(resMat);
+                auto distance  = i->compute_charmfer_distance_between_with_current_source(resMat);
                 results.push_back({result,distance});
                 Logger::message(std::format("RANSAC [ID TRY:{}] [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", ii, result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
             }
         }else{ // ICP
-            auto result    = m_p->do_ICP();
+            auto result    = i->do_ICP(settings);
             auto resMat    = from_eigen_mat(result.transformation_);
-            auto distance  = m_p->compute_charmfer_distance_between_with_current_source(resMat);
+            auto distance  = i->compute_charmfer_distance_between_with_current_source(resMat);
             results.push_back({result,distance});
             Logger::message(std::format("ICP [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
         }
@@ -455,8 +458,8 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         newM.transformation = models[idSource].compute_full_transformation() * from_eigen_mat(std::get<0>(bestResult).transformation_);
 
         // send calibration
-        m_calibrations[idSource] = newM;
-        new_calibration_signal(idSource, m_calibrations[idSource].value());
+        i->calibrations[idSource] = newM;
+        new_calibration_signal(idSource, i->calibrations[idSource].value());
 
         Logger::message(std::format("Calibration updated for cloud [{}]\n", idSource));
     }
@@ -467,77 +470,72 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
 
 auto DCCalibrator::validate_calibration() -> void{
 
-    for(size_t ii = 0; ii < m_calibrations.size(); ++ii){
-        if(m_calibrations[ii].has_value()){
-            validated_calibration_signal(ii, m_calibrations[ii].value());
+    for(size_t ii = 0; ii < i->calibrations.size(); ++ii){
+        if(i->calibrations[ii].has_value()){
+            validated_calibration_signal(ii, i->calibrations[ii].value());
         }
     }
 }
 
-auto DCCalibrator::update_settings(const DCCalibratorSettings &calibrationS) -> void{
-    m_p->settings = calibrationS;
+auto DCCalibrator::update_settings(const DCCalibratorSettings &calibratorS) -> void{
+    settings = calibratorS;
 }
 
-auto DCCalibrator::send_data_updated_signal() -> void{
-    data_updated_signal(m_p->settings.modelSelectionId, m_p->settings.sourceSelectionId, &m_p->grabbersData);
+auto DCCalibrator::trigger_data_updated() -> void{
+    data_updated_signal(settings.modelSelectionId, settings.sourceSelectionId, &i->grabbersData);
 }
 
 auto DCCalibrator::start_registering() -> void{
 
-    if((m_states.startTime == std::chrono::milliseconds(0)) || (m_states.elapsedTime.count() < m_p->settings.durationMs)){
-        m_states.startTime      = tool::Time::milliseconds_since_epoch() - m_states.elapsedTime;
-        m_states.isRegistering  = true;
-        states_updated_signal(m_states);
+    if((states.startTime == std::chrono::milliseconds(0)) || (states.elapsedTime.count() < settings.durationMs)){
+        states.startTime      = tool::Time::milliseconds_since_epoch() - states.elapsedTime;
+        states.isRegistering  = true;
     }
 }
 
 auto DCCalibrator::stop_registering() -> void{
-    m_states.isRegistering = false;
-    states_updated_signal(m_states);
+    states.isRegistering = false;
 }
 
 auto DCCalibrator::reset_registering() -> void{
 
     // reset data
-    for(auto &grabberData : m_p->grabbersData){
+    for(auto &grabberData : i->grabbersData){
         grabberData.clean();
     }
-    for(auto &calibration : m_calibrations){
+    for(auto &calibration : i->calibrations){
         calibration = std::nullopt;
     }
-    send_data_updated_signal();
+    trigger_data_updated();
 
     // reset states
-    m_states.startTime   = tool::Time::milliseconds_since_epoch();
-    m_states.elapsedTime = std::chrono::milliseconds(0);
+    states.startTime   = tool::Time::milliseconds_since_epoch();
+    states.elapsedTime = std::chrono::milliseconds(0);
 
-    std::fill(std::begin(m_states.nbFramesRegistered), std::end(m_states.nbFramesRegistered), 0);
-    states_updated_signal(m_states);        
+    std::fill(std::begin(states.nbFramesRegistered), std::end(states.nbFramesRegistered), 0);
 }
 
 auto DCCalibrator::update() -> void{
 
-    if(m_states.isRegistering){
-        m_states.elapsedTime = (tool::Time::milliseconds_since_epoch() - m_states.startTime);
+    if(states.isRegistering){
+        states.elapsedTime = (tool::Time::milliseconds_since_epoch() - states.startTime);
     }
-    if(m_states.elapsedTime.count() > m_p->settings.durationMs){
-        m_states.isRegistering = false;
+    if(states.elapsedTime.count() > settings.durationMs){
+        states.isRegistering = false;
     }
 
-    if(m_states.isRegistering && size_all_calibration_cloud() > 5000000){
-        m_states.isRegistering = false;
+    if(states.isRegistering && size_all_calibration_cloud() > 5000000){
+        states.isRegistering = false;
         Logger::message("Max calibration cloud size reached.\n");
     }
-
-    states_updated_signal(m_states);
 }
 
 
 auto DCCalibrator::add_to_calibration_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void {
-    m_p->grabbersData[idCloud].calibrationCloud.merge(cloud);
+    i->grabbersData[idCloud].calibrationCloud.merge(cloud);
 }
 
 auto DCCalibrator::add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void{
-    m_p->grabbersData[idCloud].processedCloud.merge(cloud);
+    i->grabbersData[idCloud].processedCloud.merge(cloud);
 }
 

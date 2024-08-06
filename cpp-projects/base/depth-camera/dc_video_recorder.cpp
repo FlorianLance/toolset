@@ -44,8 +44,6 @@ struct DCVideoRecorder::Impl{
     std::vector<std::shared_ptr<DCCompressedFrame>> currentCompressedFrames;
     std::vector<std::shared_ptr<DCFrame>> currentFrames;
 
-    DCVideoRecorderStates states;
-    DCVideoRecorderSettings settings;
     DCVideo videoResource;
 
     DCFrameCompressor compressor;
@@ -63,16 +61,14 @@ auto DCVideoRecorder::initialize(size_t nbDevices) -> void{
     // video
     i->videoResource.initialize(nbDevices);
     // states
-    i->states = {};
-    i->states.nbFramesRecorded  = std::vector<size_t>(nbDevices, 0);
-    i->states.currentFrames     = std::vector<size_t>(nbDevices, 0);
+    states = {};
+    states.nbFramesRecorded  = std::vector<size_t>(nbDevices, 0);
+    states.currentFrames     = std::vector<size_t>(nbDevices, 0);
     // frames
     i->currentFrames.resize(nbDevices);
     std::fill(i->currentFrames.begin(), i->currentFrames.end(), nullptr);
     i->currentCompressedFrames.resize(nbDevices);
     std::fill(i->currentCompressedFrames.begin(), i->currentCompressedFrames.end(), nullptr);
-
-    states_updated_signal(i->states);
 }
 
 auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
@@ -89,7 +85,7 @@ auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
         return false;
     }
 
-    return i->videoResource.uncompress_frame(i->settings.generation, idCamera, i->currentCompressedFrames[idCamera].get(), frame);
+    return i->videoResource.uncompress_frame(settings.generation, idCamera, i->currentCompressedFrames[idCamera].get(), frame);
 }
 
 auto DCVideoRecorder::add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> cFrame) -> void{
@@ -107,15 +103,15 @@ auto DCVideoRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCo
         return;
     }
 
-    if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
+    if((i->videoResource.nb_frames(idCamera) < settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
 
         // add frame to video
         i->videoResource.add_compressed_frame(idCamera, std::move(cFrame));
 
         // update video duration
-        i->states.duration = i->videoResource.duration_ms();
+        states.duration = i->videoResource.duration_ms();
 
-        ++i->states.nbFramesRecorded[idCamera];        
+        ++states.nbFramesRecorded[idCamera];
     }
 }
 
@@ -134,15 +130,15 @@ auto DCVideoRecorder::add_frame(size_t idCamera, std::shared_ptr<DCFrame> frame)
         return;
     }
 
-    if((i->videoResource.nb_frames(idCamera) < i->settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < i->settings.maxDurationS*1000.0)){
+    if((i->videoResource.nb_frames(idCamera) < settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
 
         // add frame to video
-        i->videoResource.add_compressed_frame(idCamera, i->compressor.compress(i->settings.compression, *frame));
+        i->videoResource.add_compressed_frame(idCamera, i->compressor.compress(settings.compression, *frame));
 
         // update video duration
-        i->states.duration = i->videoResource.duration_ms();
+        states.duration = i->videoResource.duration_ms();
 
-        ++i->states.nbFramesRecorded[idCamera];
+        ++states.nbFramesRecorded[idCamera];
     }
 }
 
@@ -151,19 +147,17 @@ auto DCVideoRecorder::set_time(double timeMs) -> void{
     if(timeMs > video()->duration_ms()){
         timeMs = video()->duration_ms();
     }
-    i->states.currentTime = timeMs;
+    states.currentTime = timeMs;
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
-        if(auto idF = video()->closest_frame_id_from_time(idC, i->states.currentTime); idF != -1){
+        if(auto idF = video()->closest_frame_id_from_time(idC, states.currentTime); idF != -1){
             i->currentCompressedFrames[idC] = i->videoResource.get_compressed_frame(idC, idF).lock();
-            i->states.currentFrames[idC] = idF;
+            states.currentFrames[idC] = idF;
         }
     }
 }
 
 auto DCVideoRecorder::update() -> void{
-
-    states_updated_signal(i->states);
 
     for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
 
@@ -186,7 +180,7 @@ auto DCVideoRecorder::video() -> DCVideo* {
 }
 
 auto DCVideoRecorder::is_recording() const noexcept -> bool {
-    return i->states.isRecording;
+    return states.isRecording;
 }
 
 auto DCVideoRecorder::start_recording() -> void {
@@ -195,7 +189,7 @@ auto DCVideoRecorder::start_recording() -> void {
         return;
     }
 
-    i->states.isRecording = true;    
+    states.isRecording = true;
     i->recordingStartTimestamp = Time::nanoseconds_since_epoch();
     i->recordingStopWatch.start();
 }
@@ -206,7 +200,7 @@ auto DCVideoRecorder::stop_recording() -> void {
         return;
     }
 
-    i->states.isRecording = false;        
+    states.isRecording = false;
     i->recordingStopWatch.stop();
 }
 
@@ -223,14 +217,14 @@ auto DCVideoRecorder::reset_recording() -> void {
     std::fill(std::begin(i->currentFrames),             std::end(i->currentFrames), nullptr);
 
     // reset states
-    i->states.currentTime = 0.0;
-    i->states.duration = 0.0;
-    std::fill(std::begin(i->states.nbFramesRecorded),   std::end(i->states.nbFramesRecorded), 0);
-    std::fill(std::begin(i->states.currentFrames),      std::end(i->states.currentFrames), 0);
+    states.currentTime = 0.0;
+    states.duration = 0.0;
+    std::fill(std::begin(states.nbFramesRecorded),   std::end(states.nbFramesRecorded), 0);
+    std::fill(std::begin(states.currentFrames),      std::end(states.currentFrames), 0);
 }
 
 auto DCVideoRecorder::update_settings(DCVideoRecorderSettings recordingsS) noexcept -> void{
-    i->settings = recordingsS;
+    settings = recordingsS;
 }
 
 auto DCVideoRecorder::update_model(size_t id, const DCModelSettings &model) -> void{

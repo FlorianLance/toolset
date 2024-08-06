@@ -43,7 +43,7 @@ public:
     DCClientRemoteDevice();
     ~DCClientRemoteDevice() override;
     
-    auto initialize(DCDeviceConnectionSettings *deviceS) -> bool override;
+    auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto init_remote_connection() -> void;
     auto clean() -> void override;
 

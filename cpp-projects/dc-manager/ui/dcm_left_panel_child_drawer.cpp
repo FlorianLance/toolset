@@ -86,8 +86,7 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
     feedbacksLogs.resize(nbGrabbers);
 }
 
-auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings &settings, DCMStates &states) -> void {
-
+auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void {
 
     if(ImGui::BeginChild("###settings_child", ImVec2(size.x(), size.y()), true, windowFlags)){
 
@@ -96,15 +95,16 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings 
         auto region2 = region;
         region1.y *= 0.75f;
         if(ImGui::BeginChild("###settings_grabbers_child1", region1, true, windowFlags)){
-            draw_grabbers_ui(settings, states);
+
+            draw_grabbers_ui(model);
 
             static ImGuiID tabId = 0;
             if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_tabbar1")){
-                draw_commands_tab_item(settings.devicesConnectionsS, settings.grabbersS);
-                draw_settings_tab_item(settings);
-                draw_recorder_tab_item(states.recorder, settings.recorderS);
-                draw_player_tab_item(states.player, settings.playerS);
-                draw_calibrator_tab_item(settings.useNormalFilteringSettings, states.calibrator, settings.calibratorDrawerS, settings.calibratorS);
+                draw_commands_tab_item(model);
+                draw_settings_tab_item(model);
+                draw_recorder_tab_item(model->recorder);
+                draw_player_tab_item(model->player);
+                draw_calibrator_tab_item(model->client.settings.useNormalFilteringSettings,  model->calibrator.states, model->uiSettings.calibratorDrawerS, model->calibrator.settings);
                 ImGui::EndTabBar();
             }
         }
@@ -113,7 +113,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMSettings 
         region2.y *= 0.25f;
         if(ImGui::BeginChild("###settings_grabbers_child2", region2, true, windowFlags)){
             if (ImGui::BeginTabBar("###settings_tabbar2")){
-                draw_infos_tab_item(settings);
+                draw_infos_tab_item(model->client);
                 draw_logs_tab_item();
                 ImGui::EndTabBar();
             }
@@ -134,41 +134,40 @@ auto DCMLeftPanelChildDrawer::append_feedback_log(size_t idG, const std::string 
     }
 }
 
-auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMSettings &settings) -> void{
+auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMModel *model) -> void{
     if (ImGuiUiDrawer::begin_tab_item("Settings###settings_tabitem")){
 
         static ImGuiID tabId = 0;
         if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###sub_settings_tabbar")){
-            draw_device_tab_item(settings);
-            draw_filters_tab_item(settings);
-            draw_calibration_tab_item(settings.grabbersS);
-            draw_color_tab_item(settings.grabbersS);
-            draw_display_tab_item(settings.sceneDisplayS, settings.grabbersS);
-            draw_ui_tab_item(settings.uiS);
+            draw_device_tab_item(model->client);
+            draw_filters_tab_item(model->client);
+            draw_calibration_tab_item(model->client);
+            draw_color_tab_item(model->client);
+            draw_display_tab_item(model->client);
+            draw_ui_tab_item(model->uiSettings);
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
     }
 }
 
+auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorder &recorder) -> void {
 
-auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> void {
-
-    if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", rStates, rSettings)){
-        DCMSignals::get()->update_recorder_settings_signal(rSettings);
+    if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", recorder.states, recorder.settings)){
+        DCMSignals::get()->update_recorder_settings_signal(recorder.settings);
     }
 
-    if(rStates.startRecording){
+    if(recorder.states.startRecording){
         DCMSignals::get()->start_recorder_signal();
     }
-    if(rStates.stopRecording){
+    if(recorder.states.stopRecording){
         DCMSignals::get()->stop_recorder_signal();
     }
-    if(rStates.resetRecording){
+    if(recorder.states.resetRecording){
         DCMSignals::get()->reset_recorder_signal();
     }
-    if(rStates.moveTime){
-        DCMSignals::get()->set_recorder_time_signal(rStates.currentTime);
+    if(recorder.states.moveTime){
+        DCMSignals::get()->set_recorder_time_signal(recorder.states.currentTime);
     }
 
     if (ImGuiFileDialog::Instance()->Display("Save recording")) {
@@ -178,38 +177,38 @@ auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorderStates 
         ImGuiFileDialog::Instance()->Close();
     }
 
-    rStates.reset_actions();
+    recorder.states.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayer &player) -> void{
 
-    if(DCUIDrawer::draw_dc_player_tab_item("Player###settings_player_tabitem", pStates, pSettings)){
-        DCMSignals::get()->update_player_settings_signal(pSettings);
+    if(DCUIDrawer::draw_dc_player_tab_item("Player###settings_player_tabitem", player.states, player.settings)){
+        DCMSignals::get()->update_player_settings_signal(player.settings);
     }
 
-    if(pStates.play){
+    if(player.states.play){
         DCMSignals::get()->start_player_signal();
     }
-    if(pStates.pause){
+    if(player.states.pause){
         DCMSignals::get()->pause_player_signal();
     }
-    if(pStates.restart){
+    if(player.states.restart){
         DCMSignals::get()->restart_player_signal();
     }
-    if(pStates.removeUntil){
+    if(player.states.removeUntil){
         DCMSignals::get()->remove_until_current_frame_player_signal();
     }
-    if(pStates.removeAfter){
+    if(player.states.removeAfter){
         DCMSignals::get()->remove_after_current_frame_player_signal();
     }
-    if(pStates.merge){
+    if(player.states.merge){
         DCMSignals::get()->merge_player_signal();
     }
-    if(pStates.info){
+    if(player.states.info){
         DCMSignals::get()->info_player_signal();
     }
-    if(pStates.moveTime){
-        DCMSignals::get()->set_player_time_signal(pStates.currentTime);
+    if(player.states.moveTime){
+        DCMSignals::get()->set_player_time_signal(player.states.currentTime);
     }
 
     if (ImGuiFileDialog::Instance()->Display("Save cloud")) {
@@ -232,7 +231,7 @@ auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayerStates &pSt
         }
         ImGuiFileDialog::Instance()->Close();
     }
-    pStates.reset_actions();
+    player.states.reset_actions();
 }
 
 auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
@@ -270,29 +269,33 @@ auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSe
     cStates.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMSettings &settings, DCMStates &states) -> void {
+auto to_imvec4(const geo::Pt4f &pt) -> ImVec4{
+    return ImVec4(pt.x(),pt.y(),pt.z(),pt.w());
+}
 
-    ImGui::Text("Grabbers");
+auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMModel *model) -> void {
 
-    for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-        ImGuiUiDrawer::text_colored(settings.grabbersS[ii].connected ? DCMSettings::connectedSelectedC : DCMSettings::selectedC, settings.grabbersS[ii].name);
-        if((ii % 4) != 0 || ii == 0){
+    ImGui::Text("Servers");
+
+    for(const auto &cDeviceS : model->client.settings.devicesS){
+        ImGuiUiDrawer::text_colored(to_imvec4(cDeviceS.connected ? model->uiSettings.connectedSelectedC : model->uiSettings.selectedC), cDeviceS.name);
+        if((cDeviceS.id % 4) != 0 || cDeviceS.id == 0){
             ImGui::SameLine();
         }
     }
 
     int nbConnected = 0;
-    for(const auto &grabber : settings.grabbersS){
-        if(grabber.connected){
+    for(const auto &cDeviceS : model->client.settings.devicesS){
+        if(cDeviceS.connected){
             ++nbConnected;
         }
     }
-    ImGuiUiDrawer::text(std::format("Count: {}", settings.grabbersS.size()));
+    ImGuiUiDrawer::text(std::format("Count: {}", model->client.devices_nb()));
     ImGui::SameLine();
     ImGuiUiDrawer::text(std::format("Connected: {}", nbConnected));
     ImGui::SameLine();
 
-    if(states.recorder.isRecording){
+    if(model->recorder.states.isRecording){
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
         ImGui::Text("RECORDING...");
         ImGui::PopStyleColor();
@@ -314,30 +317,28 @@ auto DCMLeftPanelChildDrawer::draw_ui_tab_item(DCMUiSettings &ui) -> void {
     }
 }
 
-auto DCMLeftPanelChildDrawer::draw_commands_tab_item(const DCClientConnectionSettings &clientDevicesS, std::vector<DCGrabberSettings> &grabbersS)  -> void {
+auto DCMLeftPanelChildDrawer::draw_commands_tab_item(DCMModel *model)  -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Commands###settings_commands_tabitem")){
         return;
     }
-
 
     static ImGuiID tabId = 0;
     if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_commands_sub_tabbar")){
         return;
     }
 
-    draw_all_commands_tab_item(clientDevicesS, grabbersS);
+    draw_all_commands_tab_item(model);
     
-    for(size_t idC = 0; idC < clientDevicesS.connectionsS.size(); ++idC){
-        draw_individual_commands_tab_item(clientDevicesS.connectionsS[idC].get(), grabbersS[idC]);
+    for(size_t idC = 0; idC < model->client.settings.devicesS.size(); ++idC){
+        draw_individual_commands_tab_item(model->client.settings.devicesS[idC]);
     }
-
 
     ImGui::EndTabBar();
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectionSettings &clientS, std::vector<DCGrabberSettings> &grabbersS) -> void{
+auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(DCMModel *model) -> void{
 
     using namespace  std::chrono;
 
@@ -349,19 +350,19 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     ImGui::Text("Network:");
     ImGui::Indent();
 
-    if(ImGui::Button("Reset###settings_reset_network")){
-        DCMSignals::get()->reset_network_signal();
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("Connect all###settings_connect_all_button")){
-        for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->init_connection_signal(grabberS.id);
+    // if(ImGui::Button("Reset###settings_reset_network")){
+    //     DCMSignals::get()->reset_network_signal();
+    // }
+    // ImGui::SameLine();
+    if(ImGui::Button("Connect all###settings_connect_all_button")){                
+        for(const auto &deviceS : model->client.settings.devicesS){
+            DCMSignals::get()->init_connection_signal(deviceS.id);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Disconnect all###settings_disconnect_all_button")){
-        for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, net::Command::disconnect);
+        for(const auto &deviceS : model->client.settings.devicesS){
+            DCMSignals::get()->command_signal(deviceS.id, net::Command::disconnect);
         }
     }
     ImGui::Unindent();
@@ -369,8 +370,8 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     ImGui::Text("Program:");
     ImGui::Indent();
     if(ImGui::Button("Quit all###settings_quit_all_button")){
-        for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, net::Command::quit);
+        for(const auto &deviceS : model->client.settings.devicesS){
+            DCMSignals::get()->command_signal(deviceS.id, net::Command::quit);
         }
     }
     ImGui::Unindent();
@@ -379,14 +380,14 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     ImGui::Indent();
 
     if(ImGui::Button("Shutdown all###settings_shutdown_all_button")){
-        for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, net::Command::shutdown);
+        for(const auto &deviceS : model->client.settings.devicesS){
+            DCMSignals::get()->command_signal(deviceS.id, net::Command::shutdown);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart all###settings_restart_all_button")){
-        for(const auto &grabberS : grabbersS){
-            DCMSignals::get()->command_signal(grabberS.id, net::Command::restart);
+        for(const auto &deviceS : model->client.settings.devicesS){
+            DCMSignals::get()->command_signal(deviceS.id, net::Command::restart);
         }
     }
     ImGui::Unindent();
@@ -400,31 +401,31 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
         ImGui::Text("Network");
         ImGui::Text("# Percentage success (/100):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){            
-            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", ii, grabbersS[ii].receivedNetworkStatus.percentageSuccess));
+        for(const auto &deviceS : model->client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", deviceS.id, deviceS.receivedNetworkStatus.percentageSuccess));
         }
         ImGui::Unindent();
 
         ImGui::Text("# Bandwidth (Mb/s)):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedNetworkStatus.bandwidthBytes/1000000));
+        for(const auto &deviceS : model->client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedNetworkStatus.bandwidthBytes/1000000));
         }
         ImGui::Unindent();
 
         ImGui::Text("Data");
         ImGui::Text("# Framerate (fps):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedDataStatus.framerate));
+        for(const auto &deviceS : model->client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedDataStatus.framerate));
         }
         ImGui::Unindent();
 
 
         ImGui::Text("Total latency (from capture to reception) (µs):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", ii, grabbersS[ii].receivedDataStatus.latency));
+        for(const auto &deviceS : model->client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));
         }
         ImGui::Unindent();
     }
@@ -435,10 +436,10 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     {
         ImGui::Text("Average difference (µs):");
         ImGui::Indent();
-        for(size_t ii = 0; ii < grabbersS.size(); ++ii){
+        for(const auto &deviceS : model->client.settings.devicesS){
             ImGuiUiDrawer::text(std::format("Grabber {} : {} ",
-                ii,
-                duration_cast<microseconds>(nanoseconds(grabbersS[ii].synchroAverageDiff)).count())
+                deviceS.id,
+                duration_cast<microseconds>(nanoseconds(deviceS.synchroAverageDiff)).count())
             );
         }
         ImGui::Unindent();
@@ -448,17 +449,17 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     ImGui::Text("Network interfaces:");
     ImGui::Spacing();
     ImGui::Text("IPV4:");
-    for(size_t id = 0; id < clientS.ipv4Interfaces.size(); ++id){
+
+    for(size_t id = 0; id < model->client.settings.ipv4Interfaces.size(); ++id){
         ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
             id,
-                                        clientS.ipv4Interfaces[id].ipAddress)
+            model->client.settings.ipv4Interfaces[id].ipAddress)
         );
     }
     ImGui::Spacing();
     ImGui::Text("IPV6:");
-    for(size_t id = 0; id < clientS.ipv6Interfaces.size(); ++id){
-
-        auto address = clientS.ipv6Interfaces[id].ipAddress;
+    for(size_t id = 0; id < model->client.settings.ipv6Interfaces.size(); ++id){
+        auto address = model->client.settings.ipv6Interfaces[id].ipAddress;
         String::replace_all(address, "%", "[P]");
         ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
             id,
@@ -469,9 +470,9 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(const DCClientConnectio
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCDeviceConnectionSettings *clientDeviceSettings, DCGrabberSettings &grabberS) -> void{
+auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCClientDeviceSettings &clientDeviceS) -> void{
 
-    if (!ImGuiUiDrawer::begin_tab_item(std::format("[{}]###{}_settings_commands_tabitem", grabberS.id, grabberS.id).c_str())){
+    if (!ImGuiUiDrawer::begin_tab_item(std::format("[{}]###{}_settings_commands_tabitem", clientDeviceS.id, clientDeviceS.id).c_str())){
         return;
     }
 
@@ -480,18 +481,18 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCDeviceConnecti
     ImGui::Indent();
 
     if(ImGui::Button("Connect###settings_connect_button")){
-        DCMSignals::get()->init_connection_signal(grabberS.id);
+        DCMSignals::get()->init_connection_signal(clientDeviceS.id);
     }
     ImGui::SameLine();
     if(ImGui::Button("Disconnect###settings_disconnect_button")){
-        DCMSignals::get()->command_signal(grabberS.id, net::Command::disconnect);
+        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::disconnect);
     }
     ImGui::Unindent();
 
     ImGui::Text("Program:");
     ImGui::Indent();
     if(ImGui::Button("Quit###settings_quit_button")){
-        DCMSignals::get()->command_signal(grabberS.id, net::Command::quit);
+        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::quit);
     }
     ImGui::Unindent();
 
@@ -499,20 +500,20 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCDeviceConnecti
     ImGui::Indent();
 
     if(ImGui::Button("Shutdown###settings_shutdown_button")){
-        DCMSignals::get()->command_signal(grabberS.id, net::Command::shutdown);
+        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::shutdown);
     }
     ImGui::SameLine();
     if(ImGui::Button("Restart###settings_restart_button")){
-        DCMSignals::get()->command_signal(grabberS.id, net::Command::restart);
+        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::restart);
     }
 
     ImGui::Unindent();
 
     ImGui::Text("Delay:");
-    int delay = static_cast<int>(grabberS.delay.delayMs);
+    int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
     if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-        grabberS.delay.delayMs = delay;
-        DCMSignals::get()->update_delay_settings_signal(grabberS.id, grabberS.delay);
+        clientDeviceS.delayS.delayMs = delay;
+        DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
     }
     ImGui::Indent();
     ImGui::Unindent();
@@ -520,21 +521,17 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCDeviceConnecti
     ImGui::Spacing();
     ImGui::Separator();
 
-    if(clientDeviceSettings->isLocal){
-        ImGui::Text("[LOCAL DEVICE]");
-    }else{
-        ImGui::Text("[REMOTE DEVICE]");
-    }
 
-    if(auto dcCRDS = dynamic_cast<DCRemoteDeviceConnectionSettings*>(clientDeviceSettings)){
+    if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
+        ImGui::Text("[REMOTE DEVICE]");
 
         ImGui::Text("UDP reading:");
         ImGui::Indent();
-        ImGuiUiDrawer::text(std::format("IP address: {}", dcCRDS->serverS.readingAdress));
-        ImGuiUiDrawer::text(std::format("Port: {}", dcCRDS->serverS.readingPort));
+        ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.readingAddress));
+        ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.readingPort));
         ImGui::Unindent();
 
-        if(dcCRDS->serverS.protocol == net::Protocol::ipv6){
+        if(clientDeviceS.connectionS.protocol == net::Protocol::ipv6){
             ImGui::Text("PROTOCOL: IPV6");
         }else{
             ImGui::Text("PROTOCOL: IPV4");
@@ -543,31 +540,31 @@ auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCDeviceConnecti
 
         ImGui::Text("UDP sending:");
         ImGui::Indent();
-        ImGuiUiDrawer::text(std::format("IP address: {}", dcCRDS->serverS.sendingAdress));
-        ImGuiUiDrawer::text(std::format("Port: {}", dcCRDS->serverS.sendingPort));
+        ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.sendingAddress));
+        ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.sendingPort));
         ImGui::Unindent();
-        
-    }else if(auto dcCLDS = dynamic_cast<DCLocalDeviceConnectionSettings*>(clientDeviceSettings)){
-        // ...
+
+    }else if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
+        ImGui::Text("[LOCAL DEVICE]");
     }
 
     ImGui::Text("State:");
     ImGui::Indent();
-    ImGui::Text(grabberS.connected ? "Client connected to server" : "Client not connected");
-    ImGuiUiDrawer::text(std::format("Last frame id sent: {}", grabberS.lastFrameIdReceived));
+    ImGui::Text(clientDeviceS.connected ? "Client connected to server" : "Client not connected");
+    ImGuiUiDrawer::text(std::format("Last frame id sent: {}", clientDeviceS.lastFrameIdReceived));
     ImGui::Unindent();
 
     ImGui::Separator();
     // ImGui::Text(std::format("Data received (mB): {:.2f}", net::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
     ImGui::Separator();
     ImGui::Text("Feedbacks:");
-    feedbacksLogs[grabberS.id].draw(std::format("grabber_{}_feedback", grabberS.id).c_str());
+    feedbacksLogs[clientDeviceS.id].draw(std::format("grabber_{}_feedback", clientDeviceS.id).c_str());
 
     ImGui::EndTabItem();
 }
 
 
-auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> void {
+auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Device###device_tabitem")){
         return;
@@ -582,8 +579,8 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     }        
     ImGui::SameLine();
     if(ImGui::Button("All###device_send_all")){
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+        for(const auto &clientDeviceS : client.settings.devicesS){
+            DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
@@ -592,21 +589,23 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     ImGui::Text("Apply profiles:");
     ImGui::SameLine();
     if(ImGui::Button("Remote grabber###remote_grabber_profile_device")){
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            settings.grabbersS[ii].device.apply_remote_profile();
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.deviceS.apply_remote_profile();
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Only manager###only_manager_profile_device")){
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            settings.grabbersS[ii].device.apply_local_profile();
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.deviceS.apply_local_profile();
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
@@ -616,17 +615,17 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
 
     static std::string order = "";
     if(order.empty()){
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            if(ii != 0){
+        for(auto &clientDeviceS : client.settings.devicesS){
+            if(clientDeviceS.id != 0){
                 order += ";";
             }
-            order += std::to_string(ii);
+            order += std::to_string(clientDeviceS.id);
         }
     }
     // = "0;1;2;3;4;5;6;7;8;9";
     if(ImGui::Button("Apply settings for camera order")){
         auto values = String::split(order, ';');
-        if(values.size() == settings.grabbersS.size()){
+        if(values.size() == client.settings.devicesS.size()){
             std::set<int> allIds;
             std::vector<size_t> ids;
             for(const auto &value : values){
@@ -642,11 +641,11 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
             }
 
             if(!ids.empty()){
-                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-                    settings.grabbersS[ii].device.update_with_device_id(ii, ids[ii]);
+                for(auto &clientDeviceS : client.settings.devicesS){
+                    clientDeviceS.deviceS.update_with_device_id(clientDeviceS.id, ids[clientDeviceS.id]);
                 }
-                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-                    DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+                for(auto &clientDeviceS : client.settings.devicesS){
+                    DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
                     std::this_thread::sleep_for(std::chrono::milliseconds(5));
                 }
             }
@@ -659,53 +658,26 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     ImGui::InputText("###cameras order", &order);
 
 
-    // bool saveCurrent = false;
-    // static bool allInOne = true;
-    // static bool specifyName = true;
-    // ImGui::Text("Save to file:");
-    // ImGui::SameLine();
-    // if(ImGui::Button("Current###device_save_current")){
-    //     saveCurrent = true;
-    // }
-    // ImGui::SameLine();
-    // if(ImGui::Button("All###device_save_current")){
-    //     if(!specifyName){
-    //         DCMSignals::get()->process_settings_action_signal(SAction::Save, STarget::All, SType::Device, allInOne ? SFile::HostAllInOne : SFile::Host, 0);
-    //     }else{
-
-    //         if (ImGuiFileDialog::Instance()->Display("Save settings")) {
-    //             if (ImGuiFileDialog::Instance()->IsOk()){
-    //                 DCMSignals::get()->save_cloud_player_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-    //             }
-    //             ImGuiFileDialog::Instance()->Close();
-    //         }
-    //     }
-    // }
-
-    // if(ImGui::Checkbox("Specify name (if false, use computer name)", &specifyName)){}
-    // if(ImGui::Checkbox("All in one file", &allInOne)){}
-    // ImGui::Separator();
-
     ImGui::Dummy(ImVec2{0,10});
 
     static ImGuiID tabId = 0;
     if(ImGuiUiDrawer::begin_tab_bar(&tabId, "Device_sub###device_sub_tabbar")){
 
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+        for(auto &clientDeviceS : client.settings.devicesS){
 
-            auto currentDeviceType = settings.grabbersS[ii].device.configS.typeDevice;
-            auto ret = DCUIDrawer::draw_dc_device_settings_tab_item(std::format("[{}]###device_{}_tabitem", ii, ii),
-                settings.grabbersS[ii].device
+            auto currentDeviceType = clientDeviceS.deviceS.configS.typeDevice;
+            auto ret = DCUIDrawer::draw_dc_device_settings_tab_item(
+                std::format("[{}]###device_{}_tabitem",clientDeviceS.id, clientDeviceS.id),
+                clientDeviceS.deviceS
             );
 
-            if(currentDeviceType != settings.grabbersS[ii].device.configS.typeDevice){
+            if(currentDeviceType != clientDeviceS.deviceS.configS.typeDevice){
                 tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
-                settings.grabbersS[ii].color.set_default_values(settings.grabbersS[ii].device.configS.typeDevice);
-                DCMSignals::get()->color_settings_reset_signal(ii, settings.grabbersS[ii].color);
+                clientDeviceS.colorS.set_default_values(clientDeviceS.deviceS.configS.typeDevice);
+                DCMSignals::get()->color_settings_reset_signal(clientDeviceS.id, clientDeviceS.colorS);
             }
-
             if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
-                DCMSignals::get()->update_device_settings_signal(ii, settings.grabbersS[ii].device);
+                DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
             }
         }
         ImGui::EndTabBar();
@@ -714,7 +686,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCMSettings &settings) -> voi
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> void {
+auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCClient &client) -> void {
 
     static constexpr std::string_view base = "###settings_filters";
     if (!ImGuiUiDrawer::begin_tab_item(std::format("Filters{}_tabitem", base).c_str())){
@@ -735,26 +707,26 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
         updateAll = true;
     }
 
-    int filteringMode = settings.useNormalFilteringSettings ? 0 : 1;
+    int filteringMode = client.settings.useNormalFilteringSettings ? 0 : 1;
     ImGui::Text("Filtering mode:");
     ImGui::SameLine();
     if(ImGui::RadioButton("Normal###filters_normal_mode", &filteringMode, 0)){
-        settings.useNormalFilteringSettings = true;
+        client.settings.useNormalFilteringSettings = true;
         updateAll = true;
     }
     ImGui::SameLine();
     if(ImGui::RadioButton("Calibration###filters_calibration_mode", &filteringMode, 1)){
-        settings.useNormalFilteringSettings = false;
+        client.settings.useNormalFilteringSettings = false;
         updateAll = true;
     }
     ImGui::Spacing();
 
     if(updateAll){
-        for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
-            if(settings.useNormalFilteringSettings){
-                DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].filters);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            if(client.settings.useNormalFilteringSettings){
+                DCMSignals::get()->update_filters_settings_signal(clientDeviceS.id, clientDeviceS.filtersS);
             }else{
-                DCMSignals::get()->update_calibration_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
+                DCMSignals::get()->update_calibration_filters_settings_signal(clientDeviceS.id, clientDeviceS.calibrationFiltersS);
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
@@ -771,16 +743,16 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
             static ImGuiId tabId2 = 0;
             if (ImGuiUiDrawer::begin_tab_bar(&tabId2, std::format("{}_normal_sub_tabbar",base).c_str())){
 
-                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+                for(auto &clientDeviceS : client.settings.devicesS){
 
                     auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
-                        std::format("[{}]{}_normal_{}_tabitem", ii, base, ii),
-                        settings.grabbersS[ii].device.configS.mode,
-                        settings.grabbersS[ii].filters
+                        std::format("[{}]{}_normal_{}_tabitem", clientDeviceS.id, base, clientDeviceS.id),
+                        clientDeviceS.deviceS.configS.mode,
+                        clientDeviceS.filtersS
                     );
 
                     if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
-                        DCMSignals::get()->update_filters_settings_signal(ii, settings.grabbersS[ii].filters);
+                        DCMSignals::get()->update_filters_settings_signal(clientDeviceS.id, clientDeviceS.filtersS);
                     }
                 }
                 ImGui::EndTabBar();
@@ -793,16 +765,16 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
             static ImGuiId tabId2 = 0;
             if (ImGuiUiDrawer::begin_tab_bar(&tabId2, std::format("{}_calibration_sub_tabbar",base).c_str())){
 
-                for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+                for(auto &clientDeviceS : client.settings.devicesS){
 
                     auto ret = DCUIDrawer::draw_dc_filters_settings_tab_item(
-                        std::format("[{}]{}_calibration_{}_tabitem", ii, base, ii),
-                        settings.grabbersS[ii].device.configS.mode,
-                        settings.grabbersS[ii].calibrationFilters
+                        std::format("[{}]{}_calibration_{}_tabitem", clientDeviceS.id, base, clientDeviceS.id),
+                        clientDeviceS.deviceS.configS.mode,
+                        clientDeviceS.calibrationFiltersS
                     );
 
                     if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
-                        DCMSignals::get()->update_calibration_filters_settings_signal(ii, settings.grabbersS[ii].calibrationFilters);
+                        DCMSignals::get()->update_calibration_filters_settings_signal(clientDeviceS.id, clientDeviceS.calibrationFiltersS);
                     }
                 }
                 ImGui::EndTabBar();
@@ -818,32 +790,32 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     if(ImGui::Button(std::format("Copy{}_copy_filters", base).c_str())){
 
         DCFiltersSettings *fromFilters = nullptr;
-        if(guiCurrentFromFiltersSelection < static_cast<int>(settings.grabbersS.size())){
+        if(guiCurrentFromFiltersSelection < static_cast<int>(client.settings.devicesS.size())){
             int idGrabber = guiCurrentFromFiltersSelection;
-            fromFilters = &settings.grabbersS[idGrabber].filters;
+            fromFilters = &client.settings.devicesS[idGrabber].filtersS;
         }else{
-            int idGrabber = guiCurrentFromFiltersSelection - static_cast<int>(settings.grabbersS.size());
-            fromFilters = &settings.grabbersS[idGrabber].calibrationFilters;
+            int idGrabber = guiCurrentFromFiltersSelection - static_cast<int>(client.settings.devicesS.size());
+            fromFilters = &client.settings.devicesS[idGrabber].calibrationFiltersS;
         }
 
         if(guiCurrentTargetFiltersSelection == 0){ // all
-            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            for(size_t ii = 0; ii < client.settings.devicesS.size(); ++ii){
                 DCMSignals::get()->update_filters_settings_signal(ii, *fromFilters);
                 DCMSignals::get()->update_calibration_filters_settings_signal(ii, *fromFilters);
             }
         }else if(guiCurrentTargetFiltersSelection == 1){ // all normal
-            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            for(size_t ii = 0; ii < client.settings.devicesS.size(); ++ii){
                 DCMSignals::get()->update_filters_settings_signal(ii, *fromFilters);
             }
         }else if(guiCurrentTargetFiltersSelection == 2){ // all calibration
-            for(size_t ii = 0; ii < settings.grabbersS.size(); ++ii){
+            for(size_t ii = 0; ii < client.settings.devicesS.size(); ++ii){
                 DCMSignals::get()->update_calibration_filters_settings_signal(ii, *fromFilters);
             }
-        }else if(guiCurrentTargetFiltersSelection < static_cast<int>(settings.grabbersS.size() + 3)){ // normal grabbers
+        }else if(guiCurrentTargetFiltersSelection < static_cast<int>(client.settings.devicesS.size() + 3)){ // normal grabbers
             int idGrabber = guiCurrentTargetFiltersSelection-3;
             DCMSignals::get()->update_filters_settings_signal(idGrabber, *fromFilters);
         }else{ // calibration grabbers
-            int idGrabber = guiCurrentTargetFiltersSelection-3 - static_cast<int>(settings.grabbersS.size());
+            int idGrabber = guiCurrentTargetFiltersSelection-3 - static_cast<int>(client.settings.devicesS.size());
             DCMSignals::get()->update_calibration_filters_settings_signal(idGrabber, *fromFilters);
         }
     }
@@ -858,11 +830,10 @@ auto DCMLeftPanelChildDrawer::draw_filters_tab_item(DCMSettings &settings) -> vo
     ImGui::SetNextItemWidth(100);
     ImGuiUiDrawer::combo(std::format("{}_target_filter", base).c_str(), &guiCurrentTargetFiltersSelection, targetsFilters);
 
-
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &sceneDisplay, std::vector<DCGrabberSettings> &grabbers) -> void {
+auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCClient &client) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Display###display_settings_tabitem")){
         return;
@@ -872,9 +843,9 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::Text("All grabbers");
     ImGui::SameLine();
     if(ImGui::Button("Send###display_send_all")){
-        DCMSignals::get()->update_scene_display_settings_signal(sceneDisplay);
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        DCMSignals::get()->update_scene_display_settings_signal(client.settings.sceneDisplayS);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
@@ -886,25 +857,25 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::Indent();
 
     if(ImGui::Button("Per camera###force_cloud_color_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.forceColor = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.forceColor = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Real###real_cloud_color_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.forceColor = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.forceColor = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
-    auto factorUnicolor = grabbers.front().cloudDisplay.factorUnicolor;
+    auto factorUnicolor = client.settings.devicesS.front().displayS.factorUnicolor;
     ImGui::SetNextItemWidth(100.f);
     if(ImGui::DragFloat("Color factor", &factorUnicolor, 0.01f, 0.f, 1.f)){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.factorUnicolor = factorUnicolor;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.factorUnicolor = factorUnicolor;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::Unindent();
@@ -914,30 +885,30 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::Indent();
 
     if(ImGui::Button("Use backface culling###use_backfaceculling_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.backFaceCulling = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.backFaceCulling = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Disable backface culling###disable_backfaceculling_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.backFaceCulling = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.backFaceCulling = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
     if(ImGui::Button("Use circles###use_circles_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.circles = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.circles = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Use points###use_points_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.circles = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.circles = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
@@ -945,11 +916,11 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     {
         ImGuiDragS  pointSizeD = {100.f, true, true, true, true, false};
         ImGuiFloatS pointSizeFS = {5.f, 0.1f, 30.0f, 0.1f, 0.1f};
-        auto pointSizeV = grabbers.front().cloudDisplay.pointSize;
+        auto pointSizeV = client.settings.devicesS.front().displayS.pointSize;
         if(ImGuiUiDrawer::draw_drag_float_with_buttons("Point size","display_size_points_all", &pointSizeV, pointSizeFS, pointSizeD)){
-            for(size_t ii = 0; ii < grabbers.size(); ++ii){
-                grabbers[ii].cloudDisplay.pointSize = pointSizeV;
-                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            for(auto &clientDeviceS : client.settings.devicesS){
+                clientDeviceS.displayS.pointSize = pointSizeV;
+                DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
             }
         }
     }
@@ -957,11 +928,11 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     {
         ImGuiDragS  squareSizeD = {100.f, true, true, true, true, false};
         ImGuiFloatS squareSizeFS = {0.005f, 0.001f, 0.05f, 0.0001f, 0.001f};
-        float squareSizeV = grabbers.front().cloudDisplay.squareSize;
+        float squareSizeV = client.settings.devicesS.front().displayS.squareSize;
         if(ImGuiUiDrawer::draw_drag_float_with_buttons("Square size","display_square_size_all", &squareSizeV, squareSizeFS, squareSizeD)){
-            for(size_t ii = 0; ii < grabbers.size(); ++ii){
-                grabbers[ii].cloudDisplay.squareSize = squareSizeV;
-                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            for(auto &clientDeviceS : client.settings.devicesS){
+                clientDeviceS.displayS.squareSize = squareSizeV;
+                DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
             }
         }
     }
@@ -969,11 +940,11 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     {
         ImGuiDragS  circleRadiusD = {100.f, true, true, true, true, false};
         ImGuiFloatS circleRadiusFS = {0.25f, 0.00f, 0.5f, 0.001f, 0.001f};
-        float circleRadiusV = grabbers.front().cloudDisplay.circleRadius;
+        float circleRadiusV = client.settings.devicesS.front().displayS.circleRadius;
         if(ImGuiUiDrawer::draw_drag_float_with_buttons("Circle radius","display_circle_radius_all", &circleRadiusV, circleRadiusFS, circleRadiusD)){
-            for(size_t ii = 0; ii < grabbers.size(); ++ii){
-                grabbers[ii].cloudDisplay.circleRadius = circleRadiusV;
-                DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+            for(auto &clientDeviceS : client.settings.devicesS){
+                clientDeviceS.displayS.circleRadius = circleRadiusV;
+                DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
             }
         }
     }
@@ -987,48 +958,48 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::Text("Clouds:");
     ImGui::SameLine();
     if(ImGui::Button("Show all###show_clouds_alls")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showCapture = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showCapture = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Hide all###hide_clouds_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showCapture = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showCapture = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
     ImGui::Text("Cameras frustums:");
     ImGui::SameLine();
     if(ImGui::Button("Show all###show_frustums_alls")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showCameraFrustum = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showCameraFrustum = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Hide all###hide_frustums_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showCameraFrustum = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showCameraFrustum = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
     ImGui::Text("Filterings gizmos:");
     ImGui::SameLine();
     if(ImGui::Button("Show all###show_filtering_gizmos_alls")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showFilteringGizmos = true;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showFilteringGizmos = true;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Hide all###hide_filtering_gizmos_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            grabbers[ii].cloudDisplay.showFilteringGizmos = false;
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            clientDeviceS.displayS.showFilteringGizmos = false;
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
@@ -1041,13 +1012,13 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
         return;
     }
 
-    if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplay)){
-        DCMSignals::get()->update_scene_display_settings_signal(sceneDisplay);
+    if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", client.settings.sceneDisplayS)){
+        DCMSignals::get()->update_scene_display_settings_signal(client.settings.sceneDisplayS);
     }
 
-    for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item(std::format("[{}]###{}_cloud_display_tabitem", ii, ii), grabbers[ii].cloudDisplay)){
-            DCMSignals::get()->update_cloud_display_settings_signal(ii, grabbers[ii].cloudDisplay);
+    for(auto &clientDeviceS : client.settings.devicesS){
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item(std::format("[{}]###{}_cloud_display_tabitem", clientDeviceS.id, clientDeviceS.id), clientDeviceS.displayS)){
+            DCMSignals::get()->update_cloud_display_settings_signal(clientDeviceS.id, clientDeviceS.displayS);
         }
     }
 
@@ -1055,29 +1026,22 @@ auto DCMLeftPanelChildDrawer::draw_display_tab_item(DCSceneDisplaySettings &scen
     ImGui::EndTabItem();
 }
 
-auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DCGrabberSettings> &grabbers) -> void {
-
+auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(cam::DCClient &client) -> void {
 
     if (!ImGuiUiDrawer::begin_tab_item("Calibration###calibration_settings_tabitem")){
         return;
     }
 
     ImGui::Spacing();
-//    if(ImGui::Button("Send all###model_send_all")){
-//        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-//            K4SMSignals::get()->update_model_settings_signal(ii, grabbers[ii].model);
-//        }
-//    }
-//    ImGui::Spacing();
 
     static ImGuiID tabId = 0;
     if (!ImGuiUiDrawer::begin_tab_bar(&tabId, "###calibration_settings_tabbar")){
         return;
     }
 
-    for(size_t ii = 0; ii < grabbers.size(); ++ii){
-        if(DCUIDrawer::draw_dc_model_tab_item(std::format("[{}]###{}_cloud_calibration_tabitem", ii, ii), grabbers[ii].model)){
-            DCMSignals::get()->update_model_settings_signal(ii, grabbers[ii].model);
+    for(auto &clientDeviceS : client.settings.devicesS){
+        if(DCUIDrawer::draw_dc_model_tab_item(std::format("[{}]###{}_cloud_calibration_tabitem", clientDeviceS.id, clientDeviceS.id), clientDeviceS.modelS)){
+            DCMSignals::get()->update_model_settings_signal(clientDeviceS.id, clientDeviceS.modelS);
         }
     }
 
@@ -1085,7 +1049,7 @@ auto graphics::DCMLeftPanelChildDrawer::draw_calibration_tab_item(std::vector<DC
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCGrabberSettings> &grabbers) -> void{
+auto DCMLeftPanelChildDrawer::draw_color_tab_item(cam::DCClient &client) -> void{
 
     static constexpr std::string_view base = "###settings_colors";
     if (!ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_tabitem", base).c_str())){
@@ -1101,8 +1065,8 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCGrabberSettings>
     }
     ImGui::SameLine();
     if(ImGui::Button("All###color_send_all")){
-        for(size_t ii = 0; ii < grabbers.size(); ++ii){
-            DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
+        for(auto &clientDeviceS : client.settings.devicesS){
+            DCMSignals::get()->update_color_settings_signal(clientDeviceS.id, clientDeviceS.colorS);
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
@@ -1114,11 +1078,10 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCGrabberSettings>
         return;
     }
 
-    for(size_t ii = 0; ii < grabbers.size(); ++ii){
-
-        auto ret = DCUIDrawer::draw_dc_colors_settings_tab_item(std::format("[{}]###{}_color_settings_tabitem", ii, ii), grabbers[ii].device.configS.typeDevice, grabbers[ii].color);
+    for(auto &clientDeviceS : client.settings.devicesS){
+        auto ret = DCUIDrawer::draw_dc_colors_settings_tab_item(std::format("[{}]###{}_color_settings_tabitem", clientDeviceS.id, clientDeviceS.id), clientDeviceS.deviceS.configS.typeDevice, clientDeviceS.colorS);
         if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
-            DCMSignals::get()->update_color_settings_signal(ii, grabbers[ii].color);
+            DCMSignals::get()->update_color_settings_signal(clientDeviceS.id, clientDeviceS.colorS);
         }
     }
     ImGui::EndTabBar();
@@ -1127,12 +1090,12 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(std::vector<DCGrabberSettings>
     ImGuiUiDrawer::title2("COPY");
 
     if(ImGui::Button(std::format("Copy{}_copy_colors", base).c_str())){
-        DCColorSettings *fromColor = &grabbers[guiCurrentFromColorsSelection].color;
+        DCColorSettings *fromColor = &client.settings.devicesS[guiCurrentFromColorsSelection].colorS;
         if(guiCurrentTargetColorsSelection == 0){ // all
-            for(size_t ii = 0; ii < grabbers.size(); ++ii){
+            for(size_t ii = 0; ii < client.settings.devicesS.size(); ++ii){
                 DCMSignals::get()->update_color_settings_signal(ii, *fromColor);
             }
-        }else if(guiCurrentTargetColorsSelection < grabbers.size() + 1){
+        }else if(guiCurrentTargetColorsSelection < client.settings.devicesS.size() + 1){
             int idGrabber = guiCurrentTargetColorsSelection-1;
             DCMSignals::get()->update_color_settings_signal(idGrabber, *fromColor);
         }
@@ -1175,7 +1138,7 @@ auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
     ImGuiUiDrawer::text("No file loaded."sv, geo::Pt4f{1.f,0.0f,0.0f,1.f});
 }
 
-auto DCMLeftPanelChildDrawer::draw_infos_tab_item(const DCMSettings &settings) -> void{
+auto DCMLeftPanelChildDrawer::draw_infos_tab_item(cam::DCClient &client) -> void{
     if (ImGui::BeginTabItem("Infos###settings_infos_tabitem")){
 
         ImGui::Text("Config files loaded:");
@@ -1185,27 +1148,27 @@ auto DCMLeftPanelChildDrawer::draw_infos_tab_item(const DCMSettings &settings) -
         ImGui::Indent();
             ImGui::Text("Network:");
             ImGui::SameLine();
-            draw_config_file_name(settings.devicesConnectionsS.filePath);
+            draw_config_file_name(client.settings.filePath);
         ImGui::Unindent();
 
-            for(const auto &grabber : settings.grabbersS){
-            ImGuiUiDrawer::text(std::format("Grabber {}:", grabber.id));
+        for(const auto &clientDeviceS : client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("Grabber {}:", clientDeviceS.id));
             ImGui::Indent();
             ImGui::Text("Device:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.deviceFilePath);
+            draw_config_file_name(clientDeviceS.deviceFilePath);
             ImGui::Text("Model:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.modelFilePath);
+            draw_config_file_name(clientDeviceS.modelFilePath);
             ImGui::Text("Color:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.colorFilePath);
+            draw_config_file_name(clientDeviceS.colorFilePath);
             ImGui::Text("Filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.filtersFilePath);
+            draw_config_file_name(clientDeviceS.filtersFilePath);
             ImGui::Text("Cal. filters:");
             ImGui::SameLine();
-            draw_config_file_name(grabber.calibrationFiltersFilePath);
+            draw_config_file_name(clientDeviceS.calibrationFiltersFilePath);
             ImGui::Unindent();
         }
 

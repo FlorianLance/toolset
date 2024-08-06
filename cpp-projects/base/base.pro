@@ -170,8 +170,6 @@ HEADERS += \
     ## settings
     depth-camera/settings/dc_video_player_settings.hpp \
     depth-camera/settings/dc_video_recorder_settings.hpp \
-    depth-camera/settings/dc_grabber_network_settings.hpp \
-    depth-camera/settings/dc_grabber_settings.hpp \
     depth-camera/settings/dc_settings_paths.hpp \
     depth-camera/settings/dc_device_settings.hpp \
     depth-camera/settings/dc_data_settings.hpp \
@@ -403,7 +401,6 @@ SOURCES += \
     depth-camera/settings/dc_delay_settings.cpp \
     depth-camera/settings/dc_data_settings.cpp \
     depth-camera/settings/dc_device_settings.cpp \
-    depth-camera/settings/dc_grabber_settings.cpp \
     depth-camera/settings/dc_settings_paths.cpp \
     ## impl
     depth-camera/impl/k2_config_files.cpp \

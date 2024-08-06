@@ -31,11 +31,21 @@
 
 // base
 #include "thirdparty/sigslot/signal.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "network/network_enums.hpp"
 
 // local
 #include "data/dcm_types.hpp"
-#include "data/dcm_settings.hpp"
+#include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/settings/dc_color_settings.hpp"
+#include "depth-camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_calibrator_settings.hpp"
+#include "depth-camera/settings/dc_video_recorder_settings.hpp"
+#include "depth-camera/settings/dc_video_player_settings.hpp"
+#include "depth-camera/settings/dc_display_settings.hpp"
 
 namespace tool {
 
@@ -57,11 +67,7 @@ public:
 
     // network
     SSS<size_t> init_connection_signal;
-    SSS<> reset_network_signal;
     SSS<size_t, net::Command> command_signal;
-    SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> new_compressed_frame_signal;
-    SSS<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
-    SSS<size_t, std::string> feedback_received_signal;
 
     // recording
     SSS<> start_recorder_signal;
@@ -95,7 +101,7 @@ public:
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
     SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;
-    SSS<const graphics::DCCalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
+    SSS<const cam::DCCalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
 
     // settings
     SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
@@ -111,7 +117,7 @@ public:
     SSS<size_t, const cam::DCFiltersSettings&> update_calibration_filters_settings_signal;
 
     // i/o
-    SSS<SAction, STarget, SType, SFile, size_t> process_settings_action_signal;
+    SSS<SettingsAction> process_settings_action_signal;
     SSS<std::string> load_recording_signal;    
 };
 

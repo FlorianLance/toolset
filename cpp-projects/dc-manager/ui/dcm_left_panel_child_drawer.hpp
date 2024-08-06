@@ -26,12 +26,14 @@
 
 #pragma once
 
+// base
+#include "geometry/point2.hpp"
+
 // 3d-engine
 #include "imgui-tb/imgui_logs.hpp"
 
 // local
-#include "data/dcm_settings.hpp"
-#include "data/dcm_states.hpp"
+#include "dcm_model.hpp"
 
 namespace tool::graphics {
 
@@ -39,38 +41,38 @@ namespace tool::graphics {
     "Normal", "Calibration"
 };
 
-
 class DCMLeftPanelChildDrawer{
 
 public:
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto draw(geo::Pt2f size, int windowFlags, DCMSettings &settings, DCMStates &states) -> void;
+    auto draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void;
     auto append_global_log(const std::string &log) -> void;
     auto append_feedback_log(size_t idG, const std::string &log) -> void;
 
 private:
 
-    auto draw_grabbers_ui(DCMSettings &settings, DCMStates &states) -> void;
+    auto draw_grabbers_ui(DCMModel *model) -> void;
     // tab items
-    auto draw_commands_tab_item(const cam::DCClientConnectionSettings &clientS, std::vector<cam::DCGrabberSettings> &grabbersS) -> void;
-    auto draw_settings_tab_item(DCMSettings &settings) -> void;
+    auto draw_commands_tab_item(DCMModel *model) -> void;
+    auto draw_settings_tab_item(DCMModel *model) -> void;
     auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
     auto draw_logs_tab_item() -> void;
-    auto draw_infos_tab_item(const DCMSettings &settings) -> void;
+    auto draw_infos_tab_item(cam::DCClient &client) -> void;
     // sub tab items
     // # command
-    auto draw_all_commands_tab_item(const cam::DCClientConnectionSettings &clientS, std::vector<cam::DCGrabberSettings> &grabbersS) -> void;
-    auto draw_individual_commands_tab_item(cam::DCDeviceConnectionSettings *clientDeviceSettings, cam::DCGrabberSettings &grabberS) -> void;
+    auto draw_all_commands_tab_item(DCMModel *model) -> void;
+    auto draw_individual_commands_tab_item(cam::DCClientDeviceSettings &clientDeviceS) -> void;
+
     // # settings
-    auto draw_device_tab_item(DCMSettings &settings) -> void;
-    auto draw_filters_tab_item(DCMSettings &settings) -> void;
-    auto draw_display_tab_item(cam::DCSceneDisplaySettings &sceneDisplay, std::vector<cam::DCGrabberSettings> &grabbers) -> void;
-    auto draw_calibration_tab_item( std::vector<cam::DCGrabberSettings> &grabbers) -> void;
-    auto draw_color_tab_item(std::vector<cam::DCGrabberSettings> &grabbers) -> void;
-    auto draw_recorder_tab_item(cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> void;
-    auto draw_player_tab_item(cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> void;
-    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
+    auto draw_device_tab_item(cam::DCClient &client) -> void;
+    auto draw_filters_tab_item(cam::DCClient &client) -> void;
+    auto draw_display_tab_item(cam::DCClient &client) -> void;
+    auto draw_calibration_tab_item(cam::DCClient &client) -> void;
+    auto draw_color_tab_item(cam::DCClient &client) -> void;
+    auto draw_recorder_tab_item(cam::DCVideoRecorder &recorder) -> void;
+    auto draw_player_tab_item(cam::DCVideoPlayer &player) -> void;
+    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, cam::DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
 
     // ui
     int guiCurrentFiltersTypeSelection = 0;
