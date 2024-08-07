@@ -46,7 +46,7 @@ public:
     auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto clean() -> void override;
 
-    auto apply_command(net::Command command) -> void override;
+    // auto apply_command(net::Command command) -> void override;
     auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void override;
     auto update_color_settings(const cam::DCColorSettings &colorS) -> void override;
     auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;

@@ -37,7 +37,6 @@
 #include "settings/dc_device_data_settings.hpp"
 #include "settings/dc_color_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
-#include "settings/dc_config_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
@@ -46,13 +45,34 @@
 
 namespace tool::cam {
 
-class DCDevice2{
+class DCDevice{
 public:
 
-    DCDevice2();
-    ~DCDevice2();
+    DCDevice();
+    ~DCDevice();
 
+    auto process() -> void;
+
+    // settings
     auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
+    auto update_color_settings(const DCColorSettings &colorS) -> void;
+    auto update_filters_settings(const DCFiltersSettings &filtersS) -> void;
+    auto update_delay_settings(const DCDelaySettings &delayS) -> void;
+
+    // getters
+    // # states
+    auto is_opened() const noexcept -> bool;
+    // # timing
+    auto get_capture_duration_ms() noexcept -> std::int64_t;
+    auto get_processing_duration_ms() noexcept -> std::int64_t;
+    auto get_duration_ms(std::string_view id) noexcept -> std::int64_t;
+    auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
+
+    // signals
+    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
+    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
+    sigslot::signal<DCColorSettings> color_settings_reset_signal;
+    sigslot::signal<int, std::string> update_device_name_signal;
 
 private:
 
@@ -63,42 +83,4 @@ private:
 };
 
 
-class DCDevice{
-public:
-
-    DCDevice(DCType type);
-    ~DCDevice();
-
-    // actions
-    auto open(std::uint32_t deviceId) -> bool;
-    auto start_reading(const DCConfigSettings &configS) -> bool;
-    auto stop_reading() -> void;
-    auto close() -> void;
-    auto clean() -> void;
-
-    // settings
-    auto set_color_settings(const DCColorSettings &colorS) -> void;
-    auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
-    auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
-    auto set_delay_settings(const DCDelaySettings &delayS) -> void;
-
-    // getters
-    auto nb_devices() const noexcept -> std::uint32_t;
-    auto device_name() const noexcept -> std::string;
-    auto is_opened() const noexcept -> bool;
-    auto is_reading() const noexcept -> bool;
-    auto get_capture_duration_ms() noexcept -> std::int64_t;
-    auto get_processing_duration_ms() noexcept -> std::int64_t;
-    auto get_duration_ms(std::string_view id) noexcept -> std::int64_t;
-    auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
-
-    // signals
-    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
-
-private:
-
-    struct Impl;
-    std::unique_ptr<Impl> i;
-};
 }

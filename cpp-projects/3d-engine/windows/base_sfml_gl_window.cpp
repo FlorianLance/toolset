@@ -97,6 +97,7 @@ auto BaseSfmlGlWindow::init() -> bool{
     return true;
 }
 
+#include <iostream>
 auto BaseSfmlGlWindow::start() -> void{
 
     auto lg = LogGuard("BaseSfmlGlWindow::start"sv);
@@ -111,6 +112,9 @@ auto BaseSfmlGlWindow::start() -> void{
     running = true;
     Logger::log("Start GL loop\n"sv);
     bool firstLoop = true;
+
+    ImGui::GetIO().MouseDrawCursor = true;
+
     while(running){
 
         const auto &io = ImGui::GetIO();
@@ -124,7 +128,8 @@ auto BaseSfmlGlWindow::start() -> void{
 
         while (m_scene.pollEvent(event)){
 
-            ImGui::SFML::ProcessEvent(event);
+            ImGui::SFML::ProcessEvent(m_scene, event);
+
             switch (event.type) {
             case sf::Event::Closed: // The window requested to be closed
                 Logger::message("Close window.\n");
@@ -233,6 +238,7 @@ auto BaseSfmlGlWindow::start() -> void{
                 1.f*m_camera.screen()->width(),
                 1.f*m_camera.screen()->height()
             });
+
             ImGui::EndFrame();
 
             if(firstLoop){
@@ -284,6 +290,7 @@ auto BaseSfmlGlWindow::init_sfml_window() -> bool{
     m_scene.setFramerateLimit(framerate);
     m_scene.setPosition(sf::Vector2i{m_screen.x_pos(),m_screen.y_pos()});
 
+
     return true;
 }
 
@@ -298,6 +305,7 @@ auto BaseSfmlGlWindow::base_resize_windows(sf::Event::SizeEvent size) -> void{
 }
 
 auto BaseSfmlGlWindow::mouse_button_pressed_event(sf::Event::MouseButtonEvent event) -> void{
+    std::cout << "MOUSE PRESSED " << imguiMouse << "\n";
     if(!imguiMouse){
         update_camera_with_mouse_button_event(event, true);
     }

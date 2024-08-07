@@ -46,54 +46,18 @@ using namespace tool::cam;
 DCDeviceImpl::DCDeviceImpl(){
 }
 
-DCDeviceImpl::~DCDeviceImpl(){
-    auto lg = LogGuard("DCDeviceImpl::DCDeviceImpl"sv);
+DCDeviceImpl::~DCDeviceImpl(){    
 }
 
 auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
-
     auto lg = LogGuard("DCDeviceImpl::initialize"sv);
     auto t = TimeDiffGuard(timeM, "INITIALIZE"sv);
     settings.config = newConfigS;
-
     mInfos.initialize(settings.config.mode);
     fIndices.initialize(mInfos);
     fData.reset(mInfos);
-    initialize_device_specific();
 }
 
-auto DCDeviceImpl::start_reading_thread() -> void{
-    auto lg = LogGuard("DCDeviceImpl::start_reading_thread"sv);
-
-    timeM.start("START_READING_THREAD"sv);
-    loopT = std::make_unique<std::thread>([&](){
-        auto t = TimeDiffGuard(timeM, "LOOP"sv);
-        loop_initialization();
-        while(readFramesFromCameras){
-            auto tf = TimeDiffGuard(timeM, "LOOP_ITERATION"sv);
-            // LogGuard g("Read frame.\n"sv);
-            read_settings();
-            read_images();
-            process_data();
-        }
-    });
-}
-
-auto DCDeviceImpl::stop_reading_thread() -> void{
-    auto lg = LogGuard("DCDeviceImpl::stop_reading_thread"sv);
-    if(readFramesFromCameras){
-        readFramesFromCameras = false;
-
-        if(loopT != nullptr){
-            if(loopT->joinable()){
-                loopT->join();
-            }
-            loopT = nullptr;
-        }
-    }
-
-    timeM.end("END_READING_THREAD"sv);
-}
 
 auto DCDeviceImpl::convert_color_image() -> void{
 
@@ -154,13 +118,13 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
     }
 
     auto dRange = mInfos.depth_range_mm();
-    auto minW   = mInfos.depth_width()  * cFiltersS.minWidthF;
-    auto maxW   = mInfos.depth_width()  * cFiltersS.maxWidthF;
-    auto minH   = mInfos.depth_height() * cFiltersS.minHeightF;
-    auto maxH   = mInfos.depth_height() * cFiltersS.maxHeightF;
+    auto minW   = mInfos.depth_width()  * settings.filters.minWidthF;
+    auto maxW   = mInfos.depth_width()  * settings.filters.maxWidthF;
+    auto minH   = mInfos.depth_height() * settings.filters.minHeightF;
+    auto maxH   = mInfos.depth_height() * settings.filters.maxHeightF;
     auto diffRange = dRange.y()-dRange.x();
-    auto minD = dRange.x() + cFiltersS.minDepthF * diffRange;
-    auto maxD = dRange.x() + cFiltersS.maxDepthF * diffRange;
+    auto minD = dRange.x() + settings.filters.minDepthF * diffRange;
+    auto maxD = dRange.x() + settings.filters.maxDepthF * diffRange;
 
     // reset depth mask
     std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
@@ -195,7 +159,7 @@ auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{
     auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
 
     // invalidate depth from depth-sized color
-    if(!cFiltersS.filterDepthWithColor){
+    if(!settings.filters.filterDepthWithColor){
         return;
     }
     if(fData.depth.empty()){
@@ -205,13 +169,13 @@ auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{
         return;
     }
 
-    auto hsvDiffColor = Convert::to_hsv(cFiltersS.filterColor);
+    auto hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const Pt3<size_t> &dIndex){
         size_t id = dIndex.x();
         auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
-        if((std::abs(hsv.h()- hsvDiffColor.h()) > cFiltersS.maxDiffColor.x()) ||
-            (std::abs(hsv.s()- hsvDiffColor.s()) > cFiltersS.maxDiffColor.y()) ||
-            (std::abs(hsv.v()- hsvDiffColor.v()) > cFiltersS.maxDiffColor.z())){
+        if((std::abs(hsv.h()- hsvDiffColor.h()) > settings.filters.maxDiffColor.x()) ||
+            (std::abs(hsv.s()- hsvDiffColor.s()) > settings.filters.maxDiffColor.y()) ||
+            (std::abs(hsv.v()- hsvDiffColor.v()) > settings.filters.maxDiffColor.z())){
             fData.depthMask[id] = 0;
             return;
         }
@@ -223,7 +187,7 @@ auto DCDeviceImpl::filter_depth_from_infra() -> void{
     auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_INFRA"sv);
 
     // invalidate depth from infra
-    if(!cFiltersS.filterDepthWithInfra){
+    if(!settings.filters.filterDepthWithInfra){
         return;
     }
     if(fData.depth.empty()){
@@ -243,36 +207,36 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_CLOUD"sv);
 
     // invalidate depth from cloud geometry
-    if(!cFiltersS.filterDepthWithCloud){
+    if(!settings.filters.filterDepthWithCloud){
         return;
     }
     if(fData.depth.empty() || fData.depthCloud.empty()){
         return;
     }
 
-    if(cFiltersS.p1FMode == PlaneFilteringMode::None && !cFiltersS.removeFromPointDistance && !cFiltersS.keepOnlyPointsInsideOOB){
+    if(settings.filters.p1FMode == PlaneFilteringMode::None && !settings.filters.removeFromPointDistance && !settings.filters.keepOnlyPointsInsideOOB){
         return; // do nothing
     }
 
 
     // plane filtering parameters
-    auto p1             = cFiltersS.p1A*1000.f;
-    auto p2             = cFiltersS.p1B*1000.f;
-    auto p3             = cFiltersS.p1C*1000.f;
+    auto p1             = settings.filters.p1A*1000.f;
+    auto p2             = settings.filters.p1B*1000.f;
+    auto p3             = settings.filters.p1C*1000.f;
     geo::Pt3f meanPt    = (p1+p2+p3)/3.f;
     auto AB             = vec(p2,p1);
     auto AC             = vec(p3,p1);
     auto normalV        = cross(AB,AC);
     normalV             = normalize(normalV);
 
-    geo::Pt3f pSphere   = cFiltersS.pSphere*1000.f;
-    auto squareMaxDistanceFromPoint = cFiltersS.maxSphereDistance*cFiltersS.maxSphereDistance;
+    geo::Pt3f pSphere   = settings.filters.pSphere*1000.f;
+    auto squareMaxDistanceFromPoint = settings.filters.maxSphereDistance*settings.filters.maxSphereDistance;
 
-    const auto &oobRot = cFiltersS.oob.rotation;
+    const auto &oobRot = settings.filters.oob.rotation;
     geo::Mat3f oobOrientation = geo::rotation_m3x3(geo::Vec3f{deg_2_rad(oobRot.x()), deg_2_rad(oobRot.y()), deg_2_rad(oobRot.z())});
     auto invO = inverse(oobOrientation);
-    auto halfDimensions = cFiltersS.oob.size * 500.f;
-    auto oobPos = cFiltersS.oob.position * 1000.f;
+    auto halfDimensions = settings.filters.oob.size * 500.f;
+    auto oobPos = settings.filters.oob.position * 1000.f;
 
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
@@ -282,30 +246,30 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
             return;
         }
 
-        if(cFiltersS.p1FMode != PlaneFilteringMode::None){
+        if(settings.filters.p1FMode != PlaneFilteringMode::None){
             if(dot(normalV,vec(meanPt, fData.depthCloud[idD].template conv<float>())) < 0){
-                if(cFiltersS.p1FMode == PlaneFilteringMode::Above){
+                if(settings.filters.p1FMode == PlaneFilteringMode::Above){
                     fData.depthMask[idD] = 0;
                     return;
                 }
             }else{
-                if(cFiltersS.p1FMode == PlaneFilteringMode::Below){
+                if(settings.filters.p1FMode == PlaneFilteringMode::Below){
                     fData.depthMask[idD] = 0;
                     return;
                 }
             }
         }
 
-        if(cFiltersS.removeFromPointDistance){
+        if(settings.filters.removeFromPointDistance){
             if(square_norm(vec(pSphere,fData.depthCloud[idD].template conv<float>())) > squareMaxDistanceFromPoint){
                 fData.depthMask[idD] = 0;
                 return;
             }
         }
 
-        if(cFiltersS.keepOnlyPointsInsideOOB){
+        if(settings.filters.keepOnlyPointsInsideOOB){
 
-            auto pointLocal = (fData.depthCloud[idD].template conv<float>()) - oobPos;// cFiltersS.oob.position;
+            auto pointLocal = (fData.depthCloud[idD].template conv<float>()) - oobPos;// settings.filters.oob.position;
             auto pointLocalRotated = pointLocal * invO;
             if(std::abs(pointLocalRotated.x())  > halfDimensions.x() ||
                 std::abs(pointLocalRotated.y()) > halfDimensions.y() ||
@@ -320,7 +284,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
             // }
             // return (pointLocalRotated.array().abs() <= halfDimensions.array()).all();
 
-            // if(!cFiltersS.oob.is_point_inside(oobOrientation, fData.depthCloud[idD].template conv<float>()*0.001f)){
+            // if(!settings.filters.oob.is_point_inside(oobOrientation, fData.depthCloud[idD].template conv<float>()*0.001f)){
             //     fData.depthMask[idD] = 0;
             //     return;
             // }
@@ -350,12 +314,12 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
         return;
     }
 
-    // if(cFiltersS.doErosion)
+    // if(settings.filters.doErosion)
     // {
     //     std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 1);
 
 
-    //     for(int ii = 0; ii < cFiltersS.erosionLoops; ++ii){
+    //     for(int ii = 0; ii < settings.filters.erosionLoops; ++ii){
     //         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
 
     //             if(fData.depthMask[id] == 0){
@@ -373,9 +337,9 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
 
     //                 if((fData.depthMask[cId] == 0) || (abs(fData.depth[cId]-currDepth) > 500)){
     //                     // auto hsvDiffColor = Convert::to_hsv(fData.depthSizedColor[cId]);
-    //                     // if((std::abs(hsv.h()- hsvDiffColor.h()) < cFiltersS.maxDiffColor.x()) ||
-    //                     // (std::abs(hsv.s()- hsvDiffColor.s()) < cFiltersS.maxDiffColor.y()) ||
-    //                     // (std::abs(hsv.v()- hsvDiffColor.v()) < cFiltersS.maxDiffColor.z())){
+    //                     // if((std::abs(hsv.h()- hsvDiffColor.h()) < settings.filters.maxDiffColor.x()) ||
+    //                     // (std::abs(hsv.s()- hsvDiffColor.s()) < settings.filters.maxDiffColor.y()) ||
+    //                     // (std::abs(hsv.v()- hsvDiffColor.v()) < settings.filters.maxDiffColor.z())){
     //                     //     fData.filteringMask[id] = 0;
     //                     //     return;
     //                     // }
@@ -394,29 +358,29 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
     //     }
     // }
 
-    if(cFiltersS.doLocalDiffFiltering){
-        maximum_local_depth_difference(fIndices, fData.depth, cFiltersS.maxLocalDiff, DCConnectivity::Connectivity_4);
+    if(settings.filters.doLocalDiffFiltering){
+        maximum_local_depth_difference(fIndices, fData.depth, settings.filters.maxLocalDiff, DCConnectivity::Connectivity_4);
     }
 
     // minimum neighbours filtering
-    if(cFiltersS.doMinNeighboursFiltering){
-        mininum_neighbours(cFiltersS.minNeighboursLoops, cFiltersS.nbMinNeighbours, DCConnectivity::Connectivity_8);
+    if(settings.filters.doMinNeighboursFiltering){
+        mininum_neighbours(settings.filters.minNeighboursLoops, settings.filters.nbMinNeighbours, DCConnectivity::Connectivity_8);
     }
 
     // erosion
-    if(cFiltersS.doErosion){
-        erode(cFiltersS.erosionLoops, DCConnectivity::Connectivity_8, 8);
+    if(settings.filters.doErosion){
+        erode(settings.filters.erosionLoops, DCConnectivity::Connectivity_8, 8);
     }
 
     // keep only biggest cluster
-    if(cFiltersS.keepOnlyBiggestCluster){
+    if(settings.filters.keepOnlyBiggestCluster){
         keep_only_biggest_cluster();
     }else{
         fData.meanBiggestZoneId = 0;
     }
 
     // remove after closest point
-    if(cFiltersS.removeAfterClosestPoint){
+    if(settings.filters.removeAfterClosestPoint){
 
         std::uint16_t minDist = std::numeric_limits<std::uint16_t>::max();
         std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
@@ -427,7 +391,7 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
             }
         });
 
-        std::uint16_t maxDist = minDist + static_cast<std::uint16_t>(1000.f * cFiltersS.maxDistanceAfterClosestPoint);
+        std::uint16_t maxDist = minDist + static_cast<std::uint16_t>(1000.f * settings.filters.maxDistanceAfterClosestPoint);
         std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
             if(fData.depthMask[id] == 0){
                 return;
@@ -483,12 +447,12 @@ auto DCDeviceImpl::filter_depth_sized_color_from_depth() -> void{
     }
 
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-        if(cFiltersS.invalidateColorFromDepth){
+        if(settings.filters.invalidateColorFromDepth){
             if(fData.depth[id] == dc_invalid_depth_value){
                 fData.depthSizedColor[id] = ColorRGBA8{dc_invalid_color_value};
             }
             // else{
-            //     if(cFiltersS.keepOnlyBiggestCluster){
+            //     if(settings.filters.keepOnlyBiggestCluster){
             //         // colorBuffer[meanBiggestZoneId] = ColorRGBA8{255,0,0,255};// TODO ?
             //     }
             // }
@@ -516,7 +480,7 @@ auto DCDeviceImpl::filter_infra_from_depth() -> void{
     }
 
     std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
-        if(cFiltersS.invalidateInfraFromDepth){
+        if(settings.filters.invalidateInfraFromDepth){
             if(fData.depth[id] == dc_invalid_depth_value){
                 fData.infra[id] = dc_invalid_infra_value;
             }
@@ -538,7 +502,7 @@ auto DCDeviceImpl::update_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && cDataS.generation.colorImage){
+    if(!fData.color.empty() && settings.data.generation.colorImage){
         frame->rgbaColor.width  = mInfos.color_width();
         frame->rgbaColor.height = mInfos.color_height();
         frame->rgbaColor.resize(mInfos.color_size());
@@ -555,7 +519,7 @@ auto DCDeviceImpl::update_frame_depth_sized_color() -> void{
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && cDataS.generation.depthSizedColorImage){
+    if(!fData.depthSizedColor.empty() && settings.data.generation.depthSizedColorImage){
         frame->rgbaDepthSizedColor.width  = mInfos.depth_width();
         frame->rgbaDepthSizedColor.height = mInfos.depth_height();
         frame->rgbaDepthSizedColor.resize(mInfos.depth_size());
@@ -578,7 +542,7 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         return;
     }
 
-    if(cDataS.generation.depth){
+    if(settings.data.generation.depth){
         frame->depth.width  = mInfos.depth_width();
         frame->depth.height = mInfos.depth_height();
         frame->depth.resize(mInfos.depth_size());
@@ -587,7 +551,7 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         frame->depth.reset();
     }
 
-    if(cDataS.generation.depthImage){
+    if(settings.data.generation.depthImage){
 
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
@@ -640,7 +604,7 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         return;
     }
 
-    if(cDataS.generation.infra){
+    if(settings.data.generation.infra){
         frame->infra.width  = mInfos.infra_width();
         frame->infra.height = mInfos.infra_height();
         frame->infra.resize(mInfos.infra_size());
@@ -649,7 +613,7 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         frame->infra.reset();
     }
 
-    if(cDataS.generation.infraImage){
+    if(settings.data.generation.infraImage){
 
         frame->rgbInfra.width  = mInfos.infra_width();
         frame->rgbInfra.height = mInfos.infra_height();
@@ -681,13 +645,13 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && !fData.depthCloud.empty() && cDataS.generation.cloud){
+    if(!fData.depth.empty() && !fData.depthCloud.empty() && settings.data.generation.cloud){
 
         frame->cloud.vertices.resize(fData.validDepthValues);
         frame->cloud.colors.resize(fData.validDepthValues);
         frame->cloud.normals.resize(fData.validDepthValues);
 
-        bool addColors = !fData.depthSizedColor.empty() && cDataS.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+        bool addColors = !fData.depthSizedColor.empty() && settings.data.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
         static constexpr std::array<Pt3f,5> depthGradient ={
@@ -755,7 +719,7 @@ auto DCDeviceImpl::update_frame_imu() -> void{
         return;
     }
 
-    if(!fData.binaryIMU.empty() && cDataS.generation.imu){
+    if(!fData.binaryIMU.empty() && settings.data.generation.imu){
         frame->imu.resize(fData.binaryIMU.size());
         std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), frame->imu.begin());
     }else{
@@ -770,7 +734,7 @@ auto DCDeviceImpl::update_frame_bodies() -> void{
         return;
     }
 
-    if(!fData.bodies.empty() && cDataS.generation.bodyTracking){
+    if(!fData.bodies.empty() && settings.data.generation.bodyTracking){
         frame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), frame->bodyTracking.begin());
     }else{
@@ -779,7 +743,7 @@ auto DCDeviceImpl::update_frame_bodies() -> void{
 
 
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && cDataS.generation.bodyIdMapImage){
+    if(!fData.bodiesIdMap.empty() && settings.data.generation.bodyIdMapImage){
         frame->grayBodiesIdMap.width  = mInfos.depth_width();
         frame->grayBodiesIdMap.height = mInfos.depth_height();
         frame->grayBodiesIdMap.resize(mInfos.depth_size());
@@ -796,7 +760,7 @@ auto DCDeviceImpl::update_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && cDataS.generation.calibration){
+    if(!fData.binaryCalibration.empty() && settings.data.generation.calibration){
         frame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), frame->calibration.begin());
     }else{
@@ -812,7 +776,7 @@ auto DCDeviceImpl::update_frame_audio() -> void{
         return;
     }
 
-    if(cDataS.generation.audio && (fData.audioChannels.first != 0) && !fData.audioChannels.second.empty()){
+    if(settings.data.generation.audio && (fData.audioChannels.first != 0) && !fData.audioChannels.second.empty()){
         size_t nbFrames = fData.audioChannels.second.size() / fData.audioChannels.first;
         frame->audioFrames.resize(nbFrames);
         auto audioFrom = fData.audioChannels.second.data();
@@ -829,13 +793,13 @@ auto DCDeviceImpl::update_compressed_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && cDataS.compression.color){
+    if(!fData.color.empty() && settings.data.compression.color){
         if(!jpegColorEncoder.encode(
                 mInfos.color_width(),
                 mInfos.color_height(),
                 fData.color,
                 cFrame->jpegRGBA8Color,
-                cDataS.compression.jpegCompressionRate
+                settings.data.compression.jpegCompressionRate
             )){
             cFrame->jpegRGBA8Color.reset();
         }
@@ -851,14 +815,14 @@ auto DCDeviceImpl::update_compressed_frame_depth_sized_color() -> void{
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && cDataS.compression.depthSizedColor){
+    if(!fData.depthSizedColor.empty() && settings.data.compression.depthSizedColor){
 
         if(!jpegDepthSizedColorEncoder.encode(
                 mInfos.depth_width(),
                 mInfos.depth_height(),
                 fData.depthSizedColor,
                 cFrame->jpegRGBA8DepthSizedColor,
-                cDataS.compression.jpegCompressionRate
+                settings.data.compression.jpegCompressionRate
             )){
             cFrame->jpegRGBA8DepthSizedColor.reset();
         }
@@ -875,7 +839,7 @@ auto DCDeviceImpl::update_compressed_frame_depth() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && cDataS.compression.depth){
+    if(!fData.depth.empty() && settings.data.compression.depth){
 
         fastPForDepthEncoder.encode(
             mInfos.depth_width(),
@@ -896,7 +860,7 @@ auto DCDeviceImpl::update_compressed_frame_infra() -> void{
         return;
     }
 
-    if(!fData.infra.empty() && cDataS.compression.infra){
+    if(!fData.infra.empty() && settings.data.compression.infra){
 
         fastPForInfraEncoder.encode(
             mInfos.infra_width(),
@@ -917,7 +881,7 @@ auto DCDeviceImpl::update_compressed_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && cDataS.compression.calibration){
+    if(!fData.binaryCalibration.empty() && settings.data.compression.calibration){
         cFrame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
     }else{
@@ -933,7 +897,7 @@ auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
         return;
     }
 
-    if(!fData.depthCloud.empty() && !fData.depth.empty() && cDataS.compression.cloud){
+    if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.compression.cloud){
 
         Buffer<std::uint16_t> processedCloudData;
 
@@ -949,7 +913,7 @@ auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
 
         auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
 
-        bool addColors = !fData.depthSizedColor.empty() && cDataS.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+        bool addColors = !fData.depthSizedColor.empty() && settings.data.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
 
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
@@ -1005,7 +969,7 @@ auto DCDeviceImpl::update_compressed_frame_audio() -> void{
         return;
     }
 
-    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && cDataS.compression.audio){
+    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && settings.data.compression.audio){
 
         size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
         cFrame->audioFrames.resize(audioSize);
@@ -1026,7 +990,7 @@ auto DCDeviceImpl::update_compressed_frame_imu() -> void{
         return;
     }
 
-    if(!fData.binaryIMU.empty() && cDataS.compression.imu){
+    if(!fData.binaryIMU.empty() && settings.data.compression.imu){
         cFrame->imu.resize(fData.binaryIMU.size());
         std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
     }else{
@@ -1042,7 +1006,7 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // body tracking
-    if(!fData.bodies.empty() && cDataS.compression.bodyTracking){
+    if(!fData.bodies.empty() && settings.data.compression.bodyTracking){
         cFrame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
     }else{
@@ -1050,14 +1014,14 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && cDataS.compression.bodyIdMap){
+    if(!fData.bodiesIdMap.empty() && settings.data.compression.bodyIdMap){
 
         if(!jpegBodiesIdEncoder.encode(
             mInfos.depth_width(),
             mInfos.depth_height(),
             fData.bodiesIdMap,
             cFrame->jpegG8BodiesIdMap,
-            cDataS.compression.jpegCompressionRate
+            settings.data.compression.jpegCompressionRate
         )){
             cFrame->jpegG8BodiesIdMap.reset();
         }
@@ -1342,26 +1306,25 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
 
 
 auto DCDeviceImpl::set_data_settings(const DCDeviceDataSettings &dataS) -> void {
-    parametersM.lock();
+    auto lg = LogGuard("DCDeviceImpl::set_data_settings"sv);
     settings.data = dataS;
-    parametersM.unlock();
+    // update_from_data_settings();
 }
 
 auto DCDeviceImpl::set_filters_settings(const DCFiltersSettings &filtersS) -> void{
-    parametersM.lock();
+    auto lg = LogGuard("DCDeviceImpl::set_filters_settings"sv);
     settings.filters = filtersS;
-    parametersM.unlock();
 }
 
 auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
+    auto lg = LogGuard("DCDeviceImpl::set_color_settings"sv);
     settings.color = colorS;
-    update_from_colors_settings();
+    // update_from_colors_settings();
 }
 
 auto DCDeviceImpl::set_delay_settings(const DCDelaySettings &delayS) -> void{
-    parametersM.lock();
+    auto lg = LogGuard("DCDeviceImpl::set_delay_settings"sv);
     settings.delay = delayS;
-    parametersM.unlock();
 }
 
 auto DCDeviceImpl::get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>{
@@ -1386,26 +1349,10 @@ auto DCDeviceImpl::get_duration_micro_s(std::string_view id) -> std::optional<st
     return std::nullopt;
 }
 
-auto DCDeviceImpl::loop_initialization() -> void{
-    update_from_colors_settings();
-    read_calibration();
-    readFramesFromCameras = true;
-}
 
-auto DCDeviceImpl::read_settings() -> void{
+auto DCDeviceImpl::read_frame() -> void{
 
-    parametersM.lock();
-    {
-        cFiltersS = settings.filters;
-        cDataS    = settings.data;
-        cDelayS   = settings.delay;
-        times     = timeM.times;
-    }
-    parametersM.unlock();
-    update_from_data_settings();
-}
-
-auto DCDeviceImpl::read_images() -> void{
+    auto tRF = TimeDiffGuard(timeM, "READ_FRAME"sv);
 
     fData.reset_spans();
     {
@@ -1420,131 +1367,33 @@ auto DCDeviceImpl::read_images() -> void{
     auto tRI = TimeDiffGuard(timeM, "READ_IMAGES"sv);
     {
         auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
-        read_color_image(mInfos.has_color() && cDataS.capture.color);
+        read_color_image(mInfos.has_color() && settings.data.capture.color);
     }
     {
         auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
-        read_depth_image(mInfos.has_depth() && cDataS.capture.depth);
+        read_depth_image(mInfos.has_depth() && settings.data.capture.depth);
     }
     {
         auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
-        read_infra_image(mInfos.has_infra() && cDataS.capture.infra);
+        read_infra_image(mInfos.has_infra() && settings.data.capture.infra);
     }
     {
         auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-        read_body_tracking(cDataS.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
+        read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
     }
     {
         auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
-        read_audio(cDataS.capture.audio && mInfos.has_audio());
+        read_audio(settings.data.capture.audio && mInfos.has_audio());
     }
     {
         auto tRI = TimeDiffGuard(timeM, "READ_IMU"sv);
-        read_IMU(cDataS.capture.imu);
+        read_IMU(settings.data.capture.imu);
     }
 
     dataIsValid = check_data_validity();
 }
 
-auto DCDeviceImpl::init_frames() -> void{
 
-    if(captureSuccess && dataIsValid){
-
-        if(cDataS.generation.has_data_to_generate()){
-            frame = std::make_shared<DCFrame>();
-        }else{
-            frame = nullptr;
-        }
-        if(cDataS.compression.has_data_to_compress()){
-            cFrame = std::make_shared<DCCompressedFrame>();
-        }else{
-            cFrame = nullptr;
-        }
-    }
-}
-
-auto DCDeviceImpl::resize_and_convert() -> void{
-
-    if(captureSuccess && dataIsValid){
-        {
-            auto tCCI = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
-            convert_color_image();
-        }
-        {
-            auto tRCI = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
-            resize_color_image_to_depth_size();
-        }
-        {
-            auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-            generate_cloud(cDataS.capture_cloud() || cFiltersS.filterDepthWithCloud);
-        }
-    }
-}
-
-auto DCDeviceImpl::preprocess() -> void{
-    if(captureSuccess && dataIsValid){
-        auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
-        preprocess_color_image();
-        preprocess_depth_sized_color_image();
-        preprocess_depth_image();
-        preprocess_infra_image();
-        preprocess_cloud_image();
-        preprocess_body_tracking_image();
-    }
-}
-
-auto DCDeviceImpl::filter() -> void{
-    if(captureSuccess && dataIsValid){
-        {
-            auto tFD = TimeDiffGuard(timeM, "FILTER_DEPTH"sv);
-            filter_depth_basic();
-            filter_depth_from_depth_sized_color();
-            filter_depth_from_infra();
-            filter_depth_from_cloud();
-            filter_depth_from_body_tracking();
-            filter_depth_complex();
-            update_valid_depth_values();
-        }
-
-        {
-            auto tFO = TimeDiffGuard(timeM, "FILTER_OTHER"sv);
-            filter_depth_sized_color_from_depth();
-            mix_depth_sized_color_with_body_tracking();
-            filter_infra_from_depth();
-            mix_infra_with_body_tracking();
-        }
-    }
-}
-
-auto DCDeviceImpl::update_compressed_frame() -> void{
-    if(captureSuccess && dataIsValid){
-        auto tUCF = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME"sv);
-        update_compressed_frame_color();
-        update_compressed_frame_depth_sized_color();
-        update_compressed_frame_depth();
-        update_compressed_frame_infra();
-        update_compressed_frame_cloud();
-        update_compressed_frame_audio();
-        update_compressed_frame_imu();
-        update_compressed_frame_bodies();
-        update_compressed_frame_calibration();
-    }
-}
-
-auto DCDeviceImpl::update_frame() -> void{
-    if(captureSuccess && dataIsValid){
-        auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
-        update_frame_color();
-        update_frame_depth_sized_color();
-        update_frame_depth();
-        update_frame_infra();
-        update_frame_cloud();
-        update_frame_audio();
-        update_frame_imu();
-        update_frame_bodies();
-        update_frame_calibration();
-    }
-}
 
 auto DCDeviceImpl::process_data() -> void{
 
@@ -1552,12 +1401,12 @@ auto DCDeviceImpl::process_data() -> void{
 
     if(captureSuccess && dataIsValid){
 
-        if(cDataS.generation.has_data_to_generate()){
+        if(settings.data.generation.has_data_to_generate()){
             frame = std::make_shared<DCFrame>();
         }else{
             frame = nullptr;
         }
-        if(cDataS.compression.has_data_to_compress()){
+        if(settings.data.compression.has_data_to_compress()){
             cFrame = std::make_shared<DCCompressedFrame>();
         }else{
             cFrame = nullptr;
@@ -1573,7 +1422,7 @@ auto DCDeviceImpl::process_data() -> void{
         }
         {
             auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-            generate_cloud(cDataS.capture_cloud() || cFiltersS.filterDepthWithCloud);
+            generate_cloud(settings.data.capture_cloud() || settings.filters.filterDepthWithCloud);
         }
 
         {
@@ -1638,12 +1487,8 @@ auto DCDeviceImpl::process_data() -> void{
         }
         {
             auto tSCF = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
-            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-                if(pDcDevice){
-                    pDcDevice->new_compressed_frame_signal(std::move(compressedFrameToSend));
-                }else{
-                    new_compressed_frame_signal(std::move(compressedFrameToSend));
-                }
+            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                new_compressed_frame_signal(std::move(compressedFrameToSend));
             }
         }
 
@@ -1677,13 +1522,8 @@ auto DCDeviceImpl::process_data() -> void{
 
         {
             auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
-            if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), cDelayS.delayMs)){
-                if(pDcDevice){
-                    pDcDevice->new_frame_signal(std::move(frameToSend));
-                }else{
-                    new_frame_signal(std::move(frameToSend));
-                }
-
+            if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                new_frame_signal(std::move(frameToSend));
             }
         }
     }
@@ -1694,9 +1534,9 @@ auto DCDeviceImpl::process_data() -> void{
 }
 
 
-auto DCDeviceImpl::set_parent_device(DCDevice *dcDevice) -> void{
-    pDcDevice = dcDevice;
-}
+// auto DCDeviceImpl::set_parent_device(DCDevice *dcDevice) -> void{
+//     pDcDevice = dcDevice;
+// }
 
 
 auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{
@@ -1759,6 +1599,141 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
     return nullptr;
 }
 
+
+// auto DCDeviceImpl::start_reading_thread() -> void{
+//     auto lg = LogGuard("DCDeviceImpl::start_reading_thread"sv);
+
+//     timeM.start("START_READING_THREAD"sv);
+//     loopT = std::make_unique<std::thread>([&](){
+//         auto t = TimeDiffGuard(timeM, "LOOP"sv);
+//         loop_initialization();
+//         while(readFramesFromCameras){
+//             auto tf = TimeDiffGuard(timeM, "LOOP_ITERATION"sv);
+//             // LogGuard g("Read frame.\n"sv);
+//             read_settings();
+//             read_images();
+//             process_data();
+//         }
+//     });
+// }
+
+// auto DCDeviceImpl::stop_reading_thread() -> void{
+//     auto lg = LogGuard("DCDeviceImpl::stop_reading_thread"sv);
+//     if(readFramesFromCameras){
+//         readFramesFromCameras = false;
+
+//         if(loopT != nullptr){
+//             if(loopT->joinable()){
+//                 loopT->join();
+//             }
+//             loopT = nullptr;
+//         }
+//     }
+
+//     timeM.end("END_READING_THREAD"sv);
+// }
+
+
+// auto DCDeviceImpl::init_frames() -> void{
+
+//     if(captureSuccess && dataIsValid){
+
+//         if(settings.data.generation.has_data_to_generate()){
+//             frame = std::make_shared<DCFrame>();
+//         }else{
+//             frame = nullptr;
+//         }
+//         if(settings.data.compression.has_data_to_compress()){
+//             cFrame = std::make_shared<DCCompressedFrame>();
+//         }else{
+//             cFrame = nullptr;
+//         }
+//     }
+// }
+
+// auto DCDeviceImpl::resize_and_convert() -> void{
+
+//     if(captureSuccess && dataIsValid){
+//         {
+//             auto tCCI = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
+//             convert_color_image();
+//         }
+//         {
+//             auto tRCI = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
+//             resize_color_image_to_depth_size();
+//         }
+//         {
+//             auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
+//             generate_cloud(settings.data.capture_cloud() || settings.filters.filterDepthWithCloud);
+//         }
+//     }
+// }
+
+// auto DCDeviceImpl::preprocess() -> void{
+//     if(captureSuccess && dataIsValid){
+//         auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
+//         preprocess_color_image();
+//         preprocess_depth_sized_color_image();
+//         preprocess_depth_image();
+//         preprocess_infra_image();
+//         preprocess_cloud_image();
+//         preprocess_body_tracking_image();
+//     }
+// }
+
+// auto DCDeviceImpl::filter() -> void{
+//     if(captureSuccess && dataIsValid){
+//         {
+//             auto tFD = TimeDiffGuard(timeM, "FILTER_DEPTH"sv);
+//             filter_depth_basic();
+//             filter_depth_from_depth_sized_color();
+//             filter_depth_from_infra();
+//             filter_depth_from_cloud();
+//             filter_depth_from_body_tracking();
+//             filter_depth_complex();
+//             update_valid_depth_values();
+//         }
+
+//         {
+//             auto tFO = TimeDiffGuard(timeM, "FILTER_OTHER"sv);
+//             filter_depth_sized_color_from_depth();
+//             mix_depth_sized_color_with_body_tracking();
+//             filter_infra_from_depth();
+//             mix_infra_with_body_tracking();
+//         }
+//     }
+// }
+
+// auto DCDeviceImpl::update_compressed_frame() -> void{
+//     if(captureSuccess && dataIsValid){
+//         auto tUCF = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME"sv);
+//         update_compressed_frame_color();
+//         update_compressed_frame_depth_sized_color();
+//         update_compressed_frame_depth();
+//         update_compressed_frame_infra();
+//         update_compressed_frame_cloud();
+//         update_compressed_frame_audio();
+//         update_compressed_frame_imu();
+//         update_compressed_frame_bodies();
+//         update_compressed_frame_calibration();
+//     }
+// }
+
+// auto DCDeviceImpl::update_frame() -> void{
+//     if(captureSuccess && dataIsValid){
+//         auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
+//         update_frame_color();
+//         update_frame_depth_sized_color();
+//         update_frame_depth();
+//         update_frame_infra();
+//         update_frame_cloud();
+//         update_frame_audio();
+//         update_frame_imu();
+//         update_frame_bodies();
+//         update_frame_calibration();
+//     }
+// }
+
 // auto DCDeviceImpl::read_data_taskflow() -> std::unique_ptr<tf::Taskflow>{
 
 //     auto readDataTF = std::make_unique<tf::Taskflow>();
@@ -1775,27 +1750,27 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 //         timeM.start("READ_IMAGES"sv);
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
-//             read_color_image(mInfos.has_color() && cDataS.capture_color());
+//             read_color_image(mInfos.has_color() && settings.data.capture_color());
 //         }
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
-//             read_depth_image(mInfos.has_depth() && cDataS.capture_depth());
+//             read_depth_image(mInfos.has_depth() && settings.data.capture_depth());
 //         }
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
-//             read_infra_image(mInfos.has_infra() && cDataS.capture_infra());
+//             read_infra_image(mInfos.has_infra() && settings.data.capture_infra());
 //         }
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-//             read_body_tracking(cDataS.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
+//             read_body_tracking(settings.data.capture_body_tracking() && settings.config.btEnabled && mInfos.has_depth());
 //         }
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_AUDIO"sv);
-//             read_audio(cDataS.capture_audio() && mInfos.has_audio());
+//             read_audio(settings.data.capture_audio() && mInfos.has_audio());
 //         }
 //         {
 //             auto t = TimeDiffGuard(timeM, "READ_IMU"sv);
-//             read_IMU(cDataS.capture_imu());
+//             read_IMU(settings.data.capture_imu());
 //         }
 //         timeM.end("READ_IMAGES"sv);
 //         dataIsValid = check_data_validity();
@@ -1811,12 +1786,12 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 //     auto startProcessingDataT = processDataTF->emplace([&](){
 
 //         // timeM.start("PROCESSING_DATA"sv);
-//         // if(cDataS.client.generation.has_data_to_generate()){
+//         // if(settings.data.client.generation.has_data_to_generate()){
 //         //     frame = std::make_shared<DCFrame>();
 //         // }else{
 //         //     frame = nullptr;
 //         // }
-//         // if(cDataS.client.compression.has_data_to_compress()){
+//         // if(settings.data.client.compression.has_data_to_compress()){
 //         //     cFrame = std::make_shared<DCCompressedFrame>();
 //         // }else{
 //         //     cFrame = nullptr;
@@ -1832,7 +1807,7 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 //         // }
 //         // {
 //         //     auto t = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
-//         //     generate_cloud(cDataS.generate_cloud_from_client() || cFiltersS.filterDepthWithCloud);
+//         //     generate_cloud(settings.data.generate_cloud_from_client() || settings.filters.filterDepthWithCloud);
 //         // }
 
 //     }).name("start_processing_data");
@@ -2173,8 +2148,8 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
 //     auto updateSettingsT             = processFrameTF->emplace([&](){
 //         parametersM.lock();
 //         {
-//             cFiltersS = settings.filters;
-//             cDataS    = settings.data;
+//             settings.filters = settings.filters;
+//             settings.data    = settings.data;
 //             cDelayS   = settings.delay;
 //             times     = timeM.times;
 //         }

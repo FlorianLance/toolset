@@ -35,44 +35,38 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 FemtoMegaDeviceImpl::FemtoMegaDeviceImpl(){
+
+    auto lg = LogGuard("FemtoMegaDeviceImpl::FemtoMegaDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
     orbbecD->query_devices("Femto Mega"sv, true);
 }
 
-auto FemtoMegaDeviceImpl::initialize_device_specific() -> void{
+auto FemtoMegaDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
+
+    auto lg = LogGuard("FemtoMegaDeviceImpl::open"sv);
+    initialize(newConfigS);
 
     if(mInfos.image_format() != DCImageFormat::MJPG){
         Logger::warning("Femto Mega must use MJPG image format, format ignored.\n");
         mInfos.force_image_format(DCImageFormat::MJPG);
     }
-    orbbecD->initialize(mInfos, settings.color);
+
+    if(orbbecD->open(mInfos, settings.config, settings.color)){
+        fData.binaryCalibration = orbbecD->read_calibration();
+        return true;
+    }
+
+    Logger::error("[FemtoMegaDeviceImpl::open] Cannot open device\n");
+    return false;
+}
+
+auto FemtoMegaDeviceImpl::close() -> void {
+    auto lg = LogGuard("FemtoMegaDeviceImpl::close"sv);
+    orbbecD->close();
 }
 
 auto FemtoMegaDeviceImpl::update_from_colors_settings() -> void{
     orbbecD->update_from_colors_settings(settings.color);
-}
-
-auto FemtoMegaDeviceImpl::open(uint32_t deviceId) -> bool{
-    settings.config.idDevice = deviceId;
-    return orbbecD->open(settings.config);
-}
-
-auto FemtoMegaDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
-    initialize(newConfigS);
-    return orbbecD->start(mInfos, settings.config);
-}
-
-auto FemtoMegaDeviceImpl::stop() -> void{
-    orbbecD->stop();
-}
-
-auto FemtoMegaDeviceImpl::close() -> void {
-
-    orbbecD->close();
-    orbbecD = nullptr;
-
-    orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
-    orbbecD->query_devices("Femto Mega"sv, true);
 }
 
 auto FemtoMegaDeviceImpl::is_opened() const noexcept -> bool{
@@ -85,10 +79,6 @@ auto FemtoMegaDeviceImpl::nb_devices() const noexcept -> uint32_t{
 
 auto FemtoMegaDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();
-}
-
-auto FemtoMegaDeviceImpl::read_calibration() -> void{
-    fData.binaryCalibration = orbbecD->read_calibration();
 }
 
 auto FemtoMegaDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{

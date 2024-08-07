@@ -40,16 +40,13 @@ struct OrbbecBaseDevice{
     OrbbecBaseDevice(DCType deviceType);
     ~OrbbecBaseDevice();
 
-    // initialization
-    auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
-    auto initialize(const DCModeInfos &mInfos, const DCColorSettings &colorS) -> void;
-    auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
-
     // actions
-    auto open(const DCConfigSettings &configS) -> bool;
-    auto start(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
-    auto stop() -> void;
+    auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
+    auto open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool;
     auto close() -> void;
+
+    // settings
+    auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
 
     // getters
     auto is_opened() const noexcept -> bool;
@@ -70,6 +67,8 @@ struct OrbbecBaseDevice{
     auto generate_cloud(const DCModeInfos &mInfos, std::span<std::uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>>;
 
 private:
+
+    auto initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool;
 
     struct Impl;
     std::unique_ptr<Impl> i;

@@ -401,21 +401,17 @@ auto test_dev() -> void{
 
 
     cam::AzureKinectDeviceImpl device;
-    if(device.open(0)){
+    cam::DCConfigSettings cs;
+    cs.idDevice = 0;
+    cs.typeDevice = tool::cam::DCType::AzureKinect;
 
-        cam::DCConfigSettings cs;
-        cs.idDevice = 0;
-        cs.typeDevice = tool::cam::DCType::AzureKinect;
 
-        if(device.start(cs)){
-            device.start_reading_thread();
-        }
+    if(device.open(cs)){
+
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    device.stop_reading_thread();
-    device.stop();
     device.close();
 }
 
@@ -425,110 +421,109 @@ auto test_multi_device() -> void{
 
 
 
-    std::vector<std::unique_ptr<cam::DCDeviceImpl>> devices;
+//     std::vector<std::unique_ptr<cam::DCDeviceImpl>> devices;
 
-    std::mutex lock;
+//     std::mutex lock;
 
-    std::vector<std::shared_ptr<cam::DCCompressedFrame>> frames;
-    frames.resize(4, nullptr);
+//     std::vector<std::shared_ptr<cam::DCCompressedFrame>> frames;
+//     frames.resize(4, nullptr);
 
-    for(size_t idD = 0; idD < 4; ++idD){
-        devices.push_back(std::make_unique<cam::AzureKinectDeviceImpl>());
+//     for(size_t idD = 0; idD < 4; ++idD){
+//         devices.push_back(std::make_unique<cam::AzureKinectDeviceImpl>());
 
-        cam::DCDeviceSettings ds;
-        ds.apply_remote_profile();
+//         cam::DCDeviceSettings ds;
+//         ds.apply_remote_profile();
 
-        Logger::message("open\n");
-        if(devices.back()->open(idD)){
+//         Logger::message("open\n");
+//         if(devices.back()->open(idD)){
 
-            ds.configS.idDevice = idD;
-            ds.configS.typeDevice = tool::cam::DCType::AzureKinect;
+//             ds.configS.idDevice = idD;
+//             ds.configS.typeDevice = tool::cam::DCType::AzureKinect;
 
-            Logger::message("start\n");
-            if(devices.back()->start(ds.configS)){
+//             Logger::message("start\n");
+//             if(devices.back()->start(ds.configS)){
 
-                devices.back()->new_compressed_frame_signal.connect([&, idD](std::shared_ptr<cam::DCCompressedFrame> cFrame){
-                    frames[idD] = std::move(cFrame);
-                });
+//                 devices.back()->new_compressed_frame_signal.connect([&, idD](std::shared_ptr<cam::DCCompressedFrame> cFrame){
+//                     frames[idD] = std::move(cFrame);
+//                 });
 
-                devices.back()->loop_initialization();
-            }
+//                 devices.back()->loop_initialization();
+//             }
 
-            // cam::DCDataSettings dataS;
-            // dataS.
+//             // cam::DCDataSettings dataS;
+//             // dataS.
 
-            // devices.back()->set_data_settings(dataS);
-            // devices.back()->set_colors_settings();
-        }
-    }
+//             // devices.back()->set_data_settings(dataS);
+//             // devices.back()->set_colors_settings();
+//         }
+//     }
 
-    // auto executor = std::make_unique<tf::Executor>();
-    // auto tk = std::make_unique<tf::Taskflow>();
-
-
-    for(size_t idF = 0; idF < 1000; ++idF){
-        // std::cout << "id " << idF << "\n";
-
-        auto t1 = Time::milliseconds_since_epoch();
-        std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
-            device->read_settings();
-            device->read_images();
+//     // auto executor = std::make_unique<tf::Executor>();
+//     // auto tk = std::make_unique<tf::Taskflow>();
 
 
-            device->process_data();
-        });
-        auto t2 = Time::milliseconds_since_epoch();
-        std::cout << "time1 " << idF << " " << Time::difference_ms(t1, t2).count() << std::endl;
+//     for(size_t idF = 0; idF < 1000; ++idF){
+//         // std::cout << "id " << idF << "\n";
 
-        // std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
-        //     // device->process_data();
-        //     // device->init_frames();
-        //     // device->resize_and_convert();
-        //     // device->preprocess();
-        //     // device->filter();
-        //     // device->update_compressed_frame();
-        //     // device->update_frame();
-        // });
-        // std::cout << "time2 " << idF << " " << Time::difference_ms(t2, Time::milliseconds_since_epoch()).count() << std::endl;
+//         auto t1 = Time::milliseconds_since_epoch();
+//         std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+//             device->read_frame();
+//             // device->read_settings();
+//             // device->read_images();
+//             // device->process_data();
+//         });
+//         auto t2 = Time::milliseconds_since_epoch();
+//         std::cout << "time1 " << idF << " " << Time::difference_ms(t1, t2).count() << std::endl;
 
-        // int idC= 0;
-        // std::for_each(std::execution::seq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+//         // std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+//         //     // device->process_data();
+//         //     // device->init_frames();
+//         //     // device->resize_and_convert();
+//         //     // device->preprocess();
+//         //     // device->filter();
+//         //     // device->update_compressed_frame();
+//         //     // device->update_frame();
+//         // });
+//         // std::cout << "time2 " << idF << " " << Time::difference_ms(t2, Time::milliseconds_since_epoch()).count() << std::endl;
 
-        //     std::cout << "cam "<< idC << " " << device->get_duration_micro_s("UPDATE_FRAME")->count() << "\n";
-        //     ++idC;
-        // });
+//         // int idC= 0;
+//         // std::for_each(std::execution::seq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
 
-        for(const auto &f : frames){
-            if(f){
-                std::cout << f->idCapture << " ";
-            }
-        }
-        std::cout << std::flush;
-    }
+//         //     std::cout << "cam "<< idC << " " << device->get_duration_micro_s("UPDATE_FRAME")->count() << "\n";
+//         //     ++idC;
+//         // });
+
+//         for(const auto &f : frames){
+//             if(f){
+//                 std::cout << f->idCapture << " ";
+//             }
+//         }
+//         std::cout << std::flush;
+//     }
 
 
-    // auto captureCT = tk->emplace([&](){
+//     // auto captureCT = tk->emplace([&](){
 
 
-    // });
-
+//     // });
 
 
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+//     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
 
-    for(auto &device : devices){
-        device->stop_reading_thread();
-    }
+//     for(auto &device : devices){
+//         device->stop_reading_thread();
+//     }
 
-    for(auto &device : devices){
-        device->stop();
-    }
+//     for(auto &device : devices){
+//         device->stop();
+//     }
 
-    for(auto &device : devices){
-        device->close();
-    }
+//     for(auto &device : devices){
+//         device->close();
+//     }
 
     return;
 }

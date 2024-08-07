@@ -68,7 +68,7 @@ static constexpr DCColorSettingsTypes foColorSettingsP = {{
     {ColorSettingsType::Contrast,               true,           1,      99,     1,      50},
     {ColorSettingsType::Sharpness,              true,           1,      40,     1,      24},
     {ColorSettingsType::Saturation,             true,           1,      255,    1,      64},
-    {ColorSettingsType::Gain,                   true,           0,      80,     1,      0},
+    {ColorSettingsType::Gain,                   true,           0,      80,     1,      40},
     {ColorSettingsType::Power_line_frequency,   true,           0,      2,      1,      2},
     {ColorSettingsType::Backlight_compensation, false,          0,      0,      0,      0},
     {ColorSettingsType::HDR,                    true,           0,      1,      1,      1},

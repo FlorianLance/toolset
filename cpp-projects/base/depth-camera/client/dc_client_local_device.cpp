@@ -28,7 +28,7 @@
 #include "dc_client_local_device.hpp"
 
 // local
-#include "depth-camera/dc_device_manager.hpp"
+#include "depth-camera/dc_device.hpp"
 #include "utility/time.hpp"
 
 
@@ -36,7 +36,7 @@ using namespace tool::cam;
 using namespace tool::net;
 
 struct DCClientLocalDevice::Impl{
-    std::unique_ptr<DCDeviceManager>  deviceM = nullptr;
+    std::unique_ptr<DCDevice> device = nullptr;
 };
 
 DCClientLocalDevice::DCClientLocalDevice() : i(std::make_unique<DCClientLocalDevice::Impl>()){
@@ -50,8 +50,8 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
     
     static_cast<void>(connectionS);
 
-    i->deviceM = std::make_unique<DCDeviceManager>();
-    i->deviceM->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    i->device = std::make_unique<DCDevice>();
+    i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
 
         if(frame){
 
@@ -74,40 +74,40 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
 }
 
 auto DCClientLocalDevice::clean() -> void {
-    i->deviceM = nullptr;
+    i->device = nullptr;
 }
 
-auto DCClientLocalDevice::apply_command(Command command) -> void{
-    static_cast<void>(command);
-}
+// auto DCClientLocalDevice::apply_command(Command command) -> void{
+//     static_cast<void>(command);
+// }
 
 auto DCClientLocalDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
-    if(i->deviceM){
-        i->deviceM->update_device_settings(deviceS);
+    if(i->device){
+        i->device->update_device_settings(deviceS);
     }
 }
 
 auto DCClientLocalDevice::update_color_settings(const cam::DCColorSettings &colorS) -> void{
-    if(i->deviceM){
-        i->deviceM->update_color_settings(colorS);
+    if(i->device){
+        i->device->update_color_settings(colorS);
     }
 }
 
 auto DCClientLocalDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
-    if(i->deviceM){
-        i->deviceM->update_filters_settings(filtersS);
+    if(i->device){
+        i->device->update_filters_settings(filtersS);
     }
 }
 
 auto DCClientLocalDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
-    if(i->deviceM){
-        i->deviceM->update_delay_settings(delayS);
+    if(i->device){
+        i->device->update_delay_settings(delayS);
     }
 }
 
 auto DCClientLocalDevice::device_connected() const noexcept -> bool{
-    if(i->deviceM){
-        return i->deviceM->is_opened();
+    if(i->device){
+        return i->device->is_opened();
     }
     return false;
 }

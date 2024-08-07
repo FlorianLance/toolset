@@ -34,7 +34,7 @@ using namespace std::string_view_literals;
 
 DCGModel::DCGModel(){
     auto lg = LogGuard("DCGModel::DCGModel"sv);
-    device = std::make_unique<cam::DCDeviceManager>();
+    device = std::make_unique<cam::DCDevice>();
 }
 
 DCGModel::~DCGModel(){

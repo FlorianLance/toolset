@@ -56,7 +56,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
     geo::Pt2f displaySize  = {size.x()-400.f, size.y()-50.f};
 
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Always);
-    if (ImGui::Begin("UI###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)){
+    if (ImGui::Begin("###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse)){
 
         // settings
         leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model->settings, model->states);

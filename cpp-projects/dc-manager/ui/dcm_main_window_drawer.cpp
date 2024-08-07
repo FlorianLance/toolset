@@ -78,7 +78,7 @@ auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMModel *model) -> void{
         auto sw = size.x();
         auto sh = size.y();
         m_leftPanelD.draw({450.f,sh-50.f}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model);
-        ImGui::SameLine();        
+        ImGui::SameLine();
         m_middlePanelD.draw({sw-450.f,sh-50.f}, model->uiSettings);
     }
     ImGui::End();

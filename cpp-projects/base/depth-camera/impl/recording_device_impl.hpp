@@ -37,9 +37,7 @@ struct RecordingDeviceImpl : public DCDeviceImpl{
     RecordingDeviceImpl();
 
     // actions
-    auto open_file(const std::string &path) -> bool override final;
-    auto start(const DCConfigSettings &newConfigS) -> bool override final;
-    auto stop() -> void override final;
+    auto open(const DCConfigSettings &newConfigS) -> bool override final;
     auto close() -> void override final;
 
     // getters

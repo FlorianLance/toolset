@@ -84,11 +84,11 @@ auto DCGController::set_connections() -> void{
 
     // aliases
     using Sett   = DCGSettings;
-    using CCo    = net::DCUdpServer;
+    using CCo    = net::DCServer;
     using Rec    = cam::DCVideoRecorder;
     using RecD   = graphics::DCRecorderDrawer;
     using DevD   = graphics::DCDeviceDrawer;
-    using DevM   = cam::DCDeviceManager;
+    using DevM   = cam::DCDevice;
 
     using States = DCGStates;
 
@@ -136,9 +136,9 @@ auto DCGController::set_connections() -> void{
     con->receive_filters_signal.connect(                             &Sett::update_filters,                                 sett);
     con->receive_device_settings_signal.connect(                     &Sett::update_device_settings,                         sett);
     con->receive_color_settings_signal.connect(                      &Sett::update_color_settings,                          sett);
-    con->receive_delay_settings_signal.connect(                               &Sett::update_delay,                                   sett);
+    con->receive_delay_settings_signal.connect(                               &Sett::update_delay,                          sett);
     con->disconnect_signal.connect(                                  &Sett::disconnect,                                     sett);
-    dev->new_imu_sample_signal.connect(                              &Sett::update_imu_sample,                              sett);
+    // dev->new_imu_sample_signal.connect(                              &Sett::update_imu_sample,                              sett);
     dev->update_device_name_signal.connect(                          [&](int deviceId, std::string deviceName){
         tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName); // TODO: move to settings/states ?
     });

@@ -64,36 +64,29 @@ struct DCDeviceImpl{
     virtual ~DCDeviceImpl();
 
     // actions
-    virtual auto open(std::uint32_t deviceId) -> bool{static_cast<void>(deviceId); return false;}
-    virtual auto open(std::string_view deviceId) -> bool{static_cast<void>(deviceId); return false;}
-    virtual auto open_file(const std::string &path) -> bool{static_cast<void>(path); return false;}
-    virtual auto start(const DCConfigSettings &newConfigS) -> bool = 0;
-    virtual auto stop() -> void = 0;
+    virtual auto open(const DCConfigSettings &newConfigS) -> bool = 0;
     virtual auto close() -> void = 0;
 
-    // reading thread
-    auto start_reading_thread() -> void;
-    auto stop_reading_thread() -> void;
-    auto is_reading_frames_from_camera() const noexcept -> bool{return readFramesFromCameras;}
-    // read_frame
+    auto process() -> void{
+        auto tf = TimeDiffGuard(timeM, "PROCESS"sv);
 
-    // reading steps
-    auto loop_initialization() -> void;
-    auto read_settings() -> void;
-    auto read_images() -> void;
-    auto init_frames() -> void;
-    auto resize_and_convert() -> void;
-    auto preprocess() -> void;
-    auto filter() -> void;
-    auto update_compressed_frame() -> void;
-    auto update_frame() -> void;
-    auto process_data() -> void;
+        parametersM.lock();
+        {
+            times = timeM.times;
+        }
+        parametersM.unlock();
+
+        read_frame();
+        process_data();
+    }
 
     // settings
     auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_color_settings(const DCColorSettings &colorS) -> void;
     auto set_delay_settings(const DCDelaySettings &delayS) -> void;
+    virtual auto update_from_colors_settings() -> void{}
+    virtual auto update_from_data_settings() -> void{}
 
     // getters
     virtual auto is_opened() const noexcept -> bool = 0;
@@ -104,10 +97,6 @@ struct DCDeviceImpl{
     auto get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>;
     auto get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>;
 
-
-    // misc
-    auto set_parent_device(DCDevice *dcDevice) -> void;
-
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
     sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
@@ -116,14 +105,11 @@ protected:
 
     auto initialize(const DCConfigSettings &newConfig) -> void;
 
-    // initialization    
-    virtual auto initialize_device_specific() -> void{}
-    virtual auto update_from_colors_settings() -> void{}
-    virtual auto update_from_data_settings() -> void{}
+
 
     // read data
-    virtual auto read_calibration() -> void{}
-    virtual auto capture_frame(std::int32_t timeoutMs)  -> bool{static_cast<void>(timeoutMs);return false;}
+    auto read_frame() -> void;
+    virtual auto capture_frame(std::int32_t timeoutMs)  -> bool{static_cast<void>(timeoutMs);return false;}    
     virtual auto read_color_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
     virtual auto read_depth_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
     virtual auto read_infra_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
@@ -133,6 +119,7 @@ protected:
     auto check_data_validity() -> bool;
 
     // process data
+    auto process_data() -> void;
     virtual auto resize_color_image_to_depth_size() -> void{}
     auto convert_color_image() -> void;
     virtual auto generate_cloud(bool enable) -> void{static_cast<void>(enable);}
@@ -153,11 +140,9 @@ protected:
     auto filter_depth_from_body_tracking()      -> void;
     auto filter_depth_complex()                 -> void;
     auto update_valid_depth_values() -> void;
-
     // # depth sized color processing
     auto filter_depth_sized_color_from_depth() -> void;
     auto mix_depth_sized_color_with_body_tracking() -> void{}
-
     // # infra processing
     auto filter_infra_from_depth() -> void;
     auto mix_infra_with_body_tracking() -> void{}
@@ -197,11 +182,6 @@ protected:
     std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
     std::mutex parametersM;
 
-    // current settings
-    DCFiltersSettings cFiltersS;
-    DCDeviceDataSettings cDataS;
-    DCDelaySettings cDelayS;
-
     // profiling
     TimeDiffManager timeM;
 
@@ -215,14 +195,6 @@ protected:
     // decoders
     data::JpegDecoder jpegColorDecoder;
 
-    // threads/tasks
-    std::atomic_bool readFramesFromCameras = false;
-    std::unique_ptr<std::thread> loopT = nullptr;
-    // std::unique_ptr<tf::Executor> executor = nullptr;
-    // std::unique_ptr<tf::Taskflow> processDataTF = nullptr;
-
-
-
 private:
 
     // depth filtering
@@ -230,14 +202,16 @@ private:
     auto keep_only_biggest_cluster() -> void;
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
     auto erode(std::uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void;
-
-    // other
-    DCDevice *pDcDevice = nullptr;
-
-    // tasks
-    // auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
-    // auto process_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
-    // auto process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> std::unique_ptr<tf::Taskflow>;
 };
 }
 
+
+
+// tasks
+// auto read_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+// auto process_data_taskflow() -> std::unique_ptr<tf::Taskflow>;
+// auto process_frame_taskflow(tf::Taskflow &readDataTF, tf::Taskflow &processDataTF) -> std::unique_ptr<tf::Taskflow>;
+
+// threads/tasks
+// std::atomic_bool readFramesFromCameras = false;
+// std::unique_ptr<std::thread> loopT = nullptr;

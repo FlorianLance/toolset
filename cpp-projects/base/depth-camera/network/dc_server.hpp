@@ -48,12 +48,10 @@ template<typename ...arg>
 using SSS = sigslot::signal<arg...>;
 
 
-class DCUdpServer{
+class DCServer{
 public:
 
-    DCUdpServer(){
-        messagesBuffer.resize(100, 0);
-    }
+    DCServer();
 
     auto init_connections() -> void;
     auto start_reading_thread(net::UdpServerSettings *networkS) -> bool;
@@ -104,13 +102,6 @@ private:
     std::vector<std::byte> senderBuffer;
 
     UdpSender m_udpServerSender; // to be removed
-    // reader
-
-    // sender
-
-
-
-
 
 
     std::atomic<size_t> m_lastFrameIdSent = 0;

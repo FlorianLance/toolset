@@ -46,6 +46,7 @@ HEADERS += \
     # io            
     depth-camera/frame/dc_compressed_frame_buffer.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
+    depth-camera/network/dc_server.hpp \
     depth-camera/settings/dc_capture_settings.hpp \
     depth-camera/settings/dc_client_connection_settings.hpp \
     depth-camera/settings/dc_device_data_settings.hpp \
@@ -138,7 +139,6 @@ HEADERS += \
     # camera
     camera/frame.hpp \
     # depth-camera    
-    depth-camera/dc_device_manager.hpp \
     depth-camera/dc_device.hpp \
     depth-camera/dc_enums.hpp \    
     depth-camera/dc_packed_data.hpp \
@@ -183,7 +183,6 @@ HEADERS += \
     ## network
     depth-camera/network/dc_network_enums.hpp \
     depth-camera/network/dc_network_types.hpp \
-    depth-camera/network/dc_udp_server.hpp \
     ## impl
     depth-camera/impl/recording_device_impl.hpp \
     depth-camera/impl/k2_config_files.hpp \
@@ -314,6 +313,7 @@ SOURCES += \
     depth-camera/client/dc_client.cpp \
     depth-camera/frame/dc_compressed_frame_buffer.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
+    depth-camera/network/dc_server.cpp \
     depth-camera/settings/dc_capture_settings.cpp \
     depth-camera/settings/dc_client_connection_settings.cpp \
     depth-camera/settings/dc_frame_compression_settings.cpp \
@@ -371,7 +371,6 @@ SOURCES += \
     # depth-camera            
     depth-camera/dc_video_player.cpp \
     depth-camera/dc_video_recorder.cpp \
-    depth-camera/dc_device_manager.cpp \    
     depth-camera/dc_packed_data.cpp \
     depth-camera/dc_calibrator.cpp \
     depth-camera/dc_device.cpp \
@@ -391,7 +390,6 @@ SOURCES += \
     depth-camera/client/dc_client_local_device.cpp \
     depth-camera/client/dc_client_remote_device.cpp \
     ## network
-    depth-camera/network/dc_udp_server.cpp \
     ## settings
     depth-camera/settings/dc_filters_settings.cpp \
     depth-camera/settings/dc_model_settings.cpp \

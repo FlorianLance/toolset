@@ -226,70 +226,7 @@ AzureBaseDevice::AzureBaseDevice() : i(std::make_unique<Impl>()){
 AzureBaseDevice::~AzureBaseDevice(){
 }
 
-auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> void{
-
-    auto lg = LogGuard("AzureBaseDevice::initialize"sv);
-
-    // reset images
-    i->colorImage           = nullptr;
-    i->depthImage           = nullptr;
-    i->infraredImage        = nullptr;
-    i->pointCloudImage      = nullptr;
-
-    if(mInfos.has_depth()){
-        i->depthSizedColorImage = k4a::image::create(
-            K4A_IMAGE_FORMAT_COLOR_BGRA32,
-            static_cast<int>(mInfos.depth_width()),
-            static_cast<int>(mInfos.depth_height()),
-            static_cast<int>(mInfos.depth_width() * 4)
-        );
-    }
-
-    if(mInfos.has_depth()){
-
-        i->pointCloudImage = k4a::image::create(
-            K4A_IMAGE_FORMAT_CUSTOM,
-            static_cast<int>(mInfos.depth_width()),
-            static_cast<int>(mInfos.depth_height()),
-            static_cast<int>(mInfos.depth_width() * 3 * sizeof(std::int16_t))
-        );
-    }
-
-    // init k4a configs
-    i->k4aConfig   = i->generate_config(i->device->is_sync_in_connected(), i->device->is_sync_out_connected(), configS);
-    i->k4aBtConfig = i->generate_bt_config(configS);
-}
-
-auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
-
-    if(!is_opened()){
-        return;
-    }
-
-    k4a_color_control_command_t type;
-    try{
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,   colorS.exposureTime,                                                 !colorS.autoExposureTime);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_WHITEBALANCE,             colorS.whiteBalance,                                                 !colorS.autoWhiteBalance);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BRIGHTNESS,               colorS.brightness,                                                   true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_CONTRAST,                 colorS.contrast,                                                     true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_SHARPNESS,                colorS.sharpness,                                                    true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_SATURATION,               colorS.saturation,                                                   true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION,   colorS.backlightCompensation ? 1 : 0,                                true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_GAIN,                     colorS.gain,                                                         true);
-        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,      convert_to_k4a_powerline_frequency_value(colorS.powerlineFrequency), true);
-
-    }  catch (std::runtime_error error) {
-        Logger::error(std::format("[AzureBaseDevice::update_camera_from_colors_settings] Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
-    }
-}
-
-auto AzureBaseDevice::update_from_data_settings(const DCDeviceDataSettings &dataS) -> void{
-    if(i->bodyTracker != nullptr){
-        i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
-    }
-}
-
-auto AzureBaseDevice::open(uint32_t deviceId) -> bool{
+auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
 
     auto lg = LogGuard("AzureBaseDevice::open"sv);
 
@@ -300,8 +237,8 @@ auto AzureBaseDevice::open(uint32_t deviceId) -> bool{
             Logger::message("Device destroyed.\n");
         }
 
-        Logger::message(std::format("Create device from id [{}].\n", deviceId));
-        i->device     = std::make_unique<k4a::device>(k4a::device::open(deviceId));
+        Logger::message(std::format("Create device from id [{}].\n", configS.idDevice));
+        i->device     = std::make_unique<k4a::device>(k4a::device::open(configS.idDevice));
         Logger::message("Device created.\n");
 
         i->deviceName = i->device->get_serialnum();
@@ -387,16 +324,81 @@ auto AzureBaseDevice::open(uint32_t deviceId) -> bool{
         Logger::message("Microphone listener created. \n");
     }
 
-    return true;
+    return initialize(mInfos, configS);
 }
 
-auto AzureBaseDevice::start(const DCConfigSettings &configS) -> bool{
+auto AzureBaseDevice::close() -> void{
 
-    auto lg = LogGuard("AzureBaseDevice::start"sv);
+    auto lg = LogGuard("AzureBaseDevice::close"sv);
 
-    Logger::message("Start device.\n");
+    if(i->bodyTracker != nullptr){
+        Logger::message("Stop body tracker\n");
+        i->bodyTracker->shutdown();
+        i->bodyTracker = nullptr;
+    }
+
+    if(is_opened()){
+        Logger::message("Stop IMU\n");
+        i->device->stop_imu();
+
+        Logger::message("Stop cameras\n");
+        i->device->stop_cameras();
+    }
+
+    if(i->microphone != nullptr){
+        Logger::message("Clean audio.\n");
+        if(i->microphone->IsStarted()){
+            i->microphone->Stop();
+        }
+        i->audioListener = nullptr;
+        i->microphone = nullptr;
+    }
+
+    if(is_opened()){
+        Logger::message("Close device.\n");
+        i->device->close();
+        i->device = nullptr;
+    }
+    Logger::message("Device closed.\n");
+}
+
+auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
+
+    auto lg = LogGuard("AzureBaseDevice::initialize"sv);
+
+    // reset images
+    i->colorImage           = nullptr;
+    i->depthImage           = nullptr;
+    i->infraredImage        = nullptr;
+    i->pointCloudImage      = nullptr;
+
+    if(mInfos.has_depth()){
+        i->depthSizedColorImage = k4a::image::create(
+            K4A_IMAGE_FORMAT_COLOR_BGRA32,
+            static_cast<int>(mInfos.depth_width()),
+            static_cast<int>(mInfos.depth_height()),
+            static_cast<int>(mInfos.depth_width() * 4)
+        );
+    }
+
+    if(mInfos.has_depth()){
+
+        i->pointCloudImage = k4a::image::create(
+            K4A_IMAGE_FORMAT_CUSTOM,
+            static_cast<int>(mInfos.depth_width()),
+            static_cast<int>(mInfos.depth_height()),
+            static_cast<int>(mInfos.depth_width() * 3 * sizeof(std::int16_t))
+        );
+    }
+
+    // init k4a configs
+    i->k4aConfig   = i->generate_config(i->device->is_sync_in_connected(), i->device->is_sync_out_connected(), configS);
+    i->k4aBtConfig = i->generate_bt_config(configS);
+
+
+
+    Logger::message("Create k4a capture.\n");
     i->capture = std::make_unique<k4a::capture>();
-
     try {
 
         Logger::message("Start cameras\n");
@@ -430,8 +432,6 @@ auto AzureBaseDevice::start(const DCConfigSettings &configS) -> bool{
         Logger::message(std::format("      height: {}\n",           c.depth_camera_calibration.resolution_height));
         Logger::message(std::format("      metric radius: {}\n",    c.depth_camera_calibration.metric_radius));
 
-
-
         Logger::message("Start imu\n");
         i->device->start_imu();
 
@@ -455,47 +455,35 @@ auto AzureBaseDevice::start(const DCConfigSettings &configS) -> bool{
     return true;
 }
 
-auto AzureBaseDevice::stop() -> void{
+auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
 
-    auto lg = LogGuard("AzureBaseDevice::stop"sv);
+    if(!is_opened()){
+        return;
+    }
 
-    Logger::message("Stop device.\n");
+    k4a_color_control_command_t type;
+    try{
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,   colorS.exposureTime,                                                 !colorS.autoExposureTime);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_WHITEBALANCE,             colorS.whiteBalance,                                                 !colorS.autoWhiteBalance);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BRIGHTNESS,               colorS.brightness,                                                   true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_CONTRAST,                 colorS.contrast,                                                     true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_SHARPNESS,                colorS.sharpness,                                                    true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_SATURATION,               colorS.saturation,                                                   true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION,   colorS.backlightCompensation ? 1 : 0,                                true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_GAIN,                     colorS.gain,                                                         true);
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,      convert_to_k4a_powerline_frequency_value(colorS.powerlineFrequency), true);
+
+    }  catch (std::runtime_error error) {
+        Logger::error(std::format("[AzureBaseDevice::update_camera_from_colors_settings] Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
+    }
+}
+
+auto AzureBaseDevice::update_from_data_settings(const DCDeviceDataSettings &dataS) -> void{
     if(i->bodyTracker != nullptr){
-        Logger::message("Stop body tracker\n");
-        i->bodyTracker->shutdown();
-        i->bodyTracker = nullptr;
+        i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
     }
-
-    if(is_opened()){
-        Logger::message("Stop IMU\n");
-        i->device->stop_imu();
-        Logger::message("Stop cameras\n");
-        i->device->stop_cameras();
-    }
-
-    Logger::message("Device stopped.\n");
 }
 
-auto AzureBaseDevice::close() -> void{
-
-    auto lg = LogGuard("AzureBaseDevice::close"sv);
-
-    Logger::message("Close device.\n");
-
-    if(i->microphone != nullptr){
-        if(i->microphone->IsStarted()){
-            i->microphone->Stop();
-        }
-        i->audioListener = nullptr;
-        i->microphone = nullptr;
-    }
-
-    if(is_opened()){
-        i->device->close();
-        i->device = nullptr;
-    }
-    Logger::message("Device closed.\n");
-}
 
 auto AzureBaseDevice::is_opened() const noexcept -> bool{
     return i->device != nullptr;
@@ -679,8 +667,6 @@ auto AzureBaseDevice::read_body_tracking() -> std::tuple<std::span<ColorGray8>, 
 
     return {{},{}};
 }
-
-
 
 
 auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData) -> std::span<tool::ColorRGBA8>{

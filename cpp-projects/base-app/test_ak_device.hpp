@@ -12,7 +12,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 
 // base
-#include "depth-camera/dc_device_manager.hpp"
+#include "depth-camera/dc_device.hpp"
 #include "geometry/point3.hpp"
 #include "io/cloud_io.hpp"
 
@@ -24,7 +24,7 @@ auto test_kinect4() -> void{
 
     std::puts("### Test Azure kinectc.\n");
 
-    DCDeviceManager dManager;
+    cam::DCDevice device;
 
     tool::cam::DCDeviceSettings ds;
     // config
@@ -44,10 +44,10 @@ auto test_kinect4() -> void{
     // ds.dataS.generateCloudLocal      = true;
 
     std::puts("### Open device.\n");
-    dManager.update_device_settings(ds);
+    device.update_device_settings(ds);
 
     int idC = 0;
-    dManager.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
         if(idC < 5){
             // std::cout << "frame " << frame->depthWidth << " " << frame->depthHeight << " " << frame->depthData.size() << " "<< frame->imageDepthData.size() << "\n";
             std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
@@ -81,7 +81,7 @@ auto test_kinect4() -> void{
     ds.configS.openDevice = false;
 
     std::puts("### Close device.\n");
-    dManager.update_device_settings(ds);
+    device.update_device_settings(ds);
 
     std::puts("End tests.\n");
 }

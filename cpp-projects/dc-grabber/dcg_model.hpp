@@ -27,8 +27,8 @@
 #pragma once
 
 // base
-#include "depth-camera/network/dc_udp_server.hpp"
-#include "depth-camera/dc_device_manager.hpp"
+#include "depth-camera/network/dc_server.hpp"
+#include "depth-camera/dc_device.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
 #include "data/dcg_states.hpp"
 
@@ -48,9 +48,9 @@ struct DCGModel{
 
     DCGSettings settings;
     DCGStates states;
-
-    net::DCUdpServer connection;
-    std::unique_ptr<cam::DCDeviceManager> device = nullptr;
+    
+    net::DCServer connection;
+    std::unique_ptr<cam::DCDevice> device = nullptr;
     cam::DCVideoRecorder recorder;    
 };
 }

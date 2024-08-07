@@ -24,7 +24,7 @@
 // #include "geometry/point3.hpp"
 // #include "io/cloud_io.hpp"
 
-#include "depth-camera/dc_device_manager.hpp"
+#include "depth-camera/dc_device.hpp"
 
 using namespace tool::geo;
 using namespace tool::cam;
@@ -677,7 +677,7 @@ auto test_femto_mega() -> void{
     using namespace tool::cam;
     std::puts("### Test femto mega.\n");
 
-    DCDeviceManager dManager;
+    DCDevice device;
 
     tool::cam::DCDeviceSettings ds;
 
@@ -706,10 +706,10 @@ auto test_femto_mega() -> void{
     // ds.dataS.sendDepth= false;
 
     std::puts("### Open device.\n");
-    dManager.update_device_settings(ds);
+    device.update_device_settings(ds);
 
     int idC = 0;
-    dManager.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
         std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
         // tool::io::CloudIO::save_cloud(std::format("D:/fm_cloud_{}.obj", idC++), frame->cloud);
     });
@@ -719,7 +719,7 @@ auto test_femto_mega() -> void{
     ds.configS.openDevice = false;
 
     std::puts("### Close device.\n");
-    dManager.update_device_settings(ds);
+    device.update_device_settings(ds);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 

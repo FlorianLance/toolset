@@ -116,8 +116,12 @@ struct OrbbecBaseDevice::Impl{
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration;
 
     auto init_context() -> void{
+
+        Logger::message("CREATE CONTEXT");
         context = std::make_unique<ob::Context>();
         context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+
+        Logger::message("END CREATE CONTEXT");
         // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
         //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
         //         Logger::error(logMsg);
@@ -414,7 +418,7 @@ OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>
 OrbbecBaseDevice::~OrbbecBaseDevice(){
     auto lg = LogGuard("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
     Logger::log("Destroy context");
-    i->context    = nullptr;
+    i->context = nullptr;
 }
 
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
@@ -434,39 +438,13 @@ auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ether
     Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n", i->deviceList.size(), deviceTypeName));
 }
 
-auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCColorSettings &colorS) -> void{
-
-    auto lg = LogGuard("OrbbecBaseDevice::initialize"sv);
-
-    i->frameSet      = nullptr;
-    i->colorImage    = nullptr;
-    i->depthImage    = nullptr;
-    i->infraredImage = nullptr;
-
-    if(mInfos.has_color() && dc_has_depth(mInfos.mode())){
-        i->depthSizedColorData.resize(mInfos.depth_size() * 4);
-    }else{
-        i->depthSizedColorData.clear();
-    }
-
-    if(mInfos.has_depth()){
-        i->cloudData.resize(mInfos.depth_size() * 3 * sizeof(int16_t));
-    }else{
-        i->cloudData.clear();
-    }
-
-    // theses colors settings must be set before starting the pipeline
-    i->set_property_value(OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
-}
-
-
-auto OrbbecBaseDevice::open(const DCConfigSettings &configS) -> bool{
+auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
 
     auto lg = LogGuard("OrbbecBaseDevice::open"sv);
 
     Logger::message("### Open device ###\n");
 
-    Logger::message(std::format("Open device with id [{}]\n", configS.idDevice));    
+    Logger::message(std::format("Open device with id [{}]\n", configS.idDevice));
     if(i->deviceType != DCType::FemtoMega){
         if(configS.idDevice >= i->deviceList.size()){
             Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
@@ -491,7 +469,7 @@ auto OrbbecBaseDevice::open(const DCConfigSettings &configS) -> bool{
         // Update the configuration items of the configuration file, and keep the original configuration for other items
         auto synchConfig = i->device->getMultiDeviceSyncConfig();
         Logger::message(std::format("CURRENT SYNC CONFIG BEFORE:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
-            (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
+                                    (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
 
         // // check if changes
         // // and if changes reboot device
@@ -646,14 +624,37 @@ auto OrbbecBaseDevice::open(const DCConfigSettings &configS) -> bool{
         return false;
     }
 
-
-
-    return true;
+    return initialize(mInfos, configS, colorS);
 }
 
-auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
 
-    auto lg = LogGuard("OrbbecBaseDevice::start"sv);
+auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
+
+    static_cast<void>(configS);
+
+    auto lg = LogGuard("OrbbecBaseDevice::initialize"sv);
+
+    i->frameSet      = nullptr;
+    i->colorImage    = nullptr;
+    i->depthImage    = nullptr;
+    i->infraredImage = nullptr;
+
+    if(mInfos.has_color() && dc_has_depth(mInfos.mode())){
+        i->depthSizedColorData.resize(mInfos.depth_size() * 4);
+    }else{
+        i->depthSizedColorData.clear();
+    }
+
+    if(mInfos.has_depth()){
+        i->cloudData.resize(mInfos.depth_size() * 3 * sizeof(int16_t));
+    }else{
+        i->cloudData.clear();
+    }
+
+    // theses colors settings must be set before starting the pipeline
+    i->set_property_value(OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
+
+
 
     //i->deviceType = mInfos.device();
 
@@ -690,7 +691,7 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
                         static_cast<int>(mInfos.color_height()),
                         convert_to_ob_image_format(mInfos.image_format()),
                         mInfos.framerate_value()
-                    );
+                        );
                     Logger::message("Color profile found.\n");
                 }catch(...) {
                     colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
@@ -711,7 +712,7 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
                         static_cast<int>(mInfos.depth_height()),
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
-                    );
+                        );
                     Logger::message("Depth profile found.\n");
                 }catch(...) {
                     depthProfile = depthStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
@@ -733,7 +734,7 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
                         static_cast<int>(mInfos.infra_height()),
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
-                    );
+                        );
                     Logger::message("Infra profile found.\n");
                 }catch(...) {
                     infraProfile = infraStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
@@ -771,7 +772,7 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
         Logger::message("Disable align mode.\n");
         config->setAlignMode(ALIGN_DISABLE);
 
-        // frame synch        
+        // frame synch
         if(configS.synchronizeColorAndDepth){
             Logger::message("Enable frame synch.\n");
             i->pipe->enableFrameSync();
@@ -823,34 +824,34 @@ auto OrbbecBaseDevice::start(const DCModeInfos &mInfos, const DCConfigSettings &
 
     Logger::message("### Pipeline started ###.\n");
 
-
+    Logger::message("### Update colro settings ###.\n");
+    update_from_colors_settings(colorS);
 
     return true;
 }
 
-auto OrbbecBaseDevice::stop() -> void{
 
-    auto lg = LogGuard("OrbbecBaseDevice::stop"sv);
+auto OrbbecBaseDevice::close() -> void{
 
-    Logger::message("Stop orbbec device\n");
+    auto lg = LogGuard("OrbbecBaseDevice::close"sv);
+
     if(i->pipe != nullptr){
         Logger::message("Stop pipeline\n");
         i->pipe->stop();
 
-        Logger::message("Destroy pipeline\n");
+        Logger::message("Clean pipeline\n");
         i->pipe = nullptr;
     }
-}
 
-auto OrbbecBaseDevice::close() -> void{
-    auto lg = LogGuard("OrbbecBaseDevice::close"sv);
-    Logger::message("Destroy orbbec device\n");
+    Logger::message("Close device\n");
     i->device = nullptr;
-    Logger::message("Orbbec device destroyed\n");
+
+    Logger::message("Device closed\n");
 }
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
 
+    auto lg = LogGuard("OrbbecBaseDevice::update_from_colors_settings"sv);
     if(!is_opened()){
         return;
     }

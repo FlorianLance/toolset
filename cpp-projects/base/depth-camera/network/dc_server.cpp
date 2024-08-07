@@ -25,21 +25,23 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_udp_server.hpp"
+#include "dc_server.hpp"
 
 // base
 #include "utility/logger.hpp"
 #include "utility/format.hpp"
 #include "utility/time.hpp"
-#include "depth-camera/network/dc_network_types.hpp"
+#include "depth-camera/network/dc_network_enums.hpp"
 
 using namespace tool::net;
 using namespace tool::cam;
 using namespace std::chrono;
 
+DCServer::DCServer(){
+    messagesBuffer.resize(100, 0);
+}
 
-
-auto DCUdpServer::init_connections() -> void{
+auto DCServer::init_connections() -> void{
 
     m_udpServerReader.packed_received_signal.connect([&](EndPoint endpoint, Header header, std::span<const std::byte> dataToProcess){
 
@@ -145,7 +147,7 @@ auto DCUdpServer::init_connections() -> void{
 
 }
 
-auto DCUdpServer::start_reading_thread(UdpServerSettings *networkS) -> bool{
+auto DCServer::start_reading_thread(UdpServerSettings *networkS) -> bool{
 
     // stop reading
     if(m_udpServerReader.is_reading_thread_started()){
@@ -164,7 +166,7 @@ auto DCUdpServer::start_reading_thread(UdpServerSettings *networkS) -> bool{
     return true;
 }
 
-auto DCUdpServer::init_sender(UdpServerSettings *networkS) -> void{
+auto DCServer::init_sender(UdpServerSettings *networkS) -> void{
     
     if(m_udpServerSender.is_connected()){
         Logger::warning("[DCClientConnection::init_sender] Sender already initialized. Call clean before.\n");
@@ -183,7 +185,7 @@ auto DCUdpServer::init_sender(UdpServerSettings *networkS) -> void{
             }
             sendMessagesT = nullptr;
         }
-        sendMessagesT = std::make_unique<std::thread>(&DCUdpServer::send_messages_loop, this);
+        sendMessagesT = std::make_unique<std::thread>(&DCServer::send_messages_loop, this);
         messagesToSend.push_back(Feedback{static_cast<MessageTypeId>(DCMessageType::init_server_client_connection), FeedbackType::message_received});
 
     }else{
@@ -191,13 +193,13 @@ auto DCUdpServer::init_sender(UdpServerSettings *networkS) -> void{
     }
 }
 
-auto DCUdpServer::ping_server() -> void{
+auto DCServer::ping_server() -> void{
     if(m_udpServerSender.is_connected()){
         messagesToSend.push_back(Feedback{static_cast<MessageTypeId>(DCMessageType::init_server_client_connection), FeedbackType::message_received});
     }
 }
 
-auto DCUdpServer::clean() -> void{
+auto DCServer::clean() -> void{
 
     // stop sending
     disconnect_sender();
@@ -209,7 +211,7 @@ auto DCUdpServer::clean() -> void{
     m_udpServerReader.clean_socket();
 }
 
-auto DCUdpServer::update() -> void{
+auto DCServer::update() -> void{
 
     if(!m_readerL.try_lock()){
         return;
@@ -346,7 +348,7 @@ auto DCUdpServer::update() -> void{
 
 }
 
-auto DCUdpServer::disconnect_sender() -> void{
+auto DCServer::disconnect_sender() -> void{
 
     // quit sending message loop thread
     sendMessages = false;
@@ -369,24 +371,24 @@ auto DCUdpServer::disconnect_sender() -> void{
     messagesToSend.clean();
 }
 
-auto DCUdpServer::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
+auto DCServer::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
     messagesToSend.push_back(frame);
 }
 
-auto DCUdpServer::send_feedback(Feedback feedback) -> void{
+auto DCServer::send_feedback(Feedback feedback) -> void{
     messagesToSend.push_back(feedback);
 }
 
-auto DCUdpServer::last_frame_id_sent() const -> size_t{
+auto DCServer::last_frame_id_sent() const -> size_t{
     return m_lastFrameIdSent;
 }
 
-auto DCUdpServer::simulate_sending_failure(bool enabled, int percentage) -> void{
+auto DCServer::simulate_sending_failure(bool enabled, int percentage) -> void{
     m_udpServerSender.simulate_failure(enabled, percentage);
 }
 
 
-auto DCUdpServer::send_messages_loop() -> void{
+auto DCServer::send_messages_loop() -> void{
 
     sendMessages = true;
 

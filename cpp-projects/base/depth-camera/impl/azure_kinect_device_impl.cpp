@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,41 +26,41 @@
 
 #include "azure_kinect_device_impl.hpp"
 
+// utility
+#include "utility/logger.hpp"
+
 using namespace tool::geo;
 using namespace tool::cam;
 
 AzureKinectDeviceImpl::AzureKinectDeviceImpl(){
+    auto lg = LogGuard("AzureKinectDeviceImpl::AzureKinectDeviceImpl"sv);
     azureD = std::make_unique<AzureBaseDevice>();
 }
 
-auto AzureKinectDeviceImpl::initialize_device_specific() -> void {
-    azureD->initialize(mInfos, settings.config);
+auto AzureKinectDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool {
+
+    auto lg = LogGuard("AzureKinectDeviceImpl::open"sv);
+    initialize(newConfigS);
+
+    if(azureD->open(mInfos, settings.config)){
+        fData.binaryCalibration = azureD->read_calibration();
+        return true;
+    }
+    Logger::error("[AzureKinectDeviceImpl::open] Cannot open device\n");
+    return false;
+}
+
+auto AzureKinectDeviceImpl::close() -> void{
+    auto lg = LogGuard("AzureKinectDeviceImpl::close"sv);
+    azureD->close();
 }
 
 auto AzureKinectDeviceImpl::update_from_data_settings() -> void{
-    azureD->update_from_data_settings(cDataS);
-    // btTemporalSmoothing
+    azureD->update_from_data_settings(settings.data);
 }
 
 auto AzureKinectDeviceImpl::update_from_colors_settings() -> void {
     azureD->update_from_colors_settings(settings.color);
-}
-
-auto AzureKinectDeviceImpl::open(uint32_t deviceId) -> bool {
-    return azureD->open(settings.config.idDevice = deviceId);
-}
-
-auto AzureKinectDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool {
-    initialize(newConfigS);
-    return azureD->start(settings.config);
-}
-
-auto AzureKinectDeviceImpl::stop() -> void{
-    azureD->stop();
-}
-
-auto AzureKinectDeviceImpl::close() -> void{
-    azureD->close();
 }
 
 auto AzureKinectDeviceImpl::is_opened() const noexcept -> bool{
@@ -73,10 +73,6 @@ auto AzureKinectDeviceImpl::nb_devices() const noexcept -> std::uint32_t {
 
 auto AzureKinectDeviceImpl::device_name() const noexcept -> std::string {
     return azureD->device_name();
-}
-
-auto AzureKinectDeviceImpl::read_calibration() -> void{
-    fData.binaryCalibration = azureD->read_calibration();
 }
 
 auto AzureKinectDeviceImpl::capture_frame(std::int32_t timeoutMs) -> bool{

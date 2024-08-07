@@ -28,40 +28,39 @@
 
 #include "femto_bolt_device_impl.hpp"
 
+// utility
+#include "utility/logger.hpp"
+
 using namespace tool;
 using namespace tool::geo;
 using namespace tool::cam;
 
-
 FemtoBoltDeviceImpl::FemtoBoltDeviceImpl(){
+    auto lg = LogGuard("FemtoBoltDeviceImpl::FemtoBoltDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoBolt);
     orbbecD->query_devices("Femto Bolt"sv, false);
 }
 
-auto FemtoBoltDeviceImpl::initialize_device_specific() -> void{
-    orbbecD->initialize(mInfos, settings.color);
+auto FemtoBoltDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
+
+    auto lg = LogGuard("FemtoBoltDeviceImpl::open"sv);
+    initialize(newConfigS);
+
+    if(orbbecD->open(mInfos, settings.config, settings.color)){
+        fData.binaryCalibration = orbbecD->read_calibration();
+        return true;
+    }
+    Logger::error("[FemtoBoltDeviceImpl::open] Cannot open device\n");
+    return false;
+}
+
+auto FemtoBoltDeviceImpl::close() -> void{
+    auto lg = LogGuard("FemtoBoltDeviceImpl::close"sv);
+    orbbecD->close();
 }
 
 auto FemtoBoltDeviceImpl::update_from_colors_settings() -> void{
     orbbecD->update_from_colors_settings(settings.color);
-}
-
-auto FemtoBoltDeviceImpl::open(uint32_t deviceId) -> bool{
-    settings.config.idDevice = deviceId;
-    return orbbecD->open(settings.config);
-}
-
-auto FemtoBoltDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
-    initialize(newConfigS);
-    return orbbecD->start(mInfos, settings.config);
-}
-
-auto FemtoBoltDeviceImpl::stop() -> void{
-    orbbecD->stop();
-}
-
-auto FemtoBoltDeviceImpl::close() -> void{
-    orbbecD->close();
 }
 
 auto FemtoBoltDeviceImpl::is_opened() const noexcept -> bool{
@@ -74,10 +73,6 @@ auto FemtoBoltDeviceImpl::nb_devices() const noexcept -> uint32_t{
 
 auto FemtoBoltDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();
-}
-
-auto FemtoBoltDeviceImpl::read_calibration() -> void{
-    fData.binaryCalibration = orbbecD->read_calibration();
 }
 
 auto FemtoBoltDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{

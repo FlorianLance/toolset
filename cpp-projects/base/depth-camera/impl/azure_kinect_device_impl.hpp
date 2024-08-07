@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -38,9 +38,7 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
     AzureKinectDeviceImpl();
 
     // actions
-    auto open(std::uint32_t deviceId) -> bool override final;
-    auto start(const DCConfigSettings &newConfigS) -> bool override final;
-    auto stop() -> void override final;
+    auto open(const DCConfigSettings &newConfigS) -> bool override final;
     auto close() -> void override final;
 
     // getters
@@ -50,13 +48,11 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
 
 private:
 
-    // initialization
-    auto initialize_device_specific() -> void override final;
+    // settings
     auto update_from_colors_settings() -> void override final;
     auto update_from_data_settings() -> void override final;
 
     // read data
-    auto read_calibration() -> void override final;
     auto capture_frame(std::int32_t timeoutMs) -> bool override final;
     auto read_color_image(bool enable) -> bool override final;
     auto read_depth_image(bool enable) -> bool override final;

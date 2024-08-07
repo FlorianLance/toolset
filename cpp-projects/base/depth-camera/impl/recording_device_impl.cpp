@@ -42,51 +42,27 @@ RecordingDeviceImpl::RecordingDeviceImpl(){
     playerD.update_settings(videoPlayerS);
 }
 
-auto RecordingDeviceImpl::open_file(const std::string &path) -> bool{
+auto RecordingDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool {
 
-    if(!video.load_from_file(path)){
-        return false;
-    }
+    initialize(newConfigS);
+
+    Logger::error("[RecordingDeviceImpl::open] Not implemented"sv);
+    return false;
+
+    // if(!video.load_from_file(path)){
+    //     return false;
+    // }
 
     playerD.set_video(video);
-    // auto l = video.get_compressed_frame(0,0).lock();
-    // l->mode;
-
-    return true;
-}
-
-// auto RecordingDeviceImpl::initialize_device_specific() -> void{
-
-//     if(mInfos.image_format() != DCImageFormat::MJPG){
-//         Logger::warning("Femto Mega must use MJPG image format, format ignored.\n");
-//         mInfos.force_image_format(DCImageFormat::MJPG);
-//     }
-//     orbbecD->initialize(mInfos, settings.color);
-// }
-
-// auto RecordingDeviceImpl::update_from_colors_settings() -> void{
-//     orbbecD->update_from_colors_settings(settings.color);
-// }
-
-// auto RecordingDeviceImpl::open(uint32_t deviceId) -> bool{
-//     return orbbecD->open_device(settings.config.idDevice = deviceId);
-// }
-
-auto RecordingDeviceImpl::start(const DCConfigSettings &newConfigS) -> bool{
-
-    DCConfigSettings configs = newConfigS;
-    initialize(configs);
-
     playerD.start_video();
+
     return true;
+
 }
 
-auto RecordingDeviceImpl::stop() -> void{
-    playerD.stop_video();
-}
 
 auto RecordingDeviceImpl::close() -> void {
-
+    playerD.stop_video();
 }
 
 auto RecordingDeviceImpl::is_opened() const noexcept -> bool{

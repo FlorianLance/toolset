@@ -30,7 +30,7 @@
 #include "depth-camera/dc_types.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_config_settings.hpp"
-#include "depth-camera/settings/dc_data_settings.hpp"
+#include "depth-camera/settings/dc_device_data_settings.hpp"
 #include "graphics/color/rgb.hpp"
 #include "utility/buffer.hpp"
 
@@ -41,16 +41,13 @@ struct AzureBaseDevice{
     AzureBaseDevice();
     ~AzureBaseDevice();
 
-    // initialization
-    auto initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> void;
+    // actions
+    auto open(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
+    auto close() -> void;
+
+    // settings
     auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
     auto update_from_data_settings(const DCDeviceDataSettings &dataS) -> void;
-
-    // actions
-    auto open(uint32_t deviceId) -> bool;
-    auto start(const DCConfigSettings &configS) -> bool;
-    auto stop() -> void;
-    auto close() -> void;
 
     // getters
     auto is_opened() const noexcept -> bool;
@@ -72,7 +69,9 @@ struct AzureBaseDevice{
     auto resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData) -> std::span<ColorRGBA8>;
     auto generate_cloud() -> std::span<geo::Pt3<std::int16_t>>;
 
-private:    
+private:
+
+    auto initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool;
 
     struct Impl;
     std::unique_ptr<Impl> i;
