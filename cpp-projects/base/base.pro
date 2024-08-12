@@ -48,7 +48,9 @@ HEADERS += \
     depth-camera/frame/dc_frame_processor.hpp \
     depth-camera/network/dc_server.hpp \
     depth-camera/settings/dc_capture_settings.hpp \
-    depth-camera/settings/dc_client_connection_settings.hpp \
+    depth-camera/settings/dc_client_device_settings.hpp \
+    depth-camera/settings/dc_client_settings.hpp \
+    depth-camera/settings/dc_device_connection_settings.hpp \
     depth-camera/settings/dc_device_data_settings.hpp \
     depth-camera/settings/dc_frame_compression_settings.hpp \
     depth-camera/settings/dc_frame_generation_settings.hpp \
@@ -160,7 +162,6 @@ HEADERS += \
     depth-camera/client/dc_client.hpp \
     depth-camera/client/dc_client_processing.hpp \
     depth-camera/client/dc_client_device.hpp \
-    depth-camera/client/dc_client_devices.hpp \
     depth-camera/client/dc_client_local_device.hpp \
     depth-camera/client/dc_client_remote_device.hpp \
     ## states
@@ -315,7 +316,9 @@ SOURCES += \
     depth-camera/frame/dc_frame_processor.cpp \
     depth-camera/network/dc_server.cpp \
     depth-camera/settings/dc_capture_settings.cpp \
-    depth-camera/settings/dc_client_connection_settings.cpp \
+    depth-camera/settings/dc_client_device_settings.cpp \
+    depth-camera/settings/dc_client_settings.cpp \
+    depth-camera/settings/dc_device_connection_settings.cpp \
     depth-camera/settings/dc_frame_compression_settings.cpp \
     depth-camera/settings/dc_frame_generation_settings.cpp \
     io/assimp_loader.cpp \
@@ -386,7 +389,6 @@ SOURCES += \
     depth-camera/frame/dc_frame_indices.cpp \
     ## client
     depth-camera/client/dc_client_processing.cpp \
-    depth-camera/client/dc_client_devices.cpp \
     depth-camera/client/dc_client_local_device.cpp \
     depth-camera/client/dc_client_remote_device.cpp \
     ## network

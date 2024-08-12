@@ -31,10 +31,6 @@
 #include "depth-camera/settings/dc_settings_paths.hpp"
 #include "utility/logger.hpp"
 
-// 3d-engine
-#include "imgui/extra/ImGuiFileDialog.h"
-
-
 // local
 #include "dcm_signals.hpp"
 
@@ -55,55 +51,44 @@ auto DCMModel::clean() -> void {
 
 auto DCMModel::initialize() -> bool{
 
+    auto paths = DCSettingsPaths::get();
+
     // check if path exist
-    if(std::filesystem::exists(DCSettingsPaths::client)){
-        if(!client.initialize(DCSettingsPaths::client.string())){
-            return false;
-        }
-    }else if(std::filesystem::exists(DCSettingsPaths::defaultClient)){
-        if(!client.initialize(DCSettingsPaths::defaultClient.string())){
+    if(auto filePath = paths->client_settings_file(); !filePath.empty()){
+        if(!client.initialize(filePath)){
             return false;
         }
     }else{
 
         // legacy
-        std::string networkFilePath;
-        if(std::filesystem::exists(DCSettingsPaths::hostNetwork)){
-            networkFilePath = DCSettingsPaths::hostNetwork.string();
-        }else if(std::filesystem::exists(DCSettingsPaths::hostNetworkLegacy)){
-            networkFilePath = DCSettingsPaths::hostNetworkLegacy.string();
-        }else if(std::filesystem::exists(DCSettingsPaths::defaultNetwork)){
-            networkFilePath = DCSettingsPaths::defaultNetwork.string();
+        if(auto filePath = paths->network_settings_file(); !filePath.empty()){
+            if(!client.legacy_initialize(filePath)){
+                return false;
+            }
         }else{
-            Logger::error("[DCMModel::initialize] No client or network file path found\n");
             return false;
         }
-
-        if(!client.load_network_settings_file(networkFilePath)){
-            return false;
-        }
-
-        DCSettingsPaths::initialize_grabbers(client.devices_nb());
 
         for(auto &deviceClientS : client.settings.devicesS){
+
             // read filters settings file
-            if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = DCSettingsPaths::get_filters_settings_file_path(deviceClientS.id))){
+            if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = paths->client_filters_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No filters settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.filtersFilePath));
             }
             // read calibration filters settings file
-            if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  DCSettingsPaths::get_calibration_filters_settings_file_path(deviceClientS.id))){
+            if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  paths->client_calibration_filters_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No calibration settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.calibrationFiltersFilePath));
             }
             // read device settings file
-            if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = DCSettingsPaths::get_device_settings_file_path(deviceClientS.id))){
+            if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = paths->client_device_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No device file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.deviceFilePath));
             }
             // read color settings file
-            if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = DCSettingsPaths::get_color_settings_file_path(deviceClientS.id))){
+            if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = paths->client_color_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No color file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.colorFilePath));
             }
             // read model settings file
-            if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  DCSettingsPaths::get_model_settings_file_path(deviceClientS.id))){
+            if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  paths->client_model_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No model file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.modelFilePath));
             }
         }
@@ -116,10 +101,6 @@ auto DCMModel::initialize() -> bool{
     return true;
 }
 
-auto DCMModel::trigger_settings() -> void{
-    client.trigger_all_models_settings();
-    client.trigger_all_device_display_settings();
-}
 
 auto DCMModel::ask_calibration() -> void{
     std::vector<cam::DCModelSettings> models;    
@@ -129,25 +110,6 @@ auto DCMModel::ask_calibration() -> void{
     DCMSignals::get()->calibrate_signal(std::move(models));
 }
 
-auto DCMModel::update_filters(size_t idC, const cam::DCFiltersSettings &filters) -> void {
-    client.update_filters(idC, filters);
-}
-
-auto DCMModel::update_calibration_filters(size_t idC, const cam::DCFiltersSettings &calibrationFilters) -> void{
-    client.update_calibration_filters(idC, calibrationFilters);
-}
-
-auto DCMModel::update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void {
-    client.update_device_settings(idC, deviceS);
-}
-
-auto DCMModel::update_color_settings(size_t idC, const cam::DCColorSettings &colorS) -> void{
-    client.update_color_settings(idC, colorS);
-}
-
-auto DCMModel::update_delay_settings(size_t idC, const cam::DCDelaySettings &delayS) -> void{
-    client.update_delay_settings(idC, delayS);
-}
 
 auto DCMModel::update() -> void{
     client.update();
@@ -164,9 +126,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
 
         if(sAction.type == SType::Global){
             if(sAction.file == SFile::Normal){
-                path = DCSettingsPaths::client.string();
+                path = DCSettingsPaths::get()->client.string();
             }else if(sAction.file == SFile::Default){
-                path = DCSettingsPaths::defaultClient.string();
+                path = DCSettingsPaths::get()->defaultClient.string();
             }else if(sAction.file == SFile::Specific){
                 path = sAction.path;
             }
@@ -181,12 +143,12 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
         if(sAction.type == SType::Global){
 
             if(sAction.file == SFile::Normal){
-                if(std::filesystem::exists(DCSettingsPaths::client)){
-                    path = DCSettingsPaths::client.string();
+                if(std::filesystem::exists(DCSettingsPaths::get()->client)){
+                    path = DCSettingsPaths::get()->client.string();
                 }
             }else if(sAction.file == SFile::Default){
-                if(std::filesystem::exists(DCSettingsPaths::defaultClient)){
-                    path = DCSettingsPaths::defaultClient.string();
+                if(std::filesystem::exists(DCSettingsPaths::get()->defaultClient)){
+                    path = DCSettingsPaths::get()->defaultClient.string();
                 }
             }else if(sAction.file == SFile::Specific){
                 path = sAction.path;
@@ -283,6 +245,3 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
     }
 }
 
-auto DCMModel::host_name() -> std::string{
-    return Host::get_name();
-}

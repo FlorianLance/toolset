@@ -42,11 +42,11 @@ struct DCCalibratorDrawer : public DCCloudsSceneDrawer{
 
     auto update_grabber_model(size_t idGrabber, const cam::DCModelSettings &model) -> void;
     auto update_grabber_cloud_display(size_t idGrabber, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
-    auto update_settings(const cam::DCCalibratorDrawerSettings &settings) -> void;
+    auto update_settings(const cam::DCCalibratorDisplaySettings &settings) -> void;
 
 private:
 
     bool m_redrawClouds = false;
-    cam::DCCalibratorDrawerSettings m_settings;
+    cam::DCCalibratorDisplaySettings m_settings;
 };
 }

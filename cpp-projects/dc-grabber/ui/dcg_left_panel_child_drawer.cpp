@@ -206,7 +206,7 @@ auto DCGLeftPanelChildDrawer::draw_device_tab_item(
 }
 
 auto DCGLeftPanelChildDrawer::draw_filters_tab_item(
-    ui::DCGDisplaySettingsSettings &ui,
+    ui::DCGDisplaySettings &ui,
     const cam::DCConfigSettings &config,
     cam::DCFiltersSettings &filters) -> void {
 
@@ -222,7 +222,7 @@ auto DCGLeftPanelChildDrawer::draw_colors_settings_tab_item(cam::DCType type, ca
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettings &dcDisplaySettings) -> void {
+auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettings &dcDisplaySettings) -> void {
 
     if (!ImGui::BeginTabItem("Display###display_settings_tabitem")){
         return;
@@ -234,11 +234,11 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(ui::DCGDisplaySettingsSettin
     }
 
     if (ImGui::BeginTabBar("###display_tabbar")){
-        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", dcDisplaySettings.sceneDisplay)){
-            DCGSignals::get()->update_scene_display_settings_signal(dcDisplaySettings.sceneDisplay);
+        if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", dcDisplaySettings.sceneDisplayS)){
+            DCGSignals::get()->update_scene_display_settings_signal(dcDisplaySettings.sceneDisplayS);
         }
-        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", dcDisplaySettings.cloudDisplay)){
-            DCGSignals::get()->update_cloud_display_settings_signal(0, dcDisplaySettings.cloudDisplay);
+        if(DCUIDrawer::draw_dc_cloud_display_setings_tab_item("Cloud###cloud_display_tabitem", dcDisplaySettings.cloudDisplayS)){
+            DCGSignals::get()->update_cloud_display_settings_signal(0, dcDisplaySettings.cloudDisplayS);
         }
         ImGui::EndTabBar();
     }

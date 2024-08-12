@@ -75,25 +75,43 @@ struct DCDevice::Impl{
 };
 
 DCDevice::DCDevice(): i(std::make_unique<Impl>()){
-
-    // start thread
-    i->loopT = std::make_unique<std::thread>(&DCDevice::thread_loop, this);
 }
 
 DCDevice::~DCDevice(){
+    stop_thread();
+}
 
-    // stop thread
-    i->doLoopA = false;
-    if(i->loopT->joinable()){
-        i->loopT->join();
+auto DCDevice::start_thread() -> void{
+
+    if(i->loopT != nullptr){
+        Logger::error("[DCDevice::start_thread] Thread already running."sv);
+        return;
     }
-    i->loopT = nullptr;
+
+    i->loopT = std::make_unique<std::thread>([&](){
+        i->doLoopA = true;
+        while(i->doLoopA){
+            process();
+        }
+    });
+}
+
+auto DCDevice::stop_thread() -> void{
+
+    i->doLoopA = false;
+    if(i->loopT != nullptr){
+        if(i->loopT->joinable()){
+            i->loopT->join();
+        }
+        i->loopT = nullptr;
+    }
 }
 
 auto DCDevice::process() -> void{
 
     i->locker.lock();
-    auto dAction    = i->dAction;
+    auto dAction = i->dAction;
+    i->dAction = std::nullopt;
     bool readFrames = i->readFrames;
     i->locker.unlock();
 
@@ -207,9 +225,6 @@ auto DCDevice::process() -> void{
                 }
             }
         }
-
-        // reset action
-        i->dAction = std::nullopt;
     }
 
     // process frame
@@ -285,15 +300,6 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     //     color_settings_reset_signal(i->colorsS);
     // }
     Logger::message("end");
-}
-
-
-auto DCDevice::thread_loop() -> void{
-
-    i->doLoopA = true;
-    while(i->doLoopA){
-        process();
-    }
 }
 
 auto DCDevice::is_opened() const noexcept -> bool{

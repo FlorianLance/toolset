@@ -109,7 +109,7 @@ auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DC
     m_redrawClouds = true;
 }
 
-auto DCCalibratorDrawer::update_settings(const DCCalibratorDrawerSettings &settings) -> void{
+auto DCCalibratorDrawer::update_settings(const DCCalibratorDisplaySettings &settings) -> void{
     m_settings = settings;
     m_redrawClouds = true;
 }

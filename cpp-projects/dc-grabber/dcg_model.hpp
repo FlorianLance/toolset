@@ -30,10 +30,9 @@
 #include "depth-camera/network/dc_server.hpp"
 #include "depth-camera/dc_device.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
-#include "data/dcg_states.hpp"
 
-// local
-#include "data/dcg_settings.hpp"
+// loocal
+#include "data/dcg_ui_settings.hpp"
 
 namespace tool {
 
@@ -41,15 +40,20 @@ struct DCGModel{
 
     DCGModel();
     ~DCGModel();
+
     auto initialize() -> bool;
     auto update() -> void;
     auto clean() -> void;
-    auto trigger_settings() -> void;    
 
-    DCGSettings settings;
-    DCGStates states;
-    
-    net::DCServer connection;
+
+    auto process_settings_action(cam::SettingsAction sAction) -> void{}
+    // // settings
+    // auto trigger_settings() -> void;
+
+    // ui
+    ui::DCGDisplaySettings uiSettings;
+
+    net::DCServer server;
     std::unique_ptr<cam::DCDevice> device = nullptr;
     cam::DCVideoRecorder recorder;    
 };

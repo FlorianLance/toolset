@@ -33,17 +33,10 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
-#include "depth-camera/settings/dc_client_connection_settings.hpp"
+#include "depth-camera/settings/dc_device_connection_settings.hpp"
 #include "utility/monitoring.hpp"
 
 namespace tool::cam {
-
-template<typename ...arg>
-using SSS = sigslot::signal<arg...>;
-
-enum class DCClientType{
-    local,remote,undefined
-};
 
 class DCClientDevice{
 public:
@@ -60,7 +53,7 @@ public:
     virtual constexpr auto type() const noexcept -> DCClientType {return DCClientType::undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}
 
-    SSS<net::UdpDataStatus> data_status_signal;
+    sigslot::signal<net::UdpDataStatus> data_status_signal;
 
     Framerate framerate;
     AverageLatency latency;

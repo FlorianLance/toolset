@@ -36,7 +36,6 @@
 #include "network/network_enums.hpp"
 
 // local
-#include "data/dcm_types.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
@@ -46,6 +45,7 @@
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"
 #include "depth-camera/settings/dc_video_player_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
+#include "depth-camera/dc_types.hpp"
 
 namespace tool {
 
@@ -96,29 +96,37 @@ public:
     SSS<> start_calibration_registering_signal;
     SSS<> stop_calibration_registering_signal;
     SSS<> recompute_registering_processing_signal;
-    SSS<> ask_calibration_signal;
+
     SSS<std::vector<cam::DCModelSettings>> calibrate_signal;
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
     SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;
-    SSS<const cam::DCCalibratorDrawerSettings &> update_calibration_drawer_settings_signal;
+    SSS<const cam::DCCalibratorDisplaySettings &> update_calibration_drawer_settings_signal;
 
     // settings
-    SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
-    SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
+
+
     SSS<size_t, const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
+
     SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
-    SSS<size_t, cam::DCColorSettings> color_settings_reset_signal;
+
+    // SSS<size_t, cam::DCColorSettings> color_settings_reset_signal;
     // # filters
-    SSS<bool> update_filtering_mode_signal;
+    // SSS<bool> update_filtering_mode_signal;
+
+
+
+    // calibration
+    SSS<> ask_calibration_signal;
+
+    // settings
+    SSS<cam::SettingsAction> process_settings_action_signal;
+    SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
     SSS<size_t, const cam::DCFiltersSettings&> update_filters_settings_signal;
     SSS<size_t, const cam::DCFiltersSettings&> update_calibration_filters_settings_signal;
-
-    // i/o
-    SSS<SettingsAction> process_settings_action_signal;
-    SSS<std::string> load_recording_signal;    
+    SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
+    SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
+    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
 };
 
 }

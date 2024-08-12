@@ -27,7 +27,6 @@
 #pragma once
 
 // local
-#include "thirdparty/sigslot/signal.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 #include "dc_client_device.hpp"
 

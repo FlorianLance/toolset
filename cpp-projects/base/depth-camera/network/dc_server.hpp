@@ -26,113 +26,103 @@
 
 #pragma once
 
-// std
-#include <variant>
 
 // local
-#include "utility/thread.hpp"
-#include "utility/ring_buffer.hpp"
-#include "utility/safe_queue.hpp"
-#include "network/udp_reader.hpp"
-#include "network/udp_sender.hpp"
+#include "thirdparty/sigslot/signal.hpp"
+#include "network/network_types.hpp"
 #include "network/settings/udp_server_settings.hpp"
+#include "network/settings/udp_connection_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 
 namespace tool::net {
+struct DCServerSettings  : public io::Settings{
 
-template<typename ...arg>
-using SSS = sigslot::signal<arg...>;
+    DCServerSettings();
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    auto update_reading_interface() -> void;
+
+    // settings
+    net::UdpServerSettings udpServerS;
+    cam::DCDeviceSettings deviceS = cam::DCDeviceSettings::default_init_for_grabber();
+    cam::DCFiltersSettings filtersS;
+    cam::DCFiltersSettings calibrationFiltersS = cam::DCFiltersSettings::default_init_for_calibration();
+    cam::DCColorSettings colorS;
+    cam::DCModelSettings modelS;
+    cam::DCDelaySettings delayS;
+
+    // runtime
+    std::string globalFilePath;
+    std::string deviceFilePath;
+    std::string filtersFilePath;
+    std::string calibrationFiltersFilePath;
+    std::string colorFilePath;
+    std::string modelFilePath;
+    std::vector<net::Interface> ipv4Interfaces = {};
+    std::vector<net::Interface> ipv6Interfaces = {};
+    net::Interface udpReadingInterface;
+};
 
 
 class DCServer{
 public:
 
     DCServer();
+    ~DCServer();
 
-    auto init_connections() -> void;
-    auto start_reading_thread(net::UdpServerSettings *networkS) -> bool;
-    auto init_sender(net::UdpServerSettings *networkS) -> void;
-    auto ping_server() -> void;
-    auto disconnect_sender() -> void;
-    auto update() -> void;
+    auto initialize(const std::string &serverSettingsPath) -> bool;
+    auto legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool;
     auto clean() -> void;
+    auto update() -> void;
 
+    // settings
+    auto load_device_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_filters_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_calibration_filters_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_color_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_model_settings_file(const std::string &settingsFilePath) -> bool;
+
+    // actions
     auto send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto send_feedback(Feedback feedback) -> void;
+    // auto send_feedback(Feedback feedback) -> void;
 
+    // others
+    auto ping_server() -> void;
+    auto simulate_sending_failure(bool enabled, int percentage) -> void; // TODO
+
+    // monitoring
     auto last_frame_id_sent() const -> size_t;
-    auto last_frame_sent_timestamp_nanosecond() const -> std::chrono::nanoseconds {return m_lastFrameSentTS;}
-    auto last_frame_sending_duration_micros_s() const -> std::int64_t{return lastFrameSendingDurationMicrosS;}
+    auto last_frame_sent_timestamp_nanosecond() const -> std::chrono::nanoseconds;
+    auto last_frame_sending_duration_micros_s() const -> std::int64_t;
 
-    auto simulate_sending_failure(bool enabled, int percentage) -> void;
+    DCServerSettings settings;
 
     // signals
     // # connection
-    SSS<UdpConnectionSettings> receive_init_server_client_connection_signal;
-    // # settings received    
-    SSS<cam::DCDelaySettings> receive_delay_settings_signal;
-    SSS<std::shared_ptr<cam::DCDeviceSettings>> receive_device_settings_signal;
-    SSS<std::shared_ptr<cam::DCColorSettings>> receive_color_settings_signal;
-    SSS<std::shared_ptr<cam::DCFiltersSettings>> receive_filters_signal;
+    sigslot::signal<UdpConnectionSettings> receive_init_server_client_connection_signal;
+    // # settings received
+    sigslot::signal<std::shared_ptr<cam::DCDeviceSettings>> receive_device_settings_signal;
+    sigslot::signal<std::shared_ptr<cam::DCColorSettings>> receive_color_settings_signal;
+    sigslot::signal<std::shared_ptr<cam::DCFiltersSettings>> receive_filters_signal;
+    sigslot::signal<cam::DCDelaySettings> receive_delay_settings_signal;
     // # command received
-    SSS<> shutdown_signal;
-    SSS<> quit_signal;
-    SSS<> restart_signal;
-    SSS<> disconnect_signal;
+    sigslot::signal<> shutdown_signal;
+    sigslot::signal<> quit_signal;
+    sigslot::signal<> restart_signal;
     // # other
-    SSS<size_t> timeout_messages_signal;
-
-    // auto dummy_device_trigger() -> void;
+    sigslot::signal<size_t> timeout_messages_signal;
 
 private:
 
-    Protocol m_protocol = Protocol::unknow;
 
-
-    std::unique_ptr<std::thread> sendMessagesT = nullptr;
-    std::atomic_bool sendMessages = false;
-    auto send_messages_loop() -> void;
-
-    SafeQueue<std::variant<std::shared_ptr<cam::DCCompressedFrame>, Feedback>> messagesToSend;
-    std::unordered_map<std::string, std::unique_ptr<UdpSender>> m_udpSenders;
-    std::vector<std::byte> senderBuffer;
-
-    UdpSender m_udpServerSender; // to be removed
-
-
-    std::atomic<size_t> m_lastFrameIdSent = 0;
-    std::atomic<std::int64_t> lastFrameSendingDurationMicrosS = 0;
-    std::atomic<std::chrono::nanoseconds> m_lastFrameSentTS;
-
-    // reception
-    // # reader
-    UdpReader m_udpServerReader;
-    // # packets
-    UdpMessageReception initServerClientConnectionReception;
-    UdpMessageReception deviceSettingsReception;
-    UdpMessageReception filtersSettingsReception;
-    UdpMessageReception colorSettingsReception;
-    // # messages
-    SpinLock m_readerL;
-    DoubleRingBuffer<std::byte> messagesBuffer;
-    // processeed messages
-    std::pair<EndPoint, std::optional<UdpConnectionSettings>> m_initServerClientConnectionMessage =
-        std::make_pair<EndPoint, std::optional<UdpConnectionSettings>>({}, std::nullopt);
-    std::pair<EndPoint, std::optional<cam::DCDelaySettings>> m_updateDelaySettingsMessage =
-        std::make_pair<EndPoint, std::optional<cam::DCDelaySettings>>({},std::nullopt);
-    std::pair<EndPoint, std::optional<Command>> m_commandMessage =
-        std::make_pair<EndPoint, std::optional<Command>>({},std::nullopt);
-
-    std::pair<EndPoint, std::shared_ptr<cam::DCDeviceSettings>> m_updateDeviceSettingsMessage =
-        std::make_pair<EndPoint, std::shared_ptr<cam::DCDeviceSettings>>({},nullptr);
-    std::pair<EndPoint, std::shared_ptr<cam::DCColorSettings>> m_updateColorSettingsMessage =
-        std::make_pair<EndPoint, std::shared_ptr<cam::DCColorSettings>>({},nullptr);
-    std::pair<EndPoint, std::shared_ptr<cam::DCFiltersSettings>> m_updateFiltersSettingsMessage =
-        std::make_pair<EndPoint, std::shared_ptr<cam::DCFiltersSettings>>({},nullptr);
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 
 }

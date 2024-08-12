@@ -72,7 +72,7 @@ private:
     auto draw_color_tab_item(cam::DCClient &client) -> void;
     auto draw_recorder_tab_item(cam::DCVideoRecorder &recorder) -> void;
     auto draw_player_tab_item(cam::DCVideoPlayer &player) -> void;
-    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, cam::DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
+    auto draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, cam::DCCalibratorDisplaySettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void;
 
     // ui
     int guiCurrentFiltersTypeSelection = 0;

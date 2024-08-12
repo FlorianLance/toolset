@@ -27,26 +27,40 @@
 #pragma once
 
 // std
-#include <string>
-#include <optional>
+#include <filesystem>
 
 namespace tool{
 
-struct Paths{
+class Paths{
+public:
 
-    static auto initialize(char *argv[]) -> void;
-    static inline std::string executable = "";
-    static inline std::string applicationDir = "";
-    static inline std::optional<std::string> resourcesDir = "";
-    static inline std::optional<std::string> shadersDir = "";
+    static auto get() -> Paths*;
+    auto initialize(char *argv[]) -> void;
+    constexpr auto is_initialized() const noexcept -> bool{return m_initialized;}
 
-    static inline std::optional<std::string> dataDir = "";
-    static inline std::string logsDir = "./";
+    auto get_shader(std::string_view name, std::string_view ext) -> std::filesystem::path;
 
-    static inline std::optional<std::string> configDir      = "";
+    std::string hostName;
 
-    static auto get_shader(std::string_view name, std::string_view ext) -> std::string;
+    // exe
+    std::filesystem::path executable = "";
 
-    static constexpr std::string_view sep = "/";
+    // directories paths
+    std::filesystem::path applicationDir;
+    std::filesystem::path resourcesDir;
+    std::filesystem::path shadersDir;
+    std::filesystem::path dataDir;
+    std::filesystem::path logsDir;
+    std::filesystem::path settingsDir;
+    std::filesystem::path outputDir;
+    std::filesystem::path configDir;
+    std::filesystem::path networkDir;
+    std::filesystem::path calibrationDir;
+
+protected:
+
+    bool m_initialized = false;
+    static constexpr std::string_view m_sep = "/";
 };
+
 }

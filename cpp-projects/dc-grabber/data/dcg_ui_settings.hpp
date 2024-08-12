@@ -26,16 +26,24 @@
 **                                                                            **
 ********************************************************************************/
 
+// std
+#include <chrono>
+
 // base
 #include "depth-camera/settings/dc_display_settings.hpp"
 
 namespace tool::ui {
 
-struct DCGDisplaySettingsSettings{
+struct DCGDisplaySettings{
+
+    // settings
+    cam::DCSceneDisplaySettings sceneDisplayS;
+    cam::DCDeviceDisplaySettings cloudDisplayS;
+
+    // runtime
     bool focusWindow = false;
     int currentWindow = 3;
-
-    cam::DCSceneDisplaySettings sceneDisplay;
-    cam::DCDeviceDisplaySettings cloudDisplay;
+    size_t lastFrameIdSent = 0;
+    std::chrono::nanoseconds lastFrameSentTS = std::chrono::nanoseconds(0);
 };
 }

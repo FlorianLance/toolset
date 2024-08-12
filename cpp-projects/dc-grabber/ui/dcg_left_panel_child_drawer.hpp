@@ -33,9 +33,7 @@
 // 3d-engine
 #include "imgui-tb/imgui_logs.hpp"
 
-// local
-#include "data/dcg_settings.hpp"
-#include "data/dcg_states.hpp"
+
 
 namespace tool::graphics {
 
@@ -57,15 +55,15 @@ private:
         cam::DCDeviceSettings &device) -> void;
 
     auto draw_filters_tab_item(
-        ui::DCGDisplaySettingsSettings &ui,
+        ui::DCGDisplaySettings &ui,
         const cam::DCConfigSettings &config,
         cam::DCFiltersSettings &filters) -> void;
 
     auto draw_colors_settings_tab_item(
         cam::DCType type,
         cam::DCColorSettings &colors) -> void;
-
-    auto draw_display_tab_item(ui::DCGDisplaySettingsSettings &ui)-> void;
+    
+    auto draw_display_tab_item(ui::DCGDisplaySettings &ui)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;

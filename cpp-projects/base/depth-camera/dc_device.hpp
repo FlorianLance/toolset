@@ -34,7 +34,6 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
-#include "settings/dc_device_data_settings.hpp"
 #include "settings/dc_color_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
@@ -51,6 +50,8 @@ public:
     DCDevice();
     ~DCDevice();
 
+    auto start_thread() -> void;
+    auto stop_thread() -> void;
     auto process() -> void;
 
     // settings
@@ -75,8 +76,6 @@ public:
     sigslot::signal<int, std::string> update_device_name_signal;
 
 private:
-
-    auto thread_loop() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;

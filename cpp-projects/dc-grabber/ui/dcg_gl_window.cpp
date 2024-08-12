@@ -63,7 +63,7 @@ auto DCGGlWindow::init_shaders() -> bool{
         {"voxelCloud",&VS_FS_GS}
     };
 
-    if(!Paths::shadersDir.has_value()){
+    if(!std::filesystem::exists(Paths::get()->shadersDir)){
         Logger::error("No shaders directory found.\n");
         return false;
     }
@@ -74,7 +74,7 @@ auto DCGGlWindow::init_shaders() -> bool{
         std::vector<std::string> paths;
         paths.reserve(shaderName.second->size());
         for(const auto &shaderType : *shaderName.second){
-            paths.push_back(Paths::get_shader(shaderName.first, get_ext(shaderType)));
+            paths.push_back(Paths::get()->get_shader(shaderName.first, get_ext(shaderType)).string());
         }
 
         Logger::message(std::format("Load shader [{}].\n", shaderName.first));

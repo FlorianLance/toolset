@@ -4,7 +4,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -29,67 +29,65 @@
 // std
 #include <filesystem>
 
+// local
+#include "depth-camera/dc_enums.hpp"
+
 namespace tool {
+
+struct DCGrabberPaths{
+    std::filesystem::path device;
+    std::filesystem::path filters;
+    std::filesystem::path calibrationFilters;
+    std::filesystem::path model;
+    std::filesystem::path color;
+};
 
 struct DCSettingsPaths{
 
-    static auto initialize(const std::filesystem::path &base_, const std::string &hostName_, const std::string &logName_) -> void;
-    static auto get_client_settings_file_path() -> std::string;
+    static auto get() -> DCSettingsPaths*;
+    auto initialize(char *argv[], cam::DCApplicationType type, std::optional<size_t> id = std::nullopt) -> void;
 
-    static inline std::string hostName;
-    static inline std::string logName;
+    auto client_settings_file() -> std::string;
+    auto server_settings_file() -> std::string;
+    // legacy
+    auto network_settings_file() -> std::string;
+    // # client
+    auto client_filters_settings_file(size_t idG) -> std::string;
+    auto client_calibration_filters_settings_file(size_t idG) -> std::string;
+    auto client_device_settings_file(size_t idG) -> std::string;
+    auto client_color_settings_file(size_t idG) -> std::string;
+    auto client_model_settings_file(size_t idG) -> std::string;
+    // # server
+    auto server_filters_settings_file() -> std::string;
+    auto server_calibration_filters_settings_file() -> std::string;
+    auto server_device_settings_file() -> std::string;
+    auto server_color_settings_file() -> std::string;
+    auto server_model_settings_file() -> std::string;
 
-    static inline std::filesystem::path base;
-    static inline std::filesystem::path configPath;
-    static inline std::filesystem::path settingsPath;
-    static inline std::filesystem::path outputPath;
-
-    static inline std::filesystem::path defaultClient;
-    static inline std::filesystem::path client;    
+    // files path
+    std::string logName;
+    std::filesystem::path defaultClient;
+    std::filesystem::path client;
+    std::filesystem::path defaultServer;
+    std::filesystem::path server;
 
     // legacy
-    static auto initialize_grabbers(size_t nbConnections) -> void;
-    static auto get_network_settings_file_path() -> std::string;
-    static auto get_filters_settings_file_path(size_t idG) -> std::string;
-    static auto get_calibration_filters_settings_file_path(size_t idG) -> std::string;
-    static auto get_device_settings_file_path(size_t idG) -> std::string;
-    static auto get_color_settings_file_path(size_t idG) -> std::string;
-    static auto get_model_settings_file_path(size_t idG) -> std::string;
+    // # common
+    // ## network
+    std::filesystem::path defaultJsonNetwork;
+    std::filesystem::path jsonNetwork;
+    std::filesystem::path configNetwork;
+    // ## default
+    DCGrabberPaths defaultJson;
+    DCGrabberPaths defaultConfig;
+    // # server
+    DCGrabberPaths serverJson;
+    DCGrabberPaths serverConfig;
+    // # client
+    DCGrabberPaths allJsonClients;
+    DCGrabberPaths allConfigClients;
+    std::vector<DCGrabberPaths> clientsJson;
+    std::vector<DCGrabberPaths> clientsConfig;
 
-    static inline std::filesystem::path networkPath;
-    static inline std::filesystem::path calibrationPath;
-
-    static inline std::filesystem::path defaultNetwork;
-    static inline std::filesystem::path hostNetwork;
-    static inline std::filesystem::path hostNetworkLegacy;
-
-    static inline std::filesystem::path defaultDevice;
-    static inline std::filesystem::path allGrabbersDevice;
-    static inline std::filesystem::path allGrabbersDeviceLegacy;
-    static inline std::vector<std::filesystem::path> grabbersDevice;
-    static inline std::vector<std::filesystem::path> grabbersDeviceLegacy;
-
-    static inline std::filesystem::path defaultFilters;
-    static inline std::filesystem::path allGrabbersFilters;
-    static inline std::filesystem::path allGrabbersFiltersLegacy;
-    static inline std::vector<std::filesystem::path> grabbersFilters;
-    static inline std::vector<std::filesystem::path> grabbersFiltersLegacy;
-
-    static inline std::filesystem::path defaultCalibrationFilters;
-    static inline std::filesystem::path allGrabbersCalibrationFilters;
-    static inline std::filesystem::path allGrabbersCalibrationFiltersLegacy;
-    static inline std::vector<std::filesystem::path> grabbersCalibrationFilters;
-    static inline std::vector<std::filesystem::path> grabbersCalibrationFiltersLegacy;
-
-    static inline std::filesystem::path defaultColor;
-    static inline std::filesystem::path allGrabbersColor;
-    static inline std::filesystem::path allGrabbersColorLegacy;
-    static inline std::vector<std::filesystem::path> grabbersColor;
-    static inline std::vector<std::filesystem::path> grabbersColorLegacy;
-
-    static inline std::filesystem::path allGrabbersModel;
-    static inline std::filesystem::path allGrabbersModelLegacy;
-    static inline std::vector<std::filesystem::path> grabbersModel;
-    static inline std::vector<std::filesystem::path> grabbersModelLegacy;
 };
 }

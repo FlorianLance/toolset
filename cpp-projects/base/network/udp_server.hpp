@@ -34,59 +34,57 @@
 
 namespace tool::net {
 
-struct UdpMessageSender{
+// struct UdpMessageSender{
 
-    std::unique_ptr<UdpSender> sender = nullptr;
-    std::unique_ptr<std::thread> sendMessagesT = nullptr;
+//     std::unique_ptr<UdpSender> sender = nullptr;
+//     std::unique_ptr<std::thread> sendMessagesT = nullptr;
 
-    auto initialize(const UdpConnectionSettings &udpConnectionS) -> void;
+//     auto initialize(const UdpConnectionSettings &udpConnectionS) -> void;
 
-    auto send_message() -> void{
+//     auto send_message() -> void{
 
-    }
-};
+//     }
+// };
 
+// class UdpServer{
+// public:
 
-class UdpServer{
-public:
+//     UdpServer();
+//     virtual ~UdpServer();
 
+//     auto start_reading(const UdpServerSettings &udpServerS) -> bool;
+//     auto stop_reading() -> void{}
 
-    UdpServer();
-    virtual ~UdpServer();
+//     auto add_client(const UdpConnectionSettings &udpConnectionS) -> void;
 
-    auto start_reading(const UdpServerSettings &udpServerS) -> bool;
-    auto stop_reading() -> void{}
+//     auto clean() -> void;
 
-    auto add_client(const UdpConnectionSettings &udpConnectionS) -> void;
+// protected:
+//     auto initialize() -> void;
 
-    auto clean() -> void;
+//     virtual auto init_connections() -> void{
 
-protected:
-    auto initialize() -> void;
+//     }
 
-    virtual auto init_connections() -> void{
+//     auto send_message_loop() -> void{
 
-    }
+//     }
 
-    auto send_message_loop() -> void{
+//     virtual auto generate_sender() -> std::unique_ptr<UdpSender> = 0;
+//     virtual auto generate_reader() -> std::unique_ptr<UdpReader> = 0;
 
-    }
+// protected:
 
-    virtual auto generate_sender() -> std::unique_ptr<UdpSender> = 0;
-    virtual auto generate_reader() -> std::unique_ptr<UdpReader> = 0;
+//     // reading
+//     std::unique_ptr<UdpReader> m_reader = nullptr;
 
-protected:
+//     // sending
+//     std::atomic_bool m_sendMessages = false;
+//     std::vector<UdpMessageSender> m_clientsSenders;
 
-    // reading
-    std::unique_ptr<UdpReader> m_reader = nullptr;
-
-    // sending
-    std::atomic_bool m_sendMessages = false;
-    std::vector<UdpMessageSender> m_clientsSenders;
-
-    struct Impl;
-    std::unique_ptr<Impl> i;
-};
+//     struct Impl;
+//     std::unique_ptr<Impl> i;
+// };
 
 
 

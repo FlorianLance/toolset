@@ -33,9 +33,6 @@
 #include "depth-camera/dc_calibrator.hpp"
 
 // local
-#include "data/dcm_settings.hpp"
-#include "data/dcm_states.hpp"
-#include "data/dcm_types.hpp"
 #include "data/dcm_ui_settings.hpp"
 
 namespace tool {
@@ -45,26 +42,14 @@ struct DCMModel{
     DCMModel();
     ~DCMModel();
 
-    static auto host_name() -> std::string;
-
     auto initialize() -> bool;
-    auto clean() -> void;
     auto update() -> void;
+    auto clean() -> void;
 
-    auto process_settings_action(SettingsAction sAction) -> void;
+    auto process_settings_action(cam::SettingsAction sAction) -> void;
 
     // calibration
     auto ask_calibration() -> void;
-
-    // settings
-    // # update
-    auto update_filters(size_t idC, const cam::DCFiltersSettings& filters) -> void;
-    auto update_calibration_filters(size_t idC, const cam::DCFiltersSettings& calibrationFilters) -> void;
-    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
-    auto update_color_settings(size_t idC, const cam::DCColorSettings &colorS) -> void;
-    auto update_delay_settings(size_t idC, const cam::DCDelaySettings &delayS) -> void;
-    // # triggers
-    auto trigger_settings() -> void;
 
     // ui
     DCMUiSettings uiSettings;

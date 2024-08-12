@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,12 +26,10 @@
 
 #pragma once
 
-// std
-#include <chrono>
 
 // local
-#include "network/network_types.hpp"
-#include "udp_connection_settings.hpp"
+#include "network/network_enums.hpp"
+#include "io/settings.hpp"
 
 namespace tool::net {
 
@@ -43,16 +41,7 @@ struct UdpServerSettings : io::Settings{
     Protocol protocol = Protocol::unknow;
 
     // runtime
-    std::vector<net::Interface> ipv4Interfaces = {};
-    std::vector<net::Interface> ipv6Interfaces = {};
-    net::Interface udpReadingInterface;
-
-    // std::vector<UdpConnectionSettings> clientsConnections;
-    UdpConnectionSettings clientConnectionSettings;
-
-    // to be removed
-    size_t lastFrameIdSent = 0;
-    std::chrono::nanoseconds lastFrameSentTS;
+    // ...
 
     UdpServerSettings(){
         sType   = io::SettingsType::Udp_server;
@@ -62,18 +51,5 @@ struct UdpServerSettings : io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
-
-    auto initialize() -> bool;
-    auto init_sending_settings(const UdpConnectionSettings &connectionSettings) -> void;
-
-    auto is_connected_to_manager() const noexcept -> bool {return m_connectedToManager;}
-    auto disconnect_from_manager() -> void {m_connectedToManager = false;}
-
-private:
-
-    auto init_from_text(std::string_view &text) -> void override;
-
-    // local
-    bool m_connectedToManager = false;
 };
 }

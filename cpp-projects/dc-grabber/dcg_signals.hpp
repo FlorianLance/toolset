@@ -75,7 +75,7 @@ public:
     SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<cam::DCDelaySettings> update_delay_settings_signal;
     SSS<const cam::DCFiltersSettings&> update_filters_signal;
-    SSS<ui::DCGDisplaySettingsSettings*> update_grabber_display_settings_signal;
+    SSS<ui::DCGDisplaySettings*> update_grabber_display_settings_signal;
 
     // i/o
     // # data

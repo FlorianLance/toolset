@@ -75,8 +75,8 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             std::int64_t finalizeCompressedFrame    = model->device->get_duration_micro_s("FINALIZE_COMPRESSED_FRAME"sv);
             std::int64_t updateFrame                = model->device->get_duration_micro_s("UPDATE_FRAME"sv);
             std::int64_t finalizeFrame              = model->device->get_duration_micro_s("FINALIZE_FRAME"sv);
-
-            double sendingMs = 0.001*model->connection.last_frame_sending_duration_micros_s();
+            
+            double sendingMs = 0.001*model->server.last_frame_sending_duration_micros_s();
             std::int64_t elaspedBeforeSendingD  = readImageD+procD+static_cast<std::int64_t>((updateCompressedFrame+finalizeCompressedFrame)*0.001);
             std::int64_t totalD                 = captD+elaspedBeforeSendingD + static_cast<std::int64_t>((updateFrame + finalizeFrame)*0.001) + sendingMs;
 

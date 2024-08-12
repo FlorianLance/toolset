@@ -105,7 +105,7 @@ struct DCCalibratorSettings{
     int icpMaxIteration = 30; // Maximum iteration before iteration stops.
 };
 
-struct DCCalibratorDrawerSettings{
+struct DCCalibratorDisplaySettings{
     bool displayCalibrationCloud = true;
     bool displayProcessedCloud = true;
 };

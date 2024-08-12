@@ -104,7 +104,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
                 draw_settings_tab_item(model);
                 draw_recorder_tab_item(model->recorder);
                 draw_player_tab_item(model->player);
-                draw_calibrator_tab_item(model->client.settings.useNormalFilteringSettings,  model->calibrator.states, model->uiSettings.calibratorDrawerS, model->calibrator.settings);
+                draw_calibrator_tab_item(model->client.settings.useNormalFilteringSettings,  model->calibrator.states, model->uiSettings.calibratorDisplayS, model->calibrator.settings);
                 ImGui::EndTabBar();
             }
         }
@@ -234,7 +234,7 @@ auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayer &player) -
     player.states.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDrawerSettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDisplaySettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
 
     if(DCUIDrawer::draw_dc_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings)){
         DCMSignals::get()->update_calibration_settings_signal(cSettings);

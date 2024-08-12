@@ -662,4 +662,12 @@ enum class CloudGenerationMode : std::int8_t{
     FromDecodedCloud
 };
 
+enum class DCClientType{
+    local,remote,undefined
+};
+
+enum class DCApplicationType : std::int8_t {
+    DCManager, DCGrabber
+};
+
 }

@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,73 +26,13 @@
 
 #pragma once
 
-// std
-#include <deque>
-
 // local
-#include "dc_client_device.hpp"
-#include "dc_client_processing.hpp"
-#include "depth-camera/settings/dc_model_settings.hpp"
-#include "depth-camera/settings/dc_display_settings.hpp"
+#include "thirdparty/sigslot/signal.hpp"
+#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_frame.hpp"
+#include "depth-camera/settings/dc_client_settings.hpp"
 
 namespace tool::cam {
-
-struct DCClientDeviceSettings : public io::Settings{
-
-    DCClientDeviceSettings();
-    auto set_id(size_t idC) -> void;
-
-    auto init_from_json(const nlohmann::json &json) -> void override;
-    auto convert_to_json() const -> nlohmann::json override;
-
-    DCDeviceConnectionSettings connectionS;
-    DCFiltersSettings filtersS;
-    DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
-    DCDeviceSettings deviceS;
-    DCColorSettings colorS;
-    DCModelSettings modelS;
-    DCDelaySettings delayS;   
-    DCDeviceDisplaySettings displayS;
-
-    // runtime
-    size_t id = 0;
-    std::string name = "0 xxx.xxx.xxx";
-    // # legacy paths
-    std::string filtersFilePath;
-    std::string calibrationFiltersFilePath;
-    std::string deviceFilePath;
-    std::string colorFilePath;
-    std::string modelFilePath;
-    // std::string delayFilePath;
-    // # states
-    bool connected = false;
-    size_t lastFrameIdReceived = 0;
-    size_t lastCompressedFrameIdReceived = 0;
-    // # monitoring infos
-    std::int64_t synchroAverageDiff = 0;
-    net::UdpNetworkStatus receivedNetworkStatus;
-    net::UdpDataStatus receivedDataStatus;
-
-};
-
-struct DCClientSettings : public io::Settings{
-
-    DCClientSettings();
-
-    auto init_from_json(const nlohmann::json &json) -> void override;
-    auto convert_to_json() const -> nlohmann::json override;
-
-    // settings
-    DCSceneDisplaySettings sceneDisplayS;
-    Buffer<DCClientDeviceSettings> devicesS;
-    bool useNormalFilteringSettings = true;
-
-    // runtime
-    std::string filePath;
-    std::vector<net::Interface> ipv4Interfaces = {};
-    std::vector<net::Interface> ipv6Interfaces = {};
-};
-
 
 class DCClient{
 public:
@@ -101,6 +41,7 @@ public:
     ~DCClient();
 
     auto initialize(const std::string &clientSettingsPath) -> bool;
+    auto legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool;
     auto clean() -> void;
     auto update() -> void;
 
@@ -114,8 +55,6 @@ public:
     auto read_network_data_from_remote_device(size_t idC) -> size_t;
 
     // settings
-    // # load
-    auto load_network_settings_file(const std::string &settingsFilePath) -> bool;
     // ## per device
     auto load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
     auto load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
@@ -142,23 +81,19 @@ public:
     DCClientSettings settings;
 
     // signals
-    SSS<size_t, std::string> feedback_received_signal;
-    SSS<size_t, std::shared_ptr<cam::DCCompressedFrame>> new_compressed_frame_signal;
-    SSS<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
-    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
-    SSS<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;
+    sigslot::signal<size_t, std::string> feedback_received_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCCompressedFrame>> new_compressed_frame_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
+    sigslot::signal<size_t, const cam::DCModelSettings&> update_model_settings_signal;
+    sigslot::signal<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;
 
 private:
 
     auto generate_clients() -> void;
     auto read_feedbacks() -> void;
 
-    Buffer<std::unique_ptr<DCClientDevice>> m_devices;
-    DCClientProcessing m_processing;
-
-    std::mutex m_readMessagesL;
-    std::deque<std::pair<size_t, net::Feedback>> m_messages;
-    std::vector<std::pair<size_t, net::Feedback>> m_messagesR;
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 
 }

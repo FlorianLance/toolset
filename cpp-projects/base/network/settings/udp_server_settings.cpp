@@ -3,7 +3,7 @@
 /*******************************************************************************
 ** Toolset-dc-grabber                                                  **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -30,7 +30,6 @@
 // local
 #include "utility/logger.hpp"
 #include "data/json_utility.hpp"
-#include "utility/string.hpp"
 
 using namespace tool;
 using namespace tool::net;
@@ -47,11 +46,8 @@ auto UdpServerSettings::init_from_json(const nlohmann::json &json) -> void{
     udpReadingPort          = read_value<int>(json, unreadCount, "reading_port");
     protocol                = (read_value<std::string>(json, unreadCount, "protocol") == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
 
-    const auto &interfaces = (protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-    udpReadingInterface = interfaces[udpReadingInterfaceId];
-
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[UdpServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        Logger::warning(std::format("[UdpServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 
@@ -67,71 +63,3 @@ auto UdpServerSettings::convert_to_json() const -> nlohmann::json{
 
     return json;
 }
-
-auto UdpServerSettings::initialize() -> bool{
-
-    // retrieve interfaces
-    ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
-    if(ipv4Interfaces.size() == 0){
-        Logger::warning("Cannot find any ipv4 interface.\n");
-    }
-
-    ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
-    if(ipv6Interfaces.size() == 0){
-        Logger::warning("Cannot find any ipv6 interface.\n");
-    }
-
-    if(ipv4Interfaces.empty() && ipv6Interfaces.empty()){
-        Logger::error("Cannot find any ipv4/ipv6 interface. Abort initialization.\n");
-        return false;        
-    }
-
-    return true;
-}
-
-auto UdpServerSettings::init_sending_settings(const UdpConnectionSettings &connectionSettings) -> void {
-    clientConnectionSettings = connectionSettings;
-
-    m_connectedToManager = true;
-}
-
-
-auto UdpServerSettings::init_from_text(std::string_view &text) -> void{
-
-    Logger::message("UdpServerSettings::init_from_text\n");
-
-    // read version
-    io::Settings::init_from_text(text);
-
-    // skip header
-    auto line = String::advance_view_to_delim(text, "\n"sv);
-
-    Logger::message(line);
-
-    if(auto values = String::split_view(line, " "sv); values.size() >= 2){
-
-        // read protocol
-        if(values.size() > 2){
-            if(values[2] == "ipv6"){
-                protocol = Protocol::ipv6;
-            }else{
-                protocol = Protocol::ipv4;
-            }
-        }else{
-            protocol = Protocol::ipv4;
-        }
-        udpReadingInterfaceId = String::to_int(values[0]);
-        udpReadingPort        = String::to_int(values[1]);
-
-        const auto &interfaces = (protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-        udpReadingInterface = interfaces[udpReadingInterfaceId];
-
-    }else{
-        Logger::error("UdpServerSettings::init_from_file: Invalid file format.\n");
-        return;
-    }
-}
-
-
-
-

@@ -42,13 +42,11 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
-    data/dcg_states.hpp \
     dcg_model.hpp \
     dcg_view.hpp \
     dcg_controller.hpp \
     dcg_signals.hpp \
     # data    
-    data/dcg_paths.hpp \
     data/dcg_settings.hpp \
     data/dcg_ui_settings.hpp \
     # ui

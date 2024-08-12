@@ -26,38 +26,37 @@
 
 // base
 #include "utility/logger.hpp"
-#include "utility/paths.hpp"
 
 // local
 #include "dcg_controller.hpp"
+#include "depth-camera/settings/dc_settings_paths.hpp"
 
 using namespace tool;
+using namespace cam;
 
 int main(int argc, char *argv[]){
 
-    // init paths
-    Paths::initialize(argv);
-
     Logger::message("Start DC-Grabber.\n");
     Logger::message(std::format("Args {}.\n", argc));
-    // define grabber id from command line arg
-    bool argsFound = false;
-    size_t idLocalGrabber = 0;
+
+    // check application arguments
+    std::optional<size_t> id = std::nullopt;
     for(int ii = 0; ii < argc; ++ii){
         std::string arg = argv[ii];
         if(arg.starts_with("-i")){
-            argsFound = true;
-            idLocalGrabber = std::stoi(arg.substr(2,1));
+            id = std::stoi(arg.substr(2,1));
         }
     }
-    if(!argsFound){
-        Logger::warning("No id argument found. ID set to '0'\n");
+    if(!id.has_value()){
+        Logger::warning("No id argument found.\n"sv);
     }
-    Logger::message(std::format("ID local grabber: {}\n", idLocalGrabber));
+
+    // init paths
+    DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id);
 
     // init controller
     DCGController controller;
-    if(controller.initialize(idLocalGrabber)){
+    if(controller.initialize(id.has_value() ? id.value() : 0)){
         controller.start();
         Logger::message("Exit Depth camera grabber.\n");
         return 1;

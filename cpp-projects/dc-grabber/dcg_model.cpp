@@ -27,6 +27,7 @@
 #include "dcg_model.hpp"
 
 // base
+#include "depth-camera/settings/dc_settings_paths.hpp"
 #include "utility/logger.hpp"
 
 using namespace tool;
@@ -35,61 +36,74 @@ using namespace std::string_view_literals;
 DCGModel::DCGModel(){
     auto lg = LogGuard("DCGModel::DCGModel"sv);
     device = std::make_unique<cam::DCDevice>();
+    device->start_thread();
 }
 
 DCGModel::~DCGModel(){
     auto lg = LogGuard("~DCGModel::DCGModel"sv);
+    device->stop_thread();
     device = nullptr;
 }
 
 auto DCGModel::initialize() -> bool{
 
     auto lg = LogGuard("DCGModel::initialize"sv);
+    
+    // check if path exist
+    if(auto filePath = DCSettingsPaths::get()->server_settings_file(); !filePath.empty()){
+        if(!server.initialize(filePath)){
+            return false;
+        }
+    }else {
 
-    connection.init_connections();
-    recorder.initialize(1);
+        // legacy
+        if(auto filePath = DCSettingsPaths::get()->network_settings_file(); !filePath.empty()){
+            if(!server.legacy_initialize(filePath)){
+                return false;
+            }
+        }else{
+            return false;
+        }
 
-    // load settings files
-    if(!settings.initialize()){
-        return false;
-    };
-
-    // start udp reading
-    if(!connection.start_reading_thread(&settings.networkS)){
-        return false;
+        server.load_device_settings_file(DCSettingsPaths::get()->server_device_settings_file());
+        server.load_filters_settings_file(DCSettingsPaths::get()->server_filters_settings_file());
+        server.load_calibration_filters_settings_file(DCSettingsPaths::get()->server_calibration_filters_settings_file());
+        server.load_color_settings_file(DCSettingsPaths::get()->server_color_settings_file());
+        server.load_model_settings_file(DCSettingsPaths::get()->server_model_settings_file());
     }
 
+    recorder.initialize(1);
 
     return true;
 }
 
 auto DCGModel::update() -> void{
-    connection.update();
-    settings.networkS.lastFrameIdSent = connection.last_frame_id_sent();
-    settings.networkS.lastFrameSentTS = connection.last_frame_sent_timestamp_nanosecond();
+    server.update();    
+    uiSettings.lastFrameIdSent = server.last_frame_id_sent();
+    uiSettings.lastFrameSentTS = server.last_frame_sent_timestamp_nanosecond();
     recorder.update();
 }
 
 auto DCGModel::clean() -> void{
     auto lg = LogGuard("DCGModel::clean"sv);
-    connection.clean();
+    server.clean();
 }
 
-auto DCGModel::trigger_settings() -> void{
+// auto DCGModel::trigger_settings() -> void{
 
-    auto lg = LogGuard("DCGModel::trigger_settings"sv);
-    // triggers data to init ui
-    Logger::log("### filters\n");
-    settings.triggers_filters_settings();
-    Logger::log("### display\n");
-    settings.triggers_display_settings();
-    Logger::log("### color\n");
-    settings.triggers_color_settings();
-    Logger::log("### delay\n");
-    settings.triggers_delay_settings();
-    Logger::log("### model\n");
-    settings.triggers_model();
-    Logger::log("### device\n");
-    settings.triggers_device_settings();
-}
+//     auto lg = LogGuard("DCGModel::trigger_settings"sv);
+//     // triggers data to init ui
+//     Logger::log("### filters\n");
+//     settings.triggers_filters_settings();
+//     Logger::log("### display\n");
+//     settings.triggers_display_settings();
+//     Logger::log("### color\n");
+//     settings.triggers_color_settings();
+//     Logger::log("### delay\n");
+//     settings.triggers_delay_settings();
+//     Logger::log("### model\n");
+//     settings.triggers_model();
+//     Logger::log("### device\n");
+//     settings.triggers_device_settings();
+// }
 

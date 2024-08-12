@@ -1069,7 +1069,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
     const std::string &tabItemName,
     bool useNormalFilteringSettings,
     cam::DCCalibratorStates &cStates,
-    DCCalibratorDrawerSettings &cdSettings,
+    DCCalibratorDisplaySettings &cdSettings,
     cam::DCCalibratorSettings &cSettings) -> bool {
 
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){

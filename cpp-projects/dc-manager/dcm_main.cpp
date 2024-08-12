@@ -25,18 +25,19 @@
 ********************************************************************************/
 
 // base
-#include "utility/paths.hpp"
 #include "utility/logger.hpp"
+#include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcm_controller.hpp"
 
 using namespace tool;
 
+
 int main(int, char *argv[]){
 
     // init paths
-    Paths::initialize(argv);
+    DCSettingsPaths::get()->initialize(argv, cam::DCApplicationType::DCManager);//tool::Paths::applicationDir, DCMModel::host_name(), std::format("dcm_manager_{}.html",  DCMModel::host_name()));
 
     // init controller
     DCMController controller;

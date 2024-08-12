@@ -69,11 +69,16 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
         }
     });
 
+    if(connectionS.startReadingThread){
+        i->device->start_thread();
+    }
+
     return true;
 
 }
 
 auto DCClientLocalDevice::clean() -> void {
+    i->device->stop_thread();
     i->device = nullptr;
 }
 

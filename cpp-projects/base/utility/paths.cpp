@@ -27,55 +27,58 @@
 
 #include "paths.hpp"
 
-// std
-#include <filesystem>
 
+
+// local
+#include "utility/logger.hpp"
+#include "network/network_types.hpp"
 
 using namespace tool;
+using namespace tool::net;
 using namespace std::filesystem;
-
+using namespace std::string_view_literals;
 
 // https://stackoverflow.com/questions/1528298/get-path-of-executable
 
+struct Global{
+    static inline std::unique_ptr<Paths> instance = nullptr;
+};
+
+auto Paths::get() -> Paths*{
+    if(Global::instance == nullptr){
+        Global::instance = std::make_unique<Paths>();
+    }
+    return Global::instance.get();
+}
+
 auto Paths::initialize(char *argv[]) -> void{
 
-    auto exePath = weakly_canonical(path(argv[0]));
-    executable = exePath.string();
-
-    auto applicationDirPath = exePath.parent_path();
-    applicationDir = applicationDirPath.string();
-
-    // resources
-    auto resourcesDirPath = (applicationDirPath / "resources");
-    if(exists(resourcesDirPath)){
-        resourcesDir = resourcesDirPath.string();
-    }
-    auto shadersDirPath  = (resourcesDirPath / "shaders");
-    if(exists(shadersDirPath)){
-        shadersDir = shadersDirPath.string();
-    }   
-
-    auto dataDirPath = (applicationDirPath / "data");
-    if(exists(dataDirPath)){
-        dataDir = dataDirPath.string();
+    if(!m_initialized){
+        Logger::warning("[Paths::initialize] Already initialized.\n"sv);
+        return;
     }
 
-    auto logsDirPath = (applicationDirPath / "logs");
-    if(exists(logsDirPath)){
-        logsDir = logsDirPath.string();
-    }
+    // retrieve hostname
+    hostName = Host::get_name();
 
-    auto configDirPath = (applicationDirPath / "config");
-    if(exists(configDirPath)){
-        configDir = configDirPath.string();
-    }
+    executable      = weakly_canonical(path(argv[0]));
+    applicationDir  = executable.parent_path();
+    resourcesDir    = applicationDir    / "resources"sv;
+    shadersDir      = resourcesDir      / "shaders"sv;
+    dataDir         = applicationDir    / "data"sv;
+    logsDir         = applicationDir    / "logs"sv;
+    outputDir       = applicationDir    / "output"sv;
+    configDir       = applicationDir    / "config"sv;
+    settingsDir     = configDir         / "settings"sv;
+    networkDir      = configDir         / "network"sv;
+    calibrationDir  = configDir         / "calibration"sv;
+
+    m_initialized = true;
 }
 
-auto Paths::get_shader(std::string_view name, std::string_view ext) -> std::string{
-    if(shadersDir.has_value()){
-        return std::format("{}{}{}{}", shadersDir.value(),sep,name,ext);
-    }
-    return {};
+auto Paths::get_shader(std::string_view name, std::string_view ext) -> std::filesystem::path{
+    return shadersDir / std::format("{}{}"sv, name, ext);
 }
+
 
 
