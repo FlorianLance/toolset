@@ -97,7 +97,6 @@ auto BaseSfmlGlWindow::init() -> bool{
     return true;
 }
 
-#include <iostream>
 auto BaseSfmlGlWindow::start() -> void{
 
     auto lg = LogGuard("BaseSfmlGlWindow::start"sv);
@@ -124,55 +123,44 @@ auto BaseSfmlGlWindow::start() -> void{
         currentFrame = std::chrono::system_clock::now();
 
         // retrieve sfml events
-        sf::Event event;
+        while (auto event = m_scene.pollEvent()){
 
-        while (m_scene.pollEvent(event)){
+            ImGui::SFML::ProcessEvent(m_scene, event.value());
 
-            ImGui::SFML::ProcessEvent(m_scene, event);
-
-            switch (event.type) {
-            case sf::Event::Closed: // The window requested to be closed
+            if (const auto* sE = event->getIf<sf::Event::Closed>()){ // The window requested to be closed
                 Logger::message("Close window.\n");
                 running = false;
                 break;
-            case sf::Event::Resized: // The window was resized
-                base_resize_windows(event.size);
-                break;
-            case sf::Event::KeyPressed: // A key was pressed
-                keyboard_keypress_event(event.key);
-                break;
-            case sf::Event::KeyReleased: // A key was released
-                keyboard_keyrelease_event(event.key);
-                break;
-            case sf::Event::MouseButtonPressed: // A mouse button was pressed
-                mouse_button_pressed_event(event.mouseButton);
-                break;
-            case sf::Event::MouseButtonReleased: // A mouse button was released
-                mouse_button_released_event(event.mouseButton);
-                break;
-            case sf::Event::MouseMoved: // The mouse cursor moved
-                mouse_moved_event(event.mouseMove);
-                break;
-            case sf::Event::MouseWheelScrolled: // The mouse wheel was scrolled
-                mouse_wheel_scroll_event(event.mouseWheelScroll);
-                break;
-            case sf::Event::MouseEntered: // The mouse cursor entered the area of the window
-                break;
-            case sf::Event::MouseLeft: // The mouse cursor left the area of the window
-                break;
-            case sf::Event::JoystickButtonPressed: // A joystick button was pressed
-                break; // event.joystickButton
-            case sf::Event::JoystickButtonReleased: // A joystick button was released
-                break; // event.joystickButton
-            case sf::Event::JoystickMoved: // The joystick moved along an axis
-                break; // event.joystickMove
-            case sf::Event::JoystickConnected: // A joystick was connected
-                break; // event.joystickConnect
-            case sf::Event::JoystickDisconnected: // A joystick was disconnected
-                break; // event.joystickConnect
-            default:
-                break;
+            }else if(const auto* sE = event->getIf<sf::Event::Resized>()){ // The window was resized
+                base_resize_windows(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::KeyPressed>()){ // A key was pressed
+                keyboard_keypress_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::KeyReleased>()){ // A key was released
+                keyboard_keyrelease_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::MouseButtonPressed>()){ // A mouse button was pressed
+                mouse_button_pressed_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::MouseButtonReleased>()){ // A mouse button was released
+                mouse_button_released_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::MouseMoved>()){ // The mouse cursor moved
+                mouse_moved_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::MouseWheelScrolled>()){ // The mouse wheel was scrolled
+                mouse_wheel_scroll_event(*sE);
+            }else if(const auto* sE = event->getIf<sf::Event::MouseEntered>()){ // The mouse cursor entered the area of the window
+
+            }else if(const auto* sE = event->getIf<sf::Event::MouseLeft>()){ // The mouse cursor left the area of the window
+
+            }else if(const auto* sE = event->getIf<sf::Event::JoystickButtonPressed>()){ // A joystick button was pressed
+
+            }else if(const auto* sE = event->getIf<sf::Event::JoystickButtonReleased>()){ // A joystick button was released
+
+            }else if(const auto* sE = event->getIf<sf::Event::JoystickMoved>()){ // The joystick moved along an axis
+
+            }else if(const auto* sE = event->getIf<sf::Event::JoystickConnected>()){ // A joystick was connected
+
+            }else if(const auto* sE = event->getIf<sf::Event::JoystickDisconnected>()){ // A joystick was disconnected
+
             }
+
             // LostFocus,     < The window lost the focus (no data)
             // GainedFocus,   < The window gained the focus (no data)
             // TextEntered,   < A character was entered (data in event.text)
@@ -286,44 +274,42 @@ auto BaseSfmlGlWindow::init_sfml_window() -> bool{
     }
 
     // create window
-    m_scene.create(sf::VideoMode(m_screen.width(), m_screen.height()), m_title, sf::Style::Default, glContext);
+    m_scene.create(sf::VideoMode(sf::Vector2u(m_screen.width(), m_screen.height())), m_title, sf::Style::Default, sf::State::Windowed, glContext);
     m_scene.setFramerateLimit(framerate);
     m_scene.setPosition(sf::Vector2i{m_screen.x_pos(),m_screen.y_pos()});
-
 
     return true;
 }
 
-auto BaseSfmlGlWindow::base_resize_windows(sf::Event::SizeEvent size) -> void{
+auto BaseSfmlGlWindow::base_resize_windows(sf::Event::Resized event) -> void{
 
     auto lg = LogGuard("BaseSfmlGlWindow::base_resize_windows"sv);
-    m_screen = graphics::Screen{size.width,size.height};
+    m_screen = graphics::Screen{event.size.x, event.size.y};
     m_camera.update_projection();
     glViewport(0, 0, static_cast<GLsizei>(m_screen.width()), static_cast<GLsizei>(m_screen.height()));
 
     resize_windows();
 }
 
-auto BaseSfmlGlWindow::mouse_button_pressed_event(sf::Event::MouseButtonEvent event) -> void{
-    std::cout << "MOUSE PRESSED " << imguiMouse << "\n";
+auto BaseSfmlGlWindow::mouse_button_pressed_event(sf::Event::MouseButtonPressed event) -> void{
     if(!imguiMouse){
-        update_camera_with_mouse_button_event(event, true);
+        update_camera_with_mouse_button_pressed_event(event);
     }
 }
 
-auto BaseSfmlGlWindow::mouse_button_released_event(sf::Event::MouseButtonEvent event) -> void{
+auto BaseSfmlGlWindow::mouse_button_released_event(sf::Event::MouseButtonReleased event) -> void{
     if(!imguiMouse){
-        update_camera_with_mouse_button_event(event, false);
+        update_camera_with_mouse_button_released_event(event);
     }
 }
 
-auto BaseSfmlGlWindow::mouse_moved_event(sf::Event::MouseMoveEvent event) -> void{
+auto BaseSfmlGlWindow::mouse_moved_event(sf::Event::MouseMoved event) -> void{
     if(!imguiMouse){
         update_camera_with_mouse_moved_event(event);
     }
 }
 
-auto BaseSfmlGlWindow::mouse_wheel_scroll_event(sf::Event::MouseWheelScrollEvent event) -> void{
+auto BaseSfmlGlWindow::mouse_wheel_scroll_event(sf::Event::MouseWheelScrolled event) -> void{
     if(!imguiMouse){
         if(!mouseMiddleClickPressed){
             update_camera_with_mouse_scroll_event(event);
@@ -331,51 +317,50 @@ auto BaseSfmlGlWindow::mouse_wheel_scroll_event(sf::Event::MouseWheelScrollEvent
     }
 }
 
-auto BaseSfmlGlWindow::keyboard_keypress_event(sf::Event::KeyEvent event) -> void{
+auto BaseSfmlGlWindow::keyboard_keypress_event(sf::Event::KeyPressed event) -> void{
 
     if(!imguiMouse && !imguiKeyboard){
         update_camera_with_keyboardpress_event(event);
     }
 }
 
-auto BaseSfmlGlWindow::update_camera_with_mouse_button_event(sf::Event::MouseButtonEvent event, bool pressed) -> void{
+auto BaseSfmlGlWindow::update_camera_with_mouse_button_pressed_event(sf::Event::MouseButtonPressed event) -> void{
 
-    if(pressed){
-        switch (event.button) {
-        case sf::Mouse::Button::Left:
-            mouseLeftClickPressed = true;
-            break;
-        case sf::Mouse::Button::Right:
-            mouseRightClickPressed = true;
-            break;
-        case sf::Mouse::Button::Middle:
-            mouseMiddleClickPressed = true;
-            break;
-        default:
-            break;
-        }
-    }else{
-
-        switch (event.button) {
-        case sf::Mouse::Button::Left:
-            mouseLeftClickPressed = false;
-            break;
-        case sf::Mouse::Button::Right:
-            mouseRightClickPressed = false;
-            break;
-        case sf::Mouse::Button::Middle:
-            mouseMiddleClickPressed = false;
-            break;
-        default:
-            break;
-        }
-
-        lastX = -1;
-        lastY = -1;
+    switch (event.button) {
+    case sf::Mouse::Button::Left:
+        mouseLeftClickPressed = true;
+        break;
+    case sf::Mouse::Button::Right:
+        mouseRightClickPressed = true;
+        break;
+    case sf::Mouse::Button::Middle:
+        mouseMiddleClickPressed = true;
+        break;
+    default:
+        break;
     }
 }
 
-auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyEvent event)  -> void{
+auto BaseSfmlGlWindow::update_camera_with_mouse_button_released_event(sf::Event::MouseButtonReleased event) -> void{
+    switch (event.button) {
+    case sf::Mouse::Button::Left:
+        mouseLeftClickPressed = false;
+        break;
+    case sf::Mouse::Button::Right:
+        mouseRightClickPressed = false;
+        break;
+    case sf::Mouse::Button::Middle:
+        mouseMiddleClickPressed = false;
+        break;
+    default:
+        break;
+    }
+
+    lastX = -1;
+    lastY = -1;
+}
+
+auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyPressed event)  -> void{
 
     switch (event.code) {
     case sf::Keyboard::Key::Up:
@@ -405,24 +390,24 @@ auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyEven
     }
 }
 
-auto BaseSfmlGlWindow::update_camera_with_mouse_scroll_event(sf::Event::MouseWheelScrollEvent event) -> void{
+auto BaseSfmlGlWindow::update_camera_with_mouse_scroll_event(sf::Event::MouseWheelScrolled event) -> void{
 
-    if(event.wheel == 0){
+    if(event.wheel == sf::Mouse::Wheel::Vertical){
         m_camera.move_front(static_cast<double>(event.delta) * cameraScrollSpeed);
     }
 }
 
-auto BaseSfmlGlWindow::update_camera_with_mouse_moved_event(sf::Event::MouseMoveEvent event) -> void{
+auto BaseSfmlGlWindow::update_camera_with_mouse_moved_event(sf::Event::MouseMoved event) -> void{
 
     if(lastX < 0.){
-        lastX = event.x;
-        lastY = event.y;
+        lastX = event.position.x;
+        lastY = event.position.y;
     }
 
-    double xoffset = event.x - lastX;
-    double yoffset = event.y - lastY;
-    lastX = event.x;
-    lastY = event.y;
+    double xoffset = event.position.x - lastX;
+    double yoffset = event.position.y - lastY;
+    lastX = event.position.x;
+    lastY = event.position.y;
 
     double sensitivity = cameraRotationSpeed;
     xoffset *= sensitivity;

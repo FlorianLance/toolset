@@ -32,14 +32,19 @@
 #include <format>
 
 // local
+#include "utility/io_file.hpp"
 #include "utility/logger.hpp"
 #include "utility/io_fstream.hpp"
 #include "geometry/voxel_grid.hpp"
 #include "frame/dc_frame_compressor.hpp"
 #include "frame/dc_frame_uncompressor.hpp"
+#include "data/json_utility.hpp"
 
+using namespace std::literals::string_view_literals;
 using namespace tool::cam;
 using namespace std::chrono;
+using namespace tool::data;
+using json = nlohmann::json;
 
 DCVideo &DCVideo::operator=(const DCVideo &other){
     
@@ -347,6 +352,48 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
     file.close();
 
     return success;
+}
+
+auto DCVideo::save_to_json_file(std::string_view path) -> bool{
+
+    // TESTS
+
+    if(path.length() == 0){
+        Logger::error("[DCVideo::save_to_json_file] Empty path.\n");
+        return false;
+    }
+
+    if(count_frames_from_all_cameras() == 0){
+        Logger::error("[DCVideo::save_to_json_file] No available frames to save.\n");
+        return false;
+    }
+
+    json json;
+    add_value(json, "cameras_count"sv,  nb_cameras());              
+
+    // write infos
+    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
+        nlohmann::json cInfoJson;
+        add_value(cInfoJson, "nb_frames"sv, m_camerasCompressedFrames[idCamera].frames.size());
+        add_array(cInfoJson, "model"sv, m_camerasTransforms[idCamera].cspan());
+        add_value(json, std::format("infos_camera_{}"sv, idCamera),  cInfoJson);
+    }
+
+    // write frames
+    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
+        nlohmann::json cDataJson;
+        for(size_t idFrame = 0; idFrame < m_camerasCompressedFrames[idCamera].nb_frames(); ++idFrame){
+            add_value(cDataJson, std::format("frame_{}"sv, idFrame),  m_camerasCompressedFrames[idCamera].frames[idFrame]->convert_to_json());
+        }
+        add_value(json, std::format("data_camera_{}"sv, idCamera),  cDataJson);
+    }
+
+    if(!File::write_binary_content(std::string(path), json::to_bson(json))){
+        Logger::error(std::format("[DCVideo::save_to_json_file] Cannot save video to json text file, impossible to open file with path: [{}]\n", path));
+        return false;
+    }
+
+    return true;
 }
 
 auto DCVideo::load_from_file(std::string_view path) -> bool{

@@ -117,11 +117,18 @@ struct OrbbecBaseDevice::Impl{
 
     auto init_context() -> void{
 
-        Logger::message("CREATE CONTEXT");
-        context = std::make_unique<ob::Context>();
-        context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+        auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
 
-        Logger::message("END CREATE CONTEXT");
+        try{
+            context = std::make_unique<ob::Context>();
+            context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+        }catch(const ob::Error &e) {
+            Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+        }catch(const std::exception &e){
+            Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+        }
+
+
         // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
         //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
         //         Logger::error(logMsg);
@@ -417,34 +424,48 @@ OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
     auto lg = LogGuard("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
-    Logger::log("Destroy context");
+    Logger::log("Destroy context"sv);
     i->context = nullptr;
 }
 
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::query_devices"sv);
-    i->context->enableNetDeviceEnumeration(ethernet);
 
-    auto devicesFound = i->context->queryDeviceList();
-    i->deviceList.clear();
+    try {
 
-    for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
-        auto dev = devicesFound->getDevice(idDev);
-        if(dev->getDeviceInfo()->name() == deviceTypeName){
-            i->deviceList.push_back(std::move(dev));
+        i->context->enableNetDeviceEnumeration(ethernet);
+
+        auto devicesFound = i->context->queryDeviceList();
+        i->deviceList.clear();
+
+        for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
+            auto dev = devicesFound->getDevice(idDev);
+            if(dev->getDeviceInfo()->name() == deviceTypeName){
+                i->deviceList.push_back(std::move(dev));
+            }
         }
+
+    }catch(const ob::Error &e) {
+        Logger::error(std::format("[OrbbecBaseDevice::query_devices] Orbbec error [{}]\n"sv, e.getMessage()));
+        i->deviceList.clear();
+        return;
+    }catch(const std::exception &e){
+        Logger::error(std::format("[OrbbecBaseDevice::query_devices] Error [{}]\n"sv, e.what()));
+        i->deviceList.clear();
+        return;
     }
-    Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n", i->deviceList.size(), deviceTypeName));
+
+    Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n"sv, i->deviceList.size(), deviceTypeName));
 }
 
 auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
 
     auto lg = LogGuard("OrbbecBaseDevice::open"sv);
 
-    Logger::message("### Open device ###\n");
+    Logger::message("### Open device ###\n"sv);
 
-    Logger::message(std::format("Open device with id [{}]\n", configS.idDevice));
+    Logger::message(std::format("Open device with id [{}]\n"sv, configS.idDevice));
     if(i->deviceType != DCType::FemtoMega){
         if(configS.idDevice >= i->deviceList.size()){
             Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
@@ -582,44 +603,44 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         }
 
         auto dInfos     = i->device->getDeviceInfo();
-        Logger::message("Device infos:\n");
-        Logger::message(std::format("  Name: {}\n", dInfos->name()));
-        Logger::message(std::format("  Chip type: {}\n", dInfos->asicName()));
-        Logger::message(std::format("  Serialnum: {}\n", dInfos->serialNumber()));
-        Logger::message(std::format("  PID: {}\n", dInfos->pid()));
-        Logger::message(std::format("  VID: {}\n", dInfos->vid()));
-        Logger::message(std::format("  UID: {}\n", dInfos->uid()));
+        Logger::message("Device infos:\n"sv);
+        Logger::message(std::format("  Name: {}\nsv", dInfos->name()));
+        Logger::message(std::format("  Chip type: {}\n"sv, dInfos->asicName()));
+        Logger::message(std::format("  Serialnum: {}\n"sv, dInfos->serialNumber()));
+        Logger::message(std::format("  PID: {}\n"sv, dInfos->pid()));
+        Logger::message(std::format("  VID: {}\n"sv, dInfos->vid()));
+        Logger::message(std::format("  UID: {}\n"sv, dInfos->uid()));
 
-        Logger::message("  Version:\n");
-        Logger::message(std::format("      Firmware: {}\n", dInfos->firmwareVersion()));
-        Logger::message(std::format("      Hardware: {}\n", dInfos->hardwareVersion()));
-        Logger::message(std::format("      SDK minimum supported: {}\n", dInfos->supportedMinSdkVersion()));
-        Logger::message(std::format("      Extension info: {}\n", dInfos->extensionInfo()));
-        Logger::message("  Types:\n");
+        Logger::message("  Version:\n"sv);
+        Logger::message(std::format("      Firmware: {}\n"sv, dInfos->firmwareVersion()));
+        Logger::message(std::format("      Hardware: {}\n"sv, dInfos->hardwareVersion()));
+        Logger::message(std::format("      SDK minimum supported: {}\n"sv, dInfos->supportedMinSdkVersion()));
+        Logger::message(std::format("      Extension info: {}\n"sv, dInfos->extensionInfo()));
+        Logger::message("  Types:\n"sv);
         std::string deviceT;
         switch(dInfos->deviceType()){
         case OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA:
-            deviceT = "Monocular structured light camera";
+            deviceT = "Monocular structured light camera"sv;
             break;
         case OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA:
-            deviceT = "Binocular structured light camera";
+            deviceT = "Binocular structured light camera"sv;
             break;
         case OB_TOF_CAMERA:
-            deviceT = "Time-of-flight camera";
+            deviceT = "Time-of-flight camera"sv;
             break;
         }
-        Logger::message(std::format("      Device: {}\n", deviceT));
-        Logger::message(std::format("      Connection: {}\n", dInfos->connectionType()));
-        if(std::string(dInfos->connectionType()) == "Ethernet"){
-            Logger::message(std::format("  IP: {}\n", dInfos->ipAddress()));
+        Logger::message(std::format("      Device: {}\n"sv, deviceT));
+        Logger::message(std::format("      Connection: {}\n"sv, dInfos->connectionType()));
+        if(std::string(dInfos->connectionType()) == "Ethernet"sv){
+            Logger::message(std::format("  IP: {}\n"sv, dInfos->ipAddress()));
         }
 
     }catch(const ob::Error &e) {
-        Logger::error(std::format("Open error: {}\nsv", e.getMessage()));
+        Logger::error(std::format("Open error: [{}]\n"sv, e.getMessage()));
         i->device = nullptr;
         return false;
     }catch(const std::exception &e){
-        Logger::error(std::format("Error: {}\nsv", e.what()));
+        Logger::error(std::format("Error: [{}]\n"sv, e.what()));
         i->device = nullptr;
         return false;
     }

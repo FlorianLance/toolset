@@ -35,9 +35,12 @@
 // local
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
+#include "data/json_utility.hpp"
 
 using namespace tool;
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
 
 auto buffer_bytes_size(const BinaryImageBuffer &iBuffer) -> size_t{
     return
@@ -138,6 +141,51 @@ auto write_buffer(const BinaryBuffer &buffer, std::ofstream &file) -> void{
         write_array(buffer.get_data(), file, buffer.size());
     }
 }
+
+// auto DCCompressedFrame::init_from_json(const nlohmann::json &json) -> void{
+
+// }
+
+// auto DCCompressedFrame::convert_to_json() const -> nlohmann::json{
+
+//     json json;
+//     // base
+//     add_value(json, "base_frame"sv, Frame::convert_to_json());
+//     // local
+//     add_value(json, "model"sv,                  static_cast<int>(mode));
+//     add_value(json, "valid_vertices_count"sv,   validVerticesCount);
+
+//     if(!jpegRGBA8Color.empty()){
+//         add_array(json, "color"sv, jpegRGBA8Color.span());
+//     }
+//     if(!jpegRGBA8DepthSizedColor.empty()){
+//         add_array(json, "depth_sized_color"sv, jpegRGBA8DepthSizedColor.span());
+//     }
+//     if(!jpegG8BodiesIdMap.empty()){
+//         add_array(json, "bodies_id_map"sv, jpegG8BodiesIdMap.span());
+//     }
+
+//     if(!fpfDepth.empty()){
+//         add_array(json, "depth"sv, fpfDepth.span());
+//     }
+//     if(!fpfInfra.empty()){
+//         add_array(json, "infra"sv, fpfInfra.span());
+//     }
+//     if(!fpfColoredCloud.empty()){
+//         add_array(json, "colored_cloud"sv, fpfColoredCloud.span());
+//     }
+
+//     if(!calibration.empty()){
+//         add_array(json, "calibration"sv, calibration.span());
+//     }
+//     if(!imu.empty()){
+//         add_array(json, "imu"sv, imu.span());
+//     }
+
+//     // ... bodies / audio
+
+//     return json;
+// }
 
 
 auto DCCompressedFrame::data_size() const noexcept -> size_t {
@@ -407,30 +455,3 @@ auto DCCompressedFrame::init_legacy_full_frame_from_file_stream(std::ifstream &f
     // // # read imu
     // read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 }
-
-
-
-// bool hasCalibration = false;
-// read(hasCalibration, data, offset, sizeData);
-// if(hasCalibration){
-//     if(dc_get_device(mode) == DCType::AzureKinect){
-//         k4a_calibration_t rCalibration;
-//         read(rCalibration, data, offset, sizeData);
-//         i->k4Calibration = rCalibration;
-//     }else if(dc_get_device(mode) == DCType::FemtoBolt){
-//         OBCameraParam rCalibration;
-//         read(rCalibration, data, offset, sizeData);
-//         i->obCalibration = rCalibration;
-//     }
-// }
-
-
-// if(i->k4Calibration.has_value()){
-//     write(true, file);
-//     write(i->k4Calibration.value(), file);
-// }else if(i->obCalibration.has_value()){
-//     write(true, file);
-//     write(i->obCalibration.value(), file);
-// }else{
-//     write(false, file);
-// }

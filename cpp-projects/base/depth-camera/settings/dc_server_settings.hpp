@@ -1,8 +1,6 @@
 
-#pragma once
-
 /*******************************************************************************
-** Toolset-dc-grabber                                                         **
+** Toolset-base                                                               **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -26,24 +24,60 @@
 **                                                                            **
 ********************************************************************************/
 
+#pragma once
+
 // std
-#include <chrono>
+#include <set>
 
-// base
-#include "depth-camera/settings/dc_display_settings.hpp"
+// local
+#include "network/network_types.hpp"
+#include "network/settings/udp_server_settings.hpp"
+#include "dc_filters_settings.hpp"
+#include "dc_device_settings.hpp"
+#include "dc_color_settings.hpp"
+#include "dc_delay_settings.hpp"
+#include "dc_model_settings.hpp"
+#include "dc_display_settings.hpp"
 
-namespace tool::ui {
+namespace tool::cam {
 
-struct DCGDisplaySettings{
-
-    // settings
-    cam::DCSceneDisplaySettings sceneDisplayS;
-    cam::DCDeviceDisplaySettings cloudDisplayS;
-
-    // runtime
-    bool focusWindow = false;
-    int currentWindow = 3;
+struct ClientsRuntimeInfo{
+    std::set<std::string> clientsConnected;
     size_t lastFrameIdSent = 0;
     std::chrono::nanoseconds lastFrameSentTS = std::chrono::nanoseconds(0);
+    std::int64_t lastFrameSentDurationMicroS = 0;
+    std::mutex lock;
+};
+
+struct DCServerSettings  : public io::Settings{
+
+    DCServerSettings();
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+
+    auto update_reading_interface() -> void;
+
+    // settings
+    net::UdpServerSettings udpServerS;
+    DCDeviceSettings deviceS = DCDeviceSettings::default_init_for_grabber();
+    DCFiltersSettings filtersS;
+    DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
+    DCColorSettings colorS;
+    DCModelSettings modelS;
+    DCDelaySettings delayS;
+    DCDeviceDisplaySettings displayS;
+    DCSceneDisplaySettings sceneDisplayS;
+
+    // runtime
+    std::string globalFilePath;
+    std::string deviceFilePath;
+    std::string filtersFilePath;
+    std::string calibrationFiltersFilePath;
+    std::string colorFilePath;
+    std::string modelFilePath;
+    std::vector<net::Interface> ipv4Interfaces = {};
+    std::vector<net::Interface> ipv6Interfaces = {};
+    net::Interface udpReadingInterface;
+    ClientsRuntimeInfo cInfos;
 };
 }

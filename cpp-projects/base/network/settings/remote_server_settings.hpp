@@ -35,10 +35,10 @@ namespace tool::net {
 struct RemoteServerSettings : io::Settings{
 
     size_t idReadingInterface = 0;
-    int readingPort;
-    std::string sendingAdress;
-    int sendingPort;
-    Protocol protocol = Protocol::unknow;
+    int readingPort = 8888;
+    std::string sendingAdress = "localhost";
+    int sendingPort = 8889;
+    Protocol protocol = Protocol::ipv4;
 
     // # runtime
     std::string readingAdress;

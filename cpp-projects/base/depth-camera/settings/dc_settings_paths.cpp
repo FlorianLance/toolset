@@ -46,141 +46,127 @@ auto DCSettingsPaths::get() -> DCSettingsPaths*{
     return Global::instance.get();
 }
 
-auto DCSettingsPaths::initialize(char *argv[], DCApplicationType type, std::optional<size_t> id) -> void{
+auto DCSettingsPaths::initialize(char *argv[], DCApplicationType type, size_t id) -> void{
 
     auto paths = Paths::get();
     if(!paths->is_initialized()){
         paths->initialize(argv);
     }
 
-    // common
-    // # legacy
-    defaultJsonNetwork  = paths->networkDir / "network_default.json"sv;
-    jsonNetwork         = paths->networkDir / std::format("network_{}.json"sv,    paths->hostName);
-    configNetwork       = paths->networkDir / std::format("network_{}.config"sv,  paths->hostName);
-    // ## default
-    // ### json
-    defaultJson.model                   = paths->calibrationDir / "model_default.json"sv;
-    defaultJson.filters                 = paths->settingsDir    / "filters_default.json"sv;
-    defaultJson.calibrationFilters      = paths->settingsDir    / "calibration_filters_default.json"sv;
-    defaultJson.device                  = paths->settingsDir    / "device_default.json"sv;
-    defaultJson.color                   = paths->settingsDir    / "color_default.json"sv;
-    // ### config
-    defaultConfig.model                 = paths->calibrationDir / "model_default.config"sv;
-    defaultConfig.filters               = paths->settingsDir    / "filters_default.config"sv;
-    defaultConfig.calibrationFilters    = paths->settingsDir    / "calibration_filters_default.config"sv;
-    defaultConfig.device                = paths->settingsDir    / "device_default.config"sv;
-    defaultConfig.color                 = paths->settingsDir    / "color_default.config"sv;
+    std::string cId = std::format("{}_{}", paths->hostName, id);
 
     // per type
     switch (type) {
-    case DCApplicationType::DCGrabber:{
-
-        if(id.has_value()){
-            logName = std::format("dcm_grabber_{}_{}.html"sv,  paths->hostName, id.value());
-        }else{
-            logName = std::format("dcm_grabber_{}.html"sv,  paths->hostName);
-        }
-
-        defaultServer       = paths->configDir / "server_default.json"sv;
-
-        size_t idG = 0;
-        if(id.has_value()){
-            server          = paths->configDir / std::format("server_{}_{}.json"sv, paths->hostName, id.value());
-            idG = id.value();
-        }else{
-            server          = paths->configDir / std::format("server_{}.json"sv, paths->hostName);
-        }
-
-        serverJson.model                   = paths->settingsDir / std::format("model_{}_G{}.json"sv,                   paths->hostName, idG);
-        serverJson.filters                 = paths->settingsDir / std::format("filters_{}_G{}.json"sv,                 paths->hostName, idG);
-        serverJson.calibrationFilters      = paths->settingsDir / std::format("calibration_filters_{}_G{}.json"sv,     paths->hostName, idG);
-        serverJson.device                  = paths->settingsDir / std::format("device_{}_G{}.json"sv,                  paths->hostName, idG);
-        serverJson.color                   = paths->settingsDir / std::format("color_{}_G{}.json"sv,                   paths->hostName, idG);
-        serverConfig.model                 = paths->settingsDir / std::format("model_{}_G{}.config"sv,                 paths->hostName, idG);
-        serverConfig.filters               = paths->settingsDir / std::format("filters_{}_G{}.config"sv,               paths->hostName, idG);
-        serverConfig.calibrationFilters    = paths->settingsDir / std::format("calibration_filters_{}_G{}.config"sv,   paths->hostName, idG);
-        serverConfig.device                = paths->settingsDir / std::format("device_{}_G{}.config"sv,                paths->hostName, idG);
-        serverConfig.color                 = paths->settingsDir / std::format("color_{}_G{}.config"sv,                 paths->hostName, idG);
-
+    case DCApplicationType::DCGrabber:{        
+        logName                              = std::format("dcm_grabber_{}.html"sv, cId);
+        defaultServer                        = paths->configDir   / "server_default.json"sv;
+        server                               = paths->configDir   / std::format("server_{}.json"sv, cId);
+        // legacy
+        serverJson.model                     = paths->settingsDir / std::format("model_{}.json"sv, cId);
+        serverJson.filters                   = paths->settingsDir / std::format("filters_{}.json"sv, cId);
+        serverJson.calibrationFilters        = paths->settingsDir / std::format("calibration_filters_{}.json"sv, cId);
+        serverJson.device                    = paths->settingsDir / std::format("device_{}.json"sv, cId);
+        serverJson.color                     = paths->settingsDir / std::format("color_{}.json"sv, cId);
+        serverConfig.model                   = paths->settingsDir / std::format("model_{}.config"sv, cId);
+        serverConfig.filters                 = paths->settingsDir / std::format("filters_{}.config"sv, cId);
+        serverConfig.calibrationFilters      = paths->settingsDir / std::format("calibration_filters_{}.config"sv, cId);
+        serverConfig.device                  = paths->settingsDir / std::format("device_{}.config"sv, cId);
+        serverConfig.color                   = paths->settingsDir / std::format("color_{}.config"sv, cId);
         break;
-    }case DCApplicationType::DCManager:
-
-        if(id.has_value()){
-            logName = std::format("dcm_manager_{}_{}.html"sv,  paths->hostName, id.value());
-        }else{
-            logName = std::format("dcm_manager_{}.html"sv,  paths->hostName);
-        }
-
-        defaultClient       = paths->configDir / "client_default.json"sv;
-        if(id.has_value()){
-             client          = paths->configDir / std::format("client_{}_{}.json"sv, paths->hostName, id.value());
-        }else{
-            client          = paths->configDir / std::format("client_{}.json"sv, paths->hostName);
-        }
-
-        // all files
-        allJsonClients.model               = paths->settingsDir / std::format("model_{}_all.json"sv,                 paths->hostName);
-        allJsonClients.filters             = paths->settingsDir / std::format("filters_{}_all.json"sv,               paths->hostName);
-        allJsonClients.calibrationFilters  = paths->settingsDir / std::format("calibration_filters_{}_all.json"sv,   paths->hostName);
-        allJsonClients.device              = paths->settingsDir / std::format("device_{}_all.json"sv,                paths->hostName);
-        allJsonClients.color               = paths->settingsDir / std::format("color_{}_all.json"sv,                 paths->hostName);
-
+    }case DCApplicationType::DCManager:{
+        logName                              = std::format("dcm_manager_{}.html"sv,  cId);
+        defaultClient                        = paths->configDir / "client_default.json"sv;
+        client                               = paths->configDir / std::format("client_{}.json"sv, cId);
+        // legacy
+        // # all files
+        // ## json
+        allJsonClients.model                 = paths->settingsDir / std::format("model_{}_all.json"sv, paths->hostName);
+        allJsonClients.filters               = paths->settingsDir / std::format("filters_{}_all.json"sv, paths->hostName);
+        allJsonClients.calibrationFilters    = paths->settingsDir / std::format("calibration_filters_{}_all.json"sv, paths->hostName);
+        allJsonClients.device                = paths->settingsDir / std::format("device_{}_all.json"sv, paths->hostName);
+        allJsonClients.color                 = paths->settingsDir / std::format("color_{}_all.json"sv, paths->hostName);
+        // ## config
+        allConfigClients.model               = paths->settingsDir / std::format("model_{}_all.config"sv, paths->hostName);
+        allConfigClients.filters             = paths->settingsDir / std::format("filters_{}_all.config"sv, paths->hostName);
+        allConfigClients.calibrationFilters  = paths->settingsDir / std::format("calibration_filters_{}_all.config"sv, paths->hostName);
+        allConfigClients.device              = paths->settingsDir / std::format("device_{}_all.config"sv, paths->hostName);
+        allConfigClients.color               = paths->settingsDir / std::format("color_{}_all.config"sv, paths->hostName);
         // # grabber
         // ## json
         clientsJson.resize(20);
         for(size_t idG = 0; idG < clientsJson.size(); ++idG){
-            auto &gPaths = clientsJson[idG];
-            gPaths.model                = paths->settingsDir / std::format("model_{}_G{}.json"sv,                 paths->hostName, idG);
-            gPaths.filters              = paths->settingsDir / std::format("filters_{}_G{}.json"sv,               paths->hostName, idG);
-            gPaths.calibrationFilters   = paths->settingsDir / std::format("calibration_filters_{}_G{}.json"sv,   paths->hostName, idG);
-            gPaths.device               = paths->settingsDir / std::format("device_{}_G{}.json"sv,                paths->hostName, idG);
-            gPaths.color                = paths->settingsDir / std::format("color_{}_G{}.json"sv,                 paths->hostName, idG);
+            auto &gPaths                     = clientsJson[idG];
+            gPaths.model                     = paths->settingsDir / std::format("model_{}.json"sv, cId);
+            gPaths.filters                   = paths->settingsDir / std::format("filters_{}.json"sv, cId);
+            gPaths.calibrationFilters        = paths->settingsDir / std::format("calibration_filters_{}.json"sv, cId);
+            gPaths.device                    = paths->settingsDir / std::format("device_{}.json"sv, cId);
+            gPaths.color                     = paths->settingsDir / std::format("color_{}.json"sv, cId);
         }
         // ## config
-        allConfigClients.model               = paths->settingsDir / std::format("model_{}_all.config"sv,                 paths->hostName);
-        allConfigClients.filters             = paths->settingsDir / std::format("filters_{}_all.config"sv,               paths->hostName);
-        allConfigClients.calibrationFilters  = paths->settingsDir / std::format("calibration_filters_{}_all.config"sv,   paths->hostName);
-        allConfigClients.device              = paths->settingsDir / std::format("device_{}_all.config"sv,                paths->hostName);
-        allConfigClients.color               = paths->settingsDir / std::format("color_{}_all.config"sv,                 paths->hostName);
         clientsConfig.resize(20);
         for(size_t idG = 0; idG < clientsConfig.size(); ++idG){
             auto &gPaths = clientsConfig[idG];
-            gPaths.model                = paths->settingsDir / std::format("model_{}_G{}.config"sv,               paths->hostName, idG);
-            gPaths.filters              = paths->settingsDir / std::format("filters_{}_G{}.config"sv,             paths->hostName, idG);
-            gPaths.calibrationFilters   = paths->settingsDir / std::format("calibration_filters_{}_G{}.config"sv, paths->hostName, idG);
-            gPaths.device               = paths->settingsDir / std::format("device_{}_G{}.config"sv,              paths->hostName, idG);
-            gPaths.color                = paths->settingsDir / std::format("color_{}_G{}.config"sv,               paths->hostName, idG);
+            gPaths.model                = paths->settingsDir / std::format("model_{}.config"sv, cId);
+            gPaths.filters              = paths->settingsDir / std::format("filters_{}.config"sv, cId);
+            gPaths.calibrationFilters   = paths->settingsDir / std::format("calibration_filters_{}.config"sv, cId);
+            gPaths.device               = paths->settingsDir / std::format("device_{}.config"sv, cId);
+            gPaths.color                = paths->settingsDir / std::format("color_{}.config"sv, cId);
         }
 
         break;
-    default:
+    }default:
         break;
     }
 
+    // common
+    // # legacy
+    defaultJsonNetwork                       = paths->networkDir  / "network_default.json"sv;
+    jsonNetwork                              = paths->networkDir  / std::format("network_{}.json"sv, cId);
+    configNetwork                            = paths->networkDir  / std::format("network_{}.config"sv, cId);
+    // ## default
+    // ### json
+    defaultJson.model                        = paths->calibrationDir / "model_default.json"sv;
+    defaultJson.filters                      = paths->settingsDir    / "filters_default.json"sv;
+    defaultJson.calibrationFilters           = paths->settingsDir    / "calibration_filters_default.json"sv;
+    defaultJson.device                       = paths->settingsDir    / "device_default.json"sv;
+    defaultJson.color                        = paths->settingsDir    / "color_default.json"sv;
+    // ### config
+    defaultConfig.model                      = paths->calibrationDir / "model_default.config"sv;
+    defaultConfig.filters                    = paths->settingsDir    / "filters_default.config"sv;
+    defaultConfig.calibrationFilters         = paths->settingsDir    / "calibration_filters_default.config"sv;
+    defaultConfig.device                     = paths->settingsDir    / "device_default.config"sv;
+    defaultConfig.color                      = paths->settingsDir    / "color_default.config"sv;
 }
 
 auto DCSettingsPaths::client_settings_file() -> std::string{
+
     if(std::filesystem::exists(client)){
         return client.string();
-    }else if(std::filesystem::exists(defaultClient)){
-        Logger::warning(std::format("Cannot find current client settings file [{}], use default instead.\n", defaultClient.string()));
-        return defaultClient.string();
-    }else{
-        Logger::warning(std::format("Cannot find default client settings file [{}].\n", defaultClient.string()));
     }
+    Logger::warning(std::format("Cannot find client file [{}].\n", client.string()));
+
+    if(std::filesystem::exists(defaultClient)){
+        return defaultClient.string();
+    }
+    Logger::warning(std::format("Cannot find default client settings file [{}].\n", defaultClient.string()));
+
+    Logger::warning("[DCSettingsPaths::client_settings_file] Cannot find any client file.\n");
     return {};
 }
 
 auto DCSettingsPaths::server_settings_file() -> std::string{
+
     if(std::filesystem::exists(server)){
         return server.string();
-    }else if(std::filesystem::exists(defaultServer)){
-        Logger::warning(std::format("Cannot find current server settings file [{}], use default instead.\n", defaultServer.string()));
-        return defaultServer.string();
-    }else{
-        Logger::warning(std::format("Cannot find default server settings file [{}].\n", defaultServer.string()));
     }
+    Logger::warning(std::format("Cannot find server file [{}].\n", server.string()));
+
+    if(std::filesystem::exists(defaultServer)){
+        return defaultServer.string();
+    }
+    Logger::warning(std::format("Cannot find default server settings file [{}].\n", defaultServer.string()));
+
+    Logger::warning("[DCSettingsPaths::server_settings_file] Cannot find any server file.\n");
     return {};
 }
 
@@ -188,14 +174,20 @@ auto DCSettingsPaths::network_settings_file() -> std::string{
 
     if(std::filesystem::exists(jsonNetwork)){
         return jsonNetwork.string();
-    }else if(std::filesystem::exists(configNetwork)){
-        return configNetwork.string();
-    }else if(std::filesystem::exists(defaultJsonNetwork)){
-        Logger::warning(std::format("Cannot find current host network settings file [{}], use default instead.\n", defaultJsonNetwork.string()));
-        return defaultJsonNetwork.string();
-    }else{
-        Logger::warning(std::format("Cannot find current any network settings file and cannot find default file [{}].\n", defaultJsonNetwork.string()));
     }
+    Logger::warning(std::format("Cannot find JSON network file [{}]\n", jsonNetwork.string()));
+
+    if(std::filesystem::exists(configNetwork)){
+        return configNetwork.string();
+    }
+    Logger::warning(std::format("Cannot find config network file [{}]\n", configNetwork.string()));
+
+    if(std::filesystem::exists(defaultJsonNetwork)){
+        return defaultJsonNetwork.string();
+    }
+    Logger::warning(std::format("Cannot find default JSON network file [{}]\n", defaultJsonNetwork.string()));
+
+    Logger::error("[DCSettingsPaths::network_settings_file] Cannot find any network file.\n");
     return {};
 }
 

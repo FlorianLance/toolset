@@ -1,13 +1,14 @@
 {
+    "_client_id": 0,
     "base": {
-        "type": 1,
+        "type_string": "DC client",
         "version": 1
     },
     "client_devices": [
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -27,7 +28,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -95,7 +96,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -110,19 +111,24 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote",
+                    "id_reading_interface": 0,
+                    "protocol": "ipv4",
+                    "reading_port": 8889,
+                    "sending_address": "localhost",
+                    "sending_port": 8888
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -158,7 +164,7 @@
                     },
                     "data": {
                         "base": {
-                            "type": -1054867456,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -194,10 +200,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -220,42 +230,42 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        0.0729999989271164,
-                        -0.32499998807907104,
-                        1.0360000133514404
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        31.469999313354492,
-                        -2.1700000762939453,
-                        1.8899999856948853
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.1700000762939453,
-                        2.4800000190734863,
-                        2.0399999618530273
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
                     "filter_depth_with_infra": true,
-                    "invalidate_color_from_depth": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
                     "max_depth_f": 1.0,
                     "max_diff_color": [
@@ -265,15 +275,15 @@
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
                     "max_height_f": 0.9200000166893005,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1071.0,
+                    "max_local_diff": 10.0,
+                    "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
                     "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
-                    "nb_min_neighbours": 5,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -291,16 +301,16 @@
                     ],
                     "plane_filtering_mode": 0,
                     "remove_after_closest_point": false,
-                    "remove_from_point_distance": true,
+                    "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 4,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
@@ -327,7 +337,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -347,7 +357,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -415,7 +425,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -430,19 +440,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -461,24 +471,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 5,
+                        "id_device": 6,
                         "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 160,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": -1054867456,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -514,10 +524,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -540,42 +554,42 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        0.028999999165534973,
-                        0.2639999985694885,
-                        1.6139999628067017
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        44.61000061035156,
+                        0.0,
                         0.0,
                         0.0
                     ],
                     "OOB_size": [
-                        1.9900000095367432,
-                        1.8300000429153442,
-                        1.5299999713897705
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
                     "max_depth_f": 1.0,
                     "max_diff_color": [
@@ -584,16 +598,16 @@
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.8840000033378601,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 0.9200000166893005,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.08100000023841858,
+                    "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
-                    "nb_min_neighbours": 5,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -611,34 +625,34 @@
                     ],
                     "plane_filtering_mode": 0,
                     "remove_after_closest_point": false,
-                    "remove_from_point_distance": true,
+                    "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.9990095496177673,
-                        0.04449605196714401,
-                        0.00021584192290902138,
+                        1.0,
                         0.0,
-                        -0.009568408131599426,
-                        0.2195584774017334,
-                        -0.9755525588989258,
                         0.0,
-                        -0.04345559701323509,
-                        0.9745842218399048,
-                        0.21976685523986816,
                         0.0,
-                        0.05899113416671753,
-                        -1.577078938484192,
-                        0.843753457069397,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -647,7 +661,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -667,7 +681,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -735,7 +749,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -750,19 +764,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -781,24 +795,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 7,
+                        "id_device": 6,
                         "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 320,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": -1063256064,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -834,10 +848,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -860,44 +878,44 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        0.06199999898672104,
-                        -0.5270000100135803,
-                        1.347000002861023
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        40.77000045776367,
-                        -1.2100000381469727,
-                        -1.3700000047683716
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.059999942779541,
-                        1.940000057220459,
-                        1.4299999475479126
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8019999861717224,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
@@ -905,7 +923,7 @@
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
                     "max_height_f": 0.9200000166893005,
-                    "max_local_diff": 15.0,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
@@ -913,7 +931,7 @@
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
-                    "nb_min_neighbours": 5,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -935,30 +953,30 @@
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.9961112141609192,
-                        0.0669204592704773,
-                        -0.057309288531541824,
+                        1.0,
                         0.0,
-                        0.05636483058333397,
-                        -0.9839555621147156,
-                        -0.16927678883075714,
                         0.0,
-                        -0.06771788746118546,
-                        0.16538825631141663,
-                        -0.9839008450508118,
                         0.0,
-                        0.06911956518888474,
-                        -0.6412678360939026,
-                        2.3820533752441406,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -967,7 +985,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -987,7 +1005,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -1055,7 +1073,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -1070,19 +1088,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -1101,24 +1119,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 2,
+                        "id_device": 6,
                         "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 480,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": 0,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -1154,10 +1172,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -1180,44 +1202,44 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        -0.14399999380111694,
-                        -0.16899999976158142,
-                        1.0989999771118164
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        27.8799991607666,
-                        -14.880000114440918,
+                        0.0,
+                        0.0,
                         0.0
                     ],
                     "OOB_size": [
-                        2.0,
-                        2.0,
-                        2.069999933242798
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8610000014305115,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
@@ -1225,7 +1247,7 @@
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
                     "max_height_f": 0.9200000166893005,
-                    "max_local_diff": 15.0,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
@@ -1233,7 +1255,7 @@
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
-                    "nb_min_neighbours": 5,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -1251,34 +1273,34 @@
                     ],
                     "plane_filtering_mode": 0,
                     "remove_after_closest_point": false,
-                    "remove_from_point_distance": true,
+                    "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.9987133741378784,
-                        -0.03840259090065956,
-                        -0.0331178680062294,
+                        1.0,
                         0.0,
-                        0.024487653747200966,
-                        -0.20666830241680145,
-                        0.9781045913696289,
                         0.0,
-                        -0.04440614953637123,
-                        -0.9776572585105896,
-                        -0.2054619938135147,
                         0.0,
-                        0.05031847581267357,
-                        0.8885902762413025,
-                        1.5152761936187744,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -1287,7 +1309,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -1307,7 +1329,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -1362,7 +1384,7 @@
                         0.0
                     ],
                     "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
+                    "remove_after_closest_point": true,
                     "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
@@ -1375,7 +1397,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -1390,19 +1412,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -1421,24 +1443,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 4,
-                        "mode": 3,
+                        "id_device": 6,
+                        "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 640,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": -1054867456,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -1474,10 +1496,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -1500,60 +1526,60 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        -0.02800000086426735,
-                        -0.20999999344348907,
-                        1.3459999561309814
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        -0.10999999940395355,
-                        -39.43000030517578,
-                        -3.4700000286102295
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.2300000190734863,
-                        1.6200000047683716,
-                        2.069999933242798
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.7900000214576721,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 0.9200000166893005,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
-                    "max_widht_f": 0.9190000295639038,
+                    "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.12800000607967377,
+                    "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
-                    "min_widht_f": 0.03500000014901161,
-                    "nb_min_neighbours": 5,
+                    "min_widht_f": 0.0,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -1575,30 +1601,30 @@
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.8504946827888489,
-                        -0.45826655626296997,
-                        0.2581678628921509,
+                        1.0,
                         0.0,
-                        0.05587366223335266,
-                        0.5667657256126404,
-                        0.8219822645187378,
                         0.0,
-                        -0.5230075716972351,
-                        -0.6846667528152466,
-                        0.5076361894607544,
                         0.0,
-                        1.0074472427368164,
-                        0.6437954306602478,
-                        0.6809830665588379,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -1607,7 +1633,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -1627,7 +1653,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 6,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -1636,15 +1662,15 @@
                     "erosion_connectivity": 3,
                     "erosion_loops": 1,
                     "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
+                        0.19607843458652496,
+                        0.615686297416687,
+                        0.3803921639919281
                     ],
                     "filter_depth_with_body_tracking": false,
                     "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": false,
+                    "filter_depth_with_color": true,
                     "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": false,
+                    "invalidate_color_from_depth": true,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": false,
@@ -1682,7 +1708,7 @@
                         0.0
                     ],
                     "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
+                    "remove_after_closest_point": true,
                     "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
@@ -1695,7 +1721,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -1710,19 +1736,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -1741,24 +1767,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 0,
-                        "mode": 3,
+                        "id_device": 6,
+                        "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 800,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": 8,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -1794,10 +1820,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -1820,60 +1850,60 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        -0.014000000432133675,
-                        -0.1770000010728836,
-                        1.2699999809265137
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        0.5,
-                        -40.029998779296875,
-                        -3.109999895095825
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.259999990463257,
-                        1.5700000524520874,
-                        1.9500000476837158
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.7900000214576721,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 0.9200000166893005,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
-                    "max_widht_f": 0.9190000295639038,
+                    "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.12800000607967377,
+                    "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
-                    "min_widht_f": 0.03500000014901161,
-                    "nb_min_neighbours": 5,
+                    "min_widht_f": 0.0,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -1895,30 +1925,30 @@
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.9120349287986755,
-                        0.2447320520877838,
-                        0.329087495803833,
+                        1.0,
                         0.0,
-                        0.021951034665107727,
-                        0.7721510529518127,
-                        -0.6350597143173218,
                         0.0,
-                        -0.40952473878860474,
-                        0.586420476436615,
-                        0.6988565325737,
                         0.0,
-                        1.0046825408935547,
-                        -0.8709785342216492,
-                        0.18514910340309143,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -1927,7 +1957,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -1947,7 +1977,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 6,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -1956,15 +1986,15 @@
                     "erosion_connectivity": 3,
                     "erosion_loops": 1,
                     "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
+                        0.19607843458652496,
+                        0.615686297416687,
+                        0.3803921639919281
                     ],
                     "filter_depth_with_body_tracking": false,
                     "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": false,
+                    "filter_depth_with_color": true,
                     "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": false,
+                    "invalidate_color_from_depth": true,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": false,
@@ -2002,7 +2032,7 @@
                         0.0
                     ],
                     "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
+                    "remove_after_closest_point": true,
                     "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
@@ -2015,7 +2045,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -2030,19 +2060,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -2061,24 +2091,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 3,
-                        "mode": 3,
+                        "id_device": 6,
+                        "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 960,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": 8,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -2114,10 +2144,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -2140,60 +2174,60 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        -0.014000000432133675,
-                        -0.20999999344348907,
-                        1.375
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        -0.10999999940395355,
-                        -36.099998474121094,
-                        -3.4700000286102295
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.259999990463257,
-                        1.559999942779541,
-                        2.0199999809265137
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 2,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.7900000214576721,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 0.9200000166893005,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
-                    "max_widht_f": 0.9190000295639038,
+                    "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.12800000607967377,
+                    "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
-                    "min_widht_f": 0.03500000014901161,
-                    "nb_min_neighbours": 5,
+                    "min_widht_f": 0.0,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -2215,30 +2249,30 @@
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.8237046003341675,
-                        0.47135820984840393,
-                        -0.3151701092720032,
+                        1.0,
                         0.0,
-                        0.03997667133808136,
-                        -0.6027297973632813,
-                        -0.7969433069229126,
                         0.0,
-                        -0.5656082034111023,
-                        0.6438463926315308,
-                        -0.5153146386146545,
                         0.0,
-                        1.0215237140655518,
-                        -1.2787370681762695,
-                        1.7708243131637573,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -2247,7 +2281,7 @@
         {
             "client_device": {
                 "base": {
-                    "type": 5,
+                    "type_string": "DC client device",
                     "version": 1
                 },
                 "calibration_filters": {
@@ -2267,7 +2301,7 @@
                         1.0
                     ],
                     "base": {
-                        "type": 6,
+                        "type_string": "filters",
                         "version": 1
                     },
                     "do_erosion": false,
@@ -2276,15 +2310,15 @@
                     "erosion_connectivity": 3,
                     "erosion_loops": 1,
                     "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
+                        0.19607843458652496,
+                        0.615686297416687,
+                        0.3803921639919281
                     ],
                     "filter_depth_with_body_tracking": false,
                     "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": false,
+                    "filter_depth_with_color": true,
                     "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": false,
+                    "invalidate_color_from_depth": true,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": false,
@@ -2322,7 +2356,7 @@
                         0.0
                     ],
                     "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
+                    "remove_after_closest_point": true,
                     "remove_from_point_distance": false,
                     "sphere": [
                         0.0,
@@ -2335,7 +2369,7 @@
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
-                        "type": 3,
+                        "type_string": "color",
                         "version": 1
                     },
                     "brightness": 128,
@@ -2350,19 +2384,19 @@
                 },
                 "connection": {
                     "base": {
-                        "type": 1,
+                        "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote"
                 },
                 "device": {
                     "base": {
-                        "type": 6,
+                        "type_string": "device",
                         "version": 1
                     },
                     "config": {
                         "base": {
-                            "type": 7,
+                            "type_string": "device config",
                             "version": 1
                         },
                         "bt_GPU_id": 0,
@@ -2381,24 +2415,24 @@
                             1.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
+                            -4.0,
                             0.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 1,
-                        "mode": 3,
+                        "id_device": 6,
+                        "mode": 4,
                         "open_device": true,
                         "start_reading": true,
-                        "subordinate_delay_usec": 1120,
-                        "synch_mode": 2,
+                        "subordinate_delay_usec": 0,
+                        "synch_mode": 1,
                         "synchronize_color_and_depth": true,
                         "type_device": 0
                     },
                     "data": {
                         "base": {
-                            "type": 8,
+                            "type_string": "device data",
                             "version": 1
                         },
                         "c_generation": {
@@ -2434,10 +2468,14 @@
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "color": false,
+                            "color_compression_mode": 0,
                             "dept_sized_color": false,
                             "depth": false,
+                            "depth_compression_mode": 0,
+                            "depth_sized_color_compression_mode": 0,
                             "imu": false,
                             "infra": false,
+                            "infra_compression_mode": 0,
                             "jpeg_compression_rate": 80
                         },
                         "s_generation": {
@@ -2460,27 +2498,27 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        0.11699999868869781,
-                        -0.057999998331069946,
-                        1.4149999618530273
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
-                        -0.10999999940395355,
-                        -41.790000915527344,
-                        -4.119999885559082
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_size": [
-                        2.2300000190734863,
-                        1.6200000047683716,
-                        2.069999933242798
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
-                        "type": 2,
+                        "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": true,
+                    "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
                     "erosion_loops": 1,
                     "filter_color": [
@@ -2489,31 +2527,31 @@
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "filter_depth_with_cloud": false,
+                    "filter_depth_with_color": true,
+                    "filter_depth_with_infra": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.7900000214576721,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 0.9200000166893005,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
-                    "max_widht_f": 0.9190000295639038,
+                    "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.12800000607967377,
+                    "min_height_f": 0.07999999821186066,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
-                    "min_widht_f": 0.03500000014901161,
-                    "nb_min_neighbours": 5,
+                    "min_widht_f": 0.0,
+                    "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
                         1.0,
@@ -2535,30 +2573,30 @@
                     "sphere": [
                         0.0,
                         0.0,
-                        1.5
+                        1.0
                     ]
                 },
                 "model": {
                     "base": {
-                        "type": 6,
+                        "type_string": "model",
                         "version": 1
                     },
                     "transformation": [
-                        0.8029559254646301,
-                        -0.24367128312587738,
-                        -0.5439541339874268,
+                        1.0,
                         0.0,
-                        0.08090013265609741,
-                        -0.8596153855323792,
-                        0.5044962763786316,
                         0.0,
-                        -0.5905226469039917,
-                        -0.4490942358970642,
-                        -0.6705202460289001,
                         0.0,
-                        1.0086950063705444,
-                        0.08683136105537415,
-                        1.885705590248108,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }

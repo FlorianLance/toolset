@@ -345,7 +345,11 @@ auto Logger::insert_line_to_log_file(MessageT type, std::string_view message) ->
 
     std::unique_lock<std::mutex> lock(Global::instancePtr->i->locker);
     if(Global::instancePtr->i->outStream){
-        (*Global::instancePtr->i->outStream) << to_html_line(type, message, true) << std::flush;
+        if(type != MessageT::normal){
+            (*Global::instancePtr->i->outStream) << to_html_line(type, message, true) << std::flush;
+        }else{
+            (*Global::instancePtr->i->outStream) << to_html_line(type, message, true);
+        }
     }
 }
 
@@ -382,6 +386,7 @@ auto Logger::clean() -> void {
 
     std::unique_lock<std::mutex> lock(Global::instancePtr->i->locker);
     if(Global::instancePtr->i->outStream){
+        (*Global::instancePtr->i->outStream) << std::flush;
         Global::instancePtr->i->outStream->close();
         Global::instancePtr->i->outStream = nullptr;
     }

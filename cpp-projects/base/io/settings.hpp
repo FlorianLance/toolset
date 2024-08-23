@@ -26,11 +26,14 @@
 
 #pragma once
 
+// std
+#include <span>
+
 // local
 #include "io_enum.hpp"
 
 // thirdparty
-#include "json.hpp"
+#include "json_fwd.hpp"
 
 namespace tool::io {
 

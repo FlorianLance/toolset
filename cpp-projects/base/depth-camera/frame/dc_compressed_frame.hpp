@@ -33,6 +33,40 @@
 
 namespace tool::cam{
 
+enum class DCCompressedDataType : std::int32_t{
+    Color, DepthSizedColor, DepthData, InfraData,
+    Calibration,Imu, Cloud,
+};
+
+struct TestFrame : Frame{
+
+    std::unordered_map<DCCompressedDataType, BinaryImageBuffer> imagesBuffers;
+    std::unordered_map<DCCompressedDataType, BinaryBuffer> dataBuffers;
+
+    auto write() -> void{
+        // write frame
+        // write mode
+        // write validVerticesCount
+        // write number of image buffers
+        // foreach buffer in imagesBuffers
+        //  write type
+        //  write width
+        //  write height
+        //  write data
+        // write number of data buffers
+        // foreach buffer in dataBuffers
+        //  write type
+        //  write size
+        //  write data
+    }
+
+    auto read() -> void{
+        // read frame
+        // read mode
+        // read validVerticesCount
+    }
+};
+
 struct DCCompressedFrame : Frame{
 
     // infos
@@ -57,6 +91,12 @@ struct DCCompressedFrame : Frame{
     Buffer<DCBody> bodyTracking;
     std::vector<std::array<float, 7>> audioFrames;
 
+    // test
+
+    // auto init_from_json(const nlohmann::json &json) -> void override;
+    // auto convert_to_json() const -> nlohmann::json override;
+
+    // # legacy
     // getters
     auto data_size() const noexcept -> size_t override;
 
@@ -67,7 +107,7 @@ struct DCCompressedFrame : Frame{
     auto write_to_file_stream(std::ofstream &file) -> void override;
     auto write_to_data(std::span<std::byte> data, size_t &offset) -> void override;
 
-    // # legacy
+    // ## super legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
 };

@@ -27,9 +27,9 @@
 #pragma once
 
 // local
-#include "geometry/point3.hpp"
-#include "geometry/matrix4.hpp"
-#include "graphics/color/rgb.hpp"
+// #include "geometry/point3.hpp"
+// #include "geometry/matrix4.hpp"
+// #include "graphics/color/rgb.hpp"
 #include "utility/logger.hpp"
 
 // thirdparty
@@ -49,6 +49,16 @@ namespace tool::data{
     //     ++unreadCount;
     //     return T{};
     // }
+
+    template <typename T>
+    static auto read_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key, T &value) -> void{
+        if(j.contains(key)){
+            value = j[key].template get<T>();
+            return;
+        }
+        Logger::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
+        ++unreadCount;
+    }
 
     template <typename T>
     static auto read_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> T{
@@ -87,8 +97,6 @@ namespace tool::data{
         }
         ++unreadCount;
     }
-
-
 
     template <typename T>
     static auto add_array(nlohmann::json &j, std::string_view key, std::span<const T> data) -> void{

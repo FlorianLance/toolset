@@ -51,7 +51,6 @@ HEADERS += \
 
 SOURCES += \
     demos_main.cpp \
-    imgui_demo.cpp \
     ## samples
     tests/samples/draw_samples_window.cpp \
     tests/samples/samples.cpp \

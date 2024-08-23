@@ -76,7 +76,7 @@ struct DCCloudDrawer{
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
     cam::DCFiltersSettings filtersS;
-    cam::DCDeviceSettings deviceS;
+    // cam::DCDeviceSettings deviceS;
     cam::DCDeviceDisplaySettings display;
 
     // init

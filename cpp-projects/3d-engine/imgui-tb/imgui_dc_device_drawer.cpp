@@ -34,9 +34,6 @@
 #include "utility/string.hpp"
 #include "utility/logger.hpp"
 
-// local
-// #define IMGUI_DEFINE_MATH_OPERATORS
-// #include "imgui/imgui.h"
 
 using namespace tool::graphics;
 
@@ -47,20 +44,18 @@ auto DCDeviceDrawer::initialize() -> void{
 
 auto DCDeviceDrawer::update() -> void{
 
-    locker.lock();
-    if(lastFrame != nullptr){
-        if(previousFrameId != lastFrame->idCapture){
-            update_from_frame(0, lastFrame);
-            previousFrameId = lastFrame->idCapture;
-            redrawClouds = true;
-        }
+    m_locker.lock();
+    if(m_lastFrame != nullptr){
+        update_from_frame(0, m_lastFrame);
+        m_redrawClouds = true;
+        m_lastFrame = nullptr;
     }
-    locker.unlock();
+    m_locker.unlock();
 
-    if(redrawClouds || has_to_redraw_clouds()){
+    if(m_redrawClouds || has_to_redraw_clouds()){
         draw_clouds_to_fbo();
     }
-    redrawClouds = false;
+    m_redrawClouds = false;
 }
 
 auto DCDeviceDrawer::draw(bool focusWindow) -> void{
@@ -68,26 +63,25 @@ auto DCDeviceDrawer::draw(bool focusWindow) -> void{
 }
 
 auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
-    locker.lock();
-    lastFrame = frame;    
-    locker.unlock();
+    m_locker.lock();
+    m_lastFrame = std::move(frame);
+    m_locker.unlock();
 }
 
-auto DCDeviceDrawer::save_cloud(const std::string &path) -> void{
+auto DCDeviceDrawer::save_current_cloud(const std::string &path) -> void{
 
     Logger::log("DCDeviceDrawer::save_cloud\n");
 
-    std::shared_ptr<cam::DCFrame> frame = nullptr;
-    locker.lock();
-    frame = lastFrame;
-    locker.unlock();
+    m_locker.lock();
+    auto frame = cloudsD.front()->lastFrame;
+    m_locker.unlock();
 
     if(frame != nullptr){
         Logger::message(std::format("save_cloud: {}\n", path));
         tool::io::CloudIO::save_cloud(path, frame->cloud);
         auto c = frame->cloud;
         for(size_t ii = 0; ii < c.size(); ++ii){
-            c.colors[ii] += c.normals[ii];
+            c.colors[ii] = c.normals[ii];
         }
 
         auto nPath = path;

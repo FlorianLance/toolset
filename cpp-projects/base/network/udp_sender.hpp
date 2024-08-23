@@ -40,26 +40,28 @@ public:
     ~UdpSender();
 
     auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol) -> bool;
+    auto set_sender_id(size_t idClient) -> void;
     auto clean_socket() -> void;
+
     [[nodiscard]] auto is_connected() const noexcept -> bool;
 
     auto update_size_packets(size_t newUdpPacketSize) -> void;
     auto simulate_failure(bool enabled, int percentage) -> void;
 
+    // headers
+    auto generate_dataless_header(MessageTypeId type) -> Header;
+    auto generate_header(MessageTypeId type) -> Header;
+    // data
+    auto generate_data_packets(MessageTypeId messageType, std::span<const std::byte> dataToSend, std::vector<std::vector<std::byte>> &dataPackets) -> void;
+    // send
     auto send_message(MessageTypeId messageType, std::span<const std::byte> data = {}) -> size_t;
+    auto send_packet_data(std::span<const std::byte> packetData) -> size_t;
+    auto send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t;
 
     // signals
     sigslot::signal<bool> connection_state_signal;
 
 private:
-
-    // headers
-    auto generate_dataless_header(MessageTypeId type) -> Header;
-    auto generate_header(MessageTypeId type) -> Header;
-    // data
-    auto send_data(Header &header, std::span<const std::byte> dataToSend) -> size_t;
-    auto send_packet_data(std::span<const std::byte> packetData) -> size_t;
-
 
     struct Impl;
     std::unique_ptr<Impl> i;

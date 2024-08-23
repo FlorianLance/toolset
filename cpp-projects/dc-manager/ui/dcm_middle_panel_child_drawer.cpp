@@ -37,7 +37,11 @@ using namespace tool::cam;
 auto DCMMiddlePanelChildDrawer::initialize(size_t nbGrabbers) -> void {
     directD.initialize(nbGrabbers);
     recorderD.initialize(nbGrabbers);
-    calibratorD.initialize(nbGrabbers);    
+    calibratorD.initialize(nbGrabbers);
+}
+
+auto DCMMiddlePanelChildDrawer::update() -> void{
+    directD.update();
 }
 
 auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const DCMUiSettings &uiS) -> void {

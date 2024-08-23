@@ -78,10 +78,10 @@ struct DCCloudsSceneDrawer{
     auto draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor=true, bool drawDepth=true, bool drawInfra=true, bool drawCloud=true, std::optional<geo::Pt2<int>> sizeW = std::nullopt) -> void;
 
     // settings
-    auto update_cloud_display_settings(size_t idCloud, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
+    auto update_device_display_settings(size_t idCloud, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
     auto update_scene_display_settings(const cam::DCSceneDisplaySettings &sdS) -> void;
     auto update_model_settings(size_t idCloud, const cam::DCModelSettings &model)  -> void;
-    auto update_device_settings(size_t idCloud, const cam::DCDeviceSettings &deviceS) -> void;
+    // auto update_device_settings(size_t idCloud, const cam::DCDeviceSettings &deviceS) -> void;
     auto update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filtersS) -> void;
 
     // signals

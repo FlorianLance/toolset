@@ -88,12 +88,12 @@ Header::Header(std::span<const std::byte> packet){
 }
 
 auto UdpMessageReception::update(const Header &header, std::span<const std::byte> dataToProcess, DoubleRingBuffer<std::byte> &rBuffer) -> void{
-
-    if(!infos.contains(header.idMessage)){
+    
+    if(!infos.contains(header.messageId)){
 
         // first packet of a new frame to be received
         UdpReceptionInfo info;
-        info.idMessage              = header.idMessage;
+        info.idMessage              = header.messageId;
         info.firstPacketReceivedTS  = Time::nanoseconds_since_epoch();
         info.totalNumberOfPacket    = header.totalNumberPackets;
         info.totalSizeBytes         = header.totalSizeBytes;
@@ -105,11 +105,11 @@ auto UdpMessageReception::update(const Header &header, std::span<const std::byte
         }
         info.messageData = rBuffer.current_span(info.totalDataSizeBytes);
         rBuffer.increment();
-
-        infos[header.idMessage] = std::move(info);
+        
+        infos[header.messageId] = std::move(info);
     }
-
-    UdpReceptionInfo &info = infos[header.idMessage];
+    
+    UdpReceptionInfo &info = infos[header.messageId];
 
     if(header.currentPacketId == 0){
         // packet n°1 of the frame received
@@ -144,8 +144,8 @@ auto UdpMessageReception::check_message_timeout() -> size_t{
 }
 
 auto UdpMessageReception::message_fully_received(const Header &header) -> std::optional<UdpReceptionInfo>{
-
-    const UdpReceptionInfo &info = infos[header.idMessage];
+    
+    const UdpReceptionInfo &info = infos[header.messageId];
 
     std::optional<UdpReceptionInfo> oInfo = {};
     if(info.all_packets_received()){
@@ -165,7 +165,7 @@ auto UdpMessageReception::message_fully_received(const Header &header) -> std::o
             messageReceived.increment();
             Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] All packets for message [{}] received, but with invalid size: [{}], expected: [{}].\n"sv, info.idMessage, info.totalBytesReceived, info.totalSizeBytes));
         }
-        infos.erase(header.idMessage);
+        infos.erase(header.messageId);
     }
     return oInfo;
 }

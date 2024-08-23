@@ -31,8 +31,6 @@
 
 // base
 #include "utility/logger.hpp"
-#include "utility/paths.hpp"
-#include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcm_signals.hpp"
@@ -41,30 +39,30 @@ using namespace tool;
 using namespace cam;
 using namespace graphics;
 
+DCMController::~DCMController(){
+    model->clean();
+    model = nullptr;
+    view  = nullptr;
+}
+
 auto DCMController::initialize() -> bool{
 
-    // init logger
-    Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
+    auto lg = LogGuard("DCMController::initialize"sv);
 
-    // init view
-    view  = std::make_unique<DCMView>();
+    // create view
+    view = std::make_unique<DCMView>();
 
-    // init model
+    // create model
     model = std::make_unique<DCMModel>();
 
     // connections
     set_connections();
 
-    // initialize
-    // # model
+    // initialize model
     if(!model->initialize()){
         Logger::error("Invalid model initialization.\n");
         return false;
     }
-    // # view
-    view->initialize(model->client.devices_nb());
-
-    // model->trigger_settings();
 
     return true;
 }
@@ -102,40 +100,39 @@ auto DCMController::set_connections() -> void{
         std::cerr << error;
     });
 
-    // to model
-    // # model
-    // ## settings
+    // ui
+    // ## controller
+    s->initialize_signal.connect([&](size_t nbDevices){
+        Logger::log("Initialize view\n"sv);
+        view->initialize(model->client.devices_nb());
+        model->trigger_settings();
+    });
+    view->gl()->update_signal.connect(                      &DCMController::update,                             this);
+    view->gl()->draw_imgui_signal.connect(                  &DCMController::draw_ui,                            this);
+    // ## calibrator
+    s->update_calibration_display_signal.connect(           &DCCalibrator::trigger_data_updated,                calibrator);
+    // ## calibrator drawer
+    calibrator->data_updated_signal.connect(                &DCCalibratorDrawer::set_data,                      calibratorD);
+    // ## left panel drawer
+    client->feedback_received_signal.connect(               &DCMLeftPanelChildDrawer::append_feedback_log,      leftD);
+    // ## player drawer
+    player->initialize_signal.connect(                      &DCPlayerDrawer::initialize,                        playerD);
+
+    // # actions
+    // ## model
     s->process_settings_action_signal.connect(              &DCMModel::process_settings_action,                 model.get());
-    // ## calibration
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,                         model.get());
-    // # client
-    // ## connection
+    // ## client
     s->init_connection_signal.connect(                      &DCClient::init_connection_with_remote_device,      client);
-    // ## commands
     s->command_signal.connect(                              &DCClient::apply_command,                           client);
-    // ## settings
-    s->update_device_settings_signal.connect(               &DCClient::update_device_settings,                  client);
-    s->update_filters_settings_signal.connect(              &DCClient::update_filters,                          client);
-    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters,              client);
-    s->update_color_settings_signal.connect(                &DCClient::update_color_settings,                   client);
-    s->update_delay_settings_signal.connect(                &DCClient::update_delay_settings,                   client);
-    s->update_model_settings_signal.connect(                &DCClient::update_model_settings,                   client);
-    calibrator->validated_calibration_signal.connect(       &DCClient::update_model_settings,                   client);
-    s->update_scene_display_settings_signal.connect(        &DCClient::update_scene_display_settings,           client);
-    s->update_cloud_display_settings_signal.connect(        &DCClient::update_cloud_display_settings,           client);
-    // # recorder
-    s->update_recorder_settings_signal.connect(             &DCVideoRecorder::update_settings,                  recorder);
-    s->update_model_settings_signal.connect(                &DCVideoRecorder::update_model,                     recorder);
-    calibrator->validated_calibration_signal.connect(       &DCVideoRecorder::update_model,                     recorder);
-    client->new_compressed_frame_signal.connect(            &DCVideoRecorder::add_compressed_frame,             recorder);
-    client->new_frame_signal.connect(                       &DCVideoRecorder::add_frame,                        recorder);
-    s->start_recorder_signal.connect(                       &DCVideoRecorder::start_recording,                  recorder);
-    s->stop_recorder_signal.connect(                        &DCVideoRecorder::stop_recording,                   recorder);
-    s->reset_recorder_signal.connect(                       &DCVideoRecorder::reset_recording,                  recorder);
-    s->set_recorder_time_signal.connect(                    &DCVideoRecorder::set_time,                         recorder);
-    s->save_recorder_signal.connect(                        &DCVideoRecorder::save_to_file,                     recorder);
-    // # player
-    s->update_player_settings_signal.connect(               &DCVideoPlayer::update_settings,                    player);
+    // ## calibration
+    s->start_calibration_registering_signal.connect(        &DCCalibrator::start_registering,                   calibrator);
+    s->stop_calibration_registering_signal.connect(         &DCCalibrator::stop_registering,                    calibrator);
+    s->reset_calibration_registering_signal.connect(        &DCCalibrator::reset_registering,                   calibrator);
+    s->recompute_registering_processing_signal.connect(     &DCCalibrator::process_all_frames,                  calibrator);
+    s->validate_calibration_signal.connect(                 &DCCalibrator::validate_calibration,                calibrator);
+    s->calibrate_signal.connect(                            &DCCalibrator::calibrate,                           calibrator);
+    // ## player
     s->start_player_signal.connect(                         &DCVideoPlayer::start_video,                        player);
     s->pause_player_signal.connect(                         &DCVideoPlayer::pause_video,                        player);
     s->restart_player_signal.connect(                       &DCVideoPlayer::go_to_start_time,                   player);
@@ -147,61 +144,79 @@ auto DCMController::set_connections() -> void{
     s->save_cloud_player_signal.connect(                    &DCVideoPlayer::save_cloud_to_file,                 player);
     s->merge_player_signal.connect(                         &DCVideoPlayer::merge,                              player);
     s->info_player_signal.connect(                          &DCVideoPlayer::display_infos,                      player);
-    // # calibrator
-    client->new_frame_signal.connect(                       &DCCalibrator::add_frame,                           calibrator);
-    s->update_calibration_settings_signal.connect(          &DCCalibrator::update_settings,                     calibrator);
-    s->start_calibration_registering_signal.connect(        &DCCalibrator::start_registering,                   calibrator);
-    s->stop_calibration_registering_signal.connect(         &DCCalibrator::stop_registering,                    calibrator);
-    s->reset_calibration_registering_signal.connect(        &DCCalibrator::reset_registering,                   calibrator);
-    s->recompute_registering_processing_signal.connect(     &DCCalibrator::process_all_frames,                  calibrator);
-    s->update_calibration_display_signal.connect(           &DCCalibrator::trigger_data_updated,                calibrator);
-    s->validate_calibration_signal.connect(                 &DCCalibrator::validate_calibration,                calibrator);
-    s->calibrate_signal.connect(                            &DCCalibrator::calibrate,                           calibrator);
-
-    // to drawers
-    // # left panel drawer
-    client->feedback_received_signal.connect(               &DCMLeftPanelChildDrawer::append_feedback_log,      leftD);
-    // # direct drawer
-    s->update_scene_display_settings_signal.connect(        &DCDirectDrawer::update_scene_display_settings,     directD);
-    s->update_cloud_display_settings_signal.connect(        &DCDirectDrawer::update_cloud_display_settings,     directD);
-    client->new_frame_signal.connect(                       &DCDirectDrawer::set_frame,                         directD);
-    s->update_filters_settings_signal.connect(              &DCDirectDrawer::update_filters_settings,           directD);
-    s->update_device_settings_signal.connect(               &DCDirectDrawer::update_device_settings,            directD);
-    s->update_model_settings_signal.connect(                &DCDirectDrawer::update_model_settings,             directD);
+    // ## recorder
+    s->start_recorder_signal.connect(                       &DCVideoRecorder::start_recording,                  recorder);
+    s->stop_recorder_signal.connect(                        &DCVideoRecorder::stop_recording,                   recorder);
+    s->reset_recorder_signal.connect(                       &DCVideoRecorder::reset_recording,                  recorder);
+    s->set_recorder_time_signal.connect(                    &DCVideoRecorder::set_time,                         recorder);
+    s->save_recorder_signal.connect(                        &DCVideoRecorder::save_to_file,                     recorder);
+    // ## direct drawer
     s->save_current_cloud_signal.connect(                   &DCDirectDrawer::save_current_cloud,                directD);
-    calibrator->validated_calibration_signal.connect(       &DCDirectDrawer::update_model_settings,             directD);
-    // # recorder drawer
-    s->update_scene_display_settings_signal.connect(        &DCRecorderDrawer::update_scene_display_settings,   recorderD);
-    s->update_cloud_display_settings_signal.connect(        &DCRecorderDrawer::update_cloud_display_settings,   recorderD);
-    s->update_model_settings_signal.connect(                &DCRecorderDrawer::update_model_settings,           recorderD);
-    calibrator->validated_calibration_signal.connect(       &DCRecorderDrawer::update_model_settings,           recorderD);
-    recorder->new_frame_signal.connect(                     &DCRecorderDrawer::set_frame,                       recorderD);
-    // # player drawer
-    s->update_scene_display_settings_signal.connect(        &DCPlayerDrawer::update_scene_display_settings,     playerD);
-    s->update_cloud_display_settings_signal.connect(        &DCPlayerDrawer::update_cloud_display_settings,     playerD);
-    player->initialize_signal.connect(                      &DCPlayerDrawer::initialize,                        playerD);
-    player->new_frame_signal.connect(                       &DCPlayerDrawer::set_frame,                         playerD);
 
-    // # calibration drawer
-    s->update_scene_display_settings_signal.connect(        &DCCalibratorDrawer::update_scene_display_settings, calibratorD);
-    s->update_cloud_display_settings_signal.connect(        &DCCalibratorDrawer::update_grabber_cloud_display,  calibratorD);
+    // # settings
+    // ## client
+    s->update_model_settings_signal.connect(                &DCClient::update_model_settings,                   client);
+    calibrator->validated_calibration_signal.connect(       &DCClient::update_model_settings,                   client);
+    s->update_device_settings_signal.connect(               &DCClient::update_device_settings,                  client);
+    s->update_filters_settings_signal.connect(              &DCClient::update_filters,                          client);
+    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters,              client);
+    s->update_color_settings_signal.connect(                &DCClient::update_color_settings,                   client);
+    s->update_delay_settings_signal.connect(                &DCClient::update_delay_settings,                   client);
+    // s->update_scene_display_settings_signal.connect(        &DCClient::update_scene_display_settings,           client);
+    // s->update_cloud_display_settings_signal.connect(        &DCClient::update_cloud_display_settings,           client);
+
+    // ## calibration
+    s->update_calibration_settings_signal.connect(          &DCCalibrator::update_settings,                     calibrator);
+    // ## player
+    s->update_player_settings_signal.connect(               &DCVideoPlayer::update_settings,                    player);
+    // ## recorder
+    s->update_model_settings_signal.connect(                &DCVideoRecorder::update_model,                     recorder);
+    calibrator->validated_calibration_signal.connect(       &DCVideoRecorder::update_model,                     recorder);
+    s->update_recorder_settings_signal.connect(             &DCVideoRecorder::update_settings,                  recorder);
+    // ## direct drawer
+    s->update_model_settings_signal.connect(                &DCDirectDrawer::update_model_settings,             directD);
+    calibrator->validated_calibration_signal.connect(       &DCDirectDrawer::update_model_settings,             directD);
+    s->update_filters_settings_signal.connect(              &DCDirectDrawer::update_filters_settings,           directD);
+    s->update_scene_display_settings_signal.connect(        &DCDirectDrawer::update_scene_display_settings,     directD);
+    s->update_cloud_display_settings_signal.connect(        &DCDirectDrawer::update_device_display_settings,    directD);
+    // ## calibration drawer
     s->update_model_settings_signal.connect(                &DCCalibratorDrawer::update_grabber_model,          calibratorD);
-    s->update_calibration_drawer_settings_signal.connect(   &DCCalibratorDrawer::update_settings,               calibratorD);
-    calibrator->data_updated_signal.connect(                &DCCalibratorDrawer::set_data,                      calibratorD);
     calibrator->new_calibration_signal.connect(             &DCCalibratorDrawer::update_grabber_model,          calibratorD);
     calibrator->validated_calibration_signal.connect(       &DCCalibratorDrawer::update_grabber_model,          calibratorD);
+    s->update_scene_display_settings_signal.connect(        &DCCalibratorDrawer::update_scene_display_settings, calibratorD);
+    s->update_cloud_display_settings_signal.connect(        &DCCalibratorDrawer::update_grabber_cloud_display,  calibratorD);
+    s->update_calibration_drawer_settings_signal.connect(   &DCCalibratorDrawer::update_settings,               calibratorD);
+    // # player drawer
+    s->update_scene_display_settings_signal.connect(        &DCPlayerDrawer::update_scene_display_settings,     playerD);
+    s->update_cloud_display_settings_signal.connect(        &DCPlayerDrawer::update_device_display_settings,    playerD);
+    // ## recorder drawer
+    s->update_model_settings_signal.connect(                &DCRecorderDrawer::update_model_settings,           recorderD);
+    calibrator->validated_calibration_signal.connect(       &DCRecorderDrawer::update_model_settings,           recorderD);
+    s->update_scene_display_settings_signal.connect(        &DCRecorderDrawer::update_scene_display_settings,   recorderD);
+    s->update_cloud_display_settings_signal.connect(        &DCRecorderDrawer::update_device_display_settings,  recorderD);
 
-    // to controller
-    view->gl()->update_signal.connect(                      &DCMController::update,                             this);
-    view->gl()->draw_imgui_signal.connect(                  &DCMController::draw_ui,                            this);
+    // # frames
+    // ## player
+    player->new_frame_signal.connect(                       &DCPlayerDrawer::set_frame,                         playerD);
+    // ## recorder
+    client->new_compressed_frame_signal.connect(            &DCVideoRecorder::add_compressed_frame,             recorder);
+    client->new_frame_signal.connect(                       &DCVideoRecorder::add_frame,                        recorder);
+    // ## calibrator
+    client->new_frame_signal.connect(                       &DCCalibrator::add_frame,                           calibrator);
+    // ## direct drawer
+    client->new_frame_signal.connect(                       &DCDirectDrawer::update_frame,                         directD);
+    // ## recorder drawer
+    recorder->new_frame_signal.connect(                     &DCRecorderDrawer::set_frame,                       recorderD);
 }
 
 auto DCMController::start() -> void{
+    auto lg = LogGuard("DCMController::start"sv);
     view->start();
 }
 
 auto DCMController::update() -> void{
     model->update();
+    view->update();
 }
 
 auto DCMController::draw_ui(geo::Pt2f size) -> void{

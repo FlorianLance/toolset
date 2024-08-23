@@ -16,7 +16,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8888
             },
-            "type": "local"
+            "type": "remote"
         },
         {
             "device": {
@@ -30,7 +30,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8890
             },
-            "type": "local"
+            "type": "remote"
         },
         {
             "device": {
@@ -44,7 +44,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8892
             },
-            "type": "local"
+            "type": "remote"
         },
         {
             "device": {
@@ -58,7 +58,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8894
             },
-            "type": "local"
+            "type": "remote"
 		},
         {
             "device": {
@@ -72,7 +72,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8896
             },
-            "type": "local"
+            "type": "remote"
         },
 		{
             "device": {
@@ -86,7 +86,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8898
             },
-            "type": "local"
+            "type": "remote"
         },
 		{
             "device": {
@@ -100,7 +100,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8900
             },
-            "type": "local"
+            "type": "remote"
         },
 		{
             "device": {
@@ -114,7 +114,7 @@
                 "sending_address": "localhost",
                 "sending_port": 8902
             },
-            "type": "local"
+            "type": "remote"
         }
     ]
 }

@@ -45,7 +45,7 @@ struct DCGrabberPaths{
 struct DCSettingsPaths{
 
     static auto get() -> DCSettingsPaths*;
-    auto initialize(char *argv[], cam::DCApplicationType type, std::optional<size_t> id = std::nullopt) -> void;
+    auto initialize(char *argv[], cam::DCApplicationType type, size_t id) -> void;
 
     auto client_settings_file() -> std::string;
     auto server_settings_file() -> std::string;

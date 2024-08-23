@@ -35,21 +35,32 @@
 namespace tool::cam {
 
 struct DCFrameCompressionSettings{
+
+    // data to add
+    bool addCalibration        = true;
+    bool addDepth              = true;
+    bool addDepthSizedColor    = true;
+    bool addColor              = false;
+    bool addInfra              = false;
+    bool addBodyIdMap          = false; // TODO
+    bool addCloud              = false; // TO REMOVE ?
+    bool addBodyTracking       = false; // TODO
+    bool addAudio              = false; // TODO
+    bool addImu                = false; // TODO
+
+    // compression mode
+    DCCompressionMode depthCompressionMode           = DCCompressionMode::FastPFor;
+    DCCompressionMode depthSizedColorCompressionMode = DCCompressionMode::JPEG;
+    DCCompressionMode colorCompressionMode           = DCCompressionMode::JPEG;
+    DCCompressionMode infraCompressionMode           = DCCompressionMode::FastPFor;
     std::uint8_t jpegCompressionRate = 80;
-    bool calibration        = true;
-    bool depth              = true;
-    bool depthSizedColor    = true;
-    bool color              = false;
-    bool infra              = false;
-    bool bodyIdMap          = false;
-    bool cloud              = false;
-    bool bodyTracking       = false;
-    bool audio              = false;
-    bool imu                = false;
+
+    // reconstruction
     CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
 
+
     [[nodiscard]] constexpr auto has_data_to_compress() const noexcept -> bool{
-        return  calibration || color || depth || depthSizedColor || infra || bodyTracking || audio || imu || cloud;
+        return  addCalibration || addColor || addDepth || addDepthSizedColor || addInfra || addBodyTracking || addAudio || addImu || addCloud;
     }
 
     auto init_from_json(const nlohmann::json &json) -> void;

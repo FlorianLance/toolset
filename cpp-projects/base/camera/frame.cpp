@@ -29,8 +29,11 @@
 // local
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
+#include "data/json_utility.hpp"
 
 using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
 
 auto Frame::data_size() const noexcept -> size_t{
     return
@@ -38,6 +41,57 @@ auto Frame::data_size() const noexcept -> size_t{
         sizeof(idCapture) +
         sizeof(afterCaptureTS) +
         sizeof(receivedTS);
+}
+
+auto Frame::init_from_json(const nlohmann::json &json) -> void {
+
+    size_t unreadCount = 0;
+    idDevice        = read_value<std::uint8_t>(json, unreadCount, "id_device"sv);
+    idCapture       = read_value<std::int32_t>(json, unreadCount, "id_capture"sv);
+    afterCaptureTS  = read_value<std::int64_t>(json, unreadCount, "after_capture_ts"sv);
+    receivedTS      = read_value<std::int64_t>(json, unreadCount, "received_ts"sv);
+
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[Frame::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));
+    }
+}
+
+auto Frame::convert_to_json() const -> nlohmann::json {
+
+    return json{
+        {"id_device"sv,           idDevice},
+        {"id_capture"sv,          idCapture},
+        {"after_capture_ts"sv,    afterCaptureTS},
+        {"received_ts"sv,         receivedTS},
+    };
+}
+
+auto Frame::convert_to_json_str() const -> std::string{
+    return convert_to_json().dump(4);
+}
+
+auto Frame::convert_to_json_binary() const -> std::vector<uint8_t>{
+    return json::to_bson(convert_to_json());
+}
+
+auto Frame::init_from_json_binary(std::span<const uint8_t> jsonData) -> bool{
+    try {
+        init_from_json(json::from_bson(jsonData));
+        return true;
+    }catch (const json::parse_error& e){
+        Logger::error(std::format("Frame::init_from_json_binary] Error while reading JSON binary [{}] \n", e.what()));
+    }
+    return false;
+}
+
+auto Frame::init_from_json_str(std::string_view jsonStr) -> bool{
+    try {
+        init_from_json(json::parse(jsonStr));
+        return true;
+    }catch (const json::parse_error& e){
+        Logger::error(std::format("Frame::init_from_json_str] Error while reading JSON string [{}]\n", e.what()));
+    }
+    return false;
 }
 
 auto Frame::init_from_file_stream(std::ifstream &file) -> void{

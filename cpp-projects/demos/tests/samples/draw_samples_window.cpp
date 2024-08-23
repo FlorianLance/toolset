@@ -205,7 +205,7 @@ auto DrawSampleWindow::init_textures() -> bool{
 
 auto DrawSampleWindow::init_models() -> bool{
 
-    std::string mesh = Paths::resourcesDir.value() + "/meshes";
+    std::string mesh = Paths::get()->resourcesDir.string() + "/meshes";
     bool loaded = true;
     {
         Logger::message("Add models.\n");

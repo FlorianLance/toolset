@@ -46,6 +46,7 @@ DCMModel::~DCMModel(){
 }
 
 auto DCMModel::clean() -> void {
+    auto lg = LogGuard("DCMModel::clean"sv);
     client.clean();
 }
 
@@ -73,30 +74,31 @@ auto DCMModel::initialize() -> bool{
 
             // read filters settings file
             if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = paths->client_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No filters settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.filtersFilePath));
+                Logger::error(std::format("[DCMModel] No filters settings file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read calibration filters settings file
             if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  paths->client_calibration_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No calibration settings file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.calibrationFiltersFilePath));
+                Logger::error(std::format("[DCMModel] No calibration settings file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read device settings file
             if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = paths->client_device_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No device file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.deviceFilePath));
+                Logger::error(std::format("[DCMModel] No device file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read color settings file
             if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = paths->client_color_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No color file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.colorFilePath));
+                Logger::error(std::format("[DCMModel] No color file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read model settings file
             if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  paths->client_model_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No model file found for grabber with id [{}], default parameters used instead [{}].\n", deviceClientS.id, deviceClientS.modelFilePath));
+                Logger::error(std::format("[DCMModel] No model file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
         }
     }
 
-    size_t nbConnections = client.devices_nb();
-    recorder.initialize(nbConnections);
-    calibrator.initialize(nbConnections);
+    size_t nbDevices = client.devices_nb();
+    recorder.initialize(nbDevices);
+    calibrator.initialize(nbDevices);
+    DCMSignals::get()->initialize_signal(nbDevices);
 
     return true;
 }
@@ -157,9 +159,10 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
             if(!path.empty()){
                 clean();
                 if(client.initialize(path)){
-                    size_t nbConnections = client.devices_nb();
-                    recorder.initialize(nbConnections);
-                    calibrator.initialize(nbConnections);
+                    size_t nbDevices = client.devices_nb();
+                    recorder.initialize(nbDevices);
+                    calibrator.initialize(nbDevices);
+                    DCMSignals::get()->initialize_signal(nbDevices);
                 }
             }
         }else {
@@ -243,5 +246,11 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
             }
         }
     }
+}
+
+auto DCMModel::trigger_settings() -> void{
+    auto lg = LogGuard("DCMModel::trigger_settings"sv);
+    // color settings: device
+    // DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
 }
 

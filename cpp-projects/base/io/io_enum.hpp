@@ -54,22 +54,22 @@ using TDCSettings = std::tuple<
     SettingsType,               std::string_view>;
 static constexpr TupleArray<SettingsType::SizeEnum, TDCSettings> settings = {{
     TDCSettings
-    {SettingsType::Udp_server,      "UDP server"sv},
-    {SettingsType::Dc_server, "DC server"sv},
-    {SettingsType::Dc_client, "DC client"sv},
-    {SettingsType::Dc_client_connection, "DC client connection"sv},
-    {SettingsType::Dc_client_device, "DC client device"sv},
-    {SettingsType::Udp_connection,  "UDP connection"sv},
-    {SettingsType::Remote_server,   "remote server"sv},
-    {SettingsType::Filters,         "filters"sv},
-    {SettingsType::Color,           "color"sv},
-    {SettingsType::Model,           "model"sv},
-    {SettingsType::Delay,           "delay"sv},
-    {SettingsType::Device,          "device"sv},
-    {SettingsType::Device_config,   "device config"sv},
-    {SettingsType::Device_data,     "device data"sv},
-    {SettingsType::Device_actions,  "device actions"sv},
-    {SettingsType::Undefined,       "undefined"sv},
+    {SettingsType::Udp_server,              "UDP server"sv},
+    {SettingsType::Dc_server,               "DC server"sv},
+    {SettingsType::Dc_client,               "DC client"sv},
+    {SettingsType::Dc_client_connection,    "DC client connection"sv},
+    {SettingsType::Dc_client_device,        "DC client device"sv},
+    {SettingsType::Udp_connection,          "UDP connection"sv},
+    {SettingsType::Remote_server,           "remote server"sv},
+    {SettingsType::Filters,                 "filters"sv},
+    {SettingsType::Color,                   "color"sv},
+    {SettingsType::Model,                   "model"sv},
+    {SettingsType::Delay,                   "delay"sv},
+    {SettingsType::Device,                  "device"sv},
+    {SettingsType::Device_config,           "device config"sv},
+    {SettingsType::Device_data,             "device data"sv},
+    {SettingsType::Device_actions,          "device actions"sv},
+    {SettingsType::Undefined,               "undefined"sv},
 }};
 
 [[maybe_unused]] static constexpr auto settings_name(SettingsType s) -> std::string_view{

@@ -46,6 +46,7 @@ struct DCClientDeviceSettings : public io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
+    // settings
     DCDeviceConnectionSettings connectionS;
     DCFiltersSettings filtersS;
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();

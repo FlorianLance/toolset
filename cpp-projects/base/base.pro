@@ -54,6 +54,7 @@ HEADERS += \
     depth-camera/settings/dc_device_data_settings.hpp \
     depth-camera/settings/dc_frame_compression_settings.hpp \
     depth-camera/settings/dc_frame_generation_settings.hpp \
+    depth-camera/settings/dc_server_settings.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
     io/io_enum.hpp \
@@ -321,6 +322,7 @@ SOURCES += \
     depth-camera/settings/dc_device_connection_settings.cpp \
     depth-camera/settings/dc_frame_compression_settings.cpp \
     depth-camera/settings/dc_frame_generation_settings.cpp \
+    depth-camera/settings/dc_server_settings.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \

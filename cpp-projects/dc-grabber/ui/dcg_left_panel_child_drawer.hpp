@@ -33,7 +33,8 @@
 // 3d-engine
 #include "imgui-tb/imgui_logs.hpp"
 
-
+// local
+#include "dcg_model.hpp"
 
 namespace tool::graphics {
 
@@ -41,7 +42,7 @@ class DCGLeftPanelChildDrawer{
 
 public:
 
-    auto draw(geo::Pt2f size, int windowFlags, DCGSettings &settings, DCGStates &states) -> void;
+    auto draw(geo::Pt2f size, int windowFlags, DCGModel *model) -> void;
     auto append_log(const std::string &log) -> void;
 
     bool settingsPaneDisplayed = false;
@@ -49,21 +50,15 @@ public:
 
 private:
 
-    auto draw_client_info_tab_item(DCGSettings &settings) -> void;
-
-    auto draw_device_tab_item(
-        cam::DCDeviceSettings &device) -> void;
-
-    auto draw_filters_tab_item(
-        ui::DCGDisplaySettings &ui,
-        const cam::DCConfigSettings &config,
-        cam::DCFiltersSettings &filters) -> void;
+    auto draw_client_info_tab_item(cam::DCServerSettings &settings) -> void;
+    auto draw_device_tab_item(cam::DCDeviceSettings &device) -> void;
+    auto draw_filters_tab_item(const cam::DCConfigSettings &config, cam::DCFiltersSettings &filters) -> void;
 
     auto draw_colors_settings_tab_item(
         cam::DCType type,
         cam::DCColorSettings &colors) -> void;
     
-    auto draw_display_tab_item(ui::DCGDisplaySettings &ui)-> void;
+    auto draw_display_tab_item(DCGUiSettings &uiS, cam::DCSceneDisplaySettings &sceneDisplayS, cam::DCDeviceDisplaySettings &displayS)-> void;
     auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;

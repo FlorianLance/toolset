@@ -104,24 +104,26 @@ protected:
 
     // sfml events
     // # mouse
-    virtual auto mouse_button_pressed_event(sf::Event::MouseButtonEvent event) -> void;
-    virtual auto mouse_button_released_event(sf::Event::MouseButtonEvent event) -> void;
-    virtual auto mouse_moved_event(sf::Event::MouseMoveEvent event) -> void;
-    virtual auto mouse_wheel_scroll_event(sf::Event::MouseWheelScrollEvent event) -> void;
+
+    virtual auto mouse_button_pressed_event(sf::Event::MouseButtonPressed event) -> void;
+    virtual auto mouse_button_released_event(sf::Event::MouseButtonReleased event) -> void;
+    virtual auto mouse_moved_event(sf::Event::MouseMoved event) -> void;
+    virtual auto mouse_wheel_scroll_event(sf::Event::MouseWheelScrolled event) -> void;
     // # key
-    virtual auto keyboard_keypress_event(sf::Event::KeyEvent event) -> void;
-    virtual auto keyboard_keyrelease_event(sf::Event::KeyEvent event) -> void {static_cast<void>(event);}
+    virtual auto keyboard_keypress_event(sf::Event::KeyPressed event) -> void;
+    virtual auto keyboard_keyrelease_event(sf::Event::KeyReleased event) -> void {static_cast<void>(event);}
 
     // camera
-    virtual auto update_camera_with_mouse_button_event(sf::Event::MouseButtonEvent event, bool pressed) -> void;;
-    virtual auto update_camera_with_keyboardpress_event(sf::Event::KeyEvent event) -> void;;
-    virtual auto update_camera_with_mouse_scroll_event(sf::Event::MouseWheelScrollEvent event) -> void;;
-    virtual auto update_camera_with_mouse_moved_event(sf::Event::MouseMoveEvent event) -> void;;
+    virtual auto update_camera_with_mouse_button_pressed_event(sf::Event::MouseButtonPressed event) -> void;
+    virtual auto update_camera_with_mouse_button_released_event(sf::Event::MouseButtonReleased event) -> void;
+    virtual auto update_camera_with_keyboardpress_event(sf::Event::KeyPressed event) -> void;
+    virtual auto update_camera_with_mouse_scroll_event(sf::Event::MouseWheelScrolled event) -> void;
+    virtual auto update_camera_with_mouse_moved_event(sf::Event::MouseMoved event) -> void;
 
 private:
 
     auto init_sfml_window() -> bool;
-    auto base_resize_windows(sf::Event::SizeEvent size) -> void;
+    auto base_resize_windows(sf::Event::Resized event) -> void;
 
 protected:
 

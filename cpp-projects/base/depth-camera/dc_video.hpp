@@ -97,6 +97,7 @@ public:
 
     // i/o
     auto save_to_file(std::string_view path) -> bool;
+    auto save_to_json_file(std::string_view path) -> bool;
     auto load_from_file(std::string_view path) -> bool;   
 
 protected:

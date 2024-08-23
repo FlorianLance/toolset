@@ -38,8 +38,7 @@
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "network/settings/udp_server_settings.hpp"
 
-// local
-#include "data/dcg_ui_settings.hpp"
+
 
 namespace tool {
 
@@ -51,59 +50,46 @@ class DCGSignals{
 public:
     static auto get() -> DCGSignals*;
 
-    // input
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_direct_signal;
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_direct_signal;
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
-
-    // network
-    SSS<net::UdpServerSettings*> init_network_sending_settings_signal;
-
-    // recording
+    // actions
+    // # network
+    SSS<> ping_server_signal;
+    SSS<bool, int> sending_failure_signal;
+    // # i/o
+    SSS<std::string> save_cloud_to_file_signal;
+    SSS<std::string> save_global_settings_file_signal;
+    SSS<> reset_device_settings_signal;
+    SSS<> reset_filters_settings_signal;
+    SSS<> reset_color_settings_signal;
+    SSS<> reset_model_settings_signal;
+    SSS<> load_default_device_settings_file_signal;
+    SSS<> load_default_filters_settings_file_signal;
+    SSS<> load_default_color_settings_file_signal;
+    SSS<> load_default_model_settings_file_signal;
+    SSS<std::string> load_subpart_device_settings_file_signal;
+    SSS<std::string> load_subpart_filters_settings_file_signal;
+    SSS<std::string> load_subpart_color_settings_file_signal;
+    SSS<std::string> load_subpart_model_settings_file_signal;
+    // # recordings
     SSS<> start_recorder_signal;
     SSS<> stop_recorder_signal;
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
 
     // settings
     SSS<const cam::DCDeviceSettings&> update_device_settings_signal;
-    SSS<const cam::DCColorSettings&> update_color_settings_signal;
-    SSS<size_t,const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
-    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
-    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
-    SSS<cam::DCDelaySettings> update_delay_settings_signal;
     SSS<const cam::DCFiltersSettings&> update_filters_signal;
-    SSS<ui::DCGDisplaySettings*> update_grabber_display_settings_signal;
+    SSS<const cam::DCColorSettings&> update_color_settings_signal;
+    SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
+    SSS<cam::DCDelaySettings> update_delay_settings_signal;
+    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
+    SSS<size_t,const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
 
-    // i/o
-    // # data
-    SSS<std::string> save_cloud_to_file_signal;
-    // # network
-    SSS<> save_current_network_settings_signal;
-    // # device
-    SSS<> reset_device_settings_signal;
-    SSS<> save_device_settings_to_default_file_signal;
-    SSS<> save_device_settings_to_current_hostname_file_signal;
-    SSS<> load_default_device_settings_file_signal;
-    SSS<> load_current_hostname_device_settings_file_signal;
-    // # filters
-    SSS<> reset_filters_signal;
-    SSS<> save_filters_to_default_file_signal;
-    SSS<> save_filters_to_current_hostname_file_signal;
-    SSS<> load_default_filters_file_signal;
-    SSS<> load_current_hostname_filters_file_signal;
-    // # color
-    SSS<> reset_color_settings_signal;
-    SSS<> save_color_settings_to_default_file_signal;
-    SSS<> save_color_settings_to_current_hostname_file_signal;
-    SSS<> load_default_color_settings_file_signal;
-    SSS<> load_current_hostname_color_settings_file_signal;
-    // # other
-    SSS<> ping_server_signal;
-    SSS<> debug_device_send_signal;
-    SSS<bool, int> sending_failure_signal;
+    // input
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_direct_signal;
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_direct_signal;
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 
 };
 

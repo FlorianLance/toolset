@@ -40,6 +40,7 @@ struct DCClientSettings : public io::Settings{
     auto convert_to_json() const -> nlohmann::json override;
 
     // settings
+    size_t clientId = 0;
     DCSceneDisplaySettings sceneDisplayS;
     Buffer<DCClientDeviceSettings> devicesS;
     bool useNormalFilteringSettings = true;

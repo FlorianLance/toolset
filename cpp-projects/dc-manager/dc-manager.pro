@@ -41,31 +41,33 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
+    # MCV
+    dcm_model.hpp \
     dcm_view.hpp \
     dcm_controller.hpp \    
-    dcm_model.hpp \
+    # connections
     dcm_signals.hpp \
     # data
     data/dcm_ui_settings.hpp \
-    # drawers
+    # ui
     ui/dcm_gl_window.hpp \
-    drawers/dcm_left_panel_child_drawer.hpp \
-    drawers/dcm_main_window_drawer.hpp \
-    drawers/dcm_middle_panel_child_drawer.hpp \
+    ui/dcm_left_panel_child_drawer.hpp \
+    ui/dcm_main_window_drawer.hpp \
+    ui/dcm_middle_panel_child_drawer.hpp \
 
 SOURCES += \
-    dcm_controller.cpp \    
     dcm_main.cpp \
+    # MCV
     dcm_model.cpp \
-    dcm_signals.cpp \
     dcm_view.cpp \
-    # drawers
+    dcm_controller.cpp \        
+    # connections
+    dcm_signals.cpp \    
+    # ui
     ui/dcm_gl_window.cpp \
     ui/dcm_left_panel_child_drawer.cpp \
     ui/dcm_main_window_drawer.cpp \
     ui/dcm_middle_panel_child_drawer.cpp \
-    ui/imgui_demo.cpp \
-    # data
 
 DISTFILES += \
     ../_build/bin/dc-manager/resources/shaders/cloud.fs \

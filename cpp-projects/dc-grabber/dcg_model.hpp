@@ -31,10 +31,13 @@
 #include "depth-camera/dc_device.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
 
-// loocal
-#include "data/dcg_ui_settings.hpp"
-
 namespace tool {
+
+struct DCGUiSettings{
+    // runtime
+    bool focusWindow = false;
+    int currentWindow = 3;
+};
 
 struct DCGModel{
 
@@ -45,15 +48,26 @@ struct DCGModel{
     auto update() -> void;
     auto clean() -> void;
 
+    auto save_global_settings(const std::string &settingsFilePath) -> bool;
+    auto reset_device_settings() -> void;
+    auto reset_filters_filters() -> void;
+    auto reset_color_settings() -> void;
+    auto reset_model_settings() -> void;
+    auto load_default_device_settings_file() -> void;
+    auto load_default_filters_settings_file() -> void;
+    auto load_default_color_settings_file() -> void;
+    auto load_default_model_settings_file() -> void;
+    auto load_subpart_device_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_subpart_filters_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_subpart_color_settings_file(const std::string &settingsFilePath) -> bool;
+    auto load_subpart_model_settings_file(const std::string &settingsFilePath) -> bool;
+    auto trigger_settings() -> void;
 
-    auto process_settings_action(cam::SettingsAction sAction) -> void{}
-    // // settings
-    // auto trigger_settings() -> void;
 
     // ui
-    ui::DCGDisplaySettings uiSettings;
+    DCGUiSettings uiSettings;
 
-    net::DCServer server;
+    cam::DCServer server;
     std::unique_ptr<cam::DCDevice> device = nullptr;
     cam::DCVideoRecorder recorder;    
 };

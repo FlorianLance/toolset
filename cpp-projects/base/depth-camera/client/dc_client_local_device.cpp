@@ -30,7 +30,7 @@
 // local
 #include "depth-camera/dc_device.hpp"
 #include "utility/time.hpp"
-
+#include "utility/logger.hpp"
 
 using namespace tool::cam;
 using namespace tool::net;
@@ -47,7 +47,8 @@ DCClientLocalDevice::~DCClientLocalDevice(){
 }
 
 auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool{
-    
+
+    auto lg = LogGuard("[DCClientLocalDevice::initialize]");
     static_cast<void>(connectionS);
 
     i->device = std::make_unique<DCDevice>();
@@ -78,8 +79,11 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
 }
 
 auto DCClientLocalDevice::clean() -> void {
-    i->device->stop_thread();
-    i->device = nullptr;
+    auto lg = LogGuard("[DCClientLocalDevice::clean]");
+    if(i->device){
+        i->device->stop_thread();
+        i->device = nullptr;
+    }
 }
 
 // auto DCClientLocalDevice::apply_command(Command command) -> void{

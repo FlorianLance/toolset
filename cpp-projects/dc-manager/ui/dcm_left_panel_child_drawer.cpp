@@ -98,8 +98,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
 
             draw_grabbers_ui(model);
 
-            static ImGuiID tabId = 0;
-            if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_tabbar1")){
+            if(ImGui::BeginTabBar("###settings_tabbar1")){
                 draw_commands_tab_item(model);
                 draw_settings_tab_item(model);
                 draw_recorder_tab_item(model->recorder);
@@ -263,7 +262,7 @@ auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSe
         DCMSignals::get()->update_calibration_display_signal();
     }
     if(cStates.updateFilteringMode){
-        DCMSignals::get()->update_filtering_mode_signal(cStates.filteringMode == 0);
+        // DCMSignals::get()->update_filtering_mode_signal(cStates.filteringMode == 0);
     }
 
     cStates.reset_actions();
@@ -674,7 +673,8 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
             if(currentDeviceType != clientDeviceS.deviceS.configS.typeDevice){
                 tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
                 clientDeviceS.colorS.set_default_values(clientDeviceS.deviceS.configS.typeDevice);
-                DCMSignals::get()->color_settings_reset_signal(clientDeviceS.id, clientDeviceS.colorS);
+                // DCMSignals::get()->color_settings_reset_signal(clientDeviceS.id, clientDeviceS.colorS);
+                DCMSignals::get()->update_color_settings_signal(clientDeviceS.id, clientDeviceS.colorS);
             }
             if(std::get<1>(ret) || (updateCurrent && std::get<0>(ret))){
                 DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);

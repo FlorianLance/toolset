@@ -26,6 +26,8 @@
 
 // base
 #include "utility/logger.hpp"
+#include "utility/paths.hpp"
+#include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcg_controller.hpp"
@@ -48,15 +50,19 @@ int main(int argc, char *argv[]){
         }
     }
     if(!id.has_value()){
-        Logger::warning("No id argument found.\n"sv);
+        Logger::warning("No id argument found, use 0 instead.\n"sv);
+        id = 0;
     }
 
     // init paths
-    DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id);
+    DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id.value());
+
+    // init logger
+    Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
 
     // init controller
     DCGController controller;
-    if(controller.initialize(id.has_value() ? id.value() : 0)){
+    if(controller.initialize(id.value())){
         controller.start();
         Logger::message("Exit Depth camera grabber.\n");
         return 1;

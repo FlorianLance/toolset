@@ -43,7 +43,7 @@ public:
     ~DCClientRemoteDevice() override;
     
     auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
-    auto init_remote_connection() -> void;
+    auto init_remote_connection(size_t idClient) -> void;
     auto clean() -> void override;
 
     auto apply_command(net::Command command) -> void override;
@@ -67,8 +67,8 @@ public:
     SSS<size_t> timeout_messages_signal;
 
 private:
-
-    auto process_received_packet(net::EndPoint endpoint, net::Header header, std::span<const std::byte> dataToProcess) -> void;
+    
+    auto process_received_packet(net::EndPointId endpoint, net::Header header, std::span<const std::byte> dataToProcess) -> void;
     auto receive_feedback(net::Header h, net::Feedback message) -> void;
     auto receive_compressed_frame(net::Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void;
     auto receive_network_status(net::UdpNetworkStatus status) -> void;

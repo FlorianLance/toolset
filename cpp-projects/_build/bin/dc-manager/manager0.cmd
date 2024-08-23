@@ -1,0 +1,1 @@
+dc-manager.exe -i0

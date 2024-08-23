@@ -26,49 +26,13 @@
 
 #pragma once
 
-
 // local
 #include "thirdparty/sigslot/signal.hpp"
-#include "network/network_types.hpp"
-#include "network/settings/udp_server_settings.hpp"
 #include "network/settings/udp_connection_settings.hpp"
-#include "depth-camera/settings/dc_filters_settings.hpp"
-#include "depth-camera/settings/dc_device_settings.hpp"
-#include "depth-camera/settings/dc_color_settings.hpp"
-#include "depth-camera/settings/dc_delay_settings.hpp"
-#include "depth-camera/settings/dc_model_settings.hpp"
+#include "depth-camera/settings/dc_server_settings.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 
-namespace tool::net {
-struct DCServerSettings  : public io::Settings{
-
-    DCServerSettings();
-    auto init_from_json(const nlohmann::json &json) -> void override;
-    auto convert_to_json() const -> nlohmann::json override;
-
-    auto update_reading_interface() -> void;
-
-    // settings
-    net::UdpServerSettings udpServerS;
-    cam::DCDeviceSettings deviceS = cam::DCDeviceSettings::default_init_for_grabber();
-    cam::DCFiltersSettings filtersS;
-    cam::DCFiltersSettings calibrationFiltersS = cam::DCFiltersSettings::default_init_for_calibration();
-    cam::DCColorSettings colorS;
-    cam::DCModelSettings modelS;
-    cam::DCDelaySettings delayS;
-
-    // runtime
-    std::string globalFilePath;
-    std::string deviceFilePath;
-    std::string filtersFilePath;
-    std::string calibrationFiltersFilePath;
-    std::string colorFilePath;
-    std::string modelFilePath;
-    std::vector<net::Interface> ipv4Interfaces = {};
-    std::vector<net::Interface> ipv6Interfaces = {};
-    net::Interface udpReadingInterface;
-};
-
+namespace tool::cam {
 
 class DCServer{
 public:
@@ -81,31 +45,18 @@ public:
     auto clean() -> void;
     auto update() -> void;
 
-    // settings
-    auto load_device_settings_file(const std::string &settingsFilePath) -> bool;
-    auto load_filters_settings_file(const std::string &settingsFilePath) -> bool;
-    auto load_calibration_filters_settings_file(const std::string &settingsFilePath) -> bool;
-    auto load_color_settings_file(const std::string &settingsFilePath) -> bool;
-    auto load_model_settings_file(const std::string &settingsFilePath) -> bool;
-
-    // actions
-    auto send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    // auto send_feedback(Feedback feedback) -> void;
-
-    // others
+    // network
     auto ping_server() -> void;
     auto simulate_sending_failure(bool enabled, int percentage) -> void; // TODO
 
-    // monitoring
-    auto last_frame_id_sent() const -> size_t;
-    auto last_frame_sent_timestamp_nanosecond() const -> std::chrono::nanoseconds;
-    auto last_frame_sending_duration_micros_s() const -> std::int64_t;
+    // frames
+    auto send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
 
     DCServerSettings settings;
 
     // signals
     // # connection
-    sigslot::signal<UdpConnectionSettings> receive_init_server_client_connection_signal;
+    // sigslot::signal<std::shared_ptr<net::UdpConnectionSettings>> receive_init_server_client_connection_signal;
     // # settings received
     sigslot::signal<std::shared_ptr<cam::DCDeviceSettings>> receive_device_settings_signal;
     sigslot::signal<std::shared_ptr<cam::DCColorSettings>> receive_color_settings_signal;

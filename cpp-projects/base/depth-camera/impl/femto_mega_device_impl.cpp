@@ -38,7 +38,7 @@ FemtoMegaDeviceImpl::FemtoMegaDeviceImpl(){
 
     auto lg = LogGuard("FemtoMegaDeviceImpl::FemtoMegaDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
-    orbbecD->query_devices("Femto Mega"sv, true);
+    // orbbecD->query_devices("Femto Mega"sv, true);
 }
 
 auto FemtoMegaDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{

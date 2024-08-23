@@ -40,83 +40,17 @@
 #include "utility/unordered_map.hpp"
 #include "network/udp_reader.hpp"
 #include "network/udp_sender.hpp"
-#include "data/json_utility.hpp"
 #include "depth-camera/network/dc_network_enums.hpp"
-
 
 using namespace tool::net;
 using namespace tool::cam;
 using namespace std::chrono;
-using namespace tool::data;
-using json = nlohmann::json;
-
-DCServerSettings::DCServerSettings(){
-
-    sType   = io::SettingsType::Dc_server;
-    version = io::SettingsVersion::LastVersion;
-
-    // retrieve interfaces
-    ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
-    if(ipv4Interfaces.size() == 0){
-        Logger::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
-    }
-    ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
-    if(ipv6Interfaces.size() == 0){
-        Logger::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
-    }
-}
-
-auto DCServerSettings::init_from_json(const nlohmann::json &json) -> void{
-
-    size_t unreadCount = 0;
-    // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
-    // local
-    udpServerS.init_from_json(read_object(json, unreadCount, "udp_server"sv));
-    deviceS.init_from_json(read_object(json, unreadCount, "device"sv));
-    filtersS.init_from_json(read_object(json, unreadCount, "filters"sv));
-    calibrationFiltersS.init_from_json(read_object(json, unreadCount, "calibration_filters"sv));
-    colorS.init_from_json(read_object(json, unreadCount, "color"sv));
-    modelS.init_from_json(read_object(json, unreadCount, "model"sv));
-    // delayS.init_from_json(read_object(json, unreadCount, "delay"sv))
-
-    if(unreadCount != 0){
-        Logger::warning(std::format("[DCServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
-    }
-
-    update_reading_interface();
-}
-
-auto DCServerSettings::convert_to_json() const -> nlohmann::json{
-    json json;
-    // base
-    add_value(json, "base"sv, io::Settings::convert_to_json());
-    // local
-    add_value(json, "udp_server"sv, udpServerS.convert_to_json());
-    add_value(json, "device"sv, deviceS.convert_to_json());
-    add_value(json, "filters"sv, filtersS.convert_to_json());
-    add_value(json, "calibration_filters"sv, calibrationFiltersS.convert_to_json());
-    add_value(json, "color"sv, colorS.convert_to_json());
-    add_value(json, "model"sv, modelS.convert_to_json());
-    // add_value(json, "delay"sv, delayS.convert_to_json());
-
-    return json;
-}
-
-auto DCServerSettings::update_reading_interface() -> void{
-    const auto &interfaces = (udpServerS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-    if(udpServerS.udpReadingInterfaceId < interfaces.size()){
-        udpReadingInterface = interfaces[udpServerS.udpReadingInterfaceId];
-    }else{
-        Logger::error("[DCServerSettings::update_reading_interface] Invalid reading interface id, not enough interfaces.\n");
-    }
-}
 
 template<class T>
-using EndOpt = std::pair<EndPoint, std::optional<T>>;
+using EndOpt = std::pair<EndPointId, std::optional<T>>;
 
 template<class T>
-using EndPtr = std::pair<EndPoint, std::shared_ptr<T>>;
+using EndPtr = std::pair<EndPointId, std::shared_ptr<T>>;
 
 using Mess =
     std::variant<
@@ -165,14 +99,15 @@ struct DCServer::Impl{
 
     // sending
     // # messages
-    SafeQueue<std::pair<EndPoint, std::variant<std::shared_ptr<cam::DCCompressedFrame>, Feedback, Ping>>> messagesToSend;
-    // # monitoring
-    std::atomic<size_t> lastFrameIdSent = 0;
-    std::atomic<std::int64_t> lastFrameSendingDurationMicrosS = 0;
-    std::atomic<std::chrono::nanoseconds> lastFrameSentTS;    
+    SafeQueue<std::pair<EndPointId, std::variant<UdpConnectionSettings, std::shared_ptr<cam::DCCompressedFrame>, Feedback, Ping>>> messagesToSend;
+    std::vector<std::vector<std::byte>> dataPackets;
 
     // signals
     sigslot::signal<size_t> timeout_messages_signal;
+    sigslot::signal<std::string> client_connected_signal;
+    sigslot::signal<std::string> client_disconnected_signal;
+    sigslot::signal<size_t, std::chrono::nanoseconds, std::int64_t> last_frame_sent_signal;
+
 
 private:
 
@@ -197,20 +132,22 @@ DCServer::Impl::Impl(){
 
     messagesBuffer.resize(100, 0);
 
-    initServerClientConnectionMessage   = std::make_pair<EndPoint, std::optional<UdpConnectionSettings>>({},    std::nullopt);
-    updateDelaySettingsMessage          = std::make_pair<EndPoint, std::optional<DCDelaySettings>>({},          std::nullopt);
-    commandMessage                      = std::make_pair<EndPoint, std::optional<Command>>({},                  std::nullopt);
+    initServerClientConnectionMessage   = std::make_pair<EndPointId, std::optional<UdpConnectionSettings>>({},    std::nullopt);
+    updateDelaySettingsMessage          = std::make_pair<EndPointId, std::optional<DCDelaySettings>>({},          std::nullopt);
+    commandMessage                      = std::make_pair<EndPointId, std::optional<Command>>({},                  std::nullopt);
 
-    updateDeviceSettingsMessage         = std::make_pair<EndPoint, std::shared_ptr<DCDeviceSettings>>({},  nullptr);
-    updateColorSettingsMessage          = std::make_pair<EndPoint, std::shared_ptr<DCColorSettings>>({},   nullptr);
-    updateFiltersSettingsMessage        = std::make_pair<EndPoint, std::shared_ptr<DCFiltersSettings>>({}, nullptr);
+    updateDeviceSettingsMessage         = std::make_pair<EndPointId, std::shared_ptr<DCDeviceSettings>>({},  nullptr);
+    updateColorSettingsMessage          = std::make_pair<EndPointId, std::shared_ptr<DCColorSettings>>({},   nullptr);
+    updateFiltersSettingsMessage        = std::make_pair<EndPointId, std::shared_ptr<DCFiltersSettings>>({}, nullptr);
 
     receptions[static_cast<std::int8_t>(DCMessageType::init_server_client_connection)] = {};
     receptions[static_cast<std::int8_t>(DCMessageType::update_device_settings)] = {};
     receptions[static_cast<std::int8_t>(DCMessageType::update_filters_settings)] = {};
     receptions[static_cast<std::int8_t>(DCMessageType::update_color_settings)] = {};
 
-    udpReader.packed_received_signal.connect([&](EndPoint endpoint, Header header, std::span<const std::byte> dataToProcess){
+    udpReader.packed_received_signal.connect([&](EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess){
+
+        Logger::message("[DCServer] packet received.\n");
 
         switch (static_cast<DCMessageType>(header.type)) {
         case DCMessageType::init_server_client_connection:{
@@ -316,7 +253,7 @@ DCServer::Impl::Impl(){
 auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int readingPort, Protocol protocol) -> bool{
 
     this->protocol = protocol;
-    if(!udpReader.init_socket(readingAdress,readingPort, protocol)){
+    if(!udpReader.init_socket(readingAdress, readingPort, protocol)){
         return false;
     }
     udpReader.start_reading_thread();
@@ -351,6 +288,8 @@ auto DCServer::Impl::stop_sending_thread() -> void{
     }
 }
 
+#include <iostream>
+
 auto DCServer::Impl::send_messages_loop() -> void{
 
     sendMessages = true;
@@ -368,70 +307,109 @@ auto DCServer::Impl::send_messages_loop() -> void{
             continue;
         }
 
+
         bool frameSent = false;
 
-        if(auto feedbackPtr = std::get_if<Feedback>(&message.value().second); feedbackPtr != nullptr){
+        if(auto udpConnectionS = std::get_if<UdpConnectionSettings>(&message.value().second); udpConnectionS != nullptr){
 
-            Feedback feedback = *feedbackPtr;
-            Logger::message(std::format("[DCClientConnection] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
             const auto &endPoint = message.value().first;
-
-            if(udpSenders.contains(endPoint.id)){
-
-                udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
-
-                // check if disconnect command received
-                if(feedback.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::command)){
-                    udpSenders[endPoint.id]->clean_socket();
-                    udpSenders.erase(endPoint.id);
-                }
-
-            }else if(feedback.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::init_server_client_connection)){
+            if(!udpSenders.contains(endPoint.id)){
 
                 // add new sender
                 udpSenders[endPoint.id] = std::make_unique<UdpSender>();
 
                 // init socket
-                if(udpSenders[endPoint.id]->init_socket(endPoint.address, std::to_string(endPoint.port), protocol)){
+                if(udpSenders[endPoint.id]->init_socket(udpConnectionS->address, std::to_string(udpConnectionS->port), protocol)){
+
+                    Feedback feedback;
+                    feedback.feedback = FeedbackType::message_received;
+                    feedback.receivedMessageType = static_cast<MessageTypeId>(DCMessageType::init_server_client_connection);
                     udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
+
+                    Logger::message(std::format("[DCServer] New client connected [{}].\n", endPoint.id));
+                    client_connected_signal(endPoint.id);
+                }else{
+                    udpSenders.erase(endPoint.id);
+                    Logger::error(std::format("[DCServer] Cannot connect to client [{}].\n", endPoint.id));
+                }
+            }else{
+                Logger::warning(std::format("[DCServer] Client already connected [{}].\n", endPoint.id));
+            }
+
+        }else if(auto feedbackPtr = std::get_if<Feedback>(&message.value().second); feedbackPtr != nullptr){
+
+            Feedback feedback = *feedbackPtr;
+            Logger::message(std::format("[DCServer] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
+            const auto &endPoint = message.value().first;
+
+            if(udpSenders.contains(endPoint.id)){
+
+                // send message received feedback
+                udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
+
+                // command received
+                if(feedback.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::command)){
+
+                    // disconnect command received
+                    if(feedback.feedback == FeedbackType::disconnect){
+                        Logger::message(std::format("[DCServer] Client disconnected [{}].\n", endPoint.id));
+                        udpSenders[endPoint.id]->clean_socket();
+                        udpSenders.erase(endPoint.id);
+                        client_disconnected_signal(endPoint.id);
+                    }
                 }
             }
 
         }else if(auto frame = std::get_if<std::shared_ptr<cam::DCCompressedFrame>>(&message.value().second); frame != nullptr){
 
-            auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
+            if(!udpSenders.empty()){
 
-            std::shared_ptr<cam::DCCompressedFrame> f = *frame;
+                auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 
-            // resize buffer if necessary
-            size_t totalDataSizeBytes = f->data_size();
-            if(senderBuffer.size() < totalDataSizeBytes){
-                senderBuffer.resize(totalDataSizeBytes);
-            }
+                std::shared_ptr<cam::DCCompressedFrame> f = *frame;
 
-            // write data to buffer
-            size_t offset = 0;
-            auto bData = std::span(senderBuffer.data(), totalDataSizeBytes);
-            f->write_to_data(bData, offset);
-
-            // send to all clients
-            std::atomic<size_t> count = 0;
-            std::for_each(std::execution::par_unseq, std::begin(udpSenders), std::end(udpSenders), [&](auto &senderP){
-                if(senderP.second->send_message(static_cast<MessageTypeId>(DCMessageType::compressed_frame_data), bData)){
-                    ++count;
+                // resize buffer if necessary
+                size_t totalDataSizeBytes = f->data_size();
+                if(senderBuffer.size() < totalDataSizeBytes){
+                    senderBuffer.resize(totalDataSizeBytes);
                 }
-            });
 
-            // update last frame id sent if at least on frame sent
-            if(count != 0){
-                lastFrameIdSent = f->idCapture;
-                frameSent = true;
+                // write data to buffer
+                size_t offset = 0;
+                auto bData = std::span(senderBuffer.data(), totalDataSizeBytes);
+                f->write_to_data(bData, offset);
+
+                // generate all packets
+                (*udpSenders.begin()).second->generate_data_packets(static_cast<MessageTypeId>(DCMessageType::compressed_frame_data), bData, dataPackets);
+
+                // send all packets
+                std::atomic<size_t> count = 0;
+                std::for_each(std::execution::par_unseq, std::begin(udpSenders), std::end(udpSenders), [&](auto &senderP){
+                    size_t nbBytesSent = 0;
+                    for(const auto &dataPacket : dataPackets){
+                        auto nbBytesS = senderP.second->send_packet_data(dataPacket);
+                        nbBytesSent += nbBytesS;
+                    }
+                    if(nbBytesSent != 0){
+                        ++count;
+                    }
+                });
+
+                // std::atomic<size_t> count = 0;
+                // std::for_each(std::execution::par_unseq, std::begin(udpSenders), std::end(udpSenders), [&](auto &senderP){
+                //     if(senderP.second->send_message(static_cast<MessageTypeId>(DCMessageType::compressed_frame_data), bData)){
+                //         ++count;
+                //     }
+                // });
+
+                // update last frame id sent if at least on frame sent
+                if(count != 0){
+                    frameSent = true;
+
+                    std::chrono::nanoseconds lastFrameSentTS = Time::nanoseconds_since_epoch();
+                    last_frame_sent_signal(f->idCapture, lastFrameSentTS, std::chrono::duration_cast<std::chrono::microseconds>(lastFrameSentTS - beforeSendingFrameTS).count());
+                }
             }
-
-            // update timestamp
-            auto afterSendintFrameTS = Time::nanoseconds_since_epoch();
-            lastFrameSendingDurationMicrosS = std::chrono::duration_cast<std::chrono::microseconds>(afterSendintFrameTS - beforeSendingFrameTS).count();
-            lastFrameSentTS = afterSendintFrameTS;
 
         }else if(auto pingPtr = std::get_if<Ping>(&message.value().second); pingPtr != nullptr){
 
@@ -453,10 +431,23 @@ auto DCServer::Impl::send_messages_loop() -> void{
     }
 }
 
-
-
 DCServer::DCServer(): i(std::make_unique<Impl>()){
+
     i->timeout_messages_signal.connect(&DCServer::timeout_messages_signal, this);
+    i->client_connected_signal.connect([&](std::string id){
+        std::unique_lock lg(settings.cInfos.lock);
+        settings.cInfos.clientsConnected.insert(id);
+    });
+    i->client_disconnected_signal.connect([&](std::string id){
+        std::unique_lock lg(settings.cInfos.lock);
+        settings.cInfos.clientsConnected.erase(id);
+    });
+    i->last_frame_sent_signal.connect([&](size_t idFrame, std::chrono::nanoseconds ts, std::int64_t sendingDurationMicroS){
+        std::unique_lock lg(settings.cInfos.lock);
+        settings.cInfos.lastFrameIdSent = idFrame;
+        settings.cInfos.lastFrameSentTS = ts;
+        settings.cInfos.lastFrameSentDurationMicroS = sendingDurationMicroS;
+    });
 }
 
 DCServer::~DCServer(){
@@ -485,7 +476,6 @@ auto DCServer::initialize(const std::string &serverSettingsPath) -> bool{
     }
 
     i->start_sending_thread();
-
     // ...
 
     return true;
@@ -498,11 +488,13 @@ auto DCServer::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
     }
     settings.update_reading_interface();
 
-
     if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
         // ...
         return false;
     }
+
+    i->start_sending_thread();
+    // ...
 
     return true;
 }
@@ -537,8 +529,9 @@ auto DCServer::update() -> void{
 
     // server client connection
     if(initServerClientConnectionM.second.has_value()){
-        i->messagesToSend.push_back(std::make_pair(initServerClientConnectionM.first, Feedback{static_cast<MessageTypeId>(DCMessageType::init_server_client_connection), FeedbackType::message_received}));;
-        receive_init_server_client_connection_signal(std::move(initServerClientConnectionM.second.value()));
+        // i->messagesToSend.push_back(std::make_pair(initServerClientConnectionM.first, Feedback{static_cast<MessageTypeId>(DCMessageType::init_server_client_connection), FeedbackType::message_received}));;
+        i->messagesToSend.push_back(std::make_pair(initServerClientConnectionM.first, std::move(initServerClientConnectionM.second.value())));;
+        // receive_init_server_client_connection_signal(std::move(initServerClientConnectionM.second.value()));
     }
 
     // delay
@@ -591,91 +584,22 @@ auto DCServer::update() -> void{
     }
 }
 
-auto DCServer::load_device_settings_file(const std::string &settingsFilePath) -> bool{
 
-    if(settings.deviceS.load_from_file(settingsFilePath)){
-        settings.deviceFilePath = settingsFilePath;
-    }else{
-        Logger::error("[DCServer::load_device_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n");
-        return false;
-    }
 
-    return true;
-}
-
-auto DCServer::load_filters_settings_file(const std::string &settingsFilePath) -> bool{
-
-    if(settings.filtersS.load_from_file(settingsFilePath)){
-        settings.filtersFilePath = settingsFilePath;
-    }else{
-        Logger::error("[DCServer::load_filters_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n");
-        return false;
-    }
-
-    return true;
-}
-
-auto DCServer::load_calibration_filters_settings_file(const std::string &settingsFilePath) -> bool{
-
-    if(settings.calibrationFiltersS.load_from_file(settingsFilePath)){
-        settings.calibrationFiltersFilePath = settingsFilePath;
-    }else{
-        Logger::error("[DCServer::load_calibration_filters_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n");
-        return false;
-    }
-
-    return true;
-}
-
-auto DCServer::load_color_settings_file(const std::string &settingsFilePath) -> bool{
-
-    if(settings.colorS.load_from_file(settingsFilePath)){
-        settings.colorFilePath = settingsFilePath;
-    }else{
-        Logger::error("[DCServer::load_color_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n");
-        return false;
-    }
-
-    return true;
-}
-
-auto DCServer::load_model_settings_file(const std::string &settingsFilePath) -> bool{
-
-    if(settings.modelS.load_from_file(settingsFilePath)){
-        settings.modelFilePath = settingsFilePath;
-    }else{
-        Logger::error("[DCServer::load_model_settings_file No device settings file found for device n°[{}]], default parameters used instead.\n");
-        return false;
-    }
-
-    return true;
-}
 
 auto DCServer::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
-    i->messagesToSend.push_back(std::make_pair(EndPoint{}, std::move(frame)));
+    i->messagesToSend.push_back(std::make_pair(EndPointId{}, std::move(frame)));
 }
 
 auto DCServer::ping_server() -> void{
-    i->messagesToSend.push_back(std::make_pair(EndPoint{}, Ping{}));
+    i->messagesToSend.push_back(std::make_pair(EndPointId{}, Ping{}));
 }
 
-auto DCServer::last_frame_id_sent() const -> size_t{
-    return i->lastFrameIdSent;
-}
 
-auto DCServer::last_frame_sent_timestamp_nanosecond() const -> nanoseconds {
-    return i->lastFrameSentTS;
-}
-
-auto DCServer::last_frame_sending_duration_micros_s() const -> int64_t{
-    return i->lastFrameSendingDurationMicrosS;
-}
 
 auto DCServer::simulate_sending_failure(bool enabled, int percentage) -> void{    
     //m_udpServerSender.simulate_failure(enabled, percentage);
 }
-
-
 
 
 

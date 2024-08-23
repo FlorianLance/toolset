@@ -53,18 +53,6 @@ public:
     // # remote device
     auto init_connection_with_remote_device(size_t idC) -> void;
     auto read_network_data_from_remote_device(size_t idC) -> size_t;
-
-    // settings
-    // ## per device
-    auto load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    auto load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    auto load_calibration_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    auto load_color_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    // ## mutli devices
-    auto load_device_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    auto load_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    auto load_calibration_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    auto load_color_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
     // # update
     auto use_normal_filters() -> void;
     auto use_calibration_filters() -> void;
@@ -86,6 +74,19 @@ public:
     sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
     sigslot::signal<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     sigslot::signal<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;
+
+    // // ### legacy ###
+    // // settings
+    // // ## per device
+    // auto load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
+    // auto load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
+    // auto load_calibration_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
+    // auto load_color_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
+    // // ## mutli devices
+    // auto load_device_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
+    // auto load_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
+    // auto load_calibration_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
+    // auto load_color_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
 
 private:
 

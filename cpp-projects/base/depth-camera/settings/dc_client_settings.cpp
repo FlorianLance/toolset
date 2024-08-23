@@ -53,16 +53,19 @@ DCClientSettings::DCClientSettings(){
 
 auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
 
+
     devicesS.clear();
 
     size_t unreadCount = 0;
     // base
     io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    clientId = read_value<size_t>(json, unreadCount, "_client_id"sv);
     // local
     if(!json.contains("client_devices"sv)){
         Logger::error(std::format("[DCClientSettings::init_from_json] Invalid json file.\n"));
         return;
     }
+
     for(const auto &clientDeviceJson : json["client_devices"sv]){
 
         DCClientDeviceSettings clientDevice;
@@ -83,7 +86,7 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
             connectionS.readingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
 
             // retrieve localhost corresponding address
-            if(connectionS.readingAddress == "localhost"sv){
+            if(connectionS.sendingAddress == "localhost"sv){
                 connectionS.isLocalhost = true;
                 connectionS.sendingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
             }
@@ -104,6 +107,7 @@ auto DCClientSettings::convert_to_json() const -> nlohmann::json{
     // base
     add_value(json, "base"sv, io::Settings::convert_to_json());
     // local
+    add_value(json, "_client_id"sv, clientId);
     json::array_t arr;
     for(const auto &clientDeviceS : devicesS){
         nlohmann::json clientDeviceJson;

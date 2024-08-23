@@ -7,19 +7,9 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Joystick.hpp>
 
+#include <optional>
+
 #include "imgui-SFML_export.h"
-
-#if __cplusplus >= 201703L // C++17 and above
-#define IMGUI_SFML_NODISCARD [[nodiscard]]
-#else
-#define IMGUI_SFML_NODISCARD
-#endif
-
-#if __cplusplus >= 201402L // C++14 and above
-#define IMGUI_SFML_DEPRECATED [[deprecated]]
-#else
-#define IMGUI_SFML_DEPRECATED
-#endif
 
 namespace sf {
 class Event;
@@ -33,17 +23,13 @@ class Window;
 
 namespace ImGui {
 namespace SFML {
-IMGUI_SFML_NODISCARD IMGUI_SFML_API bool Init(sf::RenderWindow& window,
-                                              bool loadDefaultFont = true);
-IMGUI_SFML_NODISCARD IMGUI_SFML_API bool Init(sf::Window& window, sf::RenderTarget& target,
-                                              bool loadDefaultFont = true);
-IMGUI_SFML_NODISCARD IMGUI_SFML_API bool Init(sf::Window& window, const sf::Vector2f& displaySize,
-                                              bool loadDefaultFont = true);
+[[nodiscard]] IMGUI_SFML_API bool Init(sf::RenderWindow& window, bool loadDefaultFont = true);
+[[nodiscard]] IMGUI_SFML_API bool Init(sf::Window& window, sf::RenderTarget& target,
+                                       bool loadDefaultFont = true);
+[[nodiscard]] IMGUI_SFML_API bool Init(sf::Window& window, const sf::Vector2f& displaySize,
+                                       bool loadDefaultFont = true);
 
 IMGUI_SFML_API void SetCurrentWindow(const sf::Window& window);
-
-// DEPRECATED: Use ProcessEvent(const sf::Window& window, const sf::Event& event)
-IMGUI_SFML_DEPRECATED IMGUI_SFML_API void ProcessEvent(const sf::Event& event);
 IMGUI_SFML_API void ProcessEvent(const sf::Window& window, const sf::Event& event);
 
 IMGUI_SFML_API void Update(sf::RenderWindow& window, sf::Time dt);
@@ -59,8 +45,8 @@ IMGUI_SFML_API void Shutdown(const sf::Window& window);
 // Shuts down all ImGui contexts
 IMGUI_SFML_API void Shutdown();
 
-IMGUI_SFML_NODISCARD IMGUI_SFML_API bool UpdateFontTexture();
-IMGUI_SFML_API sf::Texture& GetFontTexture();
+[[nodiscard]] IMGUI_SFML_API bool UpdateFontTexture();
+IMGUI_SFML_API std::optional<sf::Texture>& GetFontTexture();
 
 // joystick functions
 IMGUI_SFML_API void SetActiveJoystickId(unsigned int joystickId);

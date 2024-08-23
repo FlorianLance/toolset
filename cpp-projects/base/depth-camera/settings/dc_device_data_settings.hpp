@@ -37,7 +37,7 @@ struct DCDeviceDataSettings{
     DCCaptureSettings capture;
     DCFrameGenerationSettings generation;
     DCFrameCompressionSettings compression;
-    [[nodiscard]] constexpr auto capture_cloud() const noexcept -> bool{return capture.depth && (generation.cloud || compression.cloud);}
+    [[nodiscard]] constexpr auto capture_cloud() const noexcept -> bool{return capture.depth && (generation.cloud || compression.addCloud);}
 
     auto apply_remote_profile() -> void{
         // capture
@@ -64,16 +64,16 @@ struct DCDeviceDataSettings{
         generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
         // compression
         compression.jpegCompressionRate    = 80;
-        compression.calibration            = true;
-        compression.depth                  = true;
-        compression.depthSizedColor        = true;
-        compression.color                  = false;
-        compression.infra                  = false;
-        compression.bodyIdMap              = false;
-        compression.cloud                  = false;
-        compression.bodyTracking           = false;
-        compression.audio                  = false;
-        compression.imu                    = false;
+        compression.addCalibration            = true;
+        compression.addDepth                  = true;
+        compression.addDepthSizedColor        = true;
+        compression.addColor                  = false;
+        compression.addInfra                  = false;
+        compression.addBodyIdMap              = false;
+        compression.addCloud                  = false;
+        compression.addBodyTracking           = false;
+        compression.addAudio                  = false;
+        compression.addImu                    = false;
         compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
     }
 
@@ -102,16 +102,16 @@ struct DCDeviceDataSettings{
         generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
         // compression
         compression.jpegCompressionRate    = 80;
-        compression.calibration            = false;
-        compression.depth                  = false;
-        compression.depthSizedColor        = false;
-        compression.color                  = false;
-        compression.infra                  = false;
-        compression.bodyIdMap              = false;
-        compression.cloud                  = false;
-        compression.bodyTracking           = false;
-        compression.audio                  = false;
-        compression.imu                    = false;
+        compression.addCalibration            = false;
+        compression.addDepth                  = false;
+        compression.addDepthSizedColor        = false;
+        compression.addColor                  = false;
+        compression.addInfra                  = false;
+        compression.addBodyIdMap              = false;
+        compression.addCloud                  = false;
+        compression.addBodyTracking           = false;
+        compression.addAudio                  = false;
+        compression.addImu                    = false;
         compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
     }
 };

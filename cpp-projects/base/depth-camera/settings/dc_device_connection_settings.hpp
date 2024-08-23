@@ -52,10 +52,10 @@ struct DCDeviceConnectionSettings : io::Settings{
 
     // remote
     size_t idReadingInterface = 0;
-    int readingPort;
-    std::string sendingAddress;
-    int sendingPort;
-    net::Protocol protocol = net::Protocol::unknow;
+    int readingPort = 8888;
+    std::string sendingAddress = "localhost";
+    int sendingPort = 8889;
+    net::Protocol protocol = net::Protocol::ipv4;
 
     // # runtime
     std::string readingAddress;

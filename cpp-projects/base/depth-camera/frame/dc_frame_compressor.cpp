@@ -81,44 +81,44 @@ auto DCFrameCompressor::compress(const DCFrameCompressionSettings &fcS, DCFrame 
     cFrame->validVerticesCount = frame.cloud.size();
 
     // calibration
-    if(fcS.calibration && !frame.calibration.empty()){
+    if(fcS.addCalibration && !frame.calibration.empty()){
         cFrame->calibration = frame.calibration;
     }else{
         cFrame->calibration.clear();
     }
 
     // depth
-    if(fcS.depth && !frame.depth.empty()){
+    if(fcS.addDepth && !frame.depth.empty()){
         i->depthEncoder.encode(frame.depth, cFrame->fpfDepth);
     }
 
     // infra
-    if(fcS.infra && !frame.infra.empty()){
+    if(fcS.addInfra && !frame.infra.empty()){
         i->infraEncoder.encode(frame.infra, cFrame->fpfInfra);
     }
 
     // rgba depth-sized color
-    if(fcS.depthSizedColor && !frame.rgbaDepthSizedColor.empty()){
+    if(fcS.addDepthSizedColor && !frame.rgbaDepthSizedColor.empty()){
         i->depthSizedColorEncoder.encode(frame.rgbaDepthSizedColor, cFrame->jpegRGBA8DepthSizedColor, fcS.jpegCompressionRate);
     }
 
     // rgba color
-    if(fcS.color && !frame.rgbaColor.empty()){
+    if(fcS.addColor && !frame.rgbaColor.empty()){
         i->colorEncoder.encode(frame.rgbaColor, cFrame->jpegRGBA8Color, fcS.jpegCompressionRate);
     }
 
     // gray bodies id
-    if(fcS.bodyIdMap && !frame.grayBodiesIdMap.empty()){
+    if(fcS.addBodyIdMap && !frame.grayBodiesIdMap.empty()){
         i->bodiesIdEncoder.encode(frame.grayBodiesIdMap, cFrame->jpegG8BodiesIdMap, fcS.jpegCompressionRate);
     }
 
     // imu
-    if(fcS.imu && !frame.imu.empty()){
+    if(fcS.addImu && !frame.imu.empty()){
         cFrame->imu = frame.imu;
     }
 
     // audio
-    if(fcS.audio && !frame.audioFrames.empty()){
+    if(fcS.addAudio && !frame.audioFrames.empty()){
         cFrame->audioFrames = frame.audioFrames;
     }
 }

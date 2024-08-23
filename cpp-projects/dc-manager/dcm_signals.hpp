@@ -57,26 +57,19 @@ class DCMSignals{
 public:
     static auto get() -> DCMSignals*;
 
-    // input
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_direct_signal;
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_direct_signal;
-    SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
+    // initialization
+    SSS<size_t> initialize_signal;
 
-    SSS<std::string> save_all_current_clouds_signal;
-    SSS<size_t, std::string> save_current_cloud_signal;
-
-    // network
+    // actions
+    // # network
     SSS<size_t> init_connection_signal;
     SSS<size_t, net::Command> command_signal;
-
-    // recording
+    // # recording
     SSS<> start_recorder_signal;
     SSS<> stop_recorder_signal;
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
-    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
-
     // player
     SSS<> start_player_signal;
     SSS<> pause_player_signal;
@@ -89,35 +82,18 @@ public:
     SSS<std::string> save_cloud_player_signal;
     SSS<std::string> save_video_player_signal;
     SSS<std::string> load_video_player_signal;
-    SSS<const cam::DCVideoPlayerSettings&> update_player_settings_signal;
-
-    // calibration
+    // # calibration
+    SSS<> ask_calibration_signal;
     SSS<> reset_calibration_registering_signal;
     SSS<> start_calibration_registering_signal;
     SSS<> stop_calibration_registering_signal;
     SSS<> recompute_registering_processing_signal;
-
     SSS<std::vector<cam::DCModelSettings>> calibrate_signal;
     SSS<> validate_calibration_signal;
     SSS<> update_calibration_display_signal;
-    SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;
-    SSS<const cam::DCCalibratorDisplaySettings &> update_calibration_drawer_settings_signal;
-
-    // settings
-
-
-    SSS<size_t, const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
-
-    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
-
-    // SSS<size_t, cam::DCColorSettings> color_settings_reset_signal;
-    // # filters
-    // SSS<bool> update_filtering_mode_signal;
-
-
-
-    // calibration
-    SSS<> ask_calibration_signal;
+    // # i/o
+    SSS<size_t, std::string> save_current_cloud_signal;
+    // SSS<std::string> save_all_current_clouds_signal;
 
     // settings
     SSS<cam::SettingsAction> process_settings_action_signal;
@@ -127,6 +103,17 @@ public:
     SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
     SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
+    SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
+    SSS<const cam::DCVideoPlayerSettings&> update_player_settings_signal;
+    SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;
+    SSS<const cam::DCCalibratorDisplaySettings &> update_calibration_drawer_settings_signal;
+    SSS<size_t, const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
+    SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
+
+    // // input
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt4<std::uint8_t>> mouse_pressed_color_direct_signal;
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_depth_direct_signal;
+    // SSS<size_t, size_t, geo::Pt2<int>, geo::Pt3<std::uint8_t>> mouse_pressed_infra_direct_signal;
 };
 
 }

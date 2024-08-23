@@ -34,19 +34,22 @@ namespace tool::graphics {
 struct DCDirectDrawer : public DCCloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto set_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void;
-
+    auto update() -> void;
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;
 
+    auto update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto save_current_cloud(size_t idC, const std::string &path) -> void;
 
 private:
 
-    auto redraw_clouds_to_fbo() -> void;
+    // auto redraw_clouds_to_fbo() -> void;
 
-    bool m_allTabOpened = false;
+    std::mutex m_locker;
     bool m_redrawClouds = false;
+    std::vector<std::shared_ptr<cam::DCFrame>> m_lastFrames;
+
+    bool m_allTabOpened = false;    
     size_t m_currentTabOpened = 0;
 };
 }

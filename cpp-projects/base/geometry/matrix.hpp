@@ -286,6 +286,9 @@ struct Matrix{
         return (*this) = (*this)/v;
     }
 
+    [[nodiscard]] auto span()       noexcept -> std::span<acc>      {return array;}
+    [[nodiscard]] auto cspan() const noexcept -> std::span<const acc>{return array;}
+
     std::array<acc, _rows*_cols> array{};
 };
 

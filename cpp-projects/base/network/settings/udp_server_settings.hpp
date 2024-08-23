@@ -38,7 +38,7 @@ struct UdpServerSettings : io::Settings{
     // data
     size_t udpReadingInterfaceId = 0;
     int udpReadingPort = 8888;
-    Protocol protocol = Protocol::unknow;
+    Protocol protocol = Protocol::ipv4;
 
     // runtime
     // ...

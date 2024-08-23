@@ -54,6 +54,10 @@ auto DCMMainWindowDrawer::initialize(size_t nbDevices) -> bool{
     return true;
 }
 
+auto DCMMainWindowDrawer::update() -> void{
+    m_middlePanelD.update();
+}
+
 auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMModel *model) -> void{
 
     // menu
@@ -358,7 +362,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
 
         if (ImGuiFileDialog::Instance()->IsOk()){
             Logger::message("Save all current cloudsl\n");
-            DCMSignals::get()->save_all_current_clouds_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+            // DCMSignals::get()->save_all_current_clouds_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }

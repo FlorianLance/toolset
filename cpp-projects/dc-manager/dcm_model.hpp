@@ -47,8 +47,7 @@ struct DCMModel{
     auto clean() -> void;
 
     auto process_settings_action(cam::SettingsAction sAction) -> void;
-
-    // calibration
+    auto trigger_settings() -> void;
     auto ask_calibration() -> void;
 
     // ui

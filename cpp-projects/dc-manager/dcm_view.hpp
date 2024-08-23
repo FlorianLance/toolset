@@ -43,6 +43,7 @@ public:
     auto initialize(int nbGrabbers) -> void;
 
     auto start() -> void;
+    auto update() -> void;
     auto draw(geo::Pt2f size, DCMModel *model) -> void;
     auto exit() -> void;
 

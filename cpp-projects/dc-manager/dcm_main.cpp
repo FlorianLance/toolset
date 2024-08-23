@@ -26,18 +26,39 @@
 
 // base
 #include "utility/logger.hpp"
+#include "utility/paths.hpp"
 #include "depth-camera/settings/dc_settings_paths.hpp"
 
 // local
 #include "dcm_controller.hpp"
 
 using namespace tool;
+using namespace cam;
 
 
-int main(int, char *argv[]){
+int main(int argc, char *argv[]){
+
+    Logger::message("Start DC-Manager.\n");
+    Logger::message(std::format("Args {}.\n", argc));
+
+    // check application arguments
+    std::optional<size_t> id = std::nullopt;
+    for(int ii = 0; ii < argc; ++ii){
+        std::string arg = argv[ii];
+        if(arg.starts_with("-i")){
+            id = std::stoi(arg.substr(2,1));
+        }
+    }
+    if(!id.has_value()){
+        Logger::warning("No id argument found, use 0 instead.\n"sv);
+        id = 0;
+    }
 
     // init paths
-    DCSettingsPaths::get()->initialize(argv, cam::DCApplicationType::DCManager);//tool::Paths::applicationDir, DCMModel::host_name(), std::format("dcm_manager_{}.html",  DCMModel::host_name()));
+    DCSettingsPaths::get()->initialize(argv, cam::DCApplicationType::DCManager, id.value());
+
+    // init logger
+    Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
 
     // init controller
     DCMController controller;

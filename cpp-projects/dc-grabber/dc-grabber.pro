@@ -42,13 +42,13 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
+    # MVC
     dcg_model.hpp \
     dcg_view.hpp \
     dcg_controller.hpp \
+    # connections
     dcg_signals.hpp \
     # data    
-    data/dcg_settings.hpp \
-    data/dcg_ui_settings.hpp \
     # ui
     ui/dcg_main_w.hpp \
     ui/dcg_gl_window.hpp \
@@ -57,18 +57,18 @@ HEADERS += \
 
 SOURCES += \    
     dcg_main.cpp \
-    dcg_controller.cpp \
+    # MVC
     dcg_model.cpp \
-    dcg_signals.cpp \
     dcg_view.cpp \
+    dcg_controller.cpp \
+    # connections
+    dcg_signals.cpp \    
     # data
-    data/dcg_settings.cpp \
     # ui    
     ui/dcg_main_w.cpp \
     ui/dcg_gl_window.cpp \
     ui/dcg_left_panel_child_drawer.cpp \
     ui/dcg_main_menu_bar_drawer.cpp \
-    ui/imgui_demo.cpp \
 
 DISTFILES += \
     ../_build/bin/dc-grabber/resources/shaders/cloud.fs \

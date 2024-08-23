@@ -58,6 +58,10 @@ auto DCMView::start() -> void{
     m_glW->start();
 }
 
+auto DCMView::update() -> void{
+    mainW.update();
+}
+
 auto DCMView::draw(geo::Pt2f size, DCMModel *model) -> void{
     mainW.draw(size, model);
 }

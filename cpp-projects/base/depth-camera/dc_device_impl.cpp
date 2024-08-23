@@ -58,7 +58,6 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
     fData.reset(mInfos);
 }
 
-
 auto DCDeviceImpl::convert_color_image() -> void{
 
     fData.color = {};
@@ -793,7 +792,7 @@ auto DCDeviceImpl::update_compressed_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && settings.data.compression.color){
+    if(!fData.color.empty() && settings.data.compression.addColor){
         if(!jpegColorEncoder.encode(
                 mInfos.color_width(),
                 mInfos.color_height(),
@@ -815,7 +814,7 @@ auto DCDeviceImpl::update_compressed_frame_depth_sized_color() -> void{
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && settings.data.compression.depthSizedColor){
+    if(!fData.depthSizedColor.empty() && settings.data.compression.addDepthSizedColor){
 
         if(!jpegDepthSizedColorEncoder.encode(
                 mInfos.depth_width(),
@@ -839,7 +838,7 @@ auto DCDeviceImpl::update_compressed_frame_depth() -> void{
         return;
     }
 
-    if(!fData.depth.empty() && settings.data.compression.depth){
+    if(!fData.depth.empty() && settings.data.compression.addDepth){
 
         fastPForDepthEncoder.encode(
             mInfos.depth_width(),
@@ -860,7 +859,7 @@ auto DCDeviceImpl::update_compressed_frame_infra() -> void{
         return;
     }
 
-    if(!fData.infra.empty() && settings.data.compression.infra){
+    if(!fData.infra.empty() && settings.data.compression.addInfra){
 
         fastPForInfraEncoder.encode(
             mInfos.infra_width(),
@@ -881,7 +880,7 @@ auto DCDeviceImpl::update_compressed_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && settings.data.compression.calibration){
+    if(!fData.binaryCalibration.empty() && settings.data.compression.addCalibration){
         cFrame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
     }else{
@@ -897,7 +896,7 @@ auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
         return;
     }
 
-    if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.compression.cloud){
+    if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.compression.addCloud){
 
         Buffer<std::uint16_t> processedCloudData;
 
@@ -969,7 +968,7 @@ auto DCDeviceImpl::update_compressed_frame_audio() -> void{
         return;
     }
 
-    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && settings.data.compression.audio){
+    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && settings.data.compression.addAudio){
 
         size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
         cFrame->audioFrames.resize(audioSize);
@@ -990,7 +989,7 @@ auto DCDeviceImpl::update_compressed_frame_imu() -> void{
         return;
     }
 
-    if(!fData.binaryIMU.empty() && settings.data.compression.imu){
+    if(!fData.binaryIMU.empty() && settings.data.compression.addImu){
         cFrame->imu.resize(fData.binaryIMU.size());
         std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
     }else{
@@ -1006,7 +1005,7 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // body tracking
-    if(!fData.bodies.empty() && settings.data.compression.bodyTracking){
+    if(!fData.bodies.empty() && settings.data.compression.addBodyTracking){
         cFrame->bodyTracking.resize(fData.bodies.size());
         std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
     }else{
@@ -1014,7 +1013,7 @@ auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
     }
 
     // bodies id map
-    if(!fData.bodiesIdMap.empty() && settings.data.compression.bodyIdMap){
+    if(!fData.bodiesIdMap.empty() && settings.data.compression.addBodyIdMap){
 
         if(!jpegBodiesIdEncoder.encode(
             mInfos.depth_width(),

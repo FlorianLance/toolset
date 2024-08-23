@@ -37,17 +37,22 @@ using json = nlohmann::json;
 auto DCFrameCompressionSettings::init_from_json(const nlohmann::json &json) -> void{
     size_t unreadCount = 0;
     jpegCompressionRate = read_value<std::uint8_t>(json, unreadCount, "jpeg_compression_rate"sv);
-    calibration         = read_value<bool>(json, unreadCount, "calibration"sv);
-    depth               = read_value<bool>(json, unreadCount, "depth"sv);
-    depthSizedColor     = read_value<bool>(json, unreadCount, "dept_sized_color"sv);
-    color               = read_value<bool>(json, unreadCount, "color"sv);
-    infra               = read_value<bool>(json, unreadCount, "infra"sv);
-    bodyIdMap           = read_value<bool>(json, unreadCount, "body_id_map"sv);
-    cloud               = read_value<bool>(json, unreadCount, "cloud"sv);
-    bodyTracking        = read_value<bool>(json, unreadCount, "body_tracking"sv);
-    audio               = read_value<bool>(json, unreadCount, "audio"sv);
-    imu                 = read_value<bool>(json, unreadCount, "imu"sv);
-    cloudColorMode      = static_cast<CloudColorMode>(read_value<int>(json, unreadCount, "cloud_color_mode"sv));
+    addCalibration         = read_value<bool>(json, unreadCount, "calibration"sv);
+    addDepth               = read_value<bool>(json, unreadCount, "depth"sv);
+    addDepthSizedColor     = read_value<bool>(json, unreadCount, "dept_sized_color"sv);
+    addColor               = read_value<bool>(json, unreadCount, "color"sv);
+    addInfra               = read_value<bool>(json, unreadCount, "infra"sv);
+    addBodyIdMap           = read_value<bool>(json, unreadCount, "body_id_map"sv);
+    addCloud               = read_value<bool>(json, unreadCount, "cloud"sv);
+    addBodyTracking        = read_value<bool>(json, unreadCount, "body_tracking"sv);
+    addAudio               = read_value<bool>(json, unreadCount, "audio"sv);
+    addImu                 = read_value<bool>(json, unreadCount, "imu"sv);
+    cloudColorMode         = static_cast<CloudColorMode>(read_value<int>(json, unreadCount, "cloud_color_mode"sv));
+
+    depthCompressionMode            = static_cast<DCCompressionMode>(read_value<int>(json, unreadCount, "depth_compression_mode"sv));
+    depthSizedColorCompressionMode  = static_cast<DCCompressionMode>(read_value<int>(json, unreadCount, "depth_sized_color_compression_mode"sv));
+    colorCompressionMode            = static_cast<DCCompressionMode>(read_value<int>(json, unreadCount, "color_compression_mode"sv));
+    infraCompressionMode            = static_cast<DCCompressionMode>(read_value<int>(json, unreadCount, "infra_compression_mode"sv));
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCFrameCompressionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
@@ -57,16 +62,22 @@ auto DCFrameCompressionSettings::init_from_json(const nlohmann::json &json) -> v
 auto DCFrameCompressionSettings::convert_to_json() const -> nlohmann::json{
     json json;
     add_value(json, "jpeg_compression_rate"sv,  jpegCompressionRate);
-    add_value(json, "calibration"sv,            calibration);
-    add_value(json, "depth"sv,                  depth);
-    add_value(json, "dept_sized_color"sv,       depthSizedColor);
-    add_value(json, "color"sv,                  color);
-    add_value(json, "infra"sv,                  infra);
-    add_value(json, "body_id_map"sv,            bodyIdMap);
-    add_value(json, "cloud"sv,                  cloud);
-    add_value(json, "body_tracking"sv,          bodyTracking);
-    add_value(json, "audio"sv,                  audio);
-    add_value(json, "imu"sv,                    imu);
+    add_value(json, "calibration"sv,            addCalibration);
+    add_value(json, "depth"sv,                  addDepth);
+    add_value(json, "dept_sized_color"sv,       addDepthSizedColor);
+    add_value(json, "color"sv,                  addColor);
+    add_value(json, "infra"sv,                  addInfra);
+    add_value(json, "body_id_map"sv,            addBodyIdMap);
+    add_value(json, "cloud"sv,                  addCloud);
+    add_value(json, "body_tracking"sv,          addBodyTracking);
+    add_value(json, "audio"sv,                  addAudio);
+    add_value(json, "imu"sv,                    addImu);
     add_value(json, "cloud_color_mode"sv,       static_cast<int>(cloudColorMode));
+
+    add_value(json, "depth_compression_mode"sv,             static_cast<int>(depthCompressionMode));
+    add_value(json, "depth_sized_color_compression_mode"sv, static_cast<int>(depthSizedColorCompressionMode));
+    add_value(json, "color_compression_mode"sv,             static_cast<int>(colorCompressionMode));
+    add_value(json, "infra_compression_mode"sv,             static_cast<int>(infraCompressionMode));
+
     return json;
 }

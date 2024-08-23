@@ -85,6 +85,12 @@ enum class DCColorResolution : std::int8_t {
     SizeEnum,
 };
 
+enum class DCCompressionMode : std::int8_t{
+    None,
+    JPEG,
+    FastPFor
+};
+
 using TDCColRes = std::tuple<
     DCColorResolution,          int, int>;
 static constexpr TupleArray<DCColorResolution::SizeEnum, TDCColRes> dcColRes = {{

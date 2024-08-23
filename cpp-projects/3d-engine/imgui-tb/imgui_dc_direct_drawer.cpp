@@ -31,6 +31,7 @@
 
 // base
 #include "io/cloud_io.hpp"
+#include "utility/logger.hpp"
 
 // local
 #include "imgui_ui_drawer.hpp"
@@ -38,16 +39,23 @@
 using namespace tool::graphics;
 
 auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
+    Logger::log("DCDirectDrawer::initialize\n");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
+    m_lastFrames.resize(nbGrabbers);
+    std::fill(m_lastFrames.begin(), m_lastFrames.end(), nullptr);
 }
 
-auto DCDirectDrawer::set_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
-    if(update_from_frame(idGrabber, frame)){
-        m_redrawClouds = true;
+auto DCDirectDrawer::update() -> void{
+
+    m_locker.lock();
+    for(size_t idG = 0; idG < m_lastFrames.size(); ++idG){
+        if(m_lastFrames[idG] != nullptr){
+            update_from_frame(idG, m_lastFrames[idG]);
+            m_redrawClouds = true;
+            m_lastFrames[idG] = nullptr;
+        }
     }
-}
-
-auto DCDirectDrawer::redraw_clouds_to_fbo() -> void{
+    m_locker.unlock();
 
     if(m_redrawClouds || has_to_redraw_clouds()){
 
@@ -79,9 +87,15 @@ auto DCDirectDrawer::redraw_clouds_to_fbo() -> void{
     m_redrawClouds = false;
 }
 
+auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
+
+    m_locker.lock();
+    m_lastFrames[idGrabber] = std::move(frame);
+    m_locker.unlock();
+}
+
 auto DCDirectDrawer::draw(bool focus) -> void{
 
-    redraw_clouds_to_fbo();
 
     static ImGuiID tabId = 0;
     if (ImGuiUiDrawer::begin_tab_bar(&tabId, "###display_direct_tabbar")){
@@ -107,8 +121,6 @@ auto DCDirectDrawer::draw(bool focus) -> void{
 
 auto DCDirectDrawer::draw_only_clouds() -> void{
 
-    redraw_clouds_to_fbo();
-
     static ImGuiID tabId = 0;
     if (ImGuiUiDrawer::begin_tab_bar(&tabId, "###display_direct_tabbar")){
 
@@ -123,6 +135,15 @@ auto DCDirectDrawer::draw_only_clouds() -> void{
 }
 
 auto DCDirectDrawer::save_current_cloud(size_t idC, const std::string &path) -> void{
-    io::CloudIO::save_cloud(path, cloudsD[idC]->lastFrame->cloud);
+
+    Logger::log("DCDirectDrawer::save_current_cloud\n");
+
+    m_locker.lock();
+    auto frame = cloudsD[idC]->lastFrame;
+    m_locker.unlock();
+
+    if(frame != nullptr){
+        io::CloudIO::save_cloud(path, frame->cloud);
+    }
 }
 

@@ -41,7 +41,6 @@ using namespace tool::cam;
 using namespace tool::data;
 using json = nlohmann::json;
 
-
 auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
@@ -50,11 +49,11 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     // local
     connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCDeviceConnectionType::Remote : DCDeviceConnectionType::Local;
     if(connectionType == DCDeviceConnectionType::Remote){
-        idReadingInterface  = read_value<size_t>(json, unreadCount, "id_reading_interface"sv);
-        readingPort         = read_value<int>(json, unreadCount, "reading_port"sv);
-        sendingAddress       = read_value<std::string>(json, unreadCount, "sending_address"sv);
-        sendingPort         = read_value<int>(json, unreadCount, "sending_port"sv);
-        protocol            = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
+        read_value(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+        read_value<int>(json, unreadCount, "reading_port"sv, readingPort);
+        read_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
+        read_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
+        protocol = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
     }
 
     if(unreadCount != 0){
@@ -126,8 +125,9 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
                 }
 
                 Logger::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
-                                            dcCRDS->serverS.idReadingInterface, dcCRDS->serverS.readingAdress, dcCRDS->serverS.readingPort, dcCRDS->serverS.sendingAdress, dcCRDS->serverS.sendingPort,
-                                            dcCRDS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
+                        dcCRDS->serverS.idReadingInterface, dcCRDS->serverS.readingAdress, dcCRDS->serverS.readingPort,
+                        dcCRDS->serverS.sendingAdress, dcCRDS->serverS.sendingPort,
+                        dcCRDS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
                 
                 connectionsS.push_back(std::move(dcCRDS));
             }else{

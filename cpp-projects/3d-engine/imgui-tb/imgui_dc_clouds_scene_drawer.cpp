@@ -537,7 +537,7 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
     }
 }
 
-auto DCCloudsSceneDrawer::update_cloud_display_settings(size_t idCloud, const DCDeviceDisplaySettings &cloudDisplay) -> void{
+auto DCCloudsSceneDrawer::update_device_display_settings(size_t idCloud, const DCDeviceDisplaySettings &cloudDisplay) -> void{
     if(idCloud < cloudsD.size()){
         cloudsD[idCloud]->display = cloudDisplay;
         m_redrawClouds = true;
@@ -557,19 +557,19 @@ auto DCCloudsSceneDrawer::update_model_settings(size_t idCloud, const cam::DCMod
     m_redrawClouds = true;
 }
 
-auto DCCloudsSceneDrawer::update_device_settings(size_t idCloud, const cam::DCDeviceSettings &deviceS) -> void{
-    cloudsD[idCloud]->deviceS = deviceS;
+// auto DCCloudsSceneDrawer::update_device_settings(size_t idCloud, const cam::DCDeviceSettings &deviceS) -> void{
+//     cloudsD[idCloud]->deviceS = deviceS;
 
-    // auto mode = cloudsD[idCloud]->deviceS.configS.mode;
-    // auto dr = cam::dc_depth_resolution(mode);
-    // auto dRange = cam::dc_depth_range(mode);
-    // auto diff   = dRange.y() - dRange.x();
-    // auto hFov = dc_depth_h_fov(dr);
-    // auto vFov = dc_depth_v_fov(dr);
-    // cloudsD[idCloud]->frustumD.update(vFov, hFov/vFov, dRange.x() + cloudsD[idCloud]->filtersS.minDepthF * diff, dRange.x() + cloudsD[idCloud]->filtersS.maxDepthF * diff);
+//     // auto mode = cloudsD[idCloud]->deviceS.configS.mode;
+//     // auto dr = cam::dc_depth_resolution(mode);
+//     // auto dRange = cam::dc_depth_range(mode);
+//     // auto diff   = dRange.y() - dRange.x();
+//     // auto hFov = dc_depth_h_fov(dr);
+//     // auto vFov = dc_depth_v_fov(dr);
+//     // cloudsD[idCloud]->frustumD.update(vFov, hFov/vFov, dRange.x() + cloudsD[idCloud]->filtersS.minDepthF * diff, dRange.x() + cloudsD[idCloud]->filtersS.maxDepthF * diff);
 
-    m_redrawClouds = true;
-}
+//     m_redrawClouds = true;
+// }
 
 auto DCCloudsSceneDrawer::update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filtersS) -> void {
     cloudsD[idCloud]->filtersS = filtersS;

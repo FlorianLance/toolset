@@ -44,12 +44,14 @@ public:
     auto clean_socket() -> void;
     [[nodiscard]] auto is_connected() const noexcept -> bool;
 
-    auto read_data() -> size_t;
-
     // reading thread
     auto start_reading_thread() -> void;
     auto stop_reading_thread() -> void;
     [[nodiscard]] auto is_reading_thread_started() const noexcept -> bool;
+
+
+    auto receive_data_from_external_thread() -> size_t;
+    auto trigger_received_packets_from_external_thread() -> void;
 
     // signals
     // # from main thread
@@ -58,16 +60,17 @@ public:
     sigslot::signal<> timeout_packet_signal;
     sigslot::signal<> invalid_packet_size_signal;
     sigslot::signal<> invalid_checksum_signal;
-    sigslot::signal<EndPoint, Header, std::span<const std::byte>> packed_received_signal;
+    sigslot::signal<EndPointId, Header, std::span<const std::byte>> packed_received_signal;
 
 private :
 
-    auto read_data_thread() -> void;
-    auto read_packet() -> size_t;
+    auto receive_data() -> size_t;
+    auto trigger_received_packets() -> void;
 
-    static constexpr size_t packetSize = 9000;
-    static constexpr size_t receiveBufferSize = packetSize * 50;
-    static constexpr size_t timeoutMs = 500;
+
+    static constexpr size_t maxPacketSize = 9000;
+    static constexpr size_t receiveBufferSize = maxPacketSize * 300;
+    static constexpr size_t timeoutMs = 5000;
 
     struct Impl;
     std::unique_ptr<Impl> i;

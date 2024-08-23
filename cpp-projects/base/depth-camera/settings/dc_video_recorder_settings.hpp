@@ -26,12 +26,9 @@
 
 #pragma once
 
-// std
-// #include <vector>
-
 // local
-//#include "io/binary_settings.hpp"
-#include "dc_data_settings.hpp"
+#include "dc_frame_generation_settings.hpp"
+#include "dc_frame_compression_settings.hpp"
 
 namespace tool::cam {
 

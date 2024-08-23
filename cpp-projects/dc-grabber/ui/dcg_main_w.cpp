@@ -59,7 +59,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
     if (ImGui::Begin("###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse)){
 
         // settings
-        leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model->settings, model->states);
+        leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model);
 
         ImGui::SameLine();
 
@@ -76,7 +76,11 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             std::int64_t updateFrame                = model->device->get_duration_micro_s("UPDATE_FRAME"sv);
             std::int64_t finalizeFrame              = model->device->get_duration_micro_s("FINALIZE_FRAME"sv);
             
-            double sendingMs = 0.001*model->server.last_frame_sending_duration_micros_s();
+            double sendingMs = 0.0;
+            {
+                std::unique_lock lg(model->server.settings.cInfos.lock);
+                sendingMs = 0.001*model->server.settings.cInfos.lastFrameSentDurationMicroS;
+            }
             std::int64_t elaspedBeforeSendingD  = readImageD+procD+static_cast<std::int64_t>((updateCompressedFrame+finalizeCompressedFrame)*0.001);
             std::int64_t totalD                 = captD+elaspedBeforeSendingD + static_cast<std::int64_t>((updateFrame + finalizeFrame)*0.001) + sendingMs;
 
@@ -114,11 +118,11 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             if(ImGui::BeginTabBar("Main###MainTabBar")){
 
                 if(ImGui::BeginTabItem("Device###device_tabitem")){
-                    deviceD.draw(model->settings.displayS.focusWindow);
+                    deviceD.draw(model->uiSettings.focusWindow);
                     ImGui::EndTabItem();
                 }
                 if(ImGui::BeginTabItem("Recorder###recorder_tabitem")){;
-                    recorderD.draw(model->settings.displayS.focusWindow);
+                    recorderD.draw(model->uiSettings.focusWindow);
                     ImGui::EndTabItem();
                 }
 

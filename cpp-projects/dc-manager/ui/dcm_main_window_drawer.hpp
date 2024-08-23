@@ -39,6 +39,7 @@ class DCMMainWindowDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> bool;
+    auto update() -> void;
     auto draw(geo::Pt2f size, DCMModel *model) -> void;
 
 private:
@@ -53,7 +54,7 @@ private:
     bool m_showDemoWindow = false;
     bool m_showMetricsWindow = false;
     size_t m_nbDevices = 0;
-    SettingsAction m_currentAction;
+    cam::SettingsAction m_currentAction;
 
 public:
 

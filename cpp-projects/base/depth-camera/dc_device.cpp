@@ -91,7 +91,7 @@ auto DCDevice::start_thread() -> void{
     i->loopT = std::make_unique<std::thread>([&](){
         i->doLoopA = true;
         while(i->doLoopA){
-            process();
+            process();            
         }
     });
 }
@@ -232,13 +232,14 @@ auto DCDevice::process() -> void{
         if(i->device->is_opened()){
             if(readFrames ){
                 i->device->process();
+                auto tp = i->device->get_duration_ms("PROCESS");
+                if(tp->count() < 30){
+                    std::this_thread::sleep_for(std::chrono::milliseconds(30 - tp->count()));
+                }
                 return;
             }
         }
     }
-
-    // wait
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
 auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{

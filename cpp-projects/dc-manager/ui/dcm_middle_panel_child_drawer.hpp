@@ -41,6 +41,7 @@ class DCMMiddlePanelChildDrawer{
 public:
 
     auto initialize(size_t nbGrabbers) -> void;
+    auto update() -> void;
     auto draw(geo::Pt2f size, const DCMUiSettings &uiS) -> void;
 
     DCDirectDrawer directD;

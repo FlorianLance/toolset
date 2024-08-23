@@ -49,18 +49,18 @@ struct Interface{
     static auto list_local_interfaces(Protocol protocol) -> std::vector<Interface>;
 };
 
-struct EndPoint{
+struct EndPointId{
 
-    EndPoint() = default;
-    EndPoint(const std::string &address, unsigned short port) : address(address), port(port){
-        id = std::format("{}_{}", address, port);
+    EndPointId() = default;
+    EndPointId(const std::string &address, std::uint32_t senderId) : address(address), senderId(senderId){
+        id = std::format("{}_{}", address, senderId);
     }
 
     std::string address;
-    unsigned short port = 0;
+    std::uint32_t senderId = 0;
     std::string id;
 };
- using MessageTypeId = std::int8_t;
+using MessageTypeId = std::int8_t;
 
 struct Feedback{
     MessageTypeId receivedMessageType = 0;
@@ -72,14 +72,15 @@ struct Header{
     Header() = default;
     Header(std::span<const std::byte> packet);
 
-    std::int64_t currentPacketTimestampNs = 0;
+    std::uint32_t senderId = 0;
+    std::int32_t messageId = -1;
     std::uint32_t totalSizeBytes = 0;
     std::uint32_t dataOffset = 0;
-    std::int32_t idMessage = -1;
+    std::int64_t currentPacketTimestampNs = 0;
+    std::uint32_t checkSum = 0;
     std::uint16_t totalNumberPackets = 0;
     std::uint16_t currentPacketId = 0;
-    std::uint16_t currentPacketSizeBytes = 0;
-    std::uint32_t checkSum = 0;
+    std::uint16_t currentPacketSizeBytes = 0;    
     MessageTypeId type = 0;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{

@@ -34,7 +34,6 @@
 #include "network/udp_sender.hpp"
 #include "network/udp_reader.hpp"
 #include "network/settings/udp_connection_settings.hpp"
-
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
 
@@ -67,12 +66,33 @@ DCClientRemoteDevice::DCClientRemoteDevice() : i(std::make_unique<DCClientRemote
 }
 
 DCClientRemoteDevice::~DCClientRemoteDevice(){
+    Logger::log("[DCClientRemoteDevice::clean] 3\n");
     DCClientRemoteDevice::clean();
 }
 
 auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool {
 
+    auto lg = LogGuard("[DCClientRemoteDevice::initialize]");
     i->remoteServerS = connectionS;
+
+    Logger::message(
+        std::format(
+            "DCServerRemoteDevice: initialize:"
+            "\n\tReading interface id: [{}]"
+            "\n\tReading address: [{}]"
+            "\n\tReading port: [{}]"
+            "\n\tSending address: [{}]"
+            "\n\tSending port: [{}]"
+            "\n\tProtocol: [{}].\n",
+            i->remoteServerS.idReadingInterface,
+            i->remoteServerS.readingAddress,
+            i->remoteServerS.readingPort,
+            i->remoteServerS.sendingAddress,
+            i->remoteServerS.sendingPort,
+            static_cast<int>(i->remoteServerS.protocol)
+        )
+    );
+
 
     // init reader
     Logger::message(std::format("DCClientRemoteDevice init reader: {} {} {}\n", i->remoteServerS.readingAddress, std::to_string(i->remoteServerS.readingPort), static_cast<int>(i->remoteServerS.protocol)));
@@ -100,17 +120,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
 
 }
 
-auto DCClientRemoteDevice::init_remote_connection() -> void{
-
-    Logger::message(
-        std::format("DCServerRemoteDevice: init remote connection infos: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] PRO:[{}].\n",
-        i->remoteServerS.idReadingInterface,
-        i->remoteServerS.readingAddress,
-        i->remoteServerS.readingPort,
-        i->remoteServerS.sendingAddress,
-        i->remoteServerS.sendingPort,
-        static_cast<int>(i->remoteServerS.protocol))
-    );
+auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
 
     UdpConnectionSettings connectionSettings;
     connectionSettings.address          = i->remoteServerS.readingAddress;
@@ -118,11 +128,13 @@ auto DCClientRemoteDevice::init_remote_connection() -> void{
     connectionSettings.maxPacketSize    = i->maxSizeUpdMessage;
 
     auto bData = connectionSettings.convert_to_json_binary();
+    i->udpSender.set_sender_id(idClient);
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::init_server_client_connection),  std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
 }
 
 auto DCClientRemoteDevice::clean() -> void{
 
+    Logger::log("[DCClientRemoteDevice::clean] 1\n");
     // clean sender
     // # disconnect client
     if(i->udpSender.is_connected()){
@@ -143,6 +155,8 @@ auto DCClientRemoteDevice::clean() -> void{
     }
     // # clean socket
     i->udpReader.clean_socket();
+
+    Logger::log("[DCClientRemoteDevice::clean] 2\n");
 }
 
 auto DCClientRemoteDevice::apply_command(Command command) -> void{
@@ -193,10 +207,12 @@ auto DCClientRemoteDevice::device_connected() const noexcept -> bool {
 }
 
 auto DCClientRemoteDevice::read_data_from_network() -> size_t{
-    return i->udpReader.read_data();
+    return i->udpReader.receive_data_from_external_thread();
 }
 
-auto DCClientRemoteDevice::process_received_packet(EndPoint endpoint, Header header, std::span<const std::byte> dataToProcess) -> void{
+#include <iostream>
+
+auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess) -> void{
 
     switch (static_cast<DCMessageType>(header.type)) {
     case DCMessageType::synchro:{
@@ -220,6 +236,8 @@ auto DCClientRemoteDevice::process_received_packet(EndPoint endpoint, Header hea
 
     }break;
     case DCMessageType::compressed_frame_data:{
+
+        std::cout << header.currentPacketId << " ";
 
         i->cFramesReception.update(header, dataToProcess, i->messagesBuffer);
 
@@ -246,9 +264,9 @@ auto DCClientRemoteDevice::process_received_packet(EndPoint endpoint, Header hea
             receive_compressed_frame(std::move(header), std::move(cFrame));
         }
 
-        if(auto nbMessageTimeout = i->cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
-            timeout_messages_signal(nbMessageTimeout);
-        }
+        // if(auto nbMessageTimeout = i->cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
+            // timeout_messages_signal(nbMessageTimeout);
+        // }
 
         receive_network_status(UdpNetworkStatus{i->cFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
 

@@ -53,7 +53,7 @@ auto Paths::get() -> Paths*{
 
 auto Paths::initialize(char *argv[]) -> void{
 
-    if(!m_initialized){
+    if(m_initialized){
         Logger::warning("[Paths::initialize] Already initialized.\n"sv);
         return;
     }
