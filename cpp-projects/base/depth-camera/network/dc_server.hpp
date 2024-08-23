@@ -28,7 +28,6 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
-#include "network/settings/udp_connection_settings.hpp"
 #include "depth-camera/settings/dc_server_settings.hpp"
 #include "depth-camera/frame/dc_compressed_frame.hpp"
 
@@ -55,13 +54,11 @@ public:
     DCServerSettings settings;
 
     // signals
-    // # connection
-    // sigslot::signal<std::shared_ptr<net::UdpConnectionSettings>> receive_init_server_client_connection_signal;
     // # settings received
-    sigslot::signal<std::shared_ptr<cam::DCDeviceSettings>> receive_device_settings_signal;
-    sigslot::signal<std::shared_ptr<cam::DCColorSettings>> receive_color_settings_signal;
-    sigslot::signal<std::shared_ptr<cam::DCFiltersSettings>> receive_filters_signal;
-    sigslot::signal<cam::DCDelaySettings> receive_delay_settings_signal;
+    sigslot::signal<> device_settings_received_signal;
+    sigslot::signal<> color_settings_received_signal;
+    sigslot::signal<> filters_settings_received_signal;
+    sigslot::signal<> delay_settings_received_signal;
     // # command received
     sigslot::signal<> shutdown_signal;
     sigslot::signal<> quit_signal;

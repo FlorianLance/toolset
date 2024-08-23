@@ -71,7 +71,8 @@ struct DCDevice::Impl{
     // actions
     bool doLoopA = false;
     std::mutex locker;
-    std::optional<DeviceAction> dAction  = std::nullopt;
+    // std::optional<DeviceAction> dAction  = std::nullopt;
+    std::vector<DeviceAction> actions;
 };
 
 DCDevice::DCDevice(): i(std::make_unique<Impl>()){
@@ -89,6 +90,7 @@ auto DCDevice::start_thread() -> void{
     }
 
     i->loopT = std::make_unique<std::thread>([&](){
+        Logger::message("START\n");
         i->doLoopA = true;
         while(i->doLoopA){
             process();            
@@ -110,15 +112,17 @@ auto DCDevice::stop_thread() -> void{
 auto DCDevice::process() -> void{
 
     i->locker.lock();
-    auto dAction = i->dAction;
-    i->dAction = std::nullopt;
+    auto dActions = i->actions;
+    i->actions.clear();// = std::nullopt;
     bool readFrames = i->readFrames;
     i->locker.unlock();
 
-    if(dAction.has_value()){
+    for(const auto &dAction : dActions){
+
+        // Logger::message(std::format("{} {} {} {} {} {} {}\n"sv,dAction.cleanDevice, dAction.createDevice, dAction.closeDevice, dAction.openDevice, dAction.updateColors, dAction.updateFilters, dAction.updateDelay));
 
         // close device
-        if((i->device != nullptr) && dAction->closeDevice){
+        if((i->device != nullptr) && dAction.closeDevice){
             if(i->device->is_opened()){
                 i->device->close();
                 i->deviceOpened = false;
@@ -126,13 +130,13 @@ auto DCDevice::process() -> void{
         }
 
         // clean device
-        if((i->device != nullptr) && dAction->cleanDevice){
+        if((i->device != nullptr) && dAction.cleanDevice){
             i->device = nullptr;
             i->deviceInitialized = false;
         }
 
         // create device
-        if((i->device == nullptr) && dAction->createDevice){
+        if((i->device == nullptr) && dAction.createDevice){
 
             auto type = i->deviceS.configS.typeDevice;
             if(type == DCType::AzureKinect){
@@ -163,7 +167,7 @@ auto DCDevice::process() -> void{
         }
 
         // open device
-        if((i->device != nullptr) && dAction->openDevice){
+        if((i->device != nullptr) && dAction.openDevice){
 
             if(!i->device->is_opened()){
 
@@ -180,6 +184,7 @@ auto DCDevice::process() -> void{
                 }
 
                 if(canOpenDevice){
+
                     if(i->device->open(i->deviceS.configS)){
 
                         i->deviceOpened = true;
@@ -210,16 +215,16 @@ auto DCDevice::process() -> void{
                 std::unique_lock<std::mutex> lock(i->locker);
                 i->device->set_data_settings(i->deviceS.dataS.server);
 
-                bool updateSettings = dAction->updateColors || dAction->updateFilters || dAction->updateDelay;
+                bool updateSettings = dAction.updateColors || dAction.updateFilters || dAction.updateDelay;
                 if(updateSettings){
-                    if(dAction->updateColors){
+                    if(dAction.updateColors){
                         i->device->set_color_settings(i->colorsS);
                         i->device->update_from_colors_settings();
                     }
-                    if(dAction->updateFilters){
+                    if(dAction.updateFilters){
                         i->device->set_filters_settings(i->filtersS);
                     }
-                    if(dAction->updateDelay){
+                    if(dAction.updateDelay){
                         i->device->set_delay_settings(i->delayS);
                     }
                 }
@@ -244,14 +249,12 @@ auto DCDevice::process() -> void{
 
 auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
-    Logger::message("update_device_settings");
-
     const auto &newConfigS  = deviceS.configS;
     const auto &currConfigS = i->deviceS.configS;
 
     bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
     if(deviceChanged && i->deviceInitialized){
-        update_device_name_signal(i->deviceS.configS.idDevice, std::format("Id:{} Cam: ...", i->deviceS.configS.idDevice));
+        update_device_name_signal(i->deviceS.configS.idDevice, std::format("Id:{} Cam: ..."sv, i->deviceS.configS.idDevice));
     }
 
     bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
@@ -288,19 +291,18 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     // device must be opened
     dAction.openDevice      = newConfigS.openDevice;
 
-    Logger::message(std::format("{} {} {} {}\n",dAction.cleanDevice, dAction.createDevice, dAction.closeDevice, dAction.openDevice));
-
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
     i->deviceS = deviceS;
-    i->dAction = dAction;
+    // i->dAction = dAction;
+    i->actions.push_back(dAction);
     i->readFrames = newConfigS.startReading;
     // if(deviceChanged){
     //     tool::Logger::message("Device changed, colors settings set to default.\n");
     //     i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
     //     color_settings_reset_signal(i->colorsS);
     // }
-    Logger::message("end");
+    // Logger::message("end\n"sv);
 }
 
 auto DCDevice::is_opened() const noexcept -> bool{
@@ -316,7 +318,8 @@ auto DCDevice::update_color_settings(const DCColorSettings &colorS) -> void{
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    i->dAction = dAction;
+    // i->dAction = dAction;
+    i->actions.push_back(dAction);
 }
 
 auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> void{
@@ -328,7 +331,8 @@ auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> voi
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    i->dAction = dAction;
+    // i->dAction = dAction;
+    i->actions.push_back(dAction);
 }
 
 auto DCDevice::update_delay_settings(const DCDelaySettings &delayS) -> void{
@@ -340,7 +344,8 @@ auto DCDevice::update_delay_settings(const DCDelaySettings &delayS) -> void{
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    i->dAction = dAction;
+    // i->dAction = dAction;
+    i->actions.push_back(dAction);
 }
 
 auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{

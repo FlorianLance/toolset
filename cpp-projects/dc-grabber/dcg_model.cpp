@@ -41,6 +41,19 @@ DCGModel::DCGModel(){
     auto lg = LogGuard("DCGModel::DCGModel"sv);
     device = std::make_unique<cam::DCDevice>();
     device->start_thread();
+
+    server.device_settings_received_signal.connect([&](){
+        DCGSignals::get()->update_device_settings_signal(server.settings.deviceS);
+    });
+    server.color_settings_received_signal.connect([&](){
+        DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
+    });
+    server.filters_settings_received_signal.connect([&](){
+        DCGSignals::get()->update_filters_signal(server.settings.filtersS);
+    });
+    server.delay_settings_received_signal.connect([&](){
+        DCGSignals::get()->update_delay_settings_signal(server.settings.delayS);
+    });
 }
 
 DCGModel::~DCGModel(){
@@ -93,8 +106,6 @@ auto DCGModel::initialize() -> bool{
 
     recorder.initialize(1);
 
-    device->update_device_settings(server.settings.deviceS);
-
     return true;
 }
 
@@ -108,11 +119,10 @@ auto DCGModel::clean() -> void{
     server.clean();
 }
 
-
 auto DCGModel::trigger_settings() -> void{
     auto lg = LogGuard("DCGModel::trigger_settings"sv);
     // device settings: device
-    // DCGSignals::get()->update_device_settings_signal(server.settings.deviceS);
+    DCGSignals::get()->update_device_settings_signal(server.settings.deviceS);
     // color settings: device
     DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
     // filters settings: device drawer / device

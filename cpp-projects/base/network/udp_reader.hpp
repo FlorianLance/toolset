@@ -70,7 +70,7 @@ private :
 
     static constexpr size_t maxPacketSize = 9000;
     static constexpr size_t receiveBufferSize = maxPacketSize * 300;
-    static constexpr size_t timeoutMs = 5000;
+    static constexpr size_t timeoutMs = 100;
 
     struct Impl;
     std::unique_ptr<Impl> i;

@@ -52,11 +52,13 @@ struct TestFrame : Frame{
         //  write type
         //  write width
         //  write height
+        //  write comression mode
         //  write data
         // write number of data buffers
         // foreach buffer in dataBuffers
         //  write type
         //  write size
+        //  write comression mode
         //  write data
     }
 

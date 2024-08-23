@@ -792,17 +792,30 @@ auto DCDeviceImpl::update_compressed_frame_color() -> void{
         return;
     }
 
+    bool resetData = true;
     if(!fData.color.empty() && settings.data.compression.addColor){
-        if(!jpegColorEncoder.encode(
-                mInfos.color_width(),
-                mInfos.color_height(),
-                fData.color,
-                cFrame->jpegRGBA8Color,
-                settings.data.compression.jpegCompressionRate
-            )){
-            cFrame->jpegRGBA8Color.reset();
+        if(settings.data.compression.colorCompressionMode == DCCompressionMode::JPEG){
+            if(jpegColorEncoder.encode(
+                    mInfos.color_width(),
+                    mInfos.color_height(),
+                    fData.color,
+                    cFrame->jpegRGBA8Color,
+                    settings.data.compression.jpegCompressionRate
+                )){
+                resetData = false;
+            }
         }
-    }else{
+        // else if(settings.data.compression.colorCompressionMode == DCCompressionMode::None){
+        //     size_t nbBytes = mInfos.color_size()*4;
+        //     cFrame->jpegRGBA8Color.resize(nbBytes);
+        //     cFrame->jpegRGBA8Color.width  = mInfos.color_width();
+        //     cFrame->jpegRGBA8Color.height = mInfos.color_height();
+        //     auto s = std::span<const std::byte>(reinterpret_cast<std::byte*>(fData.color.data()), nbBytes);
+        //     std::copy(s.begin(), s.end(), cFrame->jpegRGBA8Color.begin());
+        //     resetData = false;
+        // }
+    }
+    if(resetData){
         cFrame->jpegRGBA8Color.reset();
     }
 }

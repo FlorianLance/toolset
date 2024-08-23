@@ -61,12 +61,7 @@ struct UdpReader::Impl{
 
     // packets
     DoubleRingBuffer<std::uint8_t> packetsRingBuffer;
-    // SafeQueue<std::pair<std::span<const std::byte>, std::string>> packetsReceived;
-
-    // SafeQueue<std::tuple<EndPoint, Header, std::span<const std::byte>>> packetsReceived;
-    // SafeQueue<std::tuple<EndPoint, Header, std::span<const std::byte>>> packetsReceivedSwap;
-
-    std::mutex m;
+    std::mutex locker;
     std::unique_ptr<std::vector<std::tuple<EndPointId, Header, std::span<const std::byte>>>> packetsReceived = nullptr;;
     std::unique_ptr<std::vector<std::tuple<EndPointId, Header, std::span<const std::byte>>>> swapPacketsReceived = nullptr;;
 };
@@ -157,11 +152,13 @@ auto UdpReader::start_reading_thread() -> void{
     if((i->readPacketsT == nullptr) && (i->processPacketsT == nullptr)){
         i->threadsStarted  = true;
         i->readPacketsT    = std::make_unique<std::thread>([&](){
+            auto lg = LogGuard("[UdpReader::start_reading_thread] Receiving thread"sv);
             while(i->threadsStarted){
                 receive_data();
             }
         });
-        i->processPacketsT    = std::make_unique<std::thread>([&](){
+        i->processPacketsT    = std::make_unique<std::thread>([&](){            
+            auto lg = LogGuard("[UdpReader::start_reading_thread] Triggering thread"sv);
             while(i->threadsStarted){
                 trigger_received_packets();
             }
@@ -183,17 +180,21 @@ auto UdpReader::stop_reading_thread() -> void{
 
     i->threadsStarted = false;
 
-    if(i->readPacketsT != nullptr){
+    if(i->readPacketsT != nullptr){        
         if(i->readPacketsT->joinable()){
+            Logger::log("[UdpReader::stop_reading_thread] Join readPacketsT.\n"sv);
             i->readPacketsT->join();
         }
+        Logger::log("[UdpReader::stop_reading_thread] Destroy readPacketsT.\n"sv);
         i->readPacketsT = nullptr;
     }
 
     if(i->processPacketsT != nullptr){
         if(i->processPacketsT->joinable()){
+            Logger::log("[UdpReader::stop_reading_thread] Join processPacketsT.\n"sv);
             i->processPacketsT->join();
         }
+        Logger::log("[UdpReader::stop_reading_thread] Destroy processPacketsT.\n"sv);
         i->processPacketsT = nullptr;
     }
 }
@@ -222,7 +223,7 @@ auto UdpReader::receive_data() -> size_t{
         );
     } catch (const boost::system::system_error &error) {
         if(error.code() != boost::asio::error::timed_out){
-            Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: [{}]\n", error.what());
+            Logger::error("[UdpReader::receive_data] Cannot read from socket, error message: [{}]\n"sv, error.what());
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             return 0;
         }
@@ -238,7 +239,7 @@ auto UdpReader::receive_data() -> size_t{
         // check packet size
         if(header.currentPacketSizeBytes != pkd.size_bytes()){
             invalid_packet_size_signal();
-            Logger::error(std::format("[UdpReader::read_packet] Invalid packet size: [{}], expected: [{}]\n", header.currentPacketSizeBytes, pkd.size_bytes()));
+            Logger::error(std::format("[UdpReader::receive_data] Invalid packet size: [{}], expected: [{}]\n"sv, header.currentPacketSizeBytes, pkd.size_bytes()));
             return nbBytesReceived;
         }
 
@@ -247,7 +248,7 @@ auto UdpReader::receive_data() -> size_t{
             auto checksum = data::Checksum::gen_crc16(dataToProcess);
             if(checksum != header.checkSum){
                 invalid_checksum_signal();
-                Logger::error(std::format("[UdpReader::read_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
+                Logger::error(std::format("[UdpReader::receive_data] Invalid checksum size: [{}], expected: [{}]\n"sv, checksum, header.checkSum));
                 return nbBytesReceived;
             }
         }
@@ -259,9 +260,13 @@ auto UdpReader::receive_data() -> size_t{
         auto endPoint = EndPointId(senderEndpoint.address().to_string(), header.senderId);
 
         // store received packet
-        i->m.lock();
-        i->packetsReceived->push_back(std::make_tuple(endPoint, std::move(header), std::move(dataToProcess)));
-        i->m.unlock();
+        i->locker.lock();
+        if(i->packetsReceived->size() < 200){
+            i->packetsReceived->push_back(std::make_tuple(endPoint, std::move(header), std::move(dataToProcess)));
+        }else{
+            Logger::error("[UdpReader::receive_data] To many packets received, last packet dropped.\n"sv);
+        }
+        i->locker.unlock();
     }
 
     return nbBytesReceived;
@@ -272,12 +277,12 @@ auto UdpReader::trigger_received_packets() -> void{
     i->swapPacketsReceived->clear();
 
     bool hasPacketsToGenerate = false;
-    if(i->m.try_lock()){
+    if(i->locker.try_lock()){
         if(!i->packetsReceived->empty()){
             std::swap(i->packetsReceived, i->swapPacketsReceived);
             hasPacketsToGenerate = true;
         }
-        i->m.unlock();
+        i->locker.unlock();
     }
 
     if(hasPacketsToGenerate){

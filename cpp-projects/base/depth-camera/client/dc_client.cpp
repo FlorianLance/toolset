@@ -77,11 +77,15 @@ auto DCClient::initialize(const std::string &clientSettingsPath) -> bool{
 
 auto DCClient::clean() -> void{
 
+    Logger::log("[DCClient::clean] Clean devices.\n"sv);
     for(auto &device : i->devices){
         device->clean();
     }
-    i->processing.clean();
+    Logger::log("[DCClient::clean] Clean processing.\n"sv);
+    i->processing.clean();    
     i->devices.clear();
+
+    Logger::log("[DCClient::clean] Clear settings.\n"sv);
     settings.devicesS.clear();
 
 }

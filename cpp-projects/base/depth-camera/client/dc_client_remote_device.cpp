@@ -116,8 +116,6 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     i->udpReader.packed_received_signal.connect(&DCClientRemoteDevice::process_received_packet, this);
 
     return true;
-
-
 }
 
 auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
@@ -134,29 +132,33 @@ auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
 
 auto DCClientRemoteDevice::clean() -> void{
 
-    Logger::log("[DCClientRemoteDevice::clean] 1\n");
+    auto lg = LogGuard("[DCClientRemoteDevice::clean]"sv);
+
     // clean sender
     // # disconnect client
     if(i->udpSender.is_connected()){
+        Logger::log("[DCClientRemoteDevice::clean] Send disconnect message.\n"sv);
         Command command = Command::disconnect;
         i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
     }
     // # clean socket
+    Logger::log("[DCClientRemoteDevice::clean] Clean sender socket.\n"sv);
     i->udpSender.clean_socket();
 
     // clean reader
     // # remove connections
+    Logger::log("[DCClientRemoteDevice::clean] Remove connection.\n"sv);
     i->udpReader.packed_received_signal.disconnect(&DCClientRemoteDevice::process_received_packet, this);
 
     i->remoteDeviceConnected = false;
     // # stop reading loop
     if(i->udpReader.is_reading_thread_started()){
+        Logger::log("[DCClientRemoteDevice::clean] Stop reading loop.\n"sv);
         i->udpReader.stop_reading_thread();
     }
     // # clean socket
+    Logger::log("[DCClientRemoteDevice::clean] Clean reader socket.\n"sv);
     i->udpReader.clean_socket();
-
-    Logger::log("[DCClientRemoteDevice::clean] 2\n");
 }
 
 auto DCClientRemoteDevice::apply_command(Command command) -> void{
@@ -210,8 +212,6 @@ auto DCClientRemoteDevice::read_data_from_network() -> size_t{
     return i->udpReader.receive_data_from_external_thread();
 }
 
-#include <iostream>
-
 auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess) -> void{
 
     switch (static_cast<DCMessageType>(header.type)) {
@@ -229,15 +229,13 @@ auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header h
         Feedback feedback;
         std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
 
-        Logger::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.feedback, dataToProcess.size_bytes(), dataToProcess.size()));
+        // Logger::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.feedback, dataToProcess.size_bytes(), dataToProcess.size()));
 
         // process feedback
         receive_feedback(std::move(header), feedback);
 
     }break;
     case DCMessageType::compressed_frame_data:{
-
-        std::cout << header.currentPacketId << " ";
 
         i->cFramesReception.update(header, dataToProcess, i->messagesBuffer);
 
@@ -264,9 +262,9 @@ auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header h
             receive_compressed_frame(std::move(header), std::move(cFrame));
         }
 
-        // if(auto nbMessageTimeout = i->cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
-            // timeout_messages_signal(nbMessageTimeout);
-        // }
+        if(auto nbMessageTimeout = i->cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
+            timeout_messages_signal(nbMessageTimeout);
+        }
 
         receive_network_status(UdpNetworkStatus{i->cFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
 

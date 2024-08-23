@@ -396,7 +396,6 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(DCMModel *model) -> voi
     ImGui::Text("Status:");
     ImGui::Indent();
     {
-
         ImGui::Text("Network");
         ImGui::Text("# Percentage success (/100):");
         ImGui::Indent();
@@ -405,10 +404,10 @@ auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(DCMModel *model) -> voi
         }
         ImGui::Unindent();
 
-        ImGui::Text("# Bandwidth (Mb/s)):");
+        ImGui::Text("# Bandwidth (MB/s)):");
         ImGui::Indent();
         for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedNetworkStatus.bandwidthBytes/1000000));
+            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedNetworkStatus.bandwidthBytes/1048576));
         }
         ImGui::Unindent();
 
