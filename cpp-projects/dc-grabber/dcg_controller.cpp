@@ -47,16 +47,16 @@ DCGController::~DCGController(){
     model->clean();
 }
 
-auto DCGController::initialize(size_t idLocalGrabber) -> bool{
+auto DCGController::initialize(size_t id) -> bool{
 
     auto lg = LogGuard("DCGController::initialize"sv);
 
     // init view
-    view  = std::make_unique<DCGView>(idLocalGrabber);
+    view  = std::make_unique<DCGView>(id);
 
     // init model
     model = std::make_unique<DCGModel>();
-    static_cast<void>(idLocalGrabber); // ?
+    model->server.settings.idG = id;
 
     // connections
     set_connections();
@@ -134,10 +134,11 @@ auto DCGController::set_connections() -> void{
     s->load_subpart_color_settings_file_signal.connect(         &DCGModel::load_subpart_color_settings_file,               model.get());
     s->load_subpart_model_settings_file_signal.connect(         &DCGModel::load_subpart_model_settings_file,               model.get());
     // ## server
-    s->ping_server_signal.connect(                              &DCServer::ping_server,                                    server);
     s->sending_failure_signal.connect(                          &DCServer::simulate_sending_failure,                       server);
+    s->reset_reading_network_signal.connect(                    &DCServer::reset_network,                                  server);
+    s->disconnect_all_clients_signal.connect(                   &DCServer::disconnect_clients,                             server);
     // ## device drawer
-    s->save_cloud_to_file_signal.connect(                       &DCDeviceDrawer::save_current_cloud,                               deviceD);
+    s->save_cloud_to_file_signal.connect(                       &DCDeviceDrawer::save_current_cloud,                       deviceD);
     // ## recorder
     s->start_recorder_signal.connect(                           &DCVideoRecorder::start_recording,                         recorder);
     s->stop_recorder_signal.connect(                            &DCVideoRecorder::stop_recording,                          recorder);

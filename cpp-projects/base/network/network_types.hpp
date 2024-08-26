@@ -64,7 +64,7 @@ using MessageTypeId = std::int8_t;
 
 struct Feedback{
     MessageTypeId receivedMessageType = 0;
-    FeedbackType feedback = FeedbackType::undefined;
+    FeedbackType type = FeedbackType::undefined;
 };
 
 struct Header{

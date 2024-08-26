@@ -139,6 +139,8 @@ auto UdpReader::clean_socket() -> void{
 
 auto UdpReader::start_reading_thread() -> void{
 
+
+
     if(is_reading_thread_started()){
         Logger::error("[UdpReader::start_reading_thread] Reading thread already started.\n");
         return;
@@ -150,20 +152,21 @@ auto UdpReader::start_reading_thread() -> void{
     }
 
     if((i->readPacketsT == nullptr) && (i->processPacketsT == nullptr)){
+
+        auto lg = LogGuard("[UdpReader::start_reading_thread] Start threads"sv);
         i->threadsStarted  = true;
         i->readPacketsT    = std::make_unique<std::thread>([&](){
-            auto lg = LogGuard("[UdpReader::start_reading_thread] Receiving thread"sv);
+            auto lgS = LogGuard("[UdpReader::start_reading_thread] Receiving thread"sv);
             while(i->threadsStarted){
                 receive_data();
             }
         });
         i->processPacketsT    = std::make_unique<std::thread>([&](){            
-            auto lg = LogGuard("[UdpReader::start_reading_thread] Triggering thread"sv);
+            auto lgS = LogGuard("[UdpReader::start_reading_thread] Triggering thread"sv);
             while(i->threadsStarted){
                 trigger_received_packets();
             }
         });
-
 
     }else{
         Logger::error("[UdpReader::start_reading_thread] Cannot start reading, thread not cleaned.\n");

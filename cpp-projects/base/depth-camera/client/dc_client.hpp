@@ -40,7 +40,7 @@ public:
     DCClient();
     ~DCClient();
 
-    auto initialize(const std::string &clientSettingsPath) -> bool;
+    auto initialize(const std::string &clientSettingsPath, bool startThreads = true) -> bool;
     auto legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool;
     auto clean() -> void;
     auto update() -> void;
@@ -65,6 +65,9 @@ public:
     // # trigger
     auto trigger_all_models_settings() -> void;
     auto trigger_all_device_display_settings() -> void;
+    // # external threads
+    auto process_frames_from_external_thread() -> void;
+
 
     DCClientSettings settings;
 
@@ -74,19 +77,6 @@ public:
     sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
     sigslot::signal<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     sigslot::signal<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;
-
-    // // ### legacy ###
-    // // settings
-    // // ## per device
-    // auto load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    // auto load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    // auto load_calibration_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    // auto load_color_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool;
-    // // ## mutli devices
-    // auto load_device_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    // auto load_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    // auto load_calibration_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
-    // auto load_color_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool;
 
 private:
 

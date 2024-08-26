@@ -40,7 +40,7 @@ using namespace tool::cam;
 struct DCClientProcessing::Impl{
     // std::mutex recordLocker;
     // std::atomic_bool record = false;
-    std::vector<std::unique_ptr<cam::DCFrameProcessor>>frameProcessors;
+    std::vector<std::unique_ptr<cam::DCFrameProcessor>> frameProcessors;
     // cam::DCVideo videoResource;
 };
 
@@ -163,6 +163,12 @@ auto DCClientProcessing::update_device_settings(size_t idC, const DCDeviceSettin
         return;
     }
     i->frameProcessors[idC]->update_generation_settings(deviceS.dataS.clientGeneration);
+}
+
+auto DCClientProcessing::process() -> void{
+    for(auto &frameProcessor : i->frameProcessors){
+        frameProcessor->process();
+    }
 }
 
 auto DCClientProcessing::uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>{

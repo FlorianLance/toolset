@@ -52,8 +52,9 @@ public:
 
     // actions
     // # network
-    SSS<> ping_server_signal;
     SSS<bool, int> sending_failure_signal;
+    SSS<> reset_reading_network_signal;
+    SSS<> disconnect_all_clients_signal;
     // # i/o
     SSS<std::string> save_cloud_to_file_signal;
     SSS<std::string> save_global_settings_file_signal;

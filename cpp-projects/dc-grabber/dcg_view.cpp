@@ -32,7 +32,7 @@
 using namespace tool;
 using namespace std::string_view_literals;
 
-DCGView::DCGView(size_t idGrabber){
+DCGView::DCGView(size_t id){
 
     auto lg = LogGuard("DCGView::DCGView"sv);
     // init main window
@@ -48,7 +48,7 @@ DCGView::DCGView(size_t idGrabber){
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
     const std::string numVersion = "2.1";
-    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id{} v{}", idGrabber, numVersion), screen,context);
+    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id[{}] v[{}]", id, numVersion), screen,context);
     m_glW->init();
 }
 

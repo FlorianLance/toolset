@@ -27,7 +27,7 @@
 #pragma once
 
 // std
-#include <set>
+#include <map>
 
 // local
 #include "network/network_types.hpp"
@@ -42,7 +42,7 @@
 namespace tool::cam {
 
 struct ClientsRuntimeInfo{
-    std::set<std::string> clientsConnected;
+    std::map<std::string, std::chrono::nanoseconds> clientsConnected;
     size_t lastFrameIdSent = 0;
     std::chrono::nanoseconds lastFrameSentTS = std::chrono::nanoseconds(0);
     std::int64_t lastFrameSentDurationMicroS = 0;
@@ -69,6 +69,7 @@ struct DCServerSettings  : public io::Settings{
     DCSceneDisplaySettings sceneDisplayS;
 
     // runtime
+    size_t idG = 0;
     std::string globalFilePath;
     std::string deviceFilePath;
     std::string filtersFilePath;

@@ -38,6 +38,7 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
+#include "depth-camera/settings/dc_delay_settings.hpp"
 #include "depth-camera/states/dc_video_player_states.hpp"
 #include "depth-camera/states/dc_video_recorder_states.hpp"
 #include "depth-camera/states/dc_calibrator_states.hpp"
@@ -74,6 +75,10 @@ namespace tool::graphics {
     "Default", "Clockwise 90°", "Counter clockwise 90", "Flip 180°"
 };
 
+[[maybe_unused]] static constexpr const char* protocolItems[] = {
+    "IPV4", "IVP6"
+};
+
 
 
 class DCUIDrawer{
@@ -93,6 +98,7 @@ public:
     static auto draw_dc_scene_display_setings_tab_item(const std::string &tabItemName, cam::DCSceneDisplaySettings &display) -> bool;
     static auto draw_dc_cloud_display_setings_tab_item(const std::string &tabItemName, cam::DCDeviceDisplaySettings &display) -> bool;
     static auto draw_dc_model_tab_item(const std::string &tabItemName, cam::DCModelSettings &model) -> bool;
+    static auto draw_dc_delay_tab_item(const std::string &tabItemName, cam::DCDelaySettings &delayS) -> bool;
     static auto draw_dc_recorder_tab_item(const std::string &tabItemName, cam::DCVideoRecorderStates &rStates, cam::DCVideoRecorderSettings &rSettings) -> bool;
     static auto draw_dc_player_tab_item(const std::string &tabItemName, cam::DCVideoPlayerStates &pStates, cam::DCVideoPlayerSettings &pSettings) -> bool;
     static auto draw_dc_calibrator_tab_item(const std::string &tabItemName, bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, cam::DCCalibratorDisplaySettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> bool;

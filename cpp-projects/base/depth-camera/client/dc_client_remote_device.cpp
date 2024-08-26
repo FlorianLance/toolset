@@ -184,6 +184,12 @@ auto DCClientRemoteDevice::apply_command(Command command) -> void{
     }
 }
 
+auto DCClientRemoteDevice::ping() -> void{
+    Feedback feedback;
+    feedback.type = FeedbackType::ping;
+    i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
+}
+
 auto DCClientRemoteDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
     auto bData = deviceS.convert_to_json_binary();
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_device_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
@@ -279,7 +285,7 @@ auto DCClientRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
 
-    switch(message.feedback){
+    switch(message.type){
     case FeedbackType::message_received:
         if(message.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::init_server_client_connection)){
             i->remoteDeviceConnected = true;

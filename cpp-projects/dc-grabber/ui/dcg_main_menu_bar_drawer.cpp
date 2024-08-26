@@ -172,12 +172,6 @@ auto DCGMainMenuBarDrawer::draw() -> void{
             }
 
             if (ImGui::BeginMenu("Debug")){
-                // if(ImGui::MenuItem("Trigger debug_device_send_signal")){
-                //     DCGSignals::get()->debug_device_send_signal();
-                // }
-                if(ImGui::MenuItem("Ping server")){
-                    DCGSignals::get()->ping_server_signal();
-                }
 
                 if(ImGui::MenuItem("Disable sending failure")){
                     DCGSignals::get()->sending_failure_signal(false, 0);

@@ -33,7 +33,7 @@
 namespace tool::net{
 
 enum class Protocol : std::uint8_t{
-    ipv4, ipv6, unknow
+    ipv4= 0, ipv6, unknow
 };
 
 enum class Command : std::int8_t{
@@ -50,6 +50,7 @@ enum class FeedbackType : std::int8_t{
     quit,
     shutdown,
     restart,
+    ping,
     undefined,
     SizeEnum
 };
@@ -66,6 +67,7 @@ TFeedbackTypes
     {FeedbackType::quit,                "quit"sv},
     {FeedbackType::shutdown,            "shutdown"sv},
     {FeedbackType::restart,             "restart"sv},
+    {FeedbackType::ping,                "ping"sv},
     {FeedbackType::undefined,           "undefined"sv},
 }};
 

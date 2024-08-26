@@ -36,7 +36,7 @@ namespace tool{
 class DCGView {
 public:
 
-    DCGView(size_t idGrabber);
+    DCGView(size_t id);
     auto initialize() -> void;
 
     auto start() -> void;

@@ -55,7 +55,7 @@ DCClient::~DCClient(){
     clean();
 }
 
-auto DCClient::initialize(const std::string &clientSettingsPath) -> bool{
+auto DCClient::initialize(const std::string &clientSettingsPath, bool startThreads) -> bool{
 
     if(devices_nb() != 0){
         clean();
@@ -65,9 +65,12 @@ auto DCClient::initialize(const std::string &clientSettingsPath) -> bool{
         return false;
     }
     settings.filePath = clientSettingsPath;
+    for(auto &device : settings.devicesS){
+        device.connectionS.startReadingThread = startThreads;
+    }
 
     // init other settings
-    i->processing.initialize(settings.devicesS.size(), true);
+    i->processing.initialize(settings.devicesS.size(), startThreads);
 
     generate_clients();
 
@@ -142,6 +145,15 @@ auto DCClient::update() -> void{
 
                 // invalidate it
                 // sData.invalid_last_frame(ii);
+            }
+        }
+    }
+
+
+    for(auto &device : i->devices){
+        if(auto rD = dynamic_cast<DCClientRemoteDevice*>(device.get())){
+            if(rD->device_connected()){
+                rD->ping();
             }
         }
     }
@@ -326,6 +338,10 @@ auto DCClient::trigger_all_device_display_settings() -> void{
     for(size_t idC = 0; idC < settings.devicesS.size(); ++idC){
         update_device_display_settings_signal(idC, settings.devicesS[idC].displayS);
     }
+}
+
+auto DCClient::process_frames_from_external_thread() -> void{
+    i->processing.process();
 }
 
 auto DCClient::generate_clients() -> void{

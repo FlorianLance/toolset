@@ -57,22 +57,18 @@ using RMessageV =
         EndVal<UdpConnectionSettings>,
         EndVal<DCDelaySettings>,
         EndVal<Command>,
+        EndVal<Feedback>,
         EndPtr<DCDeviceSettings>,
         EndPtr<DCColorSettings>,
         EndPtr<DCFiltersSettings>
     >;
 
-struct Ping{
-};
-
 using SMessageV =
     std::variant<
         EndPtr<DCCompressedFrame>,
         EndVal<UdpConnectionSettings>,
-        EndVal<Feedback>,
-        EndVal<Ping>
+        EndVal<Feedback>
     >;
-
 
 template<typename ... Callable>
 struct Visitor : Callable...{
@@ -175,6 +171,15 @@ DCServer::Impl::Impl(){
 
             std::lock_guard l(messagesL);
             rMessages->push_back(EndVal<Command>{std::move(endpoint), command});
+
+        }break;
+        case DCMessageType::feedback:{
+
+            Feedback feedback;
+            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Feedback), reinterpret_cast<std::byte*>(&feedback));
+
+            std::lock_guard l(messagesL);
+            rMessages->push_back(EndVal<Feedback>{std::move(endpoint), feedback});
 
         }break;
         case DCMessageType::update_device_settings:{
@@ -325,7 +330,7 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         if(udpSenders[endPoint.id]->init_socket(m.second.address, std::to_string(m.second.port), protocol)){
 
                             Feedback feedback;
-                            feedback.feedback = FeedbackType::message_received;
+                            feedback.type = FeedbackType::message_received;
                             feedback.receivedMessageType = static_cast<MessageTypeId>(DCMessageType::init_server_client_connection);
                             udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
 
@@ -346,7 +351,23 @@ auto DCServer::Impl::send_messages_loop() -> void{
                     Logger::message(std::format("[DCServer] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
                     const auto &endPoint = m.first;
 
-                    if(udpSenders.contains(endPoint.id)){
+                    if(endPoint.id.empty()){ // if empty, apply feedback to all clients
+
+                        // command received
+                        if(feedback.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::command)){
+                            if(feedback.type == FeedbackType::disconnect){
+
+                                // disconnect all
+                                for(auto &udpSender : udpSenders){
+                                    udpSender.second->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
+                                    udpSender.second->clean_socket();
+                                    client_disconnected_signal(udpSender.first);
+                                }
+                                udpSenders.clear();
+                            }
+                        }
+
+                    } else if(udpSenders.contains(endPoint.id)){
 
                         // send message received feedback
                         udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
@@ -355,20 +376,13 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         if(feedback.receivedMessageType == static_cast<MessageTypeId>(DCMessageType::command)){
 
                             // disconnect command received
-                            if(feedback.feedback == FeedbackType::disconnect){
+                            if(feedback.type == FeedbackType::disconnect){
                                 Logger::message(std::format("[DCServer] Client disconnected [{}].\n", endPoint.id));
                                 udpSenders[endPoint.id]->clean_socket();
                                 udpSenders.erase(endPoint.id);
                                 client_disconnected_signal(endPoint.id);
                             }
                         }
-                    }
-                },
-                [&](EndVal<Ping> m){
-
-                    for(auto &sender : udpSenders){
-                        Feedback pingFeedback{static_cast<MessageTypeId>(DCMessageType::init_server_client_connection), FeedbackType::message_received};
-                        sender.second->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&pingFeedback), sizeof(Feedback)));
                     }
                 },
                 [&](EndPtr<DCCompressedFrame> m){
@@ -437,7 +451,7 @@ DCServer::DCServer(): i(std::make_unique<Impl>()){
     i->timeout_messages_signal.connect(&DCServer::timeout_messages_signal, this);
     i->client_connected_signal.connect([&](std::string id){
         std::unique_lock lg(settings.cInfos.lock);
-        settings.cInfos.clientsConnected.insert(id);
+        settings.cInfos.clientsConnected[id] = Time::nanoseconds_since_epoch();
     });
     i->client_disconnected_signal.connect([&](std::string id){
         std::unique_lock lg(settings.cInfos.lock);
@@ -463,21 +477,35 @@ auto DCServer::clean() -> void{
 }
 
 
+auto DCServer::reset_network() -> void{
+
+    i->stop_reading_thread();
+
+    settings.update_reading_interface();
+    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
+        Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
+        return;
+    }
+}
+
+auto DCServer::disconnect_clients() -> void{
+    i->sMessages.push_back(std::make_pair(EndPointId{}, Feedback{static_cast<MessageTypeId>(DCMessageType::command), FeedbackType::disconnect}));
+}
+
 auto DCServer::initialize(const std::string &serverSettingsPath) -> bool{
 
     if(!settings.load_from_file(serverSettingsPath)){
-        // ...
+        Logger::error(std::format("[DCServer::initialize] Error while reading server settings file at path [{}].\n", serverSettingsPath));
         return false;
     }
     settings.globalFilePath = serverSettingsPath;
 
     if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
-        // ...
+        Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return false;
     }
 
     i->start_sending_thread();
-    // ...
 
     return true;
 }
@@ -545,6 +573,13 @@ auto DCServer::update() -> void{
                             break;
                         }
                     },
+                    [&](EndVal<Feedback> m){
+                        if(m.second.type == FeedbackType::ping){
+                            if(settings.cInfos.clientsConnected.contains(m.first.id)){
+                                settings.cInfos.clientsConnected[m.first.id] = Time::nanoseconds_since_epoch();
+                            }
+                        }
+                    },
                     [&](EndPtr<DCDeviceSettings> m){
                         i->sMessages.push_back(std::make_pair(m.first, Feedback{static_cast<MessageTypeId>(DCMessageType::update_device_settings), FeedbackType::message_received}));
                         settings.deviceS = std::move(*m.second);
@@ -566,14 +601,10 @@ auto DCServer::update() -> void{
     }
 }
 
+
 auto DCServer::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
     i->sMessages.push_back(std::make_pair(EndPointId{}, std::move(frame)));
 }
-
-auto DCServer::ping_server() -> void{
-    i->sMessages.push_back(std::make_pair(EndPointId{}, Ping{}));
-}
-
 
 
 auto DCServer::simulate_sending_failure(bool enabled, int percentage) -> void{    

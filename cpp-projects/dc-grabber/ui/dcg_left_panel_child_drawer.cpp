@@ -47,7 +47,7 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
 
     if(ImGui::BeginChild("###settings_child2", ImVec2(size.x(), size.y()), true, windowFlags)){
         if (ImGui::BeginTabBar("###settings_tabbar")){
-            draw_client_info_tab_item(model->server.settings);
+            draw_server_info_tab_item(model->server.settings);
 
             if (ImGui::BeginTabItem("Settings###settings_tabitem")){
                 if(ImGui::BeginTabBar("###sub_settings_tabbar")){
@@ -56,6 +56,7 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
                     draw_model_tab_item(model->server.settings.modelS);
                     draw_colors_settings_tab_item(model->server.settings.deviceS.configS.typeDevice, model->server.settings.colorS);
                     draw_display_tab_item(model->uiSettings, model->server.settings.sceneDisplayS,  model->server.settings.displayS);
+                    draw_delay_tab_item(model->server.settings.delayS);
                     ImGui::EndTabBar();
                 }
                 ImGui::EndTabItem();
@@ -89,26 +90,73 @@ auto draw_config_file_name(const std::string &filePath) -> void{
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(cam::DCServerSettings &settings) -> void {
+auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(cam::DCServerSettings &settings) -> void {
 
-    if (!ImGui::BeginTabItem("Client info###settings_client_info_tabitem")){
+    if (!ImGui::BeginTabItem("Server info###settings_server_info_tabitem")){
         return;
     }
 
     ImGuiUiDrawer::title2("NETWORK");
     ImGui::Spacing();
 
-    // ImGuiUiDrawer::text(std::format("Id grabber: {}", settings.idLocalGrabber));
-    // ImGui::Spacing();
 
-    if(settings.udpReadingInterface.protocol == net::Protocol::ipv6){
-        ImGui::Text("PROTOCOL: IPV6");
-    }else{
-        ImGui::Text("PROTOCOL: IPV4");
+    ImGui::Text("Protocol:");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(75.f);
+    int guiCurrentProtocolSelection = static_cast<int>(settings.udpServerS.protocol);
+    if(ImGui::Combo("###settings_protocole_combo", &guiCurrentProtocolSelection, protocolItems, 2)){
+        settings.udpServerS.protocol = static_cast<net::Protocol>(guiCurrentProtocolSelection);
+        DCGSignals::get()->reset_reading_network_signal();
     }
+
+    static ImGuiIntS idRIS = {0,0,10,0.1f,1};
+
+    if(settings.udpServerS.protocol == net::Protocol::ipv4){
+        ImGui::Text("Available IPV4 interfaces:");
+        ImGui::Indent();
+        for(auto &interface : settings.ipv4Interfaces){
+            ImGuiUiDrawer::text(interface.ipAddress);
+        }
+        if(!settings.ipv4Interfaces.empty()){
+            idRIS.max = settings.ipv4Interfaces.size()-1;
+        }else{
+            idRIS.max = 0;
+        }
+        ImGui::Unindent();
+    }else if(settings.udpServerS.protocol == net::Protocol::ipv6){
+        ImGui::Text("Available IPV6 interfaces:");
+        ImGui::Indent();
+        for(auto &interface : settings.ipv6Interfaces){
+            ImGuiUiDrawer::text(interface.ipAddress);
+        }
+        if(!settings.ipv6Interfaces.empty()){
+            idRIS.max = settings.ipv6Interfaces.size()-1;
+        }else{
+            idRIS.max = 0;
+        }
+        ImGui::Unindent();
+    }
+
+    static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
+    int idRI = static_cast<int>(settings.udpServerS.udpReadingInterfaceId);
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
+        settings.udpServerS.udpReadingInterfaceId = idRI;
+        DCGSignals::get()->reset_reading_network_signal();
+    }
+
+    static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
+    static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &settings.udpServerS.udpReadingPort, idRP, dsRP)){
+        settings.udpServerS.udpReadingInterfaceId = idRI;
+        DCGSignals::get()->reset_reading_network_signal();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
     ImGui::Spacing();
 
-    ImGui::Text("UDP reading:");
+    ImGui::Text("Current UDP reading:");
     ImGui::Indent();
     ImGuiUiDrawer::text(std::format("IP address: [{}]", settings.udpReadingInterface.ipAddress));
     ImGuiUiDrawer::text(std::format("Port: {}", settings.udpServerS.udpReadingPort));
@@ -119,12 +167,16 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(cam::DCServerSettings &s
     {
         std::unique_lock lg(settings.cInfos.lock);
         ImGuiUiDrawer::text(std::format("Nb connected: [{}]", settings.cInfos.clientsConnected.size()));
-
+        auto cTime = Time::nanoseconds_since_epoch();
         for(const auto &id : settings.cInfos.clientsConnected){
-            ImGuiUiDrawer::text(id);
+            ImGuiUiDrawer::text(std::format("name: [{}], last ping: [{}]ms"sv, id.first, Time::difference_ms(id.second, cTime).count()));
         }
     }
     ImGui::Unindent();
+    ImGui::Spacing();
+    if(ImGui::Button("Disconnect all clients")){
+        DCGSignals::get()->disconnect_all_clients_signal();
+    }
     ImGui::Separator();
 
     ImGui::Text("Last frame sent:");
@@ -135,32 +187,12 @@ auto DCGLeftPanelChildDrawer::draw_client_info_tab_item(cam::DCServerSettings &s
 
     ImGui::Separator();
 
-    // if(settings.imuSample.has_value()){
-    //     ImGui::Text("IMU last sample");
-    //     ImGui::Indent();
-    //     ImGuiUiDrawer::text(std::format("{:17.2f} : temperature(°)", settings.imuSample.value().temperature));
-    //     const auto &a = settings.imuSample.value().acc;
-    //     ImGuiUiDrawer::text(std::format("{:5.2f} {:5.2f} {:5.2f} : accelerometer(m/s²)", a.x(), a.y(), a.z()));
-    //     const auto &g = settings.imuSample.value().gyr;
-    //     ImGuiUiDrawer::text(std::format("{:5.2f} {:5.2f} {:5.2f} : gyroscope(rad/s)", g.x(), g.y(), g.z()));
-    //     ImGui::Unindent();
-    // }
-
+    ImGuiUiDrawer::title2("SETTINGS FILES");
     ImGui::Spacing();
+    ImGuiUiDrawer::text(std::format("Current local ID [{}]", settings.idG));
+    ImGui::Text("Defined by the N value of the exe argument: \"-iN\"");
+    ImGui::Text("This id is used to determinewhich settings file\n to be loaded");
     ImGui::Separator();
-
-    ImGui::Text("Other:");
-    ImGui::Indent();
-
-    int delay = settings.delayS.delayMs;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-        settings.delayS.delayMs = delay;
-        DCGSignals::get()->update_delay_settings_signal(settings.delayS);
-    }
-    ImGui::Unindent();
-    ImGui::Spacing();
-
-    ImGuiUiDrawer::title2("CONFIG FILES");
     ImGui::Spacing();
 
     if(!settings.globalFilePath.empty()){
@@ -267,6 +299,12 @@ auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &model) -
 
     if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model)){
         DCGSignals::get()->update_model_settings_signal(0, model);
+    }
+}
+
+auto DCGLeftPanelChildDrawer::draw_delay_tab_item(cam::DCDelaySettings &delayS) -> void{
+    if(DCUIDrawer::draw_dc_delay_tab_item("Delay###delay_tabitem", delayS)){
+        DCGSignals::get()->update_delay_settings_signal(delayS);
     }
 }
 

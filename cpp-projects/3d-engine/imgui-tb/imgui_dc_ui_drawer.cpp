@@ -677,7 +677,7 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
     bool update = false;
     auto d = model.transformation.array.data();
 
-    ImGuiUiDrawer::title2("Calibration matrix");
+    ImGuiUiDrawer::title2("CALIBRATION MATRIX");
     if(ImGui::DragFloat4("###r0", d, 0.001f)){
         update = true;
     }
@@ -698,7 +698,7 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
     ImGui::Spacing();
     ImGui::Separator();
 
-    ImGuiUiDrawer::title2("Additional transformation");
+    ImGuiUiDrawer::title2("EXTRA TRANSFORMATION");
 
     ImGui::Spacing();
     ImGui::Text("Transformation to be aplied on the model matrix");    
@@ -757,6 +757,26 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
         model.rotation       = {};
         model.translation    = {};
         model.scaling        = {1.f,1.f,1.f};
+        update = true;
+    }
+
+    ImGui::EndTabItem();
+
+    return update;
+}
+
+auto DCUIDrawer::draw_dc_delay_tab_item(const std::string &tabItemName, cam::DCDelaySettings &delayS) -> bool{
+    if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
+        return false;
+    }
+
+    bool update = false;
+
+    ImGuiUiDrawer::title2("DELAY");
+
+    int delay = static_cast<int>(delayS.delayMs);
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay", "delay", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
+        delayS.delayMs = delay;
         update = true;
     }
 
