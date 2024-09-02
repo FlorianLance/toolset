@@ -178,9 +178,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                             if(sAction.type == SType::Device){
                                 client.update_device_settings(id, cSettings.devicesS[id].deviceS);
                             }else if(sAction.type == SType::Filters){
-                                client.update_filters(id, cSettings.devicesS[id].filtersS);
+                                client.update_filters_settings(id, cSettings.devicesS[id].filtersS);
                             }else if(sAction.type == SType::CalibrationFilters){
-                                client.update_calibration_filters(id, cSettings.devicesS[id].calibrationFiltersS);
+                                client.update_calibration_filters_settings(id, cSettings.devicesS[id].calibrationFiltersS);
                             }else if(sAction.type == SType::Color){
                                 client.update_color_settings(id, cSettings.devicesS[id].colorS);
                             }else if(sAction.type == SType::Model){
@@ -196,9 +196,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                         if(sAction.type == SType::Device){
                             client.update_device_settings(sAction.id, cSettings.devicesS[sAction.id].deviceS);
                         }else if(sAction.type == SType::Filters){
-                            client.update_filters(sAction.id, cSettings.devicesS[sAction.id].filtersS);
+                            client.update_filters_settings(sAction.id, cSettings.devicesS[sAction.id].filtersS);
                         }else if(sAction.type == SType::CalibrationFilters){
-                            client.update_calibration_filters(sAction.id, cSettings.devicesS[sAction.id].calibrationFiltersS);
+                            client.update_calibration_filters_settings(sAction.id, cSettings.devicesS[sAction.id].calibrationFiltersS);
                         }else if(sAction.type == SType::Color){
                             client.update_color_settings(sAction.id, cSettings.devicesS[sAction.id].colorS);
                         }else if(sAction.type == SType::Model){
@@ -222,9 +222,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                 if(sAction.type == SType::Device){
                     client.update_device_settings(id, DCDeviceSettings());
                 }else if(sAction.type == SType::Filters){
-                    client.update_filters(id, DCFiltersSettings());
+                    client.update_filters_settings(id, DCFiltersSettings());
                 }else if(sAction.type == SType::CalibrationFilters){
-                    client.update_calibration_filters(id, DCFiltersSettings::default_init_for_calibration());
+                    client.update_calibration_filters_settings(id, DCFiltersSettings::default_init_for_calibration());
                 }else if(sAction.type == SType::Color){
                     client.update_color_settings(id, DCColorSettings());
                 }else if(sAction.type == SType::Model){
@@ -236,9 +236,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
             if(sAction.type == SType::Device){
                 client.update_device_settings(sAction.id, DCDeviceSettings());
             }else if(sAction.type == SType::Filters){
-                client.update_filters(sAction.id, DCFiltersSettings());
+                client.update_filters_settings(sAction.id, DCFiltersSettings());
             }else if(sAction.type == SType::CalibrationFilters){
-                client.update_calibration_filters(sAction.id, DCFiltersSettings::default_init_for_calibration());
+                client.update_calibration_filters_settings(sAction.id, DCFiltersSettings::default_init_for_calibration());
             }else if(sAction.type == SType::Color){
                 client.update_color_settings(sAction.id, DCColorSettings());
             }else if(sAction.type == SType::Model){

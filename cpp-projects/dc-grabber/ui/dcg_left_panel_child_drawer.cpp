@@ -286,6 +286,7 @@ auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCVideoRecorderStates
     if(recStates.moveTime){
         DCGSignals::get()->set_recorder_time_signal(recStates.currentTime);
     }
+    recStates.reset_actions();
 
     if (ImGuiFileDialog::Instance()->Display("Save recording")) {
         if (ImGuiFileDialog::Instance()->IsOk()){

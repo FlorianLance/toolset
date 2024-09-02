@@ -1,6 +1,5 @@
 {
     "base": {
-        "type": 6,
         "type_string": "DC server",
         "version": 1
     },
@@ -21,7 +20,6 @@
             1.0
         ],
         "base": {
-            "type": 7,
             "type_string": "filters",
             "version": 1
         },
@@ -90,30 +88,27 @@
         "auto_white_balance": false,
         "backlight_compensation": false,
         "base": {
-            "type": 3,
-            "type_string": "remote server",
+            "type_string": "color",
             "version": 1
         },
-        "brightness": 128,
-        "contrast": 5,
-        "exposure_time": 33330,
-        "gain": 128,
+        "brightness": 10,
+        "contrast": 50,
+        "exposure_time": 200,
+        "gain": 40,
         "hdr": true,
-        "powerline_frequency": 1,
-        "saturation": 32,
-        "sharpness": 2,
-        "white_balance": 4500
+        "powerline_frequency": 2,
+        "saturation": 64,
+        "sharpness": 24,
+        "white_balance": 6500
     },
     "device": {
         "base": {
-            "type": 6,
-            "type_string": "DC server",
+            "type_string": "device",
             "version": 1
         },
         "config": {
             "base": {
-                "type": 7,
-                "type_string": "filters",
+                "type_string": "device config",
                 "version": 1
             },
             "bt_GPU_id": 0,
@@ -139,18 +134,17 @@
             "delay_between_color_and_depth_usec": 0,
             "disable_LED": false,
             "id_device": 0,
-            "mode": 3,
+            "mode": 23,
             "open_device": true,
             "start_reading": true,
             "subordinate_delay_usec": 0,
             "synch_mode": 0,
             "synchronize_color_and_depth": true,
-            "type_device": 0
+            "type_device": 1
         },
         "data": {
             "base": {
-                "type": 8,
-                "type_string": "color",
+                "type_string": "device data",
                 "version": 1
             },
             "c_generation": {
@@ -186,10 +180,14 @@
                 "cloud": false,
                 "cloud_color_mode": 1,
                 "color": false,
+                "color_compression_mode": 0,
                 "dept_sized_color": true,
                 "depth": true,
+                "depth_compression_mode": 0,
+                "depth_sized_color_compression_mode": 0,
                 "imu": false,
                 "infra": false,
+                "infra_compression_mode": 0,
                 "jpeg_compression_rate": 80
             },
             "s_generation": {
@@ -202,7 +200,7 @@
                 "cloud_gen_mode": 0,
                 "color_image": false,
                 "depth": true,
-                "depth_image": false,
+                "depth_image": true,
                 "depth_sized_color_image": true,
                 "imu": false,
                 "infra": false,
@@ -227,13 +225,12 @@
             1.0
         ],
         "base": {
-            "type": 2,
-            "type_string": "UDP connection",
+            "type_string": "filters",
             "version": 1
         },
         "do_erosion": false,
         "do_local_diff_filtering": true,
-        "do_min_neighbours_filtering": false,
+        "do_min_neighbours_filtering": true,
         "erosion_connectivity": 3,
         "erosion_loops": 1,
         "filter_color": [
@@ -258,7 +255,7 @@
         ],
         "max_distance_after_closest_point": 0.20000000298023224,
         "max_height_f": 0.9200000166893005,
-        "max_local_diff": 10.0,
+        "max_local_diff": 13.0,
         "max_sphere_distance": 1000.0,
         "max_widht_f": 1.0,
         "min_depth_f": 0.0,
@@ -266,7 +263,7 @@
         "min_neighbours_connectivity": 2,
         "min_neighbours_loops": 1,
         "min_widht_f": 0.0,
-        "nb_min_neighbours": 1,
+        "nb_min_neighbours": 4,
         "plane1_A": [
             1.0,
             1.0,
@@ -293,7 +290,6 @@
     },
     "model": {
         "base": {
-            "type": 9,
             "type_string": "model",
             "version": 1
         },
@@ -318,12 +314,11 @@
     },
     "udp_server": {
         "base": {
-            "type": 0,
             "type_string": "UDP server",
             "version": 1
         },
         "id_interface": 0,
-        "protocol": "ipv6",
+        "protocol": "ipv4",
         "reading_port": 8888
     }
 }

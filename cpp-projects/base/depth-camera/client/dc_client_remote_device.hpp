@@ -58,6 +58,7 @@ public:
 
     // when no reading thread started
     auto read_data_from_network() -> size_t;
+    auto trigger_received_packets() -> void;
 
     // signals
     SSS<std::int64_t> remote_synchro_signal;

@@ -158,8 +158,8 @@ auto DCMController::set_connections() -> void{
     s->update_model_settings_signal.connect(                &DCClient::update_model_settings,                   client);
     calibrator->validated_calibration_signal.connect(       &DCClient::update_model_settings,                   client);
     s->update_device_settings_signal.connect(               &DCClient::update_device_settings,                  client);
-    s->update_filters_settings_signal.connect(              &DCClient::update_filters,                          client);
-    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters,              client);
+    s->update_filters_settings_signal.connect(              &DCClient::update_filters_settings,                          client);
+    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters_settings,              client);
     s->update_color_settings_signal.connect(                &DCClient::update_color_settings,                   client);
     s->update_delay_settings_signal.connect(                &DCClient::update_delay_settings,                   client);
     // s->update_scene_display_settings_signal.connect(        &DCClient::update_scene_display_settings,           client);

@@ -55,7 +55,30 @@ cpp-projects/_resources/textures
 cpp-projects/_resources/splash
 
 
+# unity-projects
+unity-projects/HDRP/DCBodyscan/
+unity-projects/HDRP/DCBodyscan/[Ll]ibrary/
+unity-projects/HDRP/DCBodyscan/[Tt]emp/
+unity-projects/HDRP/DCBodyscan/[Oo]bj/
+unity-projects/HDRP/DCBodyscan/[Bb]uild/
+unity-projects/HDRP/DCBodyscan/[Bb]uilds/
+unity-projects/HDRP/DCBodyscan/[Ll]ogs/
+unity-projects/HDRP/DCBodyscan/[Uu]ser[Ss]ettings/
 
+unity-projects/HDRP/DCBodyscan/*.dll
+unity-projects/HDRP/DCBodyscan/*.sln
+unity-projects/HDRP/DCBodyscan/*.csproj
+unity-projects/HDRP/DCBodyscan/.vsconfig
+unity-projects/HDRP/DCBodyscan/.vs
+unity-projects/HDRP/DCBodyscan/UIElementsSchema
+
+
+unity-projects/HDRP/DCBodyscan/plugins
+unity-projects/HDRP/DCBodyscan/platforms
+unity-projects/HDRP/DCBodyscan/imageformats
+unity-projects/HDRP/DCBodyscan/styles
+
+unity-projects/HDRP/DCBodyscan/Assets/DCVideos
 
 
 

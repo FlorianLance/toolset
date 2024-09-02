@@ -264,13 +264,13 @@ auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int 
     if(!udpReader.init_socket(readingAdress, readingPort, protocol)){
         return false;
     }
-    udpReader.start_reading_thread();
+    udpReader.start_threads();
 
     return true;
 }
 
 auto DCServer::Impl::stop_reading_thread() -> void{
-    udpReader.stop_reading_thread();
+    udpReader.stop_threads();
     udpReader.clean_socket();
 }
 

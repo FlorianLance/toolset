@@ -74,8 +74,8 @@ UdpReader::UdpReader() : i(std::make_unique<Impl>()){
 
 UdpReader::~UdpReader(){
 
-    if(is_reading_thread_started()){
-        stop_reading_thread();
+    if(are_threads_started()){
+        stop_threads();
     }
     if(is_connected()){
         clean_socket();
@@ -84,7 +84,7 @@ UdpReader::~UdpReader(){
 
 auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
 
-    if(is_reading_thread_started()){
+    if(are_threads_started()){
         Logger::error(std::format("[UdpReader::init_socket] Cannot init socket while reading thread is still active.\n"sv));
         return false;
     }
@@ -137,47 +137,45 @@ auto UdpReader::clean_socket() -> void{
     }
 }
 
-auto UdpReader::start_reading_thread() -> void{
+auto UdpReader::start_threads() -> void{
 
-
-
-    if(is_reading_thread_started()){
-        Logger::error("[UdpReader::start_reading_thread] Reading thread already started.\n");
+    if(are_threads_started()){
+        Logger::error("[UdpReader::start_threads] Reading thread already started.\n");
         return;
     }
 
     if(!is_connected()){
-        Logger::error("[UdpReader::start_reading_thread] Socket not connected.\n");
+        Logger::error("[UdpReader::start_threads] Socket not connected.\n");
         return;
     }
 
     if((i->readPacketsT == nullptr) && (i->processPacketsT == nullptr)){
 
-        auto lg = LogGuard("[UdpReader::start_reading_thread] Start threads"sv);
+        auto lg = LogGuard("[UdpReader::start_threads] Start threads"sv);
         i->threadsStarted  = true;
         i->readPacketsT    = std::make_unique<std::thread>([&](){
-            auto lgS = LogGuard("[UdpReader::start_reading_thread] Receiving thread"sv);
+            auto lgS = LogGuard("[UdpReader::start_threads] Receiving thread"sv);
             while(i->threadsStarted){
                 receive_data();
             }
         });
         i->processPacketsT    = std::make_unique<std::thread>([&](){            
-            auto lgS = LogGuard("[UdpReader::start_reading_thread] Triggering thread"sv);
+            auto lgS = LogGuard("[UdpReader::start_threads] Triggering thread"sv);
             while(i->threadsStarted){
                 trigger_received_packets();
             }
         });
 
     }else{
-        Logger::error("[UdpReader::start_reading_thread] Cannot start reading, thread not cleaned.\n");
+        Logger::error("[UdpReader::start_threads] Cannot start reading, thread not cleaned.\n");
         return;
     }
 }
 
-auto UdpReader::stop_reading_thread() -> void{
+auto UdpReader::stop_threads() -> void{
 
-    if(!is_reading_thread_started()){
-        Logger::error("[UdpReader::stop_reading_thread] Reading thread not started.\n");
+    if(!are_threads_started()){
+        Logger::error("[UdpReader::stop_threads] Reading thread not started.\n");
         return;
     }
 
@@ -185,24 +183,24 @@ auto UdpReader::stop_reading_thread() -> void{
 
     if(i->readPacketsT != nullptr){        
         if(i->readPacketsT->joinable()){
-            Logger::log("[UdpReader::stop_reading_thread] Join readPacketsT.\n"sv);
+            Logger::log("[UdpReader::stop_threads] Join readPacketsT.\n"sv);
             i->readPacketsT->join();
         }
-        Logger::log("[UdpReader::stop_reading_thread] Destroy readPacketsT.\n"sv);
+        Logger::log("[UdpReader::stop_threads] Destroy readPacketsT.\n"sv);
         i->readPacketsT = nullptr;
     }
 
     if(i->processPacketsT != nullptr){
         if(i->processPacketsT->joinable()){
-            Logger::log("[UdpReader::stop_reading_thread] Join processPacketsT.\n"sv);
+            Logger::log("[UdpReader::stop_threads] Join processPacketsT.\n"sv);
             i->processPacketsT->join();
         }
-        Logger::log("[UdpReader::stop_reading_thread] Destroy processPacketsT.\n"sv);
+        Logger::log("[UdpReader::stop_threads] Destroy processPacketsT.\n"sv);
         i->processPacketsT = nullptr;
     }
 }
 
-auto UdpReader::is_reading_thread_started() const noexcept -> bool {
+auto UdpReader::are_threads_started() const noexcept -> bool {
     return i->threadsStarted;
 }
 
@@ -303,7 +301,7 @@ auto UdpReader::is_connected() const noexcept -> bool{
 
 auto UdpReader::receive_data_from_external_thread() -> size_t{
 
-    if(is_reading_thread_started()){
+    if(are_threads_started()){
         Logger::error("[UdpReader::receive_data_from_external_thread] Thread is already started, cannot be called from main thread.\n");
         return 0;
     }
@@ -313,168 +311,12 @@ auto UdpReader::receive_data_from_external_thread() -> size_t{
 
 auto UdpReader::trigger_received_packets_from_external_thread() -> void{
 
-    if(is_reading_thread_started()){
+    if(are_threads_started()){
         Logger::error("[UdpReader::generate_packets_from_external_thread] Thread is already started, cannot be called from main thread.\n");
         return;
     }
     trigger_received_packets();
 }
-
-
-// auto UdpReader::read_packets() -> size_t{
-
-// if(!i->connected){
-    //     return 0;
-    // }
-
-    // size_t nbBytesReceived = 0;
-
-    // // receive data
-    // try {
-    //     nbBytesReceived = i->socket->receive_from(
-    //         boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
-    //         senderEndpoint
-    //     );
-    //     i->packetsRingBuffer.increment();
-    // } catch (const boost::system::system_error &error) {
-    //     if(error.code() != boost::asio::error::timed_out){
-    //         Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: [{}]\n", error.what());
-    //         buffers.clear();
-    //         break;
-    //     }
-    // }
-
-    // // if(!i->connected){
-    // //     return 0;
-    // // }
-
-    // // // receive packets
-    // // std::vector<std::tuple<std::span<std::uint8_t>, size_t, std::string>> buffers;
-    // // bool readPackets = true;
-    // // while(readPackets){
-
-    // //     auto buffer = i->packetsRingBuffer.current_span(maxPacketSize);
-    // //     size_t nbBytesReceived = 0;
-    // //     udp::endpoint senderEndpoint;
-
-    // //     // receive data
-    // //     try {
-    // //         nbBytesReceived = i->socket->receive_from(
-    // //             boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
-    // //             senderEndpoint
-    // //         );
-    // //         i->packetsRingBuffer.increment();
-    // //     } catch (const boost::system::system_error &error) {
-    // //         if(error.code() != boost::asio::error::timed_out){
-    // //             Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: [{}]\n", error.what());
-    // //             buffers.clear();
-    // //             break;
-    // //         }
-    // //     }
-
-    // //     // std::cout << "R " << nbBytesReceived << " | ";
-    // //     if(nbBytesReceived != 0){
-    // //         buffers.push_back({buffer, nbBytesReceived, senderEndpoint.address().to_string()});
-
-    // //     }else{
-    // //         break;
-    // //     }
-    // // }
-
-    // // // process packets
-    // // size_t totalNbBytesReceived = 0;
-    // // for(const auto &buffer : buffers){
-
-    // //     auto packet        = std::span(reinterpret_cast<const std::byte*>(std::get<0>(buffer).data()), std::get<1>(buffer));
-    // //     auto headerData    = packet.first(sizeof(Header));
-    // //     auto dataToProcess = packet.subspan(sizeof(Header));
-    // //     Header header(headerData);
-
-    // //     // check packet size
-    // //     if(header.currentPacketSizeBytes != packet.size_bytes()){
-    // //         invalid_packet_size_signal();
-    // //         Logger::error(std::format("[UdpReader::read_packet] Invalid packet size: [{}], expected: [{}]\n", header.currentPacketSizeBytes, packet.size_bytes()));
-    // //         return 0;
-    // //     }
-
-    // //     // check packet checksum
-    // //     if(header.checkSum != 0){
-    // //         auto checksum = data::Checksum::gen_crc16(dataToProcess);
-    // //         if(checksum != header.checkSum){
-    // //             invalid_checksum_signal();
-    // //             Logger::error(std::format("[UdpReader::read_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
-    // //             return 0;
-    // //         }
-    // //     }
-
-    // //     // send received packet
-    // //     auto endPoint = EndPoint(std::get<2>(buffer), header.senderId);
-    // //     packed_received_signal(std::move(endPoint), std::move(header), dataToProcess);
-
-    // //     totalNbBytesReceived += std::get<1>(buffer);
-    // // }
-
-    // // return totalNbBytesReceived;
-
-//     if(!i->connected){
-//         return 0;
-//     }
-
-//     auto buffer = i->packetsRingBuffer.current_span(maxPacketSize);
-
-//     size_t nbBytesReceived = 0;
-//     udp::endpoint senderEndpoint;
-
-//     try {
-//         // receive data
-//         nbBytesReceived = i->socket->receive_from(
-//             boost::asio::buffer(buffer.data(),static_cast<size_t>(buffer.size())),
-//             senderEndpoint
-//         );
-//         i->packetsRingBuffer.increment();
-
-//     } catch (const boost::system::system_error &error) {
-//         if(error.code() == boost::asio::error::timed_out){
-//             timeout_packet_signal();
-//         }else{
-//             Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: [{}]\n", error.what());
-//         }
-//         return 0;
-//     }
-
-//     if(nbBytesReceived == 0){
-//         Logger::warning("[UdpReader::read_packet] No bytes received.");
-//         return 0;
-//     }
-
-//     auto packet        = std::span(reinterpret_cast<const std::byte*>(buffer.data()), nbBytesReceived);
-//     auto headerData    = packet.first(sizeof(Header));
-//     auto dataToProcess = packet.subspan(sizeof(Header));
-//     Header header(headerData);
-
-//     // check packet size
-//     if(header.currentPacketSizeBytes != packet.size_bytes()){
-//         invalid_packet_size_signal();
-//         Logger::error(std::format("[UdpReader::read_packet] Invalid packet size: [{}], expected: [{}]\n", header.currentPacketSizeBytes, packet.size_bytes()));
-//         return 0;
-//     }
-
-//     // check packet checksum
-//     if(header.checkSum != 0){
-//         auto checksum = data::Checksum::gen_crc16(dataToProcess);
-//         if(checksum != header.checkSum){
-//             invalid_checksum_signal();
-//             Logger::error(std::format("[UdpReader::read_packet] Invalid checksum size: [{}], expected: [{}]\n", checksum, header.checkSum));
-//             return 0;
-//         }
-//     }
-
-//     // send received packet
-//     auto endPoint = EndPoint(senderEndpoint.address().to_string(), header.senderId);
-//     packed_received_signal(std::move(endPoint), std::move(header), dataToProcess);
-
-//     return nbBytesReceived;
-// }
 
 
 

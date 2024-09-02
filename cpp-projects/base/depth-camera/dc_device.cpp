@@ -210,6 +210,7 @@ auto DCDevice::process() -> void{
 
         // update settings
         if(i->device != nullptr){
+
             if(i->device->is_opened()){
 
                 std::unique_lock<std::mutex> lock(i->locker);
@@ -237,10 +238,10 @@ auto DCDevice::process() -> void{
         if(i->device->is_opened()){
             if(readFrames ){
                 i->device->process();
-                auto tp = i->device->get_duration_ms("PROCESS");
-                if(tp->count() < 30){
-                    std::this_thread::sleep_for(std::chrono::milliseconds(30 - tp->count()));
-                }
+                // auto tp = i->device->get_duration_ms("PROCESS");
+                // if(tp->count() < 30){
+                //     std::this_thread::sleep_for(std::chrono::milliseconds(30 - tp->count()));
+                // }
                 return;
             }
         }
@@ -294,7 +295,6 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
     i->deviceS = deviceS;
-    // i->dAction = dAction;
     i->actions.push_back(dAction);
     i->readFrames = newConfigS.startReading;
     // if(deviceChanged){
@@ -318,7 +318,6 @@ auto DCDevice::update_color_settings(const DCColorSettings &colorS) -> void{
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    // i->dAction = dAction;
     i->actions.push_back(dAction);
 }
 
@@ -331,7 +330,6 @@ auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> voi
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    // i->dAction = dAction;
     i->actions.push_back(dAction);
 }
 
@@ -344,12 +342,11 @@ auto DCDevice::update_delay_settings(const DCDelaySettings &delayS) -> void{
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    // i->dAction = dAction;
     i->actions.push_back(dAction);
 }
 
 auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{
-    if(i->deviceInitialized){
+    if(i->deviceOpened){
         if(auto duration = i->device->get_duration_ms("CAPTURE_FRAME"sv); duration.has_value()){
             return duration.value().count();
         }
@@ -358,7 +355,7 @@ auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{
 }
 
 auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
-    if(i->deviceInitialized){
+    if(i->deviceOpened){
         if(auto duration = i->device->get_duration_ms("PROCESSING_DATA"sv); duration.has_value()){
             return duration.value().count();
         }
@@ -367,7 +364,7 @@ auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
 }
 
 auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
-    if(i->deviceInitialized){
+    if(i->deviceOpened){
         if(auto duration = i->device->get_duration_ms(id); duration.has_value()){
             return duration.value().count();
         }
@@ -376,7 +373,7 @@ auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
 }
 
 auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
-    if(i->deviceInitialized){
+    if(i->deviceOpened){
         if(auto duration = i->device->get_duration_micro_s(id); duration.has_value()){
             return duration.value().count();
         }

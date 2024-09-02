@@ -48,7 +48,7 @@ public:
     auto initialize(size_t nbGrabbers) -> void;
     auto draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void;
     auto append_global_log(const std::string &log) -> void;
-    auto append_feedback_log(size_t idG, const std::string &log) -> void;
+    auto append_feedback_log(size_t idG, net::Feedback feedback) -> void;
 
 private:
 

@@ -38,7 +38,7 @@ FemtoMegaDeviceImpl::FemtoMegaDeviceImpl(){
 
     auto lg = LogGuard("FemtoMegaDeviceImpl::FemtoMegaDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
-    // orbbecD->query_devices("Femto Mega"sv, true);
+    orbbecD->query_devices("Femto Mega"sv, true);
 }
 
 auto FemtoMegaDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
@@ -49,6 +49,11 @@ auto FemtoMegaDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
     if(mInfos.image_format() != DCImageFormat::MJPG){
         Logger::warning("Femto Mega must use MJPG image format, format ignored.\n");
         mInfos.force_image_format(DCImageFormat::MJPG);
+    }
+
+    if(orbbecD == nullptr){
+        orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMega);
+        // orbbecD->query_devices("Femto Mega"sv, true);
     }
 
     if(orbbecD->open(mInfos, settings.config, settings.color)){
@@ -63,22 +68,34 @@ auto FemtoMegaDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
 auto FemtoMegaDeviceImpl::close() -> void {
     auto lg = LogGuard("FemtoMegaDeviceImpl::close"sv);
     orbbecD->close();
+    orbbecD = nullptr;
 }
 
 auto FemtoMegaDeviceImpl::update_from_colors_settings() -> void{
-    orbbecD->update_from_colors_settings(settings.color);
+    if(orbbecD != nullptr){
+        orbbecD->update_from_colors_settings(settings.color);
+    }
 }
 
 auto FemtoMegaDeviceImpl::is_opened() const noexcept -> bool{
-    return orbbecD->is_opened();
+    if(orbbecD != nullptr){
+        return orbbecD->is_opened();
+    }
+    return false;
 }
 
 auto FemtoMegaDeviceImpl::nb_devices() const noexcept -> uint32_t{
-    return static_cast<std::uint32_t>(orbbecD->nb_devices());
+    if(orbbecD != nullptr){
+        return static_cast<std::uint32_t>(orbbecD->nb_devices());
+    }
+    return 0;
 }
 
 auto FemtoMegaDeviceImpl::device_name() const noexcept -> std::string{
-    return orbbecD->device_name();
+    if(orbbecD != nullptr){
+        return orbbecD->device_name();
+    }
+    return "";
 }
 
 auto FemtoMegaDeviceImpl::capture_frame(int32_t timeoutMs) -> bool{

@@ -230,16 +230,43 @@ auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &co
 
     auto lg = LogGuard("AzureBaseDevice::open"sv);
 
-    try {
-        if(i->device != nullptr){
-            Logger::message("Destroy device.\n");
-            i->device = nullptr;
-            Logger::message("Device destroyed.\n");
-        }
+    if(i->device != nullptr){
+        Logger::message("Destroy device.\n");
+        i->device = nullptr;
+        Logger::message("Device destroyed.\n");
+    }
 
+    bool useSerialNum = false;
+    if(useSerialNum){
+        // for(size_t idD = 0; idD < i->deviceCount; ++idD){
+        //     try{
+        //         i->device     = std::make_unique<k4a::device>(k4a::device::open(idD));
+        //     }catch(const std::runtime_error &er){
+        //         continue;
+        //     }
+        //     if(i->device->get_serialnum() == configS.strIdDevice){
+        //         break;
+        //     }else{
+        //         i->device = nullptr;
+        //     }
+        // }
+
+        // if(i->device == nullptr){
+        //     Logger::error(std::format("[AzureBaseDevice::open] Cannot open device with id [{}].\n", configS.strIdDevice));
+        //     return  false;
+        // }
+    }else{
         Logger::message(std::format("Create device from id [{}].\n", configS.idDevice));
-        i->device     = std::make_unique<k4a::device>(k4a::device::open(configS.idDevice));
+        try{
+            i->device = std::make_unique<k4a::device>(k4a::device::open(configS.idDevice));
+        }catch(const std::runtime_error &er){
+            Logger::error(std::format("[AzureBaseDevice::open] Canot open device with id [{}], error: [{}].\n",configS.idDevice, er.what()));
+            return false;
+        }
         Logger::message("Device created.\n");
+    }
+
+    try {
 
         i->deviceName = i->device->get_serialnum();
         Logger::message(std::format("Device with name {} created.\n",i->deviceName));

@@ -90,6 +90,7 @@ auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMModel *model) -> void{
 
 auto DCMMainWindowDrawer::draw_menu() -> void{
 
+    bool openpopuptemp = false;
     if (ImGui::BeginMainMenuBar()){
 
         if (ImGui::BeginMenu("Settings")){
@@ -316,6 +317,13 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Help")){
+            if(ImGui::MenuItem("About")){
+                openpopuptemp = true;
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Developer")){
 
             if (ImGui::BeginMenu("Shaders")){
@@ -353,6 +361,25 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
 
             ImGui::EndMenu();
         }
+
+        if (openpopuptemp == true) {
+            ImGui::OpenPopup("About");
+        }
+
+        if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Project repository: https://github.com/FlorianLance/toolset/blob/main/LICENSE");
+            ImGui::Spacing();
+            ImGui::Text("Author: Florian Lance ");
+            ImGui::Text("Github: https://github.com/FlorianLance");
+            ImGui::Text("Linkedin: https://www.linkedin.com/in/florian-lance/");
+
+            if (ImGui::Button("Close", ImVec2(60, 0))){
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
+
         ImGui::EndMainMenuBar();
     }
 

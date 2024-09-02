@@ -790,7 +790,6 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     cam::DCVideoRecorderStates &rStates,
     cam::DCVideoRecorderSettings &rSettings) -> bool{
 
-
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.data())){
         return false;
     }

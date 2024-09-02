@@ -42,7 +42,7 @@ DCMView::DCMView(){
     context.minorVersion      = 6;
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
-    const std::string numVersion = "2.1";
+    const std::string numVersion = "2.2";
     m_glW = std::make_unique<graphics::DCMGlWindow>(std::format("DC manager v{}", numVersion), screen,context);
     m_glW->init();
 }

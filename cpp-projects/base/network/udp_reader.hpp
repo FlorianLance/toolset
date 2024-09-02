@@ -45,9 +45,9 @@ public:
     [[nodiscard]] auto is_connected() const noexcept -> bool;
 
     // reading thread
-    auto start_reading_thread() -> void;
-    auto stop_reading_thread() -> void;
-    [[nodiscard]] auto is_reading_thread_started() const noexcept -> bool;
+    auto start_threads() -> void;
+    auto stop_threads() -> void;
+    [[nodiscard]] auto are_threads_started() const noexcept -> bool;
 
 
     auto receive_data_from_external_thread() -> size_t;

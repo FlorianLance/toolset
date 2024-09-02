@@ -59,7 +59,7 @@ public:
     auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
 
     // when no processing thread started
-    auto process() -> void;
+    auto process(size_t idC) -> void;
     auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
 
     auto save_current_cloud(size_t idC, const std::string &path) -> bool;

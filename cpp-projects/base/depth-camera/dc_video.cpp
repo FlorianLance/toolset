@@ -185,7 +185,7 @@ auto DCVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const n
     }
 
     if(nb_frames(idCamera) == 0){
-        Logger::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
+        //Logger::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
         return -1;
     }    
 

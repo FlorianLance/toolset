@@ -268,9 +268,10 @@ enum class DCMode : std::int8_t {
     // ## 16:9 color
     // FM_C1280x720_DI320x288_MJPG_F30,
     FM_C1280x720_DI640x576_MJPG_F30,
+    // FM_C2560x1440_DI640x576_MJPG_F30,
     // # wide
     // ## 4:3 color
-    FM_C1280x960_DI512x512_MJPG_F30,
+    // FM_C1280x960_DI512x512_MJPG_F30,
     // FM_C2048x1536_DI512x512_MJPG_F30,
     // ## 16:9 color
     FM_C1280x720_DI512x512_MJPG_F30,
@@ -352,9 +353,10 @@ static constexpr TupleArray<DCMode::SizeEnum, TMode> dcModesNames ={{
     // ## 16:9 color
     // {DCMode::FM_C1280x720_DI320x288_MJPG_F30,       "C-1280p D-288p  I-MJPG F-30"sv},
     {DCMode::FM_C1280x720_DI640x576_MJPG_F30,       "C-720p  D-576p  I-MJPG F-30"sv},
+    // {DCMode::FM_C2560x1440_DI640x576_MJPG_F30,       "C-1440p  D-576p  I-MJPG F-30"sv},
     // # wide
     // ## 4:3 color    
-    {DCMode::FM_C1280x960_DI512x512_MJPG_F30,       "C-960p   D-512p  I-MJPG F-30"sv},
+    // {DCMode::FM_C1280x960_DI512x512_MJPG_F30,       "C-960p   D-512p  I-MJPG F-30"sv},
     // {DCMode::FM_C2048x1536_DI512x512_MJPG_F30,      "C-1536p D-512p   I-MJPG F-30"sv},
     // ## 16:9 color
     {DCMode::FM_C1280x720_DI512x512_MJPG_F30,       "C-720p D-512p   I-MJPG F-30"sv},
@@ -448,9 +450,10 @@ static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
     // ## 16:9 color
     // {M::FM_C1280x720_DI320x288_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_320x288,    FPS::F30, Dev::FM},
     {M::FM_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FM},
+    // {M::FM_C2560x1440_DI640x576_MJPG_F30,    IF::MJPG, CR::R1440P,  DR::K4A_640x576,     FPS::F15, Dev::FM},
     // # wide
     // ## 4:3 color    
-    {M::FM_C1280x960_DI512x512_MJPG_F30,    IF::MJPG, CR::R960P, DR::K4A_512x512,      FPS::F30, Dev::FM},
+    // {M::FM_C1280x960_DI512x512_MJPG_F30,    IF::MJPG, CR::R960P, DR::K4A_512x512,      FPS::F30, Dev::FM},
     // {M::FM_C2048x1536_DI512x512_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_512x512,    FPS::F30, Dev::FM},
     // ## 16:9 color
     {M::FM_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,    FPS::F30, Dev::FM},

@@ -22,18 +22,30 @@
 ** SOFTWARE.                                                                      **
 ************************************************************************************/
 
-#include "dc_video_player_export.hpp"
 
+
+// std
+#include <iostream>
+
+// base
+#include "utility/logger.hpp"
+#include "utility/paths.hpp"
 #include "utility/stop_watch.hpp"
+#include "io/cloud_io.hpp"
 
 using namespace tool;
 using namespace tool::geo;
+
 
 struct CloudData{
     std::vector<Pt3f> positions;
     std::vector<Pt3f> colors;
     std::vector<Vec3f> normals;
     size_t verticesCopied = 0;
+
+    auto size() -> size_t{
+        return positions.size();
+    }
 
     auto resize(size_t size) -> void{
         positions.resize(size);
@@ -42,8 +54,134 @@ struct CloudData{
     }
 };
 
-#include "io/cloud_io.hpp"
-#include <iostream>
+
+#include "dc_client_export.hpp"
+
+auto dc_client_export_test(const std::string &clientSettingsFilePath) -> void{
+
+    Logger::message("Create DCClientExport\n");
+    auto dcCE = create__dc_client_export();
+
+    Logger::message("Initialize\n");
+    if(initialize__dc_client_export(dcCE, clientSettingsFilePath.c_str(), 1) == 1){
+        Logger::message("Initialization successful\n");
+    }else{
+        Logger::error("Initialization failure\n");
+        return;
+    }
+
+    int nbDevices = devices_nb__dc_client_export(dcCE);
+    Logger::message(std::format("Number of devices: {}\n", nbDevices));
+
+    Logger::message("Connect to devices\n");
+    connect_to_devices__dc_client_export(dcCE);
+
+    Logger::message("Wait...\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    Logger::message("Devices connection state:\n");
+    for(int idD = 0; idD < nbDevices; ++idD){
+        if(is_device_connected__dc_client_export(dcCE, idD)){
+            Logger::message(std::format("\tDevice n°{} connected\n", idD).c_str());
+        }else{
+            Logger::message(std::format("\tDevice n°{} not connected\n", idD).c_str());
+        }
+    }
+
+    Logger::message("Apply settings\n");
+    apply_device_settings__dc_client_export(dcCE);
+    apply_color_settings__dc_client_export(dcCE);
+    apply_filters_settings__dc_client_export(dcCE);
+
+    Logger::message("Wait...\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    Logger::message("Start reading\n");
+
+    int nbIterations = 1000;
+    std::vector<CloudData> data;
+    data.resize(nbDevices);
+
+    for(int idL = 0; idL < nbIterations; ++idL){
+
+        update__dc_client_export(dcCE);
+
+        for(int idC = 0; idC < nbDevices; ++idC){
+
+            if(is_frame_available__dc_client_export(dcCE, idC)){
+
+                auto sizeVertices = current_frame_cloud_size__dc_client_export(dcCE, idC);
+                if(data[idC].size() < sizeVertices){
+                    data[idC].resize(sizeVertices);
+                }
+
+                auto verticesCopied = copy_current_frame_vertices_vfx__dc_client_export(
+                    dcCE,
+                    idC,
+                    data[idC].positions.data(),
+                    data[idC].colors.data(),
+                    data[idC].normals.data(),
+                    sizeVertices,
+                    true
+                    );
+
+                Logger::message(std::format("\t{} -> {} -> {} -> {}\n",
+                                            idC,
+                                            current_frame_id__dc_client_export(dcCE, idC),
+                                            sizeVertices,
+                                            verticesCopied
+                                            ).c_str());
+
+                invalidate_frame__dc_client_export(dcCE, idC);
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.0/60.0/2.0)));
+    }
+
+    Logger::message("Wait...\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    Logger::message("Disconnect from devices\n");
+    disconnect_from_devices__dc_client_export(dcCE);
+
+    Logger::message("Wait...\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    Logger::message("Delete DCClientExport\n");
+    delete__dc_client_export(dcCE);
+}
+
+
+int main(int, char *argv[]){
+
+    Paths::get()->initialize(argv);
+
+    Logger::init("./");
+    Logger::get()->message_signal.connect([&](std::string message){
+        std::cout << message;
+    });
+    Logger::get()->warning_signal.connect([&](std::string warning){
+        std::cerr << warning;
+    });
+    Logger::get()->error_signal.connect([&](std::string error){
+        std::cerr << error;
+    });
+
+    Logger::message("Start base-export-app\n");
+
+    dc_client_export_test((Paths::get()->configDir / "client_default.json").string());
+    // test_multi_device();
+    // dc_video_player_export_test();
+
+    return 0;
+}
+
+
+
+
+#include "dc_video_player_export.hpp"
+
 auto dc_video_player_export_test() -> void{
 
     geo::ColoredCloudData cloud;
@@ -178,452 +316,115 @@ auto dc_video_player_export_test() -> void{
     delete__dc_video_player(dcPlayer);
 }
 
-#include "dc_network_direct_player_export.hpp"
 
-auto dc_network_direct_player_export_test() -> void{
-
-    std::string networkSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/network/network_FLORIAN-PC.config";
-    std::string deviceSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/device_FLORIAN-PC_all.config";
-    std::string filtersSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/filters_FLORIAN-PC_all.config";
-    std::string colorsSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/settings/color_FLORIAN-PC_all.config";
-    std::string modelSettingsFilePath = "D:/DEV/ALIAD/ALIADTracking/toolset/cpp-projects/_build/bin/dc-manager/config/calibration/model_FLORIAN-PC_all.config";
-
-    std::puts("Create DCNetworkDirectPlayer\n");
-    auto dcNetworkDirectPlayer = create__dc_network_direct_player();
-
-    std::puts("Initialize\n");
-    if(initialize__dc_network_direct_player(dcNetworkDirectPlayer,networkSettingsFilePath.c_str()) == 1){
-        std::puts("Initialization successful\n");
-    }else{
-        std::puts("Initialization failure\n");
-    }
-    std::puts(std::format("Number of devices: {}\n",devices_nb__dc_network_direct_player(dcNetworkDirectPlayer)).c_str());
-
-    std::puts("Connect to devices\n");
-    connect_to_devices__dc_network_direct_player(dcNetworkDirectPlayer);
-    std::puts("Wait...\n");
-
-
-    int nbDevices = devices_nb__dc_network_direct_player(dcNetworkDirectPlayer);
-
-    std::atomic_bool readData = true;
-    std::thread rThread([&](){
-        std::puts("start thread");
-        while(readData){
-            for(int idD = 0; idD < nbDevices; ++idD){
-                std::puts(std::format("read data {}\n", idD).c_str());
-                read_network_data__dc_network_direct_player(dcNetworkDirectPlayer, idD);
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
-        std::puts("end thread");
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    // std::puts("Devices connection state:\n");
-    // for(int idD = 0; idD < nbDevices; ++idD){
-    //     if(is_device_connected__dc_network_direct_player(dcNetworkDirectPlayer, idD)){
-    //         std::puts(std::format("\tDevice n°{} connected\n", idD).c_str());
-    //     }else{
-    //         std::puts(std::format("\tDevice n°{} not connected\n", idD).c_str());
-    //     }
-    // }
-
-    std::puts("Update settings\n");
-    update_device_settings__dc_network_direct_player(dcNetworkDirectPlayer, deviceSettingsFilePath.c_str());
-    // update_color_settings__dc_network_direct_player(dcNetworkDirectPlayer, colorsSettingsFilePath.c_str());
-    // update_filters_settings__dc_network_direct_player(dcNetworkDirectPlayer, filtersSettingsFilePath.c_str());
-    // update_model_settings__dc_network_direct_player(dcNetworkDirectPlayer, modelSettingsFilePath.c_str());
-
-    std::puts("Wait...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-
-    return;
-    std::puts("Start reading\n");
-    // start_reading__dc_network_direct_player(dcNetworkDirectPlayer);
-
-    int nbIterations = 1000;
-    std::vector<std::vector<tool::cam::DCVertexMeshData>> data;
-    data.resize(devices_nb__dc_network_direct_player(dcNetworkDirectPlayer));
-
-    for(int idL = 0; idL < nbIterations; ++idL){
-
-        // update__dc_network_direct_player(dcNetworkDirectPlayer);
-
-        for(int idC = 0; idC < devices_nb__dc_network_direct_player(dcNetworkDirectPlayer); ++idC){
-            auto sizeVertices = current_frame_cloud_size__dc_network_direct_player(dcNetworkDirectPlayer, idC);
-            if(data[idC].size() < sizeVertices){
-                data[idC].resize(sizeVertices);
-            }
-            auto verticesCopied = copy_current_frame_vertices__dc_network_direct_player(dcNetworkDirectPlayer, idC, data[idC].data(), sizeVertices, true);
-            std::puts(std::format("\t{} -> {} -> {} -> {}\n",
-                idC, current_frame_id__dc_network_direct_player(dcNetworkDirectPlayer, idC), sizeVertices, verticesCopied).c_str());
-        }
-
-        // std::puts(std::format("Infos loop id {}: ", idL).c_str());
-        // for(int idC = 0; idC < devices_nb__dc_network_direct_player(dcNetworkDirectPlayer); ++idC){
-        //     std::puts(std::format("D:{} -> {} {} | ",
-        //         idC,
-        //         current_frame_id__dc_network_direct_player(dcNetworkDirectPlayer, idC),
-        //         current_frame_cloud_size__dc_network_direct_player(dcNetworkDirectPlayer, idC)).c_str());
-        // }
-        // std::puts("\n");
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.0/60.0/2.0)));
-    }
-
-    std::puts("Stop reading\n");
-    readData = false;
-    rThread.join();
-    // stop_reading__dc_network_direct_player(dcNetworkDirectPlayer);
-
-    std::puts("Wait...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    std::puts("Disconnect from devices\n");
-    disconnect_from_devices__dc_network_direct_player(dcNetworkDirectPlayer);
-
-    std::puts("Wait...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    std::puts("Delete DCNetworkDirectPlayer\n");
-    delete__dc_network_direct_player(dcNetworkDirectPlayer);
-}
-
-#include "json.hpp"
-using json = nlohmann::json;
-
-auto test(const cam::DCFiltersSettings &f1) -> json{
-    return json{
-        {"min_widht_f",     f1.minWidthF},
-        {"max_widht_f",     f1.maxWidthF},
-        {"min_height_f",    f1.minHeightF},
-        {"max_height_f",    f1.maxHeightF},
-        {"min_depth_f",     f1.minDepthF},
-        {"max_depth_f",     f1.maxDepthF}
-    };
-}
-
-auto test_json() -> void{
-    cam::DCFiltersSettings f1;
-    std::cout << "b1:" << f1.minDepthF << "\n";
-    f1.minDepthF = 0.5f;
-
-    auto f1Str = f1.convert_to_json_str();
-
-    cam::DCFiltersSettings f2;
-    f2.init_from_json_str(f1Str);
-    std::cout << "b2:" << f2.minDepthF << "\n";
-
-    auto bin2 = f2.convert_to_json_binary();
-
-    std::cout << "size " << bin2.size() << "\n";
-
-    cam::DCFiltersSettings f3;
-    f3.init_from_json_binary(bin2);
-
-    std::cout << "b3:" << f3.minDepthF << "\n";
-
-    f3.save_to_json_str_file("D:/json_test.json");
-
-    cam::DCFiltersSettings f4;
-    f4.load_from_file("D:/json_test.json");
-
-    std::cout << "b4:" << f4.minDepthF << "\n";
-
-
-    f4.save_to_json_binary_file("D:/json_test.bson");
-
-    cam::DCFiltersSettings f5;
-    f5.load_from_file("D:/json_test.bson");
-    std::cout << "b5:" << f5.minDepthF << "\n";
-
-    return;
-
-
-    auto jsonF = test(f1);
-
-    // json j2
-    //     =  json{
-    //              {"min_widht_f",     f1.minWidthF},
-    //              {"max_widht_f",     f1.maxWidthF},
-    //              {"min_height_f",    f1.minHeightF},
-    //              {"max_height_f",    f1.maxHeightF},
-    //              {"min_depth_f",     f1.minDepthF},
-    //              {"max_depth_f",     f1.maxDepthF}
-    //             };
-
-    // auto b1 = json::to_bjdata(j2);
-    // auto b2 = json::to_bjdata(j2);
-    auto b3 = json::to_bson(jsonF);
-
-    json fff(json::from_bson(json::to_bson(jsonF)).dump(4));
-
-
-    std::cout << "jsonF " << jsonF.dump(4) << "\n" << json::from_bson(b3).dump(4) << "\n" << fff.dump(4) << "\n";
-
-    // f1.minDepthF = 0.5;
-
-    auto str = f1.convert_to_json_str();
-    std::cout << "str " << str << "\n";
-
-    f1.convert_to_json_binary();
-
-    return;
-}
-
-#include "depth-camera/dc_device_impl.hpp"
-#include "depth-camera/impl/azure_kinect_device_impl.hpp"
-
-#include "thirdparty/taskflow/taskflow.hpp"
-#include <execution>
-
-
-
-#include "utility/logger.hpp"
-
-
-auto test_dev() -> void{
-
-    // cam::DCDevice dev(tool::cam::DCType::AzureKinect);
-    // if(dev.open(0)){
-    //     cam::DCConfigSettings cs;
-    //     cs.idDevice = 0;
-    //     cs.typeDevice = tool::cam::DCType::AzureKinect;
-    //     dev.start_reading(cs);
-    // }
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    // dev.stop_reading();
-    // dev.close();
-
-
-    cam::AzureKinectDeviceImpl device;
-    cam::DCConfigSettings cs;
-    cs.idDevice = 0;
-    cs.typeDevice = tool::cam::DCType::AzureKinect;
-
-
-    if(device.open(cs)){
-
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    device.close();
-}
-
-#include "utility/time.hpp"
 
 auto test_multi_device() -> void{
 
 
 
-//     std::vector<std::unique_ptr<cam::DCDeviceImpl>> devices;
+    //     std::vector<std::unique_ptr<cam::DCDeviceImpl>> devices;
 
-//     std::mutex lock;
+    //     std::mutex lock;
 
-//     std::vector<std::shared_ptr<cam::DCCompressedFrame>> frames;
-//     frames.resize(4, nullptr);
+    //     std::vector<std::shared_ptr<cam::DCCompressedFrame>> frames;
+    //     frames.resize(4, nullptr);
 
-//     for(size_t idD = 0; idD < 4; ++idD){
-//         devices.push_back(std::make_unique<cam::AzureKinectDeviceImpl>());
+    //     for(size_t idD = 0; idD < 4; ++idD){
+    //         devices.push_back(std::make_unique<cam::AzureKinectDeviceImpl>());
 
-//         cam::DCDeviceSettings ds;
-//         ds.apply_remote_profile();
+    //         cam::DCDeviceSettings ds;
+    //         ds.apply_remote_profile();
 
-//         Logger::message("open\n");
-//         if(devices.back()->open(idD)){
+    //         Logger::message("open\n");
+    //         if(devices.back()->open(idD)){
 
-//             ds.configS.idDevice = idD;
-//             ds.configS.typeDevice = tool::cam::DCType::AzureKinect;
+    //             ds.configS.idDevice = idD;
+    //             ds.configS.typeDevice = tool::cam::DCType::AzureKinect;
 
-//             Logger::message("start\n");
-//             if(devices.back()->start(ds.configS)){
+    //             Logger::message("start\n");
+    //             if(devices.back()->start(ds.configS)){
 
-//                 devices.back()->new_compressed_frame_signal.connect([&, idD](std::shared_ptr<cam::DCCompressedFrame> cFrame){
-//                     frames[idD] = std::move(cFrame);
-//                 });
+    //                 devices.back()->new_compressed_frame_signal.connect([&, idD](std::shared_ptr<cam::DCCompressedFrame> cFrame){
+    //                     frames[idD] = std::move(cFrame);
+    //                 });
 
-//                 devices.back()->loop_initialization();
-//             }
+    //                 devices.back()->loop_initialization();
+    //             }
 
-//             // cam::DCDataSettings dataS;
-//             // dataS.
+    //             // cam::DCDataSettings dataS;
+    //             // dataS.
 
-//             // devices.back()->set_data_settings(dataS);
-//             // devices.back()->set_colors_settings();
-//         }
-//     }
+    //             // devices.back()->set_data_settings(dataS);
+    //             // devices.back()->set_colors_settings();
+    //         }
+    //     }
 
-//     // auto executor = std::make_unique<tf::Executor>();
-//     // auto tk = std::make_unique<tf::Taskflow>();
-
-
-//     for(size_t idF = 0; idF < 1000; ++idF){
-//         // std::cout << "id " << idF << "\n";
-
-//         auto t1 = Time::milliseconds_since_epoch();
-//         std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
-//             device->read_frame();
-//             // device->read_settings();
-//             // device->read_images();
-//             // device->process_data();
-//         });
-//         auto t2 = Time::milliseconds_since_epoch();
-//         std::cout << "time1 " << idF << " " << Time::difference_ms(t1, t2).count() << std::endl;
-
-//         // std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
-//         //     // device->process_data();
-//         //     // device->init_frames();
-//         //     // device->resize_and_convert();
-//         //     // device->preprocess();
-//         //     // device->filter();
-//         //     // device->update_compressed_frame();
-//         //     // device->update_frame();
-//         // });
-//         // std::cout << "time2 " << idF << " " << Time::difference_ms(t2, Time::milliseconds_since_epoch()).count() << std::endl;
-
-//         // int idC= 0;
-//         // std::for_each(std::execution::seq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
-
-//         //     std::cout << "cam "<< idC << " " << device->get_duration_micro_s("UPDATE_FRAME")->count() << "\n";
-//         //     ++idC;
-//         // });
-
-//         for(const auto &f : frames){
-//             if(f){
-//                 std::cout << f->idCapture << " ";
-//             }
-//         }
-//         std::cout << std::flush;
-//     }
+    //     // auto executor = std::make_unique<tf::Executor>();
+    //     // auto tk = std::make_unique<tf::Taskflow>();
 
 
-//     // auto captureCT = tk->emplace([&](){
+    //     for(size_t idF = 0; idF < 1000; ++idF){
+    //         // std::cout << "id " << idF << "\n";
+
+    //         auto t1 = Time::milliseconds_since_epoch();
+    //         std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+    //             device->read_frame();
+    //             // device->read_settings();
+    //             // device->read_images();
+    //             // device->process_data();
+    //         });
+    //         auto t2 = Time::milliseconds_since_epoch();
+    //         std::cout << "time1 " << idF << " " << Time::difference_ms(t1, t2).count() << std::endl;
+
+    //         // std::for_each(std::execution::par_unseq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+    //         //     // device->process_data();
+    //         //     // device->init_frames();
+    //         //     // device->resize_and_convert();
+    //         //     // device->preprocess();
+    //         //     // device->filter();
+    //         //     // device->update_compressed_frame();
+    //         //     // device->update_frame();
+    //         // });
+    //         // std::cout << "time2 " << idF << " " << Time::difference_ms(t2, Time::milliseconds_since_epoch()).count() << std::endl;
+
+    //         // int idC= 0;
+    //         // std::for_each(std::execution::seq, std::begin(devices), std::end(devices), [&](std::unique_ptr<cam::DCDeviceImpl> &device){
+
+    //         //     std::cout << "cam "<< idC << " " << device->get_duration_micro_s("UPDATE_FRAME")->count() << "\n";
+    //         //     ++idC;
+    //         // });
+
+    //         for(const auto &f : frames){
+    //             if(f){
+    //                 std::cout << f->idCapture << " ";
+    //             }
+    //         }
+    //         std::cout << std::flush;
+    //     }
 
 
-//     // });
+    //     // auto captureCT = tk->emplace([&](){
+
+
+    //     // });
 
 
 
 
-//     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
 
-//     for(auto &device : devices){
-//         device->stop_reading_thread();
-//     }
+    //     for(auto &device : devices){
+    //         device->stop_reading_thread();
+    //     }
 
-//     for(auto &device : devices){
-//         device->stop();
-//     }
+    //     for(auto &device : devices){
+    //         device->stop();
+    //     }
 
-//     for(auto &device : devices){
-//         device->close();
-//     }
+    //     for(auto &device : devices){
+    //         device->close();
+    //     }
 
     return;
 }
-
-int main(int, char *[]){
-
-    std::cout << "start\n";
-    Logger::init("./");
-    Logger::get()->message_signal.connect([&](std::string message){
-        std::cout << message;
-    });
-    Logger::get()->warning_signal.connect([&](std::string warning){
-        std::cerr << warning;
-    });
-    Logger::get()->error_signal.connect([&](std::string error){
-        std::cerr << error;
-    });
-
-
-    // test_dev();
-    test_multi_device();
-
-
-    // cam::DCFiltersSettings f2;
-    // f2.init_from_json_binary(binary);
-    // // binary
-    // // auto str    = f.convert_to_json_str();
-
-    // std::cout << "b:" << f2.minDepthF << "\n";
-
-    // auto str = f2.convert_to_json_str();
-
-    // std::cout << "str:" << str << "\n";
-
-    // json v(str);
-    // std::cout << "-> " << v.dump() << "\n\n";
-
-    // for (auto& element : v) {
-    //     std::cout << element << '\n';
-    // }
-
-
-
-    // std::cout << "->->->\n";
-    // for (json::iterator it = v.begin(); it != v.end(); ++it) {
-    //     std::cout << it.key() << " : " << it.value() << "\n";
-    // }
-
-    return 0;
-
-
-    // std::string_view sstr = str;
-    // json v2(sstr);
-    // std::cout << "-> " << v2.dump() << "\n\n";
-
-
-
-    // std::cout << "cccc " << v2.contains("min_widht_f") << "\n";
-    // std::cout << "cccc " << v2.contains("max_widht_f") << "\n";
-    // std::cout << "cccc " << v2.contains("min_height_f") << "\n";
-
-    // cam::DCFiltersSettings f3;
-    // f3.init_from_json_str(str);
-
-
-
-    // std::cout << "str: " << f3.minDepthF << "\n";
-
-    return 0;
-    // tool::StopWatch sw;
-
-    // sw.start();
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-
-    // sw.set_current_time(50.0);
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-
-    // sw.stop();
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // sw.start();
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // sw.stop();
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-    // sw.set_current_time(200.0);
-    // std::puts(std::format("elapsed {} {} {} {}\n", sw.ellapsed_milli_s(), sw.first_start_ms(), sw.last_start_ms(), sw.total_ms()).c_str());
-
-    dc_video_player_export_test();
-
-    return 0;
-    // dc_video_player_export_test();
-    dc_network_direct_player_export_test();
-
-    return 0;
-}
-
-
-

@@ -102,7 +102,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     if(i->remoteServerS.startReadingThread){
-        i->udpReader.start_reading_thread();
+        i->udpReader.start_threads();
     }
 
     // init sender
@@ -152,9 +152,9 @@ auto DCClientRemoteDevice::clean() -> void{
 
     i->remoteDeviceConnected = false;
     // # stop reading loop
-    if(i->udpReader.is_reading_thread_started()){
+    if(i->udpReader.are_threads_started()){
         Logger::log("[DCClientRemoteDevice::clean] Stop reading loop.\n"sv);
-        i->udpReader.stop_reading_thread();
+        i->udpReader.stop_threads();
     }
     // # clean socket
     Logger::log("[DCClientRemoteDevice::clean] Clean reader socket.\n"sv);
@@ -216,6 +216,10 @@ auto DCClientRemoteDevice::device_connected() const noexcept -> bool {
 
 auto DCClientRemoteDevice::read_data_from_network() -> size_t{
     return i->udpReader.receive_data_from_external_thread();
+}
+
+auto DCClientRemoteDevice::trigger_received_packets() -> void{
+    i->udpReader.trigger_received_packets_from_external_thread();
 }
 
 auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess) -> void{

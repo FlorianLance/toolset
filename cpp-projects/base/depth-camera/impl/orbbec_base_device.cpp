@@ -87,7 +87,7 @@ struct OrbbecBaseDevice::Impl{
     DCType deviceType;
     std::string lastAddress;
     // static inline std::unique_ptr<ob::Context> context = nullptr;
-    std::unique_ptr<ob::Context> context = nullptr;
+    static inline std::unique_ptr<ob::Context> context = nullptr;
     std::shared_ptr<ob::Device> device          = nullptr;
     std::vector<std::shared_ptr<ob::Device>> deviceList;
     std::shared_ptr<ob::SensorList> sensorList  = nullptr;
@@ -119,6 +119,7 @@ struct OrbbecBaseDevice::Impl{
 
         auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
 
+        if(context == nullptr){
         try{
             context = std::make_unique<ob::Context>();
             context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
@@ -127,7 +128,7 @@ struct OrbbecBaseDevice::Impl{
         }catch(const std::exception &e){
             Logger::error(std::format("Error: [{}]\n"sv, e.what()));
         }
-
+        }
 
         // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
         //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
@@ -437,12 +438,17 @@ auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ether
         i->context->enableNetDeviceEnumeration(ethernet);
 
         auto devicesFound = i->context->queryDeviceList();
+
         i->deviceList.clear();
 
         for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
             auto dev = devicesFound->getDevice(idDev);
-            if(dev->getDeviceInfo()->name() == deviceTypeName){
-                i->deviceList.push_back(std::move(dev));
+
+            auto info = dev->getDeviceInfo();
+            if(info){
+                if(dev->getDeviceInfo()->name() == deviceTypeName){
+                    i->deviceList.push_back(std::move(dev));
+                }
             }
         }
 
@@ -477,8 +483,13 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
         if(i->deviceType == DCType::FemtoMega){
 
+            // auto newAdress = std::format("192.168.1.{}", configS.idDevice+2);
             auto newAdress = std::format("192.168.{}.2", configS.idDevice+1);
             Logger::message(std::format("Retrieve from ip adress: {}.\n",newAdress));
+            if(i->device != nullptr){
+                Logger::message("NOT NULL");
+            }
+
             i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
             i->lastAddress = newAdress;
 
@@ -866,6 +877,7 @@ auto OrbbecBaseDevice::close() -> void{
 
     Logger::message("Close device\n");
     i->device = nullptr;
+    // i->deviceList.clear();
 
     Logger::message("Device closed\n");
 }

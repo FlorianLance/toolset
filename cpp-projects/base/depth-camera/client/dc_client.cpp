@@ -74,7 +74,6 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
 
     generate_clients();
 
-
     return true;
 }
 
@@ -203,6 +202,18 @@ auto DCClient::read_network_data_from_remote_device(size_t idC) -> size_t{
     return 0;
 }
 
+auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::trigger_packets_from_remote_device] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+
+    if(i->devices[idC]->type() == DCClientType::remote){
+        dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->trigger_received_packets();
+    }
+}
+
 auto DCClient::legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool{
 
     if(devices_nb() != 0){
@@ -263,7 +274,7 @@ auto DCClient::use_calibration_filters() -> void{
     settings.useNormalFilteringSettings = false;
 }
 
-auto DCClient::update_filters(size_t idC, const DCFiltersSettings &filtersS) -> void{
+auto DCClient::update_filters_settings(size_t idC, const DCFiltersSettings &filtersS) -> void{
     
     if(idC > devices_nb()){
         Logger::error(std::format("[DCClient::update_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
@@ -272,11 +283,11 @@ auto DCClient::update_filters(size_t idC, const DCFiltersSettings &filtersS) -> 
     
     settings.devicesS[idC].filtersS = filtersS;
     if(settings.useNormalFilteringSettings){
-        i->devices[idC]->update_filters_settings(settings.devicesS[idC].filtersS);
+        apply_filters_settings(idC);
     }
 }
 
-auto DCClient::update_calibration_filters(size_t idC, const DCFiltersSettings &filtersS) -> void{
+auto DCClient::update_calibration_filters_settings(size_t idC, const DCFiltersSettings &filtersS) -> void{
     
     if(idC > devices_nb()){
         Logger::error(std::format("[DCClient::update_calibration_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
@@ -285,7 +296,7 @@ auto DCClient::update_calibration_filters(size_t idC, const DCFiltersSettings &f
     
     settings.devicesS[idC].calibrationFiltersS = filtersS;
     if(!settings.useNormalFilteringSettings){
-        i->devices[idC]->update_filters_settings(settings.devicesS[idC].calibrationFiltersS);
+        apply_calibration_filters_settings(idC);
     }
 }
 
@@ -297,8 +308,7 @@ auto DCClient::update_device_settings(size_t idC, const DCDeviceSettings &device
     }
         
     settings.devicesS[idC].deviceS = deviceS;
-    i->devices[idC]->update_device_settings(settings.devicesS[idC].deviceS);
-    i->processing.update_device_settings(idC, deviceS);
+    apply_device_settings(idC);
 }
 
 auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) -> void{
@@ -309,7 +319,7 @@ auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) 
     }
     
     settings.devicesS[idC].colorS = colorS;
-    i->devices[idC]->update_color_settings(settings.devicesS[idC].colorS);
+    apply_color_settings(idC);
 }
 
 auto DCClient::update_delay_settings(size_t idC, const DCDelaySettings &delayS) -> void{
@@ -320,12 +330,58 @@ auto DCClient::update_delay_settings(size_t idC, const DCDelaySettings &delayS) 
     }
     
     settings.devicesS[idC].delayS = delayS;
-    i->devices[idC]->update_delay_settings(settings.devicesS[idC].delayS);
+    apply_delay_settings(idC);
 }
 
 auto DCClient::update_model_settings(size_t idC, const DCModelSettings &modelS) -> void{
     settings.devicesS[idC].modelS = modelS;
     update_model_settings_signal(idC, settings.devicesS[idC].modelS);
+}
+
+auto DCClient::apply_device_settings(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::apply_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+    i->devices[idC]->update_device_settings(settings.devicesS[idC].deviceS);
+    i->processing.update_device_settings(idC, settings.devicesS[idC].deviceS);
+}
+
+auto DCClient::apply_filters_settings(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::apply_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+    i->devices[idC]->update_filters_settings(settings.devicesS[idC].filtersS);
+}
+
+auto DCClient::apply_calibration_filters_settings(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::apply_calibration_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+    i->devices[idC]->update_filters_settings(settings.devicesS[idC].calibrationFiltersS);
+}
+
+auto DCClient::apply_color_settings(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::apply_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+    i->devices[idC]->update_color_settings(settings.devicesS[idC].colorS);
+}
+
+auto DCClient::apply_delay_settings(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Logger::error(std::format("[DCClient::apply_delay_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+    i->devices[idC]->update_delay_settings(settings.devicesS[idC].delayS);
 }
 
 auto DCClient::trigger_all_models_settings() -> void{
@@ -340,8 +396,14 @@ auto DCClient::trigger_all_device_display_settings() -> void{
     }
 }
 
-auto DCClient::process_frames_from_external_thread() -> void{
-    i->processing.process();
+
+
+auto DCClient::process_frames_from_external_thread(size_t idD) -> void{
+    if(idD > devices_nb()){
+        Logger::error(std::format("[DCClient::process_frames_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idD, devices_nb()));
+        return;
+    }
+    i->processing.process(idD);
 }
 
 auto DCClient::generate_clients() -> void{
@@ -395,6 +457,16 @@ auto DCClient::generate_clients() -> void{
         ++idDevice;
     }
 }
+auto DCClient::messages_count() -> size_t{
+
+    if(i->readMessagesL.try_lock()){
+        size_t count = i->messages.size();
+        i->readMessagesL.unlock();
+        return count;
+    }
+
+    return 0;
+}
 
 auto DCClient::read_feedbacks() -> void{
 
@@ -418,140 +490,11 @@ auto DCClient::read_feedbacks() -> void{
         }
         
         settings.devicesS[message.first].connected = i->devices[message.first]->device_connected();
-        feedback_received_signal(message.first, std::format("Valid [{}] received\n", to_string(static_cast<tool::net::DCMessageType>(message.second.receivedMessageType))));
+        feedback_received_signal(message.first, message.second);
     }
     i->messagesR.clear();
 }
 
 
-
-
-// auto DCClient::load_device_settings_file(size_t idC, const std::string &settingsFilePath) -> bool{
-
-//     if(idC > devices_nb()){
-//         Logger::error(std::format("[DCClient::load_device_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
-//         return false;
-//     }
-
-//     if(settings.devicesS[idC].deviceS.load_from_file(settingsFilePath)){
-//         settings.devicesS[idC].deviceFilePath = settingsFilePath;
-//     }else{
-//         Logger::error(std::format("[DCClient::load_device_settings_file] No device settings file found for device with id [{}], default parameters used instead.\n", idC));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool{
-
-//     if(idC > devices_nb()){
-//         Logger::error(std::format("[DCClient::load_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
-//         return false;
-//     }
-
-//     if(settings.devicesS[idC].filtersS.load_from_file(settingsFilePath)){
-//         settings.devicesS[idC].filtersFilePath = settingsFilePath;
-//     }else{
-//         Logger::error(std::format("[DCClient::load_filters_settings_file] No device settings file found for device with id [{}], default parameters used instead.\n", idC));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_calibration_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool{
-
-//     if(idC > devices_nb()){
-//         Logger::error(std::format("[DCClient::load_calibration_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
-//         return false;
-//     }
-
-//     if(settings.devicesS[idC].calibrationFiltersS.load_from_file(settingsFilePath)){
-//         settings.devicesS[idC].calibrationFiltersFilePath = settingsFilePath;
-//     }else{
-//         Logger::error(std::format("[DCClient::load_calibration_filters_settings_file] No device settings file found for device with id [{}], default parameters used instead.\n", idC));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_color_filters_settings_file(size_t idC, const std::string &settingsFilePath) -> bool{
-
-//     if(idC > devices_nb()){
-//         Logger::error(std::format("[DCClient::load_color_filters_settings_file] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
-//         return false;
-//     }
-
-//     if(settings.devicesS[idC].colorS.load_from_file(settingsFilePath)){
-//         settings.devicesS[idC].colorFilePath = settingsFilePath;
-//     }else{
-//         Logger::error(std::format("[DCClient::load_color_filters_settings_file] No device settings file found for device with id [{}], default parameters used instead.\n", idC));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_device_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
-
-//     std::vector<io::Settings*> settingsFiles;
-//     for(auto &deviceS : settings.devicesS){
-//         settingsFiles.push_back(&deviceS.deviceS);
-//     }
-
-//     if(!io::Settings::load_multi_from_file(settingsFiles, multiSettingsFilePath)){
-//         Logger::error(std::format("[DCClient::load_device_multi_settings_file] Error while reading multi settings file with path [{}].", multiSettingsFilePath));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
-
-//     std::vector<io::Settings*> settingsFiles;
-//     for(auto &deviceS : settings.devicesS){
-//         settingsFiles.push_back(&deviceS.filtersS);
-//     }
-
-//     if(!io::Settings::load_multi_from_file(settingsFiles, multiSettingsFilePath)){
-//         Logger::error(std::format("[DCClient::load_filters_multi_settings_file] Error while reading multi settings file with path [{}].", multiSettingsFilePath));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_calibration_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
-
-//     std::vector<io::Settings*> settingsFiles;
-//     for(auto &deviceS : settings.devicesS){
-//         settingsFiles.push_back(&deviceS.calibrationFiltersS);
-//     }
-
-//     if(!io::Settings::load_multi_from_file(settingsFiles, multiSettingsFilePath)){
-//         Logger::error(std::format("[DCClient::load_calibration_filters_multi_settings_file] Error while reading multi settings file with path [{}].", multiSettingsFilePath));
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// auto DCClient::load_color_filters_multi_settings_file(const std::string &multiSettingsFilePath) -> bool{
-
-//     std::vector<io::Settings*> settingsFiles;
-//     for(auto &deviceS : settings.devicesS){
-//         settingsFiles.push_back(&deviceS.colorS);
-//     }
-
-//     if(!io::Settings::load_multi_from_file(settingsFiles, multiSettingsFilePath)){
-//         Logger::error(std::format("[DCClient::load_color_filters_multi_settings_file] Error while reading multi settings file with path [{}].", multiSettingsFilePath));
-//         return false;
-//     }
-
-//     return true;
-// }
 
 

@@ -127,9 +127,9 @@ auto DCMLeftPanelChildDrawer::append_global_log(const std::string &log) -> void 
     globalLogs.add_log(log.c_str());
 }
 
-auto DCMLeftPanelChildDrawer::append_feedback_log(size_t idG, const std::string &log) -> void {
+auto DCMLeftPanelChildDrawer::append_feedback_log(size_t idG, Feedback feedback) -> void {
     if(idG < feedbacksLogs.size()){
-        feedbacksLogs[idG].add_log(log.c_str());
+        feedbacksLogs[idG].add_log(std::format("Valid [{}] received\n", to_string(static_cast<DCMessageType>(feedback.receivedMessageType))).c_str());
     }
 }
 
@@ -1145,30 +1145,30 @@ auto DCMLeftPanelChildDrawer::draw_infos_tab_item(cam::DCClient &client) -> void
 
         ImGui::Text("Global:");
         ImGui::Indent();
-            ImGui::Text("Network:");
-            ImGui::SameLine();
             draw_config_file_name(client.settings.filePath);
         ImGui::Unindent();
 
-        for(const auto &clientDeviceS : client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {}:", clientDeviceS.id));
-            ImGui::Indent();
-            ImGui::Text("Device:");
-            ImGui::SameLine();
-            draw_config_file_name(clientDeviceS.deviceFilePath);
-            ImGui::Text("Model:");
-            ImGui::SameLine();
-            draw_config_file_name(clientDeviceS.modelFilePath);
-            ImGui::Text("Color:");
-            ImGui::SameLine();
-            draw_config_file_name(clientDeviceS.colorFilePath);
-            ImGui::Text("Filters:");
-            ImGui::SameLine();
-            draw_config_file_name(clientDeviceS.filtersFilePath);
-            ImGui::Text("Cal. filters:");
-            ImGui::SameLine();
-            draw_config_file_name(clientDeviceS.calibrationFiltersFilePath);
-            ImGui::Unindent();
+        if(client.settings.filePath.empty()){
+            for(const auto &clientDeviceS : client.settings.devicesS){
+                ImGuiUiDrawer::text(std::format("Grabber {}:", clientDeviceS.id));
+                ImGui::Indent();
+                ImGui::Text("Device:");
+                ImGui::SameLine();
+                draw_config_file_name(clientDeviceS.deviceFilePath);
+                ImGui::Text("Model:");
+                ImGui::SameLine();
+                draw_config_file_name(clientDeviceS.modelFilePath);
+                ImGui::Text("Color:");
+                ImGui::SameLine();
+                draw_config_file_name(clientDeviceS.colorFilePath);
+                ImGui::Text("Filters:");
+                ImGui::SameLine();
+                draw_config_file_name(clientDeviceS.filtersFilePath);
+                ImGui::Text("Cal. filters:");
+                ImGui::SameLine();
+                draw_config_file_name(clientDeviceS.calibrationFiltersFilePath);
+                ImGui::Unindent();
+            }
         }
 
         ImGui::EndTabItem();
