@@ -62,11 +62,9 @@ int main(int argc, char *argv[]){
 
     // init controller
     DCMController controller;
-    if(controller.initialize()){
-        controller.start();
-        Logger::message("Exit Depth camera manager.\n");
-        return 0;
-    }
+    controller.initialize();
+    controller.start();
+    Logger::message("Exit DC-manager.\n");
 
-    return -1;
+    return 0;
 }

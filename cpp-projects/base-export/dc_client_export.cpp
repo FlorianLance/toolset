@@ -88,16 +88,16 @@ auto DCClientExport::initialize(const std::string &clientSettingsFilePath, bool 
     size_t id = 0;
 
     for(auto &deviceS : client.settings.devicesS){
-        if(deviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
+        if(deviceS.connectionS.connectionType == DCClientType::Remote){
             dll_log_message(std::format("[REMOTE]\n\tId device: [{}]\n\tProtocol: [{}]\n\tId reading interface: [{}]\n\tReading address: [{}]\n\tReading port: [{}]\n\tSending address: [{}]\n\tSending port: [{}]\n\t",
                 id,
                 (deviceS.connectionS.protocol == Protocol::ipv4) ? "IPV4"sv : "IPV6"sv,
                 deviceS.connectionS.idReadingInterface,
                 deviceS.connectionS.readingAddress,
                 deviceS.connectionS.readingPort,
-                deviceS.connectionS.sendingAddress,
+                deviceS.connectionS.processedSendingAddress,
                 deviceS.connectionS.sendingPort));
-        }else if(deviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
+        }else if(deviceS.connectionS.connectionType == DCClientType::Local){
             dll_log_message(std::format("[LOCAL]\n\tId device: [{}]", id));
         }
         ++id;
@@ -135,7 +135,7 @@ auto DCClientExport::connect_to_devices() -> void{
     }
 
     for(const auto &deviceS : client.settings.devicesS){
-        if(deviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
+        if(deviceS.connectionS.connectionType == DCClientType::Remote){
             dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::connect_to_devices] Init connection with device: {}", deviceS.id));
             client.init_connection_with_remote_device(deviceS.id);
         }
@@ -357,7 +357,7 @@ void process_data__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
 
 int is_local__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
     if(idD < dcCE->client.devices_nb()){
-        return dcCE->client.settings.devicesS[idD].connectionS.connectionType == DCDeviceConnectionType::Local;
+        return dcCE->client.settings.devicesS[idD].connectionS.connectionType == DCClientType::Local;
     }
     return 0;
 }

@@ -672,7 +672,7 @@ enum class CloudGenerationMode : std::int8_t{
 };
 
 enum class DCClientType{
-    local,remote,undefined
+    Remote, Local, Undefined
 };
 
 enum class DCApplicationType : std::int8_t {

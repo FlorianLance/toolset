@@ -71,74 +71,98 @@ auto DCVideoRecorder::initialize(size_t nbDevices) -> void{
     std::fill(i->currentCompressedFrames.begin(), i->currentCompressedFrames.end(), nullptr);
 }
 
-auto DCVideoRecorder::uncompress_frame(size_t idCamera, DCFrame &frame) -> bool{
-
-    if(idCamera >= i->currentFrames.size()){
-        return false;
-    }
-
-    if(i->currentCompressedFrames[idCamera] == nullptr){
-        return false;
-    }
-
-    if(i->currentCompressedFrames[idCamera]->idCapture == frame.idCapture){
-        return false;
-    }
-
-    return i->videoResource.uncompress_frame(settings.generation, idCamera, i->currentCompressedFrames[idCamera].get(), frame);
+auto DCVideoRecorder::add_device() -> void{
+    // video
+    i->videoResource.add_device();
+    // states
+    states.nbFramesRecorded.push_back(0);
+    states.currentFrames.push_back(0);
+    // frames
+    i->currentFrames.push_back(nullptr);
+    i->currentCompressedFrames.push_back(nullptr);
 }
 
-auto DCVideoRecorder::add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> cFrame) -> void{
+auto DCVideoRecorder::remove_last_device() -> void{
+    if(i->videoResource.nb_devices() > 0){
+        // video
+        i->videoResource.remove_last_device();
+        // states
+        states.nbFramesRecorded.erase(states.nbFramesRecorded.begin() + states.nbFramesRecorded.size() -1);
+        states.currentFrames.erase(states.currentFrames.begin() + states.currentFrames.size() -1);
+        // frames
+        i->currentFrames.erase(i->currentFrames.begin() + i->currentFrames.size() -1);
+        i->currentCompressedFrames.erase(i->currentCompressedFrames.begin() + i->currentCompressedFrames.size() -1);
+    }
+}
+
+auto DCVideoRecorder::uncompress_frame(size_t idDevice, DCFrame &frame) -> bool{
+
+    if(idDevice >= i->currentFrames.size()){
+        return false;
+    }
+
+    if(i->currentCompressedFrames[idDevice] == nullptr){
+        return false;
+    }
+
+    if(i->currentCompressedFrames[idDevice]->idCapture == frame.idCapture){
+        return false;
+    }
+
+    return i->videoResource.uncompress_frame(settings.generation, idDevice, i->currentCompressedFrames[idDevice].get(), frame);
+}
+
+auto DCVideoRecorder::add_compressed_frame_to_default_device(std::shared_ptr<DCCompressedFrame> cFrame) -> void{
     add_compressed_frame(0, std::move(cFrame));
 }
 
-auto DCVideoRecorder::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> cFrame) -> void{
+auto DCVideoRecorder::add_compressed_frame(size_t idDevice, std::shared_ptr<DCCompressedFrame> cFrame) -> void{
 
-    if(!is_recording() || idCamera >= i->videoResource.nb_cameras()){
+    if(!is_recording() || idDevice >= i->videoResource.nb_devices()){
         return;
     }
 
     if(i->recordingStartTimestamp.count() > cFrame->receivedTS){
-        Logger::error("[DCRecorder::add_compressed_frame] Invalid frame timestamp.\n");
+        Logger::error("[DCVideoRecorder::add_compressed_frame] Invalid frame timestamp.\n");
         return;
     }
 
-    if((i->videoResource.nb_frames(idCamera) < settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
+    if((i->videoResource.nb_frames(idDevice) < settings.deviceMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
 
         // add frame to video
-        i->videoResource.add_compressed_frame(idCamera, std::move(cFrame));
+        i->videoResource.add_compressed_frame(idDevice, std::move(cFrame));
 
         // update video duration
         states.duration = i->videoResource.duration_ms();
 
-        ++states.nbFramesRecorded[idCamera];
+        ++states.nbFramesRecorded[idDevice];
     }
 }
 
-auto DCVideoRecorder::add_frame_to_default_camera(std::shared_ptr<DCFrame> frame) -> void{
+auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void{
     add_frame(0, std::move(frame));
 }
 
-auto DCVideoRecorder::add_frame(size_t idCamera, std::shared_ptr<DCFrame> frame) -> void{
+auto DCVideoRecorder::add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void{
 
-    if(!is_recording() || idCamera >= i->videoResource.nb_cameras()){
+    if(!is_recording() || idDevice >= i->videoResource.nb_devices()){
         return;
     }
 
     if(i->recordingStartTimestamp.count() > frame->receivedTS){
-        Logger::error("[DCRecorder::add_frame] Invalid frame timestamp.\n");
+        Logger::error("[DCVideoRecorder::add_frame] Invalid frame timestamp.\n");
         return;
     }
 
-    if((i->videoResource.nb_frames(idCamera) < settings.cameraMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
+    if((i->videoResource.nb_frames(idDevice) < settings.deviceMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
 
         // add frame to video
-        i->videoResource.add_compressed_frame(idCamera, i->compressor.compress(settings.compression, *frame));
+        i->videoResource.add_compressed_frame(idDevice, i->compressor.compress(settings.compression, *frame));
 
         // update video duration
         states.duration = i->videoResource.duration_ms();
 
-        ++states.nbFramesRecorded[idCamera];
+        ++states.nbFramesRecorded[idDevice];
     }
 }
 
@@ -149,7 +173,7 @@ auto DCVideoRecorder::set_time(double timeMs) -> void{
     }
     states.currentTime = timeMs;
 
-    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
+    for(size_t idC = 0; idC < video()->nb_devices(); ++idC){
         if(auto idF = video()->closest_frame_id_from_time(idC, states.currentTime); idF != -1){
             i->currentCompressedFrames[idC] = i->videoResource.get_compressed_frame(idC, idF).lock();
             states.currentFrames[idC] = idF;
@@ -159,7 +183,7 @@ auto DCVideoRecorder::set_time(double timeMs) -> void{
 
 auto DCVideoRecorder::update() -> void{
 
-    for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){
+    for(size_t idC = 0; idC < video()->nb_devices(); ++idC){
 
         if(video()->nb_frames(idC) == 0){
             continue;
@@ -174,6 +198,8 @@ auto DCVideoRecorder::update() -> void{
         }
     }
 }
+
+
 
 auto DCVideoRecorder::video() -> DCVideo* {
     return &i->videoResource;
@@ -207,7 +233,7 @@ auto DCVideoRecorder::stop_recording() -> void {
 auto DCVideoRecorder::reset_recording() -> void {
 
     // clean video
-    i->videoResource.remove_all_cameras_compressed_frames();
+    i->videoResource.remove_all_devices_compressed_frames();
 
     // reset stop watch
     i->recordingStopWatch.reset();

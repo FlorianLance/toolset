@@ -32,27 +32,27 @@
 #include <format>
 
 // local
-#include "utility/io_file.hpp"
 #include "utility/logger.hpp"
 #include "utility/io_fstream.hpp"
 #include "geometry/voxel_grid.hpp"
 #include "frame/dc_frame_compressor.hpp"
 #include "frame/dc_frame_uncompressor.hpp"
-#include "data/json_utility.hpp"
+// #include "data/json_utility.hpp"
+// #include "utility/io_file.hpp"
 
 using namespace std::literals::string_view_literals;
 using namespace tool::cam;
 using namespace std::chrono;
-using namespace tool::data;
-using json = nlohmann::json;
+// using namespace tool::data;
+// using json = nlohmann::json;
 
 DCVideo &DCVideo::operator=(const DCVideo &other){
     
-    m_camerasCompressedFrames = other.m_camerasCompressedFrames;
-    for(size_t id = 0; id < other.m_camerasUncompressors.size(); ++id){
-        m_camerasUncompressors.push_back(std::make_unique<DCFrameUncompressor>());
+    m_devicesCompressedFrames = other.m_devicesCompressedFrames;
+    for(size_t id = 0; id < other.m_devicesFrameUncompressors.size(); ++id){
+        m_devicesFrameUncompressors.push_back(std::make_unique<DCFrameUncompressor>());
     }
-    m_camerasTransforms = other.m_camerasTransforms;
+    m_devicesTransforms = other.m_devicesTransforms;
 
     return *this;
 }
@@ -61,45 +61,59 @@ auto DCVideo::initialize(size_t nbDevices) -> void{
 
     clean();
     
-    m_camerasCompressedFrames.resize(nbDevices);
-    m_camerasUncompressors.resize(nbDevices);
-    for(auto &uncompressor : m_camerasUncompressors){
+    m_devicesCompressedFrames.resize(nbDevices);
+    m_devicesFrameUncompressors.resize(nbDevices);
+    for(auto &uncompressor : m_devicesFrameUncompressors){
         uncompressor = std::make_unique<DCFrameUncompressor>();
-    }    
-    m_camerasTransforms  = std::vector<geo::Mat4d>(nbDevices, geo::Mat4d::identity());
+    }
+    m_devicesTransforms  = std::vector<geo::Mat4d>(nbDevices, geo::Mat4d::identity());
 }
 
 auto DCVideo::clean() -> void{
-    if(nb_cameras() > 0){
-        m_camerasCompressedFrames.clear();
-        m_camerasUncompressors.clear();
-        m_camerasTransforms.clear();
+    if(nb_devices() > 0){
+        m_devicesCompressedFrames.clear();
+        m_devicesFrameUncompressors.clear();
+        m_devicesTransforms.clear();
     }
 }
 
-auto DCVideo::nb_cameras() const noexcept -> size_t{
-    return m_camerasCompressedFrames.size();
+auto DCVideo::add_device() -> void{
+    m_devicesCompressedFrames.push_back({});
+    m_devicesFrameUncompressors.push_back(std::make_unique<DCFrameUncompressor>());
+    m_devicesTransforms.push_back(geo::Mat4d::identity());
 }
 
-auto DCVideo::count_frames_from_all_cameras() const noexcept -> size_t{
+auto DCVideo::remove_last_device() -> void{
+    if(nb_devices() > 0){
+        m_devicesCompressedFrames.erase(m_devicesCompressedFrames.begin() + m_devicesCompressedFrames.size()-1);
+        m_devicesCompressedFrames.erase(m_devicesCompressedFrames.begin() + m_devicesCompressedFrames.size()-1);
+        m_devicesTransforms.erase(m_devicesTransforms.begin() + m_devicesTransforms.size()-1);
+    }
+}
+
+auto DCVideo::nb_devices() const noexcept -> size_t{
+    return m_devicesCompressedFrames.size();
+}
+
+auto DCVideo::count_frames_from_all_devices() const noexcept -> size_t{
     size_t count = 0;
-    for(const auto &cFrames : m_camerasCompressedFrames){
+    for(const auto &cFrames : m_devicesCompressedFrames){
         count += cFrames.nb_frames();
     }
     return count;
 }
 
-auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, size_t idFrame, DCFrame &frame) -> bool{
-    if(const auto camD = get_compressed_frames_ptr(idCamera)){
+auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idDevice, size_t idFrame, DCFrame &frame) -> bool{
+    if(const auto camD = get_compressed_frames_ptr(idDevice)){
         if(auto cFrame = camD->get_frame_ptr(idFrame)){
-            return uncompress_frame(gSettings, idCamera, cFrame, frame);
+            return uncompress_frame(gSettings, idDevice, cFrame, frame);
         }
     }
     return false;
 }
 
-auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
-    if(auto unc = uncompressor(idCamera); unc != nullptr){
+auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idDevice, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+    if(auto unc = uncompressor(idDevice); unc != nullptr){
         return unc->uncompress(gSettings, cFrame, frame);
     }
     return false;
@@ -108,10 +122,10 @@ auto DCVideo::uncompress_frame(const DCFrameGenerationSettings &gSettings, size_
 auto DCVideo::first_frame_received_timestamp() const noexcept -> std::int64_t{
     auto start = std::numeric_limits<std::int64_t>::max();
     bool found = false;
-    for(const auto &cameraCompressedFrames : m_camerasCompressedFrames){
-        if(auto camStartTS = cameraCompressedFrames.first_frame_received_timestamp(); camStartTS != -1){
-            if(start > camStartTS){
-                start = camStartTS;
+    for(const auto &deviceCompressedFrames : m_devicesCompressedFrames){
+        if(auto devStartTS = deviceCompressedFrames.first_frame_received_timestamp(); devStartTS != -1){
+            if(start > devStartTS){
+                start = devStartTS;
                 found = true;
             }
         }
@@ -125,10 +139,10 @@ auto DCVideo::first_frame_received_timestamp() const noexcept -> std::int64_t{
 auto DCVideo::last_frame_received_timestamp() const noexcept -> std::int64_t{
     std::int64_t end = -1;
     bool found = false;
-    for(const auto &cameraCompressedFrames : m_camerasCompressedFrames){
-        if(auto camEndTS = cameraCompressedFrames.last_frame_received_timestamp(); camEndTS!=-1){
-            if(end < camEndTS){
-                end = camEndTS;
+    for(const auto &deviceCompressedFrames : m_devicesCompressedFrames){
+        if(auto devEndTS = deviceCompressedFrames.last_frame_received_timestamp(); devEndTS!=-1){
+            if(end < devEndTS){
+                end = devEndTS;
                 found = true;
             }
         }
@@ -139,30 +153,30 @@ auto DCVideo::last_frame_received_timestamp() const noexcept -> std::int64_t{
     return -1;
 }
 
-auto DCVideo::camera_duration_ms(size_t idCamera) const noexcept -> double{
-    if(idCamera >= nb_cameras()){
+auto DCVideo::device_duration_ms(size_t idDevice) const noexcept -> double{
+    if(idDevice >= nb_devices()){
         return 0.0;
     }
-    return m_camerasCompressedFrames[idCamera].duration_ms();
+    return m_devicesCompressedFrames[idDevice].duration_ms();
 }
 
-auto DCVideo::camera_first_frame_received_timestamp(size_t idCamera) const noexcept -> int64_t{
-    if(idCamera >= nb_cameras()){
+auto DCVideo::device_first_frame_received_timestamp(size_t idDevice) const noexcept -> int64_t{
+    if(idDevice >= nb_devices()){
         return -1;
     }
-    return m_camerasCompressedFrames[idCamera].first_frame_received_timestamp();
+    return m_devicesCompressedFrames[idDevice].first_frame_received_timestamp();
 }
 
-auto DCVideo::camera_last_frame_received_timestamp(size_t idCamera) const noexcept -> int64_t{
-    if(idCamera >= nb_cameras()){
+auto DCVideo::device_last_frame_received_timestamp(size_t idDevice) const noexcept -> int64_t{
+    if(idDevice >= nb_devices()){
         return -1;
     }
-    return m_camerasCompressedFrames[idCamera].last_frame_received_timestamp();
+    return m_devicesCompressedFrames[idDevice].last_frame_received_timestamp();
 }
 
 auto DCVideo::duration_ms() const noexcept -> double {
 
-    if(nb_cameras() == 0){
+    if(nb_devices() == 0){
         return 0.0;
     }
     auto lfc = last_frame_received_timestamp();
@@ -177,26 +191,26 @@ auto DCVideo::get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t t2) noexc
     return duration_cast<microseconds>(nanoseconds(std::max(t1,t2)) - nanoseconds(std::min(t1,t2))).count() / 1000.0;
 }
 
-auto DCVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const noexcept -> std::int64_t{
+auto DCVideo::closest_frame_id_from_time(size_t idDevice, double timeMs) const noexcept -> std::int64_t{
 
-    if(idCamera >= nb_cameras()){
+    if(idDevice >= nb_devices()){
         Logger::error("[DCVideo::closest_frame_id_from_time] Camera id invalid.\n"sv);
         return -1;
     }
 
-    if(nb_frames(idCamera) == 0){
+    if(nb_frames(idDevice) == 0){
         //Logger::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
         return -1;
     }    
 
-    auto framesPtr = get_compressed_frames_ptr(idCamera);
+    auto framesPtr = get_compressed_frames_ptr(idDevice);
     if(framesPtr->nb_frames() == 1){
         return 0;
     }
 
     auto ffTS = nanoseconds(first_frame_received_timestamp());
     // init with first diff
-    double prevDiff = std::abs(get_timestamp_diff_time_ms(ffTS.count(), camera_first_frame_received_timestamp(idCamera))-timeMs);
+    double prevDiff = std::abs(get_timestamp_diff_time_ms(ffTS.count(), device_first_frame_received_timestamp(idDevice))-timeMs);
 
     for(size_t idFrame = 1; idFrame < framesPtr->nb_frames(); ++idFrame){        
         auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->receivedTS);
@@ -209,21 +223,21 @@ auto DCVideo::closest_frame_id_from_time(size_t idCamera, double timeMs) const n
     return framesPtr->nb_frames()-1;
 }
 
-auto DCVideo::nb_frames(size_t idCamera) const noexcept -> size_t{
-    if(idCamera < nb_cameras()){
-        return get_compressed_frames_ptr(idCamera)->nb_frames();
+auto DCVideo::nb_frames(size_t idDevice) const noexcept -> size_t{
+    if(idDevice < nb_devices()){
+        return get_compressed_frames_ptr(idDevice)->nb_frames();
     }
     return 0;
 }
 
 auto DCVideo::min_nb_frames() const noexcept  -> size_t {
     
-    if(m_camerasCompressedFrames.empty()){
+    if(m_devicesCompressedFrames.empty()){
         return 0;
     }
     
-    size_t minFrames = m_camerasCompressedFrames.front().nb_frames();
-    for(auto &frames : m_camerasCompressedFrames){
+    size_t minFrames = m_devicesCompressedFrames.front().nb_frames();
+    for(auto &frames : m_devicesCompressedFrames){
         if(minFrames > frames.nb_frames()){
             minFrames = frames.nb_frames();
         }
@@ -231,94 +245,94 @@ auto DCVideo::min_nb_frames() const noexcept  -> size_t {
     return minFrames;
 }
 
-auto DCVideo::get_compressed_frames_ptr(size_t idCamera) const noexcept -> const DCCompressedFrameBuffer*{
-    if(idCamera < nb_cameras()){
-        return &m_camerasCompressedFrames[idCamera];
+auto DCVideo::get_compressed_frames_ptr(size_t idDevice) const noexcept -> const DCCompressedFrameBuffer*{
+    if(idDevice < nb_devices()){
+        return &m_devicesCompressedFrames[idDevice];
     }
-    Logger::error(std::format("[DCVideo::get_compressed_frames_ptr] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
+    Logger::error(std::format("[DCVideo::get_compressed_frames_ptr] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
     return nullptr;
 }
 
-auto DCVideo::get_compressed_frame(size_t idCamera, size_t idFrame) -> std::weak_ptr<DCCompressedFrame>{
-    if(const auto camD = get_compressed_frames_ptr(idCamera)){
+auto DCVideo::get_compressed_frame(size_t idDevice, size_t idFrame) -> std::weak_ptr<DCCompressedFrame>{
+    if(const auto camD = get_compressed_frames_ptr(idDevice)){
         return camD->get_compressed_frame(idFrame);
     }
     return {};
 }
 
-auto DCVideo::remove_compressed_frames_until(size_t idCamera, size_t idFrame) -> void{
-    if(idCamera < nb_cameras()){
-        m_camerasCompressedFrames[idCamera].remove_frames_until(idFrame);
+auto DCVideo::remove_compressed_frames_until(size_t idDevice, size_t idFrame) -> void{
+    if(idDevice < nb_devices()){
+        m_devicesCompressedFrames[idDevice].remove_frames_until(idFrame);
     }
 }
 
-auto DCVideo::remove_compressed_frames_after(size_t idCamera, size_t idFrame) -> void{
-    if(idCamera < nb_cameras()){
-        m_camerasCompressedFrames[idCamera].remove_frames_after(idFrame);
+auto DCVideo::remove_compressed_frames_after(size_t idDevice, size_t idFrame) -> void{
+    if(idDevice < nb_devices()){
+        m_devicesCompressedFrames[idDevice].remove_frames_after(idFrame);
     }
 }
 
-auto DCVideo::keep_only_one_camera(size_t idCamera) -> void{
-    m_camerasUncompressors.resize(1);
-    auto cameraFrames = std::move(m_camerasCompressedFrames[idCamera]);
-    m_camerasCompressedFrames = {std::move(cameraFrames)};
+auto DCVideo::keep_only_one_device(size_t idDevice) -> void{
+    m_devicesFrameUncompressors.resize(1);
+    auto deviceFrames = std::move(m_devicesCompressedFrames[idDevice]);
+    m_devicesCompressedFrames = {std::move(deviceFrames)};
 }
 
-auto DCVideo::keep_only_cameras_from_id(const std::vector<size_t> &ids) -> void{
+auto DCVideo::keep_only_devices_from_id(const std::vector<size_t> &ids) -> void{
 
     std::vector<std::unique_ptr<DCFrameUncompressor>> uncompressors;
     std::vector<DCCompressedFrameBuffer> framesPerCamera;
 
     for(const auto &id : ids){
-        uncompressors.push_back(std::move(m_camerasUncompressors[id]));
-        framesPerCamera.push_back(std::move(m_camerasCompressedFrames[id]));
+        uncompressors.push_back(std::move(m_devicesFrameUncompressors[id]));
+        framesPerCamera.push_back(std::move(m_devicesCompressedFrames[id]));
     }
-    std::swap(m_camerasUncompressors, uncompressors);
-    std::swap(m_camerasCompressedFrames, framesPerCamera);
+    std::swap(m_devicesFrameUncompressors, uncompressors);
+    std::swap(m_devicesCompressedFrames, framesPerCamera);
 }
 
-auto DCVideo::remove_all_cameras_compressed_frames() noexcept -> void{
-    for(auto &frames : m_camerasCompressedFrames){
+auto DCVideo::remove_all_devices_compressed_frames() noexcept -> void{
+    for(auto &frames : m_devicesCompressedFrames){
         frames.clean();
     }
 }
 
-auto DCVideo::remove_all_compressed_frames(size_t idCamera) noexcept -> void{
-    if(idCamera < nb_cameras()){
-        m_camerasCompressedFrames[idCamera].clean();
+auto DCVideo::remove_all_compressed_frames(size_t idDevice) noexcept -> void{
+    if(idDevice < nb_devices()){
+        m_devicesCompressedFrames[idDevice].clean();
     }
 }
 
-auto DCVideo::replace_compressed_frame(size_t idCamera, size_t idFrame, std::shared_ptr<DCCompressedFrame> frame) -> void{
-    if(idCamera < nb_cameras()){
-        if(idFrame < nb_frames(idCamera)){
-            m_camerasCompressedFrames[idCamera].frames[idFrame] = std::move(frame);
+auto DCVideo::replace_compressed_frame(size_t idDevice, size_t idFrame, std::shared_ptr<DCCompressedFrame> frame) -> void{
+    if(idDevice < nb_devices()){
+        if(idFrame < nb_frames(idDevice)){
+            m_devicesCompressedFrames[idDevice].frames[idFrame] = std::move(frame);
         }
     }
 }
 
-auto DCVideo::get_transform(size_t idCamera) const -> tool::geo::Mat4d{
-    if(idCamera < nb_cameras()){
-        return m_camerasTransforms[idCamera];
+auto DCVideo::get_transform(size_t idDevice) const -> tool::geo::Mat4d{
+    if(idDevice < nb_devices()){
+        return m_devicesTransforms[idDevice];
     }
-    Logger::error(std::format("[DCVideo::get_transform] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
+    Logger::error(std::format("[DCVideo::get_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
     return geo::Mat4d::identity();
 }
 
-auto DCVideo::set_transform(size_t idCamera, geo::Mat4d tr) -> void{
-    if(idCamera < nb_cameras()){
-        m_camerasTransforms[idCamera] = tr;
+auto DCVideo::set_transform(size_t idDevice, geo::Mat4d tr) -> void{
+    if(idDevice < nb_devices()){
+        m_devicesTransforms[idDevice] = tr;
         return;
     }
-    Logger::error(std::format("[DCVideo::set_transform] Invalid camera id: [{}], number of cameras available: [{}]\n", idCamera, nb_cameras()));
+    Logger::error(std::format("[DCVideo::set_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
 }
 
-auto DCVideo::add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> frame) -> void{
-    if(idCamera >= nb_cameras()){
-        m_camerasCompressedFrames.resize(idCamera+1);
+auto DCVideo::add_compressed_frame(size_t idDevice, std::shared_ptr<DCCompressedFrame> frame) -> void{
+    if(idDevice >= nb_devices()){
+        m_devicesCompressedFrames.resize(idDevice+1);
     }
     
-    m_camerasCompressedFrames[idCamera].add_compressed_frame(std::move(frame));
+    m_devicesCompressedFrames[idDevice].add_compressed_frame(std::move(frame));
 }
 
 auto DCVideo::save_to_file(std::string_view path) -> bool{
@@ -328,7 +342,7 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
         return false;
     }
 
-    if(count_frames_from_all_cameras() == 0){
+    if(count_frames_from_all_devices() == 0){
         Logger::error("[DCVideo::save_to_file] No available frames to save.\n");
         return false;
     }
@@ -354,47 +368,47 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
     return success;
 }
 
-auto DCVideo::save_to_json_file(std::string_view path) -> bool{
+// auto DCVideo::save_to_json_file(std::string_view path) -> bool{
 
-    // TESTS
+//     // TESTS
 
-    if(path.length() == 0){
-        Logger::error("[DCVideo::save_to_json_file] Empty path.\n");
-        return false;
-    }
+//     if(path.length() == 0){
+//         Logger::error("[DCVideo::save_to_json_file] Empty path.\n");
+//         return false;
+//     }
 
-    if(count_frames_from_all_cameras() == 0){
-        Logger::error("[DCVideo::save_to_json_file] No available frames to save.\n");
-        return false;
-    }
+//     if(count_frames_from_all_devices() == 0){
+//         Logger::error("[DCVideo::save_to_json_file] No available frames to save.\n");
+//         return false;
+//     }
 
-    json json;
-    add_value(json, "cameras_count"sv,  nb_cameras());              
+//     json json;
+//     add_value(json, "cameras_count"sv,  nb_devices());
 
-    // write infos
-    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
-        nlohmann::json cInfoJson;
-        add_value(cInfoJson, "nb_frames"sv, m_camerasCompressedFrames[idCamera].frames.size());
-        add_array(cInfoJson, "model"sv, m_camerasTransforms[idCamera].cspan());
-        add_value(json, std::format("infos_camera_{}"sv, idCamera),  cInfoJson);
-    }
+//     // write infos
+//     for(size_t idDevice = 0; idDevice < nb_devices(); ++idDevice){
+//         nlohmann::json cInfoJson;
+//         add_value(cInfoJson, "nb_frames"sv, m_devicesCompressedFrames[idDevice].frames.size());
+//         add_array(cInfoJson, "model"sv, m_devicesTransforms[idDevice].cspan());
+//         add_value(json, std::format("infos_camera_{}"sv, idDevice),  cInfoJson);
+//     }
 
-    // write frames
-    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
-        nlohmann::json cDataJson;
-        for(size_t idFrame = 0; idFrame < m_camerasCompressedFrames[idCamera].nb_frames(); ++idFrame){
-            add_value(cDataJson, std::format("frame_{}"sv, idFrame),  m_camerasCompressedFrames[idCamera].frames[idFrame]->convert_to_json());
-        }
-        add_value(json, std::format("data_camera_{}"sv, idCamera),  cDataJson);
-    }
+//     // write frames
+//     for(size_t idDevice = 0; idDevice < nb_devices(); ++idDevice){
+//         nlohmann::json cDataJson;
+//         for(size_t idFrame = 0; idFrame < m_devicesCompressedFrames[idDevice].nb_frames(); ++idFrame){
+//             add_value(cDataJson, std::format("frame_{}"sv, idFrame),  m_devicesCompressedFrames[idDevice].frames[idFrame]->convert_to_json());
+//         }
+//         add_value(json, std::format("data_camera_{}"sv, idDevice),  cDataJson);
+//     }
 
-    if(!File::write_binary_content(std::string(path), json::to_bson(json))){
-        Logger::error(std::format("[DCVideo::save_to_json_file] Cannot save video to json text file, impossible to open file with path: [{}]\n", path));
-        return false;
-    }
+//     if(!File::write_binary_content(std::string(path), json::to_bson(json))){
+//         Logger::error(std::format("[DCVideo::save_to_json_file] Cannot save video to json text file, impossible to open file with path: [{}]\n", path));
+//         return false;
+//     }
 
-    return true;
-}
+//     return true;
+// }
 
 auto DCVideo::load_from_file(std::string_view path) -> bool{
 
@@ -412,7 +426,7 @@ auto DCVideo::load_from_file(std::string_view path) -> bool{
     file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
 
     // clean data
-    remove_all_cameras_compressed_frames();
+    remove_all_devices_compressed_frames();
 
     // read file
     bool success = false;
@@ -426,43 +440,43 @@ auto DCVideo::load_from_file(std::string_view path) -> bool{
     return success;
 }
 
-auto DCVideo::uncompressor(size_t idCamera) noexcept -> DCFrameUncompressor*{
-    if(idCamera < m_camerasUncompressors.size()){
-        return m_camerasUncompressors[idCamera].get();
+auto DCVideo::uncompressor(size_t idDevice) noexcept -> DCFrameUncompressor*{
+    if(idDevice < m_devicesFrameUncompressors.size()){
+        return m_devicesFrameUncompressors[idDevice].get();
     }
     return nullptr;
 }
 
-auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
+auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
     
-    if(m_camerasCompressedFrames.empty()){
+    if(m_devicesCompressedFrames.empty()){
         return;
     }
     
-    if(m_camerasCompressedFrames.front().frames.empty()){
+    if(m_devicesCompressedFrames.front().frames.empty()){
         return;
     }
 
-    for(const auto &cData : m_camerasCompressedFrames){
+    for(const auto &cData : m_devicesCompressedFrames){
         if(!cData.check_same_mode_for_every_frame()){
-            Logger::error("[DCVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            Logger::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
             return;
         }
     }
-    auto mode = m_camerasCompressedFrames.front().first_frame_ptr()->mode;
-    for(const auto &cData : m_camerasCompressedFrames){
+    auto mode = m_devicesCompressedFrames.front().first_frame_ptr()->mode;
+    for(const auto &cData : m_devicesCompressedFrames){
         if(cData.first_frame_ptr()->mode != mode){
-            Logger::error("[DCVideo::merge_all_cameras] Mode inconstancie accros cameras frames\n");
+            Logger::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
             return;
         }
     }
 
-    auto c0FirstFrameTS = m_camerasCompressedFrames.front().frames.front()->receivedTS;
+    auto c0FirstFrameTS = m_devicesCompressedFrames.front().frames.front()->receivedTS;
 
     DCFrameCompressor compressor;
     for(size_t idF = 0; idF < nb_frames(0); ++idF){
         
-        auto c0Frame = m_camerasCompressedFrames.front().frames[idF].get();
+        auto c0Frame = m_devicesCompressedFrames.front().frames[idF].get();
         auto c0Time  = c0Frame->receivedTS;
         auto c0TimeMs= std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(c0Time - c0FirstFrameTS));
 
@@ -482,10 +496,10 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
         final.depth.reset();
         final.infra.reset();
 
-        geo::VoxelGrid grid(voxelSize, minBound, maxBound);        
-        grid.add_cloud(final.cloud, m_camerasTransforms.front().conv<float>());
+        geo::VoxelGrid grid(voxelSize, minBound, maxBound);
+        grid.add_cloud(final.cloud, m_devicesTransforms.front().conv<float>());
 
-        for(size_t jj = 1; jj < nb_cameras(); ++jj){
+        for(size_t jj = 1; jj < nb_devices(); ++jj){
 
             size_t idF = 0;
             if(auto id = closest_frame_id_from_time(jj, static_cast<double>(c0TimeMs.count())); id != -1){
@@ -499,7 +513,7 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
                 continue;
             }
 
-            grid.add_cloud(current.cloud, m_camerasTransforms[jj].conv<float>());
+            grid.add_cloud(current.cloud, m_devicesTransforms[jj].conv<float>());
         }
         grid.compute_grid();
         grid.convert_to_cloud(final.cloud);
@@ -508,13 +522,13 @@ auto DCVideo::merge_all_cameras(const DCFrameGenerationSettings &gSettings, floa
         //m_camerasCompressedFrames.front().frames[idF] = compressor.compress(final, 90);
     }
 
-    m_camerasTransforms.front() = geo::Mat4d::identity();
+    m_devicesTransforms.front() = geo::Mat4d::identity();
     
-    m_camerasCompressedFrames.resize(1);
-    m_camerasUncompressors.resize(1);
+    m_devicesCompressedFrames.resize(1);
+    m_devicesFrameUncompressors.resize(1);
 }
 
-auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void{
+auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void{
 
     if(idFrame >= min_nb_frames()){
         // ...
@@ -524,7 +538,7 @@ auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings,
     geo::VoxelGrid grid(sizeVoxel, minBound, maxBound);
 
     DCFrame frame;
-    for(size_t ii = 0; ii < nb_cameras(); ++ii){        
+    for(size_t ii = 0; ii < nb_devices(); ++ii){
         uncompress_frame(gSettings, ii, idFrame, frame);
         grid.add_cloud(frame.cloud, get_transform(ii).conv<float>());
     }
@@ -532,7 +546,7 @@ auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings,
     grid.convert_to_cloud(cloud);
 }
 
-auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
+auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
 
     frame = DCFrame();
     if(idFrame >= min_nb_frames()){
@@ -541,7 +555,7 @@ auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings,
     }
 
     geo::VoxelGrid grid(sizeVoxel, minBound, maxBound);
-    for(size_t ii = 0; ii < nb_cameras(); ++ii){
+    for(size_t ii = 0; ii < nb_devices(); ++ii){
         DCFrame uFrame;
         uncompress_frame(gSettings, ii, idFrame, uFrame);
         grid.add_cloud(uFrame.cloud, get_transform(ii).conv<float>());
@@ -558,27 +572,27 @@ auto DCVideo::merge_cameras_frame_id(const DCFrameGenerationSettings &gSettings,
         }
     }
     grid.compute_grid();
-    merge_cameras_frame_id(gSettings, idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
+    merge_devices_frame_id(gSettings, idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
 }
 
 
-auto DCVideo::total_audio_frames_size(size_t idCamera) const -> size_t{
-    if(idCamera < m_camerasCompressedFrames.size()){
+auto DCVideo::total_audio_frames_size(size_t idDevice) const -> size_t{
+    if(idDevice < m_devicesCompressedFrames.size()){
         size_t total = 0;
-        for(const auto &frame : m_camerasCompressedFrames[idCamera].frames){
+        for(const auto &frame : m_devicesCompressedFrames[idDevice].frames){
             for(const auto &audioChannel : frame->audioFrames){
                 total += audioChannel.size();
             }
         }
         return total;
     }
-    Logger::error("[DCVideo::total_audio_frames_size] Invalid camera id.\n");
+    Logger::error("[DCVideo::total_audio_frames_size] Invalid device id.\n");
     return 0;
 }
 
-auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<std::vector<float> > &audioBuffer) -> void{
+auto DCVideo::get_audio_samples_all_channels(size_t idDevice, std::vector<std::vector<float> > &audioBuffer) -> void{
     
-    auto camData = &m_camerasCompressedFrames[idCamera];
+    auto camData = &m_devicesCompressedFrames[idDevice];
 
     size_t samplesCount = 0;
     for(const auto &frame : camData->frames){
@@ -608,9 +622,9 @@ auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<std::v
     }
 }
 
-auto DCVideo::get_audio_samples_all_channels(size_t idCamera, std::vector<float> &audioBuffer) -> void{
+auto DCVideo::get_audio_samples_all_channels(size_t idDevice, std::vector<float> &audioBuffer) -> void{
     
-    auto camData = &m_camerasCompressedFrames[idCamera];
+    auto camData = &m_devicesCompressedFrames[idDevice];
 
     size_t samplesCount = 0;
     for(const auto &frame : camData->frames){
@@ -653,30 +667,30 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
         return false;
     }    
 
-    // read nb of cameras
-    std::int8_t nbCameras;
-    read(nbCameras, file);    
-    initialize(nbCameras);
+    // read nb of devices
+    std::int8_t nbDevices;
+    read(nbDevices, file);
+    initialize(nbDevices);
 
-    // read infos per camera
+    // read infos per device
     std::int32_t nbFrames;
     size_t currentC = 0;
-    for(size_t idC = 0; idC < m_camerasCompressedFrames.size(); ++idC){
+    for(size_t idC = 0; idC < m_devicesCompressedFrames.size(); ++idC){
 
         // read nb frames
         read(nbFrames, file);
 
         if(nbFrames > 0){
             
-            auto &cameraCompressedFrames = m_camerasCompressedFrames[currentC];
-            cameraCompressedFrames.frames.reserve(nbFrames);
+            auto &deviceCompressedFrames = m_devicesCompressedFrames[currentC];
+            deviceCompressedFrames.frames.reserve(nbFrames);
 
             for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-                cameraCompressedFrames.frames.push_back(std::make_shared<DCCompressedFrame>());
+                deviceCompressedFrames.frames.push_back(std::make_shared<DCCompressedFrame>());
             }
 
             // calibration matrix
-            read_array(m_camerasTransforms[currentC].array.data(), file, 16);
+            read_array(m_devicesTransforms[currentC].array.data(), file, 16);
 
             ++currentC;
         }else{
@@ -684,18 +698,18 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
             read_array(transform.array.data(), file, 16);
         }
     }
-    m_camerasCompressedFrames.resize(currentC);
+    m_devicesCompressedFrames.resize(currentC);
 
     // read frames
-    for(auto &cameraData : m_camerasCompressedFrames){
-        for(auto &frame : cameraData.frames){
+    for(auto &deviceData : m_devicesCompressedFrames){
+        for(auto &frame : deviceData.frames){
             double timeMsNotUsed;
             read(timeMsNotUsed, file); // read time ms
             frame->init_from_file_stream(file);
         }
     }
 
-    // remove empty cameras
+    // remove empty devices
     // TODO: ...
 
     return true;
@@ -707,20 +721,20 @@ auto DCVideo::write_file(std::ofstream &file) -> void{
     std::int8_t videoType = 2;
     write(videoType, file);                                                                         // std::int8_t
 
-    // write nb of cameras
-    write(static_cast<std::int8_t>(m_camerasCompressedFrames.size()), file);                        // std::int8_t
+    // write nb of devices
+    write(static_cast<std::int8_t>(m_devicesCompressedFrames.size()), file);                        // std::int8_t
 
-    // write infos per camera
-    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
+    // write infos per device
+    for(size_t idDevice = 0; idDevice < nb_devices(); ++idDevice){
         // nb frames
-        write(static_cast<std::int32_t>(m_camerasCompressedFrames[idCamera].frames.size()), file);  // std::int32_t * cameras count
+        write(static_cast<std::int32_t>(m_devicesCompressedFrames[idDevice].frames.size()), file);  // std::int32_t * devices count
         // calibration matrix
-        write_array(m_camerasTransforms[idCamera].array.data(), file, 16);                          // double * 16
+        write_array(m_devicesTransforms[idDevice].array.data(), file, 16);                          // double * 16
     }
 
     // writes frames
-    for(const auto &cameraCompressedFrames : m_camerasCompressedFrames){
-        for(const auto &cFrame : cameraCompressedFrames.frames){
+    for(const auto &deviceCompressedFrames : m_devicesCompressedFrames){
+        for(const auto &cFrame : deviceCompressedFrames.frames){
             double timeMsNotUsed = 0.0;
             write(timeMsNotUsed, file);
             cFrame->write_to_file_stream(file);
@@ -730,31 +744,31 @@ auto DCVideo::write_file(std::ofstream &file) -> void{
 
 auto DCVideo::read_legacy_cloud_video_file(std::ifstream &file) -> void{
 
-    // read nb of cameras
-    std::int8_t nbCameras;
-    read(nbCameras, file);
-    initialize(nbCameras);
+    // read nb of devices
+    std::int8_t nbDevices;
+    read(nbDevices, file);
+    initialize(nbDevices);
 
-    // read infos per camera
+    // read infos per device
     std::int32_t nbFrames;
-    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
+    for(size_t idDevice = 0; idDevice < nb_devices(); ++idDevice){
 
         // read nb frames
         read(nbFrames, file);
 
         // create frames
-        m_camerasCompressedFrames[idCamera].frames.reserve(nbFrames);
+        m_devicesCompressedFrames[idDevice].frames.reserve(nbFrames);
         for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-            m_camerasCompressedFrames[idCamera].frames.push_back(std::make_shared<DCCompressedFrame>());
+            m_devicesCompressedFrames[idDevice].frames.push_back(std::make_shared<DCCompressedFrame>());
         }
 
         // calibration matrix
-        read_array(m_camerasTransforms[idCamera].array.data(), file, 16);
+        read_array(m_devicesTransforms[idDevice].array.data(), file, 16);
     }
 
     // read frames
-    for(auto &cameraData : m_camerasCompressedFrames){
-        for(auto &frame : cameraData.frames){
+    for(auto &deviceData : m_devicesCompressedFrames){
+        for(auto &frame : deviceData.frames){
             // read frame
             frame->init_legacy_cloud_frame_from_file_stream(file);
         }
@@ -763,31 +777,31 @@ auto DCVideo::read_legacy_cloud_video_file(std::ifstream &file) -> void{
 
 auto DCVideo::read_legacy_full_video_file(std::ifstream &file) -> void{
 
-    // read nb of cameras
-    std::int8_t nbCameras;
-    read(nbCameras, file);
-    initialize(nbCameras);
+    // read nb of devices
+    std::int8_t nbDevices;
+    read(nbDevices, file);
+    initialize(nbDevices);
 
-    // read infos per camera
+    // read infos per device
     std::int32_t nbFrames;
-    for(size_t idCamera = 0; idCamera < nb_cameras(); ++idCamera){
+    for(size_t idDevice = 0; idDevice < nb_devices(); ++idDevice){
 
         // read nb frames
         read(nbFrames, file);
 
         // create frames
-        m_camerasCompressedFrames[idCamera].frames.reserve(nbFrames);
+        m_devicesCompressedFrames[idDevice].frames.reserve(nbFrames);
         for(size_t ii = 0; ii < static_cast<size_t>(nbFrames); ++ii){
-            m_camerasCompressedFrames[idCamera].frames.push_back(std::make_shared<DCCompressedFrame>());
+            m_devicesCompressedFrames[idDevice].frames.push_back(std::make_shared<DCCompressedFrame>());
         }
 
         // calibration matrix
-        read_array(m_camerasTransforms[idCamera].array.data(), file, 16);
+        read_array(m_devicesTransforms[idDevice].array.data(), file, 16);
     }
 
     // read frames
-    for(auto &cameraData : m_camerasCompressedFrames){
-        for(auto &frame : cameraData.frames){
+    for(auto &deviceData : m_devicesCompressedFrames){
+        for(auto &frame : deviceData.frames){
 
             std::int32_t idFrame;
             std::int64_t timestamp;

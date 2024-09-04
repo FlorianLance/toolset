@@ -50,7 +50,7 @@ public:
     virtual auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
     virtual auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void{static_cast<void>(delayS);}
 
-    virtual constexpr auto type() const noexcept -> DCClientType {return DCClientType::undefined;}
+    virtual constexpr auto type() const noexcept -> DCClientType {return DCClientType::Undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}
 
     sigslot::signal<net::UdpDataStatus> data_status_signal;

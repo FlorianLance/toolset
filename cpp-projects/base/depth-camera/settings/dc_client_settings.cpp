@@ -67,31 +67,10 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
     }
 
     for(const auto &clientDeviceJson : json["client_devices"sv]){
-
         DCClientDeviceSettings clientDevice;
         clientDevice.init_from_json(read_object(clientDeviceJson, unreadCount, "client_device"sv));
         clientDevice.set_id(devicesS.size());
-
-        auto &connectionS = clientDevice.connectionS;
-        if(connectionS.connectionType == DCDeviceConnectionType::Remote){
-
-            // retrieve interfaces from current protocol
-            const auto &interfaces = (connectionS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-            if(connectionS.idReadingInterface >= interfaces.size()){
-                Logger::error(std::format("[DCClientSettings::init_from_json] Invalid id reading interface.\n"sv));
-                continue;
-            }
-
-            // retrieve reading address
-            connectionS.readingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
-
-            // retrieve localhost corresponding address
-            if(connectionS.sendingAddress == "localhost"sv){
-                connectionS.isLocalhost = true;
-                connectionS.sendingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
-            }
-        }
-
+        update_connection_settings(clientDevice.connectionS);
         devicesS.push_back(std::move(clientDevice));
     }
 
@@ -117,4 +96,43 @@ auto DCClientSettings::convert_to_json() const -> nlohmann::json{
     json["client_devices"sv] = arr;
 
     return json;
+}
+
+auto DCClientSettings::add_device(DCClientType connectionType) -> void{
+    DCClientDeviceSettings clientDeviceS;
+    clientDeviceS.connectionS.connectionType = connectionType;
+    clientDeviceS.connectionS.startReadingThread = true;
+    // ...
+    clientDeviceS.set_id(devicesS.size());
+    update_connection_settings(clientDeviceS.connectionS);
+    devicesS.push_back(std::move(clientDeviceS));
+}
+
+auto DCClientSettings::remove_last_device() -> void{
+    devicesS.remove_last();
+}
+
+auto DCClientSettings::update_connection_settings(DCDeviceConnectionSettings &connectionS) -> void{
+
+    if(connectionS.connectionType == DCClientType::Remote){
+
+        // retrieve interfaces from current protocol
+        const auto &interfaces = (connectionS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
+        if(connectionS.idReadingInterface >= interfaces.size()){
+            Logger::error(std::format("[DCClientSettings::update_connection_settings] Invalid id reading interface.\n"sv));
+            return;
+        }
+
+        // retrieve reading address
+        connectionS.readingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
+
+        // retrieve localhost corresponding address
+        if(connectionS.sendingAddress == "localhost"sv){
+            connectionS.isLocalhost = true;
+            connectionS.processedSendingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
+        }else{
+            connectionS.processedSendingAddress = connectionS.sendingAddress;
+        }
+    }
+
 }

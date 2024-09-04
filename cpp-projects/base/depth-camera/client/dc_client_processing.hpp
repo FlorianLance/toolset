@@ -44,25 +44,27 @@ public:
     auto initialize(size_t nbDevices, bool startProcessingThread) -> void;
     auto clean() -> void;
 
-    // get
-    auto nb_frame_processors() const noexcept -> size_t;
-    auto get_frame(size_t idC) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame(size_t idC) -> std::shared_ptr<cam::DCCompressedFrame>;
-
     // modify
-    auto add_frame_processor() -> void;
-    auto remove_frame_processor(size_t idDevice) -> void;
-    auto new_compressed_frame(size_t idC, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
-    auto new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto invalid_last_frame(size_t idC) -> void;
-    auto invalid_last_compressed_frame(size_t idC) -> void;
-    auto update_device_settings(size_t idC, const cam::DCDeviceSettings &deviceS) -> void;
-
+    // # device
+    auto add_device_processor(bool startProcessingThread) -> void;
+    auto remove_device_processor(size_t idD) -> void;
+    auto update_device_settings(size_t idD, const cam::DCDeviceSettings &deviceS) -> void;
+    // # frames
+    auto new_compressed_frame(size_t idD, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
+    auto new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void;
+    auto invalid_last_frame(size_t idD) -> void;
+    auto invalid_last_compressed_frame(size_t idD) -> void;
     // when no processing thread started
-    auto process(size_t idC) -> void;
-    auto uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
+    auto process(size_t idD) -> void;
+    auto uncompress_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
 
-    auto save_current_cloud(size_t idC, const std::string &path) -> bool;
+    // get
+    auto nb_devices() const noexcept -> size_t;
+    auto get_frame(size_t idD) -> std::shared_ptr<cam::DCFrame>;
+    auto get_compressed_frame(size_t idD) -> std::shared_ptr<cam::DCCompressedFrame>;
+
+    // I/O
+    auto save_current_cloud(size_t idD, const std::string &path) -> bool;
 
 private:
 

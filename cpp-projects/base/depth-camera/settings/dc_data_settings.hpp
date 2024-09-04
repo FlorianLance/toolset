@@ -55,6 +55,9 @@ struct DCDataSettings : io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
+    auto apply_remote_profile() -> void;
+    auto apply_local_profile() -> void;
+
     // legacy
     auto init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void override;
 };

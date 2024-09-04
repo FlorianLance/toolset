@@ -50,7 +50,10 @@ public:
     auto device_connected(size_t idC) const noexcept -> bool;
     auto device_type(size_t idC) const noexcept -> DCClientType;    
     auto apply_command(size_t idC, net::Command command) -> void;
+    auto add_device(DCClientType connectionType) -> void;
+    auto remove_last_device() -> void;
     // # remote device
+    auto reset_remote_device(size_t idD) -> void;
     auto init_connection_with_remote_device(size_t idC) -> void;
     auto read_network_data_from_remote_device(size_t idC) -> size_t;
     auto trigger_packets_from_remote_device(size_t idC) -> void;

@@ -39,6 +39,9 @@ struct DCClientSettings : public io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
+    auto add_device(DCClientType connectionType) -> void;
+    auto remove_last_device() -> void;
+
     // settings
     size_t clientId = 0;
     DCSceneDisplaySettings sceneDisplayS;
@@ -49,5 +52,9 @@ struct DCClientSettings : public io::Settings{
     std::string filePath;
     std::vector<net::Interface> ipv4Interfaces = {};
     std::vector<net::Interface> ipv6Interfaces = {};
+
+private:
+
+    auto update_connection_settings(DCDeviceConnectionSettings &connectionS) -> void;
 };
 }

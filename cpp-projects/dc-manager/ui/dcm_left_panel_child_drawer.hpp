@@ -54,17 +54,14 @@ private:
 
     auto draw_grabbers_ui(DCMModel *model) -> void;
     // tab items
-    auto draw_commands_tab_item(DCMModel *model) -> void;
+    auto draw_global_tab_item(DCMModel *model) -> void;
     auto draw_settings_tab_item(DCMModel *model) -> void;
     auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
     auto draw_logs_tab_item() -> void;
     auto draw_infos_tab_item(cam::DCClient &client) -> void;
-    // sub tab items
-    // # command
-    auto draw_all_commands_tab_item(DCMModel *model) -> void;
-    auto draw_individual_commands_tab_item(cam::DCClientDeviceSettings &clientDeviceS) -> void;
 
     // # settings
+    auto draw_type_tab_item(cam::DCClient &client) -> void;
     auto draw_device_tab_item(cam::DCClient &client) -> void;
     auto draw_filters_tab_item(cam::DCClient &client) -> void;
     auto draw_display_tab_item(cam::DCClient &client) -> void;

@@ -30,12 +30,10 @@
 // local
 #include "network/settings/remote_server_settings.hpp"
 #include "network/network_types.hpp"
+#include "depth-camera/dc_enums.hpp"
 
 namespace tool::cam {
 
-enum class DCDeviceConnectionType : std::int8_t{
-    Remote, Local
-};
 
 struct DCDeviceConnectionSettings : io::Settings{
 
@@ -48,17 +46,18 @@ struct DCDeviceConnectionSettings : io::Settings{
     auto convert_to_json() const -> nlohmann::json override;
 
     // all
-    DCDeviceConnectionType connectionType;
+    DCClientType connectionType = DCClientType::Remote;
 
     // remote
     size_t idReadingInterface = 0;
-    int readingPort = 8888;
+    int readingPort = 8889;
     std::string sendingAddress = "localhost";
-    int sendingPort = 8889;
+    int sendingPort = 8888;
     net::Protocol protocol = net::Protocol::ipv4;
 
     // # runtime
     std::string readingAddress;
+    std::string processedSendingAddress;
     bool startReadingThread = true;
     bool isLocalhost = false;
 };

@@ -59,10 +59,7 @@ auto DCMController::initialize() -> bool{
     set_connections();
 
     // initialize model
-    if(!model->initialize()){
-        Logger::error("Invalid model initialization.\n");
-        return false;
-    }
+    model->initialize();
 
     return true;
 }
@@ -105,7 +102,7 @@ auto DCMController::set_connections() -> void{
     s->initialize_signal.connect([&](size_t nbDevices){
         Logger::log("Initialize view\n"sv);
         view->initialize(model->client.devices_nb());
-        model->trigger_settings();
+        // model->trigger_settings();
     });
     view->gl()->update_signal.connect(                      &DCMController::update,                             this);
     view->gl()->draw_imgui_signal.connect(                  &DCMController::draw_ui,                            this);
@@ -119,10 +116,13 @@ auto DCMController::set_connections() -> void{
     player->initialize_signal.connect(                      &DCPlayerDrawer::initialize,                        playerD);
 
     // # actions
+    s->add_device_signal.connect(                           &DCMModel::add_device,                              model.get());
+    s->remove_last_device_signal.connect(                   &DCMModel::remove_last_device,                      model.get());
     // ## model
     s->process_settings_action_signal.connect(              &DCMModel::process_settings_action,                 model.get());
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,                         model.get());
     // ## client
+    s->reset_remote_device_signal.connect(                  &DCClient::reset_remote_device,                     client);
     s->init_connection_signal.connect(                      &DCClient::init_connection_with_remote_device,      client);
     s->command_signal.connect(                              &DCClient::apply_command,                           client);
     // ## calibration
@@ -158,8 +158,8 @@ auto DCMController::set_connections() -> void{
     s->update_model_settings_signal.connect(                &DCClient::update_model_settings,                   client);
     calibrator->validated_calibration_signal.connect(       &DCClient::update_model_settings,                   client);
     s->update_device_settings_signal.connect(               &DCClient::update_device_settings,                  client);
-    s->update_filters_settings_signal.connect(              &DCClient::update_filters_settings,                          client);
-    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters_settings,              client);
+    s->update_filters_settings_signal.connect(              &DCClient::update_filters_settings,                 client);
+    s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters_settings,     client);
     s->update_color_settings_signal.connect(                &DCClient::update_color_settings,                   client);
     s->update_delay_settings_signal.connect(                &DCClient::update_delay_settings,                   client);
     // s->update_scene_display_settings_signal.connect(        &DCClient::update_scene_display_settings,           client);

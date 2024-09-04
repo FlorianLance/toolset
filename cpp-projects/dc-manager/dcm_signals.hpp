@@ -61,7 +61,10 @@ public:
     SSS<size_t> initialize_signal;
 
     // actions
+    SSS<cam::DCClientType> add_device_signal;
+    SSS<> remove_last_device_signal;
     // # network
+    SSS<size_t> reset_remote_device_signal;
     SSS<size_t> init_connection_signal;
     SSS<size_t, net::Command> command_signal;
     // # recording

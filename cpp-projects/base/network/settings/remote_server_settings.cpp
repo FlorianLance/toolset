@@ -43,7 +43,7 @@ auto RemoteServerSettings::init_from_json(const nlohmann::json &json) -> void{
     // remote server
     idReadingInterface  = read_value<size_t>(json, unreadCount, "id_reading_interface"sv);
     readingPort         = read_value<int>(json, unreadCount, "reading_port"sv);
-    sendingAdress       = read_value<std::string>(json, unreadCount, "sending_address"sv);
+    sendingAddress       = read_value<std::string>(json, unreadCount, "sending_address"sv);
     sendingPort         = read_value<int>(json, unreadCount, "sending_port"sv);
     protocol            = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
 
@@ -60,7 +60,7 @@ auto RemoteServerSettings::convert_to_json() const -> nlohmann::json{
     // remote server
     add_value(json, "id_reading_interface"sv,     idReadingInterface);
     add_value(json, "reading_port"sv,             readingPort);
-    add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAdress);
+    add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
     add_value(json, "sending_port"sv,             sendingPort);
     add_value(json, "protocol"sv,                 (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
 

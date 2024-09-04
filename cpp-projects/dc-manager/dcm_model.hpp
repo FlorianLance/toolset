@@ -46,8 +46,11 @@ struct DCMModel{
     auto update() -> void;
     auto clean() -> void;
 
+    auto add_device(cam::DCClientType type) -> void;
+    auto remove_last_device() -> void;
+
     auto process_settings_action(cam::SettingsAction sAction) -> void;
-    auto trigger_settings() -> void;
+    // auto trigger_settings() -> void;
     auto ask_calibration() -> void;
 
     // ui

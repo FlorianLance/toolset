@@ -456,8 +456,8 @@ auto process_kvid() -> void{
     tool::cam::DCFrameCompressor compressor;
 
     std::cout << "START\n" << std::endl;
-
-    for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
+    
+    for(size_t idC = 0; idC < video.nb_devices(); ++idC){
         std::cout << "CAMERA " << idC << "\n";
         for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
             std::cout << idF << " " << std::flush;

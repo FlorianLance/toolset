@@ -68,51 +68,6 @@ auto DCDeviceSettings::convert_to_json() const -> nlohmann::json{
     return json;
 }
 
-auto DCDeviceSettings::apply_remote_profile() -> void{
-
-    // server
-    dataS.server.apply_remote_profile();
-
-    // client
-    // # generation
-    dataS.clientGeneration.calibration             = true;
-    dataS.clientGeneration.depth                   = true;
-    dataS.clientGeneration.depthSizedColorImage    = true;
-    dataS.clientGeneration.cloud                   = true;
-    dataS.clientGeneration.infra                   = false;
-    dataS.clientGeneration.colorImage              = false;
-    dataS.clientGeneration.depthImage              = false;
-    dataS.clientGeneration.infraImage              = false;
-    dataS.clientGeneration.bodyIdMapImage          = false;
-    dataS.clientGeneration.bodyTracking            = false;
-    dataS.clientGeneration.imu                     = false;
-    dataS.clientGeneration.audio                   = false;
-    dataS.clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-}
-
-auto DCDeviceSettings::apply_local_profile() -> void{
-
-    // server
-    dataS.server.apply_local_profile();
-
-    // client
-    // # generation
-    dataS.clientGeneration.calibration             = false;
-    dataS.clientGeneration.depth                   = false;
-    dataS.clientGeneration.depthSizedColorImage    = false;
-    dataS.clientGeneration.cloud                   = false;
-    dataS.clientGeneration.infra                   = false;
-    dataS.clientGeneration.colorImage              = false;
-    dataS.clientGeneration.depthImage              = false;
-    dataS.clientGeneration.infraImage              = false;
-    dataS.clientGeneration.bodyIdMapImage          = false;
-    dataS.clientGeneration.bodyTracking            = false;
-    dataS.clientGeneration.imu                     = false;
-    dataS.clientGeneration.audio                   = false;
-    dataS.clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
-    dataS.clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-}
 
 auto DCDeviceSettings::update_with_device_id(size_t order, size_t id) -> void{
     configS.idDevice = static_cast<std::uint32_t>(id);

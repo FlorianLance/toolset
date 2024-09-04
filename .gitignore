@@ -56,7 +56,6 @@ cpp-projects/_resources/splash
 
 
 # unity-projects
-unity-projects/HDRP/DCBodyscan/
 unity-projects/HDRP/DCBodyscan/[Ll]ibrary/
 unity-projects/HDRP/DCBodyscan/[Tt]emp/
 unity-projects/HDRP/DCBodyscan/[Oo]bj/
@@ -78,7 +77,7 @@ unity-projects/HDRP/DCBodyscan/platforms
 unity-projects/HDRP/DCBodyscan/imageformats
 unity-projects/HDRP/DCBodyscan/styles
 
-unity-projects/HDRP/DCBodyscan/Assets/DCVideos
+unity-projects/HDRP/DCBodyscan/Assets/AllHereReserved
 
 
 

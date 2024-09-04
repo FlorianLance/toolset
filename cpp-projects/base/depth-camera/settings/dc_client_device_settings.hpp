@@ -48,9 +48,9 @@ struct DCClientDeviceSettings : public io::Settings{
 
     // settings
     DCDeviceConnectionSettings connectionS;
+    DCDeviceSettings deviceS;
     DCFiltersSettings filtersS;
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
-    DCDeviceSettings deviceS;
     DCColorSettings colorS;
     DCModelSettings modelS;
     DCDelaySettings delayS;
@@ -58,7 +58,7 @@ struct DCClientDeviceSettings : public io::Settings{
 
     // runtime
     size_t id = 0;
-    std::string name = "0 xxx.xxx.xxx";
+    std::string name = "D0";
     // # legacy paths
     std::string filtersFilePath;
     std::string calibrationFiltersFilePath;

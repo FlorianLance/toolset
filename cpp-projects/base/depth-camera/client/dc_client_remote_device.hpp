@@ -53,7 +53,7 @@ public:
     auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
     auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void override;
 
-    constexpr auto type() const noexcept -> DCClientType override {return DCClientType::remote;}
+    constexpr auto type() const noexcept -> DCClientType override {return DCClientType::Remote;}
     auto device_connected() const noexcept -> bool override;
 
     // when no reading thread started

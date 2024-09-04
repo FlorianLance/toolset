@@ -147,7 +147,6 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(cam::DCServerSettings &s
     static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
     static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
     if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &settings.udpServerS.udpReadingPort, idRP, dsRP)){
-        settings.udpServerS.udpReadingInterfaceId = idRI;
         DCGSignals::get()->reset_reading_network_signal();
     }
 

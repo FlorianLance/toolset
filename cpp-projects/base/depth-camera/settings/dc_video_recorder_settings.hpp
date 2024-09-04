@@ -33,7 +33,7 @@
 namespace tool::cam {
 
 struct DCVideoRecorderSettings{
-    int cameraMaxFramesToRecord = 10000;
+    int deviceMaxFramesToRecord = 10000;
     double maxDurationS = 500.;
     DCFrameCompressionSettings compression;
     DCFrameGenerationSettings generation;

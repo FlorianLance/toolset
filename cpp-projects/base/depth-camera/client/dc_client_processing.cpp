@@ -40,7 +40,7 @@ using namespace tool::cam;
 struct DCClientProcessing::Impl{
     // std::mutex recordLocker;
     // std::atomic_bool record = false;
-    std::vector<std::unique_ptr<cam::DCFrameProcessor>> frameProcessors;
+    Buffer<std::unique_ptr<cam::DCFrameProcessor>> frameProcessors;
     // cam::DCVideo videoResource;
 };
 
@@ -53,33 +53,29 @@ DCClientProcessing::~DCClientProcessing(){
 
 auto DCClientProcessing::initialize(size_t nbDevices, bool startProcessingThread) -> void {
 
-    if(nb_frame_processors() != 0){
+    if(nb_devices() != 0){
         clean();
     }
 
     i->frameProcessors.reserve(nbDevices);
     for(size_t id = 0; id < nbDevices; ++id){
-        i->frameProcessors.push_back(std::make_unique<DCFrameProcessor>());
-    }
-
-    if(startProcessingThread){
-        for(auto &frameProcessor : i->frameProcessors){
-            frameProcessor->start_processing_thread();
-        }
+        add_device_processor(startProcessingThread);
     }
 }
 
-auto DCClientProcessing::add_frame_processor() -> void{
+auto DCClientProcessing::add_device_processor(bool startProcessingThread) -> void{
     auto frameProcessor = std::make_unique<DCFrameProcessor>();
-    frameProcessor->start_processing_thread();
+    if(startProcessingThread){
+        frameProcessor->start_processing_thread();
+    }
     i->frameProcessors.push_back(std::move(frameProcessor));
 }
 
-auto DCClientProcessing::remove_frame_processor(size_t idDevice) -> void{
-    if(idDevice < nb_frame_processors()){
-        i->frameProcessors[idDevice]->stop_processing_thread();
-        i->frameProcessors[idDevice]->clean_processing_thread();
-        i->frameProcessors.erase(i->frameProcessors.begin() + idDevice);
+auto DCClientProcessing::remove_device_processor(size_t idD) -> void{
+    if(idD < nb_devices()){
+        i->frameProcessors[idD]->stop_processing_thread();
+        i->frameProcessors[idD]->clean_processing_thread();
+        i->frameProcessors.remove_at(idD);
     }
 }
 
@@ -94,102 +90,105 @@ auto DCClientProcessing::clean() -> void{
     i->frameProcessors.clear();
 }
 
-auto DCClientProcessing::new_compressed_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> void {
+auto DCClientProcessing::new_compressed_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> void {
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::new_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::new_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
 
-    i->frameProcessors[idC]->new_compressed_frame(frame);
+    i->frameProcessors[idD]->new_compressed_frame(frame);
 }
 
 
-auto DCClientProcessing::new_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void {
+auto DCClientProcessing::new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void {
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::new_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::new_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
-    i->frameProcessors[idC]->new_frame(frame);
+    i->frameProcessors[idD]->new_frame(frame);
 }
 
-auto DCClientProcessing::nb_frame_processors() const noexcept -> size_t{
+auto DCClientProcessing::nb_devices() const noexcept -> size_t{
     return i->frameProcessors.size();
 }
 
-auto DCClientProcessing::get_frame(size_t idC) -> std::shared_ptr<DCFrame>{
+auto DCClientProcessing::get_frame(size_t idD) -> std::shared_ptr<DCFrame>{
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::get_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::get_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return nullptr;
     }
-    return i->frameProcessors[idC]->get_frame();
+    return i->frameProcessors[idD]->get_frame();
 }
 
 
-auto DCClientProcessing::get_compressed_frame(size_t idC) -> std::shared_ptr<DCCompressedFrame>{
+auto DCClientProcessing::get_compressed_frame(size_t idD) -> std::shared_ptr<DCCompressedFrame>{
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::get_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::get_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return nullptr;
     }
-    return i->frameProcessors[idC]->get_compressed_frame();
+    return i->frameProcessors[idD]->get_compressed_frame();
 }
 
 
-auto DCClientProcessing::invalid_last_frame(size_t idC) -> void {
+auto DCClientProcessing::invalid_last_frame(size_t idD) -> void {
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::invalid_last_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::invalid_last_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
-    i->frameProcessors[idC]->invalid_frame();
+    i->frameProcessors[idD]->invalid_frame();
 }
 
-auto DCClientProcessing::invalid_last_compressed_frame(size_t idC) -> void {
+auto DCClientProcessing::invalid_last_compressed_frame(size_t idD) -> void {
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::invalid_last_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::invalid_last_compressed_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
-    i->frameProcessors[idC]->invalid_compressed_frame();
+    i->frameProcessors[idD]->invalid_compressed_frame();
 }
 
-auto DCClientProcessing::update_device_settings(size_t idC, const DCDeviceSettings &deviceS) -> void {
+auto DCClientProcessing::update_device_settings(size_t idD, const DCDeviceSettings &deviceS) -> void {
 
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::update_device_settings]Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::update_device_settings]Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
-    i->frameProcessors[idC]->update_generation_settings(deviceS.dataS.clientGeneration);
+    i->frameProcessors[idD]->update_generation_settings(deviceS.dataS.clientGeneration);
 }
 
-auto DCClientProcessing::process(size_t idC) -> void{
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::process] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+auto DCClientProcessing::process(size_t idD) -> void{
+
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::process] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return;
     }
-    i->frameProcessors[idC]->process();
+    i->frameProcessors[idD]->process();
 }
 
-auto DCClientProcessing::uncompress_frame(size_t idC, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>{
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+auto DCClientProcessing::uncompress_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>{
+
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return nullptr;
     }
-    return i->frameProcessors[idC]->uncompress(frame);
+    return i->frameProcessors[idD]->uncompress(frame);
 }
 
 
-auto DCClientProcessing::save_current_cloud(size_t idC, const std::string &path) -> bool{
-    if(idC >= i->frameProcessors.size()){
-        Logger::error(std::format("[DCClientProcessing::save_current_cloud] Invalid camera id [{}], only [{}] devices.\n", idC, i->frameProcessors.size()));
+auto DCClientProcessing::save_current_cloud(size_t idD, const std::string &path) -> bool{
+
+    if(idD >= i->frameProcessors.size()){
+        Logger::error(std::format("[DCClientProcessing::save_current_cloud] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
         return false;
     }
 
-    Logger::message(std::format("save_current_cloud {} {} {}\n", idC, path, i->frameProcessors[idC]->get_frame() != nullptr));
-    if(auto frame = i->frameProcessors[idC]->get_frame(); frame != nullptr){
+    Logger::message(std::format("save_current_cloud {} {} {}\n", idD, path, i->frameProcessors[idD]->get_frame() != nullptr));
+    if(auto frame = i->frameProcessors[idD]->get_frame(); frame != nullptr){
         Logger::message(std::format("cloud {}\n", frame->cloud.size()));
         return io::CloudIO::save_cloud(path, frame->cloud);
     }

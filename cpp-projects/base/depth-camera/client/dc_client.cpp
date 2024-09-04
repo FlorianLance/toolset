@@ -46,6 +46,51 @@ struct DCClient::Impl{
     std::mutex readMessagesL;
     std::deque<std::pair<size_t, net::Feedback>> messages;
     std::vector<std::pair<size_t, net::Feedback>> messagesR;
+
+    auto generate_client(DCClientSettings &settings, size_t idDevice) -> std::unique_ptr<DCClientDevice>{
+
+        std::unique_ptr<DCClientDevice> device = nullptr;
+        if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Local){
+
+            Logger::message("[DCClient::initialize] Create local device.\n"sv);
+            auto lDevice = std::make_unique<DCClientLocalDevice>();
+            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
+                processing.new_frame(idDevice, std::move(frame));
+            });
+            device = std::move(lDevice);
+
+        }else if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Remote){
+
+            Logger::message("[DCClient::initialize] Create remote device.\n"sv);
+            auto rDevice = std::make_unique<DCClientRemoteDevice>();
+            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
+                readMessagesL.lock();
+                messages.emplace_back(idDevice, feedback);
+                readMessagesL.unlock();
+            });
+            rDevice->remote_synchro_signal.connect([&,idDevice](std::int64_t averageTimestampDiffNs){
+                settings.devicesS[idDevice].synchroAverageDiff = averageTimestampDiffNs;
+            });
+            rDevice->remote_network_status_signal.connect([&,idDevice](net::UdpNetworkStatus status){
+                settings.devicesS[idDevice].receivedNetworkStatus = status;
+            });
+            rDevice->remote_frame_signal.connect([&,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
+                processing.new_compressed_frame(idDevice, std::move(cFrame));
+            });
+            device = std::move(rDevice);
+        }
+
+        device->data_status_signal.connect([&,idDevice](net::UdpDataStatus status){
+            settings.devicesS[idDevice].receivedDataStatus = status;
+        });
+
+        Logger::message("[DCClient::initialize] Initialize device.\n"sv);
+        if(!device->initialize(settings.devicesS[idDevice].connectionS)){
+            Logger::error("[DCClient::initialize] Cannot initialize device.\n"sv);
+        }
+
+        return device;
+    }
 };
 
 DCClient::DCClient(): i(std::make_unique<Impl>()){
@@ -98,16 +143,16 @@ auto DCClient::update() -> void{
     read_feedbacks();
 
     // read compressed frames
-    std::vector<std::shared_ptr<cam::DCCompressedFrame>> cFrames(i->processing.nb_frame_processors(), nullptr);
-    for(size_t idC = 0; idC < i->processing.nb_frame_processors(); ++idC){
+    std::vector<std::shared_ptr<cam::DCCompressedFrame>> cFrames(i->processing.nb_devices(), nullptr);
+    for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
         // check if new frame uncompressed
         if(auto cFrame = i->processing.get_compressed_frame(idC); cFrame != nullptr){
             cFrames[idC] = cFrame;
         }
     }
     // read frames
-    std::vector<std::shared_ptr<cam::DCFrame>> frames(i->processing.nb_frame_processors(), nullptr);
-    for(size_t idC = 0; idC < i->processing.nb_frame_processors(); ++idC){
+    std::vector<std::shared_ptr<cam::DCFrame>> frames(i->processing.nb_devices(), nullptr);
+    for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
         // check if new frame
         if(auto frame = i->processing.get_frame(idC); frame != nullptr){
             frames[idC] = frame;
@@ -115,7 +160,7 @@ auto DCClient::update() -> void{
     }
 
     // send frames
-    for(size_t idC = 0; idC < i->processing.nb_frame_processors(); ++idC){
+    for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
 
         if(cFrames[idC]){
             
@@ -173,7 +218,7 @@ auto DCClient::device_type(size_t idC) const noexcept -> DCClientType{
     if(idC < devices_nb()){
         return i->devices[idC]->type();
     }
-    return DCClientType::undefined;
+    return DCClientType::Undefined;
 }
 
 auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
@@ -183,7 +228,7 @@ auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
         return;
     }
 
-    if(i->devices[idC]->type() == DCClientType::remote){
+    if(i->devices[idC]->type() == DCClientType::Remote){
         dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->init_remote_connection(settings.clientId);
     }
 }
@@ -195,7 +240,7 @@ auto DCClient::read_network_data_from_remote_device(size_t idC) -> size_t{
         return 0;
     }
 
-    if(i->devices[idC]->type() == DCClientType::remote){
+    if(i->devices[idC]->type() == DCClientType::Remote){
         return dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->read_data_from_network();
     }
 
@@ -209,7 +254,7 @@ auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{
         return;
     }
 
-    if(i->devices[idC]->type() == DCClientType::remote){
+    if(i->devices[idC]->type() == DCClientType::Remote){
         dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->trigger_received_packets();
     }
 }
@@ -235,13 +280,15 @@ auto DCClient::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
     for(size_t idD = 0; idD < settings.devicesS.size(); ++idD){
         auto &coS = settings.devicesS[idD].connectionS;
         if(dS.connectionsS[idD]->isLocal){
-            coS.connectionType = DCDeviceConnectionType::Local;
+            coS.connectionType = DCClientType::Local;
         }else{
             auto *remoteC = dynamic_cast<DCDeprecatedRemoteDeviceConnectionSettings*>(dS.connectionsS[idD].get());
-            coS.connectionType      = DCDeviceConnectionType::Remote;
+            coS.connectionType      = DCClientType::Remote;
             coS.idReadingInterface  = remoteC->serverS.idReadingInterface;
             coS.readingPort         = remoteC->serverS.readingPort;
-            coS.sendingAddress      = remoteC->serverS.sendingAdress;
+            coS.sendingAddress      = remoteC->serverS.sendingAddress;
+            coS.processedSendingAddress = coS.sendingAddress;
+
             coS.sendingPort         = remoteC->serverS.sendingPort;
             coS.protocol            = remoteC->serverS.protocol;
             coS.startReadingThread  = remoteC->serverS.startReadingThread;
@@ -264,6 +311,29 @@ auto DCClient::apply_command(size_t idC, net::Command command) -> void{
     }
 
     i->devices[idC]->apply_command(command);
+}
+
+auto DCClient::add_device(DCClientType connectionType) -> void{
+    settings.add_device(connectionType);
+    i->processing.add_device_processor(true);    
+    i->devices.push_back(i->generate_client(settings, settings.devicesS.size()-1));
+}
+
+auto DCClient::remove_last_device() -> void{
+    if(devices_nb() > 0){
+        settings.devicesS.remove_last();
+        i->processing.remove_device_processor(devices_nb()-1);
+        i->devices.remove_last();
+    }
+}
+
+auto DCClient::reset_remote_device(size_t idD) -> void{
+    if(idD < devices_nb()){
+        if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->devices[idD].get())){
+            rD->clean();
+            rD->initialize(settings.devicesS[idD].connectionS);
+        }
+    }
 }
 
 auto DCClient::use_normal_filters() -> void{
@@ -396,8 +466,6 @@ auto DCClient::trigger_all_device_display_settings() -> void{
     }
 }
 
-
-
 auto DCClient::process_frames_from_external_thread(size_t idD) -> void{
     if(idD > devices_nb()){
         Logger::error(std::format("[DCClient::process_frames_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idD, devices_nb()));
@@ -406,57 +474,12 @@ auto DCClient::process_frames_from_external_thread(size_t idD) -> void{
     i->processing.process(idD);
 }
 
-auto DCClient::generate_clients() -> void{
-
-    size_t idDevice = 0;
-    for(auto &clientDeviceS : settings.devicesS){
-
-        std::unique_ptr<DCClientDevice> device = nullptr;
-        if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
-
-            Logger::message("[DCClient::initialize] Create local device.\n"sv);
-            auto lDevice = std::make_unique<DCClientLocalDevice>();
-            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
-                i->processing.new_frame(idDevice, std::move(frame));
-            });
-            device = std::move(lDevice);
-
-        }else if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
-
-            Logger::message("[DCClient::initialize] Create remote device.\n"sv);
-            auto rDevice = std::make_unique<DCClientRemoteDevice>();
-            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
-                i->readMessagesL.lock();
-                i->messages.emplace_back(idDevice, feedback);
-                i->readMessagesL.unlock();
-            });
-            rDevice->remote_synchro_signal.connect([this,idDevice](std::int64_t averageTimestampDiffNs){
-                settings.devicesS[idDevice].synchroAverageDiff = averageTimestampDiffNs;
-            });
-            rDevice->remote_network_status_signal.connect([this,idDevice](net::UdpNetworkStatus status){
-                settings.devicesS[idDevice].receivedNetworkStatus = status;
-            });
-            rDevice->remote_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
-                i->processing.new_compressed_frame(idDevice, std::move(cFrame));
-            });
-            device = std::move(rDevice);
-        }
-
-        device->data_status_signal.connect([this,idDevice](net::UdpDataStatus status){
-            settings.devicesS[idDevice].receivedDataStatus = status;
-        });
-
-        Logger::message("[DCClient::initialize] Initialize device.\n"sv);
-        if(!device->initialize(clientDeviceS.connectionS)){
-            Logger::error("[DCClient::initialize] Cannot initialize device.\n"sv);
-            continue;
-        }
-
-        Logger::message("[DCClient::initialize] Add device to list.\n"sv);
-        i->devices.push_back(std::move(device));
-        ++idDevice;
+auto DCClient::generate_clients() -> void{    
+    for(size_t idDevice = 0; idDevice < settings.devicesS.size(); ++idDevice){
+        i->devices.push_back(i->generate_client(settings, idDevice));
     }
 }
+
 auto DCClient::messages_count() -> size_t{
 
     if(i->readMessagesL.try_lock()){

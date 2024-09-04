@@ -42,16 +42,18 @@ public:
     ~DCVideoRecorder();
     auto initialize(size_t nbDevices) -> void;
     auto update() -> void;
+    auto add_device() -> void;
+    auto remove_last_device() -> void;
 
     // video
     auto video() -> DCVideo*;
 
     // frames
-    auto uncompress_frame(size_t idCamera, DCFrame &frame) -> bool;
-    auto add_compressed_frame_to_default_camera(std::shared_ptr<DCCompressedFrame> cFrame) -> void;
-    auto add_compressed_frame(size_t idCamera, std::shared_ptr<DCCompressedFrame> cFrame) -> void;
-    auto add_frame_to_default_camera(std::shared_ptr<DCFrame> frame) -> void;
-    auto add_frame(size_t idCamera, std::shared_ptr<DCFrame> frame) -> void;
+    auto uncompress_frame(size_t idDevice, DCFrame &frame) -> bool;
+    auto add_compressed_frame_to_default_device(std::shared_ptr<DCCompressedFrame> cFrame) -> void;
+    auto add_compressed_frame(size_t idDevice, std::shared_ptr<DCCompressedFrame> cFrame) -> void;
+    auto add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void;
+    auto add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void;
 
     // recordings
     auto is_recording() const noexcept -> bool;

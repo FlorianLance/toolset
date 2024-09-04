@@ -47,10 +47,12 @@ using namespace tool;
 using namespace tool::cam;
 using namespace tool::graphics;
 using namespace tool::net;
+using namespace std::chrono;
+
 
 auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
 
-    if(fromFilters.size() != 2*nbGrabbers + 2){
+    // if(fromFilters.size() != 2*nbGrabbers + 2){
 
         guiCurrentFromFiltersSelection = 0;
         guiCurrentFromColorsSelection = 0;
@@ -81,7 +83,7 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
         for(const auto &color : fromColor){
             targetsColor.push_back(color);
         }
-    }
+    // }
 
     feedbacksLogs.resize(nbGrabbers);
 }
@@ -99,7 +101,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
             draw_grabbers_ui(model);
 
             if(ImGui::BeginTabBar("###settings_tabbar1")){
-                draw_commands_tab_item(model);
+                draw_global_tab_item(model);
                 draw_settings_tab_item(model);
                 draw_recorder_tab_item(model->recorder);
                 draw_player_tab_item(model->player);
@@ -138,6 +140,7 @@ auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMModel *model) -> void{
 
         static ImGuiID tabId = 0;
         if(ImGuiUiDrawer::begin_tab_bar(&tabId, "###sub_settings_tabbar")){
+            draw_type_tab_item(model->client);
             draw_device_tab_item(model->client);
             draw_filters_tab_item(model->client);
             draw_calibration_tab_item(model->client);
@@ -272,16 +275,52 @@ auto to_imvec4(const geo::Pt4f &pt) -> ImVec4{
     return ImVec4(pt.x(),pt.y(),pt.z(),pt.w());
 }
 
+#include "utility/time.hpp"
 auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMModel *model) -> void {
 
-    ImGui::Text("Servers");
+    auto currentNbDevices = model->client.settings.devicesS.size();
+
+    static int guiDevCoType = 0;
+    static std::chrono::nanoseconds lastClick = std::chrono::nanoseconds{0};
+    auto currentTS = tool::Time::nanoseconds_since_epoch();
+
+    ImGui::Text("[Devices]");
+    ImGui::SameLine();
+    bool disablePlus = (currentNbDevices > 9) || (Time::difference_ms(lastClick, currentTS).count() < 500);
+    if(disablePlus){
+        ImGui::BeginDisabled();
+    }
+    if(ImGui::Button("+")){
+        DCMSignals::get()->add_device_signal(static_cast<DCClientType>(guiDevCoType));
+        lastClick = currentTS;
+    }
+    if(disablePlus){
+        ImGui::EndDisabled();
+    }
+    ImGui::SameLine();
+    bool disableMinus = (currentNbDevices == 0) || (Time::difference_ms(lastClick, currentTS).count() < 500);
+    if(disableMinus){
+        ImGui::BeginDisabled();
+    }
+    if(ImGui::Button("-")){
+        DCMSignals::get()->remove_last_device_signal();
+        lastClick = currentTS;
+    }
+    if(disableMinus){
+        ImGui::EndDisabled();
+    }
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(80.f);
+    if(ImGui::Combo("###settings_synch_mode_combo", &guiDevCoType, devicesConnectionTypes, IM_ARRAYSIZE(devicesConnectionTypes))){}
 
     for(const auto &cDeviceS : model->client.settings.devicesS){
         ImGuiUiDrawer::text_colored(to_imvec4(cDeviceS.connected ? model->uiSettings.connectedSelectedC : model->uiSettings.selectedC), cDeviceS.name);
-        if((cDeviceS.id % 4) != 0 || cDeviceS.id == 0){
+        // if((cDeviceS.id % 8) != 0 || cDeviceS.id == 0){
             ImGui::SameLine();
-        }
+        // }
     }
+    ImGui::Text("");
 
     int nbConnected = 0;
     for(const auto &cDeviceS : model->client.settings.devicesS){
@@ -316,247 +355,390 @@ auto DCMLeftPanelChildDrawer::draw_ui_tab_item(DCMUiSettings &ui) -> void {
     }
 }
 
-auto DCMLeftPanelChildDrawer::draw_commands_tab_item(DCMModel *model)  -> void {
+auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
 
-    if (!ImGuiUiDrawer::begin_tab_item("Commands###settings_commands_tabitem")){
+    if (!ImGuiUiDrawer::begin_tab_item("Global###global_tabitem")){
         return;
     }
 
     static ImGuiID tabId = 0;
-    if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###settings_commands_sub_tabbar")){
+    if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###global_sub_tabbar")){
         return;
     }
 
-    draw_all_commands_tab_item(model);
-    
-    for(size_t idC = 0; idC < model->client.settings.devicesS.size(); ++idC){
-        draw_individual_commands_tab_item(model->client.settings.devicesS[idC]);
+    if (ImGuiUiDrawer::begin_tab_item("Remote###global_remote_tabitem")){
+
+        ImGui::Spacing();
+        ImGui::Text("[COMMANDS]");
+        ImGui::Indent();
+
+        ImGui::Spacing();
+        ImGui::Text("Network:");
+        ImGui::Indent();
+
+        // if(ImGui::Button("Reset###settings_reset_network")){
+        //     DCMSignals::get()->reset_network_signal();
+        // }
+        // ImGui::SameLine();
+        if(ImGui::Button("Connect all###global_connect_all_button")){
+            for(const auto &deviceS : model->client.settings.devicesS){
+                DCMSignals::get()->init_connection_signal(deviceS.id);
+            }
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Disconnect all###global_disconnect_all_button")){
+            for(const auto &deviceS : model->client.settings.devicesS){
+                DCMSignals::get()->command_signal(deviceS.id, net::Command::disconnect);
+            }
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("Program:");
+        ImGui::Indent();
+        if(ImGui::Button("Quit all###global_quit_all_button")){
+            for(const auto &deviceS : model->client.settings.devicesS){
+                DCMSignals::get()->command_signal(deviceS.id, net::Command::quit);
+            }
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("Computer:");
+        ImGui::Indent();
+
+        if(ImGui::Button("Shutdown all###global_shutdown_all_button")){
+            for(const auto &deviceS : model->client.settings.devicesS){
+                DCMSignals::get()->command_signal(deviceS.id, net::Command::shutdown);
+            }
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Restart all###global_restart_all_button")){
+            for(const auto &deviceS : model->client.settings.devicesS){
+                DCMSignals::get()->command_signal(deviceS.id, net::Command::restart);
+            }
+        }
+        ImGui::Unindent();
+        ImGui::Unindent();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        ImGui::Spacing();
+        ImGui::Text("[NETWORK INTERFACES]");
+        ImGui::Spacing();
+        ImGui::Text("IPV4:");
+
+        for(size_t id = 0; id < model->client.settings.ipv4Interfaces.size(); ++id){
+            ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
+                id,
+                model->client.settings.ipv4Interfaces[id].ipAddress)
+            );
+        }
+        ImGui::Spacing();
+        ImGui::Text("IPV6:");
+        for(size_t id = 0; id < model->client.settings.ipv6Interfaces.size(); ++id){
+            auto address = model->client.settings.ipv6Interfaces[id].ipAddress;
+                String::replace_all(address, "%", "[P]");
+                ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
+                id,
+                address
+            ));
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+        ImGui::Spacing();
+        ImGui::Text("[STATUS]");
+        ImGui::Spacing();
+        ImGui::Indent();
+        {
+            ImGui::Text("Network");
+            ImGui::Text("# Percentage success (/100):");
+            ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {} ", deviceS.id, deviceS.receivedNetworkStatus.percentageSuccess));
+                }
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("# Bandwidth (MB/s)):");
+            ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedNetworkStatus.bandwidthBytes/1048576));
+                }
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("Data");
+            ImGui::Text("# Framerate (fps):");
+            ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.framerate));
+                }
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("Total latency (from capture to reception) (µs):");
+                ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));
+                }
+            }
+            ImGui::Unindent();
+        }
+        ImGui::Unindent();
+
+        ImGui::Text("Synchronization:");
+        ImGui::Indent();
+        {
+            ImGui::Text("Average difference (µs):");
+                ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {} ",
+                        deviceS.id,
+                        duration_cast<microseconds>(nanoseconds(deviceS.synchroAverageDiff)).count())
+                    );
+                }
+            }
+            ImGui::Unindent();
+        }
+        ImGui::Unindent();
+
+
+        ImGui::EndTabItem();
     }
+
+    if (ImGuiUiDrawer::begin_tab_item("Local###all_local_tabitem")){
+
+        ImGui::Text("Status:");
+        ImGui::Indent();
+        {
+            ImGui::Text("Data");
+            ImGui::Text("# Framerate (fps):");
+            ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Local){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.framerate));
+                }
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("Total latency (from capture to reception) (µs):");
+                ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Local){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));
+                }
+            }
+            ImGui::Unindent();
+        }
+        ImGui::Unindent();
+        ImGui::EndTabItem();
+    }
+
 
     ImGui::EndTabBar();
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_all_commands_tab_item(DCMModel *model) -> void{
 
-    using namespace  std::chrono;
+auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
 
-    if (!ImGuiUiDrawer::begin_tab_item("[all]###all_settings_commands_tabitem")){
+    if (!ImGuiUiDrawer::begin_tab_item("Type###type_tabitem")){
         return;
     }
 
-    ImGui::Spacing();
-    ImGui::Text("Network:");
-    ImGui::Indent();
-
-    // if(ImGui::Button("Reset###settings_reset_network")){
-    //     DCMSignals::get()->reset_network_signal();
-    // }
-    // ImGui::SameLine();
-    if(ImGui::Button("Connect all###settings_connect_all_button")){                
-        for(const auto &deviceS : model->client.settings.devicesS){
-            DCMSignals::get()->init_connection_signal(deviceS.id);
-        }
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("Disconnect all###settings_disconnect_all_button")){
-        for(const auto &deviceS : model->client.settings.devicesS){
-            DCMSignals::get()->command_signal(deviceS.id, net::Command::disconnect);
-        }
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Program:");
-    ImGui::Indent();
-    if(ImGui::Button("Quit all###settings_quit_all_button")){
-        for(const auto &deviceS : model->client.settings.devicesS){
-            DCMSignals::get()->command_signal(deviceS.id, net::Command::quit);
-        }
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Computer:");
-    ImGui::Indent();
-
-    if(ImGui::Button("Shutdown all###settings_shutdown_all_button")){
-        for(const auto &deviceS : model->client.settings.devicesS){
-            DCMSignals::get()->command_signal(deviceS.id, net::Command::shutdown);
-        }
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("Restart all###settings_restart_all_button")){
-        for(const auto &deviceS : model->client.settings.devicesS){
-            DCMSignals::get()->command_signal(deviceS.id, net::Command::restart);
-        }
-    }
-    ImGui::Unindent();
-
-    ImGui::Spacing();
-
-    ImGui::Text("Status:");
-    ImGui::Indent();
-    {
-        ImGui::Text("Network");
-        ImGui::Text("# Percentage success (/100):");
-        ImGui::Indent();
-        for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {} ", deviceS.id, deviceS.receivedNetworkStatus.percentageSuccess));
-        }
-        ImGui::Unindent();
-
-        ImGui::Text("# Bandwidth (MB/s)):");
-        ImGui::Indent();
-        for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedNetworkStatus.bandwidthBytes/1048576));
-        }
-        ImGui::Unindent();
-
-        ImGui::Text("Data");
-        ImGui::Text("# Framerate (fps):");
-        ImGui::Indent();
-        for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedDataStatus.framerate));
-        }
-        ImGui::Unindent();
-
-
-        ImGui::Text("Total latency (from capture to reception) (µs):");
-        ImGui::Indent();
-        for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));
-        }
-        ImGui::Unindent();
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Synchronization:");
-    ImGui::Indent();
-    {
-        ImGui::Text("Average difference (µs):");
-        ImGui::Indent();
-        for(const auto &deviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("Grabber {} : {} ",
-                deviceS.id,
-                duration_cast<microseconds>(nanoseconds(deviceS.synchroAverageDiff)).count())
-            );
-        }
-        ImGui::Unindent();
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Network interfaces:");
-    ImGui::Spacing();
-    ImGui::Text("IPV4:");
-
-    for(size_t id = 0; id < model->client.settings.ipv4Interfaces.size(); ++id){
-        ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
-            id,
-            model->client.settings.ipv4Interfaces[id].ipAddress)
-        );
-    }
-    ImGui::Spacing();
-    ImGui::Text("IPV6:");
-    for(size_t id = 0; id < model->client.settings.ipv6Interfaces.size(); ++id){
-        auto address = model->client.settings.ipv6Interfaces[id].ipAddress;
-        String::replace_all(address, "%", "[P]");
-        ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
-            id,
-            address
-        ));
-    }
-
-    ImGui::EndTabItem();
-}
-
-auto DCMLeftPanelChildDrawer::draw_individual_commands_tab_item(DCClientDeviceSettings &clientDeviceS) -> void{
-
-    if (!ImGuiUiDrawer::begin_tab_item(std::format("[{}]###{}_settings_commands_tabitem", clientDeviceS.id, clientDeviceS.id).c_str())){
+    static ImGuiID tabId = 0;
+    if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###type_tabbar")){
         return;
     }
 
-    ImGui::Spacing();
-    ImGui::Text("Network:");
-    ImGui::Indent();
+    for(auto &clientDeviceS : client.settings.devicesS){
 
-    if(ImGui::Button("Connect###settings_connect_button")){
-        DCMSignals::get()->init_connection_signal(clientDeviceS.id);
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("Disconnect###settings_disconnect_button")){
-        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::disconnect);
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Program:");
-    ImGui::Indent();
-    if(ImGui::Button("Quit###settings_quit_button")){
-        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::quit);
-    }
-    ImGui::Unindent();
-
-    ImGui::Text("Computer:");
-    ImGui::Indent();
-
-    if(ImGui::Button("Shutdown###settings_shutdown_button")){
-        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::shutdown);
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("Restart###settings_restart_button")){
-        DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::restart);
-    }
-
-    ImGui::Unindent();
-
-    ImGui::Text("Delay:");
-    int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-        clientDeviceS.delayS.delayMs = delay;
-        DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
-    }
-    ImGui::Indent();
-    ImGui::Unindent();
-
-    ImGui::Spacing();
-    ImGui::Separator();
-
-
-    if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Remote){
-        ImGui::Text("[REMOTE DEVICE]");
-
-        ImGui::Text("UDP reading:");
-        ImGui::Indent();
-        ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.readingAddress));
-        ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.readingPort));
-        ImGui::Unindent();
-
-        if(clientDeviceS.connectionS.protocol == net::Protocol::ipv6){
-            ImGui::Text("PROTOCOL: IPV6");
-        }else{
-            ImGui::Text("PROTOCOL: IPV4");
+        if (!ImGuiUiDrawer::begin_tab_item(std::format("[{}]###{}_settings_type_tabitem", clientDeviceS.id, clientDeviceS.id).c_str())){
+            continue;
         }
+
         ImGui::Spacing();
+        if(clientDeviceS.connectionS.connectionType == DCClientType::Remote){
 
-        ImGui::Text("UDP sending:");
-        ImGui::Indent();
-        ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.sendingAddress));
-        ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.sendingPort));
-        ImGui::Unindent();
+            ImGui::Text("[REMOTE DEVICE]");
+            ImGui::Spacing();
 
-    }else if(clientDeviceS.connectionS.connectionType == DCDeviceConnectionType::Local){
-        ImGui::Text("[LOCAL DEVICE]");
+            ImGui::Text("Protocol:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(75.f);
+            int guiCurrentProtocolSelection = static_cast<int>(clientDeviceS.connectionS.protocol);
+            if(ImGui::Combo("###settings_protocole_combo", &guiCurrentProtocolSelection, protocolItems, 2)){
+                clientDeviceS.connectionS.protocol = static_cast<net::Protocol>(guiCurrentProtocolSelection);
+                // DCGSignals::get()->reset_reading_network_signal();
+            }
+
+            static ImGuiIntS idRIS = {0,0,10,0.1f,1};
+
+            if(clientDeviceS.connectionS.protocol == net::Protocol::ipv4){
+                ImGui::Text("Available IPV4 interfaces:");
+                ImGui::Indent();
+                for(auto &interface : client.settings.ipv4Interfaces){
+                    ImGuiUiDrawer::text(interface.ipAddress);
+                }
+                if(!client.settings.ipv4Interfaces.empty()){
+                    idRIS.max = client.settings.ipv4Interfaces.size()-1;
+                }else{
+                    idRIS.max = 0;
+                }
+                ImGui::Unindent();
+            }else if(clientDeviceS.connectionS.protocol == net::Protocol::ipv6){
+                ImGui::Text("Available IPV6 interfaces:");
+                ImGui::Indent();
+                for(auto &interface : client.settings.ipv6Interfaces){
+                    ImGuiUiDrawer::text(interface.ipAddress);
+                }
+                if(!client.settings.ipv6Interfaces.empty()){
+                    idRIS.max = client.settings.ipv6Interfaces.size()-1;
+                }else{
+                    idRIS.max = 0;
+                }
+                ImGui::Unindent();
+            }
+
+            static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
+            int idRI = static_cast<int>(clientDeviceS.connectionS.idReadingInterface);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
+                clientDeviceS.connectionS.idReadingInterface = idRI;
+                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
+            static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
+                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            ImGui::Text("Sending address:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(130);
+            if(ImGui::InputText("###sending_address", &clientDeviceS.connectionS.sendingAddress)){
+                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            static ImGuiIntS idSP = {8889,8888,9999,0.1f,1};
+            static ImGuiDragS dsSP = {75.f, true, true, true, true, true};
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sending port", "sending_port", &clientDeviceS.connectionS.sendingPort, idSP, dsSP)){
+                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+
+            ImGui::Text("[UDP]:");
+            ImGui::Indent();
+            if(clientDeviceS.connectionS.protocol == net::Protocol::ipv6){
+                ImGui::Text("PROTOCOL: IPV6");
+            }else{
+                ImGui::Text("PROTOCOL: IPV4");
+            }
+
+            ImGui::Text("Reading:");
+            ImGui::Indent();
+            ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.readingAddress));
+            ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.readingPort));
+            ImGui::Unindent();
+
+            ImGui::Spacing();
+
+            ImGui::Text("Sending:");
+            ImGui::Indent();
+            ImGuiUiDrawer::text(std::format("IP address: {}", clientDeviceS.connectionS.processedSendingAddress));
+            ImGuiUiDrawer::text(std::format("Port: {}", clientDeviceS.connectionS.sendingPort));
+            ImGui::Unindent();
+            ImGui::Unindent();
+
+            ImGui::Spacing();
+            ImGui::Text("Network:");
+            ImGui::Indent();
+
+            if(ImGui::Button("Connect###settings_connect_button")){
+                DCMSignals::get()->init_connection_signal(clientDeviceS.id);
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Disconnect###settings_disconnect_button")){
+                DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::disconnect);
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("Program:");
+            ImGui::Indent();
+            if(ImGui::Button("Quit###settings_quit_button")){
+                DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::quit);
+            }
+            ImGui::Unindent();
+
+            ImGui::Text("Computer:");
+            ImGui::Indent();
+
+            if(ImGui::Button("Shutdown###settings_shutdown_button")){
+                DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::shutdown);
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Restart###settings_restart_button")){
+                DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::restart);
+            }
+
+            ImGui::Unindent();
+
+            ImGui::Text("State:");
+            ImGui::Indent();
+            ImGui::Text(clientDeviceS.connected ? "Client connected to server" : "Client not connected");
+            ImGuiUiDrawer::text(std::format("Last frame id received: {}", clientDeviceS.lastFrameIdReceived));
+            ImGui::Unindent();
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::Text("Delay:");
+            int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
+                clientDeviceS.delayS.delayMs = delay;
+                DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
+            }
+
+            ImGui::Separator();
+            ImGui::Spacing();
+
+
+        }else if(clientDeviceS.connectionS.connectionType == DCClientType::Local){
+
+            ImGui::Text("[LOCAL DEVICE]");
+            ImGui::Spacing();
+
+            ImGui::Text("State:");
+            ImGui::Indent();
+            ImGuiUiDrawer::text(std::format("Last frame id: {}", clientDeviceS.lastFrameIdReceived));
+            ImGui::Unindent();
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::Text("Delay:");
+            int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
+                clientDeviceS.delayS.delayMs = delay;
+                DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
+            }
+        }
+
+        ImGui::EndTabItem();
+
     }
-
-    ImGui::Text("State:");
-    ImGui::Indent();
-    ImGui::Text(clientDeviceS.connected ? "Client connected to server" : "Client not connected");
-    ImGuiUiDrawer::text(std::format("Last frame id sent: {}", clientDeviceS.lastFrameIdReceived));
-    ImGui::Unindent();
-
-    ImGui::Separator();
-    // ImGui::Text(std::format("Data received (mB): {:.2f}", net::K4SMNetworkInstance::net.connections[ii]->totalReceivedBytes*0.000001, 2));
-    ImGui::Separator();
-    ImGui::Text("Feedbacks:");
-    feedbacksLogs[clientDeviceS.id].draw(std::format("grabber_{}_feedback", clientDeviceS.id).c_str());
+    ImGui::EndTabBar();
 
     ImGui::EndTabItem();
 }
@@ -1121,6 +1303,15 @@ auto DCMLeftPanelChildDrawer::draw_logs_tab_item() -> void {
         globalLogs.draw("global_logs");
         ImGui::EndTabItem();
     }
+
+    for(size_t idF = 0; idF < feedbacksLogs.size(); ++idF){
+        if (ImGui::BeginTabItem(std::format("F{}###feedback_logs_{}_tabitem", idF, idF).c_str())){
+            ImGui::Text("Feedback logs:");
+            feedbacksLogs[idF].draw(std::format("device_{}_feedback", idF).c_str());
+            ImGui::EndTabItem();
+         }
+    }
+
 }
 
 auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{

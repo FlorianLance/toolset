@@ -51,9 +51,7 @@ struct DCDeviceSettings : io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
-    // apply/update
-    auto apply_remote_profile() -> void;
-    auto apply_local_profile() -> void;
+    // update
     auto update_with_device_id(size_t order, size_t id) -> void;
 
     // legacy

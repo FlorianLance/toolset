@@ -105,7 +105,7 @@ void get_transform__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, float
     std::copy(transform.array.begin(), transform.array.end(), transformData);
 }
 int cameras_count__dc_video_player(DCVideoPlayer *dcPlayer){
-    return static_cast<int>(dcPlayer->video()->nb_cameras());
+    return static_cast<int>(dcPlayer->video()->nb_devices());
 }
 int frames_count__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera){
     return static_cast<int>(dcPlayer->video()->nb_frames(idCamera));

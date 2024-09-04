@@ -36,11 +36,11 @@ struct RemoteServerSettings : io::Settings{
 
     size_t idReadingInterface = 0;
     int readingPort = 8889;
-    std::string sendingAdress = "localhost";
+    std::string sendingAddress = "localhost";
     int sendingPort = 8888;
     Protocol protocol = Protocol::ipv4;
 
-    // # runtime
+    // # runtime    
     std::string readingAdress;
     bool startReadingThread = true;
     bool isLocalhost = false;

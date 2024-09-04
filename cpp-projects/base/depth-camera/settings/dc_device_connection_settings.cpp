@@ -47,8 +47,8 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     // base
     io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // local
-    connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCDeviceConnectionType::Remote : DCDeviceConnectionType::Local;
-    if(connectionType == DCDeviceConnectionType::Remote){
+    connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCClientType::Remote : DCClientType::Local;
+    if(connectionType == DCClientType::Remote){
         read_value(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
         read_value<int>(json, unreadCount, "reading_port"sv, readingPort);
         read_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
@@ -67,8 +67,8 @@ auto DCDeviceConnectionSettings::convert_to_json() const -> nlohmann::json{
     // base
     add_value(json, "base"sv, io::Settings::convert_to_json());
     // local
-    add_value(json, "connection_type"sv, (connectionType == DCDeviceConnectionType::Remote) ? "Remote"sv : "Local"sv);
-    if(connectionType == DCDeviceConnectionType::Remote){
+    add_value(json, "connection_type"sv, (connectionType == DCClientType::Remote) ? "Remote"sv : "Local"sv);
+    if(connectionType == DCClientType::Remote){
         add_value(json, "id_reading_interface"sv,     idReadingInterface);
         add_value(json, "reading_port"sv,             readingPort);
         add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
@@ -119,14 +119,14 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
                 }
                 dcCRDS->serverS.readingAdress = interfaces[dcCRDS->serverS.idReadingInterface].ipAddress;
 
-                if(dcCRDS->serverS.sendingAdress == "localhost"sv){
+                if(dcCRDS->serverS.sendingAddress == "localhost"sv){
                     dcCRDS->serverS.isLocalhost = true;
-                    dcCRDS->serverS.sendingAdress = interfaces[dcCRDS->serverS.idReadingInterface].ipAddress;
+                    dcCRDS->serverS.sendingAddress = interfaces[dcCRDS->serverS.idReadingInterface].ipAddress;
                 }
 
                 Logger::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
                         dcCRDS->serverS.idReadingInterface, dcCRDS->serverS.readingAdress, dcCRDS->serverS.readingPort,
-                        dcCRDS->serverS.sendingAdress, dcCRDS->serverS.sendingPort,
+                                            dcCRDS->serverS.sendingAddress, dcCRDS->serverS.sendingPort,
                         dcCRDS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
                 
                 connectionsS.push_back(std::move(dcCRDS));
@@ -235,15 +235,15 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
 
                 bool localhost   = (values[3] == "localhost");
                 if(localhost){
-                    devS->serverS.sendingAdress = interfaces[idReadingInterface].ipAddress;
+                    devS->serverS.sendingAddress = interfaces[idReadingInterface].ipAddress;
                     devS->serverS.isLocalhost = true;
                 }else{
-                    devS->serverS.sendingAdress = values[3];
+                    devS->serverS.sendingAddress = values[3];
                 }
                 devS->serverS.sendingPort = String::to_int(values[4]);
 
                 Logger::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
-                    devS->serverS.idReadingInterface, devS->serverS.readingAdress, devS->serverS.readingPort, devS->serverS.sendingAdress, devS->serverS.sendingPort,
+                                            devS->serverS.idReadingInterface, devS->serverS.readingAdress, devS->serverS.readingPort, devS->serverS.sendingAddress, devS->serverS.sendingPort,
                     devS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
                 
                 connectionsS.push_back(std::move(devS));

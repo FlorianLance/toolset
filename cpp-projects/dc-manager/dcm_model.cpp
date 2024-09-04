@@ -50,6 +50,24 @@ auto DCMModel::clean() -> void {
     client.clean();
 }
 
+auto DCMModel::add_device(cam::DCClientType type) -> void{
+    client.add_device(type);
+    recorder.add_device();
+    calibrator.initialize(client.devices_nb());
+    Logger::message(std::format("INIT {}\n", client.devices_nb()));
+    DCMSignals::get()->initialize_signal(client.devices_nb());
+}
+
+auto DCMModel::remove_last_device() -> void{
+    if(client.devices_nb() > 0){
+        client.remove_last_device();
+        recorder.remove_last_device();
+        calibrator.initialize(client.devices_nb());
+        Logger::message(std::format("REMOVE {}\n", client.devices_nb()));
+        DCMSignals::get()->initialize_signal(client.devices_nb());
+    }
+}
+
 auto DCMModel::initialize() -> bool{
 
     auto paths = DCSettingsPaths::get();
@@ -248,9 +266,9 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
     }
 }
 
-auto DCMModel::trigger_settings() -> void{
-    auto lg = LogGuard("DCMModel::trigger_settings"sv);
-    // color settings: device
-    // DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
-}
+// auto DCMModel::trigger_settings() -> void{
+//     auto lg = LogGuard("DCMModel::trigger_settings"sv);
+//     // color settings: device
+//     // DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
+// }
 

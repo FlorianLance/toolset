@@ -79,6 +79,9 @@ namespace tool::graphics {
     "IPV4", "IVP6"
 };
 
+[[maybe_unused]] static constexpr const char* devicesConnectionTypes[] = {
+    "Remote", "Local"
+};
 
 
 class DCUIDrawer{

@@ -70,6 +70,52 @@ auto DCDataSettings::convert_to_json() const -> nlohmann::json{
     return json;
 }
 
+auto DCDataSettings::apply_remote_profile() -> void{
+
+    // server
+    server.apply_remote_profile();
+
+    // client
+    // # generation
+    clientGeneration.calibration             = true;
+    clientGeneration.depth                   = true;
+    clientGeneration.depthSizedColorImage    = true;
+    clientGeneration.cloud                   = true;
+    clientGeneration.infra                   = false;
+    clientGeneration.colorImage              = false;
+    clientGeneration.depthImage              = false;
+    clientGeneration.infraImage              = false;
+    clientGeneration.bodyIdMapImage          = false;
+    clientGeneration.bodyTracking            = false;
+    clientGeneration.imu                     = false;
+    clientGeneration.audio                   = false;
+    clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
+    clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
+}
+
+auto DCDataSettings::apply_local_profile() -> void{
+
+    // server
+    server.apply_local_profile();
+
+    // client
+    // # generation
+    clientGeneration.calibration             = false;
+    clientGeneration.depth                   = false;
+    clientGeneration.depthSizedColorImage    = false;
+    clientGeneration.cloud                   = false;
+    clientGeneration.infra                   = false;
+    clientGeneration.colorImage              = false;
+    clientGeneration.depthImage              = false;
+    clientGeneration.infraImage              = false;
+    clientGeneration.bodyIdMapImage          = false;
+    clientGeneration.bodyTracking            = false;
+    clientGeneration.imu                     = false;
+    clientGeneration.audio                   = false;
+    clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
+    clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
+}
+
 auto DCDataSettings::init_from_data(std::byte const * const data, size_t &offset, size_t sizeData) -> void{
 
     Settings::init_from_data(data, offset, sizeData);

@@ -87,7 +87,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
             i->remoteServerS.idReadingInterface,
             i->remoteServerS.readingAddress,
             i->remoteServerS.readingPort,
-            i->remoteServerS.sendingAddress,
+            i->remoteServerS.processedSendingAddress,
             i->remoteServerS.sendingPort,
             static_cast<int>(i->remoteServerS.protocol)
         )
@@ -106,8 +106,8 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     // init sender
-    Logger::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.sendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
-    if(!i->udpSender.init_socket(i->remoteServerS.sendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
+    Logger::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
+    if(!i->udpSender.init_socket(i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
         Logger::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
         return false;
     }

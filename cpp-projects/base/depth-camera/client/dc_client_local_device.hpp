@@ -51,7 +51,7 @@ public:
     auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
     auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void override;
 
-    constexpr auto type() const noexcept -> DCClientType override {return DCClientType::local;}
+    constexpr auto type() const noexcept -> DCClientType override {return DCClientType::Local;}
     auto device_connected() const noexcept -> bool override;
 
     // signals

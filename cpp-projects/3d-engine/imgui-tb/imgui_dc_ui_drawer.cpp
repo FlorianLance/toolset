@@ -849,7 +849,7 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     ImGui::Text("Max number of frames per camera:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(50.f);
-    if(ImGui::DragInt("###recorder_max_frames", &rSettings.cameraMaxFramesToRecord, 1.0f, 1, 100000)){
+    if(ImGui::DragInt("###recorder_max_frames", &rSettings.deviceMaxFramesToRecord, 1.0f, 1, 100000)){
         update = true;
     }
 
