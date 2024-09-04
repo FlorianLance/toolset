@@ -68,6 +68,7 @@ public:
     auto get_processing_duration_ms() noexcept -> std::int64_t;
     auto get_duration_ms(std::string_view id) noexcept -> std::int64_t;
     auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
+    auto get_framerate() -> float;
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;

@@ -343,7 +343,7 @@ auto DrawSampleWindow::init_drawers() -> bool{
         };
     }
 
-    auto cloudD = std::make_shared<gl::CloudPointsDrawer5>();
+    auto cloudD = std::make_shared<gl::CloudPointsDrawer>();
     cloudD->initialize(false, cloud);
     dm->add_drawer("cloud", std::move(cloudD), 1.f);
 
@@ -352,55 +352,55 @@ auto DrawSampleWindow::init_drawers() -> bool{
 
     if(auto model = mm->get("spot").lock(); model != nullptr){
         {
-            auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+            auto mmD = std::make_shared<gl::ModelMeshDrawer>();
             mmD->initialize(*model, TexturesInfo{tm->get_texture_info("spot_texture")});
             dm->add_drawer("spot", std::move(mmD),1.f);
         }
         {
-            auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+            auto mmD = std::make_shared<gl::ModelMeshDrawer>();
             mmD->initialize(*model);
             dm->add_drawer("notext-spot", std::move(mmD),1.f);
         }
     }
 
     if(auto model = mm->get("ogre").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model, TexturesInfo{tm->get_texture_info("ogre_diffuse",{}), tm->get_texture_info("ogre_normalmap",{})});
         dm->add_drawer("ogre", std::move(mmD),1.f);
     }
 
     if(auto model = mm->get("pig").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("pig", std::move(mmD),1.f);
     }
 
     if(auto model = mm->get("dragon").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("dragon", std::move(mmD),2.f);
     }
 
     if(auto model = mm->get("crysis").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("crysis", std::move(mmD),0.1f);
     }
 
     if(auto model = mm->get("alex").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("alex", std::move(mmD),0.01f);
     }
 
     if(auto model = mm->get("rabbit").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("rabbit", std::move(mmD),3.f);
     }
 
     if(auto model = mm->get("storm").lock(); model != nullptr){
-        auto mmD = std::make_shared<gl::ModelMeshDrawer2>();
+        auto mmD = std::make_shared<gl::ModelMeshDrawer>();
         mmD->initialize(*model);
         dm->add_drawer("storm", std::move(mmD),0.01f);
     }
@@ -596,7 +596,7 @@ auto DrawSampleWindow::draw_imgui() -> void{
     ImGui::Begin(m_imguiWindowTitle.c_str()); // begin window
     ImGui::Text(
         "Frame time generation [%lld ms]",
-        std::chrono::duration_cast<std::chrono::milliseconds>(frameDuration).count()
+        frameDurationMs.count()
     );
 
     ImGui::Text("Drawer");

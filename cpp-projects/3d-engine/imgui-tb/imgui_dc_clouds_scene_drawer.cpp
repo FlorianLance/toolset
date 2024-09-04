@@ -54,11 +54,7 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
     }
 
     gridD.initialize(1.f,1.f, 20, 20, true);
-    sphereD.initialize(0.05f);
-    trianglesLinesD.initialize(true);
-
-    geo::OBB3<float> obb;
-    oobLinesD.initialize(true, obb);
+    filteringPlanesDotD.initialize(0.05f);
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -113,10 +109,6 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             shader->set_uniform("enable_unicolor", true);
             shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
             gridD.draw();
-
-            // shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f},(fboD.camera()->position() + fboD.camera()->direction() * 1.0).conv<float>()));
-            // shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
-            // sphereD.draw();
         }
     }
 
@@ -189,7 +181,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                         const auto &jm = cloudD->jointsModels[ii][jj];
                         if(std::get<0>(jm)){
                             shader->set_uniform_matrix("model", std::get<1>(jm) * cloudD->model);
-                            cloudD->spD.draw();
+                            cloudD->btJointD.draw();
                         }
                     }
                 }
@@ -207,19 +199,19 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
                     shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
-                    sphereD.draw();
+                    filteringPlanesDotD.draw();
 
                     shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
-                    sphereD.draw();
+                    filteringPlanesDotD.draw();
 
                     shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.f,0.f,1.f, 1.f});
-                    sphereD.draw();
+                    filteringPlanesDotD.draw();
 
                     shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.f,1.f,1.f, 1.f});
-                    sphereD.draw();
+                    filteringPlanesDotD.draw();
 
 
                     shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
@@ -232,8 +224,8 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                     for(int ii = 0; ii < 40; ++ii){
                         auto f = (-20+ii)*0.05f;
                         std::array<Pt3f, 3> dataP = {f*v1 + p1, f*v2 + p2, f*v3 + p3};
-                        trianglesLinesD.update(dataP);
-                        trianglesLinesD.draw();
+                        cloudD->planeFilteringLinesD.update(dataP);
+                        cloudD->planeFilteringLinesD.draw();
                     }
                 }
 
@@ -242,15 +234,15 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                     auto sp = cloudD->filtersS.pSphere;
                     shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
-                    sphereD.draw();
+                    filteringPlanesDotD.draw();
                 }
 
                 if(cloudD->filtersS.keepOnlyPointsInsideOOB){
 
                     shader->set_uniform_matrix("model",  cloudD->model);
                     shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,0.5f, 1.f});
-                    oobLinesD.update(cloudD->filtersS.oob);
-                    oobLinesD.draw();
+                    cloudD->oobLinesD.update(cloudD->filtersS.oob);
+                    cloudD->oobLinesD.draw();
                 }
             }
 

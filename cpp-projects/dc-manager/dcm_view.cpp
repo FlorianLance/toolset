@@ -26,6 +26,9 @@
 
 #include "dcm_view.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 using namespace tool;
 
 DCMView::DCMView(){
@@ -51,6 +54,7 @@ DCMView::~DCMView(){
 }
 
 auto DCMView::initialize(int nbDevices) -> void{
+    auto lg = LogGuard("DCMView::initialize");
     mainW.initialize(nbDevices);
 }
 
@@ -59,6 +63,7 @@ auto DCMView::start() -> void{
 }
 
 auto DCMView::update() -> void{
+    mainW.m_leftPanelD.uiFramerateMS = m_glW->main_thread_duration_ms();
     mainW.update();
 }
 

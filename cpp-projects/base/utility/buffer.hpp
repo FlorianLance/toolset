@@ -231,6 +231,15 @@ struct Buffer{
         }
     }
 
+    constexpr auto keep_only(size_t id) -> void{
+        if(id < size()){
+            if(id != 0){
+                std::swap(values[0], values[id]);
+            }
+            resize(1);
+        }
+    }
+
     constexpr auto keep_from_ids(const std::vector<size_t> &ids)  -> void{
         size_t cId = 0;
         for(const auto &id : ids){

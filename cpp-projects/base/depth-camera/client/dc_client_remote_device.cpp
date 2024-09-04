@@ -53,8 +53,8 @@ struct DCClientRemoteDevice::Impl{
     // read
     UdpReader udpReader;
     DoubleRingBuffer<std::byte> messagesBuffer;
-    AverageSynch synchro;
-    AverageBandwidth bandwidth;
+    AverageSynchBuffer synchro;
+    AverageBandwidthBuffer bandwidth;
     UdpMessageReception cFramesReception;
     std::atomic<size_t> totalReceivedBytes = 0;
 

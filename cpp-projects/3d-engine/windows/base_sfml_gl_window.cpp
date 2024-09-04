@@ -39,6 +39,7 @@
 
 // base
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 
 // opengl-utility
 #include "opengl/vao.hpp"
@@ -106,7 +107,7 @@ auto BaseSfmlGlWindow::start() -> void{
 
     m_scene.setActive();
 
-    startL = std::chrono::system_clock::now();
+    startL = Time::nanoseconds_since_epoch();
 
     running = true;
     Logger::log("Start GL loop\n"sv);
@@ -120,7 +121,7 @@ auto BaseSfmlGlWindow::start() -> void{
         imguiMouse    = io.WantCaptureMouse;
         imguiKeyboard = io.WantCaptureKeyboard;
 
-        currentFrame = std::chrono::system_clock::now();
+        currentFrame = Time::nanoseconds_since_epoch();
 
         // retrieve sfml events
         while (auto event = m_scene.pollEvent()){
@@ -247,10 +248,12 @@ auto BaseSfmlGlWindow::start() -> void{
         }
 
         // sleep for fps
-        frameDuration = std::chrono::system_clock::now()-currentFrame;
-        if((timePerFrame-frameDuration).count() > 0){
-            std::this_thread::sleep_for(timePerFrame-frameDuration);
+        frameDurationMs = Time::difference_ms(currentFrame, Time::nanoseconds_since_epoch());
+        std::chrono::milliseconds sleepTime = msPerFrame-frameDurationMs;
+        if(sleepTime.count() > 0){
+            std::this_thread::sleep_for(sleepTime);
         }
+        mainThreadDurationMSA.add_value(1.0*frameDurationMs.count());
 
         firstLoop = false;
 
@@ -264,6 +267,9 @@ auto BaseSfmlGlWindow::start() -> void{
     ImGui::SFML::Shutdown();
 }
 
+auto BaseSfmlGlWindow::elapsed_secondes() const -> float{
+    return Time::difference_ms(startL, currentFrame).count()*0.001f;
+}
 
 auto BaseSfmlGlWindow::init_sfml_window() -> bool{
 

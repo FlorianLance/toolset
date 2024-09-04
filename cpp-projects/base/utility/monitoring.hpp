@@ -34,17 +34,37 @@
 
 namespace tool{
 
-struct Framerate{
-    Framerate();
+struct AverageBuffer{
+    AverageBuffer();
+    auto add_value(double value) -> void;
+    auto get() const -> double;
+private:
+    static constexpr size_t nbMaxValues = 100;
+    SingleRingBuffer<double> rValues;
+    size_t nbValuesAdded = 0;
+};
+
+struct SumBuffer{
+    SumBuffer();
+    auto add_value(double value) -> void;
+    auto get() const -> double;
+private:
+    static constexpr size_t nbMaxValues = 1000;
+    SingleRingBuffer<double> rValues;
+    size_t nbValuesAdded = 0;
+};
+
+struct FramerateBuffer{
+    FramerateBuffer();
     auto add_frame() -> void;
     auto get_framerate() -> float;
 private:
-    static constexpr size_t nbMaxValues = 1000;
+    static constexpr size_t nbMaxValues = 500;
     SingleRingBuffer<std::chrono::nanoseconds> rTimes;
 };
 
-struct AverageBandwidth{
-    AverageBandwidth();
+struct AverageBandwidthBuffer{
+    AverageBandwidthBuffer();
     auto add_size(size_t nbBytes) -> void;
     auto get_bandwidth() -> size_t;
 private:
@@ -52,8 +72,8 @@ private:
     SingleRingBuffer<std::tuple<std::chrono::nanoseconds, size_t>> bytesReceived;
 };
 
-struct AverageSynch{
-    AverageSynch();
+struct AverageSynchBuffer{
+    AverageSynchBuffer();
     auto update_average_difference(std::int64_t timestampNS) -> void;
     std::int64_t averageDiffNs = 0;
 private:
@@ -61,8 +81,8 @@ private:
     SingleRingBuffer<std::chrono::nanoseconds> diffNs;
 };
 
-struct AverageLatency{
-    AverageLatency();
+struct AverageLatencyBuffer{
+    AverageLatencyBuffer();
     auto update_average_latency(std::int64_t latency) -> void;
     std::int64_t averageLatency = 0;
 private:

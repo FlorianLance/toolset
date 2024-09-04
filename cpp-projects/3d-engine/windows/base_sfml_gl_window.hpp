@@ -41,6 +41,7 @@
 // base
 #include "thirdparty/sigslot/signal.hpp"
 #include "graphics/camera/camera.hpp"
+#include "utility/monitoring.hpp"
 
 
 namespace tool::graphics {
@@ -61,9 +62,10 @@ public:
     auto init() -> bool;
     auto start() -> void;
 
-    auto elapsed_secondes() const -> float{
-        using namespace std::chrono;
-        return duration_cast<milliseconds>(currentFrame-startL).count()*0.001f;
+    auto elapsed_secondes() const -> float;
+
+    auto main_thread_duration_ms() const -> double{
+        return mainThreadDurationMSA.get();
     }
 
     auto quit() -> void{
@@ -147,13 +149,13 @@ protected:
     graphics::Camera m_camera;
 
     // time
-    TimePoint startL;
-    TimePoint currentFrame;
     int framerate = 60;
+    std::chrono::milliseconds msPerFrame = std::chrono::milliseconds(static_cast<int>(1000./framerate));
     sf::Clock deltaClock;
-
-    std::chrono::duration<double, std::milli> frameDuration;
-    std::chrono::duration<double, std::milli> timePerFrame{1000./framerate};
+    std::chrono::nanoseconds startL;
+    std::chrono::nanoseconds currentFrame;
+    std::chrono::milliseconds frameDurationMs;
+    AverageBuffer mainThreadDurationMSA;
 
     // inputs
     // # mouse
@@ -165,8 +167,5 @@ protected:
     bool imguiMouse = false;
     bool imguiKeyboard = false;
 };
-
-
-
 }
 

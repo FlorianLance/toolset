@@ -39,7 +39,7 @@
 using namespace tool::graphics;
 
 auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
-    Logger::log("DCDirectDrawer::initialize\n");
+    auto lg = LogGuard("DCDirectDrawer::initialize");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
     m_lastFrames.resize(nbGrabbers);
     std::fill(m_lastFrames.begin(), m_lastFrames.end(), nullptr);
@@ -74,7 +74,8 @@ auto DCDirectDrawer::update() -> void{
             }
         }
 
-        set_frustum_display_state(m_allTabOpened);
+        // set_frustum_display_state(m_allTabOpened);
+        set_frustum_display_state(true);
         set_gizmo_display_state(!m_allTabOpened);
 
         draw_clouds_to_fbo();
@@ -88,7 +89,6 @@ auto DCDirectDrawer::update() -> void{
 }
 
 auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
-
     m_locker.lock();
     m_lastFrames[idGrabber] = std::move(frame);
     m_locker.unlock();

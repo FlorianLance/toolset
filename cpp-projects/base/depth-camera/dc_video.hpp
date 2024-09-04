@@ -43,8 +43,6 @@ public:
     // init / clean
     auto initialize(size_t nbDevices) -> void;
     auto clean() -> void;
-    auto add_device() -> void;
-    auto remove_last_device() -> void;
 
     // get
     // # devices
@@ -77,19 +75,22 @@ public:
     auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idD, DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
 
     // modify
-    // # remove devices/frames
+    // # devices
+    auto add_device() -> void;
     auto keep_only_one_device(size_t idD) -> void;
     auto keep_only_devices_from_id(const std::vector<size_t> &ids) -> void;
-    auto remove_all_devices_compressed_frames() noexcept -> void;
+    auto remove_last_device() -> void;
     // # modify devices/frames
+    // #### TEST
     auto merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void;
-    // # add/remove
+    // # frames
     auto add_compressed_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> void;
     auto remove_compressed_frames_until(size_t idD, size_t idF) -> void;
     auto remove_compressed_frames_after(size_t idD, size_t idF) -> void;
     auto remove_all_compressed_frames(size_t idD) noexcept -> void;
+    auto remove_all_devices_compressed_frames() noexcept -> void;
     // # replace
     auto replace_compressed_frame(size_t idD, size_t idF, std::shared_ptr<DCCompressedFrame> frame) -> void;
 
@@ -103,9 +104,9 @@ public:
 
 protected:
 
-    std::vector<std::unique_ptr<DCFrameUncompressor>> m_devicesFrameUncompressors;
-    std::vector<DCCompressedFrameBuffer> m_devicesCompressedFrames;
-    std::vector<geo::Mat4d> m_devicesTransforms;
+    Buffer<std::unique_ptr<DCFrameUncompressor>> m_devicesFrameUncompressors;
+    Buffer<DCCompressedFrameBuffer> m_devicesCompressedFrames;
+    Buffer<geo::Mat4d> m_devicesTransforms;
 
 private:
 

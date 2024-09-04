@@ -53,7 +53,6 @@ DCClientSettings::DCClientSettings(){
 
 auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
 
-
     devicesS.clear();
 
     size_t unreadCount = 0;

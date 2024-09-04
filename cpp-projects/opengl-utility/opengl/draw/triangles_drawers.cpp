@@ -554,7 +554,7 @@ auto TeapotTrianglesDrawer::initialize(int grid) -> void{
 
 
 
-auto MeshDrawer2::initialize(const graphics::Mesh &mesh) -> void{
+auto MeshDrawer::initialize(const graphics::Mesh &mesh) -> void{
 
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(!mesh.normals.empty(), !mesh.tCoords.empty(), !mesh.tangents.empty(), !mesh.bones.empty(), !mesh.colors.empty());
@@ -571,7 +571,7 @@ auto MeshDrawer2::initialize(const graphics::Mesh &mesh) -> void{
     }
 }
 
-auto GMeshDrawer2::initialize(const graphics::SubModelMesh &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
+auto GMeshDrawer::initialize(const graphics::SubModelMesh &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
 
     // clean previous textures
     if(!m_textures.empty()){
@@ -626,7 +626,7 @@ auto GMeshDrawer2::initialize(const graphics::SubModelMesh &gmesh, const std::ve
     }
 }
 
-auto ModelMeshDrawer2::initialize(const graphics::ModelMesh &modelMesh, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
+auto ModelMeshDrawer::initialize(const graphics::ModelMesh &modelMesh, const std::vector<graphics::TextureInfo> &texturesInfo) -> void{
 
     // clean previous hierarchy
     clean();
@@ -634,7 +634,7 @@ auto ModelMeshDrawer2::initialize(const graphics::ModelMesh &modelMesh, const st
     // initialize current level drawers
     std::cout << "init model mesh " << modelMesh.meshes.size() << "\n";
     for(const auto &gmesh : modelMesh.meshes){
-        auto gmeshD = std::make_unique<GMeshDrawer2>();
+        auto gmeshD = std::make_unique<GMeshDrawer>();
         std::cout << "->" << gmesh->name << " " << gmesh->mesh.vertices.size() << "\n";
         gmeshD->initialize(*gmesh, texturesInfo);
         drawers.push_back(std::move(gmeshD));
@@ -642,7 +642,7 @@ auto ModelMeshDrawer2::initialize(const graphics::ModelMesh &modelMesh, const st
 
     // initialize children drawers
     for(const auto &modelChild : modelMesh.children){
-        auto modelDrawer = std::make_unique<ModelMeshDrawer2>();
+        auto modelDrawer = std::make_unique<ModelMeshDrawer>();
         modelDrawer->initialize(*modelChild, {});
         children.push_back(std::move(modelDrawer));
     }

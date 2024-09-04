@@ -35,7 +35,6 @@
 // local
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
-#include "depth-camera/settings/dc_device_settings.hpp"
 #include "imgui_dc_cloud_drawer.hpp"
 #include "imgui_fbo_ui_drawer.hpp"
 
@@ -90,13 +89,12 @@ struct DCCloudsSceneDrawer{
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
 
     // drawers
+    // # common
     gl::GridLinesDrawer gridD;
-    gl::SphereTrianglesDrawer sphereD;
-
+    gl::SphereTrianglesDrawer filteringPlanesDotD;
+    // # clouds
     std::vector<std::unique_ptr<DCCloudDrawer>> cloudsD;
-    gl::TriangleLinesDrawer trianglesLinesD;
-    gl::OrientedBoundingBoxLinesDrawer oobLinesD;
-
+    // # fbo
     ImguiFboUiDrawer fboD;
 
     // settings

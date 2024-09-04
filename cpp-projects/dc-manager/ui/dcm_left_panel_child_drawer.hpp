@@ -50,6 +50,8 @@ public:
     auto append_global_log(const std::string &log) -> void;
     auto append_feedback_log(size_t idG, net::Feedback feedback) -> void;
 
+    double uiFramerateMS = 0.0;
+
 private:
 
     auto draw_grabbers_ui(DCMModel *model) -> void;
@@ -88,5 +90,7 @@ private:
 
     std::vector<std::string> fromColor;
     std::vector<std::string> targetsColor;
+
+
 };
 }

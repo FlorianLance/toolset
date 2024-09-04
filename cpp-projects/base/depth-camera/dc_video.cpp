@@ -37,14 +37,10 @@
 #include "geometry/voxel_grid.hpp"
 #include "frame/dc_frame_compressor.hpp"
 #include "frame/dc_frame_uncompressor.hpp"
-// #include "data/json_utility.hpp"
-// #include "utility/io_file.hpp"
 
 using namespace std::literals::string_view_literals;
 using namespace tool::cam;
 using namespace std::chrono;
-// using namespace tool::data;
-// using json = nlohmann::json;
 
 DCVideo &DCVideo::operator=(const DCVideo &other){
     
@@ -66,7 +62,9 @@ auto DCVideo::initialize(size_t nbDevices) -> void{
     for(auto &uncompressor : m_devicesFrameUncompressors){
         uncompressor = std::make_unique<DCFrameUncompressor>();
     }
-    m_devicesTransforms  = std::vector<geo::Mat4d>(nbDevices, geo::Mat4d::identity());
+
+    m_devicesTransforms.resize(nbDevices);
+    m_devicesTransforms.fill(geo::Mat4d::identity());
 }
 
 auto DCVideo::clean() -> void{
@@ -85,9 +83,9 @@ auto DCVideo::add_device() -> void{
 
 auto DCVideo::remove_last_device() -> void{
     if(nb_devices() > 0){
-        m_devicesCompressedFrames.erase(m_devicesCompressedFrames.begin() + m_devicesCompressedFrames.size()-1);
-        m_devicesCompressedFrames.erase(m_devicesCompressedFrames.begin() + m_devicesCompressedFrames.size()-1);
-        m_devicesTransforms.erase(m_devicesTransforms.begin() + m_devicesTransforms.size()-1);
+        m_devicesCompressedFrames.remove_last();
+        m_devicesFrameUncompressors.remove_last();
+        m_devicesTransforms.remove_last();
     }
 }
 
@@ -273,22 +271,15 @@ auto DCVideo::remove_compressed_frames_after(size_t idDevice, size_t idFrame) ->
 }
 
 auto DCVideo::keep_only_one_device(size_t idDevice) -> void{
-    m_devicesFrameUncompressors.resize(1);
-    auto deviceFrames = std::move(m_devicesCompressedFrames[idDevice]);
-    m_devicesCompressedFrames = {std::move(deviceFrames)};
+    m_devicesFrameUncompressors.keep_only(idDevice);
+    m_devicesCompressedFrames.keep_only(idDevice);
+    m_devicesTransforms.keep_only(idDevice);
 }
 
 auto DCVideo::keep_only_devices_from_id(const std::vector<size_t> &ids) -> void{
-
-    std::vector<std::unique_ptr<DCFrameUncompressor>> uncompressors;
-    std::vector<DCCompressedFrameBuffer> framesPerCamera;
-
-    for(const auto &id : ids){
-        uncompressors.push_back(std::move(m_devicesFrameUncompressors[id]));
-        framesPerCamera.push_back(std::move(m_devicesCompressedFrames[id]));
-    }
-    std::swap(m_devicesFrameUncompressors, uncompressors);
-    std::swap(m_devicesCompressedFrames, framesPerCamera);
+    m_devicesFrameUncompressors.keep_from_ids(ids);
+    m_devicesCompressedFrames.keep_from_ids(ids);
+    m_devicesTransforms.keep_from_ids(ids);
 }
 
 auto DCVideo::remove_all_devices_compressed_frames() noexcept -> void{

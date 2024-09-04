@@ -36,16 +36,16 @@
 using namespace tool;
 using namespace std::chrono;
 
-Framerate::Framerate(){
+FramerateBuffer::FramerateBuffer(){
     rTimes.resize(nbMaxValues, std::chrono::nanoseconds(0));
 }
 
-auto Framerate::add_frame() -> void{
+auto FramerateBuffer::add_frame() -> void{
     rTimes.set_current(Time::nanoseconds_since_epoch());
     rTimes.increment();
 }
 
-auto Framerate::get_framerate() -> float{
+auto FramerateBuffer::get_framerate() -> float{
     size_t count = 0;
 
     auto currentTimestampNS = Time::nanoseconds_since_epoch();
@@ -58,11 +58,11 @@ auto Framerate::get_framerate() -> float{
     return count / 5.f;
 }
 
-AverageSynch::AverageSynch(){
+AverageSynchBuffer::AverageSynchBuffer(){
     diffNs.resize(nbMaxValues, std::chrono::nanoseconds(0));
 }
 
-auto AverageSynch::update_average_difference(int64_t timestampNS) -> void{
+auto AverageSynchBuffer::update_average_difference(int64_t timestampNS) -> void{
 
     auto currentTimestampNS = Time::nanoseconds_since_epoch();
     diffNs.set_current(currentTimestampNS - nanoseconds(timestampNS));
@@ -74,11 +74,11 @@ auto AverageSynch::update_average_difference(int64_t timestampNS) -> void{
     );
 }
 
-AverageLatency::AverageLatency(){
+AverageLatencyBuffer::AverageLatencyBuffer(){
     latencies.resize(nbMaxValues, 0);
 }
 
-auto AverageLatency::update_average_latency(int64_t latency) -> void{
+auto AverageLatencyBuffer::update_average_latency(int64_t latency) -> void{
 
     latencies.set_current(latency);
     latencies.increment();
@@ -86,19 +86,19 @@ auto AverageLatency::update_average_latency(int64_t latency) -> void{
     auto span = latencies.span();
     averageLatency = static_cast<std::int64_t>(
         1.0 * std::accumulate(std::begin(span), std::end(span), std::int64_t{0}) / nbMaxValues
-        );
+    );
 }
 
-AverageBandwidth::AverageBandwidth(){
+AverageBandwidthBuffer::AverageBandwidthBuffer(){
     bytesReceived.resize(nbMaxValues, {std::chrono::nanoseconds(0), 0});
 }
 
-auto AverageBandwidth::add_size(size_t nbBytes) -> void{
+auto AverageBandwidthBuffer::add_size(size_t nbBytes) -> void{
     bytesReceived.set_current({Time::nanoseconds_since_epoch(), nbBytes});
     bytesReceived.increment();
 }
 
-auto AverageBandwidth::get_bandwidth() -> size_t{
+auto AverageBandwidthBuffer::get_bandwidth() -> size_t{
 
     size_t total = 0;
     auto currentTimestampNS = Time::nanoseconds_since_epoch();
@@ -110,3 +110,34 @@ auto AverageBandwidth::get_bandwidth() -> size_t{
     return total;
 }
 
+AverageBuffer::AverageBuffer(){
+    rValues.resize(nbMaxValues, 0.0);
+}
+
+auto AverageBuffer::add_value(double value) -> void{
+    rValues.set_current(value);
+    rValues.increment();
+    ++nbValuesAdded;
+}
+
+auto AverageBuffer::get() const -> double{
+    const auto span = rValues.span();
+    auto nbValues = nbValuesAdded > nbMaxValues ? nbMaxValues : nbValuesAdded;
+    return std::accumulate(std::begin(span), std::end(span), 0.0) / nbValues;
+}
+
+SumBuffer::SumBuffer(){
+    rValues.resize(nbMaxValues, 0.0);
+}
+
+auto SumBuffer::add_value(double value) -> void{
+    rValues.set_current(value);
+    rValues.increment();
+    ++nbValuesAdded;
+}
+
+auto SumBuffer::get() const -> double{
+    const auto span = rValues.span();
+    auto nbValues = nbValuesAdded > nbMaxValues ? nbMaxValues : nbValuesAdded;
+    return std::accumulate(std::begin(span), std::begin(span) + nbValues, 0.0);
+}

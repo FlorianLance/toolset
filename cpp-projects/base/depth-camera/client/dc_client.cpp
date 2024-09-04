@@ -201,6 +201,10 @@ auto DCClient::update() -> void{
             }
         }
     }
+
+    for(size_t idD = 0; idD < devices_nb(); ++idD){
+        settings.devicesS[idD].processindUCUsage = static_cast<int>(100.0*i->processing.get_uc_usage(idD));
+    }
 }
 
 auto DCClient::devices_nb() const noexcept -> size_t{
@@ -314,6 +318,7 @@ auto DCClient::apply_command(size_t idC, net::Command command) -> void{
 }
 
 auto DCClient::add_device(DCClientType connectionType) -> void{
+    auto lg = LogGuard("DCClient::add_device"sv);
     settings.add_device(connectionType);
     i->processing.add_device_processor(true);    
     i->devices.push_back(i->generate_client(settings, settings.devicesS.size()-1));
@@ -321,6 +326,7 @@ auto DCClient::add_device(DCClientType connectionType) -> void{
 
 auto DCClient::remove_last_device() -> void{
     if(devices_nb() > 0){
+        auto lg = LogGuard("DCClient::remove_last_device"sv);
         settings.devicesS.remove_last();
         i->processing.remove_device_processor(devices_nb()-1);
         i->devices.remove_last();
@@ -330,6 +336,7 @@ auto DCClient::remove_last_device() -> void{
 auto DCClient::reset_remote_device(size_t idD) -> void{
     if(idD < devices_nb()){
         if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->devices[idD].get())){
+            auto lg = LogGuard("DCClient::reset_remote_device"sv);
             rD->clean();
             rD->initialize(settings.devicesS[idD].connectionS);
         }

@@ -78,24 +78,24 @@ public:
     auto initialize(int grid) -> void;
 };
 
-class MeshDrawer2 : public BaseDrawer{
+class MeshDrawer : public BaseDrawer{
 public:
-    MeshDrawer2() : BaseDrawer(DrawerType::Triangles){}
+    MeshDrawer() : BaseDrawer(DrawerType::Triangles){}
     auto initialize(const graphics::Mesh &mesh) -> void;
 };
 
-class GMeshDrawer2 : public BaseDrawer{
+class GMeshDrawer : public BaseDrawer{
 public:
-    GMeshDrawer2() : BaseDrawer(DrawerType::Triangles){}
+    GMeshDrawer() : BaseDrawer(DrawerType::Triangles){}
     auto initialize(const graphics::SubModelMesh &gmesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;
 
 private:
     umap<gl::TextureType, std::vector<std::unique_ptr<Texture2D>>> m_textures;
 };
 
-class ModelMeshDrawer2 : public HierarchyDrawer2{
+class ModelMeshDrawer : public HierarchyDrawer2{
 public:
-    ModelMeshDrawer2() : HierarchyDrawer2(DrawerType::Triangles){}
+    ModelMeshDrawer() : HierarchyDrawer2(DrawerType::Triangles){}
     auto initialize(const graphics::ModelMesh &modelMesh, const std::vector<graphics::TextureInfo> &texturesInfo = {}) -> void;
     auto update_bones(const graphics::ModelMesh &modelMesh) -> void{static_cast<void>(modelMesh);}
 };

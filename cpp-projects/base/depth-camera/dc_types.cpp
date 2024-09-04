@@ -39,21 +39,21 @@ auto DCModeInfos::initialize(DCMode mode) -> void{
 
     // reset formats/fps/resolution
     m_fps = dc_framerate(mode);
-    m_timeoutMs        = 0;
-    switch (m_fps) {
-    case DCFramerate::F30:
-        m_timeoutMs = 100;//40;
-        break;
-    case DCFramerate::F15:
-        m_timeoutMs = 200;//70;
-        break;
-    case DCFramerate::F5:
-        m_timeoutMs = 500;//250;
-        break;
-    default:
-        m_timeoutMs = 100;//40;
-        break;
-    }
+    m_timeoutMs = 1;
+    // switch (m_fps) {
+    // case DCFramerate::F30:
+    //     m_timeoutMs = 100;//40;
+    //     break;
+    // case DCFramerate::F15:
+    //     m_timeoutMs = 200;//70;
+    //     break;
+    // case DCFramerate::F5:
+    //     m_timeoutMs = 500;//250;
+    //     break;
+    // default:
+    //     m_timeoutMs = 100;//40;
+    //     break;
+    // }
     m_imageFormat       = dc_image_format(mode);
     m_colorResolution   = dc_color_resolution(mode);
     m_depthResolution   = dc_depth_resolution(mode);

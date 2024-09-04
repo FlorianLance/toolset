@@ -336,7 +336,6 @@ auto OrientedBoundingBoxLinesDrawer::initialize(bool dynamic, const geo::OBB3<fl
 
 auto OrientedBoundingBoxLinesDrawer::update(const geo::OBB3<float> &obb) -> void{
 
-
     auto tr = geo::transform(obb.size*0.5f, obb.rotation, obb.position);
     std::array<Pt3f,8> vertices = {
         Pt3f
@@ -353,7 +352,6 @@ auto OrientedBoundingBoxLinesDrawer::update(const geo::OBB3<float> &obb) -> void
     for(auto &v : vertices){
         v = tr.multiply_point(Pt4f{v.x(),v.y(),v.z(),1.f}).xyz();
     }
-
 
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0)){

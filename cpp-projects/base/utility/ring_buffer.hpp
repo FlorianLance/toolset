@@ -60,6 +60,10 @@ struct SingleRingBuffer{
         return buffers.span();
     }
 
+    auto span() const noexcept -> std::span<const ElementType>{
+        return buffers.span();
+    }
+
 private:
     size_t currentId = 0;
     Buffer<ElementType> buffers;

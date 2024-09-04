@@ -29,6 +29,7 @@
 
 // local
 #include "utility/time_diff.hpp"
+#include "utility/monitoring.hpp"
 #include "data/fastpfor_encoding.hpp"
 #include "data/jpeg_encoding.hpp"
 #include "frame/dc_frame_indices.hpp"
@@ -96,6 +97,9 @@ struct DCDeviceImpl{
     // profiling
     auto get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>;
     auto get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>;
+    auto get_framerate() -> float{
+        return framerateB.get_framerate();
+    }
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
@@ -181,6 +185,7 @@ protected:
     std::shared_ptr<DCFrame> frame = nullptr;
     std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
     std::mutex parametersM;
+    FramerateBuffer framerateB;
 
     // profiling
     TimeDiffManager timeM;

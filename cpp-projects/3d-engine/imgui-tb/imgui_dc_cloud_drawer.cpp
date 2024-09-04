@@ -41,8 +41,8 @@ auto DCCloudDrawer::initialize() -> void {
     colorD.init(&colorT);
     depthD.init(&depthT);
     infraD.init(&infraT);
-
-    spD.initialize(0.05f, 20, 20);
+    
+    btJointD.initialize(0.05f, 20, 20);
 
     std::vector<Pt3f> initData(1024*1024);
     cpD.initialize(true, initData, initData, initData);
@@ -50,6 +50,11 @@ auto DCCloudDrawer::initialize() -> void {
 
     frustumD.initialize(true);
 
+
+    geo::OBB3<float> obb;
+    oobLinesD.initialize(true, obb);
+
+    planeFilteringLinesD.initialize(true);
     // normalsIndices.resize(initData.size()*2);
     // std::iota(normalsIndices.begin(), normalsIndices.end(), 0);
     // normalsD.initialize(true, normalsIndices, initData, initData);

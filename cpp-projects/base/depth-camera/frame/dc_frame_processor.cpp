@@ -32,6 +32,8 @@
 
 // local
 #include "depth-camera/frame/dc_frame_uncompressor.hpp"
+#include "utility/time.hpp"
+#include "utility/monitoring.hpp"
 
 using namespace tool::cam;
 
@@ -50,6 +52,9 @@ struct DCFrameProcessor::Impl{
     std::unique_ptr<DCFrameUncompressor> frameUncompressor;
 
     DCFrameGenerationSettings generationS;
+
+    SumBuffer processB;
+    SumBuffer sleepB;
 };
 
 DCFrameProcessor::DCFrameProcessor() : i(std::make_unique<Impl>()){
@@ -177,12 +182,26 @@ auto DCFrameProcessor::process_thread() -> void {
 
     i->processingThreadStarted = true;
 
+    size_t idP = 0;
     while(i->processingThreadStarted){
 
+        auto t1 = Time::nanoseconds_since_epoch();
         process();
+        auto t2 = Time::nanoseconds_since_epoch();
 
-        // sleep
+        // sleep        
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1ms);
+        auto t3 = Time::nanoseconds_since_epoch();
+
+        i->processB.add_value(Time::difference_ms(t1,t2).count());
+        i->sleepB.add_value(Time::difference_ms(t2,t3).count());
+
+        ++idP;
+        if(idP % 100 == 0){
+            idP = 0;
+            auto aP = i->processB.get();
+            ucUsage = aP / (aP + i->sleepB.get());
+        }
     }
 }

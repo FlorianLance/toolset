@@ -62,6 +62,7 @@ public:
     auto nb_devices() const noexcept -> size_t;
     auto get_frame(size_t idD) -> std::shared_ptr<cam::DCFrame>;
     auto get_compressed_frame(size_t idD) -> std::shared_ptr<cam::DCCompressedFrame>;
+    auto get_uc_usage(size_t idD) const noexcept -> double;
 
     // I/O
     auto save_current_cloud(size_t idD, const std::string &path) -> bool;

@@ -43,8 +43,6 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
 
 private:
 
-    // auto redraw_clouds_to_fbo() -> void;
-
     std::mutex m_locker;
     bool m_redrawClouds = false;
     std::vector<std::shared_ptr<cam::DCFrame>> m_lastFrames;

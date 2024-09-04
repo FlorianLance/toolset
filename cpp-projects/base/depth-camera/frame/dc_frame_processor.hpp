@@ -58,6 +58,8 @@ struct DCFrameProcessor{
     auto process() -> bool;
     auto uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>;
 
+    std::atomic<double> ucUsage = 0.0;
+
 private:
 
     auto process_thread() -> void;

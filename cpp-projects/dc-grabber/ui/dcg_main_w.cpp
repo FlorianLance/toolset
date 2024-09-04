@@ -75,6 +75,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             std::int64_t finalizeCompressedFrame    = model->device->get_duration_micro_s("FINALIZE_COMPRESSED_FRAME"sv);
             std::int64_t updateFrame                = model->device->get_duration_micro_s("UPDATE_FRAME"sv);
             std::int64_t finalizeFrame              = model->device->get_duration_micro_s("FINALIZE_FRAME"sv);
+            float framerate                         = model->device->get_framerate();
             
             double sendingMs = 0.0;
             {
@@ -82,14 +83,14 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
                 sendingMs = 0.001*model->server.settings.cInfos.lastFrameSentDurationMicroS;
             }
             std::int64_t elaspedBeforeSendingD  = readImageD+procD+static_cast<std::int64_t>((updateCompressedFrame+finalizeCompressedFrame)*0.001);
-            std::int64_t totalD                 = captD+elaspedBeforeSendingD + static_cast<std::int64_t>((updateFrame + finalizeFrame)*0.001) + sendingMs;
+            // std::int64_t totalD                 = captD+elaspedBeforeSendingD + static_cast<std::int64_t>((updateFrame + finalizeFrame)*0.001) + sendingMs;
 
 
-            auto framesS = 1000.f/totalD;
-            if(framesS > 100){
-                framesS = 0;
-            }
-            ImGuiUiDrawer::text(std::format("Images/s: {:5.2} ", framesS));
+            // auto framesS = 1000.f/totalD;
+            // if(framesS > 100){
+            //     framesS = 0;
+            // }
+            ImGuiUiDrawer::text(std::format("Images/s: {:5.2} ", framerate));
 
             ImGui::SameLine();
             ImGuiUiDrawer::text(std::format("Times (ms): Total: {:3} ", captD+procD));

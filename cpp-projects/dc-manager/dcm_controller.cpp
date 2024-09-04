@@ -100,7 +100,6 @@ auto DCMController::set_connections() -> void{
     // ui
     // ## controller
     s->initialize_signal.connect([&](size_t nbDevices){
-        Logger::log("Initialize view\n"sv);
         view->initialize(model->client.devices_nb());
         // model->trigger_settings();
     });

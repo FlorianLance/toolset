@@ -361,6 +361,8 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
         return;
     }
 
+    ImGuiUiDrawer::text(std::format("UI loop duration: [{}]ms"sv, uiFramerateMS));
+
     static ImGuiID tabId = 0;
     if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###global_sub_tabbar")){
         return;
@@ -761,7 +763,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
     if(ImGui::Button("All###device_send_all")){
         for(const auto &clientDeviceS : client.settings.devicesS){
             DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
     ImGui::Separator();
@@ -770,23 +772,23 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
     ImGui::SameLine();
     if(ImGui::Button("Remote grabber###remote_grabber_profile_device")){
         for(auto &clientDeviceS : client.settings.devicesS){
-            clientDeviceS.deviceS.apply_remote_profile();
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            clientDeviceS.deviceS.dataS.apply_remote_profile();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         for(auto &clientDeviceS : client.settings.devicesS){
             DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
     ImGui::SameLine();
     if(ImGui::Button("Only manager###only_manager_profile_device")){
         for(auto &clientDeviceS : client.settings.devicesS){
-            clientDeviceS.deviceS.apply_local_profile();
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            clientDeviceS.deviceS.dataS.apply_local_profile();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         for(auto &clientDeviceS : client.settings.devicesS){
             DCMSignals::get()->update_device_settings_signal(clientDeviceS.id, clientDeviceS.deviceS);
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 
@@ -1330,6 +1332,13 @@ auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
 
 auto DCMLeftPanelChildDrawer::draw_infos_tab_item(cam::DCClient &client) -> void{
     if (ImGui::BeginTabItem("Infos###settings_infos_tabitem")){
+
+        ImGui::Text("Monitoring:");
+        for(const auto &clientDeviceS : client.settings.devicesS){
+            ImGuiUiDrawer::text(std::format("[D{}: {}]", clientDeviceS.id, clientDeviceS.processindUCUsage));
+            ImGui::SameLine();
+        }
+        ImGui::Text("");
 
         ImGui::Text("Config files loaded:");
         ImGui::Spacing();

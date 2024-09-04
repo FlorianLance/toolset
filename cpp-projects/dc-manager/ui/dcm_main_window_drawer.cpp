@@ -96,15 +96,15 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
         if (ImGui::BeginMenu("Settings")){
 
             if (ImGui::BeginMenu("Save")){
-                if(ImGui::MenuItem("Global JSON file###save_global_file")){
+                if(ImGui::MenuItem("PC Host client JSON file###save_host_file")){
                     m_currentAction.update(SAction::Save, STarget::Irrelevant, SType::Global, SFile::Normal);
                 }
-                if(ImGui::MenuItem("Specifc JSON file###save_specific_global_file")){
+                if(ImGui::MenuItem("Specific client JSON file###save_specific_global_file")){
                     m_currentAction.update(SAction::Save, STarget::Irrelevant, SType::Global, SFile::Specific);
                     m_currentAction.hasPath = true;
                     ImGuiFileDialog::Instance()->OpenDialog("GetJSONPath", "Choose JSON file to save", ".json", ".");
                 }
-                if(ImGui::MenuItem("Default global JSON file###save_default_global_file")){
+                if(ImGui::MenuItem("Default client JSON file###save_default_global_file")){
                     m_currentAction.update(SAction::Save, STarget::Irrelevant, SType::Global, SFile::Default);
                 }
                 ImGui::EndMenu();
@@ -112,17 +112,17 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
 
             if (ImGui::BeginMenu("Load")){
 
-                if(ImGui::MenuItem("Global JSON file###load_global_file")){
+                if(ImGui::MenuItem("PC Host client JSON file###load_pc_host_file")){
                     m_currentAction.update(SAction::Load, STarget::Irrelevant, SType::Global, SFile::Normal);
                 }
 
-                if(ImGui::MenuItem("Specific global JSON file###load_specific_global_file")){
+                if(ImGui::MenuItem("Specific client JSON file###load_specific_global_file")){
                     m_currentAction.update(SAction::Load, STarget::Irrelevant, SType::Global, SFile::Specific);
                     m_currentAction.hasPath = true;
                     ImGuiFileDialog::Instance()->OpenDialog("GetJSONPath", "Choose JSON file to load", ".json", ".");
                 }
 
-                if(ImGui::MenuItem("Default JSON file###load_default_global_file")){
+                if(ImGui::MenuItem("Default client JSON file###load_default_global_file")){
                     m_currentAction.update(SAction::Load, STarget::Irrelevant, SType::Global, SFile::Default);
                 }
 

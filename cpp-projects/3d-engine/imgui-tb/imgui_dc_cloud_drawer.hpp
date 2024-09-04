@@ -60,23 +60,18 @@ struct DCCloudDrawer{
     gl::Texture2D infraT;
 
     // drawers
-    gl::CloudPointsDrawer5 cpD;
+    gl::CloudPointsDrawer cpD;
     ImGuiTextureUiDrawer colorD;
     ImGuiTextureUiDrawer depthD;
     ImGuiTextureUiDrawer infraD;
-    gl::SphereTrianglesDrawer spD;
+    gl::SphereTrianglesDrawer btJointD;
     gl::FrustumDrawerLinesDrawer frustumD;
-
-    // gl::LinesDrawer2 normalsD;
-    // Buffer<GLuint> normalsIndices;
-    // Buffer<geo::Pt3f> normalsP;
-    // Buffer<geo::Pt3f> normalsC;
-
+    gl::TriangleLinesDrawer planeFilteringLinesD;
+    gl::OrientedBoundingBoxLinesDrawer oobLinesD;
 
     // settings
     geo::Mat4f model = geo::Mat4f::identity();
     cam::DCFiltersSettings filtersS;
-    // cam::DCDeviceSettings deviceS;
     cam::DCDeviceDisplaySettings display;
 
     // init
@@ -86,5 +81,12 @@ struct DCCloudDrawer{
     auto init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool;
     // # from data
     auto init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool;
+
+
+    // tests
+    // gl::LinesDrawer2 normalsD;
+    // Buffer<GLuint> normalsIndices;
+    // Buffer<geo::Pt3f> normalsP;
+    // Buffer<geo::Pt3f> normalsC;
 };
 }

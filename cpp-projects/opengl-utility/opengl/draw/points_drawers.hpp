@@ -34,9 +34,9 @@
 
 namespace tool::gl {
 
-class CloudPointsDrawer5 : public BaseDrawer{
+class CloudPointsDrawer : public BaseDrawer{
 public:
-    CloudPointsDrawer5() : BaseDrawer(DrawerType::Points){}
+    CloudPointsDrawer() : BaseDrawer(DrawerType::Points){}
     auto initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void;
     auto initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void;
     auto update(const geo::ColoredCloudData &cloud) -> void;

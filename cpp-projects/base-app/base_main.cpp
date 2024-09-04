@@ -532,6 +532,24 @@ auto process_kvid() -> void{
     video.save_to_file(path);
 }
 
+auto test_device_idle() -> void{
+
+    DCDevice device;
+    device.start_thread();
+
+    DCDeviceSettings settings;
+    settings.configS.idDevice = 0;
+    settings.configS.openDevice = true;
+    settings.configS.startReading = true;
+    settings.configS.typeDevice = DCType::AzureKinect;
+    device.update_device_settings(settings);
+
+    for(int ii = 0; ii < 20; ++ii){
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        Logger::warning(std::format("idle {}\n",ii));
+    }
+}
+
 int main(int argc, char *argv[]){
 
 
@@ -553,8 +571,9 @@ int main(int argc, char *argv[]){
         std::cerr << error;
     });
 
+    test_device_idle();
     // test_microphone();
-    process_kvid();
+    // process_kvid();
     // test_femto_mega();
 
     return 0;

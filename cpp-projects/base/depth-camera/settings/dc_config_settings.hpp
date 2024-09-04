@@ -36,8 +36,8 @@ namespace tool::cam {
 struct DCConfigSettings : io::Settings{
     
     // actions
-    bool openDevice   = true;
-    bool startReading    = true;
+    bool openDevice   = false;
+    bool startReading = false;
     // device
     DCType typeDevice = DCType::AzureKinect;
     std::uint32_t idDevice = 0;

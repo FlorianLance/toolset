@@ -93,7 +93,19 @@ auto DCDevice::start_thread() -> void{
         Logger::message("START\n");
         i->doLoopA = true;
         while(i->doLoopA){
-            process();            
+            auto t1 = Time::nanoseconds_since_epoch();
+            process();
+            auto t2 = Time::nanoseconds_since_epoch();
+            auto diff = Time::difference_ms(t1,t2);
+            int targetFPS = 30;
+            int timeToWait = 0;
+            if(diff.count() < targetFPS){
+                timeToWait = static_cast<int>((targetFPS - diff.count())*0.75);
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeToWait));
+            }
+            // auto t3 = Time::nanoseconds_since_epoch();
+            // Logger::message(std::format("[{}][{}][{}]-",diff.count(), timeToWait, Time::difference_ms(t2,t3).count()));
+            // Logger::message(std::format("[{}] ",diff.count()));
         }
     });
 }
@@ -239,13 +251,16 @@ auto DCDevice::process() -> void{
             if(readFrames ){
                 i->device->process();
                 // auto tp = i->device->get_duration_ms("PROCESS");
+                // Logger::message(std::format("[{}]", tp.value()));
                 // if(tp->count() < 30){
                 //     std::this_thread::sleep_for(std::chrono::milliseconds(30 - tp->count()));
                 // }
-                return;
+                // return;
             }
         }
     }
+
+    // std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
 auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
@@ -379,4 +394,11 @@ auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
         }
     }
     return -1;
+}
+
+auto DCDevice::get_framerate() -> float{
+    if(i->deviceOpened){
+        return i->device->get_framerate();
+    }
+    return 0.f;
 }

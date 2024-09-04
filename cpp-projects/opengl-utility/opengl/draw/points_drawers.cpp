@@ -35,7 +35,7 @@
 using namespace tool::gl;
 
 
-auto CloudPointsDrawer5::initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+auto CloudPointsDrawer::initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
     auto pm = dynamic_cast<PointsRenderer*>(m_vaoRenderer.get());
     if(dynamic){
         pm->positionBufferUsage  = GL_DYNAMIC_STORAGE_BIT;
@@ -48,11 +48,11 @@ auto CloudPointsDrawer5::initialize(bool dynamic, std::span<const geo::Pt3f> ver
     }
 }
 
-auto CloudPointsDrawer5::initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void{
+auto CloudPointsDrawer::initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void{
     initialize(dynamic, cloud.vertices, cloud.colors, cloud.normals);
 }
 
-auto CloudPointsDrawer5::update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
+auto CloudPointsDrawer::update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
     auto pm = dynamic_cast<PointsRenderer*>(m_vaoRenderer.get());
     if(!pm->update_data(vertices, 0, colors, 0, normals, 0)){
         Logger::error("[CloudPointsDrawer::update] Error during update.\n"sv);
@@ -60,7 +60,7 @@ auto CloudPointsDrawer5::update(std::span<const geo::Pt3f> vertices, std::span<c
     }
 }
 
-auto CloudPointsDrawer5::update(const geo::ColoredCloudData &cloud) -> void{
+auto CloudPointsDrawer::update(const geo::ColoredCloudData &cloud) -> void{
     update(cloud.vertices, cloud.colors, cloud.normals);
 }
 

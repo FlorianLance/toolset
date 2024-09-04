@@ -54,17 +54,18 @@ auto DCMModel::add_device(cam::DCClientType type) -> void{
     client.add_device(type);
     recorder.add_device();
     calibrator.initialize(client.devices_nb());
-    Logger::message(std::format("INIT {}\n", client.devices_nb()));
     DCMSignals::get()->initialize_signal(client.devices_nb());
 }
 
 auto DCMModel::remove_last_device() -> void{
     if(client.devices_nb() > 0){
-        client.remove_last_device();
-        recorder.remove_last_device();
-        calibrator.initialize(client.devices_nb());
-        Logger::message(std::format("REMOVE {}\n", client.devices_nb()));
-        DCMSignals::get()->initialize_signal(client.devices_nb());
+        {
+            auto lg = LogGuard("DCMModel::remove_last_device"sv);
+            client.remove_last_device();
+            recorder.remove_last_device();
+            calibrator.initialize(client.devices_nb());
+            DCMSignals::get()->initialize_signal(client.devices_nb());
+        }
     }
 }
 
@@ -175,6 +176,7 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
             }
 
             if(!path.empty()){
+
                 clean();
                 if(client.initialize(path)){
                     size_t nbDevices = client.devices_nb();

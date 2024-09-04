@@ -40,8 +40,8 @@ using namespace tool::cam;
 struct DCClientProcessing::Impl{
     // std::mutex recordLocker;
     // std::atomic_bool record = false;
-    Buffer<std::unique_ptr<cam::DCFrameProcessor>> frameProcessors;
     // cam::DCVideo videoResource;
+    Buffer<std::unique_ptr<cam::DCFrameProcessor>> frameProcessors;    
 };
 
 DCClientProcessing::DCClientProcessing() : i(std::make_unique<Impl>()){
@@ -131,6 +131,13 @@ auto DCClientProcessing::get_compressed_frame(size_t idD) -> std::shared_ptr<DCC
         return nullptr;
     }
     return i->frameProcessors[idD]->get_compressed_frame();
+}
+
+auto DCClientProcessing::get_uc_usage(size_t idD) const noexcept -> double{
+    if(idD < i->frameProcessors.size()){
+        return i->frameProcessors[idD]->ucUsage;
+    }
+    return 0.0;
 }
 
 

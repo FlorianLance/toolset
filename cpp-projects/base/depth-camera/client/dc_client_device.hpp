@@ -55,8 +55,8 @@ public:
 
     sigslot::signal<net::UdpDataStatus> data_status_signal;
 
-    Framerate framerate;
-    AverageLatency latency;
+    FramerateBuffer framerate;
+    AverageLatencyBuffer latency;
 };
 
 

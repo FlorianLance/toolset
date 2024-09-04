@@ -1413,6 +1413,8 @@ auto DCDeviceImpl::process_data() -> void{
 
     if(captureSuccess && dataIsValid){
 
+        framerateB.add_frame();
+
         if(settings.data.generation.has_data_to_generate()){
             frame = std::make_shared<DCFrame>();
         }else{
