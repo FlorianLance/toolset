@@ -85,9 +85,12 @@ auto DCClientLocalDevice::clean() -> void {
     }
 }
 
-// auto DCClientLocalDevice::apply_command(Command command) -> void{
-//     static_cast<void>(command);
-// }
+auto DCClientLocalDevice::read_data_from_external_thread() -> size_t{
+    if(i->device){
+        i->device->process();
+    }
+    return 0;
+}
 
 auto DCClientLocalDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{
     if(i->device){

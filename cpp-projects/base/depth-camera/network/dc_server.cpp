@@ -270,7 +270,9 @@ auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int 
 }
 
 auto DCServer::Impl::stop_reading_thread() -> void{
-    udpReader.stop_threads();
+    if(udpReader.are_threads_started()){
+        udpReader.stop_threads();
+    }
     udpReader.clean_socket();
 }
 

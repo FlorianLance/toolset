@@ -42,7 +42,7 @@ public:
 
     ImguiFboUiDrawer();
 
-    auto init() -> void;
+    auto initialize() -> void;
     auto resize(const geo::Pt2<int> &size) -> void;
 
     inline auto bind() -> void {m_fbo.bind();}
@@ -63,6 +63,7 @@ public:
     float translateSpeed = 0.01f;
     bool invertTexture = true;
 
+
 private:
 
     auto restore_viewport() -> void;
@@ -74,6 +75,8 @@ private:
     gl::RBO m_depthTexture;
     graphics::Camera m_camera;       
     graphics::Screen m_screen;
+
+    bool m_initialized = false;
     bool m_cameraUpdated = false;
     bool m_screenUpdated = false;
 };

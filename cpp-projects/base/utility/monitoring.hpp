@@ -57,7 +57,7 @@ private:
 struct FramerateBuffer{
     FramerateBuffer();
     auto add_frame() -> void;
-    auto get_framerate() -> float;
+    auto get_framerate() const -> float;
 private:
     static constexpr size_t nbMaxValues = 500;
     SingleRingBuffer<std::chrono::nanoseconds> rTimes;

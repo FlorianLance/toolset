@@ -43,6 +43,7 @@ auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
     DCCloudsSceneDrawer::initialize(nbGrabbers);
     m_lastFrames.resize(nbGrabbers);
     std::fill(m_lastFrames.begin(), m_lastFrames.end(), nullptr);
+
 }
 
 auto DCDirectDrawer::update() -> void{

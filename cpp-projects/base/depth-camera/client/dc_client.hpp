@@ -52,13 +52,13 @@ public:
     auto apply_command(size_t idC, net::Command command) -> void;
     auto add_device(DCClientType connectionType) -> void;
     auto remove_last_device() -> void;
+    // # common
+    auto read_data_from_external_thread(size_t idC) -> size_t;
+    auto process_frames_from_external_thread(size_t idD) -> void;
     // # remote device
     auto reset_remote_device(size_t idD) -> void;
-    auto init_connection_with_remote_device(size_t idC) -> void;
-    auto read_network_data_from_remote_device(size_t idC) -> size_t;
-    auto trigger_packets_from_remote_device(size_t idC) -> void;
-    // # both
-    auto process_frames_from_external_thread(size_t idD) -> void;
+    auto init_connection_with_remote_device(size_t idC) -> void;    auto trigger_packets_from_remote_device(size_t idC) -> void;
+
     // # settings
     // ## select
     auto use_normal_filters() -> void;

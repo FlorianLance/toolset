@@ -45,6 +45,7 @@ public:
     auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto init_remote_connection(size_t idClient) -> void;
     auto clean() -> void override;
+    auto read_data_from_external_thread() -> size_t override;
 
     auto apply_command(net::Command command) -> void override;
     auto ping() -> void;
@@ -56,8 +57,7 @@ public:
     constexpr auto type() const noexcept -> DCClientType override {return DCClientType::Remote;}
     auto device_connected() const noexcept -> bool override;
 
-    // when no reading thread started
-    auto read_data_from_network() -> size_t;
+    // when no reading thread started    
     auto trigger_received_packets() -> void;
 
     // signals

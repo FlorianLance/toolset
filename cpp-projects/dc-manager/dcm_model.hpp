@@ -45,6 +45,7 @@ struct DCMModel{
     auto initialize() -> bool;
     auto update() -> void;
     auto clean() -> void;
+    auto trigger_settings() -> void;
 
     auto add_device(cam::DCClientType type) -> void;
     auto remove_last_device() -> void;

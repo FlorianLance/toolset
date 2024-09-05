@@ -29,6 +29,7 @@
 
 // base
 #include "geometry/point2.hpp"
+#include "utility/monitoring.hpp"
 
 // 3d-engine
 #include "imgui-tb/imgui_logs.hpp"
@@ -50,7 +51,7 @@ public:
 
 private:
 
-    auto draw_server_info_tab_item(cam::DCServerSettings &settings) -> void;
+    auto draw_server_info_tab_item(DCGModel *model) -> void;
     auto draw_device_tab_item(cam::DCDeviceSettings &device) -> void;
     auto draw_filters_tab_item(const cam::DCConfigSettings &config, cam::DCFiltersSettings &filters) -> void;
 
@@ -74,5 +75,18 @@ private:
         "Infrared###focus_windows_infrared",
         "Cloud###focus_windows_cloud"
     };
+
+    AverageBuffer captureB;
+    AverageBuffer readB;
+    AverageBuffer procB;
+    AverageBuffer convImageB;
+    AverageBuffer resizeImageB;
+    AverageBuffer filterDepthB;
+    AverageBuffer updateCompFrameB;
+    AverageBuffer finalizeCompFrameB;
+    AverageBuffer updateFrameB;
+    AverageBuffer finalizeFrameB;
+    AverageBuffer elaspedBeforeSendingB;
+    AverageBuffer sendingB;
 };
 }

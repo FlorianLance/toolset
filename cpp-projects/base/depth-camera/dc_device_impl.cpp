@@ -1361,6 +1361,13 @@ auto DCDeviceImpl::get_duration_micro_s(std::string_view id) -> std::optional<st
     return std::nullopt;
 }
 
+auto DCDeviceImpl::get_average_framerate() -> float{
+    std::unique_lock<std::mutex> lock(parametersM, std::try_to_lock);
+    if(!lock.owns_lock()){
+        return 0.f;
+    }
+    return framerateB.get_framerate();
+}
 
 auto DCDeviceImpl::read_frame() -> void{
 

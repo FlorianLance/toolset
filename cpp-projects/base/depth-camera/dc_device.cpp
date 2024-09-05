@@ -68,10 +68,13 @@ struct DCDevice::Impl{
     std::atomic_bool deviceOpened = false;
     std::atomic_bool readFrames = false;
 
+    AverageBuffer procB;
+    AverageBuffer sleepB;
+    std::atomic<double> procUsage = 0;
+
     // actions
     bool doLoopA = false;
     std::mutex locker;
-    // std::optional<DeviceAction> dAction  = std::nullopt;
     std::vector<DeviceAction> actions;
 };
 
@@ -92,20 +95,18 @@ auto DCDevice::start_thread() -> void{
     i->loopT = std::make_unique<std::thread>([&](){
         Logger::message("START\n");
         i->doLoopA = true;
+        size_t loopCounter = 0;
         while(i->doLoopA){
-            auto t1 = Time::nanoseconds_since_epoch();
+
             process();
-            auto t2 = Time::nanoseconds_since_epoch();
-            auto diff = Time::difference_ms(t1,t2);
-            int targetFPS = 30;
-            int timeToWait = 0;
-            if(diff.count() < targetFPS){
-                timeToWait = static_cast<int>((targetFPS - diff.count())*0.75);
-                std::this_thread::sleep_for(std::chrono::milliseconds(timeToWait));
+
+            if(loopCounter%20 == 0){
+                auto v1 = i->procB.get();
+                auto v2 = i->sleepB.get();
+                i->procUsage = v1 / (v1 + v2);
+                loopCounter = 0;
             }
-            // auto t3 = Time::nanoseconds_since_epoch();
-            // Logger::message(std::format("[{}][{}][{}]-",diff.count(), timeToWait, Time::difference_ms(t2,t3).count()));
-            // Logger::message(std::format("[{}] ",diff.count()));
+            ++loopCounter;
         }
     });
 }
@@ -123,15 +124,16 @@ auto DCDevice::stop_thread() -> void{
 
 auto DCDevice::process() -> void{
 
+
+    auto tStart = Time::nanoseconds_since_epoch();
+
     i->locker.lock();
     auto dActions = i->actions;
-    i->actions.clear();// = std::nullopt;
+    i->actions.clear();
     bool readFrames = i->readFrames;
     i->locker.unlock();
 
     for(const auto &dAction : dActions){
-
-        // Logger::message(std::format("{} {} {} {} {} {} {}\n"sv,dAction.cleanDevice, dAction.createDevice, dAction.closeDevice, dAction.openDevice, dAction.updateColors, dAction.updateFilters, dAction.updateDelay));
 
         // close device
         if((i->device != nullptr) && dAction.closeDevice){
@@ -250,17 +252,21 @@ auto DCDevice::process() -> void{
         if(i->device->is_opened()){
             if(readFrames ){
                 i->device->process();
-                // auto tp = i->device->get_duration_ms("PROCESS");
-                // Logger::message(std::format("[{}]", tp.value()));
-                // if(tp->count() < 30){
-                //     std::this_thread::sleep_for(std::chrono::milliseconds(30 - tp->count()));
-                // }
-                // return;
             }
         }
     }
 
-    // std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    auto tEnd = Time::nanoseconds_since_epoch();
+    auto diff = Time::difference_ms(tStart,tEnd);
+    int targetFPS = 30;
+    int timeToWait = 0;
+    if(diff.count() < targetFPS){
+        timeToWait = static_cast<int>((targetFPS - diff.count())*0.75);
+        std::this_thread::sleep_for(std::chrono::milliseconds(timeToWait));
+    }
+    i->procB.add_value(diff.count());
+    i->sleepB.add_value(Time::difference_ms(tEnd,Time::nanoseconds_since_epoch()).count());
+
 }
 
 auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
@@ -312,12 +318,8 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     i->deviceS = deviceS;
     i->actions.push_back(dAction);
     i->readFrames = newConfigS.startReading;
-    // if(deviceChanged){
-    //     tool::Logger::message("Device changed, colors settings set to default.\n");
-    //     i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
-    //     color_settings_reset_signal(i->colorsS);
-    // }
-    // Logger::message("end\n"sv);
+
+    // TODO: add timing to action?
 }
 
 auto DCDevice::is_opened() const noexcept -> bool{
@@ -366,7 +368,7 @@ auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{
             return duration.value().count();
         }
     }
-    return -1;
+    return 0;
 }
 
 auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
@@ -375,7 +377,7 @@ auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
             return duration.value().count();
         }
     }
-    return -1;
+    return 0;
 }
 
 auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
@@ -384,7 +386,7 @@ auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
             return duration.value().count();
         }
     }
-    return -1;
+    return 0;
 }
 
 auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
@@ -393,12 +395,16 @@ auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
             return duration.value().count();
         }
     }
-    return -1;
+    return 0;
 }
 
-auto DCDevice::get_framerate() -> float{
+auto DCDevice::get_average_framerate() -> float{
     if(i->deviceOpened){
-        return i->device->get_framerate();
+        return i->device->get_average_framerate();
     }
     return 0.f;
+}
+
+auto DCDevice::get_proc_usage() const -> double{
+    return i->procUsage;
 }

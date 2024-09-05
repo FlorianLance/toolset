@@ -26,6 +26,8 @@
 **                                                                            **
 ********************************************************************************/
 
+
+
 // 3d-engine
 #include "imgui-tb/imgui_dc_device_drawer.hpp"
 #include "imgui-tb/imgui_dc_recorder_drawer.hpp"
@@ -49,5 +51,7 @@ public:
     DCDeviceDrawer deviceD;
     DCRecorderDrawer recorderD;
     DCGMainMenuBarDrawer menuD;
+
+
 };
 }

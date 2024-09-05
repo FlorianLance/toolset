@@ -61,16 +61,10 @@ public:
 
     auto init() -> bool;
     auto start() -> void;
+    auto quit() -> void;
 
     auto elapsed_secondes() const -> float;
-
-    auto main_thread_duration_ms() const -> double{
-        return mainThreadDurationMSA.get();
-    }
-
-    auto quit() -> void{
-        running = false;
-    }
+    auto main_thread_duration_ms() const -> double;
 
 public:
 

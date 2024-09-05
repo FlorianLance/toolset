@@ -47,7 +47,7 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
 
     if(ImGui::BeginChild("###settings_child2", ImVec2(size.x(), size.y()), true, windowFlags)){
         if (ImGui::BeginTabBar("###settings_tabbar")){
-            draw_server_info_tab_item(model->server.settings);
+            draw_server_info_tab_item(model);
 
             if (ImGui::BeginTabItem("Settings###settings_tabitem")){
                 if(ImGui::BeginTabBar("###sub_settings_tabbar")){
@@ -90,11 +90,15 @@ auto draw_config_file_name(const std::string &filePath) -> void{
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(cam::DCServerSettings &settings) -> void {
+#include "utility/logger.hpp"
+
+auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void {
 
     if (!ImGui::BeginTabItem("Server info###settings_server_info_tabitem")){
         return;
     }
+
+    DCServerSettings &settings = model->server.settings;
 
     ImGuiUiDrawer::title2("NETWORK");
     ImGui::Spacing();
@@ -170,6 +174,20 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(cam::DCServerSettings &s
         for(const auto &id : settings.cInfos.clientsConnected){
             ImGuiUiDrawer::text(std::format("name: [{}], last ping: [{}]ms"sv, id.first, Time::difference_ms(id.second, cTime).count()));
         }
+
+        ImGui::Text("Last frame sent:");
+        ImGui::Indent();
+
+        auto lastFrameSentTS = settings.cInfos.lastFrameSentTS;
+        if(lastFrameSentTS.count() != 0){
+            ImGuiUiDrawer::text(std::format("ID: {}", settings.cInfos.lastFrameIdSent));
+            ImGuiUiDrawer::text(std::format("Time (ms): {}", std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - lastFrameSentTS).count()));
+        }else{
+            ImGuiUiDrawer::text(std::format("ID: ..."));
+            ImGuiUiDrawer::text(std::format("Time (ms): ..."));
+        }
+
+        ImGui::Unindent();
     }
     ImGui::Unindent();
     ImGui::Spacing();
@@ -178,11 +196,98 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(cam::DCServerSettings &s
     }
     ImGui::Separator();
 
-    ImGui::Text("Last frame sent:");
-    ImGui::Indent();
-    ImGuiUiDrawer::text(std::format("ID: {}", settings.cInfos.lastFrameIdSent));
-    ImGuiUiDrawer::text(std::format("Time (ms): {}", std::chrono::duration_cast<std::chrono::milliseconds>(Time::nanoseconds_since_epoch() - settings.cInfos.lastFrameSentTS).count()));
-    ImGui::Unindent();
+    ImGuiUiDrawer::title2("MONITORING");
+    ImGui::Spacing();
+
+    {
+        captureB.add_value(model->device->get_capture_duration_ms());
+        readB.add_value(model->device->get_duration_ms("READ_IMAGES"sv));
+        procB.add_value(model->device->get_processing_duration_ms());
+        convImageB.add_value(model->device->get_duration_ms("CONVERT_COLOR_IMAGE"sv));
+        resizeImageB.add_value(model->device->get_duration_ms("RESIZE_COLOR_IMAGE"sv));
+        filterDepthB.add_value(model->device->get_duration_ms("FILTER_DEPTH"sv));
+        updateCompFrameB.add_value(model->device->get_duration_ms("UPDATE_COMPRESSED_FRAME"sv));
+        finalizeCompFrameB.add_value(model->device->get_duration_ms("FINALIZE_COMPRESSED_FRAME"sv));
+        updateFrameB.add_value(model->device->get_duration_ms("UPDATE_FRAME"sv));
+        finalizeFrameB.add_value(model->device->get_duration_ms("FINALIZE_FRAME"sv));
+
+        float framerate                 = model->device->get_average_framerate();
+        auto averageCapture             = captureB.get();
+        auto averageRead                = readB.get();
+        auto averageProc                = procB.get();
+        auto averageUpdateCompFrameB    = updateCompFrameB.get();
+        auto averageFinalizeCompFrameB  = finalizeCompFrameB.get();
+        auto averageUpdateFrameB        = updateFrameB.get();
+        auto averageFinalizeFrameB      = finalizeFrameB.get();
+
+        elaspedBeforeSendingB.add_value(averageRead + averageProc + averageUpdateCompFrameB + averageFinalizeCompFrameB);
+        {
+            std::unique_lock<std::mutex> lock(model->server.settings.cInfos.lock, std::try_to_lock);
+            if(lock.owns_lock()){
+                sendingB.add_value(model->server.settings.cInfos.lastFrameSentDurationMicroS*0.001);
+            }
+        }
+        ImGui::Text("Device thread usage(%%): ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, model->device->get_proc_usage()*100.0), geo::Pt4f{0.,1.f,0.f,1.f});
+
+        ImGui::Text("Images/s: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, framerate), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::Spacing();
+        ImGui::Text("Times (ms): Total: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageCapture + averageRead + averageProc), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::Indent();
+        ImGui::Text("Cap: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageCapture), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+        ImGui::Text("Read: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageRead), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+        ImGui::Text("Proc: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageProc), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::Unindent();
+
+        ImGui::Text("Proc details:");
+        ImGui::Indent();
+        ImGui::Text("Conv col: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  convImageB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+        ImGui::Text("Res col: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  resizeImageB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+        ImGui::Text("Filt dep: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  filterDepthB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
+
+        ImGui::Text("GCFrame: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateCompFrameB + averageFinalizeCompFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+        ImGui::Text("GFrame ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateFrameB + averageFinalizeFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
+
+
+        ImGui::Text("Delay before sending: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, elaspedBeforeSendingB.get()),geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::SameLine();
+
+        ImGui::Text("Sending: ");
+        ImGui::SameLine();
+        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,sendingB.get()),geo::Pt4f{0.,1.f,0.f,1.f});
+        ImGui::Unindent();
+
+    }
+
+    // ...
 
     ImGui::Separator();
 

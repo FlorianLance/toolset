@@ -102,10 +102,12 @@ public:
     SSS<cam::SettingsAction> process_settings_action_signal;
     SSS<size_t, const cam::DCDeviceSettings &> update_device_settings_signal;
     SSS<size_t, const cam::DCFiltersSettings&> update_filters_settings_signal;
+    SSS<size_t, const cam::DCFiltersSettings&> update_filters_settings_ui_only_signal;
     SSS<size_t, const cam::DCFiltersSettings&> update_calibration_filters_settings_signal;
     SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
     SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
+    SSS<size_t, const cam::DCModelSettings&> update_model_settings_ui_only_signal;
     SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;
     SSS<const cam::DCVideoPlayerSettings&> update_player_settings_signal;
     SSS<const cam::DCCalibratorSettings &> update_calibration_settings_signal;

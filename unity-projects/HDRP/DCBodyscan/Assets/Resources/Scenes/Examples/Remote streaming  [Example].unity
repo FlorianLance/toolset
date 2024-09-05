@@ -172,11 +172,11 @@ MonoBehaviour:
   connectAtStart: 1
   readProcessAtStart: 1
   applyDeviceSettingsAfterConnection: 1
-  applyFiltersSettingsAfterConnection: 0
-  applyColorSettingsAfterConnection: 0
+  applyFiltersSettingsAfterConnection: 1
+  applyColorSettingsAfterConnection: 1
   loadDisplaySettingsFilesAfterInitializing: 0
   displaySettingsFilesBasePath: ./display_settings
-  clientSettingsFilePath: E:/client_test.json
+  clientSettingsFilePath: E:/client_local8_test.json
   m_allDevicesConnected: 0
   m_threadsStarted: 0
   devicesStates: []

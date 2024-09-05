@@ -50,22 +50,32 @@ auto DCMModel::clean() -> void {
     client.clean();
 }
 
+
 auto DCMModel::add_device(cam::DCClientType type) -> void{
-    client.add_device(type);
+
+    auto lg = LogGuard("DCMModel::add_device"sv);
+    client.add_device(type);    
+    client.apply_device_settings(client.devices_nb()-1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    client.apply_color_settings(client.devices_nb()-1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    client.apply_filters_settings(client.devices_nb()-1);
+    client.apply_delay_settings(client.devices_nb()-1);
+
     recorder.add_device();
+    recorder.update_model(client.devices_nb()-1, client.settings.devicesS.back().modelS);
+
     calibrator.initialize(client.devices_nb());
     DCMSignals::get()->initialize_signal(client.devices_nb());
 }
 
 auto DCMModel::remove_last_device() -> void{
     if(client.devices_nb() > 0){
-        {
-            auto lg = LogGuard("DCMModel::remove_last_device"sv);
-            client.remove_last_device();
-            recorder.remove_last_device();
-            calibrator.initialize(client.devices_nb());
-            DCMSignals::get()->initialize_signal(client.devices_nb());
-        }
+        auto lg = LogGuard("DCMModel::remove_last_device"sv);
+        client.remove_last_device();
+        recorder.remove_last_device();
+        calibrator.initialize(client.devices_nb());
+        DCMSignals::get()->initialize_signal(client.devices_nb());
     }
 }
 
@@ -115,11 +125,55 @@ auto DCMModel::initialize() -> bool{
     }
 
     size_t nbDevices = client.devices_nb();
-    recorder.initialize(nbDevices);
+    recorder.initialize(nbDevices);        
     calibrator.initialize(nbDevices);
+
+    // devices
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        client.apply_device_settings(idC);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+
+    // color
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        client.apply_color_settings(idC);
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+
+    // filters / delay
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        client.apply_filters_settings(idC);
+        client.apply_delay_settings(idC);
+    }
+
+    // models
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        recorder.update_model(idC, client.settings.devicesS[idC].modelS);
+    }
+
     DCMSignals::get()->initialize_signal(nbDevices);
 
     return true;
+}
+
+auto DCMModel::trigger_settings() -> void{
+
+    // filters
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        DCMSignals::get()->update_filters_settings_ui_only_signal(idC, client.settings.devicesS[idC].filtersS);
+    }
+
+    // models
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        DCMSignals::get()->update_model_settings_ui_only_signal(idC, client.settings.devicesS[idC].modelS);
+    }
+
+    // cloud display
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+        DCMSignals::get()->update_cloud_display_settings_signal(idC, client.settings.devicesS[idC].displayS);
+    }
+    // scene display
+    DCMSignals::get()->update_scene_display_settings_signal(client.settings.sceneDisplayS);
 }
 
 

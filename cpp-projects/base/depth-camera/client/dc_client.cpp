@@ -237,18 +237,13 @@ auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
     }
 }
 
-auto DCClient::read_network_data_from_remote_device(size_t idC) -> size_t{
+auto DCClient::read_data_from_external_thread(size_t idC) -> size_t{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::read_network_data_from_remote_device] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Logger::error(std::format("[DCClient::read_data_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return 0;
     }
-
-    if(i->devices[idC]->type() == DCClientType::Remote){
-        return dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->read_data_from_network();
-    }
-
-    return 0;
+    return i->devices[idC]->read_data_from_external_thread();
 }
 
 auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{

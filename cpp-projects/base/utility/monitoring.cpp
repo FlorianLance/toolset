@@ -45,7 +45,7 @@ auto FramerateBuffer::add_frame() -> void{
     rTimes.increment();
 }
 
-auto FramerateBuffer::get_framerate() -> float{
+auto FramerateBuffer::get_framerate() const -> float{
     size_t count = 0;
 
     auto currentTimestampNS = Time::nanoseconds_since_epoch();
@@ -123,7 +123,10 @@ auto AverageBuffer::add_value(double value) -> void{
 auto AverageBuffer::get() const -> double{
     const auto span = rValues.span();
     auto nbValues = nbValuesAdded > nbMaxValues ? nbMaxValues : nbValuesAdded;
-    return std::accumulate(std::begin(span), std::end(span), 0.0) / nbValues;
+    if(nbValues > 0){
+        return std::accumulate(std::begin(span), std::end(span), 0.0) / nbValues;
+    }
+    return 0.0;
 }
 
 SumBuffer::SumBuffer(){

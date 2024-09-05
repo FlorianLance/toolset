@@ -53,7 +53,7 @@ namespace BS {
             Profiler.BeginThreadProfiling("ReadNetworkData", Thread.CurrentThread.Name);
             while (doLoop) {
                 Profiler.BeginSample("[DCNetworkDirectPlayer::read_network_data]");                
-                int nbPackedRead = dllPlayer.read_network_data(idD);
+                int nbPackedRead = dllPlayer.read_data_from_external_thread(idD);
                 Profiler.EndSample();
                 totalPackedRead += nbPackedRead;
             };
@@ -83,8 +83,9 @@ namespace BS {
             Profiler.BeginThreadProfiling("TriggerReceivedPackets", Thread.CurrentThread.Name);
             while (doLoop) {
                 Profiler.BeginSample("[DCNetworkDirectPlayer::trigger_received_packets]");
-                dllPlayer.trigger_received_packets(idD);
+                dllPlayer.trigger_packets_from_external_thread(idD);                
                 Profiler.EndSample();
+                Thread.Sleep(5);
             }
             Profiler.EndThreadProfiling();
         }
@@ -112,8 +113,9 @@ namespace BS {
             Profiler.BeginThreadProfiling("ProcessData", Thread.CurrentThread.Name);
             while (doLoop) {
                 Profiler.BeginSample("[DCNetworkDirectPlayer::process_data]");
-                dllPlayer.process_data(idD);
+                dllPlayer.process_frames_from_external_thread(idD);
                 Profiler.EndSample();
+                Thread.Sleep(5);
             }
             Profiler.EndThreadProfiling();
         }

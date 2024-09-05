@@ -64,27 +64,27 @@ auto DCClientExport::init_callbacks(
 
 auto DCClientExport::initialize(const std::string &clientSettingsFilePath, bool startThreads) -> bool{
 
-    dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::initialize] Initialize from path: [{}]", clientSettingsFilePath));
+    dll_log_message(std::format("[DLL][DCClientExport::initialize] Initialize from path: [{}]", clientSettingsFilePath));
 
     if(clientSettingsFilePath.empty()){
-        dll_log_error("[DLL][DCNetworkDirectPlayer::initialize] Client settings file with path is empty.");
+        dll_log_error("[DLL][DCClientExport::initialize] Client settings file with path is empty.");
         return false;
     }
 
     if(!std::filesystem::exists(clientSettingsFilePath)){
-        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::initialize] Client settings file with path [{}] doesn't exist.", clientSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCClientExport::initialize] Client settings file with path [{}] doesn't exist.", clientSettingsFilePath));
         return false;
     }
 
     // initialize client
     if(!client.initialize(clientSettingsFilePath, startThreads)){
-        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::initialize] Cannot initialize client from client settings file with path [{}].", clientSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCClientExport::initialize] Cannot initialize client from client settings file with path [{}].", clientSettingsFilePath));
         return false;
     }
-    dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Client settings file loaded:\n");
+    dll_log_message("[DLL][DCClientExport::initialize] Client settings file loaded:\n");
     dll_log_message(std::format("[Client]\n{}", client.settings.convert_to_json_str()));
 
-    dll_log_message("[DLL][DCNetworkDirectPlayer::initialize] Connections infos:");
+    dll_log_message("[DLL][DCClientExport::initialize] Connections infos:");
     size_t id = 0;
 
     for(auto &deviceS : client.settings.devicesS){
@@ -105,7 +105,7 @@ auto DCClientExport::initialize(const std::string &clientSettingsFilePath, bool 
 
     auto nbDevices = client.settings.devicesS.size();
     if(nbDevices == 0){
-        dll_log_error(std::format("[DLL][DCNetworkDirectPlayer::initialize] No device defined in client settings file with path [{}].", clientSettingsFilePath));
+        dll_log_error(std::format("[DLL][DCClientExport::initialize] No device defined in client settings file with path [{}].", clientSettingsFilePath));
         return false;
     }
 
@@ -130,13 +130,13 @@ auto DCClientExport::clean() -> void{
 auto DCClientExport::connect_to_devices() -> void{
 
     if(devices_nb() == 0){
-        dll_log_error("[DLL][DCNetworkDirectPlayer::connect_to_devices] No devices available to be connected.");
+        dll_log_error("[DLL][DCClientExport::connect_to_devices] No devices available to be connected.");
         return;
     }
 
     for(const auto &deviceS : client.settings.devicesS){
         if(deviceS.connectionS.connectionType == DCClientType::Remote){
-            dll_log_message(std::format("[DLL][DCNetworkDirectPlayer::connect_to_devices] Init connection with device: {}", deviceS.id));
+            dll_log_message(std::format("[DLL][DCClientExport::connect_to_devices] Init connection with device: {}", deviceS.id));
             client.init_connection_with_remote_device(deviceS.id);
         }
     }
@@ -162,12 +162,10 @@ auto DCClientExport::is_device_connected(size_t idD) const noexcept -> bool{
     return client.device_connected(idD);
 }
 
-auto DCClientExport::apply_device_settings() -> void{
-    for(size_t idD = 0; idD < client.devices_nb(); ++idD){
-        client.apply_device_settings(idD);
-        dll_log_message(std::format("[G{}][Config]\n{}", idD, client.settings.devicesS[idD].deviceS.configS.convert_to_json_str()));
-        dll_log_message(std::format("[G{}][Data]\n{}", idD, client.settings.devicesS[idD].deviceS.dataS.convert_to_json_str()));
-    }
+auto DCClientExport::apply_device_settings(size_t idD) -> void{
+    client.apply_device_settings(idD);
+    dll_log_message(std::format("[G{}][Config]\n{}", idD, client.settings.devicesS[idD].deviceS.configS.convert_to_json_str()));
+    dll_log_message(std::format("[G{}][Data]\n{}", idD, client.settings.devicesS[idD].deviceS.dataS.convert_to_json_str()));
 }
 
 auto DCClientExport::apply_color_settings() -> void{
@@ -191,15 +189,15 @@ auto DCClientExport::update_delay(size_t idD, cam::DCDelaySettings delayS) -> vo
     client.update_delay_settings(idD, delayS);
 }
 
-auto DCClientExport::read_network_data(size_t idD) -> size_t{
-    return client.read_network_data_from_remote_device(idD);
+auto DCClientExport::read_data_from_external_thread(size_t idD) -> size_t{
+    return client.read_data_from_external_thread(idD);
 }
 
-auto DCClientExport::trigger_received_packets(size_t idD) -> void{
+auto DCClientExport::trigger_packets_from_external_tread(size_t idD) -> void{
     client.trigger_packets_from_remote_device(idD);
 }
 
-auto DCClientExport::process_data(size_t idD) -> void{
+auto DCClientExport::process_frames_from_external_thread(size_t idD) -> void{
     client.process_frames_from_external_thread(idD);
 }
 
@@ -328,8 +326,8 @@ void disconnect_from_devices__dc_client_export(DCClientExport *dcCE){
     dcCE->disconnect_from_devices();
 }
 
-void apply_device_settings__dc_client_export(DCClientExport *dcCE){
-    dcCE->apply_device_settings();
+void apply_device_settings__dc_client_export(DCClientExport *dcCE, int idD){
+    dcCE->apply_device_settings(idD);
 }
 void apply_color_settings__dc_client_export(DCClientExport *dcCE){
     dcCE->apply_color_settings();
@@ -341,17 +339,18 @@ void apply_filters_settings__dc_client_export(DCClientExport *dcCE){
 void update__dc_client_export(tool::cam::DCClientExport *dcCE){
     dcCE->update();
 }
-int read_network_data__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
-    return static_cast<int>(dcCE->read_network_data(idD));
+int read_data_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
+    return static_cast<int>(dcCE->read_data_from_external_thread(idD));
 }
-void trigger_received_packets__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
+
+void trigger_packets_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
     if(idD < dcCE->client.devices_nb()){
-        dcCE->trigger_received_packets(idD);
+        dcCE->trigger_packets_from_external_tread(idD);
     }
 }
-void process_data__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
+void process_frames_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcCE, int idD){
     if(idD < dcCE->client.devices_nb()){
-        dcCE->process_data(idD);
+        dcCE->process_frames_from_external_thread(idD);
     }
 }
 

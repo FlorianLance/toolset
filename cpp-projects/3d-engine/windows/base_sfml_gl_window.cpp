@@ -271,6 +271,14 @@ auto BaseSfmlGlWindow::elapsed_secondes() const -> float{
     return Time::difference_ms(startL, currentFrame).count()*0.001f;
 }
 
+auto BaseSfmlGlWindow::main_thread_duration_ms() const -> double{
+    return mainThreadDurationMSA.get();
+}
+
+auto BaseSfmlGlWindow::quit() -> void{
+    running = false;
+}
+
 auto BaseSfmlGlWindow::init_sfml_window() -> bool{
 
     auto lg = LogGuard("BaseSfmlGlWindow::init_sfml_window"sv);

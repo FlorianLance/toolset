@@ -101,7 +101,7 @@ auto DCMController::set_connections() -> void{
     // ## controller
     s->initialize_signal.connect([&](size_t nbDevices){
         view->initialize(model->client.devices_nb());
-        // model->trigger_settings();
+        model->trigger_settings();
     });
     view->gl()->update_signal.connect(                      &DCMController::update,                             this);
     view->gl()->draw_imgui_signal.connect(                  &DCMController::draw_ui,                            this);
@@ -161,8 +161,6 @@ auto DCMController::set_connections() -> void{
     s->update_calibration_filters_settings_signal.connect(  &DCClient::update_calibration_filters_settings,     client);
     s->update_color_settings_signal.connect(                &DCClient::update_color_settings,                   client);
     s->update_delay_settings_signal.connect(                &DCClient::update_delay_settings,                   client);
-    // s->update_scene_display_settings_signal.connect(        &DCClient::update_scene_display_settings,           client);
-    // s->update_cloud_display_settings_signal.connect(        &DCClient::update_cloud_display_settings,           client);
 
     // ## calibration
     s->update_calibration_settings_signal.connect(          &DCCalibrator::update_settings,                     calibrator);
@@ -174,12 +172,16 @@ auto DCMController::set_connections() -> void{
     s->update_recorder_settings_signal.connect(             &DCVideoRecorder::update_settings,                  recorder);
     // ## direct drawer
     s->update_model_settings_signal.connect(                &DCDirectDrawer::update_model_settings,             directD);
+    s->update_model_settings_ui_only_signal.connect(        &DCDirectDrawer::update_model_settings,             directD);
     calibrator->validated_calibration_signal.connect(       &DCDirectDrawer::update_model_settings,             directD);
     s->update_filters_settings_signal.connect(              &DCDirectDrawer::update_filters_settings,           directD);
+    s->update_filters_settings_ui_only_signal.connect(      &DCDirectDrawer::update_filters_settings,           directD);
     s->update_scene_display_settings_signal.connect(        &DCDirectDrawer::update_scene_display_settings,     directD);
     s->update_cloud_display_settings_signal.connect(        &DCDirectDrawer::update_device_display_settings,    directD);
     // ## calibration drawer
     s->update_model_settings_signal.connect(                &DCCalibratorDrawer::update_grabber_model,          calibratorD);
+    s->update_model_settings_ui_only_signal.connect(        &DCCalibratorDrawer::update_grabber_model,          calibratorD);
+
     calibrator->new_calibration_signal.connect(             &DCCalibratorDrawer::update_grabber_model,          calibratorD);
     calibrator->validated_calibration_signal.connect(       &DCCalibratorDrawer::update_grabber_model,          calibratorD);
     s->update_scene_display_settings_signal.connect(        &DCCalibratorDrawer::update_scene_display_settings, calibratorD);
@@ -190,6 +192,7 @@ auto DCMController::set_connections() -> void{
     s->update_cloud_display_settings_signal.connect(        &DCPlayerDrawer::update_device_display_settings,    playerD);
     // ## recorder drawer
     s->update_model_settings_signal.connect(                &DCRecorderDrawer::update_model_settings,           recorderD);
+    s->update_model_settings_ui_only_signal.connect(        &DCRecorderDrawer::update_model_settings,           recorderD);
     calibrator->validated_calibration_signal.connect(       &DCRecorderDrawer::update_model_settings,           recorderD);
     s->update_scene_display_settings_signal.connect(        &DCRecorderDrawer::update_scene_display_settings,   recorderD);
     s->update_cloud_display_settings_signal.connect(        &DCRecorderDrawer::update_device_display_settings,  recorderD);

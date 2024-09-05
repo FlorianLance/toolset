@@ -52,38 +52,36 @@ using namespace std::chrono;
 
 auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
 
-    // if(fromFilters.size() != 2*nbGrabbers + 2){
+    guiCurrentFromFiltersSelection = 0;
+    guiCurrentFromFiltersSelection = 0;
+    guiCurrentFromColorsSelection = 0;
+    guiCurrentTargetFiltersSelection = 0;
+    guiCurrentTargetColorsSelection = 0;
 
-        guiCurrentFromFiltersSelection = 0;
-        guiCurrentFromColorsSelection = 0;
-        guiCurrentTargetFiltersSelection = 0;
-        guiCurrentTargetColorsSelection = 0;
+    fromFilters.clear();
+    targetsFilters.clear();
 
-        fromFilters.clear();
-        targetsFilters.clear();
+    fromColor.clear();
+    targetsColor.clear();
 
-        fromColor.clear();
-        targetsColor.clear();
+    for(size_t ii = 0; ii < nbGrabbers; ++ii){
+        fromFilters.push_back(std::format("[{}] normal", ii));
+        fromColor.push_back(std::format("[{}]", ii));
+    }
+    for(size_t ii = 0; ii < nbGrabbers; ++ii){
+        fromFilters.push_back(std::format("[{}] calib", ii));
+    }
 
-        for(size_t ii = 0; ii < nbGrabbers; ++ii){
-            fromFilters.push_back(std::format("[{}] normal", ii));
-            fromColor.push_back(std::format("[{}]", ii));
-        }
-        for(size_t ii = 0; ii < nbGrabbers; ++ii){
-            fromFilters.push_back(std::format("[{}] calib", ii));
-        }
-
-        targetsFilters.push_back("All");
-        targetsFilters.push_back("All normal");
-        targetsFilters.push_back("All calib");
-        targetsColor.push_back("All");
-        for(const auto &filter : fromFilters){
-            targetsFilters.push_back(filter);            
-        }        
-        for(const auto &color : fromColor){
-            targetsColor.push_back(color);
-        }
-    // }
+    targetsFilters.push_back("All");
+    targetsFilters.push_back("All normal");
+    targetsFilters.push_back("All calib");
+    targetsColor.push_back("All");
+    for(const auto &filter : fromFilters){
+        targetsFilters.push_back(filter);
+    }
+    for(const auto &color : fromColor){
+        targetsColor.push_back(color);
+    }
 
     feedbacksLogs.resize(nbGrabbers);
 }
@@ -105,7 +103,7 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
                 draw_settings_tab_item(model);
                 draw_recorder_tab_item(model->recorder);
                 draw_player_tab_item(model->player);
-                draw_calibrator_tab_item(model->client.settings.useNormalFilteringSettings,  model->calibrator.states, model->uiSettings.calibratorDisplayS, model->calibrator.settings);
+                draw_calibrator_tab_item(model->client, model->calibrator.states, model->uiSettings.calibratorDisplayS, model->calibrator.settings);
                 ImGui::EndTabBar();
             }
         }
@@ -236,9 +234,9 @@ auto DCMLeftPanelChildDrawer::draw_player_tab_item(cam::DCVideoPlayer &player) -
     player.states.reset_actions();
 }
 
-auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSettings, cam::DCCalibratorStates &cStates, DCCalibratorDisplaySettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
+auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(DCClient &client, cam::DCCalibratorStates &cStates, DCCalibratorDisplaySettings &cdSettings, cam::DCCalibratorSettings &cSettings) -> void{
 
-    if(DCUIDrawer::draw_dc_calibrator_tab_item("Calibrator###calibrator_tabitem",  useNormalFilteringSettings, cStates, cdSettings, cSettings)){
+    if(DCUIDrawer::draw_dc_calibrator_tab_item("Calibrator###calibrator_tabitem",  client.settings.useNormalFilteringSettings, cStates, cdSettings, cSettings)){
         DCMSignals::get()->update_calibration_settings_signal(cSettings);
         DCMSignals::get()->update_calibration_drawer_settings_signal(cdSettings);
     }
@@ -265,7 +263,16 @@ auto DCMLeftPanelChildDrawer::draw_calibrator_tab_item(bool useNormalFilteringSe
         DCMSignals::get()->update_calibration_display_signal();
     }
     if(cStates.updateFilteringMode){
-        // DCMSignals::get()->update_filtering_mode_signal(cStates.filteringMode == 0);
+
+        client.settings.useNormalFilteringSettings = cStates.filteringMode == 0;
+
+        for(auto &clientDeviceS : client.settings.devicesS){
+            if(cStates.filteringMode == 0){
+                DCMSignals::get()->update_filters_settings_signal(clientDeviceS.id, clientDeviceS.filtersS);
+            }else if(cStates.filteringMode == 1){
+                DCMSignals::get()->update_calibration_filters_settings_signal(clientDeviceS.id, clientDeviceS.calibrationFiltersS);
+            }
+        }
     }
 
     cStates.reset_actions();
@@ -361,7 +368,7 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
         return;
     }
 
-    ImGuiUiDrawer::text(std::format("UI loop duration: [{}]ms"sv, uiFramerateMS));
+    ImGuiUiDrawer::text(std::format("UI loop duration: [{:3.1f}]ms"sv, uiFramerateMS));
 
     static ImGuiID tabId = 0;
     if(!ImGuiUiDrawer::begin_tab_bar(&tabId, "###global_sub_tabbar")){
@@ -1334,11 +1341,22 @@ auto DCMLeftPanelChildDrawer::draw_infos_tab_item(cam::DCClient &client) -> void
     if (ImGui::BeginTabItem("Infos###settings_infos_tabitem")){
 
         ImGui::Text("Monitoring:");
+        ImGui::Indent();
+        ImGui::Text("Frame processing:");
+        ImGui::Indent();
+        int id = 0;
         for(const auto &clientDeviceS : client.settings.devicesS){
             ImGuiUiDrawer::text(std::format("[D{}: {}]", clientDeviceS.id, clientDeviceS.processindUCUsage));
-            ImGui::SameLine();
-        }
+            if(id % 3 == 0 && (id != 0)){
+
+            }else{
+                ImGui::SameLine();
+            }
+            ++id;
+        }        
         ImGui::Text("");
+        ImGui::Unindent();
+        ImGui::Unindent();
 
         ImGui::Text("Config files loaded:");
         ImGui::Spacing();

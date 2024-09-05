@@ -85,9 +85,9 @@ struct DCClientExport{
     auto update() -> void;
     // # separated thread
     // ## foreach device
-    auto read_network_data(size_t idDevice) -> size_t;
-    auto trigger_received_packets(size_t idDevice) -> void;
-    auto process_data(size_t idDevice) -> void;
+    auto read_data_from_external_thread(size_t idDevice) -> size_t;
+    auto trigger_packets_from_external_tread(size_t idDevice) -> void;
+    auto process_frames_from_external_thread(size_t idDevice) -> void;
 
     // actions
     auto connect_to_devices() -> void;
@@ -103,7 +103,7 @@ struct DCClientExport{
     auto device_model(size_t idD) -> geo::Mat4f;
 
     // settings
-    auto apply_device_settings() -> void;
+    auto apply_device_settings(size_t idD) -> void;
     auto apply_color_settings() -> void;
     auto apply_filters_settings() -> void;
     auto update_delay(size_t idD, cam::DCDelaySettings delayS) -> void;
@@ -133,9 +133,9 @@ DECL_EXPORT int initialize__dc_client_export(tool::cam::DCClientExport *dcClient
 
 // update
 DECL_EXPORT void update__dc_client_export(tool::cam::DCClientExport *dcClientExport);
-DECL_EXPORT int read_network_data__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
-DECL_EXPORT void trigger_received_packets__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
-DECL_EXPORT void process_data__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
+DECL_EXPORT int read_data_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
+DECL_EXPORT void trigger_packets_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
+DECL_EXPORT void process_frames_from_external_thread__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 
 // actions
 DECL_EXPORT void connect_to_devices__dc_client_export(tool::cam::DCClientExport *dcClientExport);
@@ -149,7 +149,7 @@ DECL_EXPORT int current_frame_id__dc_client_export(tool::cam::DCClientExport *dc
 DECL_EXPORT int current_frame_cloud_size__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 
 // settings
-DECL_EXPORT void apply_device_settings__dc_client_export(tool::cam::DCClientExport *dcClientExport);
+DECL_EXPORT void apply_device_settings__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 DECL_EXPORT void apply_color_settings__dc_client_export(tool::cam::DCClientExport *dcClientExport);
 DECL_EXPORT void apply_filters_settings__dc_client_export(tool::cam::DCClientExport *dcClientExport);
 

@@ -45,7 +45,7 @@ using namespace tool::geo;
 
 auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
 
-    fboD.init();
+    fboD.initialize();
     cloudsD.resize(nbDrawers);
 
     for(auto &cloudD : cloudsD){

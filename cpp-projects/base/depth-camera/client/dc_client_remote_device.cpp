@@ -214,7 +214,7 @@ auto DCClientRemoteDevice::device_connected() const noexcept -> bool {
     return i->remoteDeviceConnected;
 }
 
-auto DCClientRemoteDevice::read_data_from_network() -> size_t{
+auto DCClientRemoteDevice::read_data_from_external_thread() -> size_t{
     return i->udpReader.receive_data_from_external_thread();
 }
 

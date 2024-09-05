@@ -71,14 +71,14 @@ namespace BS {
             update__dc_client_export(_handle);
         }
         // # dedicated thread
-        public int read_network_data(int idD) {
-            return read_network_data__dc_client_export(_handle, idD);
+        public int read_data_from_external_thread(int idD) {
+            return read_data_from_external_thread__dc_client_export(_handle, idD);
         }
-        public void trigger_received_packets(int idD) {
-            trigger_received_packets__dc_client_export(_handle, idD);
+        public void trigger_packets_from_external_thread(int idD) {
+            trigger_packets_from_external_thread__dc_client_export(_handle, idD);
         }
-        public void process_data(int idD) {
-            process_data__dc_client_export(_handle, idD);
+        public void process_frames_from_external_thread(int idD) {
+            process_frames_from_external_thread__dc_client_export(_handle, idD);
         }
 
         // actions
@@ -112,8 +112,8 @@ namespace BS {
         }
 
         // settings
-        public void apply_devices_settings() {
-            apply_device_settings__dc_client_export(_handle);
+        public void apply_devices_settings(int idD) {
+            apply_device_settings__dc_client_export(_handle, idD);
         }
         public void apply_color_settings() {
             apply_color_settings__dc_client_export(_handle);
@@ -172,12 +172,12 @@ namespace BS {
         [DllImport("base-export", EntryPoint = "update__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
         static private extern int update__dc_client_export(HandleRef dcNetworkDirectPlayer);
         // # dedicated thread
-        [DllImport("base-export", EntryPoint = "read_network_data__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int read_network_data__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);        
-        [DllImport("base-export", EntryPoint = "trigger_received_packets__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void trigger_received_packets__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
-        [DllImport("base-export", EntryPoint = "process_data__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void process_data__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        [DllImport("base-export", EntryPoint = "read_data_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
+        static private extern int read_data_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);        
+        [DllImport("base-export", EntryPoint = "trigger_packets_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
+        static private extern void trigger_packets_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        [DllImport("base-export", EntryPoint = "process_frames_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
+        static private extern void process_frames_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
 
         // actions        
         [DllImport("base-export", EntryPoint = "connect_to_server__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
@@ -201,7 +201,7 @@ namespace BS {
 
         // settings
         [DllImport("base-export", EntryPoint = "apply_device_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void apply_device_settings__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void apply_device_settings__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
         [DllImport("base-export", EntryPoint = "apply_color_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
         static private extern void apply_color_settings__dc_client_export(HandleRef dcNetworkDirectPlayer);
         [DllImport("base-export", EntryPoint = "apply_filters_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]

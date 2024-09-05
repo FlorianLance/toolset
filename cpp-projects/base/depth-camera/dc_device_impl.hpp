@@ -97,9 +97,7 @@ struct DCDeviceImpl{
     // profiling
     auto get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>;
     auto get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>;
-    auto get_framerate() -> float{
-        return framerateB.get_framerate();
-    }
+    auto get_average_framerate() -> float;
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;

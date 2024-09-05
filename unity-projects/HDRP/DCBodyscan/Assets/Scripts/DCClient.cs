@@ -34,6 +34,7 @@ using UnityEditor;
 using UnityEngine.Profiling;
 using UnityEngine.VFX;
 using UnityEngine.Events;
+using System.IO;
 
 
 namespace BS {
@@ -273,7 +274,11 @@ namespace BS {
         // settings
         public void apply_device_settings() {
             if (m_dllPlayer != null) {
-                m_dllPlayer.apply_devices_settings();
+                for (int idD = 0; idD < m_dllPlayer.devices_nb(); ++idD) {                    
+                    UnityEngine.Debug.Log(string.Format("[DClient::apply_device_settings] Wait device [{0}] to be updated. ", idD));
+                    m_dllPlayer.apply_devices_settings(idD);
+                    Thread.Sleep(250);
+                }
             }
         }
         public void apply_color_settings() {
@@ -306,7 +311,7 @@ namespace BS {
             if (loadDisplaySettingsFilesAfterInitializing) {
                 for (int idG = 0; idG < dataVFX.displaySettings.Count; ++idG) {
                     string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                    UnityEngine.Debug.Log(string.Format("[DCNetworkDirectPlayerVFX::initialize] Load display settings file with path [{0}]. ", path));
+                    UnityEngine.Debug.Log(string.Format("[DClient::initialize_data] Load display settings file with path [{0}]. ", path));
                     dataVFX.update_display_parameters_from_json_file(idG, path);
                 }
             }
@@ -416,7 +421,7 @@ namespace BS {
                     break;
             }
 
-            UnityEngine.Debug.Log(string.Format("[DCNetworkDirectPlayerVFX::new_feedback] Receive message of type [{0}] from device [{1}] with feeback [{2}] from Thread [{3}]", messageTypeStr, idC, feedbackTypeStr, Thread.CurrentThread.Name));
+            UnityEngine.Debug.Log(string.Format("[DClient::new_feedback] Receive message of type [{0}] from device [{1}] with feeback [{2}] from Thread [{3}]", messageTypeStr, idC, feedbackTypeStr, Thread.CurrentThread.Name));
 
             if (messageType == 0 && feedbackType == 0) {
                 devicesStates[idC].connected = true;
@@ -446,7 +451,7 @@ namespace BS {
 
                     allClientsConnectedEvent.Invoke();
 
-                    UnityEngine.Debug.Log(string.Format("[DCNetworkDirectPlayerVFX::check_devices_connected_state] All grabbers are connected [{0}].", devicesStates.Count));
+                    UnityEngine.Debug.Log(string.Format("[DClient::check_devices_connected_state] All devices are connected [{0}].", devicesStates.Count));
                     if (applyDeviceSettingsAfterConnection) {
                         apply_device_settings();
                     }
@@ -523,11 +528,11 @@ namespace BS {
                 return;
             }
 
-            Profiler.BeginSample("[DCNetworkDirectPlayerVFX::update] Update DLL");
+            Profiler.BeginSample("[DClient::update] Update DLL");
             m_dllPlayer.update();
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DCNetworkDirectPlayerVFX::update] uncompress_frame / copy_current_frame_vertices_vfx");
+            Profiler.BeginSample("[DClient::update] uncompress_frame / copy_current_frame_vertices_vfx");
             Parallel.ForEach(devicesStates, deviceStates => {
 
                 if (m_dllPlayer.is_frame_available(deviceStates.deviceId)) {
@@ -568,7 +573,7 @@ namespace BS {
             });
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DCNetworkDirectPlayerVFX::update] Update VFX data");
+            Profiler.BeginSample("[DClient::update] Update VFX data");
             foreach (var deviceStates in devicesStates) {
                 dataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
             }
