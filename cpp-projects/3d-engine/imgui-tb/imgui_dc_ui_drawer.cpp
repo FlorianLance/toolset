@@ -1382,14 +1382,17 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
         for(const auto &m : fbModes){
             modesNames[m] = std::string(cam::dc_mode_name(m));
         }
-        for(const auto &m : fmModes){
+        for(const auto &m : fmeModes){
+            modesNames[m] = std::string(cam::dc_mode_name(m));
+        }
+        for(const auto &m : fmuModes){
             modesNames[m] = std::string(cam::dc_mode_name(m));
         }
     }
 
     ImGui::Text("Type:");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(150.f);
+    ImGui::SetNextItemWidth(200.f);
 
     int guiCurrentTypeSelection = static_cast<int>(config.typeDevice);
     if(ImGui::Combo("###settings_device_type", &guiCurrentTypeSelection, devicesTypes, IM_ARRAYSIZE(devicesTypes))){        
@@ -1403,7 +1406,7 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
 
     ImGui::Text("Device id:");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(150.f);
+    ImGui::SetNextItemWidth(200.f);
 
     if(devicesNames.size() != 0){
         if(ImGui::BeginCombo("###settings_device_id", devicesNames[config.idDevice].c_str())){
@@ -1444,10 +1447,24 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
             }
             ImGui::EndCombo();
         }
-    }else if(config.typeDevice == cam::DCType::FemtoMega){        
+    }else if(config.typeDevice == cam::DCType::FemtoMegaEthernet){        
         if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
-            for(const auto &m : fmModes){
+            for(const auto &m : fmeModes){
                 bool selected = m == config.mode;                
+                if (ImGui::Selectable(modesNames[m].c_str(), selected)){
+                    config.mode = m;
+                    update = true;
+                }
+                if(selected){
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+    }else if(config.typeDevice == cam::DCType::FemtoMegaUSB){
+        if(ImGui::BeginCombo("###settings_mode", currentModeName.c_str())){
+            for(const auto &m : fmuModes){
+                bool selected = m == config.mode;
                 if (ImGui::Selectable(modesNames[m].c_str(), selected)){
                     config.mode = m;
                     update = true;
@@ -1982,8 +1999,8 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
                     colors.powerlineFrequency = DCPowerlineFrequency::F60;
                 }
             }
-
-        }else if(type == DCType::FemtoBolt || type == DCType::FemtoMega){
+            
+        }else if(type == DCType::FemtoBolt || type == DCType::FemtoMegaEthernet || type == DCType::FemtoMegaUSB){
 
             if(colors.powerlineFrequency == DCPowerlineFrequency::Undefined){
                 guiSel = 0;

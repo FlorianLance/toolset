@@ -46,6 +46,8 @@ HEADERS += \
     # io            
     depth-camera/frame/dc_compressed_frame_buffer.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
+    depth-camera/impl/femto_mega_ethernet_device_impl.hpp \
+    depth-camera/impl/femto_mega_usb_device_impl.hpp \
     depth-camera/network/dc_server.hpp \
     depth-camera/settings/dc_capture_settings.hpp \
     depth-camera/settings/dc_client_device_settings.hpp \
@@ -198,7 +200,6 @@ HEADERS += \
     depth-camera/impl/azure_base_device.hpp \
     depth-camera/impl/azure_utility.hpp \
     depth-camera/impl/femto_bolt_device_impl.hpp \
-    depth-camera/impl/femto_mega_device_impl.hpp \
     depth-camera/impl/orbbec_base_device.hpp \
     # exvr
     exvr/ex_element.hpp \
@@ -315,6 +316,8 @@ SOURCES += \
     depth-camera/client/dc_client.cpp \
     depth-camera/frame/dc_compressed_frame_buffer.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
+    depth-camera/impl/femto_mega_ethernet_device_impl.cpp \
+    depth-camera/impl/femto_mega_usb_device_impl.cpp \
     depth-camera/network/dc_server.cpp \
     depth-camera/settings/dc_capture_settings.cpp \
     depth-camera/settings/dc_client_device_settings.cpp \
@@ -412,7 +415,6 @@ SOURCES += \
     depth-camera/impl/azure_kinect_device_impl.cpp \
     depth-camera/impl/azure_base_device.cpp \
     depth-camera/impl/femto_bolt_device_impl.cpp \
-    depth-camera/impl/femto_mega_device_impl.cpp \
     depth-camera/impl/orbbec_base_device.cpp \
     depth-camera/impl/recording_device_impl.cpp \
     # exvr

@@ -48,7 +48,7 @@
 // local
 #include "utility/logger.hpp"
 #include "azure_utility.hpp"
-#include "utility/paths.hpp"
+
 
 // debug
 #include "thirdparty/stb/stb_image_write.h"
@@ -81,13 +81,43 @@ using namespace tool::cam;
     }
 }
 
+struct OrbbecDeviceManager{
+
+    ob::Context context;
+
+    OrbbecDeviceManager(){
+        tool::LogGuard lg("[OrbbecDeviceManager::OrbbecDeviceManager]");
+        try{
+            context.setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+            context.enableNetDeviceEnumeration(true);
+            devicesList = context.queryDeviceList();
+            for(size_t idD = 0; idD < devicesList->deviceCount(); ++idD){
+                tool::Logger::message(std::format("Device [{}] with name [{}] found.\n", idD, devicesList->getDevice(idD)->getDeviceInfo()->name()));
+            }
+        }catch(const ob::Error &e) {
+            tool::Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+        }catch(const std::exception &e){
+            tool::Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+        }
+    }
+
+    ~OrbbecDeviceManager(){
+        tool::LogGuard lg("[OrbbecDeviceManager::~OrbbecDeviceManager]");
+    }
+
+    std::shared_ptr<ob::DeviceList> devicesList;
+};
+
 struct OrbbecBaseDevice::Impl{
+
+    static inline std::unique_ptr<OrbbecDeviceManager> devicesM = nullptr;
 
     // device
     DCType deviceType;
     std::string lastAddress;
+
     // static inline std::unique_ptr<ob::Context> context = nullptr;
-    static inline std::unique_ptr<ob::Context> context = nullptr;
+
     std::shared_ptr<ob::Device> device          = nullptr;
     std::vector<std::shared_ptr<ob::Device>> deviceList;
     std::shared_ptr<ob::SensorList> sensorList  = nullptr;
@@ -115,33 +145,33 @@ struct OrbbecBaseDevice::Impl{
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration;
 
-    auto init_context() -> void{
+    // auto init_context() -> void{
 
-        auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
+    //     auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
 
-        if(context == nullptr){
-        try{
-            context = std::make_unique<ob::Context>();
-            context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-        }catch(const ob::Error &e) {
-            Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
-        }catch(const std::exception &e){
-            Logger::error(std::format("Error: [{}]\n"sv, e.what()));
-        }
-        }
+    //     if(context == nullptr){
+    //         try{
+    //             context = std::make_unique<ob::Context>();
+    //             context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+    //         }catch(const ob::Error &e) {
+    //             Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+    //         }catch(const std::exception &e){
+    //             Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+    //         }
+    //     }
 
-        // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
-        //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
-        //         Logger::error(logMsg);
-        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
-        //         Logger::warning(logMsg);
-        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
-        //         Logger::message(logMsg);
-        //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
-        //         //Logger::log(logMsg);
-        //     }
-        // });
-    }
+    //     // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
+    //     //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
+    //     //         Logger::error(logMsg);
+    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
+    //     //         Logger::warning(logMsg);
+    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
+    //     //         Logger::message(logMsg);
+    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
+    //     //         //Logger::log(logMsg);
+    //     //     }
+    //     // });
+    // }
 };
 
 auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, bool value) -> void{
@@ -416,53 +446,51 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     return k4C;
 }
 
+
+
 OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>()){
 
-    i->deviceType = deviceType;
-    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);    
-    i->init_context();
+    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
+    if(i->devicesM == nullptr){
+        i->devicesM = std::make_unique<OrbbecDeviceManager>();
+    }
+    i->deviceType = deviceType;    
 }
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
     auto lg = LogGuard("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
-    Logger::log("Destroy context"sv);
-    i->context = nullptr;
 }
+
 
 auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::query_devices"sv);
 
-    try {
+    i->deviceList.clear();
 
-        i->context->enableNetDeviceEnumeration(ethernet);
-
-        auto devicesFound = i->context->queryDeviceList();
-
-        i->deviceList.clear();
-
-        for(std::uint32_t idDev = 0; idDev < devicesFound->deviceCount(); ++idDev){
-            auto dev = devicesFound->getDevice(idDev);
-
-            auto info = dev->getDeviceInfo();
-            if(info){
-                if(dev->getDeviceInfo()->name() == deviceTypeName){
-                    i->deviceList.push_back(std::move(dev));
-                }
-            }
+    for(size_t idD = 0; idD < i->devicesM->devicesList->deviceCount(); ++idD){
+        auto dev  = i->devicesM->devicesList->getDevice(idD);
+        if(!dev){
+            continue;
+        }
+        auto info = dev->getDeviceInfo();
+        if(!info){
+            continue;
         }
 
-    }catch(const ob::Error &e) {
-        Logger::error(std::format("[OrbbecBaseDevice::query_devices] Orbbec error [{}]\n"sv, e.getMessage()));
-        i->deviceList.clear();
-        return;
-    }catch(const std::exception &e){
-        Logger::error(std::format("[OrbbecBaseDevice::query_devices] Error [{}]\n"sv, e.what()));
-        i->deviceList.clear();
-        return;
-    }
+        std::string connectionT = info->connectionType();
+        bool connectionIsValid = false;
+        if(ethernet && connectionT.contains("Ethernet")){
+            connectionIsValid = true;
+        }else if(!ethernet && connectionT.contains("USB3")){
+            connectionIsValid = true;
+        }
 
-    Logger::message(std::format("[OrbbecDevice] [{}] devices found of type [{}].\n"sv, i->deviceList.size(), deviceTypeName));
+        if(info->name() == deviceTypeName && connectionIsValid){
+            Logger::message(std::format("DEVICE {} {}n", info->name(), connectionT));
+            i->deviceList.push_back(std::move(dev));
+        }
+    }
 }
 
 auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
@@ -471,8 +499,14 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
     Logger::message("### Open device ###\n"sv);
 
+
+
     Logger::message(std::format("Open device with id [{}]\n"sv, configS.idDevice));
-    if(i->deviceType != DCType::FemtoMega){
+    if(i->deviceType != DCType::FemtoMegaEthernet){
+
+
+        // i->devicesM->devicesList
+
         if(configS.idDevice >= i->deviceList.size()){
             Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
             return false;
@@ -481,7 +515,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
     try {
 
-        if(i->deviceType == DCType::FemtoMega){
+        if(i->deviceType == DCType::FemtoMegaEthernet){
 
             // auto newAdress = std::format("192.168.1.{}", configS.idDevice+2);
             auto newAdress = std::format("192.168.{}.2", configS.idDevice+1);
@@ -490,7 +524,8 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
                 Logger::message("NOT NULL");
             }
 
-            i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
+            // i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
+            i->device     = i->devicesM->context.createNetDevice(newAdress.c_str() , 8090);
             i->lastAddress = newAdress;
 
         }else{
@@ -501,7 +536,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         // Update the configuration items of the configuration file, and keep the original configuration for other items
         auto synchConfig = i->device->getMultiDeviceSyncConfig();
         Logger::message(std::format("CURRENT SYNC CONFIG BEFORE:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
-                                    (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
+            (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
 
         // // check if changes
         // // and if changes reboot device
@@ -882,6 +917,8 @@ auto OrbbecBaseDevice::close() -> void{
     Logger::message("Device closed\n");
 }
 
+
+
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::update_from_colors_settings"sv);
@@ -917,7 +954,8 @@ auto OrbbecBaseDevice::nb_devices() const noexcept -> size_t {
 
 auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
     if(is_opened()){
-        return i->device->getDeviceInfo()->name();
+        // return std::format("{} {}", i->device->getDeviceInfo()->name(), i->device->getDeviceInfo()->serialNumber());
+        return i->device->getDeviceInfo()->serialNumber();
     }
     return "unknow_device"s;
 }
@@ -1195,4 +1233,5 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
         mInfos.depth_width() * mInfos.depth_height()
     };
 }
+
 

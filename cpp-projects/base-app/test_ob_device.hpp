@@ -684,11 +684,11 @@ auto test_femto_mega() -> void{
     // config
     ds.configS.openDevice                      = true;
     ds.configS.startReading                    = true;
-    ds.configS.typeDevice                       = DCType::FemtoMega;
+    ds.configS.typeDevice                       = DCType::FemtoMegaEthernet;
     ds.configS.idDevice                         = 0;
     ds.configS.disableLED                       = false;
     ds.configS.synchMode                        = DCSynchronisationMode::Standalone;
-    ds.configS.mode                             = DCMode::FM_C1280x720_DI640x576_MJPG_F30;
+    ds.configS.mode                             = DCMode::FME_C1280x720_DI640x576_MJPG_F30;
     ds.configS.delayBetweenColorAndDepthUsec    = 0;
     ds.configS.synchronizeColorAndDepth         = true;
     // data

@@ -29,7 +29,8 @@
 // local
 #include "depth-camera/impl/azure_kinect_device_impl.hpp"
 #include "depth-camera/impl/femto_bolt_device_impl.hpp"
-#include "depth-camera/impl/femto_mega_device_impl.hpp"
+#include "depth-camera/impl/femto_mega_ethernet_device_impl.hpp"
+#include "depth-camera/impl/femto_mega_usb_device_impl.hpp"
 #include "depth-camera/impl/recording_device_impl.hpp"
 #include "utility/logger.hpp"
 
@@ -159,9 +160,12 @@ auto DCDevice::process() -> void{
             }else if(type == DCType::FemtoBolt){
                 auto lg = LogGuard("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
                 i->device = std::make_unique<FemtoBoltDeviceImpl>();
-            }else if(type == DCType::FemtoMega){
-                auto lg = LogGuard("DCDevice::DCDevice FemtoMegaDeviceImpl"sv);
-                i->device = std::make_unique<FemtoMegaDeviceImpl>();
+            }else if(type == DCType::FemtoMegaEthernet){
+                auto lg = LogGuard("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
+                i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
+            }else if(type == DCType::FemtoMegaUSB){
+                auto lg = LogGuard("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
+                i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
             }else if(type == DCType::Recording){
                 auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
                 i->device = std::make_unique<RecordingDeviceImpl>();
@@ -186,7 +190,7 @@ auto DCDevice::process() -> void{
             if(!i->device->is_opened()){
 
                 bool canOpenDevice = true;
-                if(i->deviceS.configS.typeDevice != DCType::FemtoMega){
+                if(i->deviceS.configS.typeDevice != DCType::FemtoMegaEthernet){
                     auto deviceCount = i->device->nb_devices();
                     if(deviceCount == 0){
                         canOpenDevice = false;
@@ -216,7 +220,7 @@ auto DCDevice::process() -> void{
                         }
 
                         // update device name
-                        update_device_name_signal(i->deviceS.configS.idDevice, std::format("Id:{} Num:{}", i->deviceS.configS.idDevice, i->device->device_name()));
+                        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
                     }
                 }
             }
@@ -276,7 +280,7 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
     bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
     if(deviceChanged && i->deviceInitialized){
-        update_device_name_signal(i->deviceS.configS.idDevice, std::format("Id:{} Cam: ..."sv, i->deviceS.configS.idDevice));
+        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [...]"sv, i->deviceS.configS.idDevice));
     }
 
     bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
