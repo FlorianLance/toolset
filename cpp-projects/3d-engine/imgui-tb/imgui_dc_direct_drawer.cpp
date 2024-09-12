@@ -39,10 +39,17 @@
 using namespace tool::graphics;
 
 auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
+
     auto lg = LogGuard("DCDirectDrawer::initialize");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
-    m_lastFrames.resize(nbGrabbers);
-    std::fill(m_lastFrames.begin(), m_lastFrames.end(), nullptr);
+
+    if(nbGrabbers > m_lastFrames.size()){
+        while(m_lastFrames.size() != nbGrabbers){
+            m_lastFrames.push_back(nullptr);
+        }
+    }else if(nbGrabbers < m_lastFrames.size()){
+        m_lastFrames.resize(nbGrabbers);
+    }
 
 }
 

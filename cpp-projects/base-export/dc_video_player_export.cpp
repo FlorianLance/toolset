@@ -43,6 +43,9 @@ void delete__dc_video_player(DCVideoPlayer *dcPlayer){
 int load_from_file__dc_video_player(DCVideoPlayer *dcPlayer, const char* pathDcVideoFile){
     return dcPlayer->load_from_file(pathDcVideoFile) ? 1 : 0;
 }
+void set_video_from_recorder__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVideoRecorderExport *dcRecorderExport){
+    dcPlayer->set_video(*dcRecorderExport->recorder.video());
+}
 
 int is_started__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer){
     return dcPlayer->is_started() ? 1 : 0;

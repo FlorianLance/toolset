@@ -41,7 +41,7 @@ struct OrbbecBaseDevice{
     ~OrbbecBaseDevice();
 
     // actions
-    auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
+    // auto query_devices(std::string_view deviceTypeName, bool ethernet) -> void;
     auto open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool;
     auto close() -> void;
 

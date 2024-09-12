@@ -1316,11 +1316,9 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
     }
 }
 
-
 auto DCDeviceImpl::set_data_settings(const DCDeviceDataSettings &dataS) -> void {
     auto lg = LogGuard("DCDeviceImpl::set_data_settings"sv);
     settings.data = dataS;
-    // update_from_data_settings();
 }
 
 auto DCDeviceImpl::set_filters_settings(const DCFiltersSettings &filtersS) -> void{
@@ -1331,7 +1329,6 @@ auto DCDeviceImpl::set_filters_settings(const DCFiltersSettings &filtersS) -> vo
 auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
     auto lg = LogGuard("DCDeviceImpl::set_color_settings"sv);
     settings.color = colorS;
-    // update_from_colors_settings();
 }
 
 auto DCDeviceImpl::set_delay_settings(const DCDelaySettings &delayS) -> void{

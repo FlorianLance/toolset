@@ -69,9 +69,9 @@ auto RecordingDeviceImpl::is_opened() const noexcept -> bool{
     return false;
 }
 
-auto RecordingDeviceImpl::nb_devices() const noexcept -> uint32_t{
-    return 1;
-}
+// auto RecordingDeviceImpl::nb_devices() const noexcept -> uint32_t{
+//     return 1;
+// }
 
 auto RecordingDeviceImpl::device_name() const noexcept -> std::string{
     return "";

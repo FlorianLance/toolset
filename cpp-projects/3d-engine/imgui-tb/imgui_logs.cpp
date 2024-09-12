@@ -40,9 +40,9 @@ void ImguiLogs::clear(){
     lineOffsets.push_back(0);
 }
 
-void ImguiLogs::draw(const char* name){
+void ImguiLogs::draw(const char* name, const ImVec2& size_arg){
 
-    ImGui::BeginChild(name, ImVec2(0, 0), false);
+    ImGui::BeginChild(name, size_arg, false);
 
     // Options menu
     if (ImGui::BeginPopup("Options")){

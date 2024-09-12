@@ -54,6 +54,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 
 using namespace  std::string_literals;
+using namespace tool;
 using namespace tool::cam;
 
 [[maybe_unused]] [[nodiscard]] static auto convert_to_ob_image_format(DCImageFormat iFormat) noexcept -> OBFormat{
@@ -91,13 +92,50 @@ struct OrbbecDeviceManager{
             context.setLoggerSeverity(OB_LOG_SEVERITY_WARN);
             context.enableNetDeviceEnumeration(true);
             devicesList = context.queryDeviceList();
-            for(size_t idD = 0; idD < devicesList->deviceCount(); ++idD){
-                tool::Logger::message(std::format("Device [{}] with name [{}] found.\n", idD, devicesList->getDevice(idD)->getDeviceInfo()->name()));
-            }
+            validity.resize(devicesList->deviceCount());
+            std::fill(validity.begin(), validity.end(), false);
+
         }catch(const ob::Error &e) {
-            tool::Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+            tool::Logger::error(std::format("Orbbec query device list error: [{}]\n"sv, e.getMessage()));
         }catch(const std::exception &e){
             tool::Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+        }
+
+        tool::Logger::message(std::format("Devices founds: [{}]\n", devicesList->deviceCount()));
+        for(size_t idD = 0; idD < devicesList->deviceCount(); ++idD){
+            try{
+                auto dev  = devicesList->getDevice(static_cast<int>(idD));
+                auto info = dev->getDeviceInfo();
+
+                std::string deviceName = info->name();
+                std::string connectionT = info->connectionType();
+                validity[idD] = true;
+
+                if(deviceName.contains("Femto Bolt")){
+                    femtoBoltDevices.push_back(dev);
+                    Logger::message(std::format("[{}] Femto Bolt:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n", idD, info->serialNumber(), info->pid(), connectionT));
+                    if(!connectionT.contains("USB3")){
+                        Logger::warning("Connection is not USB3, bandwitch will be too low!\n");
+                    }
+                }else if(deviceName.contains("Femto Mega")){
+                    if(connectionT.contains("Ethernet")){
+                        femtoMegaEthernetDevices.push_back(dev);
+                        Logger::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n\tIP Address: [{}]\n",
+                            idD, info->serialNumber(), info->pid(), connectionT, info->ipAddress()));
+
+                    }else if(connectionT.contains("USB")){
+                        femtoMegaUSBDevices.push_back(dev);
+                        Logger::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}]\n",
+                            idD, info->serialNumber(), info->pid(), connectionT));
+                        if(!connectionT.contains("USB3")){
+                            Logger::warning("Connection is not USB3, bandwitch will be too low!\n");
+                        }
+                    }
+                }
+
+            }catch(const ob::Error &) {
+                Logger::message(std::format("[{}] Unavailable device, may be used in another program\n",idD));
+            }
         }
     }
 
@@ -105,7 +143,15 @@ struct OrbbecDeviceManager{
         tool::LogGuard lg("[OrbbecDeviceManager::~OrbbecDeviceManager]");
     }
 
-    std::shared_ptr<ob::DeviceList> devicesList;
+    std::vector<std::shared_ptr<ob::Device>> femtoBoltDevices;
+    std::vector<std::shared_ptr<ob::Device>> femtoMegaEthernetDevices;
+    std::vector<std::shared_ptr<ob::Device>> femtoMegaUSBDevices;
+
+private:
+
+    std::shared_ptr<ob::DeviceList> devicesList = nullptr;
+    std::vector<bool> validity;
+
 };
 
 struct OrbbecBaseDevice::Impl{
@@ -114,12 +160,8 @@ struct OrbbecBaseDevice::Impl{
 
     // device
     DCType deviceType;
-    std::string lastAddress;
-
-    // static inline std::unique_ptr<ob::Context> context = nullptr;
 
     std::shared_ptr<ob::Device> device          = nullptr;
-    std::vector<std::shared_ptr<ob::Device>> deviceList;
     std::shared_ptr<ob::SensorList> sensorList  = nullptr;
     std::unique_ptr<ob::Pipeline> pipe          = nullptr;
 
@@ -138,40 +180,10 @@ struct OrbbecBaseDevice::Impl{
     std::vector<std::int8_t> depthSizedColorData;
     std::vector<std::int8_t> cloudData;
 
-    // std::vector<ColorRGBA8> resizedColorImageFromDepthTransformation;
-
     auto set_property_value(OBPropertyID pId, bool value) -> void;
     auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration;
-
-    // auto init_context() -> void{
-
-    //     auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
-
-    //     if(context == nullptr){
-    //         try{
-    //             context = std::make_unique<ob::Context>();
-    //             context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-    //         }catch(const ob::Error &e) {
-    //             Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
-    //         }catch(const std::exception &e){
-    //             Logger::error(std::format("Error: [{}]\n"sv, e.what()));
-    //         }
-    //     }
-
-    //     // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
-    //     //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
-    //     //         Logger::error(logMsg);
-    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
-    //     //         Logger::warning(logMsg);
-    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
-    //     //         Logger::message(logMsg);
-    //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
-    //     //         //Logger::log(logMsg);
-    //     //     }
-    //     // });
-    // }
 };
 
 auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, bool value) -> void{
@@ -451,7 +463,7 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
 OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>()){
 
     auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
-    if(i->devicesM == nullptr){
+    if(i->devicesM == nullptr){         
         i->devicesM = std::make_unique<OrbbecDeviceManager>();
     }
     i->deviceType = deviceType;    
@@ -462,75 +474,82 @@ OrbbecBaseDevice::~OrbbecBaseDevice(){
 }
 
 
-auto OrbbecBaseDevice::query_devices(std::string_view deviceTypeName, bool ethernet) -> void{
-
-    auto lg = LogGuard("OrbbecBaseDevice::query_devices"sv);
-
-    i->deviceList.clear();
-
-    for(size_t idD = 0; idD < i->devicesM->devicesList->deviceCount(); ++idD){
-        auto dev  = i->devicesM->devicesList->getDevice(idD);
-        if(!dev){
-            continue;
-        }
-        auto info = dev->getDeviceInfo();
-        if(!info){
-            continue;
-        }
-
-        std::string connectionT = info->connectionType();
-        bool connectionIsValid = false;
-        if(ethernet && connectionT.contains("Ethernet")){
-            connectionIsValid = true;
-        }else if(!ethernet && connectionT.contains("USB3")){
-            connectionIsValid = true;
-        }
-
-        if(info->name() == deviceTypeName && connectionIsValid){
-            Logger::message(std::format("DEVICE {} {}n", info->name(), connectionT));
-            i->deviceList.push_back(std::move(dev));
-        }
-    }
-}
-
 auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
 
     auto lg = LogGuard("OrbbecBaseDevice::open"sv);
 
     Logger::message("### Open device ###\n"sv);
 
-
-
-    Logger::message(std::format("Open device with id [{}]\n"sv, configS.idDevice));
-    if(i->deviceType != DCType::FemtoMegaEthernet){
-
-
-        // i->devicesM->devicesList
-
-        if(configS.idDevice >= i->deviceList.size()){
-            Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
-            return false;
-        }
-    }
+    i->device = nullptr;
 
     try {
 
-        if(i->deviceType == DCType::FemtoMegaEthernet){
+        if(i->deviceType == DCType::FemtoBolt){
 
-            // auto newAdress = std::format("192.168.1.{}", configS.idDevice+2);
-            auto newAdress = std::format("192.168.{}.2", configS.idDevice+1);
-            Logger::message(std::format("Retrieve from ip adress: {}.\n",newAdress));
-            if(i->device != nullptr){
-                Logger::message("NOT NULL");
+            if(!configS.useSerialNumber){
+                if(configS.idDevice >= i->devicesM->femtoBoltDevices.size()){
+                    Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
+                    return false;
+                }
+                Logger::message("Retrieve from devices list.\n");
+                i->device     = i->devicesM->femtoBoltDevices[configS.idDevice];
+            }else{
+                for(auto &dev : i->devicesM->femtoBoltDevices){
+                    try{
+                        if(configS.serialNumber == dev->getDeviceInfo()->serialNumber()){
+                            i->device = dev;
+                            break;
+                        }
+                    }catch(const ob::Error &) {}
+                }
             }
 
-            // i->device     = i->context->createNetDevice(newAdress.c_str() , 8090);
-            i->device     = i->devicesM->context.createNetDevice(newAdress.c_str() , 8090);
-            i->lastAddress = newAdress;
+        }else if(i->deviceType == DCType::FemtoMegaUSB){
 
-        }else{
-            Logger::message("Retrieve from devices list.\n");
-            i->device     = i->deviceList[configS.idDevice];
+            if(!configS.useSerialNumber){
+                if(configS.idDevice >= i->devicesM->femtoMegaUSBDevices.size()){
+                    Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
+                    return false;
+                }
+
+                Logger::message("Retrieve from devices list.\n");
+                i->device     = i->devicesM->femtoMegaUSBDevices[configS.idDevice];
+            }else{
+
+                for(auto &dev : i->devicesM->femtoMegaUSBDevices){
+                    try{
+                        if(configS.serialNumber == dev->getDeviceInfo()->serialNumber()){
+                            i->device = dev;
+                            break;
+                        }
+                    }catch(const ob::Error &) {}
+                }
+            }
+
+        }else if(i->deviceType == DCType::FemtoMegaEthernet){
+
+            auto wantedAddress = std::format("{}.{}.{}.{}", configS.ipv4Address.x(), configS.ipv4Address.y(), configS.ipv4Address.z(), configS.ipv4Address.w());
+
+            bool found = false;
+            for(auto &dev : i->devicesM->femtoMegaEthernetDevices){
+                Logger::message(std::format("compare [{}] [{}]\n", dev->getDeviceInfo()->ipAddress(), wantedAddress));
+                if(dev->getDeviceInfo()->ipAddress() == wantedAddress){
+                    i->device = dev;
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found){
+                Logger::message("Device not avaialble from list, create new net device.\n");
+                Logger::message(std::format("Open device from ip address: [{}]\n", wantedAddress));
+                i->device = i->devicesM->context.createNetDevice(wantedAddress.c_str() , 8090);
+            }
+        }
+
+        if(i->device == nullptr){
+            Logger::error("Invalid device.\n");
+            return false;
         }
 
         // Update the configuration items of the configuration file, and keep the original configuration for other items
@@ -891,7 +910,7 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 
     Logger::message("### Pipeline started ###.\n");
 
-    Logger::message("### Update colro settings ###.\n");
+    Logger::message("### Update colors settings ###.\n");
     update_from_colors_settings(colorS);
 
     return true;
@@ -949,7 +968,14 @@ auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
 }
 
 auto OrbbecBaseDevice::nb_devices() const noexcept -> size_t {
-    return i->deviceList.size();
+    if(i->deviceType == DCType::FemtoBolt){
+        return i->devicesM->femtoBoltDevices.size();
+    }else if(i->deviceType == DCType::FemtoMegaUSB){
+        return i->devicesM->femtoMegaUSBDevices.size();
+    }else if(i->deviceType == DCType::FemtoMegaEthernet){
+        return 0;
+    }
+    return 0;
 }
 
 auto OrbbecBaseDevice::device_name() const noexcept -> std::string {
@@ -1235,3 +1261,31 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
 }
 
 
+
+// auto init_context() -> void{
+
+//     auto lg = LogGuard("[OrbbecBaseDevice::Impl::init_context]");
+
+//     if(context == nullptr){
+//         try{
+//             context = std::make_unique<ob::Context>();
+//             context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+//         }catch(const ob::Error &e) {
+//             Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+//         }catch(const std::exception &e){
+//             Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+//         }
+//     }
+
+//     // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
+//     //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
+//     //         Logger::error(logMsg);
+//     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
+//     //         Logger::warning(logMsg);
+//     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
+//     //         Logger::message(logMsg);
+//     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
+//     //         //Logger::log(logMsg);
+//     //     }
+//     // });
+// }

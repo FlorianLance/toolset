@@ -80,6 +80,7 @@ public:
     // settings
     SSS<const cam::DCDeviceSettings&> update_device_settings_signal;
     SSS<const cam::DCFiltersSettings&> update_filters_signal;
+    SSS<const cam::DCFiltersSettings&> update_filters_ui_only_signal;
     SSS<const cam::DCColorSettings&> update_color_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     SSS<cam::DCDelaySettings> update_delay_settings_signal;

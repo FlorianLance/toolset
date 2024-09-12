@@ -33,8 +33,8 @@
 // local
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "imgui/extra/ImGuiFileDialog.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
-#include "opengl/texture/texture_2d_tbo.hpp"
 
 using namespace tool::graphics;
 using namespace tool::cam;
@@ -1404,26 +1404,73 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
         }
     }
 
-    ImGui::Text("Device id:");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.f);
+    if(config.typeDevice != cam::DCType::FemtoMegaEthernet){
 
-    if(devicesNames.size() != 0){
-        if(ImGui::BeginCombo("###settings_device_id", devicesNames[config.idDevice].c_str())){
-            for(size_t ii = 0; ii < devicesNames.size(); ++ii){
-                bool selected = ii == config.idDevice;
-                if (ImGui::Selectable(devicesNames[ii].c_str(),selected)){
-                    config.idDevice = static_cast<std::uint32_t>(ii);
-                    update = true;
-                }
-                if(selected){
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
+        if(ImGui::Checkbox("Use serial number", &config.useSerialNumber)){
+            update = true;
         }
+
+        if(!config.useSerialNumber){
+
+            ImGui::Text("Device id:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(230.f);
+
+            if(devicesNames.size() != 0){
+                if(ImGui::BeginCombo("###settings_device_id", devicesNames[config.idDevice].c_str())){
+                    for(size_t ii = 0; ii < devicesNames.size(); ++ii){
+                        bool selected = ii == config.idDevice;
+                        if (ImGui::Selectable(devicesNames[ii].c_str(),selected)){
+                            config.idDevice = static_cast<std::uint32_t>(ii);
+                            update = true;
+                        }
+                        if(selected){
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+            }else{
+                ImGui::Text("No device found.");
+            }
+        }else{
+            ImGui::Text("Device serial number:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150.f);
+            if(ImGui::InputText("###settings_serial_number", &config.serialNumber)){
+                update = true;
+            }
+        }
+
     }else{
-        ImGui::Text("No device found.");
+        ImGui::Text("Device IPV4 address:");
+        int ipv4p = config.ipv4Address.x();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::InputInt("###ipv4_1", &ipv4p, 1, 1)){
+            config.ipv4Address.x() = static_cast<std::uint8_t>(ipv4p);
+            update = true;
+        }
+        ImGui::SameLine();
+        ipv4p = config.ipv4Address.y();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::InputInt("###ipv4_2", &ipv4p, 1, 1)){
+            config.ipv4Address.y() = static_cast<std::uint8_t>(ipv4p);
+            update = true;
+        }
+        ImGui::SameLine();
+        ipv4p = config.ipv4Address.z();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::InputInt("###ipv4_3", &ipv4p, 1, 1)){
+            config.ipv4Address.z() = static_cast<std::uint8_t>(ipv4p);
+            update = true;
+        }
+        ImGui::SameLine();
+        ipv4p = config.ipv4Address.w();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::InputInt("###ipv4_4", &ipv4p, 1, 1)){
+            config.ipv4Address.w() = static_cast<std::uint8_t>(ipv4p);
+            update = true;
+        }
     }
 
 
@@ -1539,40 +1586,40 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
         }
     }
 
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Text("Body tracking: (SOON)");
-    ImGui::Indent();
-    ImGui::BeginDisabled(true);{
+    // ImGui::Spacing();
+    // ImGui::Separator();
+    // ImGui::Text("Body tracking: (SOON)");
+    // ImGui::Indent();
+    // ImGui::BeginDisabled(true);{
 
-        if(ImGui::Checkbox("Enable (perfomance costly)", &config.btEnabled)){
-            update = true;
-        }
+    //     if(ImGui::Checkbox("Enable (perfomance costly)", &config.btEnabled)){
+    //         update = true;
+    //     }
 
-        ImGui::Text("Processing mode:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(150.f);
-        int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
-        if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
-            config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
-            update = true;
-        }
+    //     ImGui::Text("Processing mode:");
+    //     ImGui::SameLine();
+    //     ImGui::SetNextItemWidth(150.f);
+    //     int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
+    //     if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
+    //         config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
+    //         update = true;
+    //     }
 
-        // add gpu id
-        // ...
+    //     // add gpu id
+    //     // ...
 
-        ImGui::Text("Orientation:");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(150.f);
-        int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
-        if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
-            config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
-            update = true;
-        }
+    //     ImGui::Text("Orientation:");
+    //     ImGui::SameLine();
+    //     ImGui::SetNextItemWidth(150.f);
+    //     int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
+    //     if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
+    //         config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
+    //         update = true;
+    //     }
 
-    }ImGui::EndDisabled();
+    // }ImGui::EndDisabled();
 
-    ImGui::Unindent();
+    // ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -1633,25 +1680,25 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("infra###cap_infra", &data.server.capture.infra)){
             update = true;
         }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("audio###cap_audio", &data.server.capture.audio)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("imu###cap_imu", &data.server.capture.imu)){
-            update = true;
-        }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("audio###cap_audio", &data.server.capture.audio)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("imu###cap_imu", &data.server.capture.imu)){
+        //     update = true;
+        // }
 
-        if(ImGui::Checkbox("body tracking###cap_body_tracking", &data.server.capture.bodyTracking)){
-            update = true;
-        }
-        ImGui::SameLine();
-        ImGui::Text("| temporal smoothing: ");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(75.f);
-        if(ImGui::SliderFloat("###cap_temp_smoothing", &data.server.capture.btTemporalSmoothing, 0.f, 1.f)){
-            update = true;
-        }
+        // if(ImGui::Checkbox("body tracking###cap_body_tracking", &data.server.capture.bodyTracking)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // ImGui::Text("| temporal smoothing: ");
+        // ImGui::SameLine();
+        // ImGui::SetNextItemWidth(75.f);
+        // if(ImGui::SliderFloat("###cap_temp_smoothing", &data.server.capture.btTemporalSmoothing, 0.f, 1.f)){
+        //     update = true;
+        // }
     }
     ImGui::Unindent();
 
@@ -1689,32 +1736,32 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("infra###com_infra", &data.server.compression.addInfra)){
             update = true;
         }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###com_bodies_id_map", &data.server.compression.addBodyIdMap)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("cloud###com_cloud", &data.server.compression.addCloud)){
-            update = true;
-        }
-        cloud_color_mode_combo("Cloud color mode"sv, "###com_cloud_color_mode", data.server.compression.cloudColorMode, update);
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("bodies id map###com_bodies_id_map", &data.server.compression.addBodyIdMap)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("cloud###com_cloud", &data.server.compression.addCloud)){
+        //     update = true;
+        // }
+        // cloud_color_mode_combo("Cloud color mode"sv, "###com_cloud_color_mode", data.server.compression.cloudColorMode, update);
 
-        if(ImGui::Checkbox("body tracking###com_body_tracking", &data.server.compression.addBodyTracking)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("audio###com_audio", &data.server.compression.addAudio)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("imu###com_imu", &data.server.compression.addImu)){
-            update = true;
-        }
+        // if(ImGui::Checkbox("body tracking###com_body_tracking", &data.server.compression.addBodyTracking)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("audio###com_audio", &data.server.compression.addAudio)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("imu###com_imu", &data.server.compression.addImu)){
+        //     update = true;
+        // }
     }
     ImGui::Unindent();
     ImGui::Spacing();
 
-    if(m_isManager){
+    if(m_isClient){
         ImGui::Text("Frame generation (client):");
     }else{
         ImGui::Text("Frame generation:");
@@ -1741,21 +1788,21 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         }
         cloud_color_mode_combo("Cloud color mode"sv, "###gen_client_cloud_color_mode", data.server.generation.cloudColorMode, update);
 
-        if(m_isManager){
-            cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_client_cloud_gen_mode", data.server.generation.cloudGenMode, update);
-        }
+        // if(m_isClient){
+        //     cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_client_cloud_gen_mode", data.server.generation.cloudGenMode, update);
+        // }
 
-        if(ImGui::Checkbox("body tracking###gen_client_body_tracking", &data.server.generation.bodyTracking)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("imu###gen_client_imu", &data.server.generation.imu)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("audio###gen_client_audio", &data.server.generation.audio)){
-            update = true;
-        }
+        // if(ImGui::Checkbox("body tracking###gen_client_body_tracking", &data.server.generation.bodyTracking)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("imu###gen_client_imu", &data.server.generation.imu)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("audio###gen_client_audio", &data.server.generation.audio)){
+        //     update = true;
+        // }
 
         ImGui::Unindent();
 
@@ -1776,16 +1823,16 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("infra###gen_client_infra_image", &data.server.generation.infraImage)){
             update = true;
         }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###gen_client_bodies_id_map_image", &data.server.generation.bodyIdMapImage)){
-            update = true;
-        }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("bodies id map###gen_client_bodies_id_map_image", &data.server.generation.bodyIdMapImage)){
+        //     update = true;
+        // }
         ImGui::Unindent();
     }
     ImGui::Unindent();
 
 
-    if(!m_isManager){
+    if(!m_isClient){
         return update;
     }
 
@@ -1810,20 +1857,19 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
             update = true;
         }
         cloud_color_mode_combo("Cloud color mode"sv, "###gen_server_cloud_color_mode", data.clientGeneration.cloudColorMode, update);
-        cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_server_cloud_gen_mode", data.clientGeneration.cloudGenMode, update);
+        // cloud_generation_mode_combo("Cloud generation mode"sv, "###gen_server_cloud_gen_mode", data.clientGeneration.cloudGenMode, update);
         
-        
-        if(ImGui::Checkbox("body tracking###gen_server_gen_body_tracking", &data.clientGeneration.bodyTracking)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("imu###gen_server_gen_imu", &data.clientGeneration.imu)){
-            update = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("audio###gen_server_gen_audio", &data.clientGeneration.audio)){
-            update = true;
-        }
+        // if(ImGui::Checkbox("body tracking###gen_server_gen_body_tracking", &data.clientGeneration.bodyTracking)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("imu###gen_server_gen_imu", &data.clientGeneration.imu)){
+        //     update = true;
+        // }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("audio###gen_server_gen_audio", &data.clientGeneration.audio)){
+        //     update = true;
+        // }
 
         ImGui::Unindent();
 
@@ -1844,10 +1890,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("infra###gen_server_gen_infra_image", &data.clientGeneration.infraImage)){
             update = true;
         }
-        ImGui::SameLine();
-        if(ImGui::Checkbox("bodies id map###gen_server_gen_bodies_id_map_image", &data.clientGeneration.bodyIdMapImage)){
-            update = true;
-        }
+        // ImGui::SameLine();
+        // if(ImGui::Checkbox("bodies id map###gen_server_gen_bodies_id_map_image", &data.clientGeneration.bodyIdMapImage)){
+        //     update = true;
+        // }
         ImGui::Unindent();
     }
     ImGui::Unindent();
@@ -1896,8 +1942,6 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
         }
         ImGui::Spacing();
     }
-    ImGui::EndDisabled();
-
     if(is_available(CST::Gain, type)){
         value = colors.gain;
         if(ImGuiUiDrawer::draw_drag_int_with_buttons("Gain", "color_gain", &value, get_imgui_int_scale(CST::Gain, type), ds)){
@@ -1906,6 +1950,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
         }
         ImGui::Spacing();
     }
+    ImGui::EndDisabled();
 
     if(is_available(CST::Brightness, type)){
         value = colors.brightness;
@@ -1952,7 +1997,7 @@ auto DCUIDrawer::draw_dc_colors_settings_tab_item(const std::string &tabItemName
     ImGui::BeginDisabled(colors.autoWhiteBalance);
     if(is_available(CST::White_balance, type)){
         value = colors.whiteBalance;
-        if(ImGuiUiDrawer::draw_drag_int_with_buttons("White balance", "color_white_balance", &value, get_imgui_int_scale(CST::White_balance, type), ds)){
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Color temperature (K)", "color_white_balance", &value, get_imgui_int_scale(CST::White_balance, type), ds)){
             colors.whiteBalance = static_cast<std::uint16_t>(value);
             update = true;
         }

@@ -321,6 +321,11 @@ auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMModel *model) -> void {
     ImGui::SetNextItemWidth(80.f);
     if(ImGui::Combo("###settings_synch_mode_combo", &guiDevCoType, devicesConnectionTypes, IM_ARRAYSIZE(devicesConnectionTypes))){}
 
+    ImGui::SameLine();
+    if(ImGui::Button("Remove all")){
+        DCMSignals::get()->remove_all_devices_signal();
+    }
+
     for(const auto &cDeviceS : model->client.settings.devicesS){
         ImGuiUiDrawer::text_colored(to_imvec4(cDeviceS.connected ? model->uiSettings.connectedSelectedC : model->uiSettings.selectedC), cDeviceS.name);
         // if((cDeviceS.id % 8) != 0 || cDeviceS.id == 0){
@@ -328,6 +333,7 @@ auto DCMLeftPanelChildDrawer::draw_grabbers_ui(DCMModel *model) -> void {
         // }
     }
     ImGui::Text("");
+
 
     int nbConnected = 0;
     for(const auto &cDeviceS : model->client.settings.devicesS){

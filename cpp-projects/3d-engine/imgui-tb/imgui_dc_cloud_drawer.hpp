@@ -83,10 +83,5 @@ struct DCCloudDrawer{
     auto init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool;
 
 
-    // tests
-    // gl::LinesDrawer2 normalsD;
-    // Buffer<GLuint> normalsIndices;
-    // Buffer<geo::Pt3f> normalsP;
-    // Buffer<geo::Pt3f> normalsC;
 };
 }

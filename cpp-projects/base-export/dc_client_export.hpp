@@ -53,31 +53,11 @@ struct DCClientExport{
     DCClientExport();
     ~DCClientExport();
 
-    auto dll_log_message(const std::string &message) -> void{
-        if(logMessageCBP != nullptr){
-            (*logMessageCBP)(message.c_str(),0);
-        }else{
-            tool::Logger::message(message);
-        }
-    }
-    auto dll_log_warning(const std::string &message) -> void{
-        if(logMessageCBP != nullptr){
-            (*logMessageCBP)(message.c_str(),1);
-        }else{
-            tool::Logger::warning(message);
-        }
-    }
-    auto dll_log_error(const std::string &message) -> void{
-        if(logMessageCBP != nullptr){
-            (*logMessageCBP)(message.c_str(),2);
-        }else{
-            tool::Logger::error(message);
-        }
-    }
+    auto dll_log_message(const std::string &message) -> void;
+    auto dll_log_warning(const std::string &message) -> void;
+    auto dll_log_error(const std::string &message) -> void;
 
-    auto init_callbacks(
-        LogMessageCB logCB,
-        NewFeedbackCB newFeedbackCB) -> void;
+    auto init_callbacks(LogMessageCB logCB, NewFeedbackCB newFeedbackCB) -> void;
     auto initialize(const std::string &clientSettingsFilePath, bool startThreads) -> bool;
 
     // update functions
@@ -112,9 +92,6 @@ struct DCClientExport{
     auto copy_current_frame_vertices(size_t idD, std::span<tool::cam::DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
     auto copy_current_frame_vertices(size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform) -> size_t;
 
-private:
-
-    auto clean() -> void;
 };
 }
 

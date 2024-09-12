@@ -33,7 +33,7 @@ namespace tool::graphics {
 
 struct DCDirectDrawer : public DCCloudsSceneDrawer{
 
-    auto initialize(size_t nbGrabbers) -> void;
+    auto initialize(size_t nbGrabbers) -> void override;
     auto update() -> void;
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;

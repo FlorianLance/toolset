@@ -44,9 +44,8 @@ using namespace tool::gl;
 using namespace tool::graphics;
 
 DCMGlWindow::DCMGlWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) :
-    BaseSfmlGlWindow(title, screen, context) {
-
-    DCUIDrawer::set_manager_mode(true);
+    BaseSfmlGlWindow(title, screen, context) {    
+    DCUIDrawer::set_client_mode(true);
 }
 
 auto DCMGlWindow::init_shaders() -> bool{

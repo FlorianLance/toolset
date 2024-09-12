@@ -45,11 +45,10 @@ ImguiFboUiDrawer::ImguiFboUiDrawer() : m_camera(&m_screen, {0,0,0}, {0,0,1}){
 }
 
 auto ImguiFboUiDrawer::initialize() -> void{
-    if(!m_initialized){
-        m_fbo.clean();
-        m_fbo.initialize();
-    }
-    m_initialized = true;
+    m_fbo.clean();
+    m_fbo.initialize();
+    resize({1600,1200});
+    initialized = true;
 }
 
 auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{

@@ -117,6 +117,7 @@ auto DCMController::set_connections() -> void{
     // # actions
     s->add_device_signal.connect(                           &DCMModel::add_device,                              model.get());
     s->remove_last_device_signal.connect(                   &DCMModel::remove_last_device,                      model.get());
+    s->remove_all_devices_signal.connect(                   &DCMModel::remove_all_devices,                      model.get());
     // ## model
     s->process_settings_action_signal.connect(              &DCMModel::process_settings_action,                 model.get());
     s->ask_calibration_signal.connect(                      &DCMModel::ask_calibration,                         model.get());

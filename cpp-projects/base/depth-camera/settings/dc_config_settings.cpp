@@ -49,6 +49,14 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
     // device
     typeDevice                    = static_cast<DCType>(read_value<int>(json, unreadCount, "type_device"sv));
     idDevice                      = read_value<std::uint32_t>(json, unreadCount, "id_device"sv);
+    useSerialNumber               = read_value<bool>(json, unreadCount, "use_serial_number"sv);
+    serialNumber                  = read_value<std::string>(json, unreadCount, "serial_number_device"sv);
+    ipv4Address                   = {
+        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_1"sv),
+        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_2"sv),
+        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_3"sv),
+        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_4"sv)
+    };
     mode                          = static_cast<DCMode>(read_value<int>(json, unreadCount, "mode"sv));
 
     // synch
@@ -82,7 +90,13 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
     add_value(json, "start_reading"sv,                          startReading);
     // device
     add_value(json, "type_device"sv,                            static_cast<int>(typeDevice));
+    add_value(json, "use_serial_number"sv,                      useSerialNumber);
     add_value(json, "id_device"sv,                              idDevice);
+    add_value(json, "serial_number_device"sv,                   serialNumber);
+    add_value(json, "ipv4_address_1"sv,                         ipv4Address.x());
+    add_value(json, "ipv4_address_2"sv,                         ipv4Address.y());
+    add_value(json, "ipv4_address_3"sv,                         ipv4Address.z());
+    add_value(json, "ipv4_address_4"sv,                         ipv4Address.w());
     add_value(json, "mode"sv,                                   static_cast<int>(mode));
     // synch
     add_value(json, "synchronize_color_and_depth"sv,            synchronizeColorAndDepth);

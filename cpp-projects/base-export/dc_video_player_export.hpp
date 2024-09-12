@@ -27,14 +27,17 @@
 #pragma once
 
 // base
-#include "utility/export.hpp"
 #include "depth-camera/dc_video_player.hpp"
+
+// local
+#include "dc_video_recorder_export.hpp"
 
 extern "C"{
 
     DECL_EXPORT tool::cam::DCVideoPlayer* create__dc_video_player();
     DECL_EXPORT void delete__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
     DECL_EXPORT int load_from_file__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, const char* pathDcVideoFile);
+    DECL_EXPORT void set_video_from_recorder__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVideoRecorderExport *dcRecorderExport);
 
     DECL_EXPORT float duration_ms__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
     DECL_EXPORT float start_time_ms__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);

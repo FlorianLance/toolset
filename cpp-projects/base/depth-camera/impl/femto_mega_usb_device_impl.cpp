@@ -38,7 +38,7 @@ using namespace tool::cam;
 FemtoMegaUSBDeviceImpl::FemtoMegaUSBDeviceImpl(){
     auto lg = LogGuard("FemtoMegaUSBDeviceImpl::FemtoMegaUSBDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMegaUSB);
-    orbbecD->query_devices("Femto Mega"sv, false);
+    // orbbecD->query_devices("Femto Mega"sv, false);
 }
 
 auto FemtoMegaUSBDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
@@ -68,9 +68,9 @@ auto FemtoMegaUSBDeviceImpl::is_opened() const noexcept -> bool{
     return orbbecD->is_opened();
 }
 
-auto FemtoMegaUSBDeviceImpl::nb_devices() const noexcept -> uint32_t{
-    return static_cast<std::uint32_t>(orbbecD->nb_devices());
-}
+// auto FemtoMegaUSBDeviceImpl::nb_devices() const noexcept -> uint32_t{
+//     return static_cast<std::uint32_t>(orbbecD->nb_devices());
+// }
 
 auto FemtoMegaUSBDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();

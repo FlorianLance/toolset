@@ -41,6 +41,7 @@ struct DCClientSettings : public io::Settings{
 
     auto add_device(DCClientType connectionType) -> void;
     auto remove_last_device() -> void;
+    auto update_connection_settings(DCDeviceConnectionSettings &connectionS) -> void;
 
     // settings
     size_t clientId = 0;
@@ -53,8 +54,5 @@ struct DCClientSettings : public io::Settings{
     std::vector<net::Interface> ipv4Interfaces = {};
     std::vector<net::Interface> ipv6Interfaces = {};
 
-private:
-
-    auto update_connection_settings(DCDeviceConnectionSettings &connectionS) -> void;
 };
 }

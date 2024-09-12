@@ -45,13 +45,13 @@ public:
 
     auto initialize() -> bool;
     auto draw(geo::Pt2f size, DCGModel *model) -> void;
+    auto append_log(const std::string &log) -> void;
 
     // drawers
     DCGLeftPanelChildDrawer leftPanelD;
     DCDeviceDrawer deviceD;
     DCRecorderDrawer recorderD;
     DCGMainMenuBarDrawer menuD;
-
-
+    ImguiLogs logsD;
 };
 }

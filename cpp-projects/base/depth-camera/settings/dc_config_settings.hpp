@@ -40,8 +40,10 @@ struct DCConfigSettings : io::Settings{
     bool startReading = false;
     // device
     DCType typeDevice = DCType::AzureKinect;
+    bool useSerialNumber = false;
     std::uint32_t idDevice = 0;
-    // std::string strIdDevice = "";
+    std::string serialNumber = "";
+    geo::Pt4<std::uint8_t> ipv4Address = {192,168,1,10};
     DCMode mode = dc_default_mode(typeDevice);
     // synch
     bool synchronizeColorAndDepth = true;

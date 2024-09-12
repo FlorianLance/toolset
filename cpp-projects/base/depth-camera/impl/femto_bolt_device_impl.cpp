@@ -38,7 +38,7 @@ using namespace tool::cam;
 FemtoBoltDeviceImpl::FemtoBoltDeviceImpl(){
     auto lg = LogGuard("FemtoBoltDeviceImpl::FemtoBoltDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoBolt);
-    orbbecD->query_devices("Femto Bolt"sv, false);
+    // orbbecD->query_devices("Femto Bolt"sv, false);
 }
 
 auto FemtoBoltDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
@@ -67,9 +67,9 @@ auto FemtoBoltDeviceImpl::is_opened() const noexcept -> bool{
     return orbbecD->is_opened();
 }
 
-auto FemtoBoltDeviceImpl::nb_devices() const noexcept -> uint32_t{
-    return static_cast<std::uint32_t>(orbbecD->nb_devices());
-}
+// auto FemtoBoltDeviceImpl::nb_devices() const noexcept -> uint32_t{
+//     return static_cast<std::uint32_t>(orbbecD->nb_devices());
+// }
 
 auto FemtoBoltDeviceImpl::device_name() const noexcept -> std::string{
     return orbbecD->device_name();

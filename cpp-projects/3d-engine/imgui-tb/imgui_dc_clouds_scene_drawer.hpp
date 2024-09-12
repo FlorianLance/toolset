@@ -42,7 +42,7 @@ namespace tool::graphics {
 
 struct DCCloudsSceneDrawer{
 
-    auto initialize(size_t nbDrawers) -> void;
+    virtual auto initialize(size_t nbDrawers) -> void;
     auto reset() -> void;
 
     inline auto has_to_redraw_clouds() const noexcept -> bool{

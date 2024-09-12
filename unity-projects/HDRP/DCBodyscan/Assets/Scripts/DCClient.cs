@@ -34,8 +34,6 @@ using UnityEditor;
 using UnityEngine.Profiling;
 using UnityEngine.VFX;
 using UnityEngine.Events;
-using System.IO;
-
 
 namespace BS {
 
@@ -118,8 +116,8 @@ namespace BS {
         public UnityEvent streamingStartedEvent = new UnityEvent();
         public UnityEvent streamingEndedEvent = new UnityEvent();
 
-        private DCClientDLL m_dllPlayer = null;
-        private DCDataVFX dataVFX = null;
+        private DCClientDLL m_dcClientDLL = null;
+        private DCDataVFX m_dcDataVFX = null;
 
         // jobs
         private List<DCReadNetworkDataJob> m_readNetworkDataJobs = new List<DCReadNetworkDataJob>();
@@ -127,8 +125,8 @@ namespace BS {
         private List<DCProcessDataJob> m_processDataJobs = new List<DCProcessDataJob>();
 
         // callbacks
-        private static LogMessageCB logMessageCB = null;
-        private static NewFeedbackCB newFeedbackCB = null;
+        private LogMessageCB logMessageCB = null;
+        private NewFeedbackCB newFeedbackCB = null;
 
 
         #region public_functions
@@ -138,16 +136,16 @@ namespace BS {
             clean();
 
             // init dll
-            m_dllPlayer = new DCClientDLL();
-            m_dllPlayer.init_callbacks(logMessageCB, newFeedbackCB);
-            if (m_dllPlayer.initialize(clientSettingsFilePath, false)) {
+            m_dcClientDLL = new DCClientDLL();
+            m_dcClientDLL.init_callbacks(logMessageCB, newFeedbackCB);
+            if (m_dcClientDLL.initialize(clientSettingsFilePath, false)) {
                 initialize_data();
             }            
         }
 
         public void clean() {
 
-            if (m_dllPlayer != null) {
+            if (m_dcClientDLL != null) {
 
                 // stop reading
                 if (m_threadsStarted) {
@@ -163,8 +161,8 @@ namespace BS {
                 disconnect_from_devices();
 
                 // clean DLL
-                m_dllPlayer.dispose();
-                m_dllPlayer = null;
+                m_dcClientDLL.dispose();
+                m_dcClientDLL = null;
             }
 
             m_allDevicesConnected = false;
@@ -173,7 +171,7 @@ namespace BS {
 
         public void start_threads() {
 
-            if (m_dllPlayer != null) {
+            if (m_dcClientDLL != null) {
 
                 foreach (var deviceS in devicesStates) {
                     deviceS.cloudUpdated = 0;
@@ -200,7 +198,7 @@ namespace BS {
 
         public void stop_threads() {
 
-            if (m_dllPlayer != null) {
+            if (m_dcClientDLL != null) {
                 m_threadsStarted = false;
 
                 foreach (var rndJob in m_readNetworkDataJobs) {
@@ -224,21 +222,21 @@ namespace BS {
 
         // actions
         public void connect_to_devices() {
-            if (m_dllPlayer != null) {
-                m_dllPlayer.connect_to_devices();
+            if (m_dcClientDLL != null) {
+                m_dcClientDLL.connect_to_devices();
             }
         }
         public void disconnect_from_devices() {
-            if (m_dllPlayer != null) {
-                m_dllPlayer.disconnect_from_devices();
+            if (m_dcClientDLL != null) {
+                m_dcClientDLL.disconnect_from_devices();
             }
         }
 
         // states
         public int devices_nb() {
 
-            if (m_dllPlayer != null) {
-                return m_dllPlayer.devices_nb();
+            if (m_dcClientDLL != null) {
+                return m_dcClientDLL.devices_nb();
             }
             return 0;
         }
@@ -253,42 +251,46 @@ namespace BS {
             return countConnected;
         }
         public bool is_device_connected(int idD) {
-            if (m_dllPlayer != null) {
-                return m_dllPlayer.is_device_connected(idD);
+            if (m_dcClientDLL != null) {
+                return m_dcClientDLL.is_device_connected(idD);
             }
             return false;
         }
         public int current_frame_id(int idD) {
-            if (m_dllPlayer != null) {
-                return m_dllPlayer.current_frame_id(idD);
+            if (m_dcClientDLL != null) {
+                return m_dcClientDLL.current_frame_id(idD);
             }
             return 0;
         }
         public int current_frame_cloud_size(int idD) {
-            if (m_dllPlayer != null) {
-                return m_dllPlayer.current_frame_cloud_size(idD);
+            if (m_dcClientDLL != null) {
+                return m_dcClientDLL.current_frame_cloud_size(idD);
             }
             return 0;
         }
 
+        public DCClientDLL get_dll() {
+            return m_dcClientDLL;
+        }
+
         // settings
         public void apply_device_settings() {
-            if (m_dllPlayer != null) {
-                for (int idD = 0; idD < m_dllPlayer.devices_nb(); ++idD) {                    
+            if (m_dcClientDLL != null) {
+                for (int idD = 0; idD < m_dcClientDLL.devices_nb(); ++idD) {                    
                     UnityEngine.Debug.Log(string.Format("[DClient::apply_device_settings] Wait device [{0}] to be updated. ", idD));
-                    m_dllPlayer.apply_devices_settings(idD);
                     Thread.Sleep(250);
+                    m_dcClientDLL.apply_devices_settings(idD);      
                 }
             }
         }
         public void apply_color_settings() {
-            if (m_dllPlayer != null) {
-                m_dllPlayer.apply_color_settings();
+            if (m_dcClientDLL != null) {
+                m_dcClientDLL.apply_color_settings();
             }
         }
         public void apply_filters_settings() {
-            if (m_dllPlayer != null) {
-                m_dllPlayer.apply_filters_settings();
+            if (m_dcClientDLL != null) {
+                m_dcClientDLL.apply_filters_settings();
             }
         }
 
@@ -299,7 +301,7 @@ namespace BS {
         public void initialize_data() {
 
             int nbDevices = devices_nb();
-            dataVFX.initialize(nbDevices);
+            m_dcDataVFX.initialize(nbDevices);
             devicesStates = new List<DCStreamingStates>(nbDevices);
 
             for (int idC = 0; idC < nbDevices; ++idC) {
@@ -309,10 +311,10 @@ namespace BS {
             }
 
             if (loadDisplaySettingsFilesAfterInitializing) {
-                for (int idG = 0; idG < dataVFX.displaySettings.Count; ++idG) {
+                for (int idG = 0; idG < m_dcDataVFX.displaySettings.Count; ++idG) {
                     string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
                     UnityEngine.Debug.Log(string.Format("[DClient::initialize_data] Load display settings file with path [{0}]. ", path));
-                    dataVFX.update_display_parameters_from_json_file(idG, path);
+                    m_dcDataVFX.update_display_parameters_from_json_file(idG, path);
                 }
             }
 
@@ -320,13 +322,11 @@ namespace BS {
 
             // if devices  are local, set them as connected
             for (int idC = 0; idC < nbDevices; ++idC) {
-                if (m_dllPlayer.is_local(idC)) {
+                if (m_dcClientDLL.is_local(idC)) {
                     devicesStates[idC].connected = true;
                 }
             }
 
-            check_devices_connected_state();
-         
         }
 
         private void create_jobs(int nbDevices) {
@@ -335,7 +335,7 @@ namespace BS {
             m_readNetworkDataJobs = new List<DCReadNetworkDataJob>();
             for (int idC = 0; idC < nbDevices; ++idC) {
                 var rndJob = new DCReadNetworkDataJob();
-                rndJob.dllPlayer = m_dllPlayer;
+                rndJob.dllPlayer = m_dcClientDLL;
                 rndJob.idD = idC;
                 m_readNetworkDataJobs.Add(rndJob);
             }
@@ -344,7 +344,7 @@ namespace BS {
             m_triggerReceievedPacketsJobs = new List<DCTriggerReceivedPacketsJob>();
             for (int idC = 0; idC < nbDevices; ++idC) {
                 var trJob = new DCTriggerReceivedPacketsJob();
-                trJob.dllPlayer = m_dllPlayer;
+                trJob.dllPlayer = m_dcClientDLL;
                 trJob.idD = idC;
                 m_triggerReceievedPacketsJobs.Add(trJob);
             }
@@ -352,7 +352,7 @@ namespace BS {
             m_processDataJobs = new List<DCProcessDataJob>();
             for (int idC = 0; idC < nbDevices; ++idC) {
                 var pdJob = new DCProcessDataJob();
-                pdJob.dllPlayer = m_dllPlayer;
+                pdJob.dllPlayer = m_dcClientDLL;
                 pdJob.idD = idC;
                 m_processDataJobs.Add(pdJob);
             }
@@ -471,29 +471,30 @@ namespace BS {
 
         private void Awake() {
 
-
             // init callbacks
-            logMessageCB = (string message, int type) => {
-                if (type == 0) {
-                    UnityEngine.Debug.Log(message);
-                }else if(type == 1) {
-                    UnityEngine.Debug.LogWarning(message);
-                } else if(type == 2) {
-                    UnityEngine.Debug.LogError(message);
-                }
-            };
+            if (logMessageCB == null) {
+                logMessageCB = (string message, int type) => {
+                    if (type == 0) {
+                        UnityEngine.Debug.Log(message);
+                    } else if (type == 1) {
+                        UnityEngine.Debug.LogWarning(message);
+                    } else if (type == 2) {
+                        UnityEngine.Debug.LogError(message);
+                    }
+                };
+            }
 
             newFeedbackCB = (int idC, int messageType, int feedbackType) => {
                 new_feedback(idC, messageType, feedbackType);
             };
 
-            dataVFX = GetComponent<DCDataVFX>();
-            if (dataVFX == null) {
-                dataVFX = gameObject.AddComponent<DCDataVFX>();
+            m_dcDataVFX = GetComponent<DCDataVFX>();
+            if (m_dcDataVFX == null) {
+                m_dcDataVFX = gameObject.AddComponent<DCDataVFX>();
             }
 
-            if (dataVFX.sharedVisualEffectAsset == null) {
-                dataVFX.sharedVisualEffectAsset = Resources.Load<VisualEffectAsset>("VisualEffectAssets/DCCloud");
+            if (m_dcDataVFX.sharedVisualEffectAsset == null) {
+                m_dcDataVFX.sharedVisualEffectAsset = Resources.Load<VisualEffectAsset>("VisualEffectAssets/DCCloud");
             }
 
             if (initAtAwake) {
@@ -511,17 +512,19 @@ namespace BS {
             if (connectAtStart) {
                 connect_to_devices();
             }
+
+            check_devices_connected_state();
         }
 
         private void Update() {
 
-            if (m_dllPlayer == null) {
+            if (m_dcClientDLL == null) {
                 return;
             }
 
             // update shaders parameters
             foreach (var deviceStates in devicesStates) {
-                dataVFX.update_shader_from_display_parameters(deviceStates.deviceId);
+                m_dcDataVFX.update_shader_from_display_parameters(deviceStates.deviceId);
             }
 
             if (!m_threadsStarted) {
@@ -529,27 +532,27 @@ namespace BS {
             }
 
             Profiler.BeginSample("[DClient::update] Update DLL");
-            m_dllPlayer.update();
+            m_dcClientDLL.update();
             Profiler.EndSample();
 
             Profiler.BeginSample("[DClient::update] uncompress_frame / copy_current_frame_vertices_vfx");
             Parallel.ForEach(devicesStates, deviceStates => {
 
-                if (m_dllPlayer.is_frame_available(deviceStates.deviceId)) {
+                if (m_dcClientDLL.is_frame_available(deviceStates.deviceId)) {
 
-                    deviceStates.currentFrameSize = m_dllPlayer.current_frame_cloud_size(deviceStates.deviceId);
-                    deviceStates.currentId = m_dllPlayer.current_frame_id(deviceStates.deviceId);
+                    deviceStates.currentFrameSize = m_dcClientDLL.current_frame_cloud_size(deviceStates.deviceId);
+                    deviceStates.currentId = m_dcClientDLL.current_frame_id(deviceStates.deviceId);
 
-                    deviceStates.verticesCountToCopy = m_dllPlayer.copy_current_frame_vertices_vfx(
+                    deviceStates.verticesCountToCopy = m_dcClientDLL.copy_current_frame_vertices_vfx(
                         deviceStates.deviceId,
-                        dataVFX.positions_native_buffer(deviceStates.deviceId),
-                        dataVFX.colors_native_buffer(deviceStates.deviceId),
-                        dataVFX.normals_native_buffer(deviceStates.deviceId),
+                        m_dcDataVFX.positions_native_buffer(deviceStates.deviceId),
+                        m_dcDataVFX.colors_native_buffer(deviceStates.deviceId),
+                        m_dcDataVFX.normals_native_buffer(deviceStates.deviceId),
                         deviceStates.currentFrameSize,
                         true
                     );
 
-                    m_dllPlayer.invalidate_frame(deviceStates.deviceId);
+                    m_dcClientDLL.invalidate_frame(deviceStates.deviceId);
                 } else {
                     deviceStates.verticesCountToCopy = -1;
                 }
@@ -575,7 +578,7 @@ namespace BS {
 
             Profiler.BeginSample("[DClient::update] Update VFX data");
             foreach (var deviceStates in devicesStates) {
-                dataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
+                m_dcDataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
             }
             Profiler.EndSample();
 

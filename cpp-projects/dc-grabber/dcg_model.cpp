@@ -104,6 +104,19 @@ auto DCGModel::initialize() -> bool{
         }
     }
 
+    // device
+    device->update_device_settings(server.settings.deviceS);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    // color
+    device->update_color_settings(server.settings.colorS);
+
+    // filters
+    device->update_filters_settings(server.settings.filtersS);
+
+    // delay
+    device->update_delay_settings(server.settings.delayS);
+
     recorder.initialize(1);
 
     return true;
@@ -120,20 +133,13 @@ auto DCGModel::clean() -> void{
 }
 
 auto DCGModel::trigger_settings() -> void{
-    auto lg = LogGuard("DCGModel::trigger_settings"sv);
-    // device settings: device
-    DCGSignals::get()->update_device_settings_signal(server.settings.deviceS);
-    // color settings: device
-    DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
-    // filters settings: device drawer / device
-    DCGSignals::get()->update_filters_signal(server.settings.filtersS);
-    // model settings: device drawer / recorder drawer / recorder
+    // filters
+    DCGSignals::get()->update_filters_ui_only_signal(server.settings.filtersS);
+    // model
     DCGSignals::get()->update_model_settings_signal(0, server.settings.modelS);
-    // delay setings: device
-    DCGSignals::get()->update_delay_settings_signal(server.settings.delayS);
-    // display settings: device drawer / recorder drawer
+    // cloud display
     DCGSignals::get()->update_cloud_display_settings_signal(0, server.settings.displayS);
-    // scene settings: device drawer / recorder drawer
+    // // scene display
     DCGSignals::get()->update_scene_display_settings_signal(server.settings.sceneDisplayS);
 }
 
@@ -150,6 +156,10 @@ auto DCGModel::reset_filters_filters() -> void{
 auto DCGModel::reset_color_settings() -> void{
     server.settings.colorS = cam::DCColorSettings();
     DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
+}
+
+auto DCGModel::update_color_settings_ui_only(const cam::DCColorSettings &colorS) -> void{
+    server.settings.colorS = colorS;
 }
 
 auto DCGModel::reset_model_settings() -> void{

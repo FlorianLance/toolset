@@ -60,7 +60,7 @@ struct ImguiLogs{
         }
     }
 
-    void draw(const char* name);
+    void draw(const char* name, const ImVec2& size_arg = ImVec2(0, 0));
 };
 
 struct ImguiLogs2{

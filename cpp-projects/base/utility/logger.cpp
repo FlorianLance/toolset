@@ -170,12 +170,12 @@ auto Logger::message(std::string_view message, bool htmlFormat, bool triggersSig
         return;
     }
 
-    if(triggersSignal){
-        trigger_message(message, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::normal, message);
+    }
+
+    if(triggersSignal){
+        trigger_message(message, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -186,12 +186,12 @@ auto Logger::warning(std::string_view warning, bool htmlFormat, bool triggersSig
         return;
     }
 
-    if(triggersSignal){
-        trigger_warning(warning, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::warning, warning);
+    }
+
+    if(triggersSignal){
+        trigger_warning(warning, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -201,12 +201,12 @@ auto Logger::log(std::string_view log, bool htmlFormat, bool triggersSignal, boo
         return;
     }
 
-    if(triggersSignal){
-        trigger_log(log, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::log, log);
+    }
+
+    if(triggersSignal){
+        trigger_log(log, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -217,12 +217,12 @@ auto Logger::error(std::string_view error, bool htmlFormat, bool triggersSignal,
         return;
     }
 
-    if(triggersSignal){
-        trigger_error(error, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::error, error);
+    }
+
+    if(triggersSignal){
+        trigger_error(error, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -233,12 +233,12 @@ auto Logger::message_id(std::string_view message, SenderT sType, int sKey, bool 
         return;
     }
 
-    if(triggersSignal){
-        trigger_message_id(message, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::normal, message);
+    }
+
+    if(triggersSignal){
+        trigger_message_id(message, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -250,12 +250,12 @@ auto Logger::warning_id(std::string_view warning, SenderT sType, int sKey, bool 
         return;
     }
 
-    if(triggersSignal){
-        trigger_warning_id(warning, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::warning, warning);
+    }
+
+    if(triggersSignal){
+        trigger_warning_id(warning, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -267,12 +267,12 @@ auto Logger::error_id(std::string_view error, SenderT sType, int sKey, bool html
         return;
     }
 
-    if(triggersSignal){
-        trigger_error_id(error, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
-    }
-
     if(saveToFile && (Global::instancePtr->i->outStream != nullptr)){
         insert_line_to_log_file(MessageT::error, error);
+    }
+
+    if(triggersSignal){
+        trigger_error_id(error, sType, sKey, htmlFormat && Global::instancePtr->i->doFormat);
     }
 }
 
@@ -343,12 +343,14 @@ auto Logger::progress(int state) -> void {
 
 auto Logger::insert_line_to_log_file(MessageT type, std::string_view message) -> void {
 
+    auto line = to_html_line(type, message, true);
+
     std::unique_lock<std::mutex> lock(Global::instancePtr->i->locker);
     if(Global::instancePtr->i->outStream){
         if(type != MessageT::normal){
-            (*Global::instancePtr->i->outStream) << to_html_line(type, message, true) << std::flush;
+            (*Global::instancePtr->i->outStream) << line << std::flush;
         }else{
-            (*Global::instancePtr->i->outStream) << to_html_line(type, message, true);
+            (*Global::instancePtr->i->outStream) << line;
         }
     }
 }

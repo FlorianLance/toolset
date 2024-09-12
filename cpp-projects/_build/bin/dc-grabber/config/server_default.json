@@ -84,8 +84,8 @@
         ]
     },
     "color": {
-        "auto_exposure_time": false,
-        "auto_white_balance": false,
+        "auto_exposure_time": true,
+        "auto_white_balance": true,
         "backlight_compensation": false,
         "base": {
             "type_string": "color",
@@ -132,15 +132,21 @@
                 0.0
             ],
             "delay_between_color_and_depth_usec": 0,
-            "disable_LED": false,
+            "disable_LED": true,
             "id_device": 0,
-            "mode": 23,
+            "ipv4_address_1": 192,
+            "ipv4_address_2": 168,
+            "ipv4_address_3": 1,
+            "ipv4_address_4": 10,
+            "mode": 3,
             "open_device": true,
+            "serial_number_device": "",
             "start_reading": true,
             "subordinate_delay_usec": 0,
             "synch_mode": 0,
             "synchronize_color_and_depth": true,
-            "type_device": 1
+            "type_device": 0,
+            "use_serial_number": false
         },
         "data": {
             "base": {
@@ -170,7 +176,7 @@
                 "color": true,
                 "depth": true,
                 "imu": false,
-                "infra": false
+                "infra": true
             },
             "s_compression": {
                 "audio": false,
@@ -198,79 +204,79 @@
                 "cloud": true,
                 "cloud_color_mode": 1,
                 "cloud_gen_mode": 0,
-                "color_image": false,
+                "color_image": true,
                 "depth": true,
                 "depth_image": true,
                 "depth_sized_color_image": true,
                 "imu": false,
                 "infra": false,
-                "infra_image": false
+                "infra_image": true
             }
         }
     },
     "filters": {
         "OOB_position": [
+            0.28999999165534973,
             0.0,
-            0.0,
-            0.0
+            0.9710000157356262
         ],
         "OOB_rotation": [
-            0.0,
+            24.510000228881836,
             0.0,
             0.0
         ],
         "OOB_size": [
-            1.0,
-            1.0,
-            1.0
+            1.6299999952316284,
+            0.7400000095367432,
+            1.0499999523162842
         ],
         "base": {
             "type_string": "filters",
             "version": 1
         },
-        "do_erosion": false,
+        "do_erosion": true,
         "do_local_diff_filtering": true,
         "do_min_neighbours_filtering": true,
         "erosion_connectivity": 3,
         "erosion_loops": 1,
         "filter_color": [
-            0.0,
-            0.5,
-            0.07999999821186066
+            0.6960784196853638,
+            0.1330738216638565,
+            0.1330738216638565
         ],
         "filter_depth_with_body_tracking": false,
-        "filter_depth_with_cloud": false,
+        "filter_depth_with_cloud": true,
         "filter_depth_with_color": false,
         "filter_depth_with_infra": true,
         "invalidate_color_from_depth": false,
-        "invalidate_infra_from_depth": false,
+        "invalidate_infra_from_depth": true,
         "keep_only_bigger_cluster": false,
-        "keep_only_points_inside_OOB": false,
+        "keep_only_points_inside_OOB": true,
         "local_diff_connectivity": 0,
-        "max_depth_f": 1.0,
+        "max_depth_f": 0.6980000138282776,
         "max_diff_color": [
             20.0,
             0.5,
             0.5
         ],
         "max_distance_after_closest_point": 0.20000000298023224,
-        "max_height_f": 0.9200000166893005,
-        "max_local_diff": 13.0,
-        "max_sphere_distance": 1000.0,
+        "max_height_f": 0.8259999752044678,
+        "max_local_diff": 15.0,
+        "max_sphere_distance": 1029.0,
         "max_widht_f": 1.0,
         "min_depth_f": 0.0,
-        "min_height_f": 0.07999999821186066,
+        "min_height_f": 0.04500000178813934,
         "min_neighbours_connectivity": 2,
-        "min_neighbours_loops": 1,
-        "min_widht_f": 0.0,
-        "nb_min_neighbours": 4,
+        "min_neighbours_loops": 2,
+        "min_widht_f": 0.1979999989271164,
+        "nb_min_neighbours": 6,
         "plane1_A": [
-            1.0,
+            0.8759999871253967,
             1.0,
             0.0
         ],
         "plane1_B": [
-            1.0,
+            0.8740000128746033,
             0.0,
             1.0
         ],
@@ -283,7 +289,7 @@
         "remove_after_closest_point": false,
         "remove_from_point_distance": false,
         "sphere": [
-            0.0,
+            0.10700000077486038,
             0.0,
             1.0
         ]
@@ -306,7 +312,7 @@
             0.0,
             1.0,
             0.0,
-            0.0,
+            0.1679999977350235,
             0.0,
             0.0,
             1.0

@@ -62,6 +62,7 @@ namespace tool::data{
 
     template <typename T>
     static auto read_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> T{
+
         if(j.contains(key)){
             return j[key].template get<T>();
         }

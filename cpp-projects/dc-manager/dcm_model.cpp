@@ -79,6 +79,15 @@ auto DCMModel::remove_last_device() -> void{
     }
 }
 
+auto DCMModel::remove_all_devices() -> void{
+    while(client.devices_nb() > 0){
+        client.remove_last_device();
+        recorder.remove_last_device();
+    }
+    calibrator.initialize(0);
+    DCMSignals::get()->initialize_signal(0);
+}
+
 auto DCMModel::initialize() -> bool{
 
     auto paths = DCSettingsPaths::get();
@@ -129,7 +138,7 @@ auto DCMModel::initialize() -> bool{
     calibrator.initialize(nbDevices);
 
     // devices
-    for(size_t idC = 0; idC < client.devices_nb(); ++idC){
+    for(size_t idC = 0; idC < client.devices_nb(); ++idC){        
         client.apply_device_settings(idC);
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
@@ -157,17 +166,14 @@ auto DCMModel::initialize() -> bool{
 }
 
 auto DCMModel::trigger_settings() -> void{
-
     // filters
     for(size_t idC = 0; idC < client.devices_nb(); ++idC){
         DCMSignals::get()->update_filters_settings_ui_only_signal(idC, client.settings.devicesS[idC].filtersS);
     }
-
     // models
     for(size_t idC = 0; idC < client.devices_nb(); ++idC){
         DCMSignals::get()->update_model_settings_ui_only_signal(idC, client.settings.devicesS[idC].modelS);
     }
-
     // cloud display
     for(size_t idC = 0; idC < client.devices_nb(); ++idC){
         DCMSignals::get()->update_cloud_display_settings_signal(idC, client.settings.devicesS[idC].displayS);

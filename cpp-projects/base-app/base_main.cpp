@@ -550,6 +550,7 @@ auto test_device_idle() -> void{
     }
 }
 
+
 int main(int argc, char *argv[]){
 
 
@@ -571,7 +572,21 @@ int main(int argc, char *argv[]){
         std::cerr << error;
     });
 
-    test_device_idle();
+    ;
+    for(size_t idD = 0; idD < k4a::device::get_installed_count(); ++idD){
+        try{
+            k4a::device dev = k4a::device::open(idD);
+
+            auto sn = dev.get_serialnum();
+            std::cout << "open device with " << sn << "\n";
+
+        }catch(const std::runtime_error &er){
+            std::cerr << std::format("Cannot open device with id [{}], error: [{}].\n", idD, er.what()) << "\n";
+        }
+
+    }
+
+    // test_device_idle();
     // test_microphone();
     // process_kvid();
     // test_femto_mega();

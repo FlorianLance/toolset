@@ -67,9 +67,9 @@ auto AzureKinectDeviceImpl::is_opened() const noexcept -> bool{
     return azureD->is_opened();
 }
 
-auto AzureKinectDeviceImpl::nb_devices() const noexcept -> std::uint32_t {
-    return static_cast<std::uint32_t>(azureD->nb_devices());
-}
+// auto AzureKinectDeviceImpl::nb_devices() const noexcept -> std::uint32_t {
+//     return static_cast<std::uint32_t>(azureD->nb_devices());
+// }
 
 auto AzureKinectDeviceImpl::device_name() const noexcept -> std::string {
     return azureD->device_name();

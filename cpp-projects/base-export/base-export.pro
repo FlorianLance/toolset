@@ -44,8 +44,10 @@ include(../ts-dependencies.pri)
 ######################################## PROJECT FILES
 HEADERS += \
     dc_client_export.hpp \
-    dc_video_player_export.hpp
+    dc_video_player_export.hpp \
+    dc_video_recorder_export.hpp
 
 SOURCES += \
     dc_client_export.cpp \
-    dc_video_player_export.cpp
+    dc_video_player_export.cpp \
+    dc_video_recorder_export.cpp

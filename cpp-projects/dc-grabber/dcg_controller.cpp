@@ -92,19 +92,19 @@ auto DCGController::set_connections() -> void{
 
     // from logger
     Logger::get()->message_signal.connect([&](std::string message){
-        view->mainW.leftPanelD.append_log(message);
+        view->mainW.append_log(message);
         std::cout << message;
     });
     Logger::get()->warning_signal.connect([&](std::string warning){
-        view->mainW.leftPanelD.append_log(warning);
+        view->mainW.append_log(warning);
         std::cerr << warning;
     });
     Logger::get()->error_signal.connect([&](std::string error){
-        view->mainW.leftPanelD.append_log(error);
+        view->mainW.append_log(error);
         std::cerr << error;
     });
 
-    device->update_device_name_signal.connect(                          [&](int deviceId, std::string deviceName){
+    device->update_device_name_signal.connect( [&](int deviceId, std::string deviceName){
         tool::graphics::DCUIDrawer::udpate_device_name(deviceId, deviceName); // TODO: move to settings/states ?
     });
 
@@ -133,6 +133,7 @@ auto DCGController::set_connections() -> void{
     s->load_subpart_filters_settings_file_signal.connect(       &DCGModel::load_subpart_filters_settings_file,             model.get());
     s->load_subpart_color_settings_file_signal.connect(         &DCGModel::load_subpart_color_settings_file,               model.get());
     s->load_subpart_model_settings_file_signal.connect(         &DCGModel::load_subpart_model_settings_file,               model.get());
+    device->color_settings_reset_signal.connect(                &DCGModel::update_color_settings_ui_only,                  model.get());
     // ## server
     s->sending_failure_signal.connect(                          &DCServer::simulate_sending_failure,                       server);
     s->reset_reading_network_signal.connect(                    &DCServer::reset_network,                                  server);
@@ -149,7 +150,7 @@ auto DCGController::set_connections() -> void{
     // # settings
     // ## device
     s->update_device_settings_signal.connect(                   &DCDevice::update_device_settings,                         device);
-    s->update_filters_signal.connect(                           &DCDevice::update_filters_settings,                        device);
+    s->update_filters_signal.connect(                           &DCDevice::update_filters_settings,                        device);        
     s->update_color_settings_signal.connect(                    &DCDevice::update_color_settings,                          device);
     s->update_delay_settings_signal.connect(                    &DCDevice::update_delay_settings,                          device);
     // ## recorder
@@ -157,6 +158,7 @@ auto DCGController::set_connections() -> void{
     s->update_recorder_settings_signal.connect(                 &DCVideoRecorder::update_settings,                         recorder);
     // ## device drawer
     s->update_filters_signal.connect(                           &DCDeviceDrawer::update_filters_settings,                  deviceD);
+    s->update_filters_ui_only_signal.connect(                   &DCDeviceDrawer::update_filters_settings,                  deviceD);
     s->update_model_settings_signal.connect(                    &graphics::DCCloudsSceneDrawer::update_model_settings,     deviceD);
     s->update_scene_display_settings_signal.connect(            &DCDeviceDrawer::update_scene_display_settings,            deviceD);
     s->update_cloud_display_settings_signal.connect(            &DCDeviceDrawer::update_device_display_settings,           deviceD);

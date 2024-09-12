@@ -124,7 +124,7 @@ namespace BS {
 
         private void Awake() {
 
-            string exePath = "D:/DEV/Clients/AllHere/BodyScannerStandAloneHDRP/BodyScannerSA";
+            string exePath = "";
 
             Debug.Log("[QtMainThread] Init callbacks");
             logMessageCB = (string message, int type) => {

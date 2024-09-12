@@ -49,6 +49,7 @@ struct DCMModel{
 
     auto add_device(cam::DCClientType type) -> void;
     auto remove_last_device() -> void;
+    auto remove_all_devices() -> void;
 
     auto process_settings_action(cam::SettingsAction sAction) -> void;
     auto ask_calibration() -> void;

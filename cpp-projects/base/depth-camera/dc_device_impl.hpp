@@ -91,7 +91,7 @@ struct DCDeviceImpl{
 
     // getters
     virtual auto is_opened() const noexcept -> bool = 0;
-    virtual auto nb_devices() const noexcept -> std::uint32_t = 0;
+    // virtual auto nb_devices() const noexcept -> std::uint32_t = 0;
     virtual auto device_name() const noexcept -> std::string = 0;
 
     // profiling

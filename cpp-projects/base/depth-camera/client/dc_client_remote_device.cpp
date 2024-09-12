@@ -75,6 +75,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     auto lg = LogGuard("[DCClientRemoteDevice::initialize]");
     i->remoteServerS = connectionS;
 
+
     Logger::message(
         std::format(
             "DCServerRemoteDevice: initialize:"

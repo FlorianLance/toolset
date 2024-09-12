@@ -63,6 +63,7 @@ public:
     // actions
     SSS<cam::DCClientType> add_device_signal;
     SSS<> remove_last_device_signal;
+    SSS<> remove_all_devices_signal;
     // # network
     SSS<size_t> reset_remote_device_signal;
     SSS<size_t> init_connection_signal;

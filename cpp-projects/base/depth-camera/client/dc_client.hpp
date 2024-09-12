@@ -57,7 +57,8 @@ public:
     auto process_frames_from_external_thread(size_t idD) -> void;
     // # remote device
     auto reset_remote_device(size_t idD) -> void;
-    auto init_connection_with_remote_device(size_t idC) -> void;    auto trigger_packets_from_remote_device(size_t idC) -> void;
+    auto init_connection_with_remote_device(size_t idC) -> void;
+    auto trigger_packets_from_remote_device(size_t idC) -> void;
 
     // # settings
     // ## select

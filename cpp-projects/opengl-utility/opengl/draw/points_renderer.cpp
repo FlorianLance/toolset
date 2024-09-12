@@ -132,7 +132,7 @@ auto PointsRenderer::load_data(
 }
 
 auto PointsRenderer::update_data(
-    std::span<const Pt3f> vertices, size_t verticesOffset ,
+    std::span<const Pt3f> vertices, size_t verticesOffset,
     std::span<const Pt3f> colors,   size_t colorsOffset,
     std::span<const Pt3f> normals,  size_t normalsOffset
     ) -> bool{

@@ -63,17 +63,12 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
             }
 
             draw_recording_tab_item(model->recorder.states, model->recorder.settings);
-            // draw_audio_tab_item();
-            draw_logs_tab_item();
             ImGui::EndTabBar();
         }
     }
     ImGui::EndChild();
 }
 
-auto DCGLeftPanelChildDrawer::append_log(const std::string &log) -> void {
-    m_logs.add_log(log.c_str());
-}
 
 
 auto draw_config_file_name(const std::string &filePath) -> void{
@@ -413,14 +408,6 @@ auto DCGLeftPanelChildDrawer::draw_delay_tab_item(cam::DCDelaySettings &delayS) 
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_logs_tab_item() -> void {
-    if (!ImGui::BeginTabItem("Logs###settings_logs_tabitem")){
-        return;
-    }
-
-    m_logs.draw("Logs###settings_logs_imguilogs");
-    ImGui::EndTabItem();
-}
 
 
 auto DCGLeftPanelChildDrawer::draw_audio_tab_item() -> void {

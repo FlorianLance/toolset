@@ -53,6 +53,7 @@ public:
     auto update_viewport() -> void;
 
     inline auto camera() -> graphics::Camera* {return &m_camera;}
+    auto texture_size() const noexcept -> geo::Pt2<int>{return {m_texture.width(),m_texture.height()};}
     auto texture_id() const noexcept -> GLuint {return m_texture.id();}
     auto is_camera_updated() const noexcept -> bool{return m_cameraUpdated;}
     auto is_screen_updated() const noexcept -> bool{return m_screenUpdated;}
@@ -63,6 +64,7 @@ public:
     float translateSpeed = 0.01f;
     bool invertTexture = true;
 
+    bool initialized = false;
 
 private:
 
@@ -76,7 +78,6 @@ private:
     graphics::Camera m_camera;       
     graphics::Screen m_screen;
 
-    bool m_initialized = false;
     bool m_cameraUpdated = false;
     bool m_screenUpdated = false;
 };

@@ -65,6 +65,10 @@ namespace BS {
             return initialize__dc_client_export(_handle, clientSettingsFilePath, startThreads ? 1 : 0) == 1;
         }
 
+        public HandleRef get_handle() {
+            return _handle;
+        }
+
         // update
         // # main thread
         public void update() {
@@ -156,72 +160,72 @@ namespace BS {
         [DllImport("base-export", EntryPoint = "create__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
         static private extern IntPtr create__dc_client_export();
         [DllImport("base-export", EntryPoint = "delete__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void delete__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void delete__dc_client_export(HandleRef dcClientExport);
 
         // init
         [DllImport("base-export", EntryPoint = "init_callbacks__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void init_callbacks__dc_client_export(HandleRef dcNetworkDirectPlayer,
+        static private extern void init_callbacks__dc_client_export(HandleRef dcClientExport,
             [MarshalAs(UnmanagedType.FunctionPtr)] LogMessageCB logMessageCB,
             [MarshalAs(UnmanagedType.FunctionPtr)] NewFeedbackCB newFeedbackCB
         );
         [DllImport("base-export", EntryPoint = "initialize__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int initialize__dc_client_export(HandleRef dcNetworkDirectPlayer, string networkSettingsFilePath, int startThreads);
+        static private extern int initialize__dc_client_export(HandleRef dcClientExport, string networkSettingsFilePath, int startThreads);
 
         // update
         // # main thread
         [DllImport("base-export", EntryPoint = "update__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int update__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern int update__dc_client_export(HandleRef dcClientExport);
         // # dedicated thread
         [DllImport("base-export", EntryPoint = "read_data_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int read_data_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);        
+        static private extern int read_data_from_external_thread__dc_client_export(HandleRef dcClientExport, int idD);        
         [DllImport("base-export", EntryPoint = "trigger_packets_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void trigger_packets_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern void trigger_packets_from_external_thread__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "process_frames_from_external_thread__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void process_frames_from_external_thread__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern void process_frames_from_external_thread__dc_client_export(HandleRef dcClientExport, int idD);
 
         // actions        
         [DllImport("base-export", EntryPoint = "connect_to_server__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void connect_to_server__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern void connect_to_server__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "connect_to_devices__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void connect_to_devices__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void connect_to_devices__dc_client_export(HandleRef dcClientExport);
         [DllImport("base-export", EntryPoint = "disconnect_from_devices__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void disconnect_from_devices__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void disconnect_from_devices__dc_client_export(HandleRef dcClientExport);
 
         // states
         [DllImport("base-export", EntryPoint = "is_local__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int is_local__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern int is_local__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "devices_nb__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int devices_nb__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern int devices_nb__dc_client_export(HandleRef dcClientExport);
         [DllImport("base-export", EntryPoint = "is_device_connected__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int is_device_connected__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern int is_device_connected__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "current_frame_id__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int current_frame_id__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern int current_frame_id__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "current_frame_cloud_size__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int current_frame_cloud_size__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern int current_frame_cloud_size__dc_client_export(HandleRef dcClientExport, int idD);
 
         // settings
         [DllImport("base-export", EntryPoint = "apply_device_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void apply_device_settings__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern void apply_device_settings__dc_client_export(HandleRef dcClientExport, int idD);
         [DllImport("base-export", EntryPoint = "apply_color_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void apply_color_settings__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void apply_color_settings__dc_client_export(HandleRef dcClientExport);
         [DllImport("base-export", EntryPoint = "apply_filters_settings__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void apply_filters_settings__dc_client_export(HandleRef dcNetworkDirectPlayer);
+        static private extern void apply_filters_settings__dc_client_export(HandleRef dcClientExport);
 
         // frames
         [DllImport("base-export", EntryPoint = "is_frame_available__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern int is_frame_available__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern int is_frame_available__dc_client_export(HandleRef dcClientExport, int idD);
 
         [DllImport("base-export", EntryPoint = "invalidate_frame__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void invalidate_frame__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD);
+        static private extern void invalidate_frame__dc_client_export(HandleRef dcClientExport, int idD);
 
         // data
         [DllImport("base-export", EntryPoint = "copy_transform__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void copy_transform__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD, float[] transformData);
+        static private extern void copy_transform__dc_client_export(HandleRef dcClientExport, int idD, float[] transformData);
         [DllImport("base-export", EntryPoint = "copy_current_frame_vertices__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        unsafe static private extern int copy_current_frame_vertices__dc_client_export(HandleRef dcNetworkDirectPlayer, int idD, void* vertices, int verticesCount, int applyModelTransform);
+        unsafe static private extern int copy_current_frame_vertices__dc_client_export(HandleRef dcClientExport, int idD, void* vertices, int verticesCount, int applyModelTransform);
 
         [DllImport("base-export", EntryPoint = "copy_current_frame_vertices_vfx__dc_client_export", CallingConvention = CallingConvention.Cdecl)]
-        unsafe static public extern int copy_current_frame_vertices_vfx__dc_client_export(HandleRef dcPlayer, int idCamera, void* positions, void* colors, void* normals, int verticesCount, int applyModelTransform);
+        unsafe static public extern int copy_current_frame_vertices_vfx__dc_client_export(HandleRef dcClientExport, int idCamera, void* positions, void* colors, void* normals, int verticesCount, int applyModelTransform);
 
 
         #endregion

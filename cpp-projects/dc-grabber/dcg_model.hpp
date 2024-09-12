@@ -52,6 +52,7 @@ struct DCGModel{
     auto reset_device_settings() -> void;
     auto reset_filters_filters() -> void;
     auto reset_color_settings() -> void;
+    auto update_color_settings_ui_only(const cam::DCColorSettings &colorS) -> void;
     auto reset_model_settings() -> void;
     auto load_default_device_settings_file() -> void;
     auto load_default_filters_settings_file() -> void;

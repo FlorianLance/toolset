@@ -38,7 +38,6 @@ FemtoMegaEthernetDeviceImpl::FemtoMegaEthernetDeviceImpl(){
 
     auto lg = LogGuard("FemtoMegaEthernetDeviceImpl::FemtoMegaEthernetDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMegaEthernet);
-    orbbecD->query_devices("Femto Mega"sv, true);
 }
 
 auto FemtoMegaEthernetDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
@@ -53,7 +52,6 @@ auto FemtoMegaEthernetDeviceImpl::open(const DCConfigSettings &newConfigS) -> bo
 
     if(orbbecD == nullptr){
         orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMegaEthernet);
-        orbbecD->query_devices("Femto Mega"sv, true);
     }
 
     if(orbbecD->open(mInfos, settings.config, settings.color)){
@@ -86,12 +84,12 @@ auto FemtoMegaEthernetDeviceImpl::is_opened() const noexcept -> bool{
     return false;
 }
 
-auto FemtoMegaEthernetDeviceImpl::nb_devices() const noexcept -> uint32_t{
-    if(orbbecD != nullptr){
-        return static_cast<std::uint32_t>(orbbecD->nb_devices());
-    }
-    return 0;
-}
+// auto FemtoMegaEthernetDeviceImpl::nb_devices() const noexcept -> uint32_t{
+//     if(orbbecD != nullptr){
+//         return static_cast<std::uint32_t>(orbbecD->nb_devices());
+//     }
+//     return 0;
+// }
 
 auto FemtoMegaEthernetDeviceImpl::device_name() const noexcept -> std::string{
     if(orbbecD != nullptr){

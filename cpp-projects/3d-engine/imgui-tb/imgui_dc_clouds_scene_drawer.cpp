@@ -45,16 +45,21 @@ using namespace tool::geo;
 
 auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
 
-    fboD.initialize();
-    cloudsD.resize(nbDrawers);
-
-    for(auto &cloudD : cloudsD){
-        cloudD = std::make_unique<DCCloudDrawer>();
-        cloudD->initialize();                
+    if(!fboD.initialized){
+        fboD.initialize();
+        gridD.initialize(1.f,1.f, 20, 20, true);
+        filteringPlanesDotD.initialize(0.05f);
     }
 
-    gridD.initialize(1.f,1.f, 20, 20, true);
-    filteringPlanesDotD.initialize(0.05f);
+    if(cloudsD.size() < nbDrawers){
+        while(cloudsD.size() != nbDrawers){
+            auto cloudD = std::make_unique<DCCloudDrawer>();
+            cloudD->initialize();
+            cloudsD.push_back(std::move(cloudD));
+        }
+    }else{
+        cloudsD.resize(nbDrawers);
+    }
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -93,21 +98,21 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
     fboD.update_viewport();
     fboD.set_gl_states(display.backgroundColor);
 
-    auto solidShader        = ShadersManager::get_instance()->get_ptr("solid");
-    auto pointsCloudShader  = ShadersManager::get_instance()->get_ptr("cloud");
-    auto circlesCloudShader = ShadersManager::get_instance()->get_ptr("voxelCloud");
+    auto solidShader        = ShadersManager::get_instance()->get_ptr("solid"sv);
+    auto pointsCloudShader  = ShadersManager::get_instance()->get_ptr("cloud"sv);
+    auto circlesCloudShader = ShadersManager::get_instance()->get_ptr("voxelCloud"sv);
 
     if(display.drawGrid){
         if(auto shader = solidShader){
 
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
             shader->set_uniform_matrix("model"sv, Mat4f::identity());
             // colors
-            shader->set_uniform("enable_unicolor", true);
-            shader->set_uniform("unicolor", Pt4f{1.f,1.f,1.f,1.f});
+            shader->set_uniform("enable_unicolor"sv, true);
+            shader->set_uniform("unicolor"sv, Pt4f{1.f,1.f,1.f,1.f});
             gridD.draw();
         }
     }
@@ -128,21 +133,21 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
             shader->set_uniform_matrix("model"sv, cloudD->model);
             // camera
-            shader->set_uniform("camera_position", fboD.camera()->position().conv<float>());
-            shader->set_uniform("camera_direction", fboD.camera()->direction().conv<float>());
+            shader->set_uniform("camera_position"sv, fboD.camera()->position().conv<float>());
+            shader->set_uniform("camera_direction"sv, fboD.camera()->direction().conv<float>());
             //shader->set_uniform_matrix("transposed_inverse_model"sv, transpose(inverse(cloudD->model)));
             // color
-            shader->set_uniform("enable_unicolor", cloudD->display.forceColor);
-            shader->set_uniform("unicolor", cloudD->display.unicolor);
-            shader->set_uniform("factor_unicolor", cloudD->display.factorUnicolor);            
+            shader->set_uniform("enable_unicolor"sv, cloudD->display.forceColor);
+            shader->set_uniform("unicolor"sv, cloudD->display.unicolor);
+            shader->set_uniform("factor_unicolor"sv, cloudD->display.factorUnicolor);
             // geometry
-            shader->set_uniform("backFaceCulling", cloudD->display.backFaceCulling);
+            shader->set_uniform("backFaceCulling"sv, cloudD->display.backFaceCulling);
 
             if(cloudD->display.circles){
-                shader->set_uniform("squareSize", cloudD->display.squareSize);
-                shader->set_uniform("circleRadius", cloudD->display.circleRadius);
+                shader->set_uniform("squareSize"sv, cloudD->display.squareSize);
+                shader->set_uniform("circleRadius"sv, cloudD->display.circleRadius);
             }else{
-                shader->set_uniform("pointSize", cloudD->display.pointSize);
+                shader->set_uniform("pointSize"sv, cloudD->display.pointSize);
             }
             
             if(cloudD->display.showCapture){
@@ -150,7 +155,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
         }else{
-            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n");
+            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n"sv);
             break;
         }
 
@@ -158,35 +163,30 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view", fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection", fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, cloudD->model);            
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("model"sv, cloudD->model);
 
             // color
-            shader->set_uniform("enable_unicolor", true);
-            shader->set_uniform("unicolor", cloudD->display.unicolor);
+            shader->set_uniform("enable_unicolor"sv, true);
+            shader->set_uniform("unicolor"sv, cloudD->display.unicolor);
             if(cloudD->display.showCameraFrustum && cloudD->display.showCapture && m_displayFrustum){
                 cloudD->frustumD.draw();
-                // shader->set_uniform("enable_unicolor", false);
-                // cloudD->normalsD.draw();
-                // shader->set_uniform("enable_unicolor", true);
             }
-
 
             // body tracking
             if(cloudD->display.showBodyTracking && cloudD->display.showCapture){
                 for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
-                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                    shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
                     for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
                         const auto &jm = cloudD->jointsModels[ii][jj];
                         if(std::get<0>(jm)){
-                            shader->set_uniform_matrix("model", std::get<1>(jm) * cloudD->model);
+                            shader->set_uniform_matrix("model"sv, std::get<1>(jm) * cloudD->model);
                             cloudD->btJointD.draw();
                         }
                     }
                 }
             }
-
 
             // filtering planes
             if(cloudD->filtersS.filterDepthWithCloud && cloudD->display.showFilteringGizmos && cloudD->display.showCapture && m_displayGizmos){
@@ -197,25 +197,24 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                     auto p3 = cloudD->filtersS.p1C;
                     Pt3f meanPt    = (p1+p2+p3)/3.f;
 
-                    shader->set_uniform_matrix("model",  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{0.f,1.f,0.f, 1.f});
+                    shader->set_uniform_matrix("model"sv,  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{0.f,1.f,0.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{0.f,0.f,1.f, 1.f});
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{0.f,0.f,1.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{0.f,1.f,1.f, 1.f});
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{0.f,1.f,1.f, 1.f});
                     filteringPlanesDotD.draw();
 
-
-                    shader->set_uniform("unicolor", Pt4f{1.f,0.f,0.f, 1.f});
-                    shader->set_uniform_matrix("model", cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
+                    shader->set_uniform_matrix("model"sv, cloudD->model);
 
                     auto v1 = vec(meanPt,p1);
                     auto v2 = vec(meanPt,p2);
@@ -230,24 +229,22 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                 }
 
                 if(cloudD->filtersS.removeFromPointDistance){
-
                     auto sp = cloudD->filtersS.pSphere;
-                    shader->set_uniform_matrix("model", transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,1.f, 1.f});
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{0.5f,0.5f,1.f, 1.f});
                     filteringPlanesDotD.draw();
                 }
 
                 if(cloudD->filtersS.keepOnlyPointsInsideOOB){
-
-                    shader->set_uniform_matrix("model",  cloudD->model);
-                    shader->set_uniform("unicolor", Pt4f{0.5f,0.5f,0.5f, 1.f});
+                    shader->set_uniform_matrix("model"sv,  cloudD->model);
+                    shader->set_uniform("unicolor"sv, Pt4f{0.5f,0.5f,0.5f, 1.f});
                     cloudD->oobLinesD.update(cloudD->filtersS.oob);
                     cloudD->oobLinesD.draw();
                 }
             }
 
         }else{
-            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"solid\" must be available in the shader manager.\n");
+            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"solid\" must be available in the shader manager.\n"sv);
             break;
         }
     }
@@ -403,7 +400,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
                         ii,
                         std::get<0>(textPos[ii]) + cp,
                         std::get<1>(textPos[ii]),
-                        std::format("Cam{}",ii)
+                        std::format("Cam{}"sv,ii)
                     );
                 }
 
@@ -424,7 +421,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
                         ii,
                         std::get<0>(textPos[ii]) + cp,
                         std::get<1>(textPos[ii]),
-                        std::format("Cam{}",ii)
+                        std::format("Cam{}"sv,ii)
                     );
                 }
                 ImGui::EndTabItem();
@@ -444,7 +441,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
                         ii,
                         std::get<0>(textPos[ii]) + cp,
                         std::get<1>(textPos[ii]),
-                        std::format("Cam{}",ii)
+                        std::format("Cam{}"sv,ii)
                     );
                 }
 
@@ -453,7 +450,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
         }
 
         if(drawCloud){
-            if(ImGuiUiDrawer::begin_tab_item(std::format("{}###direct_all_cloud_tabitem",cloudTabName).c_str())){
+            if(ImGuiUiDrawer::begin_tab_item(std::format("{}###direct_all_cloud_tabitem"sv,cloudTabName).c_str())){
                 draw_fbo(content_region_size_available().conv<int>());
                 ImGui::EndTabItem();
             }
@@ -467,28 +464,28 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
 
     static_cast<void>(sizeW);
     if(focusWindow){        
-        if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("Frames###{}_frames_tab_bar", name).data())){
+        if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("Frames###{}_frames_tab_bar"sv, name).data())){
 
             if(drawColor){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_focus_color_tabitem", name).data())){
-                    draw_color_texture_imgui_child(idDrawer, std::format("-###direct_focus_color_tabchild", name), content_region_size_available());
+                if(ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_focus_color_tabitem"sv, name).data())){
+                    draw_color_texture_imgui_child(idDrawer, std::format("-###direct_focus_color_tabchild"sv, name), content_region_size_available());
                     ImGui::EndTabItem();
                 }
             }
             if(drawDepth){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Depth###{}_focus_depth_tabitem", name).data())){
-                    draw_depth_texture_imgui_child(idDrawer, std::format("-###direct_focus_depth_tabchild", name), content_region_size_available());
+                if(ImGuiUiDrawer::begin_tab_item(std::format("Depth###{}_focus_depth_tabitem"sv, name).data())){
+                    draw_depth_texture_imgui_child(idDrawer, std::format("-###direct_focus_depth_tabchild"sv, name), content_region_size_available());
                     ImGui::EndTabItem();
                 }
             }
             if(drawInfra){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Infra###{}_focus_infra_tabitem", name).data())){
-                    draw_infra_texture_imgui_child(idDrawer, std::format("-###direct_focus_infra_tabchild", name), content_region_size_available());
+                if(ImGuiUiDrawer::begin_tab_item(std::format("Infra###{}_focus_infra_tabitem"sv, name).data())){
+                    draw_infra_texture_imgui_child(idDrawer, std::format("-###direct_focus_infra_tabchild"sv, name), content_region_size_available());
                     ImGui::EndTabItem();
                 }
             }
             if(drawCloud){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_focus_cloud_tabitem", name).data())){
+                if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_focus_cloud_tabitem"sv, name).data())){
                     draw_fbo(content_region_size_available().conv<int>());
                     ImGui::EndTabItem();
                 }
@@ -499,25 +496,25 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
     }else{
         auto sizeW = content_region_size_available() * 0.46f;
         if(drawColor){
-            draw_color_texture_imgui_child(idDrawer, std::format("Color###{}_nofocus_color_tabchild", name), sizeW);
+            draw_color_texture_imgui_child(idDrawer, std::format("Color###{}_nofocus_color_tabchild"sv, name), sizeW);
             if(drawDepth){
                 ImGui::SameLine();
             }
         }
         if(drawDepth){
-            draw_depth_texture_imgui_child(idDrawer, std::format("Depth###{}_nofocus_depth_tabchild", name), sizeW);
+            draw_depth_texture_imgui_child(idDrawer, std::format("Depth###{}_nofocus_depth_tabchild"sv, name), sizeW);
         }
         if(drawInfra){
-            draw_infra_texture_imgui_child(idDrawer, std::format("Infra###{}_nofocus_infra_tabchild", name), sizeW);
+            draw_infra_texture_imgui_child(idDrawer, std::format("Infra###{}_nofocus_infra_tabchild"sv, name), sizeW);
             if(drawCloud){
                 ImGui::SameLine();
             }
         }
 
         if(drawCloud){
-            if(ImGui::BeginChild(std::format("CloudWindow###{}_nofocus_cloud_window_child", name).data(), to_iv2(sizeW))){
-                if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("CloudTab###{}_cloud_tabbar", name).data())){
-                    if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_cloud_tabitem", name).data())){
+            if(ImGui::BeginChild(std::format("CloudWindow###{}_nofocus_cloud_window_child"sv, name).data(), to_iv2(sizeW))){
+                if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("CloudTab###{}_cloud_tabbar"sv, name).data())){
+                    if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_cloud_tabitem"sv, name).data())){
                         draw_fbo(content_region_size_available().conv<int>());
                         ImGui::EndTabItem();
                     }
@@ -675,7 +672,6 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(Pt2f parentSize, const std
 
 auto DCCloudsSceneDrawer::draw_fbo(Pt2<int> size) -> void{
     fboD.bind();
-    fboD.resize(size);
     fboD.draw();
     fboD.unbind();
 }

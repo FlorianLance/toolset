@@ -44,7 +44,6 @@ class DCGLeftPanelChildDrawer{
 public:
 
     auto draw(geo::Pt2f size, int windowFlags, DCGModel *model) -> void;
-    auto append_log(const std::string &log) -> void;
 
     bool settingsPaneDisplayed = false;
     bool filtersPanelDisplayed = false;
@@ -60,13 +59,12 @@ private:
         cam::DCColorSettings &colors) -> void;
     
     auto draw_display_tab_item(DCGUiSettings &uiS, cam::DCSceneDisplaySettings &sceneDisplayS, cam::DCDeviceDisplaySettings &displayS)-> void;
-    auto draw_logs_tab_item()-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;
     auto draw_model_tab_item(cam::DCModelSettings &model)-> void;
     auto draw_delay_tab_item(cam::DCDelaySettings &delayS) -> void;
 
-    ImguiLogs m_logs;
+
     bool m_autoUpdate = true;
 
     static const inline std::vector<std::string> windows = {

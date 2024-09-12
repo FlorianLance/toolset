@@ -42,7 +42,7 @@ DCClientExport::DCClientExport(){
 
     // set connections
     client.feedback_received_signal.connect([&](size_t idD, tool::net::Feedback feedback){
-         if(newFeedbackCBP != nullptr){
+        if(newFeedbackCBP != nullptr){
             (*newFeedbackCBP)(static_cast<int>(idD), static_cast<int>(feedback.type), static_cast<int>(feedback.receivedMessageType));
         }
     });
@@ -52,7 +52,32 @@ DCClientExport::DCClientExport(){
 }
 
 DCClientExport::~DCClientExport(){
-    clean();
+    framesToDisplay.clear();
+    client.clean();
+}
+
+auto DCClientExport::dll_log_message(const std::string &message) -> void{
+    if(logMessageCBP != nullptr){
+        (*logMessageCBP)(message.c_str(),0);
+    }else{
+        tool::Logger::message(message);
+    }
+}
+
+auto DCClientExport::dll_log_warning(const std::string &message) -> void{
+    if(logMessageCBP != nullptr){
+        (*logMessageCBP)(message.c_str(),1);
+    }else{
+        tool::Logger::warning(message);
+    }
+}
+
+auto DCClientExport::dll_log_error(const std::string &message) -> void{
+    if(logMessageCBP != nullptr){
+        (*logMessageCBP)(message.c_str(),2);
+    }else{
+        tool::Logger::error(message);
+    }
 }
 
 auto DCClientExport::init_callbacks(
@@ -120,11 +145,6 @@ auto DCClientExport::initialize(const std::string &clientSettingsFilePath, bool 
 
 auto DCClientExport::update() -> void{
     client.update();
-}
-
-auto DCClientExport::clean() -> void{
-    framesToDisplay.clear();
-    client.clean();
 }
 
 auto DCClientExport::connect_to_devices() -> void{

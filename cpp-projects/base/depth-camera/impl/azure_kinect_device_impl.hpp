@@ -43,7 +43,7 @@ struct AzureKinectDeviceImpl : public DCDeviceImpl{
 
     // getters
     auto is_opened() const noexcept -> bool override final;
-    auto nb_devices() const noexcept -> std::uint32_t override final;
+    // auto nb_devices() const noexcept -> std::uint32_t override final;
     auto device_name() const noexcept -> std::string override final;    
 
 private:

@@ -47,6 +47,8 @@ struct DeviceAction{
     bool updateColors  = false;
     bool updateFilters  = false;
     bool updateDelay   = false;
+
+    bool resetColorSettings = false;
 };
 
 struct DCDevice::Impl{
@@ -94,7 +96,7 @@ auto DCDevice::start_thread() -> void{
     }
 
     i->loopT = std::make_unique<std::thread>([&](){
-        Logger::message("START\n");
+        Logger::message("[DCDevice::start_thread]\n"sv);
         i->doLoopA = true;
         size_t loopCounter = 0;
         while(i->doLoopA){
@@ -190,16 +192,21 @@ auto DCDevice::process() -> void{
             if(!i->device->is_opened()){
 
                 bool canOpenDevice = true;
-                if(i->deviceS.configS.typeDevice != DCType::FemtoMegaEthernet){
-                    auto deviceCount = i->device->nb_devices();
-                    if(deviceCount == 0){
-                        canOpenDevice = false;
-                        Logger::error("[DCDevice::open] No device found\n");
-                    } else if(i->deviceS.configS.idDevice >= deviceCount){
-                        canOpenDevice = false;
-                        Logger::error(std::format("[DCDevice::open] Invalid device id: [{}], available: [{}]\n", i->deviceS.configS.idDevice, deviceCount));
-                    }
-                }
+                // if(i->deviceS.configS.typeDevice != DCType::FemtoMegaEthernet){
+                //     auto deviceCount = i->device->nb_devices();
+                //     Logger::message(std::format("NB DEVICES {}\n", deviceCount));
+                //     if(deviceCount == 0){
+                //         canOpenDevice = false;
+                //         Logger::error("[DCDevice::open] No device found\n");
+                //     }else if(i->deviceS.configS.useSerialNumber){
+                //         // ...
+                //     }else{
+                //         if(i->deviceS.configS.idDevice >= deviceCount){
+                //             canOpenDevice = false;
+                //             Logger::error(std::format("[DCDevice::open] Invalid device id: [{}], available: [{}]\n", i->deviceS.configS.idDevice, deviceCount));
+                //         }
+                //     }
+                // }
 
                 if(canOpenDevice){
 
@@ -211,12 +218,16 @@ auto DCDevice::process() -> void{
                         {
                             std::unique_lock<std::mutex> lock(i->locker);
                             i->device->set_data_settings(i->deviceS.dataS.server);
-                            i->device->update_from_colors_settings();
-                            i->device->set_color_settings(i->colorsS);
-                            i->device->update_from_colors_settings();
                             i->device->set_filters_settings(i->filtersS);
                             i->device->set_delay_settings(i->delayS);
 
+                            if(dAction.resetColorSettings){
+                                i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                                color_settings_reset_signal(i->colorsS);
+                            }
+
+                            i->device->set_color_settings(i->colorsS);
+                            i->device->update_from_colors_settings();
                         }
 
                         // update device name
@@ -278,12 +289,16 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     const auto &newConfigS  = deviceS.configS;
     const auto &currConfigS = i->deviceS.configS;
 
-    bool deviceChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
-    if(deviceChanged && i->deviceInitialized){
+    bool deviceTypeChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
+    if(deviceTypeChanged && i->deviceInitialized){
         update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [...]"sv, i->deviceS.configS.idDevice));
     }
 
-    bool deviceIdChanged = currConfigS.idDevice != newConfigS.idDevice;
+    bool deviceChanged =
+        (newConfigS.useSerialNumber != currConfigS.useSerialNumber) ||
+        (newConfigS.idDevice        != currConfigS.idDevice)        ||
+        (newConfigS.serialNumber    != currConfigS.serialNumber)    ||
+        (newConfigS.ipv4Address     != currConfigS.ipv4Address);
 
     bool syncChanged  =
         (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
@@ -309,13 +324,15 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
     // device must be deleted
     DeviceAction dAction;    
-    dAction.cleanDevice     = i->deviceInitialized && deviceChanged;
+    dAction.cleanDevice     = i->deviceInitialized && deviceTypeChanged;
     // device must be created
-    dAction.createDevice    = (!i->deviceInitialized && (newConfigS.typeDevice != DCType::Undefined)) || deviceChanged;
+    dAction.createDevice    = (!i->deviceInitialized && (newConfigS.typeDevice != DCType::Undefined)) || deviceTypeChanged;
     // device must be closed
-    dAction.closeDevice     = !newConfigS.openDevice || deviceIdChanged || syncChanged || cameraSettingsChanged || dAction.cleanDevice;
+    dAction.closeDevice     = !newConfigS.openDevice || deviceChanged || syncChanged || cameraSettingsChanged || dAction.cleanDevice;
     // device must be opened
     dAction.openDevice      = newConfigS.openDevice;
+    // colors resetings must be resetted
+    dAction.resetColorSettings = deviceTypeChanged;
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);

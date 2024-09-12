@@ -51,6 +51,11 @@ namespace BS {
         // I/O
         public bool load_from_file(string videoFilePath) { return load_from_file__dc_video_player(_handle, videoFilePath) == 1; }
 
+        public bool set_video_from_recorder(DCVideoRecorder dCVideoRecorder) {
+            set_video_from_recorder__dc_video_player(_handle, dCVideoRecorder.get_dll().get_handle());
+            return true;
+        }
+
         // settings
         public void set_player_settings(bool doLoops, float startTimeMs, float endTimeMs) { set_player_settings__dc_video_player(_handle, doLoops ? 1 : 0, startTimeMs, endTimeMs); }
 
@@ -101,6 +106,8 @@ namespace BS {
         static private extern void delete__dc_video_player(HandleRef dcPlayer);
         [DllImport("base-export", EntryPoint = "load_from_file__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
         static private extern int load_from_file__dc_video_player(HandleRef dcPlayer, string pathDcVideoFile);
+        [DllImport("base-export", EntryPoint = "set_video_from_recorder__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
+        static private extern void set_video_from_recorder__dc_video_player(HandleRef dcPlayer, HandleRef dcRecorderExport);
 
         // navigation
         [DllImport("base-export", EntryPoint = "is_started__dc_video_player", CallingConvention = CallingConvention.Cdecl)]

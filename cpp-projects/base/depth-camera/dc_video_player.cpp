@@ -31,7 +31,6 @@ struct DCVideoPlayer::Impl{
         camerasCompressedFrame.resize(nbDevices);
         camerasFrame.resize(nbDevices);
 
-
         std::fill(std::begin(camerasFrameId),         std::end(camerasFrameId), 0);
         std::fill(std::begin(camerasCompressedFrame), std::end(camerasCompressedFrame), nullptr);
         std::fill(std::begin(camerasFrame),           std::end(camerasFrame), nullptr);
@@ -64,7 +63,7 @@ struct DCVideoPlayer::Impl{
                     auto firstMode = cFrame->mode;
                     for(size_t idF = 1; idF < video.nb_frames(idD); ++idF){
                         if(firstMode != video.get_compressed_frame(idD, idF).lock()->mode){
-                            tool::Logger::error("[DCPlayerData::load_from_file] Inconsistent modes for cameras.\n");
+                            tool::Logger::error("[DCVideoPlayer::load_from_file] Inconsistent modes for cameras.\n");
                             return false;
                         }
                     }
@@ -72,11 +71,11 @@ struct DCVideoPlayer::Impl{
                     if(auto uncompressor = video.uncompressor(idD); uncompressor != nullptr){
                         uncompressor->initialize(cFrame.get());
                     }else{
-                        tool::Logger::error("[DCPlayerData::load_from_file] Invalid uncompressor.\n");
+                        tool::Logger::error("[DCVideoPlayer::load_from_file] Invalid uncompressor.\n");
                     }
 
                 }else{
-                    tool::Logger::error("[DCPlayerData::load_from_file] Invalid nb of frames.\n");
+                    tool::Logger::error("[DCVideoPlayer::load_from_file] Invalid nb of frames.\n");
                     return false;
                 }
             }
@@ -184,7 +183,7 @@ struct DCVideoPlayer::Impl{
     }
 
     auto remove_empty_cameras() -> void{
-        tool::Logger::error("[DCPlayerData::remove_empty_cameras] Not implemented.\n");
+        tool::Logger::error("[DCVideoPlayer::remove_empty_cameras] Not implemented.\n");
 
         // for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
         //     Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->video.nb_frames(ii)));
@@ -236,7 +235,7 @@ struct DCVideoPlayer::Impl{
 
     auto merge_before(DCVideo &other) -> void{
         static_cast<void>(other);
-        tool::Logger::error("[DCPlayerData::merge_before] Not implemented.\n");
+        tool::Logger::error("[DCVideoPlayer::merge_before] Not implemented.\n");
 
         // if(other.nb_cameras() != video.nb_cameras()){
         //     tool::Logger::error("[DCPlayerData::merge_before] Incompatible number of cameras.\n");
@@ -463,7 +462,7 @@ auto DCVideoPlayer::remove_after_current_frame() -> void{
 }
 
 auto DCVideoPlayer::merge() -> void{
-    Logger::error("[DCPlayer::merge] Not implemented.\n");
+    Logger::error("[DCVideoPlayer::merge] Not implemented.\n");
     // remove_empty_cameras();
 //    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
     // update_states();

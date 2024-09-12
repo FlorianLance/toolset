@@ -49,16 +49,9 @@ auto DCCloudDrawer::initialize() -> void {
     cpD.set_indice_count(0);
 
     frustumD.initialize(true);
-
-
     geo::OBB3<float> obb;
     oobLinesD.initialize(true, obb);
-
     planeFilteringLinesD.initialize(true);
-    // normalsIndices.resize(initData.size()*2);
-    // std::iota(normalsIndices.begin(), normalsIndices.end(), 0);
-    // normalsD.initialize(true, normalsIndices, initData, initData);
-    // normalsD.set_indice_count(0);
 }
 
 auto DCCloudDrawer::reset() -> void{
@@ -77,11 +70,8 @@ auto DCCloudDrawer::reset() -> void{
     depthT.init_or_update_8ui(100,100,3, reset3.data());
     infraT.init_or_update_8ui(100,100,3, reset3.data());
 
-
     cpD.set_indice_count(0);
-    // normalsD.set_indice_count(0);
 }
-
 
 auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
 
@@ -89,10 +79,10 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
         return false;
     }
 
-    auto dr = cam::dc_depth_resolution(frame->mode);
-    auto range = cam::dc_depth_range(dr);
-    auto hFov = dc_depth_h_fov(dr);
-    auto vFov = dc_depth_v_fov(dr);
+    auto dr     = cam::dc_depth_resolution(frame->mode);
+    auto range  = cam::dc_depth_range(dr);
+    auto hFov   = dc_depth_h_fov(dr);
+    auto vFov   = dc_depth_v_fov(dr);
     auto diff   = range.y() - range.x();
     frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x() + filtersS.minDepthF*diff, range.x() + filtersS.maxDepthF*diff);
 
@@ -121,23 +111,7 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     if(frame->cloud.is_valid()){
         cpD.update(frame->cloud);
         cpD.set_indice_count(frame->cloud.vertices.size());
-
-        // if(!frame->cloud.normals.empty()){
-        //     normalsP.resize(frame->cloud.vertices.size()*2);
-        //     normalsC.resize(frame->cloud.vertices.size()*2);
-
-        //     for(size_t id = 0; id < frame->cloud.vertices.size(); ++ id){
-        //         normalsP[2*id]   = frame->cloud.vertices[id];
-        //         normalsP[2*id+1] = frame->cloud.vertices[id] + frame->cloud.normals[id] * 0.07f;
-        //         normalsC[2*id]   = frame->cloud.colors[id];
-        //         normalsC[2*id+1] = {0,1,0};//frame->cloud.colors[id];
-        //     }
-
-        //     normalsD.update(normalsIndices, normalsP, normalsC);
-        //     normalsD.set_indice_count(frame->cloud.vertices.size()*2);
-        // }
     }
-
     
     nbBodies = frame->bodyTracking.size();
     if(jointsModels.size() < nbBodies){
@@ -161,32 +135,33 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     lastFrame   = frame;
 
     return true;
-    //    if(k4M->parameters.captureAudio){
-    //        for(size_t idFrame = 0; idFrame < currentData->audioFramesCount; ++idFrame){
-    //            for(size_t idChannel = 0; idChannel < channelsData2.size(); ++idChannel){
-    //                //                        if(idChannel == 0){
-    //                //                            Logger::message(std::to_string(currentData->audioChannelsData[idChannel][idFrame]) + " ");
-    //                //                        }
-    //                channelsData2[idChannel].push_back(currentData->audioChannelsData[idChannel][idFrame]);
-    //            }
-    //        }
-
-    //        for(size_t idChannel = 0; idChannel < channelsData2.size(); ++idChannel){
-    //            if(channelsData2[idChannel].size() > 50000){
-    //                channelsData2[idChannel].erase(channelsData2[idChannel].begin(), channelsData2[idChannel].begin() + (channelsData2[idChannel].size() - 50000));
-    //            }
-    //        }
-    //    }
 }
 
 auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool {    
 
     cpD.update(cloudData);
     cpD.set_indice_count(cloudData.vertices.size());
-    // cpD.init(cloudData.vertices.span(), cloudData.colors.span());
 
     lastFrame   = nullptr;
     lastFrameId = -1;
 
     return true;
 }
+
+
+//    if(k4M->parameters.captureAudio){
+//        for(size_t idFrame = 0; idFrame < currentData->audioFramesCount; ++idFrame){
+//            for(size_t idChannel = 0; idChannel < channelsData2.size(); ++idChannel){
+//                //                        if(idChannel == 0){
+//                //                            Logger::message(std::to_string(currentData->audioChannelsData[idChannel][idFrame]) + " ");
+//                //                        }
+//                channelsData2[idChannel].push_back(currentData->audioChannelsData[idChannel][idFrame]);
+//            }
+//        }
+
+//        for(size_t idChannel = 0; idChannel < channelsData2.size(); ++idChannel){
+//            if(channelsData2[idChannel].size() > 50000){
+//                channelsData2[idChannel].erase(channelsData2[idChannel].begin(), channelsData2[idChannel].begin() + (channelsData2[idChannel].size() - 50000));
+//            }
+//        }
+//    }

@@ -53,7 +53,8 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
     menuD.draw();
 
     geo::Pt2f settingsSize = {400.f, size.y()-50.f};
-    geo::Pt2f displaySize  = {size.x()-400.f, size.y()-50.f};
+    geo::Pt2f displaySize  = {size.x()-800.f, size.y()-50.f};
+    geo::Pt2f logsSize     = {400.f, size.y()-50.f};
 
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Always);
     if (ImGui::Begin("###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse)){
@@ -81,7 +82,14 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
             }
         }
         ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        logsD.draw("Logs###main_logs_imguilogs", to_iv2(logsSize));
     }
     ImGui::End();
 }
 
+auto DCGMainW::append_log(const std::string &log) -> void {
+    logsD.add_log(log.c_str());
+}

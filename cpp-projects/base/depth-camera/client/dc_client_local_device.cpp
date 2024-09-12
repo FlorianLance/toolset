@@ -118,7 +118,7 @@ auto DCClientLocalDevice::update_delay_settings(const cam::DCDelaySettings &dela
 
 auto DCClientLocalDevice::device_connected() const noexcept -> bool{
     if(i->device){
-        return i->device->is_opened();
+        return true;
     }
     return false;
 }

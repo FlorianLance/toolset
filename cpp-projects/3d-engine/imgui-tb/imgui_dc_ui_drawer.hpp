@@ -76,7 +76,7 @@ namespace tool::graphics {
 };
 
 [[maybe_unused]] static constexpr const char* protocolItems[] = {
-    "IPV4", "IVP6"
+    "IPV4", "IPV6"
 };
 
 [[maybe_unused]] static constexpr const char* devicesConnectionTypes[] = {
@@ -88,8 +88,8 @@ class DCUIDrawer{
 
 public:
 
-    static auto set_manager_mode(bool state) -> void{
-        m_isManager = true;
+    static auto set_client_mode(bool state) -> void{
+        m_isClient = true;
     }
 
     static auto draw_dc_config(cam::DCConfigSettings &config) -> bool;
@@ -130,7 +130,7 @@ public:
         devicesNames[idDevice] = deviceName;
     }
 
-    static inline bool m_isManager = false;
+    static inline bool m_isClient = false;
 };
 
 }
