@@ -49,7 +49,8 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     // local
     connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCClientType::Remote : DCClientType::Local;
     if(connectionType == DCClientType::Remote){
-        read_value(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+        read_value<size_t>(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+        read_value<bool>(json, unreadCount, "any_reading_interface"sv, anyReadingInterface);
         read_value<int>(json, unreadCount, "reading_port"sv, readingPort);
         read_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
         read_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
@@ -70,8 +71,10 @@ auto DCDeviceConnectionSettings::convert_to_json() const -> nlohmann::json{
     add_value(json, "connection_type"sv, (connectionType == DCClientType::Remote) ? "Remote"sv : "Local"sv);
     if(connectionType == DCClientType::Remote){
         add_value(json, "id_reading_interface"sv,     idReadingInterface);
+        add_value(json, "any_reading_interface"sv,    anyReadingInterface);
         add_value(json, "reading_port"sv,             readingPort);
-        add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
+        // add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
+        add_value(json, "sending_address"sv,          sendingAddress);
         add_value(json, "sending_port"sv,             sendingPort);
         add_value(json, "protocol"sv,                 (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
     }

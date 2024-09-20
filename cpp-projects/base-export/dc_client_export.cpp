@@ -30,6 +30,9 @@
 #include <filesystem>
 #include <execution>
 
+// utility
+#include "utility/logger.hpp"
+
 using namespace tool::cam;
 using namespace tool::net;
 using namespace tool::geo;

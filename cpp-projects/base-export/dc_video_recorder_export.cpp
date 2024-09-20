@@ -27,6 +27,8 @@
 
 #include "dc_video_recorder_export.hpp"
 
+#include "utility/logger.hpp"
+
 using namespace tool::cam;
 
 DCVideoRecorderExport::DCVideoRecorderExport(){

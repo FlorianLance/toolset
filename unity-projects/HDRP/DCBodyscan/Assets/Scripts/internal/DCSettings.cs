@@ -31,7 +31,7 @@ namespace BS {
     public class DCDisplaySettingsVFX {
         public bool display = true;                 // shall the cloud be displayed ?
         public bool update = true;                  // shall the cloud be updated ?
-        public bool enableBackFaceCulling = true;
+        public bool enableBackFaceCulling = false;
         public UnityEngine.Color tint = new UnityEngine.Color(1f, 1f, 1f, 1f); // tint color to be mixed with input cloud color (VFX)
         public float colorFactor = 3.0f;            // color multiplier factor applied at the end (VFX)
         public float particleSize = 0.005f;         // particle size (VFX)

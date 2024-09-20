@@ -24,7 +24,7 @@
 // unity
 using UnityEngine;
 
-namespace Ex{
+namespace Ex {
 
     public class RuntimeFPPCamera : MonoBehaviour {
 
@@ -33,6 +33,10 @@ namespace Ex{
         public float speedRV = 3f;
         public float speedRR = 3f;
         public bool outside = true;
+
+        public float lastNx = 0f;
+        public float lastNy = 0f;
+        public bool lastOutsideState = false;
 
         Camera cameraC = null;
         private void Awake() {
@@ -51,16 +55,21 @@ namespace Ex{
 
         private void Update() {
 
-            if (outside = is_mouse_outside()) {
-                return;
-            }
-
             bool leftClick = UnityEngine.Input.GetMouseButton(0);
             bool rightClick = UnityEngine.Input.GetMouseButton(1);
             bool middleClick = UnityEngine.Input.GetMouseButton(2);
             float nx = UnityEngine.Input.GetAxis("Mouse X");
             float ny = UnityEngine.Input.GetAxis("Mouse Y");
             float scroll = UnityEngine.Input.GetAxis("Mouse ScrollWheel");
+            outside = is_mouse_outside();
+
+            if (outside) {
+                lastNx = nx;
+                lastNy = ny;
+                lastOutsideState = outside;
+                return;
+            }
+
 
             if (scroll > 0f) {
                 move_forward(speedT);
@@ -68,24 +77,33 @@ namespace Ex{
                 move_backward(speedT);
             }
 
-            if (middleClick) {
+            if (!lastOutsideState) {
 
-                // check horizontal right click mouse drag movement
-                if (nx != 0) {
-                    horizontal_strafe(nx * speedT);
-                }
-                // check vertical right click mouse drag movement
-                if (ny != 0) {
-                    vertical_strafe(ny * speedT);
-                }
+                if (middleClick) {
 
-            } else if (leftClick && rightClick) {
-                transform.Rotate(0, 0, speedRR * nx);
-            } else if (rightClick) {
-                transform.Rotate(new Vector3(-ny * speedRV, nx * speedRH, 0));
-            } else if (leftClick) {
-                // ...
+                    // check horizontal right click mouse drag movement
+                    if (nx != 0) {
+                        //Debug.Log("NX " + nx + " " + lastNx + " " + lastOutsideState + " " + outside);
+                        horizontal_strafe(nx * speedT);
+                    }
+                    // check vertical right click mouse drag movement
+                    if (ny != 0) {
+                        //Debug.Log("NY " + ny + " " + lastNy);
+                        vertical_strafe(ny * speedT);
+                    }
+
+                } else if (leftClick && rightClick) {
+                    transform.Rotate(0, 0, speedRR * nx);
+                } else if (rightClick) {
+                    transform.Rotate(new Vector3(-ny * speedRV, nx * speedRH, 0));
+                } else if (leftClick) {
+                    // ...
+                }
             }
+
+            lastNx = nx;
+            lastNy = ny;
+            lastOutsideState = outside;
         }
 
         protected void horizontal_strafe(float amount) {

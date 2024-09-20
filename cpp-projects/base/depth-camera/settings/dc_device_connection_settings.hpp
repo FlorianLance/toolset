@@ -50,6 +50,7 @@ struct DCDeviceConnectionSettings : io::Settings{
 
     // remote
     size_t idReadingInterface = 0;
+    bool anyReadingInterface = false;
     int readingPort = 8889;
     std::string sendingAddress = "localhost";
     int sendingPort = 8888;
@@ -59,7 +60,7 @@ struct DCDeviceConnectionSettings : io::Settings{
     std::string readingAddress;
     std::string processedSendingAddress;
     bool startReadingThread = true;
-    bool isLocalhost = false;
+    // bool isLocalhost = false;
 };
 
 

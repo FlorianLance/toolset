@@ -166,7 +166,7 @@ namespace BS {
             }
 
             if (!File.Exists(displaySettingsJsonFilePath)) {
-                UnityEngine.Debug.LogError(string.Format("[DCDataVFX::update_parameters] File with path [{0}] doesn't exist. ", displaySettingsJsonFilePath));
+                UnityEngine.Debug.LogWarning(string.Format("[DCDataVFX::update_parameters] File with path [{0}] doesn't exist. ", displaySettingsJsonFilePath));
                 return;
             }
 

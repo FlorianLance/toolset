@@ -42,8 +42,9 @@ auto UdpServerSettings::init_from_json(const nlohmann::json &json) -> void{
     // base
     io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
     // settings
-    udpReadingInterfaceId   = read_value<size_t>(json, unreadCount, "id_interface");
-    udpReadingPort          = read_value<int>(json, unreadCount, "reading_port");
+    anyReadingInterface  = read_value<bool>(json, unreadCount, "any_reading_interface");
+    readingInterfaceId   = read_value<size_t>(json, unreadCount, "id_interface");
+    readingPort          = read_value<int>(json, unreadCount, "reading_port");
     protocol                = (read_value<std::string>(json, unreadCount, "protocol") == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
 
     if(unreadCount != 0){
@@ -57,9 +58,10 @@ auto UdpServerSettings::convert_to_json() const -> nlohmann::json{
     // base
     add_value(json, "base"sv, io::Settings::convert_to_json());
     // settings
-    add_value(json, "id_interface"sv,   udpReadingInterfaceId);
-    add_value(json, "reading_port"sv,   udpReadingPort);
-    add_value(json, "protocol"sv,       (protocol == Protocol::ipv6) ? "ipv6" : "ipv4");
+    add_value(json, "any_reading_interface"sv,  anyReadingInterface);
+    add_value(json, "id_interface"sv,           readingInterfaceId);
+    add_value(json, "reading_port"sv,           readingPort);
+    add_value(json, "protocol"sv,               (protocol == Protocol::ipv6) ? "ipv6" : "ipv4");
 
     return json;
 }

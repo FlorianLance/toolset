@@ -484,7 +484,8 @@ auto DCServer::reset_network() -> void{
     i->stop_reading_thread();
 
     settings.update_reading_interface();
-    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
+
+    if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
         Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return;
     }
@@ -502,7 +503,7 @@ auto DCServer::initialize(const std::string &serverSettingsPath) -> bool{
     }
     settings.globalFilePath = serverSettingsPath;
 
-    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
+    if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
         Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return false;
     }
@@ -519,7 +520,7 @@ auto DCServer::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
     }
     settings.update_reading_interface();
 
-    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.udpReadingPort, settings.udpReadingInterface.protocol)){
+    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
         // ...
         return false;
     }

@@ -176,7 +176,7 @@ MonoBehaviour:
   applyColorSettingsAfterConnection: 1
   loadDisplaySettingsFilesAfterInitializing: 0
   displaySettingsFilesBasePath: ./display_settings
-  clientSettingsFilePath: E:/client_remote_test1.json
+  clientSettingsFilePath: E:/client_local8_test.json
   m_allDevicesConnected: 0
   m_threadsStarted: 0
   devicesStates: []

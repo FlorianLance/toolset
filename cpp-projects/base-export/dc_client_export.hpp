@@ -29,7 +29,6 @@
 // base
 #include "depth-camera/settings/dc_delay_settings.hpp"
 #include "depth-camera/client/dc_client.hpp"
-#include "utility/logger.hpp"
 
 typedef void (__stdcall * LogMessageCB)(const char*, int);
 typedef void (__stdcall * NewFeedbackCB)(int,int,int);

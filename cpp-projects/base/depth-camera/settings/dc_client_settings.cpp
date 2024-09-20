@@ -123,11 +123,15 @@ auto DCClientSettings::update_connection_settings(DCDeviceConnectionSettings &co
         }
 
         // retrieve reading address
-        connectionS.readingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
+        if(!connectionS.anyReadingInterface){
+            connectionS.readingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
+        }else{
+            connectionS.readingAddress = "any";
+        }
 
         // retrieve localhost corresponding address
         if(connectionS.sendingAddress == "localhost"sv){
-            connectionS.isLocalhost = true;
+            // connectionS.isLocalhost = true;
             connectionS.processedSendingAddress = interfaces[connectionS.idReadingInterface].ipAddress;
         }else{
             connectionS.processedSendingAddress = connectionS.sendingAddress;

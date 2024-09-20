@@ -85,8 +85,6 @@ auto draw_config_file_name(const std::string &filePath) -> void{
     }
 }
 
-#include "utility/logger.hpp"
-
 auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void {
 
     if (!ImGui::BeginTabItem("Server info###settings_server_info_tabitem")){
@@ -136,18 +134,27 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
         ImGui::Unindent();
     }
 
-    static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
-    int idRI = static_cast<int>(settings.udpServerS.udpReadingInterfaceId);
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
-        settings.udpServerS.udpReadingInterfaceId = idRI;
+    if(ImGui::Checkbox("Use any interface", &settings.udpServerS.anyReadingInterface)){
         DCGSignals::get()->reset_reading_network_signal();
     }
 
-    static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
-    static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &settings.udpServerS.udpReadingPort, idRP, dsRP)){
+    ImGui::BeginDisabled(settings.udpServerS.anyReadingInterface);
+
+    static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
+    int idRI = static_cast<int>(settings.udpServerS.readingInterfaceId);
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
+        settings.udpServerS.readingInterfaceId = idRI;
         DCGSignals::get()->reset_reading_network_signal();
     }
+
+    ImGui::EndDisabled();
+
+    static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
+    static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &settings.udpServerS.readingPort, idRP, dsRP)){
+        DCGSignals::get()->reset_reading_network_signal();
+    }
+
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -157,7 +164,7 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
     ImGui::Text("Current UDP reading:");
     ImGui::Indent();
     ImGuiUiDrawer::text(std::format("IP address: [{}]", settings.udpReadingInterface.ipAddress));
-    ImGuiUiDrawer::text(std::format("Port: {}", settings.udpServerS.udpReadingPort));
+    ImGuiUiDrawer::text(std::format("Port: {}", settings.udpServerS.readingPort));
     ImGui::Unindent();
 
     ImGui::Text("Clients:");

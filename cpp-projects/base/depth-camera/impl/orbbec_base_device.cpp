@@ -90,7 +90,7 @@ struct OrbbecDeviceManager{
         tool::LogGuard lg("[OrbbecDeviceManager::OrbbecDeviceManager]");
         try{
             context.setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-            context.enableNetDeviceEnumeration(true);
+            context.enableNetDeviceEnumeration(false);
             devicesList = context.queryDeviceList();
             validity.resize(devicesList->deviceCount());
             std::fill(validity.begin(), validity.end(), false);

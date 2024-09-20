@@ -103,10 +103,14 @@ auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protoc
         i->socket->set_option(udp::socket::receive_buffer_size(receiveBufferSize));
 
         // bind socket
-        i->endPoint = udp::endpoint(address::from_string(readingAdress), static_cast<unsigned short>(port));
-        i->socket->bind(i->endPoint);
-
-        Logger::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [{}], [{}].\n"sv, readingAdress, port));
+        if(readingAdress.empty()){
+            i->endPoint = udp::endpoint(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(), static_cast<unsigned short>(port));
+            Logger::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [any_address], [{}].\n"sv, port));
+        }else{
+            i->endPoint = udp::endpoint(address::from_string(readingAdress), static_cast<unsigned short>(port));
+            Logger::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [{}], [{}].\n"sv, readingAdress, port));
+        }
+        i->socket->bind(i->endPoint);        
 
     }catch (const boost::system::system_error &error){
         Logger::error(std::format("[UdpReader::init_socket] Cannot bind endpoint [{}], [{}], error message: [{}].\n"sv, readingAdress, port, error.what()));

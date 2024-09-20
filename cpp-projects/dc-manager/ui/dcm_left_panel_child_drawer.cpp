@@ -622,29 +622,41 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
                 ImGui::Unindent();
             }
 
+            if(ImGui::Checkbox("Use any interface", &clientDeviceS.connectionS.anyReadingInterface)){
+                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            ImGui::BeginDisabled(clientDeviceS.connectionS.anyReadingInterface);
+
             static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
             int idRI = static_cast<int>(clientDeviceS.connectionS.idReadingInterface);
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
                 clientDeviceS.connectionS.idReadingInterface = idRI;
-                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
+
+            ImGui::EndDisabled();
 
             static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
             static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
-                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
 
             ImGui::Text("Sending address:");
             ImGui::SameLine();
             ImGui::SetNextItemWidth(130);
             if(ImGui::InputText("###sending_address", &clientDeviceS.connectionS.sendingAddress)){
-                DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
 
             static ImGuiIntS idSP = {8889,8888,9999,0.1f,1};
             static ImGuiDragS dsSP = {75.f, true, true, true, true, true};
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sending port", "sending_port", &clientDeviceS.connectionS.sendingPort, idSP, dsSP)){
+                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            }
+
+            if(ImGui::Button("Reset Network")){
                 DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
 

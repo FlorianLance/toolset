@@ -91,8 +91,12 @@ auto DCServerSettings::convert_to_json() const -> nlohmann::json{
 
 auto DCServerSettings::update_reading_interface() -> void{
     const auto &interfaces = (udpServerS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-    if(udpServerS.udpReadingInterfaceId < interfaces.size()){
-        udpReadingInterface = interfaces[udpServerS.udpReadingInterfaceId];
+    if(udpServerS.readingInterfaceId < interfaces.size()){
+        if(!udpServerS.anyReadingInterface){
+            udpReadingInterface = interfaces[udpServerS.readingInterfaceId];
+        }else{
+            udpReadingInterface = Interface(udpServerS.protocol, "any");
+        }
     }else{
         Logger::error("[DCServerSettings::update_reading_interface] Invalid reading interface id, not enough interfaces.\n");
     }

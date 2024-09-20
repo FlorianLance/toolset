@@ -173,11 +173,11 @@ namespace BS {
 
             if (m_dcClientDLL != null) {
 
-                foreach (var deviceS in devicesStates) {
-                    deviceS.cloudUpdated = 0;
-                    deviceS.averageCloudUpdatedPerSecond = 0;
-                    deviceS.sw.Start();
-                }
+                //foreach (var deviceS in devicesStates) {
+                //    deviceS.cloudUpdated = 0;
+                //    deviceS.averageCloudUpdatedPerSecond = 0;
+                //    deviceS.sw.Start();
+                //}
 
                 foreach (var rndJob in m_readNetworkDataJobs) {
                     rndJob.start_reading();
@@ -213,9 +213,9 @@ namespace BS {
                     pdJob.stop_processing();
                 }
 
-                foreach (var deviceS in devicesStates) {
-                    deviceS.sw.Stop();
-                }
+                //foreach (var deviceS in devicesStates) {
+                //    deviceS.sw.Stop();
+                //}
                 streamingEndedEvent.Invoke();
             }
         }

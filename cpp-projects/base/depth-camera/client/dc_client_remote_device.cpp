@@ -66,7 +66,6 @@ DCClientRemoteDevice::DCClientRemoteDevice() : i(std::make_unique<DCClientRemote
 }
 
 DCClientRemoteDevice::~DCClientRemoteDevice(){
-    Logger::log("[DCClientRemoteDevice::clean] 3\n");
     DCClientRemoteDevice::clean();
 }
 
@@ -75,17 +74,18 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     auto lg = LogGuard("[DCClientRemoteDevice::initialize]");
     i->remoteServerS = connectionS;
 
-
     Logger::message(
         std::format(
             "DCServerRemoteDevice: initialize:"
             "\n\tReading interface id: [{}]"
+            "\n\tAny reading interface: [{}]"
             "\n\tReading address: [{}]"
             "\n\tReading port: [{}]"
             "\n\tSending address: [{}]"
             "\n\tSending port: [{}]"
             "\n\tProtocol: [{}].\n",
             i->remoteServerS.idReadingInterface,
+            i->remoteServerS.anyReadingInterface,
             i->remoteServerS.readingAddress,
             i->remoteServerS.readingPort,
             i->remoteServerS.processedSendingAddress,
@@ -94,10 +94,8 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
         )
     );
 
-
     // init reader
-    Logger::message(std::format("DCClientRemoteDevice init reader: {} {} {}\n", i->remoteServerS.readingAddress, std::to_string(i->remoteServerS.readingPort), static_cast<int>(i->remoteServerS.protocol)));
-    if(!i->udpReader.init_socket(i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
+    if(!i->udpReader.init_socket(i->remoteServerS.anyReadingInterface ? "" : i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
         Logger::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }

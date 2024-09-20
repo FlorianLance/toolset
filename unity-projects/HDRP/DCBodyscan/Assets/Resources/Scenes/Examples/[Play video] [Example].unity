@@ -507,6 +507,9 @@ MonoBehaviour:
   speedRV: 3
   speedRR: 3
   outside: 1
+  lastNx: 0
+  lastNy: 0
+  lastOutsideState: 0
 --- !u!1 &870560273
 GameObject:
   m_ObjectHideFlags: 0

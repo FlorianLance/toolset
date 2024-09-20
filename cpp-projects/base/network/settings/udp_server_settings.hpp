@@ -36,12 +36,10 @@ namespace tool::net {
 struct UdpServerSettings : io::Settings{
 
     // data
-    size_t udpReadingInterfaceId = 0;
-    int udpReadingPort = 8888;
+    bool anyReadingInterface = false;
+    size_t readingInterfaceId = 0;
+    int readingPort = 8888;
     Protocol protocol = Protocol::ipv4;
-
-    // runtime
-    // ...
 
     UdpServerSettings(){
         sType   = io::SettingsType::Udp_server;

@@ -220,7 +220,7 @@ namespace BS {
                 if (loadDisplaySettingsFilesAfterVideoLoading) {
                     for (int idG = 0; idG < dataVFX.displaySettings.Count; ++idG) {
                         string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayerVFX::load_video_from_file] Load display settings file with path [{0}]. ", path));
+                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayer::initialize_data_from_video] Load display settings file with path [{0}]. ", path));
                         dataVFX.update_display_parameters_from_json_file(idG, path);
                     }
                 }
@@ -443,11 +443,11 @@ namespace BS {
                 devicesStates[idC].currentFrameId = m_dcVideoPlayerDLL.current_frame_id(idC);
             }
 
-            Profiler.BeginSample("[DCVideoPlayerVFX::update] Update DLL player");
+            Profiler.BeginSample("[DCVideoPlayer::update] Update DLL player");
             m_dcVideoPlayerDLL.update();
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DCVideoPlayerVFX::update] Copy data from DLL player");
+            Profiler.BeginSample("[DCVideoPlayer::update] Copy data from DLL player");
             Parallel.ForEach(devicesStates, deviceStates => {
 
                 int currentId = m_dcVideoPlayerDLL.current_frame_id(deviceStates.deviceId);
@@ -471,7 +471,7 @@ namespace BS {
             });
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DCVideoPlayerVFX::update] Update VFX data");
+            Profiler.BeginSample("[DCVideoPlayer::update] Update VFX data");
             foreach (var deviceStates in devicesStates) {
                 dataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
             }
@@ -503,7 +503,7 @@ namespace BS {
                 if (loadDisplaySettingsFilesAfterVideoLoading) {
                     for (int idG = 0; idG < count; ++idG) {
                         string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayerVFX::set_visualeffect_asset] Load display settings file with path [{0}]. ", path));
+                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayer::set_vfx_asset] Load display settings file with path [{0}]. ", path));
                         dataVFX.update_display_parameters_from_json_file(idG, path);
                     }
                 }
