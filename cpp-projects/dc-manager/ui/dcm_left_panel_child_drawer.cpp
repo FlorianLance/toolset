@@ -83,7 +83,7 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
         targetsColor.push_back(color);
     }
 
-    feedbacksLogs.resize(nbGrabbers);
+
 }
 
 auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void {
@@ -113,7 +113,6 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
         if(ImGui::BeginChild("###settings_grabbers_child2", region2, true, windowFlags)){
             if (ImGui::BeginTabBar("###settings_tabbar2")){
                 draw_infos_tab_item(model->client);
-                draw_logs_tab_item();
                 ImGui::EndTabBar();
             }
         }
@@ -123,15 +122,6 @@ auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *mo
 }
 
 
-auto DCMLeftPanelChildDrawer::append_global_log(const std::string &log) -> void {
-    globalLogs.add_log(log.c_str());
-}
-
-auto DCMLeftPanelChildDrawer::append_feedback_log(size_t idG, Feedback feedback) -> void {
-    if(idG < feedbacksLogs.size()){
-        feedbacksLogs[idG].add_log(std::format("Valid [{}] received\n", to_string(static_cast<DCMessageType>(feedback.receivedMessageType))).c_str());
-    }
-}
 
 auto DCMLeftPanelChildDrawer::draw_settings_tab_item(DCMModel *model) -> void{
     if (ImGuiUiDrawer::begin_tab_item("Settings###settings_tabitem")){
@@ -1324,22 +1314,6 @@ auto DCMLeftPanelChildDrawer::draw_color_tab_item(cam::DCClient &client) -> void
     ImGui::EndTabItem();
 }
 
-auto DCMLeftPanelChildDrawer::draw_logs_tab_item() -> void {
-    if (ImGui::BeginTabItem("Logs###settings_logs_tabitem")){
-        ImGui::Text("Global logs:");
-        globalLogs.draw("global_logs");
-        ImGui::EndTabItem();
-    }
-
-    for(size_t idF = 0; idF < feedbacksLogs.size(); ++idF){
-        if (ImGui::BeginTabItem(std::format("F{}###feedback_logs_{}_tabitem", idF, idF).c_str())){
-            ImGui::Text("Feedback logs:");
-            feedbacksLogs[idF].draw(std::format("device_{}_feedback", idF).c_str());
-            ImGui::EndTabItem();
-         }
-    }
-
-}
 
 auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
     if(filePath.has_value()){

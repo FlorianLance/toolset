@@ -125,8 +125,9 @@ auto FastPForDecoder::decode(ConstBinarySpan encodedBuffer, BinarySpan buffer) -
 }
 
 auto FastPForDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<uint16_t> &image) -> bool{
-
-    image.resize_image(encodedImage.width, encodedImage.height);
+    image.width  = encodedImage.width;
+    image.height = encodedImage.height;
+    image.resize(encodedImage.width*encodedImage.height);
     if(decode(encodedImage.byte_span(), image.byte_span())){
         return true;
     }

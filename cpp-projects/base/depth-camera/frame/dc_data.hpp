@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -25,47 +24,45 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_frame_data.hpp"
+#pragma once
 
-using namespace tool::cam;
+// std
+#include <span>
 
-auto DCFrameData::reset_spans() -> void{
-    rawColor            = {};
-    color               = {};
-    depthSizedColor     = {};
-    depth               = {};
-    infra               = {};
-    bodiesIdMap         = {};
-    depthCloud          = {};    
-    binaryIMU           = {};
-    audioChannels       = {0,{}};
-    bodies              = {};
+// local
+#include "utility/image_buffer.hpp"
+#include "graphics/color/rgb.hpp"
+#include "depth-camera/dc_types.hpp"
+
+namespace tool::cam{
+
+struct DCData{
+
+    auto reset(const DCModeInfos &mInfos) -> void;
+    auto reset_spans() -> void;
+
+    // device data
+    // # global
+    BinarySpan binaryCalibration;
+    // # per frame
+    BinarySpan rawColor;
+    std::span<ColorRGBA8> color;
+    std::span<ColorRGBA8> depthSizedColor;    
+    std::span<std::uint16_t> depth;
+    std::span<std::uint16_t> infra;
+    std::span<ColorGray8> bodiesIdMap;
+    std::span<geo::Pt3<std::int16_t>> depthCloud;    
+    BinarySpan binaryIMU;
+    std::pair<size_t, std::span<float>> audioChannels;    
+    std::span<DCBody> bodies;
+
+    // processed data
+    ImageBuffer<ColorRGBA8> convertedColorData;
+    size_t validDepthValues = 0;
+    size_t meanBiggestZoneId = 0;
+    std::vector<std::int8_t> filteringMask;
+    std::vector<int> depthMask;
+    std::vector<int> zonesId;
+    std::vector<std::int16_t> depthFiltering;
+};
 }
-
-auto DCFrameData::reset(const DCModeInfos &mInfos) -> void{
-
-    binaryCalibration   = {};
-    reset_spans();
-
-    // processsing
-    if(mInfos.has_depth()){
-        depthMask.resize(mInfos.depth_size());
-        filteringMask.resize(mInfos.depth_size());
-        depthFiltering.resize(mInfos.depth_size());
-        zonesId.resize(mInfos.depth_size());
-    }else{
-        depthMask.clear();
-        filteringMask.clear();
-        depthFiltering.clear();
-        zonesId.clear();
-    }
-
-    if(mInfos.has_color()){
-        convertedColorData.resize(mInfos.color_size());
-        convertedColorData.width  = mInfos.color_width();
-        convertedColorData.height = mInfos.color_height();
-    }else{
-        convertedColorData.reset();
-    }
-}
-

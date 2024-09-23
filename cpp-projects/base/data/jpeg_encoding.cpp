@@ -212,7 +212,9 @@ auto JpegDecoder::decode(size_t width, size_t height, int tjpfFormat, ConstBinar
 }
 
 auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-    image.resize_image(encodedImage.width, encodedImage.height);
+    image.width  = encodedImage.width;
+    image.height = encodedImage.height;
+    image.resize(encodedImage.width*encodedImage.height);
     if(decode(encodedImage.width, encodedImage.height, TJPF_RGBA, encodedImage.byte_span(), image.byte_span())){
         return true;
     }
@@ -221,7 +223,9 @@ auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<Colo
 }
 
 auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-    image.resize_image(encodedImage.width, encodedImage.height);
+    image.width  = encodedImage.width;
+    image.height = encodedImage.height;
+    image.resize(encodedImage.width*encodedImage.height);
     if(decode(encodedImage.width, encodedImage.height, TJPF_RGB, encodedImage.byte_span(), image.byte_span())){
         return true;
     }
@@ -230,7 +234,9 @@ auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<Colo
 }
 
 auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<ColorGray8> &image) -> bool{
-    image.resize_image(encodedImage.width, encodedImage.height);
+    image.width  = encodedImage.width;
+    image.height = encodedImage.height;
+    image.resize(encodedImage.width*encodedImage.height);
     if(decode(encodedImage.width, encodedImage.height, TJPF_GRAY, encodedImage.byte_span(), image.byte_span())){
         return true;
     }
@@ -239,7 +245,9 @@ auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<Colo
 }
 
 auto JpegDecoder::decode(size_t width, size_t height, ConstBinarySpan encodedImage, ImageBuffer<ColorRGBA8> &image) -> bool{
-    image.resize_image(width, height);
+    image.width  = width;
+    image.height = height;
+    image.resize(width*height);
     if(decode(width, height, TJPF_RGBA, encodedImage, image.byte_span())){
         return true;
     }
@@ -248,7 +256,9 @@ auto JpegDecoder::decode(size_t width, size_t height, ConstBinarySpan encodedIma
 }
 
 auto JpegDecoder::decode(size_t width, size_t height, ConstBinarySpan encodedImage, ImageBuffer<ColorRGB8> &image) -> bool{
-    image.resize_image(width, height);
+    image.width  = width;
+    image.height = height;
+    image.resize(width*height);
     if(decode(width, height, TJPF_RGB, encodedImage, image.byte_span())){
         return true;
     }

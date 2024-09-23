@@ -43,7 +43,9 @@ auto DCFrame::compute_rgb_depth_image(ImageBuffer<ColorRGB8> &rgbDepth) -> void{
         {1.f,0.f,0.f},
     };
 
-    rgbDepth.resize_image(depth.width, depth.height);
+    rgbDepth.width  = depth.width;
+    rgbDepth.height = depth.height;
+    rgbDepth.resize(depth.width*depth.height);
 
     const auto dRange = dc_depth_range(mode)*1000.f;
     const auto diff = dRange(1) - dRange(0);
@@ -76,7 +78,9 @@ auto DCFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void{
         return;
     }
 
-    rgbInfra.resize_image(infra.width, infra.height);
+    rgbInfra.width  = infra.width;
+    rgbInfra.height = infra.height;
+    rgbInfra.resize(infra.width*infra.height);
 
     const float max = 2000;
     for(size_t id = 0; id < infra.size(); ++id){

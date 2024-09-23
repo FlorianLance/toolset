@@ -33,7 +33,7 @@
 #include "data/fastpfor_encoding.hpp"
 #include "data/jpeg_encoding.hpp"
 #include "frame/dc_frame_indices.hpp"
-#include "frame/dc_frame_data.hpp"
+#include "frame/dc_data.hpp"
 #include "dc_device.hpp"
 
 namespace tool::cam {
@@ -107,8 +107,6 @@ protected:
 
     auto initialize(const DCConfigSettings &newConfig) -> void;
 
-
-
     // read data
     auto read_frame() -> void;
     virtual auto capture_frame(std::int32_t timeoutMs)  -> bool{static_cast<void>(timeoutMs);return false;}    
@@ -176,7 +174,7 @@ protected:
     DCModeInfos mInfos;
     DCFrameIndices fIndices;
     DCFramesBuffer frames;
-    DCFrameData fData;
+    DCData fData;
     tool::s_umap<std::string_view, TimeElem> times;
     bool captureSuccess = false;
     bool dataIsValid = false;

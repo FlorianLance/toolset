@@ -33,11 +33,10 @@
 namespace tool::cam {
 
 struct DCJoint{
-
     geo::Pt3f position = {};
     geo::Quaternion<float> orientation = {};
     DCJointConfidenceLevel confidence = DCJointConfidenceLevel::None;
-    constexpr auto good_confidence() const noexcept{
+    constexpr auto good_confidence() const noexcept -> bool {
         return confidence == DCJointConfidenceLevel::Hight || confidence == DCJointConfidenceLevel::Medium;
     }
 };

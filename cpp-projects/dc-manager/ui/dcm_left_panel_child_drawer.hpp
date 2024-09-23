@@ -47,8 +47,6 @@ public:
 
     auto initialize(size_t nbGrabbers) -> void;
     auto draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void;
-    auto append_global_log(const std::string &log) -> void;
-    auto append_feedback_log(size_t idG, net::Feedback feedback) -> void;
 
     double uiFramerateMS = 0.0;
 
@@ -59,7 +57,6 @@ private:
     auto draw_global_tab_item(DCMModel *model) -> void;
     auto draw_settings_tab_item(DCMModel *model) -> void;
     auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
-    auto draw_logs_tab_item() -> void;
     auto draw_infos_tab_item(cam::DCClient &client) -> void;
 
     // # settings
@@ -82,9 +79,7 @@ private:
     int guiCurrentTargetColorsSelection = 0;
 
 
-    // logs
-    ImguiLogs globalLogs;
-    std::vector<ImguiLogs> feedbacksLogs;
+
     std::vector<std::string> fromFilters;
     std::vector<std::string> targetsFilters;
 

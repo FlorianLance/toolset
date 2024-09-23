@@ -35,12 +35,9 @@
 // local
 #include "utility/io_data.hpp"
 #include "utility/io_fstream.hpp"
-#include "data/json_utility.hpp"
 
 using namespace tool;
 using namespace tool::cam;
-using namespace tool::data;
-using json = nlohmann::json;
 
 auto buffer_bytes_size(const BinaryImageBuffer &iBuffer) -> size_t{
     return
@@ -53,6 +50,29 @@ auto buffer_bytes_size(const BinaryBuffer &iBuffer) -> size_t{
         sizeof(size_t) + iBuffer.size();
 }
 
+auto read_buffer(BinaryBuffer &buffer, const std::span<const std::byte> data, size_t &offset) -> void{
+
+    using namespace tool;
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, data, offset);
+    if(encodedDataSize > 0){
+        buffer.resize(encodedDataSize);
+        read_array(buffer.get_data(), data, encodedDataSize, offset);
+    }
+}
+
+auto read_buffer(BinaryBuffer &buffer, std::ifstream &file) -> void{
+
+    using namespace tool;
+    size_t encodedDataSize = 0;
+    read(encodedDataSize, file);
+    if(encodedDataSize > 0){
+        buffer.resize(encodedDataSize);
+        read_array(buffer.get_data(), file, encodedDataSize);
+    }
+}
+
+
 auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
@@ -63,17 +83,6 @@ auto read_buffer(BinaryImageBuffer &iBuffer, const std::span<const std::byte> da
     if(encodedDataSize > 0){
         iBuffer.resize(encodedDataSize);
         read_array(iBuffer.get_data(), data, encodedDataSize, offset);
-    }
-}
-
-auto read_buffer(BinaryBuffer &buffer, const std::span<const std::byte> data, size_t &offset) -> void{
-
-    using namespace tool;
-    size_t encodedDataSize = 0;
-    read(encodedDataSize, data, offset);
-    if(encodedDataSize > 0){
-        buffer.resize(encodedDataSize);
-        read_array(buffer.get_data(), data, encodedDataSize, offset);
     }
 }
 
@@ -90,14 +99,21 @@ auto read_buffer(BinaryImageBuffer &iBuffer, std::ifstream &file) -> void{
     }
 }
 
-auto read_buffer(BinaryBuffer &buffer, std::ifstream &file) -> void{
+auto write_buffer(const BinaryBuffer &buffer, std::span<std::byte> data, size_t &offset) -> void{
 
     using namespace tool;
-    size_t encodedDataSize = 0;
-    read(encodedDataSize, file);
-    if(encodedDataSize > 0){
-        buffer.resize(encodedDataSize);
-        read_array(buffer.get_data(), file, encodedDataSize);
+    write(buffer.size(), data, offset);
+    if(!buffer.empty()){
+        write_array(buffer.get_data(), data, buffer.size(), offset);
+    }
+}
+
+auto write_buffer(const BinaryBuffer &buffer, std::ofstream &file) -> void{
+
+    using namespace tool;
+    write(buffer.size(), file);
+    if(!buffer.empty()){
+        write_array(buffer.get_data(), file, buffer.size());
     }
 }
 
@@ -112,16 +128,6 @@ auto write_buffer(const BinaryImageBuffer &iBuffer, std::span<std::byte> data, s
     }
 }
 
-auto write_buffer(const BinaryBuffer &buffer, std::span<std::byte> data, size_t &offset) -> void{
-
-    using namespace tool;
-    write(buffer.size(), data, offset);
-    if(!buffer.empty()){
-        write_array(buffer.get_data(), data, buffer.size(), offset);
-    }
-}
-
-
 auto write_buffer(const BinaryImageBuffer &iBuffer, std::ofstream &file) -> void{
 
     using namespace tool;
@@ -133,59 +139,158 @@ auto write_buffer(const BinaryImageBuffer &iBuffer, std::ofstream &file) -> void
     }
 }
 
-auto write_buffer(const BinaryBuffer &buffer, std::ofstream &file) -> void{
 
-    using namespace tool;
-    write(buffer.size(), file);
-    if(!buffer.empty()){
-        write_array(buffer.get_data(), file, buffer.size());
+auto DCDataFrame::init_from_data(std::span<const std::byte> data, size_t &offset) -> void{
+
+    // frame
+    Frame::init_from_data( data, offset);
+
+    // infos
+    read(mode, data,  offset);
+    read(validVerticesCount, data, offset);
+
+    // read info buffers
+    size_t nbInfosB = 0;
+    read(nbInfosB, data, offset);
+    infosB.reserve(nbInfosB);
+    for(size_t idI = 0; idI < nbInfosB; ++idI){
+        auto type = read_and_return<DCInfoType>(data, offset);
+        infosB.insert({type, read_and_return<std::int32_t>(data, offset)});
+    }
+
+    // read data buffers
+    size_t nbDataB = 0;
+    read(nbDataB, data, offset);
+    datasB.reserve(nbDataB);
+    for(size_t idD = 0; idD < nbDataB; ++idD){
+        auto type       = read_and_return<DCDataBufferType>(data, offset);
+        auto encoding   = read_and_return<DCCompressionMode>(data, offset);
+        auto iInfo      = datasB.insert({type, {encoding, BinaryImageBuffer()}});
+        read_buffer(std::get<1>(iInfo.first->second), data, offset);
+    }
+
+    // read image data buffers
+    size_t nbImageDataB = 0;
+    read(nbImageDataB, data, offset);
+    imagesB.reserve(nbImageDataB);
+    for(size_t idID = 0; idID < nbImageDataB; ++idID){
+        auto type       = read_and_return<DCImageDataBufferType>(data, offset);
+        auto encoding   = read_and_return<DCCompressionMode>(data, offset);
+        auto iInfo      = imagesB.insert({type, {encoding, BinaryImageBuffer()}});
+        read_buffer(std::get<1>(iInfo.first->second), data, offset);
     }
 }
 
-// auto DCCompressedFrame::init_from_json(const nlohmann::json &json) -> void{
+auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
 
-// }
+    Frame::init_from_file_stream(file);
 
-// auto DCCompressedFrame::convert_to_json() const -> nlohmann::json{
+    // infos
+    read(mode, file);
+    read(validVerticesCount, file);
 
-//     json json;
-//     // base
-//     add_value(json, "base_frame"sv, Frame::convert_to_json());
-//     // local
-//     add_value(json, "model"sv,                  static_cast<int>(mode));
-//     add_value(json, "valid_vertices_count"sv,   validVerticesCount);
+    // read info buffers
+    size_t nbInfosB = 0;
+    read(nbInfosB, file);
+    infosB.reserve(nbInfosB);
+    for(size_t idI = 0; idI < nbInfosB; ++idI){
+        auto type = read_and_return<DCInfoType>(file);
+        infosB.insert({type, read_and_return<std::int32_t>(file)});
+    }
 
-//     if(!jpegRGBA8Color.empty()){
-//         add_array(json, "color"sv, jpegRGBA8Color.span());
-//     }
-//     if(!jpegRGBA8DepthSizedColor.empty()){
-//         add_array(json, "depth_sized_color"sv, jpegRGBA8DepthSizedColor.span());
-//     }
-//     if(!jpegG8BodiesIdMap.empty()){
-//         add_array(json, "bodies_id_map"sv, jpegG8BodiesIdMap.span());
-//     }
+    // read data buffers
+    size_t nbDataB = 0;
+    read(nbDataB, file);
+    datasB.reserve(nbDataB);
+    for(size_t idD = 0; idD < nbDataB; ++idD){
+        auto type       = read_and_return<DCDataBufferType>(file);
+        auto encoding   = read_and_return<DCCompressionMode>(file);
+        auto iInfo      = datasB.insert({type, {encoding, BinaryImageBuffer()}});
+        read_buffer(std::get<1>(iInfo.first->second), file);
+    }
 
-//     if(!fpfDepth.empty()){
-//         add_array(json, "depth"sv, fpfDepth.span());
-//     }
-//     if(!fpfInfra.empty()){
-//         add_array(json, "infra"sv, fpfInfra.span());
-//     }
-//     if(!fpfColoredCloud.empty()){
-//         add_array(json, "colored_cloud"sv, fpfColoredCloud.span());
-//     }
+    // read image data buffers
+    size_t nbImageDataB = 0;
+    read(nbImageDataB, file);
+    imagesB.reserve(nbImageDataB);
+    for(size_t idID = 0; idID < nbImageDataB; ++idID){
+        auto type       = read_and_return<DCImageDataBufferType>(file);
+        auto encoding   = read_and_return<DCCompressionMode>(file);
+        auto iInfo      = imagesB.insert({type, {encoding, BinaryImageBuffer()}});
+        read_buffer(std::get<1>(iInfo.first->second), file);
+    }
+}
 
-//     if(!calibration.empty()){
-//         add_array(json, "calibration"sv, calibration.span());
-//     }
-//     if(!imu.empty()){
-//         add_array(json, "imu"sv, imu.span());
-//     }
 
-//     // ... bodies / audio
+auto DCDataFrame::write_to_file_stream(std::ofstream &file) -> void{
 
-//     return json;
-// }
+    // frame
+    Frame::write_to_file_stream(file);
+
+    // infos
+    write(mode, file);
+    write(validVerticesCount, file);
+
+    // info buffers
+    write(infosB.size(), file);
+    for(const auto &infoB : infosB){
+        write(infoB.first,  file);
+        write(infoB.second, file);
+    }
+
+    // data buffers
+    write(datasB.size(), file);
+    for(const auto &dataB : datasB){
+        write(dataB.first,  file);
+        write(std::get<0>(dataB.second),        file);
+        write_buffer(std::get<1>(dataB.second), file);
+    }
+
+    // image buffers
+    write(imagesB.size(), file);
+    for(const auto &imageB : imagesB){
+        write(imageB.first,  file);
+        write(std::get<0>(imageB.second),        file);
+        write_buffer(std::get<1>(imageB.second), file);
+    }
+}
+
+auto DCDataFrame::write_to_data(std::span<std::byte> data, size_t &offset) -> void{
+
+    // frame
+    Frame::write_to_data(data, offset);
+
+    // infos
+    write(mode, data, offset);
+    write(validVerticesCount, data, offset);
+
+    // info buffers
+    write(infosB.size(), data, offset);
+    for(const auto &infoB : infosB){
+        write(infoB.first,  data, offset);
+        write(infoB.second, data, offset);
+    }
+
+    // data buffers
+    write(datasB.size(), data, offset);
+    for(const auto &dataB : datasB){
+        write(dataB.first,  data, offset);
+        write(std::get<0>(dataB.second),        data, offset);
+        write_buffer(std::get<1>(dataB.second), data, offset);
+    }
+
+    // image buffers
+    write(imagesB.size(), data, offset);
+    for(const auto &imageB : imagesB){
+        write(imageB.first,  data, offset);
+        write(std::get<0>(imageB.second),        data, offset);
+        write_buffer(std::get<1>(imageB.second), data, offset);
+    }
+}
+
+
+
+
 
 
 auto DCCompressedFrame::data_size() const noexcept -> size_t {
@@ -249,6 +354,7 @@ auto DCCompressedFrame::init_from_file_stream(std::ifstream &file) -> void{
     //     // TODO: ...
     // }
 }
+
 
 
 auto DCCompressedFrame::init_from_data(std::span<const std::byte> data, size_t &offset) -> void{
@@ -455,3 +561,5 @@ auto DCCompressedFrame::init_legacy_full_frame_from_file_stream(std::ifstream &f
     // // # read imu
     // read_array(file, reinterpret_cast<char*>(&imuSample), sizeof (DCImuSample));
 }
+
+

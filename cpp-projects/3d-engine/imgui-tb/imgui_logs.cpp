@@ -43,6 +43,7 @@ void ImguiLogs::clear(){
 void ImguiLogs::draw(const char* name, const ImVec2& size_arg){
 
     ImGui::BeginChild(name, size_arg, false);
+    // ImGui::BeginChild(name, size_arg);
 
     // Options menu
     if (ImGui::BeginPopup("Options")){

@@ -52,7 +52,6 @@ template<typename ReadValueType>
 static auto read(ReadValueType &v, std::span<const std::byte> data, size_t &offset) -> void {
     read(v, data.data(), offset, data.size());
 }
-
 template<typename ReadValueType>
 static auto read(ReadValueType &v, std::byte const * const data, size_t &offset, size_t sizeData, ReadValueType min, ReadValueType max) -> void {
     read(v, data, offset, sizeData);
@@ -61,6 +60,14 @@ static auto read(ReadValueType &v, std::byte const * const data, size_t &offset,
 template<typename ReadValueType>
 static auto read(ReadValueType &v, std::span<const std::byte> data, size_t &offset, ReadValueType min, ReadValueType max) -> void {
     read(v, data.data(), offset, data.size(), min, max);
+}
+
+
+template<typename ReadValueType>
+static auto read_and_return(std::span<const std::byte> data, size_t &offset) -> ReadValueType {
+    ReadValueType v;
+    read(v, data.data(), offset, data.size());
+    return v;
 }
 
 template<typename ReadArrayValueType>

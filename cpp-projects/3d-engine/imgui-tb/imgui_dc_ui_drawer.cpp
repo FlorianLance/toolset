@@ -1666,6 +1666,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
 
     bool update = false;
 
+    if(m_isClient){
+        ImGuiUiDrawer::title2("[SERVER SIDE]");
+    }
+
     ImGui::Text("Capture:");
     ImGui::Indent();
     {
@@ -1761,11 +1765,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
     ImGui::Unindent();
     ImGui::Spacing();
 
-    if(m_isClient){
-        ImGui::Text("Frame generation (client):");
-    }else{
-        ImGui::Text("Frame generation:");
-    }
+    ImGui::Text("Frame generation:");
 
     ImGui::Indent();
     {
@@ -1836,7 +1836,9 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         return update;
     }
 
-    ImGui::Text("Frame generation (server):");
+    ImGuiUiDrawer::title2("[CLIENT SIDE]");
+
+    ImGui::Text("Frame generation:");
     ImGui::Indent();
     {
         ImGui::Text("Data:");

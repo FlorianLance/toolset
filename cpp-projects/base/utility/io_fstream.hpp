@@ -52,6 +52,12 @@ template<typename ReadValueType>
 auto read(ReadValueType &value, std::ifstream &file) -> void{
     file.read(reinterpret_cast<char*>(&value), sizeof(ReadValueType));
 }
+template<typename ReadValueType>
+auto read_and_return(std::ifstream &file) -> ReadValueType{
+    ReadValueType value;
+    file.read(reinterpret_cast<char*>(&value), sizeof(ReadValueType));
+    return value;
+}
 
 template<typename ReadArrayValueType>
 [[deprecated("Use read_array(ReadArrayValueType *value, std::ifstream &file, size_t size) instead.")]]

@@ -45,6 +45,7 @@ include(../ts-dependencies.pri)
 HEADERS += \
     # io            
     depth-camera/frame/dc_compressed_frame_buffer.hpp \
+    depth-camera/frame/dc_data.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.hpp \
     depth-camera/impl/femto_mega_usb_device_impl.hpp \
@@ -155,7 +156,6 @@ HEADERS += \
     depth-camera/dc_video_player.hpp \
     depth-camera/dc_video_recorder.hpp \
     ## frame
-    depth-camera/frame/dc_frame_data.hpp \
     depth-camera/frame/dc_frame_indices.hpp \
     depth-camera/frame/dc_frame.hpp \
     depth-camera/frame/dc_compressed_frame.hpp \
@@ -315,6 +315,7 @@ SOURCES += \
     # io    
     depth-camera/client/dc_client.cpp \
     depth-camera/frame/dc_compressed_frame_buffer.cpp \
+    depth-camera/frame/dc_data.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.cpp \
     depth-camera/impl/femto_mega_usb_device_impl.cpp \
@@ -390,7 +391,6 @@ SOURCES += \
     depth-camera/frame/dc_frame_compressor.cpp \
     depth-camera/frame/dc_frame_uncompressor.cpp \
     depth-camera/frame/dc_frame.cpp \
-    depth-camera/frame/dc_frame_data.cpp \
     depth-camera/frame/dc_frame_indices.cpp \
     ## client
     depth-camera/client/dc_client_processing.cpp \

@@ -42,6 +42,17 @@ public:
     auto update() -> void;
     auto draw(geo::Pt2f size, DCMModel *model) -> void;
 
+    auto append_global_log(const std::string &log) -> void {
+        globalLogs.add_log(log.c_str());
+    }
+
+    auto append_feedback_log(size_t idG, net::Feedback feedback) -> void {
+        if(idG < feedbacksLogs.size()){
+            feedbacksLogs[idG].add_log(std::format("Valid [{}] received\n", to_string(static_cast<net::DCMessageType>(feedback.receivedMessageType))).c_str());
+        }
+    }
+
+
 private:
 
     auto draw_menu()-> void;
@@ -61,5 +72,7 @@ public:
     // drawers
     DCMLeftPanelChildDrawer m_leftPanelD;
     DCMMiddlePanelChildDrawer m_middlePanelD;
+    ImguiLogs globalLogs;
+    std::vector<ImguiLogs> feedbacksLogs;
 };
 }

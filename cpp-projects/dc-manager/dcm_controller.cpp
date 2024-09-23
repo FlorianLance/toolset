@@ -85,15 +85,15 @@ auto DCMController::set_connections() -> void{
 
     // from logger
     Logger::get()->message_signal.connect([&](std::string message){
-        view->mainW.m_leftPanelD.append_global_log(message);
+        view->mainW.append_global_log(message);
         std::cout << message;
     });
     Logger::get()->warning_signal.connect([&](std::string warning){
-        view->mainW.m_leftPanelD.append_global_log(warning);
+        view->mainW.append_global_log(warning);
         std::cerr << warning;
     });
     Logger::get()->error_signal.connect([&](std::string error){
-        view->mainW.m_leftPanelD.append_global_log(error);
+        view->mainW.append_global_log(error);
         std::cerr << error;
     });
 
@@ -110,7 +110,7 @@ auto DCMController::set_connections() -> void{
     // ## calibrator drawer
     calibrator->data_updated_signal.connect(                &DCCalibratorDrawer::set_data,                      calibratorD);
     // ## left panel drawer
-    client->feedback_received_signal.connect(               &DCMLeftPanelChildDrawer::append_feedback_log,      leftD);
+    client->feedback_received_signal.connect(               &DCMMainWindowDrawer::append_feedback_log,          &view->mainW);
     // ## player drawer
     player->initialize_signal.connect(                      &DCPlayerDrawer::initialize,                        playerD);
 

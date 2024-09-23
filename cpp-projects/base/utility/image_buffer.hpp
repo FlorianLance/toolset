@@ -50,12 +50,6 @@ struct ImageBuffer : public Buffer<ElementType>{
         Buffer<ElementType>::clear();
     }
 
-    constexpr auto resize_image(size_t width, size_t height) noexcept -> void{
-        this->width  = width;
-        this->height = height;
-        Buffer<ElementType>::resize(width*height);
-    }
-
     [[nodiscard]] constexpr auto is_encoded() const noexcept -> bool {
         return Buffer<ElementType>::size() != (width*height);
     }

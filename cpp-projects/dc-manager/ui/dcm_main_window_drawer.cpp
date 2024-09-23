@@ -37,6 +37,8 @@
 
 // 3d-engine
 #include "imgui/extra/ImGuiFileDialog.h"
+#include "imgui-tb/imgui_convert.hpp"
+#include "imgui-tb/imgui_ui_drawer.hpp"
 
 // local
 #include "dcm_signals.hpp"
@@ -51,6 +53,7 @@ auto DCMMainWindowDrawer::initialize(size_t nbDevices) -> bool{
     m_leftPanelD.initialize(nbDevices);
     m_middlePanelD.initialize(nbDevices);
 
+    feedbacksLogs.resize(nbDevices);
     return true;
 }
 
@@ -75,15 +78,42 @@ auto DCMMainWindowDrawer::draw(geo::Pt2f size, DCMModel *model) -> void{
         ImGui::ShowMetricsWindow(&m_showMetricsWindow);
     }
 
-    ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Always);
-    if (ImGui::Begin("###UiWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)){
+    ImGui::SetNextWindowPos(ImVec2(0, 20));
+    if (ImGui::Begin("###UiWindow", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)){
 
-        // settings
-        auto sw = size.x();
-        auto sh = size.y();
-        m_leftPanelD.draw({450.f,sh-50.f}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model);
+        geo::Pt2f settingsSize = {450.f, size.y()-40.f};
+        geo::Pt2f displaySize  = {size.x()-800.f, size.y()-40.f};
+        geo::Pt2f logsSize     = {320.f, size.y()-40.f};
+
+        m_leftPanelD.draw(settingsSize, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize, model);
         ImGui::SameLine();
-        m_middlePanelD.draw({sw-450.f,sh-50.f}, model->uiSettings);
+        m_middlePanelD.draw(displaySize, model->uiSettings);
+
+        ImGui::SameLine();
+
+        if(ImGui::BeginChild("Logs###logs_child", to_iv2(logsSize), true)){
+            if(ImGui::BeginTabBar("Logs###logs_tab_bar")){ // , ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar
+
+                if (ImGui::BeginTabItem("Logs###logs_tab_item", nullptr)){
+                    ImGui::Text("Global logs:");
+                    globalLogs.draw("global_logs", to_iv2(logsSize + geo::Pt2f{0.f,-50.f}));
+                    ImGui::EndTabItem();
+                }
+
+                for(size_t idF = 0; idF < feedbacksLogs.size(); ++idF){
+                    if (ImGui::BeginTabItem(std::format("F{}###feedback_logs_{}_tabitem", idF, idF).c_str())){
+                        ImGuiUiDrawer::text(std::format("Feedback logs for device {}:", idF));
+                        feedbacksLogs[idF].draw(std::format("device_{}_feedback", idF).c_str()), to_iv2(logsSize + geo::Pt2f{0.f,-50.f});
+                        ImGui::EndTabItem();
+                    }
+                }
+
+                ImGui::EndTabBar();
+            }
+        }
+        ImGui::EndChild();
+
+
     }
     ImGui::End();
 }

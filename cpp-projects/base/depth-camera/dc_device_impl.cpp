@@ -740,7 +740,6 @@ auto DCDeviceImpl::update_frame_bodies() -> void{
         frame->bodyTracking.clear();
     }
 
-
     // bodies id map
     if(!fData.bodiesIdMap.empty() && settings.data.generation.bodyIdMapImage){
         frame->grayBodiesIdMap.width  = mInfos.depth_width();
@@ -813,6 +812,25 @@ auto DCDeviceImpl::update_compressed_frame_color() -> void{
         //     auto s = std::span<const std::byte>(reinterpret_cast<std::byte*>(fData.color.data()), nbBytes);
         //     std::copy(s.begin(), s.end(), cFrame->jpegRGBA8Color.begin());
         //     resetData = false;
+        // }
+
+        // DCDataFrame dFrame;
+        // if(settings.data.compression.colorCompressionMode == DCCompressionMode::JPEG){
+        //     auto dInfo = dFrame.imagesB.insert({DCImageDataBufferType::ColorImage, {DCCompressionMode::JPEG, BinaryImageBuffer{}}});
+        //     if(jpegColorEncoder.encode(
+        //             mInfos.color_width(),
+        //             mInfos.color_height(),
+        //             fData.color,
+        //             std::get<1>(dInfo.first->second),
+        //             settings.data.compression.jpegCompressionRate
+        //         )){
+        //         resetData = false;
+        //     }
+        // } else if(settings.data.compression.colorCompressionMode == DCCompressionMode::None){
+        //     auto dInfo = dFrame.imagesB.insert({DCImageDataBufferType::ColorImage, {DCCompressionMode::None, BinaryImageBuffer{}}});
+        //     auto &image = std::get<1>(dInfo.first->second);
+        //     image.resize_image(image.width, image.height);
+        //     std::copy(fData.color.begin(), fData.color.end(), reinterpret_cast<ColorRGBA8*>(image.values.data()));
         // }
     }
     if(resetData){

@@ -30,43 +30,42 @@
 #include "depth-camera/dc_types.hpp"
 #include "camera/frame.hpp"
 #include "utility/image_buffer.hpp"
+#include "utility/unordered_map.hpp"
 
 namespace tool::cam{
 
-enum class DCCompressedDataType : std::int32_t{
-    Color, DepthSizedColor, DepthData, InfraData,
-    Calibration,Imu, Cloud,
+enum class DCInfoType : std::int8_t{
+    // NbAudioChannels = 30
 };
 
-struct TestFrame : Frame{
+enum class DCDataBufferType : std::int8_t{
+    Calibration = 0,
+    Color = 10, DepthSizedColor, Depth, Infrared,
+    // IMU = 20,
+    // Audio = 30,
+    // BodyIdMap = 40,
+};
 
-    std::unordered_map<DCCompressedDataType, BinaryImageBuffer> imagesBuffers;
-    std::unordered_map<DCCompressedDataType, BinaryBuffer> dataBuffers;
+enum class DCImageDataBufferType : std::int8_t{
+    ColorImage = 0, DepthSizedColorImage, DepthImage, InfraredImage,
+    // BodyIdImage     = 40,
+};
 
-    auto write() -> void{
-        // write frame
-        // write mode
-        // write validVerticesCount
-        // write number of image buffers
-        // foreach buffer in imagesBuffers
-        //  write type
-        //  write width
-        //  write height
-        //  write comression mode
-        //  write data
-        // write number of data buffers
-        // foreach buffer in dataBuffers
-        //  write type
-        //  write size
-        //  write comression mode
-        //  write data
-    }
+struct DCDataFrame : Frame{
 
-    auto read() -> void{
-        // read frame
-        // read mode
-        // read validVerticesCount
-    }
+    // infos
+    DCMode mode;
+    size_t validVerticesCount = 0;
+    umap<DCInfoType, std::int32_t> infosB;
+    umap<DCDataBufferType, std::tuple<DCCompressionMode, BinaryBuffer>> datasB;
+    umap<DCImageDataBufferType, std::tuple<DCCompressionMode, BinaryImageBuffer>> imagesB;
+
+    // init
+    auto init_from_file_stream(std::ifstream &file) -> void override;
+    auto init_from_data(std::span<const std::byte> data, size_t &offset) -> void override;
+    // write
+    auto write_to_file_stream(std::ofstream &file) -> void override;
+    auto write_to_data(std::span<std::byte> data, size_t &offset) -> void override;    
 };
 
 struct DCCompressedFrame : Frame{
@@ -98,7 +97,7 @@ struct DCCompressedFrame : Frame{
     // auto init_from_json(const nlohmann::json &json) -> void override;
     // auto convert_to_json() const -> nlohmann::json override;
 
-    // # legacy
+
     // getters
     auto data_size() const noexcept -> size_t override;
 
@@ -112,5 +111,7 @@ struct DCCompressedFrame : Frame{
     // ## super legacy
     auto init_legacy_cloud_frame_from_file_stream(std::ifstream &file) -> void;
     auto init_legacy_full_frame_from_file_stream(std::ifstream &file) -> void;
+
+    // auto convert_to
 };
 }
