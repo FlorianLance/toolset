@@ -44,8 +44,11 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io            
-    depth-camera/frame/dc_compressed_frame_buffer.hpp \
-    depth-camera/frame/dc_data.hpp \
+    depth-camera/frame/dc_data_frame.hpp \
+    depth-camera/frame/dc_data_frame_buffer.hpp \
+    depth-camera/frame/dc_data_frame_generator.hpp \
+    depth-camera/frame/dc_device_data.hpp \
+    depth-camera/frame/dc_frame_generator.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.hpp \
     depth-camera/impl/femto_mega_usb_device_impl.hpp \
@@ -53,9 +56,9 @@ HEADERS += \
     depth-camera/settings/dc_capture_settings.hpp \
     depth-camera/settings/dc_client_device_settings.hpp \
     depth-camera/settings/dc_client_settings.hpp \
+    depth-camera/settings/dc_data_frame_generation_settings.hpp \
     depth-camera/settings/dc_device_connection_settings.hpp \
     depth-camera/settings/dc_device_data_settings.hpp \
-    depth-camera/settings/dc_frame_compression_settings.hpp \
     depth-camera/settings/dc_frame_generation_settings.hpp \
     depth-camera/settings/dc_server_settings.hpp \
     io/cloud_io.hpp \
@@ -132,7 +135,6 @@ HEADERS += \
     network/settings/remote_server_settings.hpp \
     network/settings/udp_connection_settings.hpp \
     network/udp_client.hpp \
-    network/udp_server.hpp \
     network/network_enums.hpp \
     network/network_types.hpp \
     network/tcp_reader.hpp \
@@ -158,9 +160,6 @@ HEADERS += \
     ## frame
     depth-camera/frame/dc_frame_indices.hpp \
     depth-camera/frame/dc_frame.hpp \
-    depth-camera/frame/dc_compressed_frame.hpp \
-    depth-camera/frame/dc_frame_compressor.hpp \
-    depth-camera/frame/dc_frame_uncompressor.hpp \
     ## client
     depth-camera/client/dc_client.hpp \
     depth-camera/client/dc_client_processing.hpp \
@@ -314,8 +313,11 @@ HEADERS += \
 SOURCES += \
     # io    
     depth-camera/client/dc_client.cpp \
-    depth-camera/frame/dc_compressed_frame_buffer.cpp \
-    depth-camera/frame/dc_data.cpp \
+    depth-camera/frame/dc_data_frame.cpp \
+    depth-camera/frame/dc_data_frame_buffer.cpp \
+    depth-camera/frame/dc_data_frame_generator.cpp \
+    depth-camera/frame/dc_device_data.cpp \
+    depth-camera/frame/dc_frame_generator.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.cpp \
     depth-camera/impl/femto_mega_usb_device_impl.cpp \
@@ -323,8 +325,8 @@ SOURCES += \
     depth-camera/settings/dc_capture_settings.cpp \
     depth-camera/settings/dc_client_device_settings.cpp \
     depth-camera/settings/dc_client_settings.cpp \
+    depth-camera/settings/dc_data_frame_generation_settings.cpp \
     depth-camera/settings/dc_device_connection_settings.cpp \
-    depth-camera/settings/dc_frame_compression_settings.cpp \
     depth-camera/settings/dc_frame_generation_settings.cpp \
     depth-camera/settings/dc_server_settings.cpp \
     io/assimp_loader.cpp \
@@ -358,7 +360,6 @@ SOURCES += \
     network/settings/udp_connection_settings.cpp \
     network/settings/udp_server_settings.cpp \
     # utility    
-    network/udp_server.cpp \
     utility/benchmark.cpp \
     utility/cmd_args.cpp \
     utility/decimal.cpp \
@@ -387,9 +388,6 @@ SOURCES += \
     depth-camera/dc_types.cpp \
     depth-camera/dc_video.cpp \
     ## frame
-    depth-camera/frame/dc_compressed_frame.cpp \
-    depth-camera/frame/dc_frame_compressor.cpp \
-    depth-camera/frame/dc_frame_uncompressor.cpp \
     depth-camera/frame/dc_frame.cpp \
     depth-camera/frame/dc_frame_indices.cpp \
     ## client

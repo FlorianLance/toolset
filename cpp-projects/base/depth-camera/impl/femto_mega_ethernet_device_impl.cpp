@@ -151,8 +151,8 @@ auto FemtoMegaEthernetDeviceImpl::read_body_tracking(bool enable) -> void{
 
 auto FemtoMegaEthernetDeviceImpl::resize_color_image_to_depth_size() -> void {
 
-    if(!fData.color.empty() && !fData.depth.empty()){
-        fData.depthSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.color, fData.depth);
+    if(!fData.originalSizeColor.empty() && !fData.depth.empty()){
+        fData.depthSizedColor = orbbecD->resize_color_image_to_depth_size(mInfos, fData.originalSizeColor, fData.depth);
     }else{
         fData.depthSizedColor = {};
     }

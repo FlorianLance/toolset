@@ -29,15 +29,17 @@
 // local
 #include "dc_capture_settings.hpp"
 #include "dc_frame_generation_settings.hpp"
-#include "dc_frame_compression_settings.hpp"
+#include "dc_data_frame_generation_settings.hpp"
 
 namespace tool::cam {
 
 struct DCDeviceDataSettings{
+
     DCCaptureSettings capture;
-    DCFrameGenerationSettings generation;
-    DCFrameCompressionSettings compression;
-    [[nodiscard]] constexpr auto capture_cloud() const noexcept -> bool{return capture.depth && (generation.cloud || compression.addCloud);}
+    DCDataFrameGenerationSettings sending;
+    DCFrameGenerationSettings generation;    
+
+    [[nodiscard]] constexpr auto capture_cloud() const noexcept -> bool{return capture.depth && (generation.cloud || sending.addCloud);}
 
     auto apply_remote_profile() -> void{
         // capture
@@ -47,34 +49,26 @@ struct DCDeviceDataSettings{
         capture.audio                      = false;
         capture.imu                        = false;
         capture.bodyTracking               = false;
+        // sending
+        sending.originalSizeColorJPEGCQ   = 90;
+        sending.depthSizedColorJPEGCQ     = 90;
+        sending.addDepth                  = true;
+        sending.addDepthSizedColor        = true;
+        sending.addOriginalSizeColor      = false;
+        sending.addInfra                  = false;
+        sending.addBodyIdMap              = false;
+        sending.addCloud                  = false;
+        sending.addBodyTracking           = false;
+        sending.addAudio                  = false;
+        sending.addImu                    = false;
+        sending.cloudColorMode            = CloudColorMode::FromDepthSizedColorImage;
         // generation
-        generation.calibration             = false;
-        generation.depth                   = false;
-        generation.depthSizedColorImage    = false;
         generation.cloud                   = false;
+        generation.depthSizedColorImage    = false;        
         generation.depthImage              = false;
-        generation.infra                   = false;
         generation.infraImage              = false;
-        generation.colorImage              = false;
-        generation.bodyIdMapImage          = false;
-        generation.bodyTracking            = false;
-        generation.imu                     = false;
-        generation.audio                   = false;
-        generation.cloudGenMode            = CloudGenerationMode::FromDepth;
+        generation.originalSizeColorImage  = false;
         generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-        // compression
-        compression.jpegCompressionRate    = 80;
-        compression.addCalibration            = true;
-        compression.addDepth                  = true;
-        compression.addDepthSizedColor        = true;
-        compression.addColor                  = false;
-        compression.addInfra                  = false;
-        compression.addBodyIdMap              = false;
-        compression.addCloud                  = false;
-        compression.addBodyTracking           = false;
-        compression.addAudio                  = false;
-        compression.addImu                    = false;
-        compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
     }
 
     auto apply_local_profile() -> void{
@@ -85,34 +79,26 @@ struct DCDeviceDataSettings{
         capture.audio                      = false;
         capture.imu                        = false;
         capture.bodyTracking               = false;
-        // generation
-        generation.calibration             = true;
-        generation.depth                   = true;
-        generation.depthSizedColorImage    = true;
+        // sending
+        sending.originalSizeColorJPEGCQ     = 80;
+        sending.depthSizedColorJPEGCQ       = 90;
+        sending.addDepth                    = false;
+        sending.addDepthSizedColor          = false;
+        sending.addOriginalSizeColor        = false;
+        sending.addInfra                    = false;
+        sending.addBodyIdMap                = false;
+        sending.addCloud                    = false;
+        sending.addBodyTracking             = false;
+        sending.addAudio                    = false;
+        sending.addImu                      = false;
+        sending.cloudColorMode              = CloudColorMode::FromDepthSizedColorImage;
+        // generation        
         generation.cloud                   = true;
         generation.depthImage              = true;
-        generation.infra                   = false;
+        generation.depthSizedColorImage    = true;
         generation.infraImage              = false;
-        generation.colorImage              = false;
-        generation.bodyIdMapImage          = false;
-        generation.bodyTracking            = false;
-        generation.imu                     = false;
-        generation.audio                   = false;
-        generation.cloudGenMode            = CloudGenerationMode::FromDepth;
+        generation.originalSizeColorImage  = false;
         generation.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
-        // compression
-        compression.jpegCompressionRate    = 80;
-        compression.addCalibration            = false;
-        compression.addDepth                  = false;
-        compression.addDepthSizedColor        = false;
-        compression.addColor                  = false;
-        compression.addInfra                  = false;
-        compression.addBodyIdMap              = false;
-        compression.addCloud                  = false;
-        compression.addBodyTracking           = false;
-        compression.addAudio                  = false;
-        compression.addImu                    = false;
-        compression.cloudColorMode         = CloudColorMode::FromDepthSizedColorImage;
     }
 };
 }

@@ -49,57 +49,57 @@ auto DCFiltersSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // depth filtering
-    minWidthF                     = read_value<float>(json, unreadCount, "min_widht_f");
-    maxWidthF                     = read_value<float>(json, unreadCount, "max_widht_f");
-    minHeightF                    = read_value<float>(json, unreadCount, "min_height_f");
-    maxHeightF                    = read_value<float>(json, unreadCount, "max_height_f");
-    minDepthF                     = read_value<float>(json, unreadCount, "min_depth_f");
-    maxDepthF                     = read_value<float>(json, unreadCount, "max_depth_f");
+    read_and_update_value(json, unreadCount, "min_widht_f"sv, minWidthF);
+    read_and_update_value(json, unreadCount, "max_widht_f"sv, maxWidthF);
+    read_and_update_value(json, unreadCount, "min_height_f"sv, minHeightF);
+    read_and_update_value(json, unreadCount, "max_height_f"sv, maxHeightF);
+    read_and_update_value(json, unreadCount, "min_depth_f"sv, minDepthF);
+    read_and_update_value(json, unreadCount, "max_depth_f"sv, maxDepthF);
     // # from depth-sized color
-    filterDepthWithColor          = read_value<bool>(json, unreadCount, "filter_depth_with_color"sv);
-    data::read_array<float>(json, unreadCount, "filter_color"sv, filterColor.array);
-    data::read_array<float>(json, unreadCount, "max_diff_color"sv, maxDiffColor.array);
+    read_and_update_value(json, unreadCount, "filter_depth_with_color"sv, filterDepthWithColor);
+    data::read_and_update_array<float>(json, unreadCount,   "filter_color"sv, filterColor.array);
+    data::read_and_update_array<float>(json, unreadCount,   "max_diff_color"sv, maxDiffColor.array);
     // # from infra
-    filterDepthWithInfra          = read_value<bool>(json, unreadCount, "filter_depth_with_infra"sv);
-        // # from body tracking
-    filterDepthWithBodyTracking   = read_value<bool>(json, unreadCount, "filter_depth_with_body_tracking"sv);
+    read_and_update_value(json, unreadCount, "filter_depth_with_infra"sv, filterDepthWithInfra);
+    // # from body tracking
+    read_and_update_value(json, unreadCount, "filter_depth_with_body_tracking"sv, filterDepthWithBodyTracking);
     // # from cloud
-    filterDepthWithCloud          = read_value<bool>(json, unreadCount, "filter_depth_with_cloud"sv);
-    p1FMode                       = static_cast<PlaneFilteringMode>(read_value<int>(json, unreadCount, "plane_filtering_mode"sv));
-    data::read_array<float>(json, unreadCount, "plane1_A"sv, p1A.array);
-    data::read_array<float>(json, unreadCount, "plane1_B"sv, p1B.array);
-    data::read_array<float>(json, unreadCount, "plane1_C"sv, p1C.array);
-    removeFromPointDistance       = read_value<float>(json, unreadCount, "remove_from_point_distance"sv);
-    data::read_array<float>(json, unreadCount, "sphere"sv, pSphere.array);
-    maxSphereDistance             = read_value<float>(json, unreadCount, "max_sphere_distance"sv);
-    keepOnlyPointsInsideOOB       = read_value<bool>(json, unreadCount, "keep_only_points_inside_OOB"sv);
-    data::read_array<float>(json, unreadCount, "OOB_position"sv, oob.position.array);
-    data::read_array<float>(json, unreadCount, "OOB_rotation"sv, oob.rotation.array);
-    data::read_array<float>(json, unreadCount, "OOB_size"sv, oob.size.array);
+    read_and_update_value(json, unreadCount, "filter_depth_with_cloud"sv, filterDepthWithCloud);
+    p1FMode     = static_cast<PlaneFilteringMode>(read_and_return_value(json, unreadCount, "plane_filtering_mode"sv, static_cast<int>(p1FMode)));
+    data::read_and_update_array<float>(json, unreadCount, "plane1_A"sv, p1A.array);
+    data::read_and_update_array<float>(json, unreadCount, "plane1_B"sv, p1B.array);
+    data::read_and_update_array<float>(json, unreadCount, "plane1_C"sv, p1C.array);
+    read_and_update_value(json, unreadCount, "remove_from_point_distance"sv,    removeFromPointDistance);
+    data::read_and_update_array<float>(json, unreadCount, "sphere"sv,           pSphere.array);
+    read_and_update_value(json, unreadCount, "max_sphere_distance"sv,           maxSphereDistance);
+    read_and_update_value(json, unreadCount, "keep_only_points_inside_OOB"sv,   keepOnlyPointsInsideOOB);
+    data::read_and_update_array<float>(json, unreadCount, "OOB_position"sv,     oob.position.array);
+    data::read_and_update_array<float>(json, unreadCount, "OOB_rotation"sv,     oob.rotation.array);
+    data::read_and_update_array<float>(json, unreadCount, "OOB_size"sv,         oob.size.array);
     // # complex
-    doLocalDiffFiltering          = read_value<bool>(json, unreadCount, "do_local_diff_filtering"sv);
-    maxLocalDiff                  = read_value<float>(json, unreadCount, "max_local_diff"sv);
-    localDiffConnectivity         = static_cast<DCConnectivity>(read_value<int>(json, unreadCount, "local_diff_connectivity"sv));
+    read_and_update_value(json, unreadCount, "do_local_diff_filtering"sv,       doLocalDiffFiltering);
+    read_and_update_value(json, unreadCount, "max_local_diff"sv,                maxLocalDiff);
+    localDiffConnectivity         = static_cast<DCConnectivity>(read_and_return_value(json, unreadCount, "local_diff_connectivity"sv, static_cast<int>(localDiffConnectivity)));
     // ## min neighbours
-    doMinNeighboursFiltering      = read_value<bool>(json, unreadCount, "do_min_neighbours_filtering"sv);
-    nbMinNeighbours               = read_value<unsigned char>(json, unreadCount, "nb_min_neighbours"sv);
-    minNeighboursLoops            = read_value<unsigned char>(json, unreadCount, "min_neighbours_loops"sv);
-    minNeighboursConnectivity     = static_cast<DCConnectivity>(read_value<int>(json, unreadCount, "min_neighbours_connectivity"sv));
+    read_and_update_value(json, unreadCount, "do_min_neighbours_filtering"sv,   doMinNeighboursFiltering);
+    read_and_update_value(json, unreadCount, "nb_min_neighbours"sv,             nbMinNeighbours);
+    read_and_update_value(json, unreadCount, "min_neighbours_loops"sv,          minNeighboursLoops);
+    minNeighboursConnectivity     = static_cast<DCConnectivity>(read_and_return_value(json, unreadCount, "min_neighbours_connectivity"sv, static_cast<int>(minNeighboursConnectivity)));
     // ## erosion
-    doErosion                     = read_value<bool>(json, unreadCount, "do_erosion"sv);
-    erosionLoops                  = read_value<unsigned char>(json, unreadCount, "erosion_loops"sv);
-    erosionConnectivity           = static_cast<DCConnectivity>(read_value<int>(json, unreadCount, "erosion_connectivity"sv));
+    read_and_update_value(json, unreadCount, "do_erosion"sv, doErosion);
+    read_and_update_value(json, unreadCount, "erosion_loops"sv, erosionLoops);
+    erosionConnectivity           = static_cast<DCConnectivity>(read_and_return_value<int>(json, unreadCount, "erosion_connectivity"sv, static_cast<int>(erosionConnectivity)));
     // ## bigger cluster
-    keepOnlyBiggestCluster        = read_value<bool>(json, unreadCount, "keep_only_bigger_cluster"sv);
+    read_and_update_value(json, unreadCount, "keep_only_bigger_cluster"sv, keepOnlyBiggestCluster);
     // ## remove after closest point
-    removeAfterClosestPoint       = read_value<bool>(json, unreadCount, "remove_after_closest_point"sv);
-    maxDistanceAfterClosestPoint  = read_value<float>(json, unreadCount, "max_distance_after_closest_point"sv);
+    read_and_update_value(json, unreadCount, "remove_after_closest_point"sv, removeAfterClosestPoint);
+    read_and_update_value(json, unreadCount, "max_distance_after_closest_point"sv, maxDistanceAfterClosestPoint);
     // depth-sized color filtering
-    invalidateColorFromDepth      = read_value<bool>(json, unreadCount, "invalidate_color_from_depth"sv);
+    read_and_update_value(json, unreadCount, "invalidate_color_from_depth"sv, invalidateColorFromDepth);
     // infra filtering
-    invalidateInfraFromDepth      = read_value<bool>(json, unreadCount, "invalidate_infra_from_depth"sv);
+    read_and_update_value(json, unreadCount, "invalidate_infra_from_depth"sv, invalidateInfraFromDepth);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCFiltersSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

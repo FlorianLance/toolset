@@ -119,7 +119,7 @@
                     "id_reading_interface": 0,
                     "protocol": "ipv4",
                     "reading_port": 8889,
-                    "sending_address": "AH_CAM_SERVER",
+                    "sending_address": "localhost",
                     "sending_port": 8888
                 },
                 "device": {
@@ -187,7 +187,7 @@
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "imu": false,
-                            "infra": false,
+                            "infra": true,
                             "infra_image": false
                         },
                         "s_capture": {
@@ -198,24 +198,6 @@
                             "depth": true,
                             "imu": false,
                             "infra": false
-                        },
-                        "s_compression": {
-                            "audio": false,
-                            "body_id_map": false,
-                            "body_tracking": false,
-                            "calibration": true,
-                            "cloud": false,
-                            "cloud_color_mode": 1,
-                            "color": false,
-                            "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
-                            "depth_compression_mode": 2,
-                            "depth_sized_color_compression_mode": 1,
-                            "imu": false,
-                            "infra": false,
-                            "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 80
                         },
                         "s_generation": {
                             "audio": false,
@@ -230,8 +212,28 @@
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "imu": false,
-                            "infra": false,
+                            "infra": true,
                             "infra_image": false
+                        },
+                        "s_sending": {
+                            "audio": false,
+                            "body_id_map": false,
+                            "body_tracking": false,
+                            "calibration": true,
+                            "cloud": false,
+                            "cloud_color_mode": 1,
+                            "cloud_compression_mode": 2,
+                            "color": false,
+                            "color_compression_mode": 1,
+                            "dept_sized_color": true,
+                            "depth": true,
+                            "depth_compression_mode": 2,
+                            "depth_sized_color_compression_mode": 1,
+                            "imu": false,
+                            "infra": false,
+                            "infra_compression_mode": 2,
+                            "jpeg_compression_rate": 95,
+                            "original_size_color_jpeg_quality": 95
                         }
                     }
                 },

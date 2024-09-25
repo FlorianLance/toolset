@@ -52,17 +52,8 @@ auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const DCMUiSettings &uiS) -
         static ImGuiID tabId = 0;
         if (ImGuiUiDrawer::begin_tab_bar(&tabId, "###display_tabbar")){
 
-            if((m_directTabOpened = ImGuiUiDrawer::begin_tab_item("Direct###display_direct_tabitem"))){
+            if((m_directTabOpened = ImGuiUiDrawer::begin_tab_item("Clients-Direct###clients_direct_tabitem"))){
                 directD.draw(uiS.focusWindow);
-                ImGui::EndTabItem();
-            }
-
-            if((m_recordingTabOpened = ImGuiUiDrawer::begin_tab_item("Recorder###display_recorder_tabitem"))){
-                recorderD.draw(uiS.focusWindow);
-                ImGui::EndTabItem();
-            }
-            if((m_playerTabOpened = ImGuiUiDrawer::begin_tab_item("Player###display_player_tabitem"))){
-                playerD.draw(uiS.focusWindow);
                 ImGui::EndTabItem();
             }
             if((m_calibrationTabOpened = ImGuiUiDrawer::begin_tab_item("Calibrator###calibrator_direct_tabitem"))){
@@ -78,9 +69,19 @@ auto DCMMiddlePanelChildDrawer::draw(geo::Pt2f size, const DCMUiSettings &uiS) -
                 if(ImGui::BeginChild("###calibrator_child2", ImVec2(size.x()*0.4, size.y()*0.9), true, windowFlags)){
                     directD.draw_only_clouds();
                 }
-                ImGui::EndChild();                
+                ImGui::EndChild();
                 ImGui::EndTabItem();
             }
+
+            if((m_recordingTabOpened = ImGuiUiDrawer::begin_tab_item("Recorder###_recorder_tabitem"))){
+                recorderD.draw(uiS.focusWindow);
+                ImGui::EndTabItem();
+            }
+            if((m_playerTabOpened = ImGuiUiDrawer::begin_tab_item("Player###player_tabitem"))){
+                playerD.draw(uiS.focusWindow);
+                ImGui::EndTabItem();
+            }
+
 
             ImGui::EndTabBar();
         }

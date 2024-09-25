@@ -122,7 +122,7 @@ auto Settings::init_from_json_str(std::string_view jsonStr) -> bool{
 auto Settings::init_from_json(const nlohmann::json &json) -> void{
     size_t unreadCount = 0;
     // sType   = static_cast<tool::io::SettingsType>(read_value<int>(json, unreadCount, "type"));
-    version = static_cast<tool::io::SettingsVersion>(read_value<int>(json, unreadCount, "version"));
+    version = static_cast<tool::io::SettingsVersion>(read_and_return_value(json, unreadCount, "version"sv, static_cast<int>(version)));
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[BaseSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

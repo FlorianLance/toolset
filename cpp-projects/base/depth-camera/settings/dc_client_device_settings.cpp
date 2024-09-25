@@ -57,7 +57,11 @@ auto DCClientDeviceSettings::set_id(size_t idC) -> void{
     };
 
     id   = idC;
-    name = std::format("D{}", id);
+    if(connectionS.connectionType == DCClientType::Remote){
+        name = std::format("R{}", id);
+    }else if(connectionS.connectionType == DCClientType::Local){
+        name = std::format("L{}", id);
+    }
     displayS.unicolor = colors[id];
 }
 
@@ -65,14 +69,14 @@ auto DCClientDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // local
-    connectionS.init_from_json(read_object(json, unreadCount, "connection"sv));
-    deviceS.init_from_json(read_object(json, unreadCount, "device"sv));
-    filtersS.init_from_json(read_object(json, unreadCount, "filters"sv));
-    calibrationFiltersS.init_from_json(read_object(json, unreadCount, "calibration_filters"sv));
-    colorS.init_from_json(read_object(json, unreadCount, "color"sv));
-    modelS.init_from_json(read_object(json, unreadCount, "model"sv));
+    connectionS.init_from_json(read_and_return_object(json, unreadCount, "connection"sv));
+    deviceS.init_from_json(read_and_return_object(json, unreadCount, "device"sv));
+    filtersS.init_from_json(read_and_return_object(json, unreadCount, "filters"sv));
+    calibrationFiltersS.init_from_json(read_and_return_object(json, unreadCount, "calibration_filters"sv));
+    colorS.init_from_json(read_and_return_object(json, unreadCount, "color"sv));
+    modelS.init_from_json(read_and_return_object(json, unreadCount, "model"sv));
     // delayS.init_from_json(read_object(json, unreadCount, "delay"sv));
     // displayS.init_from_json(read_object(json, unreadCount, "display"sv));
 }

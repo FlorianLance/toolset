@@ -28,10 +28,23 @@
 #pragma once
 
 // local
-#include "frame/dc_frame_uncompressor.hpp"
-#include "frame/dc_compressed_frame_buffer.hpp"
+#include "frame/dc_frame_generator.hpp"
+#include "frame/dc_data_frame_buffer.hpp"
+#include "settings/dc_data_frame_generation_settings.hpp"
 
 namespace tool::cam{
+
+enum class VideoType : std::int8_t{
+    Legacy1 = 0,
+    Legacy2 = 1,
+    Legacy3 = 2,
+    Current = 3,
+};
+
+[[maybe_unused]] static constexpr auto valid(VideoType vt) noexcept -> bool{
+    return (vt == VideoType::Legacy3) || (vt == VideoType::Current);
+}
+
 
 class DCVideo{
 
@@ -62,17 +75,17 @@ public:
     auto count_frames_from_all_devices() const noexcept -> size_t;
     auto min_nb_frames() const noexcept -> size_t;
     auto closest_frame_id_from_time(size_t idD, double timeMs) const noexcept -> std::int64_t;
-    auto get_compressed_frame(size_t idD, size_t idFrame) -> std::weak_ptr<DCCompressedFrame>;
-    auto get_compressed_frames_ptr(size_t idD) const noexcept -> const DCCompressedFrameBuffer*;
-    auto uncompressor(size_t idD) noexcept -> DCFrameUncompressor*;
+    auto get_data_frame(size_t idD, size_t idFrame) -> std::weak_ptr<DCDataFrame>;
+    auto get_data_frames_ptr(size_t idD) const noexcept -> const DCDataFrameBuffer*;
+    auto generator(size_t idD) noexcept -> DCFrameGenerator*;
     // # audio
-    auto total_audio_frames_size(size_t idD) const -> size_t;
-    auto get_audio_samples_all_channels(size_t idD, std::vector<std::vector<float>> &audioBuffer) -> void;
-    auto get_audio_samples_all_channels(size_t idD, std::vector<float> &audioBuffer) -> void;
+    // auto total_audio_frames_size(size_t idD) const -> size_t;
+    // auto get_audio_samples_all_channels(size_t idD, std::vector<std::vector<float>> &audioBuffer) -> void;
+    // auto get_audio_samples_all_channels(size_t idD, std::vector<float> &audioBuffer) -> void;
 
-    // uncomress
-    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idD, size_t idF, DCFrame &frame) -> bool;
-    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idD, DCCompressedFrame *cFrame, DCFrame &frame) -> bool;
+    // generate
+    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, size_t idF, DCFrame &frame) -> bool;
+    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, DCDataFrame *cFrame, DCFrame &frame) -> bool;
 
     // modify
     // # devices
@@ -86,26 +99,25 @@ public:
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void;
     // # frames
-    auto add_compressed_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> void;
-    auto remove_compressed_frames_until(size_t idD, size_t idF) -> void;
-    auto remove_compressed_frames_after(size_t idD, size_t idF) -> void;
-    auto remove_all_compressed_frames(size_t idD) noexcept -> void;
-    auto remove_all_devices_compressed_frames() noexcept -> void;
+    auto add_data_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> void;
+    auto remove_data_frames_until(size_t idD, size_t idF) -> void;
+    auto remove_data_frames_after(size_t idD, size_t idF) -> void;
+    auto remove_all_data_frames(size_t idD) noexcept -> void;
+    auto remove_all_devices_data_frames() noexcept -> void;
     // # replace
-    auto replace_compressed_frame(size_t idD, size_t idF, std::shared_ptr<DCCompressedFrame> frame) -> void;
+    auto replace_data_frame(size_t idD, size_t idF, std::shared_ptr<DCDataFrame> frame) -> void;
 
     // # calibration
     auto set_transform(size_t idD, geo::Mat4d tr) -> void;
 
     // i/o
     auto save_to_file(std::string_view path) -> bool;
-    // auto save_to_json_file(std::string_view path) -> bool;
     auto load_from_file(std::string_view path) -> bool;   
 
 protected:
 
-    Buffer<std::unique_ptr<DCFrameUncompressor>> m_devicesFrameUncompressors;
-    Buffer<DCCompressedFrameBuffer> m_devicesCompressedFrames;
+    Buffer<std::unique_ptr<DCFrameGenerator>> m_devicesFrameGenerators;
+    Buffer<DCDataFrameBuffer> m_devicesDataFrames;
     Buffer<geo::Mat4d> m_devicesTransforms;
 
 private:
@@ -114,8 +126,8 @@ private:
     auto read_file(std::ifstream &file) -> bool;
     auto write_file(std::ofstream &file) -> void;
     // # legacy
-    auto read_legacy_cloud_video_file(std::ifstream &file) -> void;
-    auto read_legacy_full_video_file(std::ifstream &file) -> void;
+    // auto read_legacy_cloud_video_file(std::ifstream &file) -> void;
+    // auto read_legacy_full_video_file(std::ifstream &file) -> void;
 };
 
 }

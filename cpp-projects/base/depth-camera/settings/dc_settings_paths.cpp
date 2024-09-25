@@ -91,7 +91,7 @@ auto DCSettingsPaths::initialize(char *argv[], DCApplicationType type, size_t id
         allConfigClients.calibrationFilters  = paths->settingsDir / std::format("calibration_filters_{}_all.config"sv, paths->hostName);
         allConfigClients.device              = paths->settingsDir / std::format("device_{}_all.config"sv, paths->hostName);
         allConfigClients.color               = paths->settingsDir / std::format("color_{}_all.config"sv, paths->hostName);
-        // # grabber
+        // # client
         // ## json
         clientsJson.resize(20);
         for(size_t idG = 0; idG < clientsJson.size(); ++idG){
@@ -201,11 +201,11 @@ auto DCSettingsPaths::client_filters_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].filters.string();
         }
     }else{
-        Logger::warning(std::format("Invalid grabber id [{}] for filters settings file.\n"sv, idG));
+        Logger::warning(std::format("Invalid client id [{}] for filters settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.filters)){
-        Logger::warning(std::format("Cannot find filters settings file for grabber [{}], use default instead.\n"sv, idG));
+        Logger::warning(std::format("Cannot find filters settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.filters.string();
     }else{
         Logger::warning(std::format("Cannot find default filters settings file [{}].\n"sv, defaultJson.filters.string()));
@@ -223,11 +223,11 @@ auto DCSettingsPaths::client_calibration_filters_settings_file(size_t idG) -> st
             return clientsConfig[idG].calibrationFilters.string();
         }
     }else{
-        Logger::warning(std::format("Invalid grabber id [{}] for calibration filters settings file.\n"sv, idG));
+        Logger::warning(std::format("Invalid client id [{}] for calibration filters settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.calibrationFilters)){
-        Logger::warning(std::format("Cannot find calibration filters settings file for grabber [{}], use default instead.\n"sv, idG));
+        Logger::warning(std::format("Cannot find calibration filters settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.calibrationFilters.string();
     }else{
         Logger::warning(std::format("Cannot find default calibration filters settings file [{}].\n"sv, defaultJson.calibrationFilters.string()));
@@ -245,11 +245,11 @@ auto DCSettingsPaths::client_device_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].device.string();
         }
     }else{
-        Logger::warning(std::format("Invalid grabber id [{}] for device settings file.\n"sv, idG));
+        Logger::warning(std::format("Invalid client id [{}] for device settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.device)){
-        Logger::warning(std::format("Cannot find device settings file for grabber [{}], use default instead.\n"sv, idG));
+        Logger::warning(std::format("Cannot find device settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.device.string();
     }else{
         Logger::warning(std::format("Cannot find default device settings file [{}].\n"sv, defaultJson.device.string()));
@@ -267,11 +267,11 @@ auto DCSettingsPaths::client_color_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].color.string();
         }
     }else{
-        Logger::warning(std::format("Invalid grabber id [{}] for color settings file.\n"sv, idG));
+        Logger::warning(std::format("Invalid client id [{}] for color settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.color)){
-        Logger::warning(std::format("Cannot find color settings file for grabber [{}], use default instead.\n"sv, idG));
+        Logger::warning(std::format("Cannot find color settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.color.string();
     }else{
         Logger::warning(std::format("Cannot find default color settings file [{}].\n"sv, defaultJson.color.string()));
@@ -289,12 +289,12 @@ auto DCSettingsPaths::client_model_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].model.string();
         }
     }else{
-        Logger::warning(std::format("Invalid grabber id [{}] for model settings file.\n", idG));
+        Logger::warning(std::format("Invalid client id [{}] for model settings file.\n", idG));
     }
 
 
     if(std::filesystem::exists(defaultJson.model)){
-        Logger::warning(std::format("Cannot find model settings file for grabber [{}], use default instead.\n"sv, idG));
+        Logger::warning(std::format("Cannot find model settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.model.string();
     }else{
         Logger::warning(std::format("Cannot find default modelsettings file [{}].\n"sv, defaultJson.model.string()));

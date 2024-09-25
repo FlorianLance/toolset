@@ -69,7 +69,7 @@ struct DCCalibratorSettings{
         }
     }
 
-    // # grabbers to use
+    // # clients to use
     std::vector<std::string> models;
     std::vector<std::string> sources;
     int modelSelectionId = 0;
@@ -111,7 +111,7 @@ struct DCCalibratorDisplaySettings{
 };
 
 
-struct DCCalibratorGrabberData{
+struct DCCalibratorClientData{
 
     size_t id;
     std::vector<std::shared_ptr<DCFrame>> frames;

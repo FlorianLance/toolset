@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -24,68 +25,47 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "dc_device_data.hpp"
 
-// local
-#include "network/settings/udp_server_settings.hpp"
+using namespace tool::cam;
 
-#include "udp_reader.hpp"
-#include "udp_sender.hpp"
-
-namespace tool::net {
-
-// struct UdpMessageSender{
-
-//     std::unique_ptr<UdpSender> sender = nullptr;
-//     std::unique_ptr<std::thread> sendMessagesT = nullptr;
-
-//     auto initialize(const UdpConnectionSettings &udpConnectionS) -> void;
-
-//     auto send_message() -> void{
-
-//     }
-// };
-
-// class UdpServer{
-// public:
-
-//     UdpServer();
-//     virtual ~UdpServer();
-
-//     auto start_reading(const UdpServerSettings &udpServerS) -> bool;
-//     auto stop_reading() -> void{}
-
-//     auto add_client(const UdpConnectionSettings &udpConnectionS) -> void;
-
-//     auto clean() -> void;
-
-// protected:
-//     auto initialize() -> void;
-
-//     virtual auto init_connections() -> void{
-
-//     }
-
-//     auto send_message_loop() -> void{
-
-//     }
-
-//     virtual auto generate_sender() -> std::unique_ptr<UdpSender> = 0;
-//     virtual auto generate_reader() -> std::unique_ptr<UdpReader> = 0;
-
-// protected:
-
-//     // reading
-//     std::unique_ptr<UdpReader> m_reader = nullptr;
-
-//     // sending
-//     std::atomic_bool m_sendMessages = false;
-//     std::vector<UdpMessageSender> m_clientsSenders;
-
-//     struct Impl;
-//     std::unique_ptr<Impl> i;
-// };
-
-
-
+auto DCDeviceData::reset_spans() -> void{
+    rawColor            = {};
+    originalSizeColor               = {};
+    depthSizedColor     = {};
+    depth               = {};
+    infra               = {};
+    bodiesIdMap         = {};
+    depthCloud          = {};    
+    binaryIMU           = {};
+    audioChannels       = {0,{}};
+    bodies              = {};
 }
+
+auto DCDeviceData::reset(const DCModeInfos &mInfos) -> void{
+
+    binaryCalibration   = {};
+    reset_spans();
+
+    // processsing
+    if(mInfos.has_depth()){
+        depthMask.resize(mInfos.depth_size());
+        filteringMask.resize(mInfos.depth_size());
+        depthFiltering.resize(mInfos.depth_size());
+        zonesId.resize(mInfos.depth_size());
+    }else{
+        depthMask.clear();
+        filteringMask.clear();
+        depthFiltering.clear();
+        zonesId.clear();
+    }
+
+    if(mInfos.has_color()){
+        convertedColorData.resize(mInfos.color_size());
+        convertedColorData.width  = mInfos.color_width();
+        convertedColorData.height = mInfos.color_height();
+    }else{
+        convertedColorData.reset();
+    }
+}
+

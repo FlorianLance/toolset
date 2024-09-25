@@ -52,19 +52,18 @@ public:
 
 private:
 
-    auto draw_grabbers_ui(DCMModel *model) -> void;
+    auto draw_clients_ui(DCMModel *model) -> void;
     // tab items
     auto draw_global_tab_item(DCMModel *model) -> void;
-    auto draw_settings_tab_item(DCMModel *model) -> void;
+    auto draw_clients_tab_item(DCMModel *model) -> void;
     auto draw_ui_tab_item(DCMUiSettings &ui) -> void;
-    auto draw_infos_tab_item(cam::DCClient &client) -> void;
 
     // # settings
     auto draw_type_tab_item(cam::DCClient &client) -> void;
     auto draw_device_tab_item(cam::DCClient &client) -> void;
     auto draw_filters_tab_item(cam::DCClient &client) -> void;
     auto draw_display_tab_item(cam::DCClient &client) -> void;
-    auto draw_calibration_tab_item(cam::DCClient &client) -> void;
+    auto draw_model_tab_item(cam::DCClient &client) -> void;
     auto draw_color_tab_item(cam::DCClient &client) -> void;
     auto draw_recorder_tab_item(cam::DCVideoRecorder &recorder) -> void;
     auto draw_player_tab_item(cam::DCVideoPlayer &player) -> void;

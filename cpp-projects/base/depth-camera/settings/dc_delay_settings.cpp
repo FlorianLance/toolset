@@ -42,9 +42,9 @@ auto DCDelaySettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // delay
-    delayMs   = read_value<std::int64_t>(json, unreadCount, "delay");
+    read_and_update_value(json, unreadCount, "delay"sv, delayMs);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCDelaySettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

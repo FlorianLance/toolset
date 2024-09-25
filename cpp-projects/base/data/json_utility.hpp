@@ -27,9 +27,6 @@
 #pragma once
 
 // local
-// #include "geometry/point3.hpp"
-// #include "geometry/matrix4.hpp"
-// #include "graphics/color/rgb.hpp"
 #include "utility/logger.hpp"
 
 // thirdparty
@@ -39,19 +36,8 @@ namespace tool::data{
 
     using namespace std::string_view_literals;
 
-
-
-    // template <typename T>
-    // static auto read_array(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> T{
-    //     if(j.contains(key)){
-    //         return j[key].template get<T>();
-    //     }
-    //     ++unreadCount;
-    //     return T{};
-    // }
-
     template <typename T>
-    static auto read_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key, T &value) -> void{
+    static auto read_and_update_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key, T &value) -> void{
         if(j.contains(key)){
             value = j[key].template get<T>();
             return;
@@ -61,18 +47,18 @@ namespace tool::data{
     }
 
     template <typename T>
-    static auto read_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> T{
+    static auto read_and_return_value(const nlohmann::json &j, size_t &unreadCount, std::string_view key, T defaultValue = {}) -> T{
 
         if(j.contains(key)){
             return j[key].template get<T>();
         }
         Logger::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
         ++unreadCount;
-        return T{};
+        return defaultValue;
     }
 
 
-    [[maybe_unused]] static auto read_object(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> nlohmann::json{
+    [[maybe_unused]] static auto read_and_return_object(const nlohmann::json &j, size_t &unreadCount, std::string_view key) -> nlohmann::json{
         if(j.contains(key)){
             return j[key];            
         }
@@ -82,7 +68,7 @@ namespace tool::data{
     }
 
     template <typename T>
-    static auto read_array(const nlohmann::json &j, size_t &unreadCount, std::string_view key, std::span<T> values) -> void{
+    static auto read_and_update_array(const nlohmann::json &j, size_t &unreadCount, std::string_view key, std::span<T> values) -> void{
         if(j.contains(key)){
             if(j[key].is_array()){
             nlohmann::json::array_t array = j[key];

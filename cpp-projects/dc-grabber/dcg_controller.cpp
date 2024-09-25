@@ -169,9 +169,9 @@ auto DCGController::set_connections() -> void{
 
     // # frames
     // ## server
-    device->new_compressed_frame_signal.connect(                &DCServer::send_frame,                                     server);
+    device->new_data_frame_signal.connect(                      &DCServer::send_frame,                                     server);
     // ## recorder
-    device->new_compressed_frame_signal.connect(                &DCVideoRecorder::add_compressed_frame_to_default_device,  recorder);
+    device->new_frame_signal.connect(                           &DCVideoRecorder::add_frame_to_default_device,             recorder);
     // ## device drawer
     device->new_frame_signal.connect(                           &DCDeviceDrawer::update_frame,                             deviceD);
     // ## recorder drawer

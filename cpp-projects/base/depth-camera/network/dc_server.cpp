@@ -1,7 +1,7 @@
 
 
 /*******************************************************************************
-** Toolset-dc-grabber                                                  **
+** Toolset-dc-grabber                                                         **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -65,7 +65,7 @@ using RMessageV =
 
 using SMessageV =
     std::variant<
-        EndPtr<DCCompressedFrame>,
+        EndPtr<DCDataFrame>,
         EndVal<UdpConnectionSettings>,
         EndVal<Feedback>
     >;
@@ -101,7 +101,7 @@ struct DCServer::Impl{
     // # messages
     SafeQueue<SMessageV> sMessages;
     // # data
-    std::vector<std::vector<std::byte>> cFrameDataPackets;
+    std::vector<std::vector<std::byte>> frameDataPackets;
 
     // signals
     sigslot::signal<size_t> timeout_messages_signal;
@@ -387,13 +387,13 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         }
                     }
                 },
-                [&](EndPtr<DCCompressedFrame> m){
+                [&](EndPtr<DCDataFrame> m){
 
                     if(!udpSenders.empty()){
 
                         auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 
-                        std::shared_ptr<cam::DCCompressedFrame> f = std::move(m.second);
+                        std::shared_ptr<cam::DCDataFrame> f = std::move(m.second);
 
                         // resize buffer if necessary
                         size_t totalDataSizeBytes = f->data_size();
@@ -407,13 +407,13 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         f->write_to_data(bData, offset);
 
                         // generate all packets
-                        (*udpSenders.begin()).second->generate_data_packets(static_cast<MessageTypeId>(DCMessageType::compressed_frame_data), bData, cFrameDataPackets);
+                        (*udpSenders.begin()).second->generate_data_packets(static_cast<MessageTypeId>(DCMessageType::data_frame), bData, frameDataPackets);
 
                         // send all packets
                         std::atomic<size_t> count = 0;
                         std::for_each(std::execution::par_unseq, std::begin(udpSenders), std::end(udpSenders), [&](auto &senderP){
                             size_t nbBytesSent = 0;
-                            for(const auto &dataPacket : cFrameDataPackets){
+                            for(const auto &dataPacket : frameDataPackets){
                                 auto nbBytesS = senderP.second->send_packet_data(dataPacket);
                                 nbBytesSent += nbBytesS;
                             }
@@ -605,7 +605,8 @@ auto DCServer::update() -> void{
 }
 
 
-auto DCServer::send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void{
+auto DCServer::send_frame(std::shared_ptr<cam::DCDataFrame> frame) -> void{
+    settings.cInfos.sizeDataFrame = frame->data_size();
     i->sMessages.push_back(std::make_pair(EndPointId{}, std::move(frame)));
 }
 

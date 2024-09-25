@@ -40,12 +40,12 @@ auto UdpServerSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // settings
-    anyReadingInterface  = read_value<bool>(json, unreadCount, "any_reading_interface");
-    readingInterfaceId   = read_value<size_t>(json, unreadCount, "id_interface");
-    readingPort          = read_value<int>(json, unreadCount, "reading_port");
-    protocol                = (read_value<std::string>(json, unreadCount, "protocol") == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
+    read_and_update_value(json, unreadCount, "any_reading_interface"sv,   anyReadingInterface);
+    read_and_update_value(json, unreadCount, "id_interface"sv,            readingInterfaceId);
+    read_and_update_value(json, unreadCount, "reading_port"sv,            readingPort);
+    protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
 
     if(unreadCount != 0){
         Logger::warning(std::format("[UdpServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

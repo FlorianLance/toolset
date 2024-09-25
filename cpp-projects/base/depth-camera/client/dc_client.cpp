@@ -74,8 +74,8 @@ struct DCClient::Impl{
             rDevice->remote_network_status_signal.connect([&,idDevice](net::UdpNetworkStatus status){
                 settings.devicesS[idDevice].receivedNetworkStatus = status;
             });
-            rDevice->remote_frame_signal.connect([&,idDevice](std::shared_ptr<cam::DCCompressedFrame> cFrame){
-                processing.new_compressed_frame(idDevice, std::move(cFrame));
+            rDevice->remote_data_frame_signal.connect([&,idDevice](std::shared_ptr<cam::DCDataFrame> cFrame){
+                processing.new_data_frame(idDevice, std::move(cFrame));
             });
             device = std::move(rDevice);
         }
@@ -111,6 +111,8 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
     }
     settings.filePath = clientSettingsPath;
     for(auto &device : settings.devicesS){
+        // device.connectionS.connectionType == DCClientType::Remote
+        // device.deviceS;
         device.connectionS.startReadingThread = startThreads;
     }
 
@@ -142,12 +144,12 @@ auto DCClient::update() -> void{
     // read messages from network
     read_feedbacks();
 
-    // read compressed frames
-    std::vector<std::shared_ptr<cam::DCCompressedFrame>> cFrames(i->processing.nb_devices(), nullptr);
+    // read data frames
+    std::vector<std::shared_ptr<cam::DCDataFrame>> dFrames(i->processing.nb_devices(), nullptr);
     for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
         // check if new frame uncompressed
-        if(auto cFrame = i->processing.get_compressed_frame(idC); cFrame != nullptr){
-            cFrames[idC] = cFrame;
+        if(auto cFrame = i->processing.get_data_frame(idC); cFrame != nullptr){
+            dFrames[idC] = cFrame;
         }
     }
     // read frames
@@ -162,15 +164,15 @@ auto DCClient::update() -> void{
     // send frames
     for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
 
-        if(cFrames[idC]){
+        if(dFrames[idC]){
             
-            if(settings.devicesS[idC].lastCompressedFrameIdReceived != cFrames[idC]->idCapture){
+            if(settings.devicesS[idC].lastDataFrameIdReceived != dFrames[idC]->idCapture){
 
                 // update last compresesd frame id
-                settings.devicesS[idC].lastCompressedFrameIdReceived = cFrames[idC]->idCapture;
+                settings.devicesS[idC].lastDataFrameIdReceived = dFrames[idC]->idCapture;
 
                 // send it
-                new_compressed_frame_signal(idC, std::move(cFrames[idC]));
+                new_data_frame_signal(idC, std::move(dFrames[idC]));
 
                 // invalidate it
                 // sData.invalid_last_compressed_frame(ii);
@@ -256,6 +258,23 @@ auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{
     if(i->devices[idC]->type() == DCClientType::Remote){
         dynamic_cast<DCClientRemoteDevice*>(i->devices[idC].get())->trigger_received_packets();
     }
+}
+
+auto DCClient::reset_network() -> void{
+
+    for(size_t idD = 0; idD < devices_nb(); ++idD){
+        if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->devices[idD].get())){
+            rD->clean();
+        }
+    }
+
+    for(size_t idD = 0; idD < devices_nb(); ++idD){
+        if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->devices[idD].get())){
+            settings.update_connection_settings(settings.devicesS[idD].connectionS);
+            rD->initialize(settings.devicesS[idD].connectionS);
+        }
+    }
+
 }
 
 auto DCClient::legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool{

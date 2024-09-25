@@ -1,5 +1,4 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -28,55 +27,23 @@
 #pragma once
 
 // local
-#include "utility/buffer.hpp"
-#include "dc_compressed_frame.hpp"
+#include "dc_data_frame.hpp"
+#include "dc_frame.hpp"
+#include "depth-camera/settings/dc_frame_generation_settings.hpp"
 
 namespace tool::cam{
 
-class DCVideo;
+struct DCFrameGenerator{
 
-struct DCCompressedFrameBuffer{
+    DCFrameGenerator();
+    ~DCFrameGenerator();
 
-    DCCompressedFrameBuffer() = default;
-
-    // getters
-    auto nb_frames() const noexcept -> size_t;
-    auto valid_vertices_count(size_t idFrame) const noexcept -> size_t;
-    auto first_frame_received_timestamp() const noexcept -> std::int64_t;
-    auto last_frame_received_timestamp() const noexcept -> std::int64_t;
-    auto duration_ms() const noexcept -> double;
-
-    // modifiers
-    auto add_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void;
-    auto get_compressed_frame(size_t idFrame) const noexcept -> std::weak_ptr<DCCompressedFrame>;
-    auto remove_frames_until(size_t idFrame) -> void;
-    auto remove_frames_after(size_t idFrame) -> void;
-    auto clean() noexcept -> void;
-
-    friend DCVideo;
-
-    auto check_same_mode_for_every_frame() const noexcept -> bool{
-        if(frames.empty()){
-            return true;
-        }
-        auto mode = frames.front()->mode;
-        for(const auto &frame : frames){
-            if(mode != frame->mode){
-                return false;
-            }
-        }
-        return true;
-    }
+    auto initialize(DCDataFrame *cFrame) -> void;
+    auto generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *cFrame, DCFrame &frame) -> bool;
 
 private:
 
-    auto first_frame_ptr() const -> DCCompressedFrame*;
-    auto last_frame_ptr() const -> DCCompressedFrame*;
-    auto get_frame_ptr(size_t idFrame) const -> DCCompressedFrame*;
-
-public:
-
-    Buffer<std::shared_ptr<DCCompressedFrame>> frames;
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
-
 }

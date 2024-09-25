@@ -45,12 +45,20 @@ using namespace tool::cam;
 
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *model) -> void {
 
-    if(ImGui::BeginChild("###settings_child2", ImVec2(size.x(), size.y()), true, windowFlags)){
-        if (ImGui::BeginTabBar("###settings_tabbar")){
-            draw_server_info_tab_item(model);
+    if(ImGui::BeginChild("###main_child", ImVec2(size.x(), size.y()), true, windowFlags)){
+        if (ImGui::BeginTabBar("###main_tabbar")){
 
-            if (ImGui::BeginTabItem("Settings###settings_tabitem")){
-                if(ImGui::BeginTabBar("###sub_settings_tabbar")){
+
+            // windowVisible = ImGui::Begin("Hello, world!");
+            // if (changeColor)
+
+
+            if (ImGui::BeginTabItem("Server###server_tabitem")){
+
+
+
+                if(ImGui::BeginTabBar("###sub_server_tabbar")){
+                    draw_info_tab_item(model);
                     draw_device_tab_item(model->server.settings.deviceS);
                     draw_filters_tab_item(model->server.settings.deviceS.configS, model->server.settings.filtersS);
                     draw_model_tab_item(model->server.settings.modelS);
@@ -59,17 +67,18 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
                     draw_delay_tab_item(model->server.settings.delayS);
                     ImGui::EndTabBar();
                 }
+
+
                 ImGui::EndTabItem();
             }
 
-            draw_recording_tab_item(model->recorder.states, model->recorder.settings);
+
+            draw_recorder_tab_item(model->recorder.states, model->recorder.settings);
             ImGui::EndTabBar();
         }
     }
     ImGui::EndChild();
 }
-
-
 
 auto draw_config_file_name(const std::string &filePath) -> void{
 
@@ -85,15 +94,25 @@ auto draw_config_file_name(const std::string &filePath) -> void{
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void {
+auto DCGLeftPanelChildDrawer::draw_info_tab_item(DCGModel *model) -> void {
 
-    if (!ImGui::BeginTabItem("Server info###settings_server_info_tabitem")){
+    // ImGui::PushStyleColor(ImGuiCol_Tab,         ImVec4(0, 1, 0, 1));
+    // ImGui::PushStyleColor(ImGuiCol_TabSelected, ImVec4(0.5, 1, 0.5, 1));
+    // ImGui::PushStyleColor(ImGuiCol_TabHovered,  ImVec4(0.2, 1, 0.2, 1));
+
+    if (!ImGui::BeginTabItem("Info###settings_server_info_tabitem")){
+        // ImGui::PopStyleColor();
+        // ImGui::PopStyleColor();
+        // ImGui::PopStyleColor();
         return;
     }
+    // ImGui::PopStyleColor();
+    // ImGui::PopStyleColor();
+    // ImGui::PopStyleColor();
 
     DCServerSettings &settings = model->server.settings;
 
-    ImGuiUiDrawer::title2("NETWORK");
+    ImGuiUiDrawer::title("NETWORK");
     ImGui::Spacing();
 
 
@@ -188,6 +207,8 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
             ImGuiUiDrawer::text(std::format("ID: ..."));
             ImGuiUiDrawer::text(std::format("Time (ms): ..."));
         }
+        ImGuiUiDrawer::text(std::format("Data frame size (M/bytes): {}", settings.cInfos.sizeDataFrame/10000000.0));
+        ImGuiUiDrawer::text(std::format("Nb 9K packets (approximate): {}", settings.cInfos.sizeDataFrame/9000));
 
         ImGui::Unindent();
     }
@@ -198,7 +219,7 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
     }
     ImGui::Separator();
 
-    ImGuiUiDrawer::title2("MONITORING");
+    ImGuiUiDrawer::title("MONITORING");
     ImGui::Spacing();
 
     {
@@ -208,8 +229,8 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
         convImageB.add_value(model->device->get_duration_ms("CONVERT_COLOR_IMAGE"sv));
         resizeImageB.add_value(model->device->get_duration_ms("RESIZE_COLOR_IMAGE"sv));
         filterDepthB.add_value(model->device->get_duration_ms("FILTER_DEPTH"sv));
-        updateCompFrameB.add_value(model->device->get_duration_ms("UPDATE_COMPRESSED_FRAME"sv));
-        finalizeCompFrameB.add_value(model->device->get_duration_ms("FINALIZE_COMPRESSED_FRAME"sv));
+        updateCompFrameB.add_value(model->device->get_duration_ms("UPDATE_DATA_FRAME"sv));
+        finalizeCompFrameB.add_value(model->device->get_duration_ms("FINALIZE_DATA_FRAME"sv));
         updateFrameB.add_value(model->device->get_duration_ms("UPDATE_FRAME"sv));
         finalizeFrameB.add_value(model->device->get_duration_ms("FINALIZE_FRAME"sv));
 
@@ -268,11 +289,11 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
         ImGui::SameLine();
         ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  filterDepthB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
 
-        ImGui::Text("GCFrame: ");
+        ImGui::Text("Data frame: ");
         ImGui::SameLine();
         ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateCompFrameB + averageFinalizeCompFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
         ImGui::SameLine();
-        ImGui::Text("GFrame ");
+        ImGui::Text("Display frame ");
         ImGui::SameLine();
         ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateFrameB + averageFinalizeFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
 
@@ -293,7 +314,7 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
 
     ImGui::Separator();
 
-    ImGuiUiDrawer::title2("SETTINGS FILES");
+    ImGuiUiDrawer::title("SETTINGS FILES");
     ImGui::Spacing();
     ImGuiUiDrawer::text(std::format("Current local ID [{}]", settings.idG));
     ImGui::Text("Defined by the N value of the exe argument: \"-iN\"");
@@ -334,7 +355,7 @@ auto DCGLeftPanelChildDrawer::draw_server_info_tab_item(DCGModel *model) -> void
 }
 
 auto DCGLeftPanelChildDrawer::draw_device_tab_item(cam::DCDeviceSettings &device) -> void {
-    if(std::get<1>(DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",device))){
+    if(std::get<1>(DCUIDrawer::draw_dc_device_settings_tab_item("Device###device_tabitem",device, std::nullopt))){
         DCGSignals::get()->update_device_settings_signal(device);
     }
 }
@@ -374,9 +395,9 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(DCGUiSettings &uiS, DCSceneD
     ImGui::EndTabItem();
 }
 
-auto DCGLeftPanelChildDrawer::draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void {
+auto DCGLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void {
 
-    if(DCUIDrawer::draw_dc_recorder_tab_item("Recording###settings_recording_tabitem", recStates, recSetings)){
+    if(DCUIDrawer::draw_dc_recorder_tab_item("Recorder###settings_recorder_tabitem", recStates, recSetings, true)){
         DCGSignals::get()->update_recorder_settings_signal(recSetings);
     }
 

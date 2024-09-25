@@ -38,7 +38,7 @@ using namespace cam;
 
 int main(int argc, char *argv[]){
 
-    Logger::message("Start DC-Grabber.\n");
+    Logger::message("Start DC grabber.\n");
     Logger::message(std::format("Args {}.\n", argc));
 
     // check application arguments
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
     DCGController controller;
     if(controller.initialize(id.value())){
         controller.start();
-        Logger::message("Exit Depth camera grabber.\n");
+        Logger::message("Exit DC grabber.\n");
         return 1;
     }
 

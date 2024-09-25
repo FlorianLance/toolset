@@ -25,7 +25,7 @@
 ********************************************************************************/
 
 
-#include "dc_compressed_frame_buffer.hpp"
+#include "dc_data_frame_buffer.hpp"
 
 // std
 #include <format>
@@ -35,11 +35,11 @@
 
 using namespace tool::cam;
 
-auto DCCompressedFrameBuffer::nb_frames() const noexcept -> size_t{
+auto DCDataFrameBuffer::nb_frames() const noexcept -> size_t{
     return frames.size();
 }
 
-auto DCCompressedFrameBuffer::first_frame_ptr() const -> DCCompressedFrame*{
+auto DCDataFrameBuffer::first_frame_ptr() const -> DCDataFrame*{
     if(!frames.empty()){
         return frames.front().get();
     }
@@ -47,7 +47,7 @@ auto DCCompressedFrameBuffer::first_frame_ptr() const -> DCCompressedFrame*{
     return nullptr;
 }
 
-auto DCCompressedFrameBuffer::last_frame_ptr() const -> DCCompressedFrame*{
+auto DCDataFrameBuffer::last_frame_ptr() const -> DCDataFrame*{
     if(!frames.empty()){
         return frames.back().get();
     }
@@ -55,7 +55,7 @@ auto DCCompressedFrameBuffer::last_frame_ptr() const -> DCCompressedFrame*{
     return nullptr;
 }
 
-auto DCCompressedFrameBuffer::get_frame_ptr(size_t idFrame) const -> DCCompressedFrame*{
+auto DCDataFrameBuffer::get_frame_ptr(size_t idFrame) const -> DCDataFrame*{
     if(idFrame < nb_frames()){
         return frames[idFrame].get();
     }
@@ -63,21 +63,21 @@ auto DCCompressedFrameBuffer::get_frame_ptr(size_t idFrame) const -> DCCompresse
     return nullptr;
 }
 
-auto DCCompressedFrameBuffer::first_frame_received_timestamp() const noexcept -> std::int64_t {
+auto DCDataFrameBuffer::first_frame_received_timestamp() const noexcept -> std::int64_t {
     if(!frames.empty()){
         return frames.front()->receivedTS;
     }
     return -1;
 }
 
-auto DCCompressedFrameBuffer::last_frame_received_timestamp() const noexcept ->  std::int64_t {
+auto DCDataFrameBuffer::last_frame_received_timestamp() const noexcept ->  std::int64_t {
     if(!frames.empty()){
         return frames.back()->receivedTS;
     }
     return -1;
 }
 
-auto DCCompressedFrameBuffer::duration_ms() const noexcept -> double {
+auto DCDataFrameBuffer::duration_ms() const noexcept -> double {
     using namespace std::chrono;
     auto lfc = last_frame_received_timestamp();
     auto ffc = first_frame_received_timestamp();
@@ -87,7 +87,7 @@ auto DCCompressedFrameBuffer::duration_ms() const noexcept -> double {
     return 0.0;
 }
 
-auto DCCompressedFrameBuffer::valid_vertices_count(size_t idFrame) const noexcept -> size_t{
+auto DCDataFrameBuffer::valid_vertices_count(size_t idFrame) const noexcept -> size_t{
     if(auto frame = get_frame_ptr(idFrame)){
         return frame->validVerticesCount;
     }
@@ -95,15 +95,15 @@ auto DCCompressedFrameBuffer::valid_vertices_count(size_t idFrame) const noexcep
 }
 
 
-auto DCCompressedFrameBuffer::get_compressed_frame(size_t idFrame) const noexcept -> std::weak_ptr<DCCompressedFrame>{
+auto DCDataFrameBuffer::get_data_frame(size_t idFrame) const noexcept -> std::weak_ptr<DCDataFrame>{
     if(idFrame < nb_frames()){
         return frames[idFrame];
     }
-    Logger::error(std::format("[DCCameraData::get_compressed_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
+    Logger::error(std::format("[DCCameraData::get_data_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
     return {};
 }
 
-auto DCCompressedFrameBuffer::add_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void{
+auto DCDataFrameBuffer::add_data_frame(std::shared_ptr<DCDataFrame> frame) -> void{
     if(!frames.empty()){
         if(frame->idCapture == frames.back()->idCapture){
             return;
@@ -113,14 +113,14 @@ auto DCCompressedFrameBuffer::add_compressed_frame(std::shared_ptr<DCCompressedF
 }
 
 
-auto DCCompressedFrameBuffer::remove_frames_until(size_t idFrame) -> void{
+auto DCDataFrameBuffer::remove_frames_until(size_t idFrame) -> void{
     frames.remove_before(idFrame);
 }
 
-auto DCCompressedFrameBuffer::remove_frames_after(size_t idFrame) -> void{
+auto DCDataFrameBuffer::remove_frames_after(size_t idFrame) -> void{
     frames.remove_after(idFrame);
 }
 
-auto DCCompressedFrameBuffer::clean() noexcept -> void{
+auto DCDataFrameBuffer::clean() noexcept -> void{
     frames.clear();
 }

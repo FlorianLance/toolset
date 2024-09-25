@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2024] [Florian Lance]                                       **
+** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,43 +26,24 @@
 
 #pragma once
 
-// std
-#include <span>
 
 // local
-#include "utility/image_buffer.hpp"
-#include "graphics/color/rgb.hpp"
-#include "depth-camera/dc_types.hpp"
+#include "dc_frame.hpp"
+#include "dc_data_frame.hpp"
+#include "depth-camera/settings/dc_data_frame_generation_settings.hpp"
 
 namespace tool::cam{
 
-struct DCData{
+struct DCDataFrameGenerator{
 
-    auto reset(const DCModeInfos &mInfos) -> void;
-    auto reset_spans() -> void;
+    DCDataFrameGenerator();
+    ~DCDataFrameGenerator();
+    
+    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame) -> std::unique_ptr<DCDataFrame>;
+    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame, DCDataFrame *cFrame) -> void;
 
-    // device data
-    // # global
-    BinarySpan binaryCalibration;
-    // # per frame
-    BinarySpan rawColor;
-    std::span<ColorRGBA8> color;
-    std::span<ColorRGBA8> depthSizedColor;    
-    std::span<std::uint16_t> depth;
-    std::span<std::uint16_t> infra;
-    std::span<ColorGray8> bodiesIdMap;
-    std::span<geo::Pt3<std::int16_t>> depthCloud;    
-    BinarySpan binaryIMU;
-    std::pair<size_t, std::span<float>> audioChannels;    
-    std::span<DCBody> bodies;
-
-    // processed data
-    ImageBuffer<ColorRGBA8> convertedColorData;
-    size_t validDepthValues = 0;
-    size_t meanBiggestZoneId = 0;
-    std::vector<std::int8_t> filteringMask;
-    std::vector<int> depthMask;
-    std::vector<int> zonesId;
-    std::vector<std::int16_t> depthFiltering;
+private:
+    struct Impl;
+    std::unique_ptr<Impl> i;
 };
 }

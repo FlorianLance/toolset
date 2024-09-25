@@ -27,7 +27,7 @@
 #pragma once
 
 // local
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "dc_client_device.hpp"
 
 namespace tool::cam {
@@ -63,7 +63,7 @@ public:
     // signals
     SSS<std::int64_t> remote_synchro_signal;
     SSS<net::Feedback> remote_feedback_signal;
-    SSS<std::shared_ptr<cam::DCCompressedFrame>> remote_frame_signal;
+    SSS<std::shared_ptr<cam::DCDataFrame>> remote_data_frame_signal;
     SSS<net::UdpNetworkStatus> remote_network_status_signal;
     // # other
     SSS<size_t> timeout_messages_signal;
@@ -72,7 +72,7 @@ private:
     
     auto process_received_packet(net::EndPointId endpoint, net::Header header, std::span<const std::byte> dataToProcess) -> void;
     auto receive_feedback(net::Header h, net::Feedback message) -> void;
-    auto receive_compressed_frame(net::Header h, std::shared_ptr<cam::DCCompressedFrame> compressedFrame) -> void;
+    auto receive_data_frame(net::Header h, std::shared_ptr<cam::DCDataFrame> dFrame) -> void;
     auto receive_network_status(net::UdpNetworkStatus status) -> void;
 
     struct Impl;

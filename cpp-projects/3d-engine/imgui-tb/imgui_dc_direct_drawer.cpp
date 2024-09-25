@@ -73,7 +73,7 @@ auto DCDirectDrawer::update() -> void{
             cloudsVisibility.push_back(cloudsD[ii]->display.showCapture ? 1 : 0);
         }
 
-        // display only current grabber id cloud if per tab
+        // display only current client id cloud if per tab
         if(!m_allTabOpened){
             for(size_t ii = 0; ii < cloudsD.size(); ++ii){
                 if(cloudsD[ii]->display.showCapture){
@@ -114,9 +114,9 @@ auto DCDirectDrawer::draw(bool focus) -> void{
             ImGui::EndTabItem();
         }
 
-        // per grabber
+        // per client
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
-            if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_direct_per_grabber_tabitem_{}", ii, ii).c_str())){
+            if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_direct_per_client_tabitem_{}", ii, ii).c_str())){
                 m_currentTabOpened = ii;
                 draw_cloud_drawer_tab(ii, focus, "display_direct"sv);
                 ImGui::EndTabItem();

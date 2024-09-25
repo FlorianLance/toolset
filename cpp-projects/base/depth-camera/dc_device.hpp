@@ -37,7 +37,7 @@
 #include "settings/dc_color_settings.hpp"
 #include "settings/dc_delay_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 
 #include "settings/dc_device_settings.hpp"
@@ -73,7 +73,7 @@ public:
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
+    sigslot::signal<std::shared_ptr<DCDataFrame>> new_data_frame_signal;
     sigslot::signal<DCColorSettings> color_settings_reset_signal;
     sigslot::signal<int, std::string> update_device_name_signal;
 

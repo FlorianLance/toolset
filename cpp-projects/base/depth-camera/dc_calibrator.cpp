@@ -68,7 +68,7 @@ struct DCCalibrator::Impl{
     static auto convert_to_opend3d_pc(const ColoredCloudData &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>;
 
     std::mt19937 gen;
-    std::vector<DCCalibratorGrabberData> grabbersData;
+    std::vector<DCCalibratorClientData> clientsData;
     geo::ColoredCloudData modelCloud;
     geo::ColoredCloudData sourceCloud;
 
@@ -88,8 +88,8 @@ auto DCCalibrator::Impl::set_model_cloud(const DCCalibratorSettings &settings, s
 
     // retrieve model cloud
     modelCloud = settings.useProcessed ?
-        grabbersData[idModel].processedCloud :
-        grabbersData[idModel].calibrationCloud;
+                     clientsData[idModel].processedCloud :
+                     clientsData[idModel].calibrationCloud;
 
     // apply transformation
     modelCloud.vertices.apply_transformation(modelTr.compute_full_transformation());
@@ -109,8 +109,8 @@ auto DCCalibrator::Impl::set_source_cloud(const DCCalibratorSettings &settings, 
 
     // retrieve source cloud
     sourceCloud = settings.useProcessed ?
-        grabbersData[idSource].processedCloud :
-        grabbersData[idSource].calibrationCloud;
+                      clientsData[idSource].processedCloud :
+                      clientsData[idSource].calibrationCloud;
 
     // apply transformation
     sourceCloud.vertices.apply_transformation(sourceTr.compute_full_transformation());
@@ -289,9 +289,9 @@ auto DCCalibrator::initialize(size_t nbGrabbers) -> void{
 
     settings.initialize(nbGrabbers);
 
-    i->grabbersData.resize(nbGrabbers);
-    for(size_t ii = 0; ii < i->grabbersData.size(); ++ii){
-        i->grabbersData[ii].id = ii;
+    i->clientsData.resize(nbGrabbers);
+    for(size_t ii = 0; ii < i->clientsData.size(); ++ii){
+        i->clientsData[ii].id = ii;
         i->calibrations.push_back(std::nullopt);
         states.nbFramesRegistered.push_back(0);
     }
@@ -299,20 +299,20 @@ auto DCCalibrator::initialize(size_t nbGrabbers) -> void{
 }
 
 auto DCCalibrator::nb_frames_registered(size_t idGrabber) const noexcept -> size_t{
-    return i->grabbersData[idGrabber].frames.size();
+    return i->clientsData[idGrabber].frames.size();
 }
 
 auto DCCalibrator::size_all_calibration_cloud() const noexcept -> size_t{
     size_t total = 0;
-    for(const auto &grabberData : i->grabbersData){
-        total += grabberData.calibrationCloud.size();
+    for(const auto &clientData : i->clientsData){
+        total += clientData.calibrationCloud.size();
     }
     return total;
 }
 
-auto DCCalibrator::calibration_grabber_data(size_t idGrabber) const -> const DCCalibratorGrabberData*{
-    if(idGrabber < i->grabbersData.size()){
-        return &i->grabbersData.at(idGrabber);
+auto DCCalibrator::calibration_client_data(size_t idGrabber) const -> const DCCalibratorClientData*{
+    if(idGrabber < i->clientsData.size()){
+        return &i->clientsData.at(idGrabber);
     }
     return nullptr;
 }
@@ -333,16 +333,16 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
         return;
     }
 
-    auto &grabberData = i->grabbersData[idCloud];
-    if(grabberData.frames.size() > 0){
-        if(grabberData.frames.back()->idCapture == frame->idCapture){
+    auto &clientData = i->clientsData[idCloud];
+    if(clientData.frames.size() > 0){
+        if(clientData.frames.back()->idCapture == frame->idCapture){
             Logger::error("[DCCalibrator] Previous cloud already added.\n");
             return;
         }
     }
 
     states.nbFramesRegistered[idCloud]++;
-    grabberData.frames.push_back(frame);
+    clientData.frames.push_back(frame);
 
     add_to_calibration_cloud(idCloud, cloud);
     add_to_proccessed_cloud(idCloud, i->process_cloud(settings, cloud));
@@ -351,13 +351,13 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
 
 auto DCCalibrator::process_all_frames() -> void{
 
-    for(auto &grabberData : i->grabbersData){
-        grabberData.calibrationCloud.clear();
-        grabberData.processedCloud.clear();
+    for(auto &clientData : i->clientsData){
+        clientData.calibrationCloud.clear();
+        clientData.processedCloud.clear();
 
-        for(auto &frame : grabberData.frames){
-            add_to_calibration_cloud(grabberData.id, frame->cloud);
-            add_to_proccessed_cloud(grabberData.id, i->process_cloud(settings, frame->cloud));
+        for(auto &frame : clientData.frames){
+            add_to_calibration_cloud(clientData.id, frame->cloud);
+            add_to_proccessed_cloud(clientData.id, i->process_cloud(settings, frame->cloud));
         }
     }
     trigger_data_updated();
@@ -482,7 +482,7 @@ auto DCCalibrator::update_settings(const DCCalibratorSettings &calibratorS) -> v
 }
 
 auto DCCalibrator::trigger_data_updated() -> void{
-    data_updated_signal(settings.modelSelectionId, settings.sourceSelectionId, &i->grabbersData);
+    data_updated_signal(settings.modelSelectionId, settings.sourceSelectionId, &i->clientsData);
 }
 
 auto DCCalibrator::start_registering() -> void{
@@ -500,8 +500,8 @@ auto DCCalibrator::stop_registering() -> void{
 auto DCCalibrator::reset_registering() -> void{
 
     // reset data
-    for(auto &grabberData : i->grabbersData){
-        grabberData.clean();
+    for(auto &clientData : i->clientsData){
+        clientData.clean();
     }
     for(auto &calibration : i->calibrations){
         calibration = std::nullopt;
@@ -532,10 +532,10 @@ auto DCCalibrator::update() -> void{
 
 
 auto DCCalibrator::add_to_calibration_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void {
-    i->grabbersData[idCloud].calibrationCloud.merge(cloud);
+    i->clientsData[idCloud].calibrationCloud.merge(cloud);
 }
 
 auto DCCalibrator::add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void{
-    i->grabbersData[idCloud].processedCloud.merge(cloud);
+    i->clientsData[idCloud].processedCloud.merge(cloud);
 }
 

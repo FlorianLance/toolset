@@ -25,7 +25,7 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_frame_uncompressor.hpp"
+#include "dc_frame_generator.hpp"
 
 // std
 #include <execution>
@@ -54,7 +54,7 @@ using namespace tool;
 using namespace tool::geo;
 using namespace tool::cam;
 
-struct DCFrameUncompressor::Impl{
+struct DCFrameGenerator::Impl{
     
     // parameters
     bool generateColorRGB = false;
@@ -64,7 +64,7 @@ struct DCFrameUncompressor::Impl{
 
     // decoders
     data::JpegDecoder colorDecoder;
-    data::JpegDecoder depthSizedColorDecoder;
+    data::JpegDecoder jpegDepthSizedColorDecoder;
     data::JpegDecoder bodiesIdDecoder;
     data::FastPForDecoder depthDecoder;
     data::FastPForDecoder infraDecoder;
@@ -82,7 +82,7 @@ struct DCFrameUncompressor::Impl{
 
 
     // local task data
-    DCCompressedFrame *cFrame = nullptr;
+    DCDataFrame *dFrame = nullptr;
     DCFrame *frame = nullptr;
     DCFrameGenerationSettings gSettings;
 
@@ -97,18 +97,20 @@ struct DCFrameUncompressor::Impl{
         auto cInfraDataT                = taskFlow.emplace([&](){compute_infra_data();}).name("compute_infra_data");
         auto cInfraImageT               = taskFlow.emplace([&](){compute_infra_image();}).name("compute_infra_image");
         auto cCloudT                    = taskFlow.emplace([&](){
-            if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
-                compute_cloud_from_depth();
-            }else{
-                // ...
-            }
+            compute_cloud_from_depth();
+            // if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
+
+            // }else{
+            //     // ...
+            // }
         }).name("compute_cloud");
         auto cCreateColoredCloudT       = taskFlow.emplace([&](){
-            if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
-                create_colored_cloud();
-            }else{
-                // ...
-            }
+            create_colored_cloud();
+            // if(gSettings.cloudGenMode == CloudGenerationMode::FromDepth){
+
+            // }else{
+            //     // ...
+            // }
         }).name("create_colored_cloud");
 
         resetCalibrationT.priority(tf::TaskPriority::HIGH);
@@ -132,10 +134,10 @@ struct DCFrameUncompressor::Impl{
         cInfraImageT.succeed(cInfraDataT);
     }
 
-    auto initialize(DCCompressedFrame *initCFrame) -> void{
+    auto initialize(DCDataFrame *initCFrame) -> void{
         mInfos.initialize(initCFrame->mode);
         indices.initialize(mInfos);
-        cFrame = initCFrame;
+        dFrame = initCFrame;
         DCFrame initFrame;
         frame = &initFrame;
         reset_calibration();
@@ -171,26 +173,26 @@ struct DCFrameUncompressor::Impl{
                   << "tot [" << tTotal.count() << "]\n";
     }
 
-    auto do_work_task(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
+    auto do_work_task(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> void{
 
         // frame
-        frame.idCapture      = cFrame->idCapture;
-        frame.afterCaptureTS = cFrame->afterCaptureTS;
-        frame.receivedTS     = cFrame->receivedTS;
+        frame.idCapture         = dFrame->idCapture;
+        frame.afterCaptureTS    = dFrame->afterCaptureTS;
+        frame.receivedTS        = dFrame->receivedTS;
 
         // info
-        frame.mode = cFrame->mode;
+        frame.mode              = dFrame->mode;
 
         // set data
-        this->gSettings  = gSettings;
-        this->cFrame    = cFrame;
-        this->frame     = &frame;
+        this->gSettings         = gSettings;
+        this->dFrame            = dFrame;
+        this->frame             = &frame;
 
         // run task
         auto tStart = Time::nanoseconds_since_epoch();
 
-        if(mInfos.mode() != cFrame->mode){
-            mInfos.initialize(cFrame->mode);
+        if(mInfos.mode() != dFrame->mode){
+            mInfos.initialize(dFrame->mode);
             indices.initialize(mInfos);
         }
 
@@ -200,25 +202,25 @@ struct DCFrameUncompressor::Impl{
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
-    auto do_work(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> void{
+    auto do_work(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> void{
 
         // frame
-        frame.idCapture      = cFrame->idCapture;
-        frame.afterCaptureTS = cFrame->afterCaptureTS;
-        frame.receivedTS     = cFrame->receivedTS;
+        frame.idCapture         = dFrame->idCapture;
+        frame.afterCaptureTS    = dFrame->afterCaptureTS;
+        frame.receivedTS        = dFrame->receivedTS;
 
         // info
-        frame.mode = cFrame->mode;
+        frame.mode              = dFrame->mode;
 
         // set data
-        this->gSettings  = gSettings;
-        this->cFrame    = cFrame;
-        this->frame     = &frame;
+        this->gSettings         = gSettings;
+        this->dFrame            = dFrame;
+        this->frame             = &frame;
 
         auto tStart = Time::nanoseconds_since_epoch();
 
-        if(mInfos.mode() != cFrame->mode){
-            mInfos.initialize(cFrame->mode);
+        if(mInfos.mode() != dFrame->mode){
+            mInfos.initialize(dFrame->mode);
             indices.initialize(mInfos);
         }
 
@@ -255,14 +257,14 @@ private:
     auto reset_calibration() -> void{
 
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->calibration.empty()){
+        if(dFrame->datasB.contains(DCDataBufferType::Calibration)){
 
-            frame->calibration = cFrame->calibration;
+            frame->calibration = std::get<1>(dFrame->datasB[DCDataBufferType::Calibration]);
 
-            if((cFrame->idDevice != lastidDevice) || (cFrame->mode != lastMode) || (k4aTransformation == nullptr)){
+            if((dFrame->idDevice != lastidDevice) || (dFrame->mode != lastMode) || (k4aTransformation == nullptr)){
 
-                lastidDevice = cFrame->idDevice;
-                lastMode     = cFrame->mode;
+                lastidDevice = dFrame->idDevice;
+                lastMode     = dFrame->mode;
 
                 // device specifics here (TODO)
                 k4a::calibration calibration = *reinterpret_cast<k4a::calibration*>(frame->calibration.get_data());
@@ -279,45 +281,84 @@ private:
     }
 
     auto compute_color_image() -> void{
-        auto tStart = Time::nanoseconds_since_epoch();                
-        if(!cFrame->jpegRGBA8Color.empty() && gSettings.colorImage){
-            colorDecoder.decode(
-                cFrame->jpegRGBA8Color, frame->rgbaColor
-            );
+
+        auto tStart = Time::nanoseconds_since_epoch();
+        if(dFrame->imagesB.contains(DCDataImageBufferType::OriginalColorRGBA8) && gSettings.originalSizeColorImage){
+            const auto &image   = dFrame->imagesB[DCDataImageBufferType::OriginalColorRGBA8];
+            const auto cMode    = std::get<0>(image);
+            const auto &buffer  = std::get<1>(image);
+            if(cMode == DCCompressionMode::JPEG){
+                colorDecoder.decode(buffer, frame->rgbaColor);
+            }else if(cMode == DCCompressionMode::None){
+                frame->rgbaColor.resize_image(buffer.width, buffer.height);
+                std::copy(buffer.begin(), buffer.end(), frame->rgbaColor.get_byte_data());
+            }
+
         }
         tComputeColorImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
     auto compute_depth_sized_color_image() -> void{
-        auto tStart = Time::nanoseconds_since_epoch();
 
-        if(!cFrame->jpegRGBA8DepthSizedColor.empty() && gSettings.depthSizedColorImage){
-            depthSizedColorDecoder.decode(
-                cFrame->jpegRGBA8DepthSizedColor, frame->rgbaDepthSizedColor
-            );
+        auto tStart = Time::nanoseconds_since_epoch();
+        if(dFrame->imagesB.contains(DCDataImageBufferType::DepthSizedColorRGBA8) && gSettings.depthSizedColorImage){
+            const auto &image   = dFrame->imagesB[DCDataImageBufferType::DepthSizedColorRGBA8];
+            const auto cMode    = std::get<0>(image);
+            const auto &buffer  = std::get<1>(image);
+            if(cMode == DCCompressionMode::JPEG){
+                // Logger::message("[DS-JPEG]");
+                jpegDepthSizedColorDecoder.decode(buffer, frame->rgbaDepthSizedColor);
+            }else if(cMode == DCCompressionMode::None){
+                // Logger::message("[DS-NONE]");
+                frame->rgbaDepthSizedColor.resize_image(buffer.width, buffer.height);
+                std::copy(buffer.begin(), buffer.end(), frame->rgbaDepthSizedColor.get_byte_data());
+            }
         }
         tComputeDephtSizedColorImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
     auto compute_bodies_id_map_image() -> void{
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->jpegG8BodiesIdMap.empty() && gSettings.bodyTracking){
-            bodiesIdDecoder.decode(
-                cFrame->jpegG8BodiesIdMap, frame->grayBodiesIdMap
-            );
-        }
+        // if(!cFrame->jpegG8BodiesIdMap.empty() && gSettings.bodyTracking){
+        //     bodiesIdDecoder.decode(
+        //         cFrame->jpegG8BodiesIdMap, frame->grayBodiesIdMap
+        //     );
+        // }
         tComputeBodiesIdMapImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
     auto compute_depth_data() -> void{
 
         auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->fpfDepth.empty() && gSettings.depth){
-            depthDecoder.decode(
-                cFrame->fpfDepth, frame->depth
-            );          
+        if(dFrame->imagesB.contains(DCDataImageBufferType::Depth16)){
+            const auto &image   = dFrame->imagesB[DCDataImageBufferType::Depth16];
+            const auto cMode    = std::get<0>(image);
+            const auto &buffer  = std::get<1>(image);
+            if(cMode == DCCompressionMode::FastPFor){
+                depthDecoder.decode(buffer, frame->depth);
+            }else if(cMode == DCCompressionMode::None){
+                frame->depth.resize_image(buffer.width, buffer.height);
+                std::copy(buffer.begin(), buffer.end(), frame->depth.get_byte_data());
+            }
         }
         tComputeDepthData = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
+    }
+
+    auto compute_infra_data() -> void{
+
+        auto tStart = Time::nanoseconds_since_epoch();
+        if(dFrame->imagesB.contains(DCDataImageBufferType::Infrared16)){
+            const auto &image   = dFrame->imagesB[DCDataImageBufferType::Infrared16];
+            const auto cMode    = std::get<0>(image);
+            const auto &buffer  = std::get<1>(image);
+            if(cMode == DCCompressionMode::FastPFor){
+                infraDecoder.decode(buffer, frame->infra);
+            }else if(cMode == DCCompressionMode::None){
+                frame->infra.resize_image(buffer.width, buffer.height);
+                std::copy(buffer.begin(), buffer.end(), frame->infra.get_byte_data());
+            }
+        }
+        tComputeInfraData = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
     auto compute_depth_image() -> void{
@@ -326,16 +367,6 @@ private:
             frame->compute_rgb_depth_image(frame->rgbDepth);            
         }
         tComputeDepthImage = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
-    }
-
-    auto compute_infra_data() -> void{
-        auto tStart = Time::nanoseconds_since_epoch();
-        if(!cFrame->fpfInfra.empty() && gSettings.infra){
-            infraDecoder.decode(
-                cFrame->fpfInfra, frame->infra
-            );
-        }
-        tComputeInfraData = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
     auto compute_infra_image() -> void{
@@ -348,7 +379,7 @@ private:
 
     auto compute_cloud_from_depth() -> void{
 
-        if(cFrame->calibration.empty() || frame->depth.empty() || !gSettings.cloud){
+        if(frame->calibration.empty() || frame->depth.empty() || !gSettings.cloud){
             return;
         }
 
@@ -382,7 +413,7 @@ private:
             &k4aPointCloudImage
         );
 
-        frame->cloud.resize(cFrame->validVerticesCount, true);
+        frame->cloud.resize(dFrame->validVerticesCount, true);
 
         int currentValidId = 0;
         for(size_t id = 0; id < frame->depth.size(); ++id){
@@ -417,7 +448,7 @@ private:
             {1.f,0.f,0.f},
         };
 
-        const auto dRange = dc_depth_range(cFrame->mode)*1000.f;
+        const auto dRange = dc_depth_range(dFrame->mode)*1000.f;
         const auto diff = dRange(1) - dRange(0);
 
         auto tStart = Time::nanoseconds_since_epoch();
@@ -473,19 +504,19 @@ private:
     }
 };
 
-DCFrameUncompressor::DCFrameUncompressor() : i(std::make_unique<Impl>()){}
+DCFrameGenerator::DCFrameGenerator() : i(std::make_unique<Impl>()){}
 
-DCFrameUncompressor::~DCFrameUncompressor(){
+DCFrameGenerator::~DCFrameGenerator(){
 }
 
-auto DCFrameUncompressor::initialize(DCCompressedFrame *cFrame) -> void{
-    i->initialize(cFrame);
+auto DCFrameGenerator::initialize(DCDataFrame *dFrame) -> void{
+    i->initialize(dFrame);
 }
 
-auto DCFrameUncompressor::uncompress(const DCFrameGenerationSettings &gSettings, DCCompressedFrame *cFrame, DCFrame &frame) -> bool{
+auto DCFrameGenerator::generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> bool{
 
     i->reset_timings();
-    i->do_work_task(gSettings,cFrame,frame);
+    i->do_work_task(gSettings, dFrame,frame);
     // i->do_work(gSettings, cFrame, frame);
     // i->display_timings();
     return true;

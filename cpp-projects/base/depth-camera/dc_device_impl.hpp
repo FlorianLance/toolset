@@ -33,11 +33,10 @@
 #include "data/fastpfor_encoding.hpp"
 #include "data/jpeg_encoding.hpp"
 #include "frame/dc_frame_indices.hpp"
-#include "frame/dc_data.hpp"
+#include "frame/dc_device_data.hpp"
 #include "dc_device.hpp"
 
 namespace tool::cam {
-
 
 struct DCSettings{
     DCConfigSettings config;
@@ -50,13 +49,13 @@ struct DCSettings{
 struct DCFramesBuffer{
 
     auto add_frame(std::shared_ptr<cam::DCFrame> frame) -> void;
-    auto add_compressed_frame(std::shared_ptr<cam::DCCompressedFrame> cFrame) -> void;
+    auto add_data_frame(std::shared_ptr<cam::DCDataFrame> cFrame) -> void;
     auto take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCCompressedFrame>;
+    auto get_data_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, std::int64_t delayMs) -> std::shared_ptr<cam::DCDataFrame>;
 
     // delay buffer
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<DCFrame>>> frames;
-    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<cam::DCCompressedFrame>>> compressedFrames;
+    std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<cam::DCDataFrame>>> dataFrames;
 };
 
 struct DCDeviceImpl{
@@ -101,7 +100,7 @@ struct DCDeviceImpl{
 
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<DCCompressedFrame>> new_compressed_frame_signal;
+    sigslot::signal<std::shared_ptr<DCDataFrame>> new_data_frame_signal;
 
 protected:
 
@@ -159,27 +158,27 @@ protected:
     auto update_frame_bodies() -> void;
     auto update_frame_calibration() -> void;
     // # compressed
-    auto update_compressed_frame_color() -> void;
-    auto update_compressed_frame_depth_sized_color() -> void;
-    auto update_compressed_frame_depth() -> void;
-    auto update_compressed_frame_infra() -> void;
-    auto update_compressed_frame_cloud() -> void;
-    auto update_compressed_frame_audio() -> void;
-    auto update_compressed_frame_imu() -> void;
-    auto update_compressed_frame_bodies() -> void;
-    auto update_compressed_frame_calibration() -> void;
+    auto update_data_frame_color() -> void;
+    auto update_data_frame_depth_sized_color() -> void;
+    auto update_data_frame_depth() -> void;
+    auto update_data_frame_infra() -> void;
+    auto update_data_frame_cloud() -> void;
+    auto update_data_frame_audio() -> void;
+    auto update_data_frame_imu() -> void;
+    auto update_data_frame_bodies() -> void;
+    auto update_data_frame_calibration() -> void;
 
     // states
     DCSettings settings;
     DCModeInfos mInfos;
     DCFrameIndices fIndices;
     DCFramesBuffer frames;
-    DCData fData;
+    DCDeviceData fData;
     tool::s_umap<std::string_view, TimeElem> times;
     bool captureSuccess = false;
     bool dataIsValid = false;
     std::shared_ptr<DCFrame> frame = nullptr;
-    std::shared_ptr<DCCompressedFrame> cFrame = nullptr;
+    std::shared_ptr<DCDataFrame> dFrame = nullptr;
     std::mutex parametersM;
     FramerateBuffer framerateB;
 

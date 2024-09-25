@@ -41,11 +41,11 @@ auto UdpConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // settings
-    address   = read_value<std::string>(json, unreadCount, "udp_sending_address"sv);
-    port      = read_value<int>(json, unreadCount, "udp_sending_port"sv);
-    maxPacketSize    = read_value<int>(json, unreadCount, "max_size_udp_packet"sv);
+    read_and_update_value(json, unreadCount, "udp_sending_address"sv,   address);
+    read_and_update_value(json, unreadCount, "udp_sending_port"sv,      port);
+    read_and_update_value(json, unreadCount, "max_size_udp_packet"sv,   maxPacketSize);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[UdpConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

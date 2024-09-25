@@ -50,7 +50,7 @@ public:
 
 private:
 
-    auto draw_server_info_tab_item(DCGModel *model) -> void;
+    auto draw_info_tab_item(DCGModel *model) -> void;
     auto draw_device_tab_item(cam::DCDeviceSettings &device) -> void;
     auto draw_filters_tab_item(const cam::DCConfigSettings &config, cam::DCFiltersSettings &filters) -> void;
 
@@ -60,7 +60,7 @@ private:
     
     auto draw_display_tab_item(DCGUiSettings &uiS, cam::DCSceneDisplaySettings &sceneDisplayS, cam::DCDeviceDisplaySettings &displayS)-> void;
     auto draw_audio_tab_item()-> void;
-    auto draw_recording_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;
+    auto draw_recorder_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;
     auto draw_model_tab_item(cam::DCModelSettings &model)-> void;
     auto draw_delay_tab_item(cam::DCDelaySettings &delayS) -> void;
 

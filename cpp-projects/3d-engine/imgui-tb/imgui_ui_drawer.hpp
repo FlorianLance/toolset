@@ -64,7 +64,7 @@ struct ImGuiUiDrawer{
 [[maybe_unused]] static auto draw_drag_int_with_buttons(std::string_view displayName, std::string_view itemName, int *value, ImGuiIntS iSettings, ImGuiDragS dSettings) -> bool;
 [[maybe_unused]] static auto draw_drag_float_with_buttons(std::string_view displayName, std::string_view itemName, float *value, ImGuiFloatS fSettings, ImGuiDragS dSettings) -> bool;
 
-[[maybe_unused]] static auto title2(std::string_view text) -> void;
+[[maybe_unused]] static auto title(std::string_view text, tool::geo::Pt4f color = {0.f, 1.f, 0.f, 1.f}) -> void;
 
 [[maybe_unused]] static auto begin_tab_bar(unsigned int *tabId, const char* label, ImGuiTabBarFlags flags = 0) -> bool;
 //[[maybe_unused]] static auto begin_tab_item(const char* label, ImGuiID &activeTab, const ImVec4 &activeColor = ImVec4(0, 1, 0, 1), const ImVec4 &inactiveColor = ImVec4(1, 1, 1, 1), bool* pOpen = nullptr, ImGuiTabItemFlags flags = 0) -> bool;

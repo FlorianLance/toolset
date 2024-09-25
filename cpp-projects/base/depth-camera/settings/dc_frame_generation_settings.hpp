@@ -36,23 +36,22 @@ namespace tool::cam {
 
 struct DCFrameGenerationSettings{
 
-    bool calibration          = true;
-    bool depth                = true;
-    bool depthSizedColorImage = true;
-    bool cloud                = true;
-    bool infra                = false;
-    bool colorImage           = false;
-    bool depthImage           = false;
-    bool infraImage           = false;
-    bool bodyIdMapImage       = false;
-    bool bodyTracking         = false;
-    bool imu                  = false;
-    bool audio                = false;
-    CloudGenerationMode cloudGenMode = CloudGenerationMode::FromDepth;
+    bool cloud                  = true;
+    bool depthSizedColorImage   = true;
+    bool depthImage             = false;
+    bool originalSizeColorImage = false;
+    bool infraImage             = false;
+
+    bool bodyIdMapImage       = false; // TODO
+    bool bodyTracking         = false; // TODO
+    bool imu                  = false; // TODO
+    bool audio                = false; // TODO
+    // CloudGenerationMode cloudGenMode = CloudGenerationMode::FromDepth;
     CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
 
-    [[nodiscard]] constexpr auto has_data_to_generate() const noexcept -> bool{
-        return  calibration || depth || infra || colorImage || depthSizedColorImage || depthImage || infraImage || cloud || imu || bodyTracking || audio;
+    [[nodiscard]] constexpr auto has_data() const noexcept -> bool{
+        return  originalSizeColorImage || depthSizedColorImage ||
+                depthImage || infraImage || cloud;
     }
 
     auto init_from_json(const nlohmann::json &json) -> void;

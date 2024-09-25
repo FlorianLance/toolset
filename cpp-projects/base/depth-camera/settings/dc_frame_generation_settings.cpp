@@ -38,20 +38,17 @@ using json = nlohmann::json;
 auto DCFrameGenerationSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
-    calibration             = read_value<bool>(json, unreadCount, "calibration"sv);
-    depth                   = read_value<bool>(json, unreadCount, "depth"sv);
-    depthSizedColorImage    = read_value<bool>(json, unreadCount, "depth_sized_color_image"sv);
-    cloud                   = read_value<bool>(json, unreadCount, "cloud"sv);
-    infra                   = read_value<bool>(json, unreadCount, "infra"sv);
-    colorImage              = read_value<bool>(json, unreadCount, "color_image"sv);
-    depthImage              = read_value<bool>(json, unreadCount, "depth_image"sv);
-    infraImage              = read_value<bool>(json, unreadCount, "infra_image"sv);
-    bodyIdMapImage          = read_value<bool>(json, unreadCount, "body_id_map_image"sv);
-    bodyTracking            = read_value<bool>(json, unreadCount, "body_tracking"sv);
-    imu                     = read_value<bool>(json, unreadCount, "imu"sv);
-    audio                   = read_value<bool>(json, unreadCount, "audio"sv);
-    cloudGenMode            = static_cast<CloudGenerationMode>(read_value<int>(json, unreadCount, "cloud_gen_mode"sv));
-    cloudColorMode          = static_cast<CloudColorMode>(read_value<int>(json, unreadCount, "cloud_color_mode"sv));
+        read_and_update_value(json, unreadCount, "cloud"sv,                     cloud);
+    read_and_update_value(json, unreadCount, "depth_sized_color_image"sv,   depthSizedColorImage);
+    read_and_update_value(json, unreadCount, "color_image"sv,               originalSizeColorImage);
+    read_and_update_value(json, unreadCount, "depth_image"sv,               depthImage);
+    read_and_update_value(json, unreadCount, "infra_image"sv,               infraImage);
+    // read_and_update_value(json, unreadCount, "body_id_map_image"sv,         bodyIdMapImage);
+    // read_and_update_value(json, unreadCount, "body_tracking"sv,             bodyTracking);
+    // read_and_update_value(json, unreadCount, "imu"sv,                       imu);
+    // read_and_update_value(json, unreadCount, "audio"sv,                     audio);
+    // cloudGenMode    = static_cast<CloudGenerationMode>(read_and_return_value(json, unreadCount, "cloud_gen_mode"sv,     static_cast<int>(cloudGenMode)));
+    cloudColorMode  = static_cast<CloudColorMode>(read_and_return_value(json, unreadCount,      "cloud_color_mode"sv,   static_cast<int>(cloudColorMode)));
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCFrameGenerationSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
@@ -59,20 +56,17 @@ auto DCFrameGenerationSettings::init_from_json(const nlohmann::json &json) -> vo
 }
 
 auto DCFrameGenerationSettings::convert_to_json() const -> nlohmann::json{
-    json json;
-    add_value(json, "calibration"sv,                calibration);
-    add_value(json, "depth"sv,                      depth);
-    add_value(json, "depth_sized_color_image"sv,    depthSizedColorImage);
+    json json;    
     add_value(json, "cloud"sv,                      cloud);
-    add_value(json, "infra"sv,                      infra);
-    add_value(json, "color_image"sv,                colorImage);
+    add_value(json, "depth_sized_color_image"sv,    depthSizedColorImage);
+    add_value(json, "color_image"sv,                originalSizeColorImage);
     add_value(json, "depth_image"sv,                depthImage);
     add_value(json, "infra_image"sv,                infraImage);
-    add_value(json, "body_id_map_image"sv,          bodyIdMapImage);
-    add_value(json, "body_tracking"sv,              bodyTracking);
-    add_value(json, "imu"sv,                        imu);
-    add_value(json, "audio"sv,                      audio);
-    add_value(json, "cloud_gen_mode"sv,             static_cast<int>(cloudGenMode));
+    // add_value(json, "body_id_map_image"sv,          bodyIdMapImage);
+    // add_value(json, "body_tracking"sv,              bodyTracking);
+    // add_value(json, "imu"sv,                        imu);
+    // add_value(json, "audio"sv,                      audio);
+    // add_value(json, "cloud_gen_mode"sv,             static_cast<int>(cloudGenMode));
     add_value(json, "cloud_color_mode"sv,           static_cast<int>(cloudColorMode));
     return json;
 }

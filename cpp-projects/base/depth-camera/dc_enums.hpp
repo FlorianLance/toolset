@@ -89,7 +89,7 @@ enum class DCColorResolution : std::int8_t {
 };
 
 enum class DCCompressionMode : std::int8_t{
-    None,
+    None = 0,
     JPEG,
     FastPFor
 };

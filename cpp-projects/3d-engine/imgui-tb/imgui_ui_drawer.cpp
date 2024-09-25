@@ -194,10 +194,10 @@ auto tool::ImGuiUiDrawer::draw_drag_float_with_buttons(
     return update;
 }
 
-auto tool::ImGuiUiDrawer::title2(std::string_view text) -> void{
+auto tool::ImGuiUiDrawer::title(std::string_view text, tool::geo::Pt4f color) -> void{
     ImGui::Spacing();
     ImGui::Spacing();
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(color.x()*255, color.y()*255, color.z()*255, color.w()*255));
     auto d = text.data();
     ImGuiUiDrawer::text_centered(d, d + text.size());
     ImGui::PopStyleColor();

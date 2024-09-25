@@ -42,13 +42,21 @@ auto DCDataSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // server
-    server.capture.init_from_json(read_object(json,         unreadCount, json.contains("s_capture"sv)      ? "s_capture"sv      : "client_capture"sv));
-    server.compression.init_from_json(read_object(json,     unreadCount, json.contains("s_compression"sv)  ? "s_compression"sv  : "client_compression"sv));
-    server.generation.init_from_json(read_object(json,      unreadCount, json.contains("s_generation"sv)   ? "s_generation"sv   : "client_generation"sv));
+    server.capture.init_from_json(read_and_return_object(json,     unreadCount, json.contains("s_capture"sv)      ? "s_capture"sv      : "client_capture"sv));
+    std::string_view sendingS;
+    if(json.contains("s_sending"sv)){
+        sendingS = "s_sending"sv;
+    }else if(json.contains("s_generation"sv)){
+        sendingS = "s_generation"sv;
+    }else{
+        sendingS = "client_generation"sv;
+    }
+    server.sending.init_from_json(read_and_return_object(json,     unreadCount, sendingS));
+    server.generation.init_from_json(read_and_return_object(json,  unreadCount, json.contains("s_generation"sv)   ? "s_generation"sv   : "client_generation"sv));
     // client
-    clientGeneration.init_from_json(read_object(json,      unreadCount, json.contains("c_generation"sv)   ? "c_generation"sv   : "server_generation"sv));
+    clientGeneration.init_from_json(read_and_return_object(json,   unreadCount, json.contains("c_generation"sv)   ? "c_generation"sv   : "server_generation"sv));
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCFiltersSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
@@ -59,13 +67,13 @@ auto DCDataSettings::convert_to_json() const -> nlohmann::json{
 
     json json;
     // base
-    add_value(json, "base"sv,               io::Settings::convert_to_json());
+    add_value(json, "base"sv,           io::Settings::convert_to_json());
     // sever
-    add_value(json, "s_capture"sv,     server.capture.convert_to_json());
-    add_value(json, "s_compression"sv, server.compression.convert_to_json());
-    add_value(json, "s_generation"sv,  server.generation.convert_to_json());
+    add_value(json, "s_capture"sv,      server.capture.convert_to_json());
+    add_value(json, "s_sending"sv,      server.sending.convert_to_json());
+    add_value(json, "s_generation"sv,   server.generation.convert_to_json());
     // client
-    add_value(json, "c_generation"sv,  clientGeneration.convert_to_json());
+    add_value(json, "c_generation"sv,   clientGeneration.convert_to_json());
 
     return json;
 }
@@ -77,19 +85,11 @@ auto DCDataSettings::apply_remote_profile() -> void{
 
     // client
     // # generation
-    clientGeneration.calibration             = true;
-    clientGeneration.depth                   = true;
     clientGeneration.depthSizedColorImage    = true;
     clientGeneration.cloud                   = true;
-    clientGeneration.infra                   = false;
-    clientGeneration.colorImage              = false;
+    clientGeneration.originalSizeColorImage  = false;
     clientGeneration.depthImage              = false;
     clientGeneration.infraImage              = false;
-    clientGeneration.bodyIdMapImage          = false;
-    clientGeneration.bodyTracking            = false;
-    clientGeneration.imu                     = false;
-    clientGeneration.audio                   = false;
-    clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
     clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
 }
 
@@ -100,19 +100,11 @@ auto DCDataSettings::apply_local_profile() -> void{
 
     // client
     // # generation
-    clientGeneration.calibration             = false;
-    clientGeneration.depth                   = false;
-    clientGeneration.depthSizedColorImage    = false;
     clientGeneration.cloud                   = false;
-    clientGeneration.infra                   = false;
-    clientGeneration.colorImage              = false;
+    clientGeneration.depthSizedColorImage    = false;    
+    clientGeneration.originalSizeColorImage  = false;
     clientGeneration.depthImage              = false;
     clientGeneration.infraImage              = false;
-    clientGeneration.bodyIdMapImage          = false;
-    clientGeneration.bodyTracking            = false;
-    clientGeneration.imu                     = false;
-    clientGeneration.audio                   = false;
-    clientGeneration.cloudGenMode            = CloudGenerationMode::FromDepth;
     clientGeneration.cloudColorMode          = CloudColorMode::FromDepthSizedColorImage;
 }
 

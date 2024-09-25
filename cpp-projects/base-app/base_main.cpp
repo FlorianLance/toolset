@@ -38,7 +38,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 #include "io/cloud_io.hpp"
 
-#include "depth-camera/frame/dc_frame_compressor.hpp"
+#include "depth-camera/frame/dc_data_frame_generator.hpp"
 
 using namespace tool;
 using namespace tool::geo;
@@ -62,7 +62,7 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
     file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
 
     data::JpegDecoder jpgDecoder;
-    DCFrameCompressor frameCompressor;
+    DCDataFrameGenerator frameCompressor;
     // DCVideoRecorder recorder;
     DCVideo video;
 
@@ -445,15 +445,15 @@ auto process_kvid() -> void{
     video.load_from_file(path);
 
     DCFrameGenerationSettings settings;
-    settings.calibration = true;
+    // settings.calibration = true;
     settings.cloud = false;
 
 
     bool initialized = false;
     tool::cam::DCFrameIndices fIndices;
     tool::cam::DCModeInfos mInfos;
-
-    tool::cam::DCFrameCompressor compressor;
+    
+    tool::cam::DCDataFrameGenerator compressor;
 
     std::cout << "START\n" << std::endl;
     
@@ -463,9 +463,9 @@ auto process_kvid() -> void{
             std::cout << idF << " " << std::flush;
             DCFrame frame;
             // std::cout << "uncompress " << idC << " " << idF << "\n";
-            video.uncompress_frame(settings, idC, idF, frame);
-
-            auto ccc = video.get_compressed_frame(idC, idF);
+            video.generate_frame(settings, idC, idF, frame);
+            
+            auto ccc = video.get_data_frame(idC, idF);
             int v = ccc.lock().get()->validVerticesCount;
 
             if(!initialized){
@@ -507,13 +507,13 @@ auto process_kvid() -> void{
                 }
             }
 
-            auto cFrame = std::make_shared<DCCompressedFrame>();
+            auto dFrame = std::make_shared<DCDataFrame>();
             // compressor.compress(frame, 100, cFrame.get());
             // cFrame->validVerticesCount = idValid;
 
 
             // std::cout << "ccloud " << cFrame->calibration.size() << " " << (int)cFrame->mode << " "<< cFrame->fpfDepth.size() << " " << cFrame->validVerticesCount << " " << v <<  "\n";
-            video.replace_compressed_frame(idC, idF, std::move(cFrame));
+            video.replace_data_frame(idC, idF, std::move(dFrame));
             // fIndices.neighbours8Depth1D;
             // frame.depth.values;
 

@@ -50,8 +50,8 @@ public:
 
     // frames
     auto uncompress_frame(size_t idDevice, DCFrame &frame) -> bool;
-    auto add_compressed_frame_to_default_device(std::shared_ptr<DCCompressedFrame> cFrame) -> void;
-    auto add_compressed_frame(size_t idDevice, std::shared_ptr<DCCompressedFrame> cFrame) -> void;
+    auto add_data_frame_to_default_device(std::shared_ptr<DCDataFrame> dFrame) -> void;
+    auto add_data_frame(size_t idDevice, std::shared_ptr<DCDataFrame> dFrame) -> void;
     auto add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void;
     auto add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void;
 

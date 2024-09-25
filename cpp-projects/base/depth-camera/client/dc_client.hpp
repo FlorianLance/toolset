@@ -28,7 +28,7 @@
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 #include "depth-camera/settings/dc_client_settings.hpp"
 
@@ -56,9 +56,10 @@ public:
     auto read_data_from_external_thread(size_t idC) -> size_t;
     auto process_frames_from_external_thread(size_t idD) -> void;
     // # remote device
+    auto reset_network() -> void;
     auto reset_remote_device(size_t idD) -> void;
     auto init_connection_with_remote_device(size_t idC) -> void;
-    auto trigger_packets_from_remote_device(size_t idC) -> void;
+    auto trigger_packets_from_remote_device(size_t idC) -> void;    
 
     // # settings
     // ## select
@@ -85,7 +86,7 @@ public:
 
     // signals
     sigslot::signal<size_t, tool::net::Feedback> feedback_received_signal;
-    sigslot::signal<size_t, std::shared_ptr<cam::DCCompressedFrame>> new_compressed_frame_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCDataFrame>> new_data_frame_signal;
     sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
     sigslot::signal<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     sigslot::signal<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;

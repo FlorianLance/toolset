@@ -60,9 +60,9 @@ struct DCConfigSettings : io::Settings{
     // color - depth calibration
     tool::geo::Pt3f colorAlignmentTr = {0,0,0};
     tool::geo::Mat3f colorAlignmentRot = geo::Mat3f::identity();
-
-    static auto default_init_for_grabber() -> DCConfigSettings;
-    static auto default_init_for_manager() -> DCConfigSettings;
+    
+    static auto default_init_for_server() -> DCConfigSettings;
+    static auto default_init_for_client() -> DCConfigSettings;
 
     DCConfigSettings(){
         sType   = io::SettingsType::Device_config;

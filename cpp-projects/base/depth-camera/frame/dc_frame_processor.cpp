@@ -31,7 +31,7 @@
 #include <mutex>
 
 // local
-#include "depth-camera/frame/dc_frame_uncompressor.hpp"
+#include "depth-camera/frame/dc_frame_generator.hpp"
 #include "utility/time.hpp"
 #include "utility/monitoring.hpp"
 
@@ -39,18 +39,17 @@ using namespace tool::cam;
 
 struct DCFrameProcessor::Impl{
 
-    std::atomic_bool processingThreadStarted       = false;
-    std::unique_ptr<std::thread>thread = nullptr;
-    std::unique_ptr<std::mutex>locker  = nullptr;
+    std::atomic_bool processingThreadStarted    = false;
+    std::unique_ptr<std::thread> thread         = nullptr;
+    std::unique_ptr<std::mutex> locker          = nullptr;
 
-    std::shared_ptr<DCCompressedFrame>lastCF = nullptr;
-    std::shared_ptr<DCFrame>lastF = nullptr;
+    std::shared_ptr<DCDataFrame> lastDF = nullptr;
+    std::shared_ptr<DCFrame>lastF       = nullptr;
 
-    std::shared_ptr<DCCompressedFrame>cFrame = nullptr;
-    std::shared_ptr<DCFrame> frame = nullptr;
+    std::shared_ptr<DCDataFrame> dFrame = nullptr;
+    std::shared_ptr<DCFrame> frame      = nullptr;
 
-    std::unique_ptr<DCFrameUncompressor> frameUncompressor;
-
+    std::unique_ptr<DCFrameGenerator> frameGenerator;
     DCFrameGenerationSettings generationS;
 
     SumBuffer processB;
@@ -59,7 +58,7 @@ struct DCFrameProcessor::Impl{
 
 DCFrameProcessor::DCFrameProcessor() : i(std::make_unique<Impl>()){
     i->locker = std::make_unique<std::mutex>();
-    i->frameUncompressor = std::make_unique<DCFrameUncompressor>();
+    i->frameGenerator = std::make_unique<DCFrameGenerator>();
 }
 
 DCFrameProcessor::~DCFrameProcessor(){
@@ -89,9 +88,9 @@ auto DCFrameProcessor::clean_processing_thread() -> void {
     }
 }
 
-auto DCFrameProcessor::new_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void {
+auto DCFrameProcessor::new_data_frame(std::shared_ptr<DCDataFrame> frame) -> void {
     std::lock_guard<std::mutex> guard(*i->locker);
-    i->lastCF = frame;
+    i->lastDF = frame;
 }
 
 auto DCFrameProcessor::new_frame(std::shared_ptr<DCFrame> frame) -> void {
@@ -104,9 +103,9 @@ auto DCFrameProcessor::get_frame() -> std::shared_ptr<DCFrame> {
     return i->frame;
 }
 
-auto DCFrameProcessor::get_compressed_frame() -> std::shared_ptr<DCCompressedFrame> {
+auto DCFrameProcessor::get_data_frame() -> std::shared_ptr<DCDataFrame> {
     std::lock_guard<std::mutex> guard(*i->locker);
-    return i->cFrame;
+    return i->dFrame;
 }
 
 auto DCFrameProcessor::invalid_frame() -> void {
@@ -114,9 +113,9 @@ auto DCFrameProcessor::invalid_frame() -> void {
     i->frame = nullptr;
 }
 
-auto DCFrameProcessor::invalid_compressed_frame() -> void {
+auto DCFrameProcessor::invalid_data_frame() -> void {
     std::lock_guard<std::mutex> guard(*i->locker);
-    i->cFrame = nullptr;
+    i->dFrame = nullptr;
 }
 
 auto DCFrameProcessor::update_generation_settings(const DCFrameGenerationSettings &generationS) -> void {
@@ -126,17 +125,17 @@ auto DCFrameProcessor::update_generation_settings(const DCFrameGenerationSetting
 
 auto DCFrameProcessor::process() -> bool{
 
-    std::shared_ptr<DCCompressedFrame> frameToBeUncompresed = nullptr;
+    std::shared_ptr<DCDataFrame> dataFrameToBeProccessed = nullptr;
     {
         std::lock_guard<std::mutex> guard(*i->locker);
 
-        if(i->lastCF){  // check for new compressed frame
+        if(i->lastDF){  // check for new compressed frame
             // store last
-            i->cFrame = i->lastCF;
+            i->dFrame = i->lastDF;
             // invalid it
-            i->lastCF = nullptr;
+            i->lastDF = nullptr;
             // ask for uncompression
-            frameToBeUncompresed = i->cFrame;
+            dataFrameToBeProccessed = i->dFrame;
         }else if(i->lastF){ // check for new frame
             // store last
             i->frame  = i->lastF;
@@ -149,12 +148,12 @@ auto DCFrameProcessor::process() -> bool{
 
     // uncompress
     {
-        if(frameToBeUncompresed != nullptr){
+        if(dataFrameToBeProccessed != nullptr){
 
-            auto uncompressedFrame = std::make_shared<DCFrame>();
-            if(i->frameUncompressor->uncompress(i->generationS, frameToBeUncompresed.get(), *uncompressedFrame)){
+            auto frame = std::make_shared<DCFrame>();
+            if(i->frameGenerator->generate(i->generationS, dataFrameToBeProccessed.get(), *frame)){
                 std::lock_guard<std::mutex> guard(*i->locker);
-                i->frame = uncompressedFrame;
+                i->frame = frame;
                 return true;
             }
         }
@@ -163,15 +162,15 @@ auto DCFrameProcessor::process() -> bool{
     return false;
 }
 
-auto DCFrameProcessor::uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>{
+auto DCFrameProcessor::generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>{
 
     std::lock_guard<std::mutex> guard(*i->locker);
-    if(!cFrame){
+    if(!dFrame){
         return nullptr;
     }
 
     auto frame = std::make_shared<DCFrame>();
-    if(i->frameUncompressor->uncompress(i->generationS, cFrame.get(), *frame)){
+    if(i->frameGenerator->generate(i->generationS, dFrame.get(), *frame)){
         return frame;
     }
     return nullptr;

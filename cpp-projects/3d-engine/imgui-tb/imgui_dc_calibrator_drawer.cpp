@@ -29,36 +29,37 @@
 using namespace tool::cam;
 using namespace tool::graphics;
 
-auto DCCalibratorDrawer::initialize(size_t nbGrabbers) -> void{
-    DCCloudsSceneDrawer::initialize(2*nbGrabbers);
+auto DCCalibratorDrawer::initialize(size_t nbClients) -> void{
 
-    for(size_t ii = 0; ii < nbGrabbers; ++ii){
+    DCCloudsSceneDrawer::initialize(2*nbClients);
+
+    for(size_t ii = 0; ii < nbClients; ++ii){
         auto &cdC = cloudsD[ii]->display;
         cdC.forceColor = true;
-        auto &cdP = cloudsD[nbGrabbers  + ii]->display;
+        auto &cdP = cloudsD[nbClients  + ii]->display;
         cdP.forceColor = true;
     }
 }
 
-auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DCCalibratorGrabberData>* grabbersData) -> void{
+auto DCCalibratorDrawer::set_data(int sourceId, int modelId, std::vector<cam::DCCalibratorClientData>* clientsData) -> void{
 
-    auto allSelection = modelId == grabbersData->size();
-    for(size_t ii = 0; ii < grabbersData->size(); ++ii){
+    auto allSelection = modelId == clientsData->size();
+    for(size_t ii = 0; ii < clientsData->size(); ++ii){
 
-        auto grabberData = &(*grabbersData)[ii];
+        auto clientData = &(*clientsData)[ii];
 
         // calibration
-        update_from_colored_cloud_data(grabberData->id, grabberData->calibrationCloud);
+        update_from_colored_cloud_data(clientData->id, clientData->calibrationCloud);
 
         // processsed
-        update_from_colored_cloud_data(grabbersData->size() + grabberData->id, grabberData->processedCloud);
+        update_from_colored_cloud_data(clientsData->size() + clientData->id, clientData->processedCloud);
 
         auto visibilty = (ii == modelId) || (ii == sourceId) || allSelection;
 
         auto &cdC = cloudsD[ii]->display;
         cdC.showCapture = m_settings.displayCalibrationCloud && visibilty;
 
-        auto &cdP = cloudsD[grabbersData->size()  + ii]->display;
+        auto &cdP = cloudsD[clientsData->size()  + ii]->display;
         cdP.showCapture = m_settings.displayProcessedCloud && visibilty;
     }
     m_redrawClouds = true;
@@ -74,20 +75,20 @@ auto DCCalibratorDrawer::draw() -> void{
     draw_all_clouds_drawers_in_one_tab(false, false, false, true, "Calibration clouds");
 }
 
-auto DCCalibratorDrawer::update_grabber_model(size_t idGrabber, const cam::DCModelSettings &model) -> void{
+auto DCCalibratorDrawer::update_client_model(size_t idClient, const cam::DCModelSettings &model) -> void{
 
     auto tr = model.compute_full_transformation();
-    cloudsD[idGrabber]->model                      = tr;
-    cloudsD[(cloudsD.size()/2) + idGrabber]->model = tr;
+    cloudsD[idClient]->model                      = tr;
+    cloudsD[(cloudsD.size()/2) + idClient]->model = tr;
     m_redrawClouds = true;
 }
 
-auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DCDeviceDisplaySettings &cloudDisplay) -> void{
+auto DCCalibratorDrawer::update_client_cloud_display(size_t idClient, const DCDeviceDisplaySettings &cloudDisplay) -> void{
 
-    auto &cdC = cloudsD[idGrabber]->display;
-    cdC.forceColor     = true;
+    auto &cdC = cloudsD[idClient]->display;
+    cdC.forceColor          = true;
     cdC.backFaceCulling     = false;
-    cdC.unicolor          = cloudDisplay.unicolor;
+    cdC.unicolor            = cloudDisplay.unicolor;
     cdC.circles             = cloudDisplay.circles;
     cdC.pointSize           = cloudDisplay.pointSize;
     cdC.squareSize          = cloudDisplay.squareSize;
@@ -95,7 +96,7 @@ auto DCCalibratorDrawer::update_grabber_cloud_display(size_t idGrabber, const DC
     cdC.showCameraFrustum   = false;
     cdC.showFilteringGizmos = false;
 
-    auto &cdP       = cloudsD[(cloudsD.size()/2)  + idGrabber]->display;
+    auto &cdP       = cloudsD[(cloudsD.size()/2)  + idClient]->display;
     cdP.forceColor     = true;
     cdP.backFaceCulling     = false;
     cdP.unicolor          = cdC.unicolor * 0.5f;

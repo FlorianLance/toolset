@@ -80,10 +80,10 @@ auto DCRecorderDrawer::draw(bool focusWindow) -> void{
             ImGui::EndTabItem();
         }
 
-        // per grabber
+        // per client
         int previousCloudIdDisplayed = display.drawOnlyCloudId;
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
-            if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_recorder_per_grabber_tabitem_{}", ii, ii).c_str())){
+            if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_recorder_per_client_tabitem_{}", ii, ii).c_str())){
                 display.drawOnlyCloudId  = ii;
 
                 if(m_redrawClouds || has_to_redraw_clouds()){

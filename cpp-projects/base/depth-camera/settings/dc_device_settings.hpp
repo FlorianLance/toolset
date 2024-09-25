@@ -37,8 +37,11 @@ struct DCDeviceSettings : io::Settings{
     DCConfigSettings configS;
     DCDataSettings dataS;
 
-    static auto default_init_for_grabber() -> DCDeviceSettings;
-    static auto default_init_for_manager() -> DCDeviceSettings;
+    // runtime
+    // ...
+    
+    static auto default_init_for_server() -> DCDeviceSettings;
+    static auto default_init_for_client() -> DCDeviceSettings;
 
     DCDeviceSettings(){
         sType   = io::SettingsType::Device;

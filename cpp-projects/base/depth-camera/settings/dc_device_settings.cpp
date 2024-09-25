@@ -44,11 +44,11 @@ auto DCDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // config
-    configS.init_from_json(read_object(json, unreadCount, "config"sv));
+    configS.init_from_json(read_and_return_object(json, unreadCount, "config"sv));
     // data
-    dataS.init_from_json(read_object(json, unreadCount, "data"sv));
+    dataS.init_from_json(read_and_return_object(json, unreadCount, "data"sv));
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
@@ -82,15 +82,15 @@ auto DCDeviceSettings::update_with_device_id(size_t order, size_t id) -> void{
     }
 }
 
-auto DCDeviceSettings::default_init_for_grabber() -> DCDeviceSettings{
+auto DCDeviceSettings::default_init_for_server() -> DCDeviceSettings{
     DCDeviceSettings device;
-    device.configS  = DCConfigSettings::default_init_for_grabber();
+    device.configS  = DCConfigSettings::default_init_for_server();
     return device;
 }
 
-auto DCDeviceSettings::default_init_for_manager() -> DCDeviceSettings{
+auto DCDeviceSettings::default_init_for_client() -> DCDeviceSettings{
     DCDeviceSettings device;
-    device.configS  = DCConfigSettings::default_init_for_manager();
+    device.configS  = DCConfigSettings::default_init_for_client();
     return device;
 }
 

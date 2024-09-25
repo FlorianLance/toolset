@@ -57,8 +57,8 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
-    clientId = read_value<size_t>(json, unreadCount, "_client_id"sv);
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
+    read_and_update_value(json, unreadCount, "_client_id"sv, clientId);
     // local
     if(!json.contains("client_devices"sv)){
         Logger::error(std::format("[DCClientSettings::init_from_json] Invalid json file.\n"));
@@ -67,7 +67,7 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
 
     for(const auto &clientDeviceJson : json["client_devices"sv]){
         DCClientDeviceSettings clientDevice;
-        clientDevice.init_from_json(read_object(clientDeviceJson, unreadCount, "client_device"sv));
+        clientDevice.init_from_json(read_and_return_object(clientDeviceJson, unreadCount, "client_device"sv));
         clientDevice.set_id(devicesS.size());
         update_connection_settings(clientDevice.connectionS);
         devicesS.push_back(std::move(clientDevice));
@@ -100,9 +100,16 @@ auto DCClientSettings::convert_to_json() const -> nlohmann::json{
 auto DCClientSettings::add_device(DCClientType connectionType) -> void{
     DCClientDeviceSettings clientDeviceS;
     clientDeviceS.connectionS.connectionType = connectionType;
-    clientDeviceS.connectionS.startReadingThread = true;
+    clientDeviceS.connectionS.startReadingThread = true;        
     // ...
     clientDeviceS.set_id(devicesS.size());
+
+    if(connectionType == DCClientType::Local){
+        clientDeviceS.deviceS.dataS.apply_local_profile();
+    }else if(connectionType == DCClientType::Remote){
+        clientDeviceS.deviceS.dataS.apply_remote_profile();
+    }
+
     update_connection_settings(clientDeviceS.connectionS);
     devicesS.push_back(std::move(clientDeviceS));
 }

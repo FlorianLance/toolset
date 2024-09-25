@@ -29,7 +29,7 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 #include "depth-camera/settings/dc_server_settings.hpp"
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 
 namespace tool::cam {
 
@@ -50,7 +50,7 @@ public:
     auto simulate_sending_failure(bool enabled, int percentage) -> void; // TODO
 
     // frames
-    auto send_frame(std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
+    auto send_frame(std::shared_ptr<cam::DCDataFrame> frame) -> void;
 
     DCServerSettings settings;
 

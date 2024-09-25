@@ -142,8 +142,8 @@ auto AzureKinectDeviceImpl::generate_cloud(bool enable) -> void{
 }
 
 auto AzureKinectDeviceImpl::resize_color_image_to_depth_size() -> void{
-    if(!fData.color.empty() && !fData.depth.empty()){
-        fData.depthSizedColor = azureD->resize_color_image_to_depth_size(mInfos, fData.color);
+    if(!fData.originalSizeColor.empty() && !fData.depth.empty()){
+        fData.depthSizedColor = azureD->resize_color_image_to_depth_size(mInfos, fData.originalSizeColor);
     }else{
         fData.depthSizedColor = {};
     }

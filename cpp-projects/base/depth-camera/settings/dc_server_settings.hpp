@@ -47,6 +47,7 @@ struct ClientsRuntimeInfo{
     std::chrono::nanoseconds lastFrameSentTS = std::chrono::nanoseconds(0);
     std::int64_t lastFrameSentDurationMicroS = 0;
     std::mutex lock;
+    size_t sizeDataFrame = 0;
 };
 
 struct DCServerSettings  : public io::Settings{
@@ -59,7 +60,7 @@ struct DCServerSettings  : public io::Settings{
 
     // settings
     net::UdpServerSettings udpServerS;
-    DCDeviceSettings deviceS = DCDeviceSettings::default_init_for_grabber();
+    DCDeviceSettings deviceS = DCDeviceSettings::default_init_for_server();
     DCFiltersSettings filtersS;
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
     DCColorSettings colorS;

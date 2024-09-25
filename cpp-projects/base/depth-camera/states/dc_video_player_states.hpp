@@ -28,6 +28,7 @@
 
 // std
 #include <vector>
+#include <string>
 
 namespace tool::cam {
 
@@ -39,6 +40,7 @@ struct DCVideoPlayerStates{
     std::vector<size_t> currentFrames;
     double currentTime = 0.0;
     double duration = 0.0;
+    std::string fileName;
 
     // actions
     bool play        = false;

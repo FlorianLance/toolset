@@ -80,7 +80,7 @@ auto DCFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void{
 
     rgbInfra.width  = infra.width;
     rgbInfra.height = infra.height;
-    rgbInfra.resize(infra.width*infra.height);
+    rgbInfra.resize(infra.size());
 
     const float max = 2000;
     for(size_t id = 0; id < infra.size(); ++id){
@@ -90,7 +90,6 @@ auto DCFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void{
             vF = max;
         }
         vF/=max;
-
         rgbInfra[id] = ColorRGB8{
             static_cast<uint8_t>(255*vF),
             static_cast<uint8_t>(255*vF),

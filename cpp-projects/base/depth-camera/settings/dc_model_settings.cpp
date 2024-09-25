@@ -44,9 +44,9 @@ auto DCModelSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // model
-    read_array<float>(json, unreadCount, "transformation"sv, transformation.array);
+    read_and_update_array<float>(json, unreadCount, "transformation"sv, transformation.array);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCModelSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

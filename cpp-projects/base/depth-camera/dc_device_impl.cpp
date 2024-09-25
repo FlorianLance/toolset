@@ -60,7 +60,7 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
 
 auto DCDeviceImpl::convert_color_image() -> void{
 
-    fData.color = {};
+    fData.originalSizeColor = {};
 
     if(!mInfos.has_color() || fData.rawColor.empty()){
         return;
@@ -104,7 +104,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         return;
     }
 
-    fData.color = fData.convertedColorData.span();
+    fData.originalSizeColor = fData.convertedColorData.span();
 }
 
 auto DCDeviceImpl::filter_depth_basic() -> void{
@@ -501,11 +501,11 @@ auto DCDeviceImpl::update_frame_color() -> void{
         return;
     }
 
-    if(!fData.color.empty() && settings.data.generation.colorImage){
+    if(!fData.originalSizeColor.empty() && settings.data.generation.originalSizeColorImage){
         frame->rgbaColor.width  = mInfos.color_width();
         frame->rgbaColor.height = mInfos.color_height();
         frame->rgbaColor.resize(mInfos.color_size());
-        std::copy(fData.color.begin(), fData.color.end(), frame->rgbaColor.begin());
+        std::copy(fData.originalSizeColor.begin(), fData.originalSizeColor.end(), frame->rgbaColor.begin());
     }else{
         frame->rgbaColor.reset();
     }
@@ -541,14 +541,10 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         return;
     }
 
-    if(settings.data.generation.depth){
-        frame->depth.width  = mInfos.depth_width();
-        frame->depth.height = mInfos.depth_height();
-        frame->depth.resize(mInfos.depth_size());
-        std::copy(fData.depth.begin(), fData.depth.end(), frame->depth.begin());
-    }else{
-        frame->depth.reset();
-    }
+    frame->depth.width  = mInfos.depth_width();
+    frame->depth.height = mInfos.depth_height();
+    frame->depth.resize(mInfos.depth_size());
+    std::copy(fData.depth.begin(), fData.depth.end(), frame->depth.begin());
 
     if(settings.data.generation.depthImage){
 
@@ -603,14 +599,10 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         return;
     }
 
-    if(settings.data.generation.infra){
-        frame->infra.width  = mInfos.infra_width();
-        frame->infra.height = mInfos.infra_height();
-        frame->infra.resize(mInfos.infra_size());
-        std::copy(fData.infra.begin(), fData.infra.end(), frame->infra.begin());
-    }else{
-        frame->infra.reset();
-    }
+    frame->infra.width  = mInfos.infra_width();
+    frame->infra.height = mInfos.infra_height();
+    frame->infra.resize(mInfos.infra_size());
+    std::copy(fData.infra.begin(), fData.infra.end(), frame->infra.begin());
 
     if(settings.data.generation.infraImage){
 
@@ -758,7 +750,7 @@ auto DCDeviceImpl::update_frame_calibration() -> void{
         return;
     }
 
-    if(!fData.binaryCalibration.empty() && settings.data.generation.calibration){
+    if(!fData.binaryCalibration.empty()){
         frame->calibration.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), frame->calibration.begin());
     }else{
@@ -784,280 +776,293 @@ auto DCDeviceImpl::update_frame_audio() -> void{
     }
 }
 
-auto DCDeviceImpl::update_compressed_frame_color() -> void{
+auto DCDeviceImpl::update_data_frame_color() -> void{
 
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_COLOR"sv);
-    if(cFrame == nullptr){
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_COLOR"sv);
+    if(dFrame == nullptr){
         return;
     }
 
-    bool resetData = true;
-    if(!fData.color.empty() && settings.data.compression.addColor){
-        if(settings.data.compression.colorCompressionMode == DCCompressionMode::JPEG){
-            if(jpegColorEncoder.encode(
+    if(!fData.originalSizeColor.empty() && settings.data.sending.addOriginalSizeColor){
+        if(settings.data.sending.originalSizeColorCM == DCCompressionMode::JPEG){
+            
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, BinaryImageBuffer{}}});
+            if(!jpegColorEncoder.encode(
                     mInfos.color_width(),
                     mInfos.color_height(),
-                    fData.color,
-                    cFrame->jpegRGBA8Color,
-                    settings.data.compression.jpegCompressionRate
+                    fData.originalSizeColor,
+                    std::get<1>(dInfo.first->second),
+                    settings.data.sending.originalSizeColorJPEGCQ
                 )){
-                resetData = false;
+                dFrame->imagesB.erase(DCDataImageBufferType::OriginalColorRGBA8);
             }
-        }
-        // else if(settings.data.compression.colorCompressionMode == DCCompressionMode::None){
-        //     size_t nbBytes = mInfos.color_size()*4;
-        //     cFrame->jpegRGBA8Color.resize(nbBytes);
-        //     cFrame->jpegRGBA8Color.width  = mInfos.color_width();
-        //     cFrame->jpegRGBA8Color.height = mInfos.color_height();
-        //     auto s = std::span<const std::byte>(reinterpret_cast<std::byte*>(fData.color.data()), nbBytes);
-        //     std::copy(s.begin(), s.end(), cFrame->jpegRGBA8Color.begin());
-        //     resetData = false;
-        // }
 
-        // DCDataFrame dFrame;
-        // if(settings.data.compression.colorCompressionMode == DCCompressionMode::JPEG){
-        //     auto dInfo = dFrame.imagesB.insert({DCImageDataBufferType::ColorImage, {DCCompressionMode::JPEG, BinaryImageBuffer{}}});
-        //     if(jpegColorEncoder.encode(
-        //             mInfos.color_width(),
-        //             mInfos.color_height(),
-        //             fData.color,
-        //             std::get<1>(dInfo.first->second),
-        //             settings.data.compression.jpegCompressionRate
-        //         )){
-        //         resetData = false;
-        //     }
-        // } else if(settings.data.compression.colorCompressionMode == DCCompressionMode::None){
-        //     auto dInfo = dFrame.imagesB.insert({DCImageDataBufferType::ColorImage, {DCCompressionMode::None, BinaryImageBuffer{}}});
-        //     auto &image = std::get<1>(dInfo.first->second);
-        //     image.resize_image(image.width, image.height);
-        //     std::copy(fData.color.begin(), fData.color.end(), reinterpret_cast<ColorRGBA8*>(image.values.data()));
-        // }
-    }
-    if(resetData){
-        cFrame->jpegRGBA8Color.reset();
+        }else if(settings.data.sending.originalSizeColorCM == DCCompressionMode::None){
+            
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, BinaryImageBuffer{}}});
+            auto &image = std::get<1>(dInfo.first->second);
+            image.width  = mInfos.color_width();
+            image.height = mInfos.color_height();
+            image.resize(image.width*image.height*4);
+            std::copy(fData.originalSizeColor.begin(), fData.originalSizeColor.end(), reinterpret_cast<ColorRGBA8*>(image.values.data()));
+        }
     }
 }
 
-auto DCDeviceImpl::update_compressed_frame_depth_sized_color() -> void{
+auto DCDeviceImpl::update_data_frame_depth_sized_color() -> void{
 
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_DEPH_SIZED_COLOR"sv);
-    if(cFrame == nullptr){
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_DEPH_SIZED_COLOR"sv);
+    if(dFrame == nullptr){
         return;
     }
 
-    if(!fData.depthSizedColor.empty() && settings.data.compression.addDepthSizedColor){
+    if(!fData.depthSizedColor.empty() && settings.data.sending.addDepthSizedColor){
 
-        if(!jpegDepthSizedColorEncoder.encode(
+        if(settings.data.sending.depthSizedColorCM == DCCompressionMode::JPEG){
+            
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
+            if(!jpegDepthSizedColorEncoder.encode(
+                    mInfos.depth_width(),
+                    mInfos.depth_height(),
+                    fData.depthSizedColor,
+                    std::get<1>(dInfo.first->second),
+                    settings.data.sending.depthSizedColorJPEGCQ
+                )){
+                dFrame->imagesB.erase(DCDataImageBufferType::DepthSizedColorRGBA8);
+            }
+
+        }else if(settings.data.sending.depthSizedColorCM == DCCompressionMode::None){
+            
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
+            auto &image = std::get<1>(dInfo.first->second);
+            image.width  = mInfos.depth_width();
+            image.height = mInfos.depth_height();
+            image.resize(image.width*image.height*4);
+            std::copy(fData.depthSizedColor.begin(), fData.depthSizedColor.end(), reinterpret_cast<ColorRGBA8*>(image.get_data()));
+        }
+    }
+}
+
+auto DCDeviceImpl::update_data_frame_depth() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_DEPTH"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    if(!fData.depth.empty() && settings.data.sending.addDepth){
+
+        if(settings.data.sending.depthCM == DCCompressionMode::FastPFor){
+
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
+            if(!fastPForDepthEncoder.encode(
                 mInfos.depth_width(),
                 mInfos.depth_height(),
-                fData.depthSizedColor,
-                cFrame->jpegRGBA8DepthSizedColor,
-                settings.data.compression.jpegCompressionRate
+                fData.depth,
+                std::get<1>(dInfo.first->second)
             )){
-            cFrame->jpegRGBA8DepthSizedColor.reset();
-        }
-
-    }else{
-        cFrame->jpegRGBA8DepthSizedColor.reset();
-    }
-}
-
-auto DCDeviceImpl::update_compressed_frame_depth() -> void{
-
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_DEPTH"sv);
-    if(cFrame == nullptr){
-        return;
-    }
-
-    if(!fData.depth.empty() && settings.data.compression.addDepth){
-
-        fastPForDepthEncoder.encode(
-            mInfos.depth_width(),
-            mInfos.depth_height(),
-            fData.depth,
-            cFrame->fpfDepth
-        );
-
-    }else{
-        cFrame->fpfDepth.reset();
-    }
-}
-
-auto DCDeviceImpl::update_compressed_frame_infra() -> void{
-
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_INFRA"sv);
-    if(cFrame == nullptr){
-        return;
-    }
-
-    if(!fData.infra.empty() && settings.data.compression.addInfra){
-
-        fastPForInfraEncoder.encode(
-            mInfos.infra_width(),
-            mInfos.infra_height(),
-            fData.infra,
-            cFrame->fpfInfra
-        );
-
-    }else{
-        cFrame->fpfInfra.reset();
-    }
-}
-
-auto DCDeviceImpl::update_compressed_frame_calibration() -> void{
-
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_CALIBRATION"sv);
-    if(cFrame == nullptr){
-        return;
-    }
-
-    if(!fData.binaryCalibration.empty() && settings.data.compression.addCalibration){
-        cFrame->calibration.resize(fData.binaryCalibration.size());
-        std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), cFrame->calibration.begin());
-    }else{
-        cFrame->calibration.clear();
-    }
-}
-
-
-auto DCDeviceImpl::update_compressed_frame_cloud() -> void{
-
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_CLOUD"sv);
-    if(cFrame == nullptr){
-        return;
-    }
-
-    if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.compression.addCloud){
-
-        Buffer<std::uint16_t> processedCloudData;
-
-        // resize cloud data
-        // data mapping: XXYYZZRGB0
-        size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
-        size_t rest                                 = cloudVerticesBufferSize % 128;
-        size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
-        if(processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
-            processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
-        }
-        std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
-
-        auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
-
-        bool addColors = !fData.depthSizedColor.empty() && settings.data.compression.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
-
-        const auto dRange = mInfos.depth_range_mm();
-        const auto diff   = dRange.y() - dRange.x();
-        static constexpr std::array<Pt3f,5> depthGradient ={
-            Pt3f{0.f,0.f,1.f},
-            {0.f,1.f,1.f},
-            {0.f,1.f,0.f},
-            {1.f,1.f,0.f},
-            {1.f,0.f,0.f},
-        };
-
-        // fill data
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
-
-            auto idD = std::get<0>(idC);
-            if(fData.depth[idD] == dc_invalid_depth_value){
-                return;
+                dFrame->imagesB.erase(DCDataImageBufferType::Depth16);
             }
-            auto idV = std::get<1>(idC);
 
-            processedCloudData[idV]                             = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].x())+4096); // X
-            processedCloudData[fData.validDepthValues   + idV]  = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].y())+4096); // Y
-            processedCloudData[2*fData.validDepthValues + idV]  = static_cast<std::uint16_t>(fData.depthCloud[idV].z());                                 // Z
-            if(addColors){
-                processedCloudData8[6*fData.validDepthValues + idV] = fData.depthSizedColor[idV].r();
-                processedCloudData8[7*fData.validDepthValues + idV] = fData.depthSizedColor[idV].g();
-                processedCloudData8[8*fData.validDepthValues + idV] = fData.depthSizedColor[idV].b();
-            }else{
-                float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
-                float intPart;
-                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-                size_t idG = static_cast<size_t>(intPart);
-                auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-                processedCloudData8[6*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.x());
-                processedCloudData8[7*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.y());
-                processedCloudData8[8*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.z());
+        }else if(settings.data.sending.depthCM == DCCompressionMode::None){
+
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::None, {}}});
+            auto &image = std::get<1>(dInfo.first->second);
+            image.resize_image(mInfos.depth_width(), mInfos.depth_height(), 2);            
+            std::copy(fData.depth.begin(), fData.depth.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
+        }
+    }
+}
+
+auto DCDeviceImpl::update_data_frame_infra() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_INFRA"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    if(!fData.infra.empty() && settings.data.sending.addInfra){
+
+        if(settings.data.sending.infraCM == DCCompressionMode::FastPFor){
+
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
+            if(!fastPForInfraEncoder.encode(
+                    mInfos.infra_width(),
+                    mInfos.infra_height(),
+                    fData.infra,
+                    std::get<1>(dInfo.first->second)
+                )){
+                dFrame->imagesB.erase(DCDataImageBufferType::Infrared16);
             }
-        });
 
-        if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), cFrame->fpfColoredCloud)){
-            cFrame->fpfColoredCloud = {};
+        }else if(settings.data.sending.infraCM == DCCompressionMode::None){
+
+            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
+            auto &image = std::get<1>(dInfo.first->second);
+            image.resize_image(mInfos.infra_width(), mInfos.infra_height(), 2);
+            std::copy(fData.infra.begin(), fData.infra.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
         }
-
-    }else{
-        cFrame->fpfColoredCloud = {};
     }
 }
 
-auto DCDeviceImpl::update_compressed_frame_audio() -> void{
+auto DCDeviceImpl::update_data_frame_calibration() -> void{
 
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_AUDIO"sv);
-    if(cFrame == nullptr){
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_CALIBRATION"sv);
+    if(dFrame == nullptr){
         return;
     }
 
-    if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && settings.data.compression.addAudio){
-
-        size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
-        cFrame->audioFrames.resize(audioSize);
-        std::copy(
-            fData.audioChannels.second.begin(), fData.audioChannels.second.end(),
-            reinterpret_cast<float*>(cFrame->audioFrames.data())
-        );
-
-    }else{
-        cFrame->audioFrames = {};
+    if(!fData.binaryCalibration.empty()){
+        auto dInfo = dFrame->datasB.insert({DCDataBufferType::Calibration, {DCCompressionMode::None, {}}});
+        auto &data = std::get<1>(dInfo.first->second);
+        data.resize(fData.binaryCalibration.size());
+        std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), data.begin());
     }
 }
 
-auto DCDeviceImpl::update_compressed_frame_imu() -> void{
+auto DCDeviceImpl::update_data_frame_cloud() -> void{
 
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_IMU"sv);
-    if(cFrame == nullptr){
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_CLOUD"sv);
+    if(dFrame == nullptr){
         return;
     }
 
-    if(!fData.binaryIMU.empty() && settings.data.compression.addImu){
-        cFrame->imu.resize(fData.binaryIMU.size());
-        std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
-    }else{
-        cFrame->imu.clear();
-    }
-}
+    if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.sending.addCloud){
 
-auto DCDeviceImpl::update_compressed_frame_bodies() -> void{
+        if(settings.data.sending.cloudCM == DCCompressionMode::FastPFor){
 
-    auto t = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME_BODIES"sv);
-    if(cFrame == nullptr){
-        return;
-    }
+            Buffer<std::uint16_t> processedCloudData;
 
-    // body tracking
-    if(!fData.bodies.empty() && settings.data.compression.addBodyTracking){
-        cFrame->bodyTracking.resize(fData.bodies.size());
-        std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
-    }else{
-        cFrame->bodyTracking.clear();
-    }
+            // resize cloud data
+            // data mapping: XXYYZZRGB0
+            size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
+            size_t rest                                 = cloudVerticesBufferSize % 128;
+            size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
+            if(processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
+                processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
+            }
+            std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
 
-    // bodies id map
-    if(!fData.bodiesIdMap.empty() && settings.data.compression.addBodyIdMap){
+            auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
 
-        if(!jpegBodiesIdEncoder.encode(
-            mInfos.depth_width(),
-            mInfos.depth_height(),
-            fData.bodiesIdMap,
-            cFrame->jpegG8BodiesIdMap,
-            settings.data.compression.jpegCompressionRate
-        )){
-            cFrame->jpegG8BodiesIdMap.reset();
+            bool addColors = !fData.depthSizedColor.empty() && settings.data.sending.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
+
+            const auto dRange = mInfos.depth_range_mm();
+            const auto diff   = dRange.y() - dRange.x();
+            static constexpr std::array<Pt3f,5> depthGradient ={
+                Pt3f{0.f,0.f,1.f},
+                {0.f,1.f,1.f},
+                {0.f,1.f,0.f},
+                {1.f,1.f,0.f},
+                {1.f,0.f,0.f},
+            };
+
+            // fill data
+            std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
+
+                auto idD = std::get<0>(idC);
+                if(fData.depth[idD] == dc_invalid_depth_value){
+                    return;
+                }
+                auto idV = std::get<1>(idC);
+
+                processedCloudData[idV]                             = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].x())+4096); // X
+                processedCloudData[fData.validDepthValues   + idV]  = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].y())+4096); // Y
+                processedCloudData[2*fData.validDepthValues + idV]  = static_cast<std::uint16_t>(fData.depthCloud[idV].z());                                 // Z
+                if(addColors){
+                    processedCloudData8[6*fData.validDepthValues + idV] = fData.depthSizedColor[idV].r();
+                    processedCloudData8[7*fData.validDepthValues + idV] = fData.depthSizedColor[idV].g();
+                    processedCloudData8[8*fData.validDepthValues + idV] = fData.depthSizedColor[idV].b();
+                }else{
+                    float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
+                    float intPart;
+                    float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                    size_t idG = static_cast<size_t>(intPart);
+                    auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+                    processedCloudData8[6*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.x());
+                    processedCloudData8[7*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.y());
+                    processedCloudData8[8*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.z());
+                }
+            });
+
+            auto dInfo = dFrame->datasB.insert({DCDataBufferType::CloudXYZ16RGB8, {DCCompressionMode::FastPFor, {}}});
+            auto &data = std::get<1>(dInfo.first->second);
+            if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), data)){
+                dFrame->datasB.erase(DCDataBufferType::CloudXYZ16RGB8);
+            }
+
+        }else if(settings.data.sending.cloudCM == DCCompressionMode::None){
+            // ...
         }
-    }else{
-        cFrame->jpegG8BodiesIdMap.reset();
     }
+}
+
+auto DCDeviceImpl::update_data_frame_audio() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_AUDIO"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    // if((fData.audioChannels.first != 0) && !fData.audioChannels.second.empty() && settings.data.compression.addAudio){
+
+    //     size_t audioSize = fData.audioChannels.second.size() / fData.audioChannels.first;
+    //     cFrame->audioFrames.resize(audioSize);
+    //     std::copy(
+    //         fData.audioChannels.second.begin(), fData.audioChannels.second.end(),
+    //         reinterpret_cast<float*>(cFrame->audioFrames.data())
+    //     );
+
+    // }else{
+    //     cFrame->audioFrames = {};
+    // }
+}
+
+auto DCDeviceImpl::update_data_frame_imu() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_IMU"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    // if(!fData.binaryIMU.empty() && settings.data.compression.addImu){
+    //     cFrame->imu.resize(fData.binaryIMU.size());
+    //     std::copy(fData.binaryIMU.begin(), fData.binaryIMU.end(), cFrame->imu.begin());
+    // }else{
+    //     cFrame->imu.clear();
+    // }
+}
+
+auto DCDeviceImpl::update_data_frame_bodies() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_BODIES"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    // // body tracking
+    // if(!fData.bodies.empty() && settings.data.compression.addBodyTracking){
+    //     cFrame->bodyTracking.resize(fData.bodies.size());
+    //     std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
+    // }else{
+    //     cFrame->bodyTracking.clear();
+    // }
+
+    // // bodies id map
+    // if(!fData.bodiesIdMap.empty() && settings.data.compression.addBodyIdMap){
+
+    //     if(!jpegBodiesIdEncoder.encode(
+    //         mInfos.depth_width(),
+    //         mInfos.depth_height(),
+    //         fData.bodiesIdMap,
+    //         cFrame->jpegG8BodiesIdMap,
+    //         settings.data.compression.jpegCompressionRate
+    //     )){
+    //         cFrame->jpegG8BodiesIdMap.reset();
+    //     }
+    // }else{
+    //     cFrame->jpegG8BodiesIdMap.reset();
+    // }
 }
 
 
@@ -1427,8 +1432,6 @@ auto DCDeviceImpl::read_frame() -> void{
     dataIsValid = check_data_validity();
 }
 
-
-
 auto DCDeviceImpl::process_data() -> void{
 
     auto tPD = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
@@ -1437,15 +1440,15 @@ auto DCDeviceImpl::process_data() -> void{
 
         framerateB.add_frame();
 
-        if(settings.data.generation.has_data_to_generate()){
+        if(settings.data.generation.has_data()){
             frame = std::make_shared<DCFrame>();
         }else{
             frame = nullptr;
         }
-        if(settings.data.compression.has_data_to_compress()){
-            cFrame = std::make_shared<DCCompressedFrame>();
+        if(settings.data.sending.has_data()){
+            dFrame = std::make_shared<DCDataFrame>();
         }else{
-            cFrame = nullptr;
+            dFrame = nullptr;
         }
 
         {
@@ -1492,39 +1495,38 @@ auto DCDeviceImpl::process_data() -> void{
 
 
         {
-            auto tUCF = TimeDiffGuard(timeM, "UPDATE_COMPRESSED_FRAME"sv);
-            update_compressed_frame_color();
-            update_compressed_frame_depth_sized_color();
-            update_compressed_frame_depth();
-            update_compressed_frame_infra();
-            update_compressed_frame_cloud();
-            update_compressed_frame_audio();
-            update_compressed_frame_imu();
-            update_compressed_frame_bodies();
-            update_compressed_frame_calibration();
+            auto tUCF = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME"sv);
+            update_data_frame_color();
+            update_data_frame_depth_sized_color();
+            update_data_frame_depth();
+            update_data_frame_infra();
+            update_data_frame_cloud();
+            update_data_frame_audio();
+            update_data_frame_imu();
+            update_data_frame_bodies();
+            update_data_frame_calibration();
         }
 
-
         {
-            auto tFCF = TimeDiffGuard(timeM, "FINALIZE_COMPRESSED_FRAME"sv);
-            if(cFrame != nullptr){
+            auto tFCF = TimeDiffGuard(timeM, "FINALIZE_DATA_FRAME"sv);
+            if(dFrame != nullptr){
                 // set infos
-                cFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
-                cFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
-                cFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
-                cFrame->receivedTS         = cFrame->afterCaptureTS; // default init received TS with after capture TS
-                cFrame->mode               = settings.config.mode;
-                cFrame->validVerticesCount = fData.validDepthValues;
+                dFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
+                dFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
+                dFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
+                dFrame->receivedTS         = dFrame->afterCaptureTS; // default init received TS with after capture TS
+                dFrame->mode               = settings.config.mode;
+                dFrame->validVerticesCount = fData.validDepthValues;
 
                 // add frame
-                frames.add_compressed_frame(std::move(cFrame));
-                cFrame = nullptr;
+                frames.add_data_frame(std::move(dFrame));
+                dFrame = nullptr;
             }
         }
         {
-            auto tSCF = TimeDiffGuard(timeM, "SEND_COMPRESSED_FRAME"sv);
-            if(auto compressedFrameToSend = frames.get_compressed_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
-                new_compressed_frame_signal(std::move(compressedFrameToSend));
+            auto tSCF = TimeDiffGuard(timeM, "SEND_DATA_FRAME"sv);
+            if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                new_data_frame_signal(std::move(dataFrameToSend));
             }
         }
 
@@ -1581,10 +1583,10 @@ auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{
     frames.push_back(std::make_tuple(afterCaptureTS, std::move(frame)));
 }
 
-auto DCFramesBuffer::add_compressed_frame(std::shared_ptr<DCCompressedFrame> cFrame) -> void{
+auto DCFramesBuffer::add_data_frame(std::shared_ptr<DCDataFrame> dFrame) -> void{
     // store frame
-    auto afterCaptureTS = std::chrono::nanoseconds(cFrame->afterCaptureTS);
-    compressedFrames.push_back(std::make_tuple(afterCaptureTS, std::move(cFrame)));
+    auto afterCaptureTS = std::chrono::nanoseconds(dFrame->afterCaptureTS);
+    dataFrames.push_back(std::make_tuple(afterCaptureTS, std::move(dFrame)));
 }
 
 auto DCFramesBuffer::take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCFrame>{
@@ -1611,14 +1613,14 @@ auto DCFramesBuffer::take_frame_with_delay(std::chrono::nanoseconds afterCapture
     return nullptr;
 }
 
-auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCCompressedFrame>{
+auto DCFramesBuffer::get_data_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCDataFrame>{
 
     // check delay
     using namespace std::chrono;
     bool foundFrame = false;
     size_t idFrame = 0;
-    for(size_t ii = 0; ii < compressedFrames.size(); ++ii){
-        auto diff = duration_cast<milliseconds>(afterCaptureTS - std::get<0>(compressedFrames[ii]));
+    for(size_t ii = 0; ii < dataFrames.size(); ++ii){
+        auto diff = duration_cast<milliseconds>(afterCaptureTS - std::get<0>(dataFrames[ii]));
         if(diff.count() >= delayMs){
             foundFrame = true;
             idFrame = ii;
@@ -1628,9 +1630,9 @@ auto DCFramesBuffer::get_compressed_frame_with_delay(std::chrono::nanoseconds af
     }
 
     if(foundFrame){
-        auto cFrame = std::move(compressedFrames[idFrame]);
-        tool::erase_range(compressedFrames, 0, idFrame + 1);
-        return std::get<1>(cFrame);
+        auto dFrame = std::move(dataFrames[idFrame]);
+        tool::erase_range(dataFrames, 0, idFrame + 1);
+        return std::get<1>(dFrame);
     }
     return nullptr;
 }

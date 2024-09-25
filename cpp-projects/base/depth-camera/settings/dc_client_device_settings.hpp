@@ -46,11 +46,6 @@ struct DCClientDeviceSettings : public io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
-    // DCDeviceSettings
-    //  DCConnectionSettings
-    //  DCConfigSettings
-    //  DCDataSettings
-
     // settings
     DCDeviceConnectionSettings connectionS;
     DCDeviceSettings deviceS;
@@ -74,7 +69,7 @@ struct DCClientDeviceSettings : public io::Settings{
     // # states
     bool connected = false;
     size_t lastFrameIdReceived = 0;
-    size_t lastCompressedFrameIdReceived = 0;
+    size_t lastDataFrameIdReceived = 0;
     // # monitoring infos
     std::int64_t synchroAverageDiff = 0;
     net::UdpNetworkStatus receivedNetworkStatus;

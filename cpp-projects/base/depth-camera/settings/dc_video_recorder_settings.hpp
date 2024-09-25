@@ -27,16 +27,15 @@
 #pragma once
 
 // local
+#include "dc_data_frame_generation_settings.hpp"
 #include "dc_frame_generation_settings.hpp"
-#include "dc_frame_compression_settings.hpp"
 
 namespace tool::cam {
 
 struct DCVideoRecorderSettings{
     int deviceMaxFramesToRecord = 10000;
     double maxDurationS = 500.;
-    DCFrameCompressionSettings compression;
-    DCFrameGenerationSettings generation;
-    // std::vector<bool> camerasToRecord;
+    DCDataFrameGenerationSettings dataFrameGenS;
+    DCFrameGenerationSettings frameGenS;
 };
 }

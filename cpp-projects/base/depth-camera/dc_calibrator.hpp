@@ -46,7 +46,7 @@ public:
     // getters
     auto nb_frames_registered(size_t idGrabber) const noexcept -> size_t;
     auto size_all_calibration_cloud() const noexcept -> size_t;
-    auto calibration_grabber_data(size_t idGrabber) const  -> const DCCalibratorGrabberData*;
+    auto calibration_client_data(size_t idGrabber) const  -> const DCCalibratorClientData*;
 
     // registration
     auto is_registering() const -> bool {return states.isRegistering;}
@@ -72,7 +72,7 @@ public:
     // signals
     sigslot::signal<size_t, DCModelSettings> new_calibration_signal;
     sigslot::signal<size_t, DCModelSettings> validated_calibration_signal;
-    sigslot::signal<int, int, std::vector<DCCalibratorGrabberData>*> data_updated_signal;
+    sigslot::signal<int, int, std::vector<DCCalibratorClientData>*> data_updated_signal;
 
 private :
 

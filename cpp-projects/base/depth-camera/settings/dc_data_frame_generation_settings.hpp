@@ -26,24 +26,49 @@
 
 #pragma once
 
+// thirdparty
+#include "json_fwd.hpp"
 
 // local
-#include "dc_frame.hpp"
-#include "dc_compressed_frame.hpp"
-#include "depth-camera/settings/dc_frame_compression_settings.hpp"
+#include "depth-camera/dc_enums.hpp"
 
-namespace tool::cam{
+namespace tool::cam {
 
-struct DCFrameCompressor{
+struct DCDataFrameGenerationSettings{
 
-    DCFrameCompressor();
-    ~DCFrameCompressor();
+    // data to add
+    // bool addCalibration        = true;
+    bool addDepth              = true;
+    bool addDepthSizedColor    = true;
+    bool addOriginalSizeColor  = false;
+    bool addInfra              = false;
 
-    auto compress(const DCFrameCompressionSettings &fcS, DCFrame &frame) -> std::unique_ptr<DCCompressedFrame>;
-    auto compress(const DCFrameCompressionSettings &fcS, DCFrame &frame, DCCompressedFrame *cFrame) -> void;
+    bool addBodyIdMap          = false; // TODO
+    bool addCloud              = false; // TODO
+    bool addBodyTracking       = false; // TODO
+    bool addAudio              = false; // TODO
+    bool addImu                = false; // TODO
 
-private:
-    struct Impl;
-    std::unique_ptr<Impl> i;
+    // compression mode
+    DCCompressionMode depthCM               = DCCompressionMode::FastPFor;
+    DCCompressionMode depthSizedColorCM     = DCCompressionMode::JPEG;
+    DCCompressionMode originalSizeColorCM   = DCCompressionMode::JPEG;
+    DCCompressionMode infraCM               = DCCompressionMode::FastPFor;
+    DCCompressionMode cloudCM               = DCCompressionMode::FastPFor;
+    std::uint8_t depthSizedColorJPEGCQ      = 95;
+    std::uint8_t originalSizeColorJPEGCQ    = 95;
+
+    // reconstruction
+    CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
+
+    [[nodiscard]] constexpr auto has_data() const noexcept -> bool{
+        return  addOriginalSizeColor || addDepth || addDepthSizedColor ||
+                addInfra || addBodyTracking || addAudio || addImu || addCloud;
+    }
+
+    auto init_from_json(const nlohmann::json &json) -> void;
+    auto convert_to_json() const -> nlohmann::json;
 };
+
+
 }

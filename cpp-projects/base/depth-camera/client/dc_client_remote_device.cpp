@@ -55,7 +55,7 @@ struct DCClientRemoteDevice::Impl{
     DoubleRingBuffer<std::byte> messagesBuffer;
     AverageSynchBuffer synchro;
     AverageBandwidthBuffer bandwidth;
-    UdpMessageReception cFramesReception;
+    UdpMessageReception dFramesReception;
     std::atomic<size_t> totalReceivedBytes = 0;
 
     std::int64_t averageTimestampDiffNs = 0;    
@@ -244,38 +244,38 @@ auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header h
         receive_feedback(std::move(header), feedback);
 
     }break;
-    case DCMessageType::compressed_frame_data:{
+    case DCMessageType::data_frame:{
 
-        i->cFramesReception.update(header, dataToProcess, i->messagesBuffer);
+        i->dFramesReception.update(header, dataToProcess, i->messagesBuffer);
 
-        if(auto info = i->cFramesReception.message_fully_received(header); info.has_value()){
+        if(auto info = i->dFramesReception.message_fully_received(header); info.has_value()){
 
             // create compressed frame from data
-            auto cFrame = std::make_shared<DCCompressedFrame>();
+            auto dFrame = std::make_shared<DCDataFrame>();
 
             // init compressed frame from data packets
             size_t offset = 0;
-            cFrame->init_from_data(info->messageData, offset);
+            dFrame->init_from_data(info->messageData, offset);
 
             // update received TS with first packet received TS
-            auto diffCaptureSending = (info->firstPacketSentTS.count() - cFrame->afterCaptureTS);
-            cFrame->receivedTS = info->firstPacketReceivedTS.count() - diffCaptureSending;
+            auto diffCaptureSending = (info->firstPacketSentTS.count() - dFrame->afterCaptureTS);
+            dFrame->receivedTS = info->firstPacketReceivedTS.count() - diffCaptureSending;
 
             // add average diff to capture timestamp
-            cFrame->afterCaptureTS += i->synchro.averageDiffNs;
+            dFrame->afterCaptureTS += i->synchro.averageDiffNs;
 
             // update bandwitdh
             i->bandwidth.add_size(info->totalBytesReceived);
 
             // send compressed frame
-            receive_compressed_frame(std::move(header), std::move(cFrame));
+            receive_data_frame(std::move(header), std::move(dFrame));
         }
 
-        if(auto nbMessageTimeout = i->cFramesReception.check_message_timeout(); nbMessageTimeout != 0){
+        if(auto nbMessageTimeout = i->dFramesReception.check_message_timeout(); nbMessageTimeout != 0){
             timeout_messages_signal(nbMessageTimeout);
         }
 
-        receive_network_status(UdpNetworkStatus{i->cFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
+        receive_network_status(UdpNetworkStatus{i->dFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
 
     }break;
     default:
@@ -314,20 +314,20 @@ auto DCClientRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
     remote_feedback_signal(std::move(message));
 }
 
-auto DCClientRemoteDevice::receive_compressed_frame(Header h, std::shared_ptr<cam::DCCompressedFrame> cFrame) -> void{
+auto DCClientRemoteDevice::receive_data_frame(Header h, std::shared_ptr<cam::DCDataFrame> dFrame) -> void{
 
     // from reader thread:
     i->totalReceivedBytes += h.totalSizeBytes;
-    if(cFrame){
+    if(dFrame){
 
         // update framerate
         framerate.add_frame();
 
         // update latency
-        latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(cFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+        latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(dFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
 
         // send frame
-        remote_frame_signal(std::move(cFrame));
+        remote_data_frame_signal(std::move(dFrame));
 
         // send status
         data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});

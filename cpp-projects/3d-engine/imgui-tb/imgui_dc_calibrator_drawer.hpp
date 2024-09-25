@@ -36,12 +36,12 @@ namespace tool::graphics {
 
 struct DCCalibratorDrawer : public DCCloudsSceneDrawer{
 
-    auto initialize(size_t nbGrabbers) -> void;
-    auto set_data(int sourceId, int modelId,  std::vector<cam::DCCalibratorGrabberData>* grabbersData) -> void;
+    auto initialize(size_t nbClients) -> void;
+    auto set_data(int sourceId, int modelId,  std::vector<cam::DCCalibratorClientData>* clientsData) -> void;
     auto draw() -> void;
 
-    auto update_grabber_model(size_t idGrabber, const cam::DCModelSettings &model) -> void;
-    auto update_grabber_cloud_display(size_t idGrabber, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
+    auto update_client_model(size_t idClient, const cam::DCModelSettings &model) -> void;
+    auto update_client_cloud_display(size_t idClient, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
     auto update_settings(const cam::DCCalibratorDisplaySettings &settings) -> void;
 
 private:

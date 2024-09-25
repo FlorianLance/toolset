@@ -32,7 +32,7 @@
 // base
 #include "thirdparty/sigslot/signal.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "network/network_enums.hpp"
 
 // local
@@ -67,6 +67,7 @@ public:
     // # network
     SSS<size_t> reset_remote_device_signal;
     SSS<size_t> init_connection_signal;
+    SSS<> reset_network_signal;
     SSS<size_t, net::Command> command_signal;
     // # recording
     SSS<> start_recorder_signal;

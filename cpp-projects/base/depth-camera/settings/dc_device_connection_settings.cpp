@@ -45,16 +45,16 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // local
-    connectionType = (read_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCClientType::Remote : DCClientType::Local;
+    connectionType = (read_and_return_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCClientType::Remote : DCClientType::Local;
     if(connectionType == DCClientType::Remote){
-        read_value<size_t>(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
-        read_value<bool>(json, unreadCount, "any_reading_interface"sv, anyReadingInterface);
-        read_value<int>(json, unreadCount, "reading_port"sv, readingPort);
-        read_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
-        read_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
-        protocol = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
+        read_and_update_value<size_t>(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+        read_and_update_value<bool>(json, unreadCount, "any_reading_interface"sv, anyReadingInterface);
+        read_and_update_value<int>(json, unreadCount, "reading_port"sv, readingPort);
+        read_and_update_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
+        read_and_update_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
+        protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
     }
 
     if(unreadCount != 0){
@@ -89,7 +89,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
 
     std::string arrayN = "devices";
     if(!json.contains(arrayN)){
@@ -107,7 +107,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
 
     for(const auto &devicesJson : json[arrayN]){
         
-        auto isLocal = (read_value<std::string>(devicesJson, unreadCount, "type") == "local") ? true : false;
+        auto isLocal = (read_and_return_value<std::string>(devicesJson, unreadCount, "type") == "local") ? true : false;
         if(devicesJson.contains("device"sv)){
 
             if(!isLocal){

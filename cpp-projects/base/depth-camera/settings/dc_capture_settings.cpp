@@ -37,13 +37,13 @@ using json = nlohmann::json;
 auto DCCaptureSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
-    color               = read_value<bool>(json, unreadCount, "color"sv);
-    depth               = read_value<bool>(json, unreadCount, "depth"sv);
-    infra               = read_value<bool>(json, unreadCount, "infra"sv);
-    bodyTracking        = read_value<bool>(json, unreadCount, "body_tracking"sv);
-    btTemporalSmoothing = read_value<float>(json, unreadCount, "bt_temporal_smoothing"sv);
-    audio               = read_value<bool>(json, unreadCount, "audio"sv);
-    imu                 = read_value<bool>(json, unreadCount, "imu"sv);
+    read_and_update_value(json, unreadCount, "color"sv,                 color);
+    read_and_update_value(json, unreadCount, "depth"sv,                 depth);
+    read_and_update_value(json, unreadCount, "infra"sv,                 infra);
+    read_and_update_value(json, unreadCount, "body_tracking"sv,         bodyTracking);
+    read_and_update_value(json, unreadCount, "bt_temporal_smoothing"sv, btTemporalSmoothing);
+    read_and_update_value(json, unreadCount, "audio"sv,                 audio);
+    read_and_update_value(json, unreadCount, "imu"sv,                   imu);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCCaptureDataSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

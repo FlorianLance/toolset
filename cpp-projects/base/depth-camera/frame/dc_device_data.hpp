@@ -2,7 +2,7 @@
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,46 +26,43 @@
 
 #pragma once
 
-// thirdparty
-#include "json_fwd.hpp"
+// std
+#include <span>
 
 // local
-#include "depth-camera/dc_enums.hpp"
+#include "utility/image_buffer.hpp"
+#include "graphics/color/rgb.hpp"
+#include "depth-camera/dc_types.hpp"
 
-namespace tool::cam {
+namespace tool::cam{
 
-struct DCFrameCompressionSettings{
+struct DCDeviceData{
 
-    // data to add
-    bool addCalibration        = true;
-    bool addDepth              = true;
-    bool addDepthSizedColor    = true;
-    bool addColor              = false;
-    bool addInfra              = false;
-    bool addBodyIdMap          = false; // TODO
-    bool addCloud              = false; // TO REMOVE ?
-    bool addBodyTracking       = false; // TODO
-    bool addAudio              = false; // TODO
-    bool addImu                = false; // TODO
+    auto reset(const DCModeInfos &mInfos) -> void;
+    auto reset_spans() -> void;
 
-    // compression mode
-    DCCompressionMode depthCompressionMode           = DCCompressionMode::FastPFor;
-    DCCompressionMode depthSizedColorCompressionMode = DCCompressionMode::JPEG;
-    DCCompressionMode colorCompressionMode           = DCCompressionMode::JPEG;
-    DCCompressionMode infraCompressionMode           = DCCompressionMode::FastPFor;
-    std::uint8_t jpegCompressionRate = 80;
+    // device data
+    // # global
+    BinarySpan binaryCalibration;
+    // # per frame
+    BinarySpan rawColor;
+    std::span<ColorRGBA8> originalSizeColor;
+    std::span<ColorRGBA8> depthSizedColor;    
+    std::span<std::uint16_t> depth;
+    std::span<std::uint16_t> infra;
+    std::span<ColorGray8> bodiesIdMap;
+    std::span<geo::Pt3<std::int16_t>> depthCloud;    
+    BinarySpan binaryIMU;
+    std::pair<size_t, std::span<float>> audioChannels;    
+    std::span<DCBody> bodies;
 
-    // reconstruction
-    CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
-
-
-    [[nodiscard]] constexpr auto has_data_to_compress() const noexcept -> bool{
-        return  addCalibration || addColor || addDepth || addDepthSizedColor || addInfra || addBodyTracking || addAudio || addImu || addCloud;
-    }
-
-    auto init_from_json(const nlohmann::json &json) -> void;
-    auto convert_to_json() const -> nlohmann::json;
+    // processed data
+    ImageBuffer<ColorRGBA8> convertedColorData;
+    size_t validDepthValues = 0;
+    size_t meanBiggestZoneId = 0;
+    std::vector<std::int8_t> filteringMask;
+    std::vector<int> depthMask;
+    std::vector<int> zonesId;
+    std::vector<std::int16_t> depthFiltering;
 };
-
-
 }

@@ -27,7 +27,7 @@
 #pragma once
 
 // local
-#include "dc_compressed_frame.hpp"
+#include "dc_data_frame.hpp"
 #include "dc_frame.hpp"
 #include "depth-camera/settings/dc_frame_generation_settings.hpp"
 
@@ -39,15 +39,15 @@ struct DCFrameProcessor{
     ~DCFrameProcessor();
 
     // set
-    auto new_compressed_frame(std::shared_ptr<DCCompressedFrame> frame) -> void;
+    auto new_data_frame(std::shared_ptr<DCDataFrame> frame) -> void;
     auto new_frame(std::shared_ptr<DCFrame> frame) -> void;
     auto invalid_frame() -> void;
-    auto invalid_compressed_frame() -> void;
+    auto invalid_data_frame() -> void;
     auto update_generation_settings(const DCFrameGenerationSettings &generationS) -> void;
 
     // get
     auto get_frame() -> std::shared_ptr<DCFrame>;
-    auto get_compressed_frame() -> std::shared_ptr<DCCompressedFrame>;
+    auto get_data_frame() -> std::shared_ptr<DCDataFrame>;
 
     // processing thread
     auto start_processing_thread() -> void;
@@ -56,7 +56,7 @@ struct DCFrameProcessor{
 
     // processing
     auto process() -> bool;
-    auto uncompress(std::shared_ptr<DCCompressedFrame> cFrame) -> std::shared_ptr<DCFrame>;
+    auto generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>;
 
     std::atomic<double> ucUsage = 0.0;
 

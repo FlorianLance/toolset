@@ -27,7 +27,7 @@
 #pragma once
 
 // local
-#include "depth-camera/frame/dc_compressed_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 
@@ -50,18 +50,18 @@ public:
     auto remove_device_processor(size_t idD) -> void;
     auto update_device_settings(size_t idD, const cam::DCDeviceSettings &deviceS) -> void;
     // # frames
-    auto new_compressed_frame(size_t idD, std::shared_ptr<cam::DCCompressedFrame> frame) -> void;
+    auto new_data_frame(size_t idD, std::shared_ptr<cam::DCDataFrame> frame) -> void;
     auto new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto invalid_last_frame(size_t idD) -> void;
-    auto invalid_last_compressed_frame(size_t idD) -> void;
+    auto invalid_last_data_frame(size_t idD) -> void;
     // when no processing thread started
     auto process(size_t idD) -> void;
-    auto uncompress_frame(size_t idD, std::shared_ptr<DCCompressedFrame> frame) -> std::shared_ptr<DCFrame>;
+    auto generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>;
 
     // get
     auto nb_devices() const noexcept -> size_t;
     auto get_frame(size_t idD) -> std::shared_ptr<cam::DCFrame>;
-    auto get_compressed_frame(size_t idD) -> std::shared_ptr<cam::DCCompressedFrame>;
+    auto get_data_frame(size_t idD) -> std::shared_ptr<cam::DCDataFrame>;
     auto get_uc_usage(size_t idD) const noexcept -> double;
 
     // I/O

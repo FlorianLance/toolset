@@ -91,15 +91,15 @@
             "type_string": "color",
             "version": 1
         },
-        "brightness": 10,
-        "contrast": 50,
-        "exposure_time": 200,
-        "gain": 40,
-        "hdr": true,
+        "brightness": 128,
+        "contrast": 5,
+        "exposure_time": 33330,
+        "gain": 128,
+        "hdr": false,
         "powerline_frequency": 2,
-        "saturation": 64,
-        "sharpness": 24,
-        "white_balance": 6500
+        "saturation": 32,
+        "sharpness": 2,
+        "white_balance": 4500
     },
     "device": {
         "base": {
@@ -138,14 +138,14 @@
             "ipv4_address_2": 168,
             "ipv4_address_3": 1,
             "ipv4_address_4": 10,
-            "mode": 23,
+            "mode": 3,
             "open_device": true,
             "serial_number_device": "",
             "start_reading": true,
             "subordinate_delay_usec": 0,
             "synch_mode": 0,
             "synchronize_color_and_depth": true,
-            "type_device": 1,
+            "type_device": 0,
             "use_serial_number": false
         },
         "data": {
@@ -166,7 +166,7 @@
                 "depth_image": false,
                 "depth_sized_color_image": true,
                 "imu": false,
-                "infra": false,
+                "infra": true,
                 "infra_image": false
             },
             "s_capture": {
@@ -177,24 +177,6 @@
                 "depth": true,
                 "imu": false,
                 "infra": true
-            },
-            "s_compression": {
-                "audio": false,
-                "body_id_map": false,
-                "body_tracking": false,
-                "calibration": true,
-                "cloud": false,
-                "cloud_color_mode": 1,
-                "color": false,
-                "color_compression_mode": 0,
-                "dept_sized_color": true,
-                "depth": true,
-                "depth_compression_mode": 0,
-                "depth_sized_color_compression_mode": 0,
-                "imu": false,
-                "infra": false,
-                "infra_compression_mode": 0,
-                "jpeg_compression_rate": 80
             },
             "s_generation": {
                 "audio": false,
@@ -209,8 +191,27 @@
                 "depth_image": true,
                 "depth_sized_color_image": true,
                 "imu": false,
-                "infra": false,
+                "infra": true,
                 "infra_image": true
+            },
+            "s_sending": {
+                "audio": false,
+                "body_id_map": false,
+                "body_tracking": false,
+                "cloud": true,
+                "cloud_color_mode": 1,
+                "cloud_compression_mode": 0,
+                "color": true,
+                "color_compression_mode": 1,
+                "dept_sized_color": true,
+                "depth": true,
+                "depth_compression_mode": 2,
+                "depth_sized_color_compression_mode": 1,
+                "imu": false,
+                "infra": true,
+                "infra_compression_mode": 2,
+                "jpeg_compression_rate": 81,
+                "original_size_color_jpeg_quality": 95
             }
         }
     },
@@ -245,7 +246,7 @@
             0.1330738216638565
         ],
         "filter_depth_with_body_tracking": false,
-        "filter_depth_with_cloud": true,
+        "filter_depth_with_cloud": false,
         "filter_depth_with_color": false,
         "filter_depth_with_infra": true,
         "invalidate_color_from_depth": false,
@@ -319,6 +320,7 @@
         ]
     },
     "udp_server": {
+        "any_reading_interface": false,
         "base": {
             "type_string": "UDP server",
             "version": 1

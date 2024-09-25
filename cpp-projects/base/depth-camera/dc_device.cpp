@@ -179,8 +179,8 @@ auto DCDevice::process() -> void{
             i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
                 new_frame_signal(std::move(frame));
             });
-            i->device->new_compressed_frame_signal.connect([&](std::shared_ptr<DCCompressedFrame> frame){
-                new_compressed_frame_signal(std::move(frame));
+            i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
+                new_data_frame_signal(std::move(frame));
             });
 
             i->deviceInitialized = true;

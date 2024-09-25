@@ -42,38 +42,38 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // actions
-    openDevice                    = read_value<bool>(json, unreadCount, "open_device"sv);
-    startReading                  = read_value<bool>(json, unreadCount, "start_reading"sv);
+    read_and_update_value(json, unreadCount, "open_device"sv,   openDevice);
+    read_and_update_value(json, unreadCount, "start_reading"sv, startReading);
     // device
-    typeDevice                    = static_cast<DCType>(read_value<int>(json, unreadCount, "type_device"sv));
-    idDevice                      = read_value<std::uint32_t>(json, unreadCount, "id_device"sv);
-    useSerialNumber               = read_value<bool>(json, unreadCount, "use_serial_number"sv);
-    serialNumber                  = read_value<std::string>(json, unreadCount, "serial_number_device"sv);
-    ipv4Address                   = {
-        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_1"sv),
-        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_2"sv),
-        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_3"sv),
-        read_value<std::uint8_t>(json, unreadCount, "ipv4_address_4"sv)
+    typeDevice          = static_cast<DCType>(read_and_return_value(json, unreadCount, "type_device"sv, static_cast<int>(typeDevice)));
+    read_and_update_value(json, unreadCount, "id_device"sv, idDevice);
+    read_and_update_value(json, unreadCount, "use_serial_number"sv, useSerialNumber);
+    read_and_update_value(json, unreadCount, "serial_number_device"sv, serialNumber);
+    ipv4Address = {
+        read_and_return_value(json, unreadCount, "ipv4_address_1"sv, ipv4Address.x()),
+        read_and_return_value(json, unreadCount, "ipv4_address_2"sv, ipv4Address.y()),
+        read_and_return_value(json, unreadCount, "ipv4_address_3"sv, ipv4Address.z()),
+        read_and_return_value(json, unreadCount, "ipv4_address_4"sv, ipv4Address.w())
     };
-    mode                          = static_cast<DCMode>(read_value<int>(json, unreadCount, "mode"sv));
+    mode                = static_cast<DCMode>(read_and_return_value(json, unreadCount, "mode"sv, static_cast<int>(mode)));
 
     // synch
-    synchronizeColorAndDepth      = read_value<bool>(json, unreadCount, "synchronize_color_and_depth"sv);
-    delayBetweenColorAndDepthUsec = read_value<int>(json, unreadCount, "delay_between_color_and_depth_usec"sv);
-    synchMode                     = static_cast<DCSynchronisationMode>(read_value<int>(json, unreadCount, "synch_mode"sv));
-    subordinateDelayUsec          = read_value<int>(json, unreadCount, "subordinate_delay_usec"sv);
+    read_and_update_value(json, unreadCount, "synchronize_color_and_depth"sv,           synchronizeColorAndDepth);
+    read_and_update_value(json, unreadCount, "delay_between_color_and_depth_usec"sv,    delayBetweenColorAndDepthUsec);
+    synchMode           = static_cast<DCSynchronisationMode>(read_and_return_value(json, unreadCount, "synch_mode"sv, static_cast<int>(synchMode)));
+    read_and_update_value(json, unreadCount, "subordinate_delay_usec"sv,                subordinateDelayUsec);
     // body tracking
-    btEnabled                     = read_value<bool>(json, unreadCount, "bt_enabled"sv);
-    btOrientation                 = static_cast<DCBTSensorOrientation>(read_value<int>(json, unreadCount, "bt_orientation"sv));
-    btProcessingMode              = static_cast<DCBTProcessingMode>(read_value<int>(json, unreadCount, "bt_processing_mode"sv));
-    btGPUId                       = read_value<std::int8_t>(json, unreadCount, "bt_GPU_id"sv);
+    read_and_update_value(json, unreadCount, "bt_enabled"sv, btEnabled);
+    btOrientation       = static_cast<DCBTSensorOrientation>(read_and_return_value(json, unreadCount,   "bt_orientation"sv, static_cast<int>(btOrientation)));
+    btProcessingMode    = static_cast<DCBTProcessingMode>(read_and_return_value(json, unreadCount,      "bt_processing_mode"sv, static_cast<int>(btProcessingMode)));
+    read_and_update_value(json, unreadCount, "bt_GPU_id"sv, btGPUId);
     // misc
-    disableLED                    = read_value<bool>(json, unreadCount, "disable_LED"sv);
+    read_and_update_value(json, unreadCount, "disable_LED"sv, disableLED);
     // color - depth calibration
-    data::read_array<float>(json, unreadCount, "color_alignment_tr"sv, colorAlignmentTr.array);
-    data::read_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRot.array);
+    data::read_and_update_array<float>(json, unreadCount, "color_alignment_tr"sv, colorAlignmentTr.array);
+    data::read_and_update_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRot.array);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
@@ -117,14 +117,14 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
     return json;
 }
 
-auto DCConfigSettings::default_init_for_grabber() -> DCConfigSettings{
+auto DCConfigSettings::default_init_for_server() -> DCConfigSettings{
     DCConfigSettings config;
 
     // TODO
     return config;
 }
 
-auto DCConfigSettings::default_init_for_manager() -> DCConfigSettings{
+auto DCConfigSettings::default_init_for_client() -> DCConfigSettings{
     DCConfigSettings config;
 
     // TODO

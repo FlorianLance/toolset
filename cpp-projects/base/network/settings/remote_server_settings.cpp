@@ -39,13 +39,13 @@ auto RemoteServerSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // remote server
-    idReadingInterface  = read_value<size_t>(json, unreadCount, "id_reading_interface"sv);
-    readingPort         = read_value<int>(json, unreadCount, "reading_port"sv);
-    sendingAddress       = read_value<std::string>(json, unreadCount, "sending_address"sv);
-    sendingPort         = read_value<int>(json, unreadCount, "sending_port"sv);
-    protocol            = (read_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
+    read_and_update_value(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+    read_and_update_value(json, unreadCount, "reading_port"sv, readingPort);
+    read_and_update_value(json, unreadCount, "sending_address"sv, sendingAddress);
+    read_and_update_value(json, unreadCount, "sending_port"sv, sendingPort);
+    protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[RemoteServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));

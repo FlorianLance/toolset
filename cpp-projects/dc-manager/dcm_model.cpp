@@ -112,23 +112,23 @@ auto DCMModel::initialize() -> bool{
 
             // read filters settings file
             if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = paths->client_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No filters settings file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Logger::error(std::format("[DCMModel] No filters settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read calibration filters settings file
             if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  paths->client_calibration_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No calibration settings file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Logger::error(std::format("[DCMModel] No calibration settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read device settings file
             if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = paths->client_device_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No device file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Logger::error(std::format("[DCMModel] No device file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read color settings file
             if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = paths->client_color_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No color file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Logger::error(std::format("[DCMModel] No color file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read model settings file
             if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  paths->client_model_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No model file found for grabber with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Logger::error(std::format("[DCMModel] No model file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
         }
     }

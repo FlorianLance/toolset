@@ -66,20 +66,20 @@ auto DCColorSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // colors
-    whiteBalance                  = read_value<std::uint16_t>(json, unreadCount, "white_balance"sv);
-    exposureTime                  = read_value<std::uint16_t>(json, unreadCount, "exposure_time"sv);
-    brightness                    = read_value<std::uint8_t>(json, unreadCount, "brightness"sv);
-    contrast                      = read_value<std::uint8_t>(json, unreadCount, "contrast"sv);
-    saturation                    = read_value<std::uint8_t>(json, unreadCount, "saturation"sv);
-    sharpness                     = read_value<std::uint8_t>(json, unreadCount, "sharpness"sv);
-    gain                          = read_value<std::uint8_t>(json, unreadCount, "gain"sv);
-    powerlineFrequency            = static_cast<DCPowerlineFrequency>(read_value<int>(json, unreadCount, "powerline_frequency"sv));
-    backlightCompensation         = read_value<bool>(json, unreadCount, "backlight_compensation"sv);
-    autoExposureTime              = read_value<bool>(json, unreadCount, "auto_exposure_time"sv);
-    autoWhiteBalance              = read_value<bool>(json, unreadCount, "auto_white_balance"sv);
-    hdr                           = read_value<bool>(json, unreadCount, "hdr"sv);
+    read_and_update_value(json, unreadCount, "white_balance"sv, whiteBalance);
+    read_and_update_value(json, unreadCount, "exposure_time"sv, exposureTime);
+    read_and_update_value(json, unreadCount, "brightness"sv, brightness);
+    read_and_update_value(json, unreadCount, "contrast"sv, contrast);
+    read_and_update_value(json, unreadCount, "saturation"sv, saturation);
+    read_and_update_value(json, unreadCount, "sharpness"sv, sharpness);
+    read_and_update_value(json, unreadCount, "gain"sv, gain);
+    powerlineFrequency = static_cast<DCPowerlineFrequency>(read_and_return_value(json, unreadCount, "powerline_frequency"sv, static_cast<int>(powerlineFrequency)));
+    read_and_update_value(json, unreadCount, "backlight_compensation"sv, backlightCompensation);
+    read_and_update_value(json, unreadCount, "auto_exposure_time"sv, autoExposureTime);
+    read_and_update_value(json, unreadCount, "auto_white_balance"sv, autoWhiteBalance);
+    read_and_update_value(json, unreadCount, "hdr"sv, hdr);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[DCColorSettings::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));

@@ -56,14 +56,14 @@ auto DCServerSettings::init_from_json(const nlohmann::json &json) -> void{
 
     size_t unreadCount = 0;
     // base
-    io::Settings::init_from_json(read_object(json, unreadCount, "base"sv));
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // local
-    udpServerS.init_from_json(read_object(json, unreadCount, "udp_server"sv));
-    deviceS.init_from_json(read_object(json, unreadCount, "device"sv));
-    filtersS.init_from_json(read_object(json, unreadCount, "filters"sv));
-    calibrationFiltersS.init_from_json(read_object(json, unreadCount, "calibration_filters"sv));
-    colorS.init_from_json(read_object(json, unreadCount, "color"sv));
-    modelS.init_from_json(read_object(json, unreadCount, "model"sv));
+    udpServerS.init_from_json(read_and_return_object(json, unreadCount, "udp_server"sv));
+    deviceS.init_from_json(read_and_return_object(json, unreadCount, "device"sv));
+    filtersS.init_from_json(read_and_return_object(json, unreadCount, "filters"sv));
+    calibrationFiltersS.init_from_json(read_and_return_object(json, unreadCount, "calibration_filters"sv));
+    colorS.init_from_json(read_and_return_object(json, unreadCount, "color"sv));
+    modelS.init_from_json(read_and_return_object(json, unreadCount, "model"sv));
     // delayS.init_from_json(read_object(json, unreadCount, "delay"sv))
 
     if(unreadCount != 0){

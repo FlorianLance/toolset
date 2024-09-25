@@ -46,10 +46,10 @@ auto Frame::data_size() const noexcept -> size_t{
 auto Frame::init_from_json(const nlohmann::json &json) -> void {
 
     size_t unreadCount = 0;
-    idDevice        = read_value<std::uint8_t>(json, unreadCount, "id_device"sv);
-    idCapture       = read_value<std::int32_t>(json, unreadCount, "id_capture"sv);
-    afterCaptureTS  = read_value<std::int64_t>(json, unreadCount, "after_capture_ts"sv);
-    receivedTS      = read_value<std::int64_t>(json, unreadCount, "received_ts"sv);
+    read_and_update_value(json, unreadCount, "id_device"sv,         idDevice);
+    read_and_update_value(json, unreadCount, "id_capture"sv,        idCapture);
+    read_and_update_value(json, unreadCount, "after_capture_ts"sv,  afterCaptureTS);
+    read_and_update_value(json, unreadCount, "received_ts"sv,       receivedTS);
 
     if(unreadCount != 0){
         tool::Logger::warning(std::format("[Frame::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));

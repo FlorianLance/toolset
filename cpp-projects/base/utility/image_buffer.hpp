@@ -31,16 +31,6 @@
 
 namespace tool{
 
-// template<typename ElementType>
-// struct ImageSpan : public std::span<ElementType>{
-
-//     ImageSpan(size_t width, size_t height, const std::vector<ElementType> &values) : std::span<ElementType>(values), width(width), height(height){
-//     }
-
-//     size_t width = 0;
-//     size_t height = 0;
-// };
-
 template<typename ElementType>
 struct ImageBuffer : public Buffer<ElementType>{
 
@@ -50,12 +40,14 @@ struct ImageBuffer : public Buffer<ElementType>{
         Buffer<ElementType>::clear();
     }
 
-    [[nodiscard]] constexpr auto is_encoded() const noexcept -> bool {
-        return Buffer<ElementType>::size() != (width*height);
+    auto resize_image(size_t width, size_t height) -> void{
+        this->width    = width;
+        this->height   = height;
+        Buffer<ElementType>::resize(width*height);
     }
 
     [[nodiscard]] constexpr auto is_valid_image() const noexcept -> bool {
-        return !is_encoded() && (width != 0) && (height != 0);
+        return (Buffer<ElementType>::size() == (width*height)) && (width != 0) && (height != 0);
     }    
 
     [[nodiscard]] constexpr auto get(size_t idX, size_t idY)       -> ElementType&       {return Buffer<ElementType>::values[idY*width + idX];}
@@ -75,5 +67,26 @@ struct ImageBuffer : public Buffer<ElementType>{
     size_t height = 0;
 };
 
-using BinaryImageBuffer = ImageBuffer<std::byte>;
+struct BinaryImageBuffer : public Buffer<std::byte>{
+
+    constexpr auto reset() noexcept -> void{
+        width    = 0;
+        height   = 0;
+        Buffer::clear();
+    }
+
+    auto resize_image(size_t width, size_t height, std::uint8_t sizeType) -> void{
+        this->width    = width;
+        this->height   = height;
+        Buffer::resize(width*height*sizeType);
+    }
+
+    [[nodiscard]] constexpr auto size_type() const noexcept -> size_t {
+        return !empty() ? (width*height/size()) : 0;
+    }
+
+    size_t width = 0;
+    size_t height = 0;
+};
 }
+
