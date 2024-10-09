@@ -39,7 +39,8 @@ class ImGuiTextureUiDrawer{
 public:
 
     auto init(gl::TBO *texture, bool invert = false) -> void;
-    auto draw_child(const std::string &windowName, geo::Pt2f sizeWindow, std::string_view topTitle = {}, std::string_view infos = {}) -> void;
+    auto draw_tab_item(const std::string &itemName) -> void;
+    auto draw_child(const std::string &windowName, geo::Pt2f sizeWindow) -> void;//, std::string_view topTitle = {}, std::string_view infos = {}) -> void;
     auto draw_at_position(const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = std::nullopt) -> void;
 
     geo::Pt2<int> hoveringPixel = {-1,-1};

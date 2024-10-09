@@ -74,16 +74,16 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
 
     // calibration
     if(!frame.calibration.empty()){
-        dFrame->datasB.insert({DCDataBufferType::Calibration, {DCCompressionMode::None, frame.calibration}});
+        dFrame->datasB.insert({DCBufferType::Calibration, {DCCompressionMode::None, frame.calibration}});
     }
 
     // depth
     if(dfgS.addDepth && !frame.depth.empty()){
         if(dfgS.depthCM == DCCompressionMode::FastPFor){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
             i->depthEncoder.encode(frame.depth, std::get<1>(dInfo.first->second));
         }else if(dfgS.depthCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(frame.depth.width, frame.depth.height, 2);
             std::copy(frame.depth.begin(), frame.depth.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
@@ -93,10 +93,10 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
     // infrared
     if(dfgS.addInfra && !frame.infra.empty()){
         if(dfgS.infraCM == DCCompressionMode::FastPFor){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
             i->infraEncoder.encode(frame.infra, std::get<1>(dInfo.first->second));
         }else if(dfgS.infraCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(frame.infra.width, frame.infra.height, 2);
             std::copy(frame.infra.begin(), frame.infra.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
@@ -106,10 +106,10 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
     // depth-sized color
     if(dfgS.addDepthSizedColor && !frame.rgbaDepthSizedColor.empty()){
         if(dfgS.depthSizedColorCM == DCCompressionMode::JPEG){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
             i->depthSizedColorEncoder.encode(frame.rgbaDepthSizedColor, std::get<1>(dInfo.first->second), dfgS.depthSizedColorJPEGCQ);
         }else if(dfgS.depthSizedColorCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(frame.rgbaDepthSizedColor.width, frame.rgbaDepthSizedColor.height, 4);
             std::copy(frame.rgbaDepthSizedColor.begin(), frame.rgbaDepthSizedColor.end(), reinterpret_cast<ColorRGBA8*>(image.get_data()));
@@ -120,10 +120,10 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
     // original color
     if(dfgS.addOriginalSizeColor && !frame.rgbaColor.empty()){
         if(dfgS.originalSizeColorCM == DCCompressionMode::JPEG){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, {}}});
             i->colorEncoder.encode(frame.rgbaColor, std::get<1>(dInfo.first->second), dfgS.depthSizedColorJPEGCQ);
         }else if(dfgS.originalSizeColorCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(frame.rgbaColor.width, frame.rgbaColor.height, 4);
             std::copy(frame.rgbaColor.begin(), frame.rgbaColor.end(), reinterpret_cast<ColorRGBA8*>(image.get_data()));

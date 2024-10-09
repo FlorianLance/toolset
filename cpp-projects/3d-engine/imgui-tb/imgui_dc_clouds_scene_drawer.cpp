@@ -75,7 +75,7 @@ auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<cam:
     return false;
 }
 
-auto DCCloudsSceneDrawer::update_from_colored_cloud_data(size_t idCloud, const ColoredCloudData &cloud) -> bool{
+auto DCCloudsSceneDrawer::update_from_colored_cloud_data(size_t idCloud, const ColorCloud &cloud) -> bool{
     if(idCloud < cloudsD.size()){
         return cloudsD[idCloud]->init_from_colored_cloud_data(cloud);
     }
@@ -312,6 +312,10 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const s
     }
 }
 
+auto DCCloudsSceneDrawer::draw_bodies_id_map_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void{
+    // ...
+}
+
 
 auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const Pt2f &screenPos, const Pt2f &sizeTexture, std::string_view text) -> void {
 
@@ -379,14 +383,34 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_at_position(size_t idCloud, c
     }
 }
 
-auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, bool drawDepth, bool drawInfra, bool drawCloud, std::string_view cloudTabName) -> void{
+auto DCCloudsSceneDrawer::draw_bodies_id_map_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void{
+
+    auto cD = cloudsD[idCloud].get();
+
+    // draw
+    cD->bodiesIdMapD.draw_at_position(screenPos, sizeTexture, std::move(text));
+
+    // check mouse inputs
+    // const auto &hp = cD->bodiesIdMapD.hoveringPixel;
+    // for(size_t idB = 0; idB < cD->bodiesIdMapD.mouseButtonsPressed.size(); ++idB){
+        // if(cD->lastFrame != nullptr && cD->bodiesIdMapD.mouseButtonsPressed[idB]){
+            // if(hp.x() >= 0 && hp.x() < static_cast<int>(cD->lastFrame->rgbInfra.width)  &&
+            //     hp.y() >= 0 && hp.y() < static_cast<int>(cD->lastFrame->rgbInfra.height) &&
+            //     !cD->lastFrame->rgbInfra.empty()){
+            //     mouse_pressed_infra_signal(idCloud, idB, hp, cD->lastFrame->rgbInfra[hp.y() * cD->lastFrame->rgbInfra.width + hp.x()]);
+            // }
+        // }
+    // }
+}
+
+auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawImages, bool drawCloud, std::string_view cloudTabName) -> void{
 
 
     if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, "Frames_all###direct_all_frames_tab_bar")){
 
         std::vector<const gl::Texture2D*> textures;
 
-        if(drawColor){
+        if(drawImages){
             if(ImGuiUiDrawer::begin_tab_item("Color###direct_all_color_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
@@ -406,8 +430,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
 
                 ImGui::EndTabItem();
             }
-        }
-        if(drawDepth){
+
             if(ImGuiUiDrawer::begin_tab_item("Depth###direct_all_depth_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
@@ -426,8 +449,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
                 }
                 ImGui::EndTabItem();
             }
-        }
-        if(drawInfra){
+
             if(ImGuiUiDrawer::begin_tab_item("Infra###direct_all_infra_tabitem")){
 
                 for(const auto &cloudD : cloudsD){
@@ -438,6 +460,26 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
                 auto cp = cursor_screen_position();
                 for(size_t ii = 0; ii < textPos.size(); ++ii){
                     draw_infra_texture_imgui_at_position(
+                        ii,
+                        std::get<0>(textPos[ii]) + cp,
+                        std::get<1>(textPos[ii]),
+                        std::format("Cam{}"sv,ii)
+                    );
+                }
+
+                ImGui::EndTabItem();
+            }
+
+            if(ImGuiUiDrawer::begin_tab_item("Bodies ID map###direct_all_bodies_id_map_tabitem")){
+
+                for(const auto &cloudD : cloudsD){
+                    textures.push_back(&cloudD->bodiesIdMapT);
+                }
+
+                auto textPos = compute_textures_rectangles(content_region_size_available(), textures);
+                auto cp = cursor_screen_position();
+                for(size_t ii = 0; ii < textPos.size(); ++ii){
+                    draw_bodies_id_map_texture_imgui_at_position(
                         ii,
                         std::get<0>(textPos[ii]) + cp,
                         std::get<1>(textPos[ii]),
@@ -460,69 +502,56 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawColor, boo
     }
 }
 
-auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor, bool drawDepth, bool drawInfra, bool drawCloud, std::optional<Pt2<int>> sizeW) -> void{
+auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name) -> void{
 
-    static_cast<void>(sizeW);
     if(focusWindow){        
         if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("Frames###{}_frames_tab_bar"sv, name).data())){
 
-            if(drawColor){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Color###{}_focus_color_tabitem"sv, name).data())){
-                    draw_color_texture_imgui_child(idDrawer, std::format("-###direct_focus_color_tabchild"sv, name), content_region_size_available());
-                    ImGui::EndTabItem();
-                }
-            }
-            if(drawDepth){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Depth###{}_focus_depth_tabitem"sv, name).data())){
-                    draw_depth_texture_imgui_child(idDrawer, std::format("-###direct_focus_depth_tabchild"sv, name), content_region_size_available());
-                    ImGui::EndTabItem();
-                }
-            }
-            if(drawInfra){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Infra###{}_focus_infra_tabitem"sv, name).data())){
-                    draw_infra_texture_imgui_child(idDrawer, std::format("-###direct_focus_infra_tabchild"sv, name), content_region_size_available());
-                    ImGui::EndTabItem();
-                }
-            }
-            if(drawCloud){
-                if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_focus_cloud_tabitem"sv, name).data())){
-                    draw_fbo(content_region_size_available().conv<int>());
-                    ImGui::EndTabItem();
-                }
+            auto cD = cloudsD[idDrawer].get();
+
+            // draw
+            cD->colorD.draw_tab_item(std::format("Color###{}_focus_color_tabitem"sv, name).data());
+            cD->depthD.draw_tab_item(std::format("Depth###{}_focus_depth_tabitem"sv, name).data());
+            cD->infraD.draw_tab_item(std::format("Infra###{}_focus_infra_tabitem"sv, name).data());
+            cD->bodiesIdMapD.draw_tab_item(std::format("Bodies ID map###{}_focus_bodies_id_map_tabitem"sv, name).data());
+            if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_focus_cloud_tabitem"sv, name).data())){
+                draw_fbo(content_region_size_available().conv<int>());
+                ImGui::EndTabItem();
             }
 
             ImGui::EndTabBar();
         }
     }else{
         auto sizeW = content_region_size_available() * 0.46f;
-        if(drawColor){
-            draw_color_texture_imgui_child(idDrawer, std::format("Color###{}_nofocus_color_tabchild"sv, name), sizeW);
-            if(drawDepth){
-                ImGui::SameLine();
-            }
-        }
-        if(drawDepth){
-            draw_depth_texture_imgui_child(idDrawer, std::format("Depth###{}_nofocus_depth_tabchild"sv, name), sizeW);
-        }
-        if(drawInfra){
-            draw_infra_texture_imgui_child(idDrawer, std::format("Infra###{}_nofocus_infra_tabchild"sv, name), sizeW);
-            if(drawCloud){
-                ImGui::SameLine();
-            }
-        }
 
-        if(drawCloud){
-            if(ImGui::BeginChild(std::format("CloudWindow###{}_nofocus_cloud_window_child"sv, name).data(), to_iv2(sizeW))){
-                if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("CloudTab###{}_cloud_tabbar"sv, name).data())){
-                    if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_cloud_tabitem"sv, name).data())){
-                        draw_fbo(content_region_size_available().conv<int>());
-                        ImGui::EndTabItem();
-                    }
-                    ImGui::EndTabBar();
-                }
+        draw_color_texture_imgui_child(idDrawer, std::format("Color###{}_nofocus_color_tabchild"sv, name), sizeW);
+        ImGui::SameLine();
+        draw_depth_texture_imgui_child(idDrawer, std::format("Depth###{}_nofocus_depth_tabchild"sv, name), sizeW);
+
+        if(ImGui::BeginChild("###infra_bodies_id_map_child", to_iv2(sizeW),false,ImGuiWindowFlags_NoScrollWithMouse)){
+
+            if(ImGui::BeginTabBar("###infra_bodies_id_map_tabbar", ImGuiTabBarFlags_None)){
+
+                auto cD = cloudsD[idDrawer].get();
+                cD->infraD.draw_tab_item(std::format("Infra###{}_nofocus_infra_tabitem"sv, name).data());
+                cD->bodiesIdMapD.draw_tab_item(std::format("Bodies ID map###{}_nofocus_bodies_id_map_tabitem"sv, name).data());
+                ImGui::EndTabBar();
             }
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        if(ImGui::BeginChild(std::format("CloudWindow###{}_nofocus_cloud_window_child"sv, name).data(), to_iv2(sizeW))){
+            if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("CloudTab###{}_cloud_tabbar"sv, name).data())){
+                if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_cloud_tabitem"sv, name).data())){
+                    draw_fbo(content_region_size_available().conv<int>());
+                    ImGui::EndTabItem();
+                }
+                ImGui::EndTabBar();
+            }
+        }
+        ImGui::EndChild();
     }
 }
 

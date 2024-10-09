@@ -57,7 +57,7 @@ struct DCDevice::Impl{
     DCDeviceSettings deviceS;
     DCFiltersSettings filtersS;
     DCColorSettings colorsS;
-    DCDelaySettings delayS;
+    DCMiscSettings delayS;
 
     // device
     std::unique_ptr<DCDeviceImpl> device = nullptr;
@@ -126,7 +126,6 @@ auto DCDevice::stop_thread() -> void{
 }
 
 auto DCDevice::process() -> void{
-
 
     auto tStart = Time::nanoseconds_since_epoch();
 
@@ -371,9 +370,9 @@ auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> voi
     i->actions.push_back(dAction);
 }
 
-auto DCDevice::update_delay_settings(const DCDelaySettings &delayS) -> void{
+auto DCDevice::update_misc_settings(const DCMiscSettings &miscS) -> void{
 
-    i->delayS = delayS;
+    i->delayS = miscS;
 
     DeviceAction dAction;
     dAction.updateDelay = true;

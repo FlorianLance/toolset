@@ -50,7 +50,7 @@ struct DCCloudsSceneDrawer{
     }
 
     auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool;
-    auto update_from_colored_cloud_data(size_t idCloud, const geo::ColoredCloudData &cloud) -> bool;
+    auto update_from_colored_cloud_data(size_t idCloud, const geo::ColorCloud &cloud) -> bool;
 
     auto draw_clouds_to_fbo() -> void;
     auto draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void;
@@ -68,13 +68,15 @@ struct DCCloudsSceneDrawer{
     auto draw_color_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     auto draw_depth_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     auto draw_infra_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
+    auto draw_bodies_id_map_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     // # position
     auto draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::string_view text) -> void;
     auto draw_depth_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
     auto draw_infra_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
+    auto draw_bodies_id_map_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
     // # tab
-    auto draw_all_clouds_drawers_in_one_tab(bool drawColor=true, bool drawDepth=true, bool drawInfra=true, bool drawCloud=true, std::string_view cloudTabName = "Cloud"sv) -> void;
-    auto draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name, bool drawColor=true, bool drawDepth=true, bool drawInfra=true, bool drawCloud=true, std::optional<geo::Pt2<int>> sizeW = std::nullopt) -> void;
+    auto draw_all_clouds_drawers_in_one_tab(bool drawImages=true, bool drawCloud=true, std::string_view cloudTabName = "Cloud"sv) -> void;
+    auto draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name) -> void;
 
     // settings
     auto update_device_display_settings(size_t idCloud, const cam::DCDeviceDisplaySettings &cloudDisplay) -> void;
@@ -87,6 +89,7 @@ struct DCCloudsSceneDrawer{
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_pressed_color_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_depth_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_bodies_id_signal;
 
     // drawers
     // # common

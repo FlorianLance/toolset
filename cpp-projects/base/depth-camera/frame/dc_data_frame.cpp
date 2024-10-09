@@ -164,7 +164,7 @@ auto DCDataFrame::init_from_data(std::span<const std::byte> data, size_t &offset
     read(nbDataB, data, offset);
     datasB.reserve(nbDataB);
     for(size_t idD = 0; idD < nbDataB; ++idD){
-        auto type       = read_and_return<DCDataBufferType>(data, offset);
+        auto type       = read_and_return<DCBufferType>(data, offset);
         auto encoding   = read_and_return<DCCompressionMode>(data, offset);
         auto iInfo      = datasB.insert({type, {encoding, BinaryBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), data, offset);
@@ -175,7 +175,7 @@ auto DCDataFrame::init_from_data(std::span<const std::byte> data, size_t &offset
     read(nbImageDataB, data, offset);
     imagesB.reserve(nbImageDataB);
     for(size_t idID = 0; idID < nbImageDataB; ++idID){
-        auto type       = read_and_return<DCDataImageBufferType>(data, offset);
+        auto type       = read_and_return<DCImageBufferType>(data, offset);
         auto encoding   = read_and_return<DCCompressionMode>(data, offset);
         auto iInfo      = imagesB.insert({type, {encoding, BinaryImageBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), data, offset);
@@ -204,7 +204,7 @@ auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
     read(nbDataB, file);
     datasB.reserve(nbDataB);
     for(size_t idD = 0; idD < nbDataB; ++idD){
-        auto type       = read_and_return<DCDataBufferType>(file);
+        auto type       = read_and_return<DCBufferType>(file);
         auto encoding   = read_and_return<DCCompressionMode>(file);
         auto iInfo      = datasB.insert({type, {encoding, BinaryBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), file);
@@ -215,7 +215,7 @@ auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
     read(nbImageDataB, file);
     imagesB.reserve(nbImageDataB);
     for(size_t idID = 0; idID < nbImageDataB; ++idID){
-        auto type       = read_and_return<DCDataImageBufferType>(file);
+        auto type       = read_and_return<DCImageBufferType>(file);
         auto encoding   = read_and_return<DCCompressionMode>(file);
         auto iInfo      = imagesB.insert({type, {encoding, BinaryImageBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), file);
@@ -224,24 +224,8 @@ auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
 
 auto DCDataFrame::init_from_file_stream_legacy3(std::ifstream &file) -> void{
 
-    // // frame
-    // Frame::init_from_data( data, offset);
-    // // infos
-    // read(mode, data,  offset);
-    // read(validVerticesCount, data, offset);
-    // // jpeg encoding
-    // read_buffer(jpegRGBA8Color, data, offset);
-    // read_buffer(jpegRGBA8DepthSizedColor, data, offset);
-    // read_buffer(jpegG8BodiesIdMap, data, offset);
-    // // lossless std::uint16_t encoding
-    // read_buffer(fpfDepth, data, offset);
-    // read_buffer(fpfInfra, data, offset);
-    // read_buffer(fpfColoredCloud, data, offset);
-    // // binary encoding
-    // read_buffer(calibration, data, offset);
-    // read_buffer(imu, data, offset);
 
-    Logger::message("init_from_file_stream_legacy3_1\n");
+    // Logger::message("init_from_file_stream_legacy3_1\n");
     Frame::init_from_file_stream(file);
 
     // Logger::message(std::format(
@@ -253,61 +237,81 @@ auto DCDataFrame::init_from_file_stream_legacy3(std::ifstream &file) -> void{
     read(validVerticesCount, file);
 
     // Logger::message(std::format(
-    //     "mode: [{}]\nvalidVerticesCount: [{}]\n"
+    //     "mode: [{}] validVerticesCount: [{}]\n"
     //     ,(int)mode, validVerticesCount));
 
-    // Logger::message("init_from_file_stream_legacy3_2\n");
     {
         BinaryImageBuffer buffer;
         read_buffer(buffer, file);
         // Logger::message(std::format(
-        //     "width: [{}]\nheight: [{}]\nsize: [{}]\n"
+        //     "OriginalColorRGBA8 width: [{}] height: [{}] size: [{}]\n"
         //     ,buffer.width, buffer.height, buffer.size()));
-        imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, std::move(buffer)}});
+        imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_3\n");
+
     {
         BinaryImageBuffer buffer;
         read_buffer(buffer, file);
-        imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "DepthSizedColorRGBA8 width: [{}] height: [{}] size: [{}]\n"
+        //     ,buffer.width, buffer.height, buffer.size()));
+        imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_4\n");
+
     {
         BinaryImageBuffer buffer;
         read_buffer(buffer, file);
-        imagesB.insert({DCDataImageBufferType::BodiesIdMap8, {DCCompressionMode::JPEG, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "BodiesIdMap8 width: [{}] height: [{}] size: [{}]\n"
+        //     ,buffer.width, buffer.height, buffer.size()));
+        imagesB.insert({DCImageBufferType::BodiesIdMap8, {DCCompressionMode::JPEG, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_5\n");
+
     {
         BinaryImageBuffer buffer;
         read_buffer(buffer, file);
-        imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::FastPFor, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "Depth16 width: [{}] height: [{}] size: [{}]\n"
+        //     ,buffer.width, buffer.height, buffer.size()));
+        imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::FastPFor, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_6\n");
+
     {
         BinaryImageBuffer buffer;
         read_buffer(buffer, file);
-        imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::FastPFor, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "Infrared16 width: [{}] height: [{}] size: [{}]\n"
+        //     ,buffer.width, buffer.height, buffer.size()));
+        imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::FastPFor, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_7\n");
+
     {
         BinaryBuffer buffer;
         read_buffer(buffer, file);
-        datasB.insert({DCDataBufferType::CloudXYZ16RGB8, {DCCompressionMode::FastPFor, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "CloudXYZ16RGB8 size: [{}]\n"
+        //     ,buffer.size()));
+        datasB.insert({DCBufferType::CloudXYZ16RGB8, {DCCompressionMode::FastPFor, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_8\n");
+
     {
         BinaryBuffer buffer;
         read_buffer(buffer, file);
-        datasB.insert({DCDataBufferType::Calibration, {DCCompressionMode::None, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "Calibration size: [{}]\n"
+        //     ,buffer.size()));
+        datasB.insert({DCBufferType::Calibration, {DCCompressionMode::None, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_9\n");
+
     {
         BinaryBuffer buffer;
         read_buffer(buffer, file);
-        datasB.insert({DCDataBufferType::IMU, {DCCompressionMode::None, std::move(buffer)}});
+        // Logger::message(std::format(
+        //     "IMU size: [{}]\n"
+        //     ,buffer.size()));
+        datasB.insert({DCBufferType::IMU, {DCCompressionMode::None, std::move(buffer)}});
     }
-    // Logger::message("init_from_file_stream_legacy3_10\n");
+
 }
 
 auto DCDataFrame::init_from_file_stream_legacy2(std::ifstream &file) -> void{
@@ -323,7 +327,7 @@ auto DCDataFrame::init_from_file_stream_legacy2(std::ifstream &file) -> void{
         buffer.resize(sizeof(k4a_calibration_t));
         auto ptr = reinterpret_cast<std::byte*>(&rCalibration);
         std::copy(ptr, ptr +  buffer.size(), buffer.begin());
-        datasB.insert({DCDataBufferType::IMU, {DCCompressionMode::None, std::move(buffer)}});
+        datasB.insert({DCBufferType::IMU, {DCCompressionMode::None, std::move(buffer)}});
     }
 
     std::int32_t validVerticesC;
@@ -463,12 +467,12 @@ auto DCDataFrame::data_size() const noexcept -> size_t{
 
     sizeData += sizeof(size_t); // nb datasB
     for(const auto &dataB : datasB){
-        sizeData += sizeof(DCDataBufferType) + sizeof(DCCompressionMode) + sizeof(size_t) + std::get<1>(dataB.second).size();
+        sizeData += sizeof(DCBufferType) + sizeof(DCCompressionMode) + sizeof(size_t) + std::get<1>(dataB.second).size();
     }
 
     sizeData += sizeof(size_t); // nb imagesB
     for(const auto &imageB : imagesB){
-        sizeData += sizeof(size_t) + sizeof(DCDataImageBufferType) + sizeof(DCCompressionMode) + (3*sizeof(size_t)) + std::get<1>(imageB.second).size();
+        sizeData += sizeof(size_t) + sizeof(DCImageBufferType) + sizeof(DCCompressionMode) + (3*sizeof(size_t)) + std::get<1>(imageB.second).size();
     }
     return sizeData;
 }

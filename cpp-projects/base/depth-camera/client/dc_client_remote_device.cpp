@@ -162,6 +162,8 @@ auto DCClientRemoteDevice::clean() -> void{
 
 auto DCClientRemoteDevice::apply_command(Command command) -> void{
 
+    Logger::message("APPLY\n");
+
     bool isCommandValid = false;
     switch(command){
     case Command::disconnect:
@@ -181,6 +183,8 @@ auto DCClientRemoteDevice::apply_command(Command command) -> void{
     if(isCommandValid){
         i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
     }
+
+    Logger::message("END APPLY\n");
 }
 
 auto DCClientRemoteDevice::ping() -> void{
@@ -204,9 +208,9 @@ auto DCClientRemoteDevice::update_filters_settings(const cam::DCFiltersSettings 
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_filters_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
 }
 
-auto DCClientRemoteDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
-    auto bData = delayS.convert_to_json_binary();
-    i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_delay_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+auto DCClientRemoteDevice::update_misc_settings(const cam::DCMiscSettings &miscS) -> void{
+    auto bData = miscS.convert_to_json_binary();
+    i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_misc_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
 }
 
 auto DCClientRemoteDevice::device_connected() const noexcept -> bool {
@@ -232,13 +236,14 @@ auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header h
         // trigger synchro signal
         remote_synchro_signal(i->synchro.averageDiffNs);
 
+
     }break;
     case DCMessageType::feedback:{
 
         Feedback feedback;
         std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
 
-        // Logger::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.feedback, dataToProcess.size_bytes(), dataToProcess.size()));
+        // Logger::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.type, dataToProcess.size_bytes(), dataToProcess.size()));
 
         // process feedback
         receive_feedback(std::move(header), feedback);

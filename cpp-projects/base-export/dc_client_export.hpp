@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_misc_settings.hpp"
 #include "depth-camera/client/dc_client.hpp"
 
 typedef void (__stdcall * LogMessageCB)(const char*, int);
@@ -85,7 +85,7 @@ struct DCClientExport{
     auto apply_device_settings(size_t idD) -> void;
     auto apply_color_settings() -> void;
     auto apply_filters_settings() -> void;
-    auto update_delay(size_t idD, cam::DCDelaySettings delayS) -> void;
+    auto update_delay(size_t idD, cam::DCMiscSettings miscS) -> void;
 
     // data
     auto copy_current_frame_vertices(size_t idD, std::span<tool::cam::DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;

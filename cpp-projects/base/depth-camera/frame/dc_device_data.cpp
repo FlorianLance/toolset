@@ -42,17 +42,17 @@ auto DCDeviceData::reset_spans() -> void{
     bodies              = {};
 }
 
-auto DCDeviceData::reset(const DCModeInfos &mInfos) -> void{
+auto DCDeviceData::reset(bool hasDepth, size_t depthSize, bool hasColor, size_t colorWidth, size_t colorHeight) -> void{
 
     binaryCalibration   = {};
     reset_spans();
 
     // processsing
-    if(mInfos.has_depth()){
-        depthMask.resize(mInfos.depth_size());
-        filteringMask.resize(mInfos.depth_size());
-        depthFiltering.resize(mInfos.depth_size());
-        zonesId.resize(mInfos.depth_size());
+    if(hasDepth){
+        depthMask.resize(depthSize);
+        filteringMask.resize(depthSize);
+        depthFiltering.resize(depthSize);
+        zonesId.resize(depthSize);
     }else{
         depthMask.clear();
         filteringMask.clear();
@@ -60,10 +60,10 @@ auto DCDeviceData::reset(const DCModeInfos &mInfos) -> void{
         zonesId.clear();
     }
 
-    if(mInfos.has_color()){
-        convertedColorData.resize(mInfos.color_size());
-        convertedColorData.width  = mInfos.color_width();
-        convertedColorData.height = mInfos.color_height();
+    if(hasColor){
+        convertedColorData.resize(colorWidth*colorHeight);
+        convertedColorData.width  = colorWidth;
+        convertedColorData.height = colorHeight;
     }else{
         convertedColorData.reset();
     }

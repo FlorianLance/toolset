@@ -52,7 +52,7 @@ DCGModel::DCGModel(){
         DCGSignals::get()->update_filters_signal(server.settings.filtersS);
     });
     server.delay_settings_received_signal.connect([&](){
-        DCGSignals::get()->update_delay_settings_signal(server.settings.delayS);
+        DCGSignals::get()->update_misc_settings_signal(server.settings.miscS);
     });
 }
 
@@ -115,7 +115,7 @@ auto DCGModel::initialize() -> bool{
     device->update_filters_settings(server.settings.filtersS);
 
     // delay
-    device->update_delay_settings(server.settings.delayS);
+    device->update_misc_settings(server.settings.miscS);
 
     recorder.initialize(1);
 
@@ -239,10 +239,18 @@ auto DCGModel::load_subpart_model_settings_file(const std::string &settingsFileP
     return false;
 }
 
-auto DCGModel::save_global_settings(const std::string &settingsFilePath) -> bool{
+auto DCGModel::save_server_settings_file(const std::string &settingsFilePath) -> bool{
 
     if(server.settings.save_to_json_str_file(settingsFilePath)){
-        Logger::message(std::format("Global settings file saved at [{}].\n", settingsFilePath));
+        Logger::message(std::format("Server settings file saved at [{}].\n", settingsFilePath));
+        return true;
+    }
+    return false;
+}
+
+auto DCGModel::load_server_settings_file(const std::string &settingsFilePath) -> bool{
+    if(server.settings.load_from_file(settingsFilePath)){
+        Logger::message(std::format("Server settings file loaded from [{}].\n", settingsFilePath));
         return true;
     }
     return false;

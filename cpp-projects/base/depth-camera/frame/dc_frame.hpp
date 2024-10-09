@@ -26,14 +26,34 @@
 
 #pragma once
 
+// std
+#include <variant>
+
 // local
 #include "utility/image_buffer.hpp"
-#include "geometry/cloud.hpp"
+#include "geometry/color_cloud.hpp"
 #include "graphics/color/rgb.hpp"
+
 #include "camera/frame.hpp"
 #include "depth-camera/dc_types.hpp"
+#include "utility/unordered_map.hpp"
 
 namespace tool::cam{
+
+using ImageBufferV = std::variant<
+    ImageBuffer<ColorRGBA8>,
+    ImageBuffer<ColorRGB8>,
+    ImageBuffer<ColorGray8>,
+    ImageBuffer<ColorGray16>>;
+
+struct DCFrame2 : Frame{
+
+    DCMode mode;
+    size_t validVerticesCount = 0;
+    umap<DCInfoType, std::int32_t> infosB;
+    umap<DCBufferType, BinaryBuffer> datasB;
+    umap<DCImageBufferType, ImageBufferV> imagesB;
+};
 
 struct DCFrame : Frame{
 
@@ -49,7 +69,7 @@ struct DCFrame : Frame{
     ImageBuffer<std::uint16_t> depth;           // depth-sized
     ImageBuffer<std::uint16_t> infra;           // depth-sized
 
-    geo::ColoredCloudData cloud;                // valid-vertices sized
+    geo::ColorCloud cloud;                // valid-vertices sized
 
     // binary encoding
     BinaryBuffer calibration;

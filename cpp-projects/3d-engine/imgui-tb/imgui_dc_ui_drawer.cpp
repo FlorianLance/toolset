@@ -765,7 +765,8 @@ auto DCUIDrawer::draw_dc_model_tab_item(const std::string &tabItemName, cam::DCM
     return update;
 }
 
-auto DCUIDrawer::draw_dc_delay_tab_item(const std::string &tabItemName, cam::DCDelaySettings &delayS) -> bool{
+auto DCUIDrawer::draw_dc_misc_tab_item(const std::string &tabItemName, cam::DCMiscSettings &miscS) -> bool{
+
     if (!ImGuiUiDrawer::begin_tab_item(tabItemName.c_str())){
         return false;
     }
@@ -774,9 +775,9 @@ auto DCUIDrawer::draw_dc_delay_tab_item(const std::string &tabItemName, cam::DCD
 
     ImGuiUiDrawer::title("DELAY");
 
-    int delay = static_cast<int>(delayS.delayMs);
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay", "delay", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-        delayS.delayMs = delay;
+    int delay = static_cast<int>(miscS.delayMs);
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
+        miscS.delayMs = delay;
         update = true;
     }
 
@@ -1632,38 +1633,36 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
 
     // ImGui::Spacing();
     // ImGui::Separator();
-    // ImGui::Text("Body tracking: (SOON)");
-    // ImGui::Indent();
+    ImGui::Text("Body tracking:");
+    ImGui::Indent();
     // ImGui::BeginDisabled(true);{
 
-    //     if(ImGui::Checkbox("Enable (perfomance costly)", &config.btEnabled)){
-    //         update = true;
-    //     }
+        if(ImGui::Checkbox("Enable (perfomance costly)", &config.btEnabled)){
+            update = true;
+        }
 
-    //     ImGui::Text("Processing mode:");
-    //     ImGui::SameLine();
-    //     ImGui::SetNextItemWidth(150.f);
-    //     int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
-    //     if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
-    //         config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
-    //         update = true;
-    //     }
+        ImGui::Text("Processing mode:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150.f);
+        int guiProcessingModeBodyTrackingSelection = static_cast<int>(config.btProcessingMode);
+        if(ImGui::Combo("###settings_processing_mode_body_tracking", &guiProcessingModeBodyTrackingSelection, processingModeBodyTrackingItems, IM_ARRAYSIZE(processingModeBodyTrackingItems))){
+            config.btProcessingMode = static_cast<DCBTProcessingMode>(guiProcessingModeBodyTrackingSelection);
+            update = true;
+        }
 
     //     // add gpu id
     //     // ...
-
-    //     ImGui::Text("Orientation:");
-    //     ImGui::SameLine();
-    //     ImGui::SetNextItemWidth(150.f);
-    //     int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
-    //     if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
-    //         config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
-    //         update = true;
-    //     }
+        ImGui::Text("Orientation:");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(150.f);
+        int guiOrientationBodyTrackingSelection = static_cast<int>(config.btOrientation);
+        if(ImGui::Combo("###settings_orientation_body_tracking", &guiOrientationBodyTrackingSelection, orientationBodyTrackingItems, IM_ARRAYSIZE(orientationBodyTrackingItems))){
+            config.btOrientation = static_cast<DCBTSensorOrientation>(guiOrientationBodyTrackingSelection);
+            update = true;
+        }
 
     // }ImGui::EndDisabled();
-
-    // ImGui::Unindent();
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -1737,6 +1736,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         ImGui::Indent();
 
         if(ImGui::Checkbox("infra###cap_infra", &data.server.capture.infra)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("body###cap_body_tracking", &data.server.capture.bodyTracking)){
             update = true;
         }
 
@@ -1832,6 +1835,23 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
                 update = true;
             }
             ImGui::EndDisabled();
+
+            if(ImGui::Checkbox("bodies id map###send_com_bodies_id_map", &data.server.sending.addBodyIdMap)){
+                update = true;
+            }
+            ImGui::SameLine();
+            ImGui::BeginDisabled(!data.server.sending.addBodyIdMap);
+            compress = data.server.sending.bodiesIdMapCM == cam::DCCompressionMode::JPEG;
+            if(ImGui::Checkbox("compress###send_comp_bodies_id_map", &compress)){
+                data.server.sending.bodiesIdMapCM = compress ? cam::DCCompressionMode::JPEG : cam::DCCompressionMode::None;
+                update = true;
+            }
+            ImGui::EndDisabled();
+
+            if(ImGui::Checkbox("body tracking###send_com_body_tracking", &data.server.sending.addBodyTracking)){
+                update = true;
+            }
+
             ImGui::Unindent();
         }
         ImGui::Unindent();

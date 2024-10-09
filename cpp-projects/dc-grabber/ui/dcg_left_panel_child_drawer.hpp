@@ -50,7 +50,7 @@ public:
 
 private:
 
-    auto draw_info_tab_item(DCGModel *model) -> void;
+    auto draw_network_tab_item(DCGModel *model) -> void;
     auto draw_device_tab_item(cam::DCDeviceSettings &device) -> void;
     auto draw_filters_tab_item(const cam::DCConfigSettings &config, cam::DCFiltersSettings &filters) -> void;
 
@@ -61,8 +61,8 @@ private:
     auto draw_display_tab_item(DCGUiSettings &uiS, cam::DCSceneDisplaySettings &sceneDisplayS, cam::DCDeviceDisplaySettings &displayS)-> void;
     auto draw_audio_tab_item()-> void;
     auto draw_recorder_tab_item(cam::DCVideoRecorderStates &recStates, cam::DCVideoRecorderSettings &recSetings) -> void;
-    auto draw_model_tab_item(cam::DCModelSettings &model)-> void;
-    auto draw_delay_tab_item(cam::DCDelaySettings &delayS) -> void;
+    auto draw_model_tab_item(cam::DCModelSettings &modelS)-> void;
+    auto draw_misc_tab_item(cam::DCMiscSettings &miscS) -> void;
 
 
     bool m_autoUpdate = true;
@@ -74,17 +74,6 @@ private:
         "Cloud###focus_windows_cloud"
     };
 
-    AverageBuffer captureB;
-    AverageBuffer readB;
-    AverageBuffer procB;
-    AverageBuffer convImageB;
-    AverageBuffer resizeImageB;
-    AverageBuffer filterDepthB;
-    AverageBuffer updateCompFrameB;
-    AverageBuffer finalizeCompFrameB;
-    AverageBuffer updateFrameB;
-    AverageBuffer finalizeFrameB;
-    AverageBuffer elaspedBeforeSendingB;
-    AverageBuffer sendingB;
+
 };
 }

@@ -37,12 +37,67 @@
 using namespace tool;
 using namespace tool::graphics;
 
-void ImGuiTextureUiDrawer::init(gl::TBO *texture, bool invert){
+auto ImGuiTextureUiDrawer::init(gl::TBO *texture, bool invert) -> void{
     m_invert  = invert;
     m_texture = texture;
 }
 
-void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f sizeWindow, std::string_view topTitle, std::string_view infos){
+auto ImGuiTextureUiDrawer::draw_tab_item(const std::string &itemName) -> void{
+
+    if(ImGui::BeginTabItem(itemName.c_str())){
+
+        auto size    = content_region_size_available();
+        float scale  = std::min(1.f*size.y() / m_texture->height(),  1.f*size.x() / m_texture->width());
+        auto sizeI   = ImVec2(m_texture->width() * scale, m_texture->height() * scale);
+
+        auto cursorScreenPos = ImGui::GetCursorScreenPos();
+
+        if(m_texture->id() == 0){
+            ImGui::Text("Texture not initialized.");
+        }else{
+
+            if(m_invert){
+                ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
+            }else{
+                ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
+            }
+
+            auto io       = ImGui::GetIO();
+            auto min      = ImGui::GetItemRectMin();
+            auto size     = ImGui::GetItemRectSize();
+            auto mousePos = io.MousePos;
+            auto diff     = geo::Pt2f{mousePos.x-min.x, mousePos.y-min.y};
+
+            if(diff.x() > 0 && diff.x() < size.x && diff.y() > 0 && diff.y() < size.y){
+
+                hoveringPixel = (diff / scale).conv<int>();
+                for(int ii = 0; ii < 5; ++ii){
+                    if(io.MouseDown[ii]){
+                        mouseButtonsPressed[ii] = true;
+                    }else if(io.MouseReleased[ii]){
+                        mouseButtonsPressed[ii] = false;
+                    }
+                }
+
+            }else{
+                hoveringPixel = {-1,-1};
+                for(int ii = 0; ii < 5; ++ii){
+                    mouseButtonsPressed[ii] = false;
+                }
+            }
+
+            // if(!topTitle.empty()){
+            //     auto newCursorPos = ImGui::GetCursorScreenPos();
+            //     ImGui::SetCursorScreenPos(cursorScreenPos);
+            //     ImGuiUiDrawer::text_colored(ImVec4(1,0,0,1), topTitle);
+            //     ImGui::SetCursorScreenPos(newCursorPos);
+            // }
+        }
+        ImGui::EndTabItem();
+    }
+}
+
+auto ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f sizeWindow) -> void{//, std::string_view topTitle, std::string_view infos) -> void{
 
     if(!m_texture){
         return;
@@ -51,76 +106,27 @@ void ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
     if(ImGui::BeginChild(std::format("{}Window",windowName).c_str(), to_iv2(sizeWindow),false,ImGuiWindowFlags_NoScrollWithMouse)){
 
         if(ImGui::BeginTabBar(std::format("{}Tab",windowName).c_str(), ImGuiTabBarFlags_None)){
-            if(ImGui::BeginTabItem(windowName.c_str())){
 
-                auto size    = content_region_size_available();
-                float scale  = std::min(1.f*size.y() / m_texture->height(),  1.f*size.x() / m_texture->width());
-                auto sizeI   = ImVec2(m_texture->width() * scale, m_texture->height() * scale);
+            draw_tab_item(windowName.c_str());
 
-                auto cursorScreenPos = ImGui::GetCursorScreenPos();
-
-                if(m_texture->id() == 0){
-                    ImGui::Text("Texture not initialized.");
-                }else{
-
-                    if(m_invert){
-                        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,1), ImVec2(1,0));
-                    }else{
-                        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture->id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
-                    }
-
-                    auto io       = ImGui::GetIO();
-                    auto min      = ImGui::GetItemRectMin();
-                    auto size     = ImGui::GetItemRectSize();
-                    auto mousePos = io.MousePos;
-                    auto diff     = geo::Pt2f{mousePos.x-min.x, mousePos.y-min.y};
-
-                    if(diff.x() > 0 && diff.x() < size.x && diff.y() > 0 && diff.y() < size.y){
-
-                        hoveringPixel = (diff / scale).conv<int>();
-                        for(int ii = 0; ii < 5; ++ii){
-                            if(io.MouseDown[ii]){
-                                mouseButtonsPressed[ii] = true;
-                            }else if(io.MouseReleased[ii]){
-                                mouseButtonsPressed[ii] = false;
-                            }
-                        }
-
-                    }else{
-                        hoveringPixel = {-1,-1};
-                        for(int ii = 0; ii < 5; ++ii){
-                            mouseButtonsPressed[ii] = false;
-                        }
-                    }
-
-                    if(!topTitle.empty()){
-                        auto newCursorPos = ImGui::GetCursorScreenPos();
-                        ImGui::SetCursorScreenPos(cursorScreenPos);
-                        ImGuiUiDrawer::text_colored(ImVec4(1,0,0,1), topTitle);
-                        ImGui::SetCursorScreenPos(newCursorPos);
-                    }
-                }
-                ImGui::EndTabItem();
-            }
-            if(ImGui::BeginTabItem("Infos")){
-                auto size    = content_region_size_available();
-                ImGui::Text("pointer = %d\n", m_texture->id());
-                ImGui::Text("original size = %d x %d", m_texture->width(), m_texture->height());
-                ImGui::Text("window size = %d x %d", static_cast<int>(size.x()), static_cast<int>(size.y()));
-                if(!infos.empty()){
-                    ImGuiUiDrawer::text(std::format("Infos:\n{}",infos));
-                }
-                ImGui::EndTabItem();
-            }
+            // if(ImGui::BeginTabItem("Infos")){
+            //     auto size    = content_region_size_available();
+            //     ImGui::Text("pointer = %d\n", m_texture->id());
+            //     ImGui::Text("original size = %d x %d", m_texture->width(), m_texture->height());
+            //     ImGui::Text("window size = %d x %d", static_cast<int>(size.x()), static_cast<int>(size.y()));
+            //     if(!infos.empty()){
+            //         ImGuiUiDrawer::text(std::format("Infos:\n{}",infos));
+            //     }
+            //     ImGui::EndTabItem();
+            // }
 
             ImGui::EndTabBar();
         }
     }
     ImGui::EndChild();
-
 }
 
-void ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text){
+auto ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void{
 
     if(!m_texture){
         return;

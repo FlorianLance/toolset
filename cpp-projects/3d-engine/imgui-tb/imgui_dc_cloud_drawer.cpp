@@ -33,14 +33,18 @@ using namespace tool::geo;
 auto DCCloudDrawer::initialize() -> void {
 
     std::vector<std::uint8_t> reset4(4* 100*100, 50);
-    std::vector<std::uint8_t> reset3(3* 100*100, 50);
-    colorT.init_or_update_8ui(100,100,4, reset4.data());
-    depthT.init_or_update_8ui(100,100,3, reset3.data());
-    infraT.init_or_update_8ui(100,100,3, reset3.data());
 
+    // init textures
+    colorT.init_or_update_8ui(100,100,4, reset4.data());
+    depthT.init_or_update_8ui(100,100,3, reset4.data());
+    infraT.init_or_update_8ui(100,100,3, reset4.data());
+    bodiesIdMapT.init_or_update_8ui(100, 100, 1, reset4.data());
+
+    // init textures drawers
     colorD.init(&colorT);
     depthD.init(&depthT);
     infraD.init(&infraT);
+    bodiesIdMapD.init(&bodiesIdMapT);
     
     btJointD.initialize(0.05f, 20, 20);
 
@@ -65,10 +69,10 @@ auto DCCloudDrawer::reset() -> void{
     jointsModels.clear();
 
     std::vector<std::uint8_t> reset4(4* 100*100, 50);
-    std::vector<std::uint8_t> reset3(3* 100*100, 50);    
     colorT.init_or_update_8ui(100,100,4, reset4.data());
-    depthT.init_or_update_8ui(100,100,3, reset3.data());
-    infraT.init_or_update_8ui(100,100,3, reset3.data());
+    depthT.init_or_update_8ui(100,100,3, reset4.data());
+    infraT.init_or_update_8ui(100,100,3, reset4.data());
+    bodiesIdMapT.init_or_update_8ui(100,100,3, reset4.data());
 
     cpD.set_indice_count(0);
 }
@@ -108,6 +112,9 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
             static_cast<GLsizei>(frame->rgbInfra.height), 3, reinterpret_cast<uint8_t *>(frame->rgbInfra.get_data()));
     }
 
+    // ...
+
+
     if(frame->cloud.is_valid()){
         cpD.update(frame->cloud);
         cpD.set_indice_count(frame->cloud.vertices.size());
@@ -137,7 +144,7 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     return true;
 }
 
-auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool {    
+auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColorCloud &cloudData) -> bool {    
 
     cpD.update(cloudData);
     cpD.set_indice_count(cloudData.vertices.size());

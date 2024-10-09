@@ -32,7 +32,7 @@
 #include "utility/monitoring.hpp"
 #include "data/fastpfor_encoding.hpp"
 #include "data/jpeg_encoding.hpp"
-#include "frame/dc_frame_indices.hpp"
+#include "frame/dc_depth_indices.hpp"
 #include "frame/dc_device_data.hpp"
 #include "dc_device.hpp"
 
@@ -43,7 +43,7 @@ struct DCSettings{
     DCDeviceDataSettings data;
     DCFiltersSettings filters;
     DCColorSettings color;
-    DCDelaySettings delay;
+    DCMiscSettings delay;
 };
 
 struct DCFramesBuffer{
@@ -84,7 +84,7 @@ struct DCDeviceImpl{
     auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_color_settings(const DCColorSettings &colorS) -> void;
-    auto set_delay_settings(const DCDelaySettings &delayS) -> void;
+    auto set_delay_settings(const DCMiscSettings &delayS) -> void;
     virtual auto update_from_colors_settings() -> void{}
     virtual auto update_from_data_settings() -> void{}
 
@@ -171,7 +171,7 @@ protected:
     // states
     DCSettings settings;
     DCModeInfos mInfos;
-    DCFrameIndices fIndices;
+    DCDepthIndices dIndices;
     DCFramesBuffer frames;
     DCDeviceData fData;
     tool::s_umap<std::string_view, TimeElem> times;
@@ -198,7 +198,7 @@ protected:
 private:
 
     // depth filtering
-    auto maximum_local_depth_difference(const DCFrameIndices &ids, std::span<std::uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void;
+    auto maximum_local_depth_difference(const DCDepthIndices &ids, std::span<std::uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void;
     auto keep_only_biggest_cluster() -> void;
     auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
     auto erode(std::uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void;

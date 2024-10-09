@@ -91,15 +91,15 @@
             "type_string": "color",
             "version": 1
         },
-        "brightness": 10,
-        "contrast": 50,
-        "exposure_time": 200,
-        "gain": 40,
+        "brightness": 128,
+        "contrast": 5,
+        "exposure_time": 0,
+        "gain": 128,
         "hdr": true,
-        "powerline_frequency": 2,
-        "saturation": 64,
-        "sharpness": 24,
-        "white_balance": 6500
+        "powerline_frequency": 1,
+        "saturation": 32,
+        "sharpness": 4,
+        "white_balance": 4500
     },
     "device": {
         "base": {
@@ -132,7 +132,7 @@
                 0.0
             ],
             "delay_between_color_and_depth_usec": 0,
-            "disable_LED": true,
+            "disable_LED": false,
             "id_device": 0,
             "ipv4_address_1": 192,
             "ipv4_address_2": 168,
@@ -154,19 +154,11 @@
                 "version": 1
             },
             "c_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
                 "cloud": true,
                 "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
                 "color_image": false,
-                "depth": true,
                 "depth_image": false,
                 "depth_sized_color_image": true,
-                "imu": false,
-                "infra": false,
                 "infra_image": false
             },
             "s_capture": {
@@ -176,41 +168,34 @@
                 "color": true,
                 "depth": true,
                 "imu": false,
-                "infra": true
+                "infra": false
             },
-            "s_compression": {
+            "s_generation": {
+                "cloud": true,
+                "cloud_color_mode": 1,
+                "color_image": false,
+                "depth_image": false,
+                "depth_sized_color_image": true,
+                "infra_image": false
+            },
+            "s_sending": {
                 "audio": false,
                 "body_id_map": false,
                 "body_tracking": false,
-                "calibration": true,
                 "cloud": false,
                 "cloud_color_mode": 1,
+                "cloud_compression_mode": 2,
                 "color": false,
-                "color_compression_mode": 0,
+                "color_compression_mode": 1,
                 "dept_sized_color": true,
                 "depth": true,
-                "depth_compression_mode": 0,
-                "depth_sized_color_compression_mode": 0,
+                "depth_compression_mode": 2,
+                "depth_sized_color_compression_mode": 1,
                 "imu": false,
                 "infra": false,
-                "infra_compression_mode": 0,
-                "jpeg_compression_rate": 80
-            },
-            "s_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
-                "cloud": true,
-                "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
-                "color_image": true,
-                "depth": true,
-                "depth_image": true,
-                "depth_sized_color_image": true,
-                "imu": false,
-                "infra": false,
-                "infra_image": true
+                "infra_compression_mode": 2,
+                "jpeg_compression_rate": 95,
+                "original_size_color_jpeg_quality": 95
             }
         }
     },
@@ -245,7 +230,7 @@
             0.1330738216638565
         ],
         "filter_depth_with_body_tracking": false,
-        "filter_depth_with_cloud": true,
+        "filter_depth_with_cloud": false,
         "filter_depth_with_color": false,
         "filter_depth_with_infra": true,
         "invalidate_color_from_depth": false,
@@ -253,7 +238,7 @@
         "keep_only_bigger_cluster": false,
         "keep_only_points_inside_OOB": true,
         "local_diff_connectivity": 0,
-        "max_depth_f": 0.6980000138282776,
+        "max_depth_f": 1.0,
         "max_diff_color": [
             20.0,
             0.5,
@@ -294,6 +279,13 @@
             1.0
         ]
     },
+    "misc": {
+        "base": {
+            "type_string": "misc",
+            "version": 1
+        },
+        "delay": 0
+    },
     "model": {
         "base": {
             "type_string": "model",
@@ -319,6 +311,7 @@
         ]
     },
     "udp_server": {
+        "any_reading_interface": false,
         "base": {
             "type_string": "UDP server",
             "version": 1

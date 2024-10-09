@@ -45,8 +45,6 @@ namespace BS {
         public int currentFrameSize = 0;
         public int currentId = 0;
         public int verticesCountToCopy = 0;
-        //public int cloudUpdated = 0;
-        //public int averageCloudUpdatedPerSecond = 0;
-        //public Stopwatch sw = new Stopwatch();
+        //public float latencyMs = 0f;
     }
 }

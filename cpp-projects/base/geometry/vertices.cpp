@@ -27,196 +27,11 @@
 
 #include "vertices.hpp"
 
-// local
-#include "point4.hpp"
-
 using namespace tool::geo;
 
-auto Vertices3D::min_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    return std::distance(values.cbegin(), std::min_element(values.cbegin(), values.cend()));
-}
-
-auto Vertices3D::min() const noexcept -> Pt3f{
-    if(empty()){
-        return {};
-    }
-    return *std::min_element(values.cbegin(), values.cend());
-}
-
-auto Vertices3D::max_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
-}
-
-auto Vertices3D::max() const noexcept -> Pt3f{
-    if(empty()){
-        return {};
-    }
-    return *std::max_element(values.cbegin(), values.cend());
-}
-
-auto Vertices3D::min_x_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto minX = std::min_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.x() < b.x();
-    });
-    return std::distance(values.cbegin(), minX);
-}
-
-auto Vertices3D::min_x() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto minX = std::min_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.x() < b.x();
-    });
-    return minX->x();
-}
-
-auto Vertices3D::max_x_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto maxX = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.x() < b.x();
-    });
-    return std::distance(values.cbegin(), maxX);
-}
-
-auto Vertices3D::max_x() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto maxX = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.x() < b.x();
-    });
-    return maxX->x();
-}
-
-auto Vertices3D::min_y_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto minY = std::min_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.y() < b.y();
-    });
-    return std::distance(values.cbegin(), minY);
-}
-
-auto Vertices3D::min_y() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto minY = std::min_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.y() < b.y();
-    });
-    return minY->y();
-}
-
-auto Vertices3D::max_y_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto maxY = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.y() < b.y();
-    });
-    return std::distance(values.cbegin(), maxY);
-}
-
-auto Vertices3D::max_y() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto maxY = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.y() < b.y();
-    });
-    return maxY->y();
-}
-
-auto Vertices3D::min_z_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto minZ = std::min_element(values.begin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.z() < b.z();
-    });
-    return std::distance(values.begin(), minZ);
-}
-
-auto Vertices3D::min_z() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto minZ = std::min_element(values.begin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.z() < b.z();
-    });
-    return minZ->z();
-}
-
-auto Vertices3D::max_z_id() const noexcept -> size_t{
-    if(empty()){
-        return {};
-    }
-    auto maxZ = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.z() < b.z();
-    });
-    return std::distance(values.cbegin(), maxZ);
-}
-
-auto Vertices3D::max_z() const noexcept -> float{
-    if(empty()){
-        return {};
-    }
-    auto maxZ = std::max_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.z() < b.z();
-    });
-    return maxZ->z();
-}
-
-auto Vertices3D::sum() const noexcept -> Pt3f {
-    if(empty()){
-        return {};
-    }
-    return std::accumulate(values.cbegin(), values.cend(), geo::Pt3f{0,0,0});
-}
-
-auto Vertices3D::mean_position() const noexcept -> Pt3f{
-    if(empty()){
-        return {};
-    }
-    return sum()/static_cast<float>(size());
-}
-
-auto Vertices3D::aabb() const noexcept -> AABB3<float>{
-
-    if(empty()){
-        return {};
-    }
-
-    auto [minX, maxX] = std::minmax_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.x() < b.x();
-    });
-    auto [minY, maxY] = std::minmax_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.y() < b.y();
-    });
-    auto [minZ, maxZ] = std::minmax_element(values.cbegin(), values.cend(), [](const Pt3f &a, const Pt3f &b){
-        return a.z() < b.z();
-    });
-
-    return {
-        {minX->x(),minY->y(),minZ->z()},
-        {maxX->x(),maxY->y(),maxZ->z()}
-    };
-}
-
 auto Vertices3D::sphere() const -> Sphere<float>{
+
+     // TODO: add test
 
     if(empty()){
         return {{},0.f};
@@ -263,88 +78,37 @@ auto Vertices3D::sphere() const -> Sphere<float>{
     return {center,r};
 }
 
-auto Vertices3D::apply_transformation(const Mat4f &transformation) noexcept -> void{
-
-    std::transform(values.begin(), values.end(), values.begin(),
-        [&](const geo::Pt3f &vertex) {
-            return (to_pt4(vertex,1.f)*transformation).xyz();
-        }
-    );
-}
-
-auto Vertices3D::sort_ascendant() noexcept -> void{
-    std::sort(values.begin(), values.end(), std::less<geo::Pt3f>());
-}
-
-auto Vertices3D::sort_descendant() noexcept -> void{
-    std::sort(values.begin(), values.end(), std::greater<geo::Pt3f>());
-}
 
 auto Vertices3D::get_outliers_id(const Pt3f &target, float maxDistance) noexcept -> std::vector<size_t>{
 
-    if(empty()){
-        return {};
-    }
-
-    std::vector<size_t> ids;
-    auto squareMaxDistance = maxDistance*maxDistance;
-    for(size_t ii = 0; ii < size(); ++ii){
-        if(square_norm(vec(values[ii], target)) < squareMaxDistance){
-            ids.push_back(ii);
+    if(!empty()){
+        std::vector<size_t> ids;
+        auto squareMaxDistance = maxDistance*maxDistance;
+        for(size_t ii = 0; ii < size(); ++ii){
+            if(square_norm(vec(values[ii], target)) < squareMaxDistance){
+                ids.push_back(ii);
+            }
         }
-    }
 
-    return ids;
+        return ids;
+    }
+    return {};
 }
 
 auto Vertices3D::get_from_plane_id(const Plane3f &plane, bool keepAbove) noexcept -> std::vector<size_t>{
 
-    if(empty()){
-        return {};
-    }
-
-    std::vector<size_t> ids;
-    for(size_t ii = 0; ii < size(); ++ii){
-        auto v = plane_equation(values[ii], plane);
-        if((!keepAbove && v < 0.f) || (keepAbove && v >= 0.f) ){
-            ids.push_back(ii);
+    if(!empty()){
+        std::vector<size_t> ids;
+        for(size_t ii = 0; ii < size(); ++ii){
+            auto v = plane_equation(values[ii], plane);
+            if((!keepAbove && v < 0.f) || (keepAbove && v >= 0.f) ){
+                ids.push_back(ii);
+            }
         }
+        return ids;
     }
-    return ids;
+    return {};
 }
-
-auto Vertices3D::remove_outliers(const Pt3f &target, float maxDistance) noexcept -> void {
-
-    if(empty()){
-        return;
-    }
-
-    auto squareMaxDistance = maxDistance*maxDistance;
-    size_t currIdToKeep = 0;
-    for(auto &v : values){
-        if(square_norm(vec(v, target)) < squareMaxDistance){
-            values[currIdToKeep++] = std::move(v);
-        }
-    }
-    resize(currIdToKeep);
-}
-
-auto Vertices3D::remove_from_plane(const Plane3f &plane, bool keepAbove) noexcept -> void{
-
-    if(empty()){
-        return;
-    }
-
-    size_t currIdToKeep = 0;
-    for(auto &v : values){
-        auto pe = plane_equation(v, plane);
-        if((!keepAbove && pe < 0.f) || (keepAbove && pe >= 0.f) ){
-            values[currIdToKeep++] = std::move(v);
-        }
-    }
-    resize(currIdToKeep);
-}
-
 
 
 

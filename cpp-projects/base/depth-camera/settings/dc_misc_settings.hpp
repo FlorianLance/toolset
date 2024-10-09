@@ -1,5 +1,3 @@
-
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -25,53 +23,27 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "cloud.hpp"
+#pragma once
 
-using namespace tool::geo;
+// local
+#include "io/settings.hpp"
 
-auto ColoredCloudData::merge(const ColoredCloudData &cloud) -> void{
+namespace tool::cam {
 
-    if(!is_valid() || !cloud.is_valid()){
-        return;
+struct DCMiscSettings : io::Settings{
+
+    std::int64_t delayMs = 0;
+
+    DCMiscSettings(){
+        sType   = io::SettingsType::Misc;
+        version = io::SettingsVersion::LastVersion;
+    }
+    DCMiscSettings(std::span<const std::uint8_t> jsonBinary){
+        DCMiscSettings::init_from_json_binary(jsonBinary);
     }
 
-    if(!empty()){
+    auto init_from_json(const nlohmann::json &json) -> void override;
+    auto convert_to_json() const -> nlohmann::json override;
+};
 
-        vertices.merge(cloud.vertices);
-
-        if(has_colors() && cloud.has_colors()){
-            colors.merge(cloud.colors);
-        }
-
-        if(has_normals() && cloud.has_normals()){
-            normals.merge(cloud.normals);
-        }
-
-    }else{
-        *this = cloud;
-    }
 }
-
-auto ColoredCloudData::fill_colors(const geo::Pt3f &color) -> void{
-    colors.fill(color);
-}
-
-auto ColoredCloudData::remove_outliers(const Pt3f &target, float maxDistance) -> void {
-    keep_from_ids(vertices.get_outliers_id(target, maxDistance));
-}
-
-auto ColoredCloudData::keep_from_ids(const std::vector<size_t> &ids) noexcept -> void{
-
-    vertices.keep_from_ids(ids);
-
-    if(has_colors()){
-        colors.keep_from_ids(ids);
-    }
-
-    if(has_normals()){
-        normals.keep_from_ids(ids);
-    }
-}
-
-
-

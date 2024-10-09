@@ -70,14 +70,14 @@ public:
     auto update_filters_settings(size_t idC, const cam::DCFiltersSettings& filtersS) -> void;
     auto update_calibration_filters_settings(size_t idC, const cam::DCFiltersSettings& filtersS) -> void;    
     auto update_color_settings(size_t idC, const cam::DCColorSettings &colorS) -> void;
-    auto update_delay_settings(size_t idC, const cam::DCDelaySettings &delayS) -> void;
+    auto update_misc_settings(size_t idC, const cam::DCMiscSettings &delayS) -> void;
     auto update_model_settings(size_t idC, const cam::DCModelSettings &modelS) -> void;
     // ## apply
     auto apply_device_settings(size_t idC) -> void;
     auto apply_filters_settings(size_t idC) -> void;
     auto apply_calibration_filters_settings(size_t idC) -> void;
     auto apply_color_settings(size_t idC) -> void;
-    auto apply_delay_settings(size_t idC) -> void;
+    auto apply_misc_settings(size_t idC) -> void;
     // # trigger
     auto trigger_all_models_settings() -> void;
     auto trigger_all_device_display_settings() -> void;

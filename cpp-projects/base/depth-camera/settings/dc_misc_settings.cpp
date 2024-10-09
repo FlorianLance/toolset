@@ -24,40 +24,45 @@
 **                                                                            **
 ********************************************************************************/
 
-#pragma once
+#include "dc_misc_settings.hpp"
+
+// std
+#include <format>
 
 // local
-#include "geometry/voxel.hpp"
-#include "geometry/cloud.hpp"
-#include "utility/unordered_map.hpp"
+#include "utility/logger.hpp"
+#include "data/json_utility.hpp"
 
-namespace tool::geo{
+using namespace tool::cam;
+using namespace tool::data;
+using json = nlohmann::json;
+using namespace tool::cam;
 
-struct VoxelGrid{
+auto DCMiscSettings::init_from_json(const nlohmann::json &json) -> void{
 
-    struct Pt3IntHashRepresentation {
-        using is_avalanching = void;
-        [[nodiscard]] auto operator()(const tool::geo::Pt3<int> &f) const noexcept -> uint64_t {
-            static_assert(std::has_unique_object_representations_v<tool::geo::Pt3<int>>);
-            return ankerl::unordered_dense::detail::wyhash::hash(&f, sizeof(f));
-        }
-    };
+    size_t unreadCount = 0;
+    // base
+    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
+    // delay
+    read_and_update_value(json, unreadCount, "delay"sv, delayMs);
 
-    VoxelGrid(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound);
-    auto add_cloud(const ColoredCloudData &cloud, const Mat4f &model) -> void;
-    auto compute_grid() -> void;
-
-    auto convert_to_cloud(ColoredCloudData &cloud) -> void;
-
-    static auto create_from_point_cloud_within_bounds(const ColoredCloudData &cloud, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> VoxelGrid;
-
-    float voxelSize = 0.1f;
-    Pt3f origin = {};
-    Pt3f size = {};
-    umap<Pt3<int>, Voxel, Pt3IntHashRepresentation> grid;
-
-private:
-
-    umap<Pt3<int>, AvgColorVoxel, Pt3IntHashRepresentation> voxelindexToAccPoint;
-};
+    if(unreadCount != 0){
+        tool::Logger::warning(std::format("[DCMiscSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    }
 }
+
+auto DCMiscSettings::convert_to_json() const -> nlohmann::json{
+
+    json json;
+    // base
+    add_value(json, "base"sv, io::Settings::convert_to_json());
+    // delay
+    add_value(json, "delay"sv,  delayMs);
+
+    return json;
+}
+
+
+
+
+

@@ -32,7 +32,7 @@
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"
-#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_misc_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
@@ -58,6 +58,8 @@ public:
     // # i/o
     SSS<std::string> save_cloud_to_file_signal;
     SSS<std::string> save_global_settings_file_signal;
+    SSS<std::string> load_global_settings_file_signal;
+
     SSS<> reset_device_settings_signal;
     SSS<> reset_filters_settings_signal;
     SSS<> reset_color_settings_signal;
@@ -83,7 +85,7 @@ public:
     SSS<const cam::DCFiltersSettings&> update_filters_ui_only_signal;
     SSS<const cam::DCColorSettings&> update_color_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
-    SSS<cam::DCDelaySettings> update_delay_settings_signal;
+    SSS<cam::DCMiscSettings> update_misc_settings_signal;
     SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;
     SSS<size_t,const cam::DCDeviceDisplaySettings&> update_cloud_display_settings_signal;
     SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;

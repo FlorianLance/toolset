@@ -52,8 +52,8 @@ auto DCMMainWindowDrawer::initialize(size_t nbDevices) -> bool{
     m_nbDevices = nbDevices;
     m_leftPanelD.initialize(nbDevices);
     m_middlePanelD.initialize(nbDevices);
-
     feedbacksLogs.resize(nbDevices);
+
     return true;
 }
 

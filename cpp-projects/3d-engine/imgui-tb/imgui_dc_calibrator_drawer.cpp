@@ -72,7 +72,7 @@ auto DCCalibratorDrawer::draw() -> void{
     }
     m_redrawClouds = false;
 
-    draw_all_clouds_drawers_in_one_tab(false, false, false, true, "Calibration clouds");
+    draw_all_clouds_drawers_in_one_tab(false, true, "Calibration clouds");
 }
 
 auto DCCalibratorDrawer::update_client_model(size_t idClient, const cam::DCModelSettings &model) -> void{

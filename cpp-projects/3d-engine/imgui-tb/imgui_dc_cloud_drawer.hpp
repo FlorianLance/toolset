@@ -58,12 +58,16 @@ struct DCCloudDrawer{
     gl::Texture2D depthSizedColorT;
     gl::Texture2D depthT;
     gl::Texture2D infraT;
+    gl::Texture2D bodiesIdMapT;
 
     // drawers
-    gl::CloudPointsDrawer cpD;
+    // # textures
     ImGuiTextureUiDrawer colorD;
     ImGuiTextureUiDrawer depthD;
     ImGuiTextureUiDrawer infraD;
+    ImGuiTextureUiDrawer bodiesIdMapD;
+    // # shapes
+    gl::CloudPointsDrawer cpD;
     gl::SphereTrianglesDrawer btJointD;
     gl::FrustumDrawerLinesDrawer frustumD;
     gl::TriangleLinesDrawer planeFilteringLinesD;
@@ -80,7 +84,7 @@ struct DCCloudDrawer{
     // # from frame
     auto init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool;
     // # from data
-    auto init_from_colored_cloud_data(const geo::ColoredCloudData &cloudData) -> bool;
+    auto init_from_colored_cloud_data(const geo::ColorCloud &cloudData) -> bool;
 
 
 };

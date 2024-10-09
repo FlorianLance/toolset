@@ -75,9 +75,9 @@ public:
     sigslot::signal<int, int, std::vector<DCCalibratorClientData>*> data_updated_signal;
 
 private :
-
-    auto add_to_calibration_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;
-    auto add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void;   
+    
+    auto add_to_calibration_cloud(size_t idCloud, const geo::ColorCloud &cloud) -> void;
+    auto add_to_proccessed_cloud(size_t idCloud, const geo::ColorCloud &cloud) -> void;   
 
     struct Impl;
     std::unique_ptr<Impl> i;

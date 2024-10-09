@@ -97,7 +97,7 @@ public:
     // #### TEST
     auto merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
-    auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void;
+    auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColorCloud &cloud) -> void;
     // # frames
     auto add_data_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> void;
     auto remove_data_frames_until(size_t idD, size_t idF) -> void;

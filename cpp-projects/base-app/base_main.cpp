@@ -29,6 +29,7 @@
 #include "depth-camera/dc_video_player.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 #include "data/jpeg_encoding.hpp"
 
 #include "utility/io_fstream.hpp"
@@ -434,7 +435,7 @@ auto test_microphone() -> void{
     std::cout << "end test_microphone\n";
 }
 
-#include "depth-camera/frame/dc_frame_indices.hpp"
+#include "depth-camera/frame/dc_depth_indices.hpp"
 #include <execution>
 #include "utility/string.hpp"
 
@@ -450,7 +451,7 @@ auto process_kvid() -> void{
 
 
     bool initialized = false;
-    tool::cam::DCFrameIndices fIndices;
+    tool::cam::DCDepthIndices dIndices;
     tool::cam::DCModeInfos mInfos;
     
     tool::cam::DCDataFrameGenerator compressor;
@@ -470,7 +471,7 @@ auto process_kvid() -> void{
 
             if(!initialized){
                 mInfos.initialize(frame.mode);
-                fIndices.initialize(mInfos);
+                dIndices.initialize(mInfos.has_depth(), mInfos.depth_width(), mInfos.depth_height());
                 initialized = true;
 
                 std::cout << "cloud " << (int) frame.mode  << " " << frame.calibration.size() << " " << frame.depth.size() << " " << frame.rgbaDepthSizedColor.size() << " " <<  frame.cloud.empty() << std::endl;
@@ -479,12 +480,12 @@ auto process_kvid() -> void{
             std::vector<bool> filteringM(frame.depth.size(), false);
 
             for(size_t idL = 0; idL < 3; ++idL){
-                std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
+                std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
                     if(frame.depth[id] ==  dc_invalid_depth_value){
                         return;
                     }
                     std::uint8_t count = 0;
-                    for(auto cId : fIndices.neighbours8Depth1D[id]){
+                    for(auto cId : dIndices.neighbours8Depth1D[id]){
                         if(frame.depth[cId] != dc_invalid_depth_value){
                             ++count;
                         }
@@ -550,10 +551,7 @@ auto test_device_idle() -> void{
     }
 }
 
-
 int main(int argc, char *argv[]){
-
-
 
     std::cout << "argc " << argc << "\n";
     for(int ii = 0; ii < argc; ++ii){
@@ -572,19 +570,60 @@ int main(int argc, char *argv[]){
         std::cerr << error;
     });
 
-    ;
-    for(size_t idD = 0; idD < k4a::device::get_installed_count(); ++idD){
-        try{
-            k4a::device dev = k4a::device::open(idD);
+    DCVideoPlayer player;
 
-            auto sn = dev.get_serialnum();
-            std::cout << "open device with " << sn << "\n";
 
-        }catch(const std::runtime_error &er){
-            std::cerr << std::format("Cannot open device with id [{}], error: [{}].\n", idD, er.what()) << "\n";
-        }
+    DCVideo v;
+    Logger::message("load\n");
+    v.load_from_file("E:/07-09-fam2.kvid");
+    player.set_video(v);
+    // auto dfp = v.get_data_frames_ptr(0);
+    // auto df = dfp->get_data_frame(dfp->nb_frames()/2);
 
+    Logger::message("loaded\n");
+    DCFrameGenerationSettings fgS;
+    DCFrame frame;
+
+    player.set_current_time(25000.0);
+    player.update();
+
+    ColorVoxelGrid cGrid(0.0025f, {-2.f,-2.f,-2.f}, {+2.f,+2.f,+2.f});
+
+    auto t1 = Time::nanoseconds_since_epoch();
+    for(size_t idD = 0; idD < v.nb_devices(); ++idD){
+        auto frame = player.current_frame(idD);
+        cGrid.add_cloud(frame->cloud, v.get_transform(idD).conv<float>());
     }
+    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    cGrid.compute_grid();
+    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+
+    ColorCloud vCloud;
+    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    cGrid.convert_to_cloud(vCloud);
+    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    io::CloudIO::save_cloud("E:/agg_c1.obj", vCloud);
+
+    Logger::message("ended\n");
+    // if(auto frame = df.lock()){
+    //     Logger::message(std::format("size {}\n", frame->validVerticesCount));
+
+    //
+    //     // cGrid.add_cloud(frame->)
+    // }
+
+    // for(size_t idD = 0; idD < k4a::device::get_installed_count(); ++idD){
+    //     try{
+    //         k4a::device dev = k4a::device::open(idD);
+
+    //         auto sn = dev.get_serialnum();
+    //         std::cout << "open device with " << sn << "\n";
+
+    //     }catch(const std::runtime_error &er){
+    //         std::cerr << std::format("Cannot open device with id [{}], error: [{}].\n", idD, er.what()) << "\n";
+    //     }
+
+    // }
 
     // test_device_idle();
     // test_microphone();

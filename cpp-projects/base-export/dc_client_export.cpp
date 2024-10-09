@@ -205,11 +205,11 @@ auto DCClientExport::apply_filters_settings() -> void{
     }
 }
 
-auto DCClientExport::update_delay(size_t idD, cam::DCDelaySettings delayS) -> void{
+auto DCClientExport::update_delay(size_t idD, cam::DCMiscSettings miscS) -> void{
     if(idD >= devices_nb()){
         return;
     }
-    client.update_delay_settings(idD, delayS);
+    client.update_misc_settings(idD, miscS);
 }
 
 auto DCClientExport::read_data_from_external_thread(size_t idD) -> size_t{

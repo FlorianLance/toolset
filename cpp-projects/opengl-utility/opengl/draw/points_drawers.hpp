@@ -27,7 +27,7 @@
 #pragma once
 
 // base
-#include "geometry/cloud.hpp"
+#include "geometry/color_cloud.hpp"
 
 // local
 #include "base_drawer.hpp"
@@ -37,9 +37,9 @@ namespace tool::gl {
 class CloudPointsDrawer : public BaseDrawer{
 public:
     CloudPointsDrawer() : BaseDrawer(DrawerType::Points){}
-    auto initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void;
+    auto initialize(bool dynamic, const geo::ColorCloud &cloud) -> void;
     auto initialize(bool dynamic, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void;
-    auto update(const geo::ColoredCloudData &cloud) -> void;
+    auto update(const geo::ColorCloud &cloud) -> void;
     auto update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void;
 };
 

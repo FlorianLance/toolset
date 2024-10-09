@@ -110,9 +110,9 @@ auto DCClientLocalDevice::update_filters_settings(const cam::DCFiltersSettings &
     }
 }
 
-auto DCClientLocalDevice::update_delay_settings(const cam::DCDelaySettings &delayS) -> void{
+auto DCClientLocalDevice::update_misc_settings(const cam::DCMiscSettings &miscS) -> void{
     if(i->device){
-        i->device->update_delay_settings(delayS);
+        i->device->update_misc_settings(miscS);
     }
 }
 

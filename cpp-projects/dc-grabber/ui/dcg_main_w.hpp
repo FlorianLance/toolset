@@ -53,5 +53,19 @@ public:
     DCRecorderDrawer recorderD;
     DCGMainMenuBarDrawer menuD;
     ImguiLogs logsD;
+
+    // monitoring
+    AverageBuffer captureB;
+    AverageBuffer readB;
+    AverageBuffer procB;
+    AverageBuffer convImageB;
+    AverageBuffer resizeImageB;
+    AverageBuffer filterB;
+    AverageBuffer updateDataFrameB;
+    AverageBuffer finalizeDataFrameB;
+    AverageBuffer updateFrameB;
+    AverageBuffer finalizeFrameB;
+    AverageBuffer elaspedBeforeSendingB;
+    AverageBuffer sendingB;
 };
 }

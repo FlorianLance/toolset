@@ -50,33 +50,12 @@ auto DCMModel::clean() -> void {
     client.clean();
 }
 
-
 auto DCMModel::add_device(cam::DCClientType type) -> void{
-
-    auto lg = LogGuard("DCMModel::add_device"sv);
-    client.add_device(type);    
-    client.apply_device_settings(client.devices_nb()-1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    client.apply_color_settings(client.devices_nb()-1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    client.apply_filters_settings(client.devices_nb()-1);
-    client.apply_delay_settings(client.devices_nb()-1);
-
-    recorder.add_device();
-    recorder.update_model(client.devices_nb()-1, client.settings.devicesS.back().modelS);
-
-    calibrator.initialize(client.devices_nb());
-    DCMSignals::get()->initialize_signal(client.devices_nb());
+    addDeviceEvent = type;
 }
 
 auto DCMModel::remove_last_device() -> void{
-    if(client.devices_nb() > 0){
-        auto lg = LogGuard("DCMModel::remove_last_device"sv);
-        client.remove_last_device();
-        recorder.remove_last_device();
-        calibrator.initialize(client.devices_nb());
-        DCMSignals::get()->initialize_signal(client.devices_nb());
-    }
+    m_removeLastDeviceEvent = true;
 }
 
 auto DCMModel::remove_all_devices() -> void{
@@ -111,23 +90,23 @@ auto DCMModel::initialize() -> bool{
         for(auto &deviceClientS : client.settings.devicesS){
 
             // read filters settings file
-            if(!deviceClientS.filtersS.load_from_file(deviceClientS.filtersFilePath = paths->client_filters_settings_file(deviceClientS.id))){
+            if(!deviceClientS.filtersS.load_from_file(paths->client_filters_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No filters settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read calibration filters settings file
-            if(!deviceClientS.calibrationFiltersS.load_from_file(deviceClientS.calibrationFiltersFilePath =  paths->client_calibration_filters_settings_file(deviceClientS.id))){
+            if(!deviceClientS.calibrationFiltersS.load_from_file(paths->client_calibration_filters_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No calibration settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read device settings file
-            if(!deviceClientS.deviceS.load_from_file(deviceClientS.deviceFilePath = paths->client_device_settings_file(deviceClientS.id))){
+            if(!deviceClientS.deviceS.load_from_file(paths->client_device_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No device file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read color settings file
-            if(!deviceClientS.colorS.load_from_file(deviceClientS.colorFilePath = paths->client_color_settings_file(deviceClientS.id))){
+            if(!deviceClientS.colorS.load_from_file(paths->client_color_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No color file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read model settings file
-            if(!deviceClientS.modelS.load_from_file(deviceClientS.modelFilePath =  paths->client_model_settings_file(deviceClientS.id))){
+            if(!deviceClientS.modelS.load_from_file(paths->client_model_settings_file(deviceClientS.id))){
                 Logger::error(std::format("[DCMModel] No model file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
         }
@@ -152,7 +131,7 @@ auto DCMModel::initialize() -> bool{
     // filters / delay
     for(size_t idC = 0; idC < client.devices_nb(); ++idC){
         client.apply_filters_settings(idC);
-        client.apply_delay_settings(idC);
+        client.apply_misc_settings(idC);
     }
 
     // models
@@ -193,6 +172,42 @@ auto DCMModel::ask_calibration() -> void{
 
 
 auto DCMModel::update() -> void{
+
+    // events
+    if(addDeviceEvent.has_value()){
+
+        auto lg = LogGuard("DCMModel::update::addDeviceEvent"sv);
+        client.add_device(addDeviceEvent.value());
+        client.apply_device_settings(client.devices_nb()-1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        client.apply_color_settings(client.devices_nb()-1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        client.apply_filters_settings(client.devices_nb()-1);
+        client.apply_misc_settings(client.devices_nb()-1);
+
+        recorder.add_device();
+        recorder.update_model(client.devices_nb()-1, client.settings.devicesS.back().modelS);
+
+        calibrator.initialize(client.devices_nb());
+        DCMSignals::get()->initialize_signal(client.devices_nb());
+
+        addDeviceEvent = std::nullopt;
+    }
+
+    if(m_removeLastDeviceEvent){
+
+        if(client.devices_nb() > 0){
+            auto lg = LogGuard("DCMModel::update::removeLastDeviceEvent"sv);
+            int newDeviceNb = client.devices_nb() -1;
+            client.remove_last_device();
+            recorder.remove_last_device();
+            calibrator.initialize(newDeviceNb);
+            DCMSignals::get()->initialize_signal(newDeviceNb);
+        }
+
+        m_removeLastDeviceEvent = false;
+    }
+
     client.update();
     calibrator.update();
     player.update();

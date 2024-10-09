@@ -64,7 +64,7 @@ auto DCServerSettings::init_from_json(const nlohmann::json &json) -> void{
     calibrationFiltersS.init_from_json(read_and_return_object(json, unreadCount, "calibration_filters"sv));
     colorS.init_from_json(read_and_return_object(json, unreadCount, "color"sv));
     modelS.init_from_json(read_and_return_object(json, unreadCount, "model"sv));
-    // delayS.init_from_json(read_object(json, unreadCount, "delay"sv))
+    miscS.init_from_json(read_and_return_object(json, unreadCount, "misc"sv));
 
     if(unreadCount != 0){
         Logger::warning(std::format("[DCServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
@@ -84,7 +84,7 @@ auto DCServerSettings::convert_to_json() const -> nlohmann::json{
     add_value(json, "calibration_filters"sv, calibrationFiltersS.convert_to_json());
     add_value(json, "color"sv, colorS.convert_to_json());
     add_value(json, "model"sv, modelS.convert_to_json());
-    // add_value(json, "delay"sv, delayS.convert_to_json());
+    add_value(json, "misc"sv, miscS.convert_to_json());
 
     return json;
 }

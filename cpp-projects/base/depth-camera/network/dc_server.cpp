@@ -55,7 +55,7 @@ using EndPtr = std::pair<EndPointId, std::shared_ptr<T>>;
 using RMessageV =
     std::variant<
         EndVal<UdpConnectionSettings>,
-        EndVal<DCDelaySettings>,
+    EndVal<DCMiscSettings>,
         EndVal<Command>,
         EndVal<Feedback>,
         EndPtr<DCDeviceSettings>,
@@ -241,15 +241,15 @@ DCServer::Impl::Impl(){
             }
 
         }break;
-        case DCMessageType::update_delay_settings:{
+        case DCMessageType::update_misc_settings:{
 
             Logger::message("[DCServer] update_delay_settings message received.\n");
-
-            DCDelaySettings delay;
-            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCDelaySettings), reinterpret_cast<std::byte*>(&delay));
+            
+            DCMiscSettings delay;
+            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCMiscSettings), reinterpret_cast<std::byte*>(&delay));
 
             std::lock_guard l(messagesL);
-            rMessages->push_back(EndVal<DCDelaySettings>{std::move(endpoint), std::move(delay)});
+            rMessages->push_back(EndVal<DCMiscSettings>{std::move(endpoint), std::move(delay)});
 
         }break;
         default:
@@ -551,9 +551,9 @@ auto DCServer::update() -> void{
                     [&](EndVal<UdpConnectionSettings> m){
                         i->sMessages.push_back(std::make_pair(m.first, std::move(m.second)));;
                     },
-                    [&](EndVal<DCDelaySettings> m){
-                        i->sMessages.push_back(std::make_pair(m.first, Feedback{static_cast<MessageTypeId>(DCMessageType::update_delay_settings), FeedbackType::message_received}));
-                        settings.delayS = std::move(m.second);
+                    [&](EndVal<DCMiscSettings> m){
+                        i->sMessages.push_back(std::make_pair(m.first, Feedback{static_cast<MessageTypeId>(DCMessageType::update_misc_settings), FeedbackType::message_received}));
+                        settings.miscS = std::move(m.second);
                         delay_settings_received_signal();
                     },
                     [&](EndVal<Command> m){

@@ -46,25 +46,37 @@ using namespace tool::cam;
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *model) -> void {
 
     if(ImGui::BeginChild("###main_child", ImVec2(size.x(), size.y()), true, windowFlags)){
+
         if (ImGui::BeginTabBar("###main_tabbar")){
 
+            ImGui::BeginDisabled(true);
 
-            // windowVisible = ImGui::Begin("Hello, world!");
-            // if (changeColor)
+            ImGui::PushStyleColor(ImGuiCol_Tab,  ImVec4(0.0f, 0, 0.0f, 1));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1, 1.0f, 1));
+            if (ImGui::BeginTabItem("[SETTINGS]###settings_tabitem")){
+                ImGui::EndTabItem();
+            }
+            ImGui::PopStyleColor();
+            ImGui::PopStyleColor();
+            ImGui::EndDisabled();
 
+            static bool forceSelectedOnce = true;
+            ImGuiTabItemFlags flags = 0;
+            if(forceSelectedOnce){
+                flags = ImGuiTabItemFlags_::ImGuiTabItemFlags_SetSelected;
+                forceSelectedOnce = false;
+            }
 
-            if (ImGui::BeginTabItem("Server###server_tabitem")){
+            if (ImGui::BeginTabItem("Server device###server_device_tabitem", nullptr, flags)){
 
-
-
-                if(ImGui::BeginTabBar("###sub_server_tabbar")){
-                    draw_info_tab_item(model);
+                if(ImGui::BeginTabBar("###sub_server_device_tabbar")){
+                    draw_network_tab_item(model);
                     draw_device_tab_item(model->server.settings.deviceS);
                     draw_filters_tab_item(model->server.settings.deviceS.configS, model->server.settings.filtersS);
                     draw_model_tab_item(model->server.settings.modelS);
                     draw_colors_settings_tab_item(model->server.settings.deviceS.configS.typeDevice, model->server.settings.colorS);
                     draw_display_tab_item(model->uiSettings, model->server.settings.sceneDisplayS,  model->server.settings.displayS);
-                    draw_delay_tab_item(model->server.settings.delayS);
+                    draw_misc_tab_item(model->server.settings.miscS);
                     ImGui::EndTabBar();
                 }
 
@@ -80,27 +92,13 @@ auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *mo
     ImGui::EndChild();
 }
 
-auto draw_config_file_name(const std::string &filePath) -> void{
-
-    if(filePath.empty()){
-        ImGuiUiDrawer::text("No file loaded"sv, geo::Pt4f{1.f,0.f,0.f,1.f});
-    }
-
-    auto s = String::split_path_and_filename(filePath);
-    if(s.second.contains("default")){
-        ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{1.f,0.5f,0.15f,1.f});
-    }else{
-        ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{0,1.f,0,1.f});
-    }
-}
-
-auto DCGLeftPanelChildDrawer::draw_info_tab_item(DCGModel *model) -> void {
+auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
 
     // ImGui::PushStyleColor(ImGuiCol_Tab,         ImVec4(0, 1, 0, 1));
     // ImGui::PushStyleColor(ImGuiCol_TabSelected, ImVec4(0.5, 1, 0.5, 1));
     // ImGui::PushStyleColor(ImGuiCol_TabHovered,  ImVec4(0.2, 1, 0.2, 1));
 
-    if (!ImGui::BeginTabItem("Info###settings_server_info_tabitem")){
+    if (!ImGui::BeginTabItem("Network###settings_server_network_tabitem")){
         // ImGui::PopStyleColor();
         // ImGui::PopStyleColor();
         // ImGui::PopStyleColor();
@@ -112,7 +110,7 @@ auto DCGLeftPanelChildDrawer::draw_info_tab_item(DCGModel *model) -> void {
 
     DCServerSettings &settings = model->server.settings;
 
-    ImGuiUiDrawer::title("NETWORK");
+    ImGuiUiDrawer::title("CLIENT/SERVER CONNECTION");
     ImGui::Spacing();
 
 
@@ -180,6 +178,8 @@ auto DCGLeftPanelChildDrawer::draw_info_tab_item(DCGModel *model) -> void {
 
     ImGui::Spacing();
 
+    ImGuiUiDrawer::title("CURRENT STATE");
+
     ImGui::Text("Current UDP reading:");
     ImGui::Indent();
     ImGuiUiDrawer::text(std::format("IP address: [{}]", settings.udpReadingInterface.ipAddress));
@@ -217,139 +217,6 @@ auto DCGLeftPanelChildDrawer::draw_info_tab_item(DCGModel *model) -> void {
     if(ImGui::Button("Disconnect all clients")){
         DCGSignals::get()->disconnect_all_clients_signal();
     }
-    ImGui::Separator();
-
-    ImGuiUiDrawer::title("MONITORING");
-    ImGui::Spacing();
-
-    {
-        captureB.add_value(model->device->get_capture_duration_ms());
-        readB.add_value(model->device->get_duration_ms("READ_IMAGES"sv));
-        procB.add_value(model->device->get_processing_duration_ms());
-        convImageB.add_value(model->device->get_duration_ms("CONVERT_COLOR_IMAGE"sv));
-        resizeImageB.add_value(model->device->get_duration_ms("RESIZE_COLOR_IMAGE"sv));
-        filterDepthB.add_value(model->device->get_duration_ms("FILTER_DEPTH"sv));
-        updateCompFrameB.add_value(model->device->get_duration_ms("UPDATE_DATA_FRAME"sv));
-        finalizeCompFrameB.add_value(model->device->get_duration_ms("FINALIZE_DATA_FRAME"sv));
-        updateFrameB.add_value(model->device->get_duration_ms("UPDATE_FRAME"sv));
-        finalizeFrameB.add_value(model->device->get_duration_ms("FINALIZE_FRAME"sv));
-
-        float framerate                 = model->device->get_average_framerate();
-        auto averageCapture             = captureB.get();
-        auto averageRead                = readB.get();
-        auto averageProc                = procB.get();
-        auto averageUpdateCompFrameB    = updateCompFrameB.get();
-        auto averageFinalizeCompFrameB  = finalizeCompFrameB.get();
-        auto averageUpdateFrameB        = updateFrameB.get();
-        auto averageFinalizeFrameB      = finalizeFrameB.get();
-
-        elaspedBeforeSendingB.add_value(averageRead + averageProc + averageUpdateCompFrameB + averageFinalizeCompFrameB);
-        {
-            std::unique_lock<std::mutex> lock(model->server.settings.cInfos.lock, std::try_to_lock);
-            if(lock.owns_lock()){
-                sendingB.add_value(model->server.settings.cInfos.lastFrameSentDurationMicroS*0.001);
-            }
-        }
-        ImGui::Text("Device thread usage(%%): ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, model->device->get_proc_usage()*100.0), geo::Pt4f{0.,1.f,0.f,1.f});
-
-        ImGui::Text("Images/s: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, framerate), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::Spacing();
-        ImGui::Text("Times (ms): Total: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageCapture + averageRead + averageProc), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::Indent();
-        ImGui::Text("Cap: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageCapture), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-        ImGui::Text("Read: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageRead), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-        ImGui::Text("Proc: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:3.1f}"sv, averageProc), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::Unindent();
-
-        ImGui::Text("Proc details:");
-        ImGui::Indent();
-        ImGui::Text("Conv col: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  convImageB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-        ImGui::Text("Res col: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  resizeImageB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-        ImGui::Text("Filt dep: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,  filterDepthB.get()), geo::Pt4f{0.,1.f,0.f,1.f});
-
-        ImGui::Text("Data frame: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateCompFrameB + averageFinalizeCompFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-        ImGui::Text("Display frame ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, (averageUpdateFrameB + averageFinalizeFrameB)), geo::Pt4f{0.,1.f,0.f,1.f});
-
-
-        ImGui::Text("Delay before sending: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv, elaspedBeforeSendingB.get()),geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::SameLine();
-
-        ImGui::Text("Sending: ");
-        ImGui::SameLine();
-        ImGuiUiDrawer::text(std::format("{:4.2f}"sv,sendingB.get()),geo::Pt4f{0.,1.f,0.f,1.f});
-        ImGui::Unindent();
-
-    }
-
-    // ...
-
-    ImGui::Separator();
-
-    ImGuiUiDrawer::title("SETTINGS FILES");
-    ImGui::Spacing();
-    ImGuiUiDrawer::text(std::format("Current local ID [{}]", settings.idG));
-    ImGui::Text("Defined by the N value of the exe argument: \"-iN\"");
-    ImGui::Text("This id is used to determinewhich settings file\n to be loaded");
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if(!settings.globalFilePath.empty()){
-        ImGui::Text("Global:");
-        ImGui::Indent();
-        draw_config_file_name(settings.globalFilePath);
-        ImGui::Unindent();
-    }else{
-        ImGui::Text("[No global file found, use legacy files instead]");
-
-        ImGui::Text("Device:");
-        ImGui::Indent();
-        draw_config_file_name(settings.deviceFilePath);
-        ImGui::Unindent();
-
-        ImGui::Text("Filters:");
-        ImGui::Indent();
-        draw_config_file_name(settings.filtersFilePath);
-        ImGui::Unindent();
-
-        ImGui::Text("Color:");
-        ImGui::Indent();
-        draw_config_file_name(settings.colorFilePath);
-        ImGui::Unindent();
-
-        ImGui::Text("Model:");
-        ImGui::Indent();
-        draw_config_file_name(settings.modelFilePath);
-        ImGui::Unindent();
-    }
 
     ImGui::EndTabItem();
 }
@@ -377,11 +244,13 @@ auto DCGLeftPanelChildDrawer::draw_display_tab_item(DCGUiSettings &uiS, DCSceneD
     if (!ImGui::BeginTabItem("Display###display_settings_tabitem")){
         return;
     }
-    bool update = false;
+
+    ImGuiUiDrawer::title("UI");
 
     if(ImGui::Checkbox("Focus window###settings_focus_window", &uiS.focusWindow)){
-        update = true;
     }
+
+    ImGuiUiDrawer::title("3D VIEW");
 
     if (ImGui::BeginTabBar("###display_tabbar")){
         if(DCUIDrawer::draw_dc_scene_display_setings_tab_item("Scene###scene_display_tabitem", sceneDisplayS)){
@@ -423,19 +292,18 @@ auto DCGLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorderStates 
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &model) -> void {
+auto DCGLeftPanelChildDrawer::draw_model_tab_item(cam::DCModelSettings &modelS) -> void {
 
-    if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", model)){
-        DCGSignals::get()->update_model_settings_signal(0, model);
+    if(DCUIDrawer::draw_dc_model_tab_item("Model###model_tabitem", modelS)){
+        DCGSignals::get()->update_model_settings_signal(0, modelS);
     }
 }
 
-auto DCGLeftPanelChildDrawer::draw_delay_tab_item(cam::DCDelaySettings &delayS) -> void{
-    if(DCUIDrawer::draw_dc_delay_tab_item("Delay###delay_tabitem", delayS)){
-        DCGSignals::get()->update_delay_settings_signal(delayS);
+auto DCGLeftPanelChildDrawer::draw_misc_tab_item(cam::DCMiscSettings &miscS) -> void{
+    if(DCUIDrawer::draw_dc_misc_tab_item("Misc###misc_tabitem", miscS)){
+        DCGSignals::get()->update_misc_settings_signal(miscS);
     }
 }
-
 
 
 auto DCGLeftPanelChildDrawer::draw_audio_tab_item() -> void {

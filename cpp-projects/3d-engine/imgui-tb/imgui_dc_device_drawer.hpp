@@ -36,7 +36,6 @@ namespace tool::graphics {
 
 struct DCDeviceDrawer : public DCCloudsSceneDrawer{
 
-    auto initialize() -> void;
     auto update() -> void;
     auto draw(bool focusWindow) -> void;
 

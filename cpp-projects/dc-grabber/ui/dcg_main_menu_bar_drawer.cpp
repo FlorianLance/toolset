@@ -52,89 +52,76 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
         if (ImGui::BeginMenu("Settings")){
 
-            if (ImGui::BeginMenu("Global")){
-                if(ImGui::MenuItem("Save to specific file###save_global_settings_to_specific_file")){
-                    ImGuiFileDialog::Instance()->OpenDialog("Global settings specific file", "Choose file to save", ".json", ".");
+            if (ImGui::BeginMenu("Save")){
+                if(ImGui::MenuItem("PC Host server JSON file###save_pc_host_server_json_file")){
+                    Logger::message("Save to PC Host server JSON file\n");
+                    ImGuiFileDialog::Instance()->OpenDialog("Save PC Host server JSON file", "Choose file to save", ".json", ".");
                 }
-                if(ImGui::MenuItem("Save to hostname file###save_global_settings_to_hostname_file")){
-                    Logger::message("Save to default file\n");
+                if(ImGui::MenuItem("Specific server JSON file###save_specific_server_json_file")){
+                    Logger::message("Save to specific server JSON file\n");
                     DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->server.string());
                 }
-                if(ImGui::MenuItem("Save to default file###save_global_settings_to_default_file")){
-                    Logger::message("Save to default file\n");
+                if(ImGui::MenuItem("Default server JSON FILE###save_default_server_json_file")){
+                    Logger::message("Save to default server JSON file\n");
                     DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->defaultServer.string());
                 }
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Device")){
+            if (ImGui::BeginMenu("Load")){
+                if(ImGui::MenuItem("PC Host server JSON file###load_pc_host_server_json_file")){
+                    Logger::message("Load PC Host server JSON file\n");
+                    ImGuiFileDialog::Instance()->OpenDialog("Load PC Host server JSON file", "Choose file to load", ".json", ".");
+                }
+                if(ImGui::MenuItem("Specific server JSON file###load_specific_server_json_file")){
+                    Logger::message("Load specific server JSON file\n");
+                    DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->server.string());
+                }
+                if(ImGui::MenuItem("Default server JSON file###load_default_server_json_file")){
+                    Logger::message("Load default server JSON file\n");
+                    DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->defaultServer.string());
+                }
 
-                if(ImGui::MenuItem("Reset###reset_device_settings")){
+                if(ImGui::MenuItem("Device subpart from specific JSON file###load_device_subpart_specific_server_json_file")){
+                    ImGuiFileDialog::Instance()->OpenDialog("Load device subpart from specific JSON file", "Choose file to load", ".json", ".");
+                }
+
+                if(ImGui::MenuItem("Filters subpart from specific JSON file###load_filters_subpart_specific_server_json_file")){
+                    ImGuiFileDialog::Instance()->OpenDialog("Load filters subpart from specific JSON file", "Choose file to load", ".json", ".");
+                }
+
+                if(ImGui::MenuItem("Color subpart from specific JSON file###load_color_subpart_specific_server_json_file")){
+                    ImGuiFileDialog::Instance()->OpenDialog("Load color subpart from specific JSON file", "Choose file to load", ".json", ".");
+                }
+
+                if(ImGui::MenuItem("Model subpart from specific JSON file###load_model_subpart_specific_server_json_file")){
+                    ImGuiFileDialog::Instance()->OpenDialog("Load model subpart from specific JSON file", "Choose file to load", ".json", ".");
+                }
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Reset")){
+
+                if(ImGui::MenuItem("Device###reset_device_settings")){
+                    Logger::message("Reset device settings\n");
                     DCGSignals::get()->reset_device_settings_signal();
                 }
-
-                if(ImGui::MenuItem("Load device subpart from specific global file###load_device_subpart_from_global_file")){
-                    ImGuiFileDialog::Instance()->OpenDialog("Load device subpart from specific global file", "Choose file to load", ".json", ".");
-                }
-
-                if(ImGui::MenuItem("Load from default global file###load_device_subpart_from_default_global_file")){
-                    DCGSignals::get()->load_default_device_settings_file_signal();
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Filters")){
-
-                if(ImGui::MenuItem("Reset###reset_filters_settings")){
+                if(ImGui::MenuItem("Filters###reset_filters_settings")){
+                    Logger::message("Reset filters settings\n");
                     DCGSignals::get()->reset_filters_settings_signal();
                 }
-
-                if(ImGui::MenuItem("Load subpart from specific global file###load_filters_subpart_from_global_file")){
-                    ImGuiFileDialog::Instance()->OpenDialog("Load filters subpart from specific global file", "Choose file to load", ".json", ".");
-                }
-
-                if(ImGui::MenuItem("Load from default global file###load_filters_subpart_from_default_global_file")){
-                    DCGSignals::get()->load_default_filters_settings_file_signal();
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Color")){
-
-                if(ImGui::MenuItem("Reset###reset_color_settings")){
+                if(ImGui::MenuItem("Color###reset_color_settings")){
+                    Logger::message("Reset color settings\n");
                     DCGSignals::get()->reset_color_settings_signal();
                 }
-
-                if(ImGui::MenuItem("Load subpart from specific global file###load_color_subpart_from_global_file")){
-                    ImGuiFileDialog::Instance()->OpenDialog("Load color subpart from specific global file", "Choose file to load", ".json", ".");
-                }
-
-                if(ImGui::MenuItem("Load from default global file###load_color_subpart_from_default_global_file")){
-                    DCGSignals::get()->load_default_color_settings_file_signal();
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Model")){
-
-                if(ImGui::MenuItem("Reset###reset_model_settings")){
+                if(ImGui::MenuItem("Model###reset_model_settings")){
+                    Logger::message("Reset model settings\n");
                     DCGSignals::get()->reset_model_settings_signal();
                 }
 
-                if(ImGui::MenuItem("Load subpart from specific global file###load_model_subpart_from_global_file")){
-                    ImGuiFileDialog::Instance()->OpenDialog("Load model subpart from specific global file", "Choose file to load", ".json", ".");
-                }
-
-                if(ImGui::MenuItem("Load from default global file###load_model_subpart_from_default_global_file")){
-                    DCGSignals::get()->load_default_model_settings_file_signal();
-                }
-
                 ImGui::EndMenu();
             }
-
             ImGui::EndMenu();
         }
 
@@ -238,10 +225,47 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
 
     // # save global settings file
-    if (ImGuiFileDialog::Instance()->Display("Global settings specific file", flags, ImVec2(500,200))) {
+    if (ImGuiFileDialog::Instance()->Display("Save PC Host server JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("save global settings file\n");
+            Logger::message("Save PC Host server JSON file\n");
             DCGSignals::get()->save_global_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+    if (ImGuiFileDialog::Instance()->Display("Load PC Host server JSON file", flags, ImVec2(500,200))) {
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Load PC Host server JSON file\n");
+            DCGSignals::get()->load_global_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    // # load
+    if (ImGuiFileDialog::Instance()->Display("Load device subpart from specific JSON file", flags, ImVec2(500,200))) {
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Load device subpart from specific JSON file\n");
+            DCGSignals::get()->load_subpart_device_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+    if (ImGuiFileDialog::Instance()->Display("Load filters subpart from specific JSON file", flags, ImVec2(500,200))) {
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Load filters subpart from specific JSON file\n");
+            DCGSignals::get()->load_subpart_filters_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+    if (ImGuiFileDialog::Instance()->Display("Load color subpart from specific JSON file", flags, ImVec2(500,200))) {
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Load color subpart from specific JSON file\n");
+            DCGSignals::get()->load_subpart_color_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+    if (ImGuiFileDialog::Instance()->Display("Load model subpart from specific JSON file", flags, ImVec2(500,200))) {
+        if (ImGuiFileDialog::Instance()->IsOk()){
+            Logger::message("Load model subpart from specific JSON file\n");
+            DCGSignals::get()->load_subpart_model_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }
@@ -255,35 +279,6 @@ auto DCGMainMenuBarDrawer::draw() -> void{
         ImGuiFileDialog::Instance()->Close();
     }
 
-    // # load
-    if (ImGuiFileDialog::Instance()->Display("Load device subpart from specific global file", flags, ImVec2(500,200))) {
-        if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load device subpart from specific global file\n");
-            DCGSignals::get()->load_subpart_device_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-        }
-        ImGuiFileDialog::Instance()->Close();
-    }
-    if (ImGuiFileDialog::Instance()->Display("Load filters subpart from specific global file", flags, ImVec2(500,200))) {
-        if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load filters subpart from specific global file\n");
-            DCGSignals::get()->load_subpart_filters_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-        }
-        ImGuiFileDialog::Instance()->Close();
-    }
-    if (ImGuiFileDialog::Instance()->Display("Load color subpart from specific global file", flags, ImVec2(500,200))) {
-        if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load color subpart from specific global file\n");
-            DCGSignals::get()->load_subpart_color_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-        }
-        ImGuiFileDialog::Instance()->Close();
-    }
-    if (ImGuiFileDialog::Instance()->Display("Load model subpart from specific global file", flags, ImVec2(500,200))) {
-        if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load model subpart from specific global file\n");
-            DCGSignals::get()->load_subpart_model_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
-        }
-        ImGuiFileDialog::Instance()->Close();
-    }
 
     // show demo
     if (m_showDemoWindow){

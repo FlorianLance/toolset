@@ -37,15 +37,15 @@ namespace tool::cam {
 struct DCDataFrameGenerationSettings{
 
     // data to add
-    // bool addCalibration        = true;
     bool addDepth              = true;
     bool addDepthSizedColor    = true;
     bool addOriginalSizeColor  = false;
     bool addInfra              = false;
+    bool addBodyIdMap          = false;
+    bool addBodyTracking       = false;
 
-    bool addBodyIdMap          = false; // TODO
+    // TODO
     bool addCloud              = false; // TODO
-    bool addBodyTracking       = false; // TODO
     bool addAudio              = false; // TODO
     bool addImu                = false; // TODO
 
@@ -54,6 +54,8 @@ struct DCDataFrameGenerationSettings{
     DCCompressionMode depthSizedColorCM     = DCCompressionMode::JPEG;
     DCCompressionMode originalSizeColorCM   = DCCompressionMode::JPEG;
     DCCompressionMode infraCM               = DCCompressionMode::FastPFor;
+    DCCompressionMode bodiesIdMapCM         = DCCompressionMode::JPEG;
+
     DCCompressionMode cloudCM               = DCCompressionMode::FastPFor;
     std::uint8_t depthSizedColorJPEGCQ      = 95;
     std::uint8_t originalSizeColorJPEGCQ    = 95;

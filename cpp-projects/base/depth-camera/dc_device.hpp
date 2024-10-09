@@ -35,7 +35,7 @@
 // local
 #include "thirdparty/sigslot/signal.hpp"
 #include "settings/dc_color_settings.hpp"
-#include "settings/dc_delay_settings.hpp"
+#include "settings/dc_misc_settings.hpp"
 #include "settings/dc_filters_settings.hpp"
 #include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
@@ -58,7 +58,7 @@ public:
     auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
     auto update_color_settings(const DCColorSettings &colorS) -> void;
     auto update_filters_settings(const DCFiltersSettings &filtersS) -> void;
-    auto update_delay_settings(const DCDelaySettings &delayS) -> void;
+    auto update_misc_settings(const DCMiscSettings &delayS) -> void;
 
     // getters
     // # states

@@ -65,7 +65,7 @@ int main(int argc, char *argv[]){
     if(controller.initialize(id.value())){
         controller.start();
         Logger::message("Exit DC grabber.\n");
-        return 1;
+        return 0;
     }
 
     return -1;

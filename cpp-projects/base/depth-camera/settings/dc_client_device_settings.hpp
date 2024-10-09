@@ -32,7 +32,7 @@
 #include "dc_filters_settings.hpp"
 #include "dc_device_settings.hpp"
 #include "dc_color_settings.hpp"
-#include "dc_delay_settings.hpp"
+#include "dc_misc_settings.hpp"
 #include "dc_model_settings.hpp"
 #include "dc_display_settings.hpp"
 
@@ -53,19 +53,12 @@ struct DCClientDeviceSettings : public io::Settings{
     DCFiltersSettings calibrationFiltersS = DCFiltersSettings::default_init_for_calibration();
     DCColorSettings colorS;
     DCModelSettings modelS;
-    DCDelaySettings delayS;
+    DCMiscSettings miscS;
     DCDeviceDisplaySettings displayS;
 
     // runtime
     size_t id = 0;
     std::string name = "D0";
-    // # legacy paths
-    std::string filtersFilePath;
-    std::string calibrationFiltersFilePath;
-    std::string deviceFilePath;
-    std::string colorFilePath;
-    std::string modelFilePath;
-    // std::string delayFilePath;
     // # states
     bool connected = false;
     size_t lastFrameIdReceived = 0;

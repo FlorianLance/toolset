@@ -47,7 +47,7 @@
 
 #include "thirdparty/taskflow/taskflow.hpp"
 
-#include "dc_frame_indices.hpp"
+#include "dc_depth_indices.hpp"
 
 
 using namespace tool;
@@ -71,8 +71,7 @@ struct DCFrameGenerator::Impl{
     data::FastPForDecoder cloudDecoder;
 
     // processing data
-    DCModeInfos mInfos;
-    DCFrameIndices indices;
+    DCDepthIndices dIndices;
     std::uint8_t lastidDevice = 0;
     DCMode lastMode = DCMode::Invalid;
     std::unique_ptr<k4a::transformation> k4aTransformation = nullptr;
@@ -135,8 +134,14 @@ struct DCFrameGenerator::Impl{
     }
 
     auto initialize(DCDataFrame *initCFrame) -> void{
-        mInfos.initialize(initCFrame->mode);
-        indices.initialize(mInfos);
+        
+        if(initCFrame->imagesB.contains(DCImageBufferType::Depth16)){
+            auto &dImage = std::get<1>(initCFrame->imagesB[DCImageBufferType::Depth16]);
+            dIndices.initialize(true, dImage.width, dImage.height);
+        }else{
+            dIndices.initialize(false, 0, 0);
+        }
+
         dFrame = initCFrame;
         DCFrame initFrame;
         frame = &initFrame;
@@ -190,10 +195,12 @@ struct DCFrameGenerator::Impl{
 
         // run task
         auto tStart = Time::nanoseconds_since_epoch();
-
-        if(mInfos.mode() != dFrame->mode){
-            mInfos.initialize(dFrame->mode);
-            indices.initialize(mInfos);
+        
+        if(dFrame->imagesB.contains(DCImageBufferType::Depth16)){
+            auto &dImage = std::get<1>(dFrame->imagesB[DCImageBufferType::Depth16]);
+            dIndices.initialize(true, dImage.width, dImage.height);
+        }else{
+            dIndices.initialize(false, 0, 0);
         }
 
         // start computing
@@ -218,10 +225,12 @@ struct DCFrameGenerator::Impl{
         this->frame             = &frame;
 
         auto tStart = Time::nanoseconds_since_epoch();
-
-        if(mInfos.mode() != dFrame->mode){
-            mInfos.initialize(dFrame->mode);
-            indices.initialize(mInfos);
+        
+        if(dFrame->imagesB.contains(DCImageBufferType::Depth16)){
+            auto &dImage = std::get<1>(dFrame->imagesB[DCImageBufferType::Depth16]);
+            dIndices.initialize(true, dImage.width, dImage.height);
+        }else{
+            dIndices.initialize(false, 0, 0);
         }
 
         // start computing
@@ -257,9 +266,9 @@ private:
     auto reset_calibration() -> void{
 
         auto tStart = Time::nanoseconds_since_epoch();
-        if(dFrame->datasB.contains(DCDataBufferType::Calibration)){
-
-            frame->calibration = std::get<1>(dFrame->datasB[DCDataBufferType::Calibration]);
+        if(dFrame->datasB.contains(DCBufferType::Calibration)){
+            
+            frame->calibration = std::get<1>(dFrame->datasB[DCBufferType::Calibration]);
 
             if((dFrame->idDevice != lastidDevice) || (dFrame->mode != lastMode) || (k4aTransformation == nullptr)){
 
@@ -283,8 +292,8 @@ private:
     auto compute_color_image() -> void{
 
         auto tStart = Time::nanoseconds_since_epoch();
-        if(dFrame->imagesB.contains(DCDataImageBufferType::OriginalColorRGBA8) && gSettings.originalSizeColorImage){
-            const auto &image   = dFrame->imagesB[DCDataImageBufferType::OriginalColorRGBA8];
+        if(dFrame->imagesB.contains(DCImageBufferType::OriginalColorRGBA8) && gSettings.originalSizeColorImage){
+            const auto &image   = dFrame->imagesB[DCImageBufferType::OriginalColorRGBA8];
             const auto cMode    = std::get<0>(image);
             const auto &buffer  = std::get<1>(image);
             if(cMode == DCCompressionMode::JPEG){
@@ -300,16 +309,15 @@ private:
 
     auto compute_depth_sized_color_image() -> void{
 
+        // Logger::message("compute_depth_sized_color_image\n");
         auto tStart = Time::nanoseconds_since_epoch();
-        if(dFrame->imagesB.contains(DCDataImageBufferType::DepthSizedColorRGBA8) && gSettings.depthSizedColorImage){
-            const auto &image   = dFrame->imagesB[DCDataImageBufferType::DepthSizedColorRGBA8];
+        if(dFrame->imagesB.contains(DCImageBufferType::DepthSizedColorRGBA8) && gSettings.depthSizedColorImage){
+            const auto &image   = dFrame->imagesB[DCImageBufferType::DepthSizedColorRGBA8];
             const auto cMode    = std::get<0>(image);
             const auto &buffer  = std::get<1>(image);
             if(cMode == DCCompressionMode::JPEG){
-                // Logger::message("[DS-JPEG]");
                 jpegDepthSizedColorDecoder.decode(buffer, frame->rgbaDepthSizedColor);
             }else if(cMode == DCCompressionMode::None){
-                // Logger::message("[DS-NONE]");
                 frame->rgbaDepthSizedColor.resize_image(buffer.width, buffer.height);
                 std::copy(buffer.begin(), buffer.end(), frame->rgbaDepthSizedColor.get_byte_data());
             }
@@ -318,6 +326,7 @@ private:
     }
 
     auto compute_bodies_id_map_image() -> void{
+        // Logger::message("compute_bodies_id_map_image\n");
         auto tStart = Time::nanoseconds_since_epoch();
         // if(!cFrame->jpegG8BodiesIdMap.empty() && gSettings.bodyTracking){
         //     bodiesIdDecoder.decode(
@@ -329,9 +338,10 @@ private:
 
     auto compute_depth_data() -> void{
 
+        // Logger::message("compute_depth_data\n");
         auto tStart = Time::nanoseconds_since_epoch();
-        if(dFrame->imagesB.contains(DCDataImageBufferType::Depth16)){
-            const auto &image   = dFrame->imagesB[DCDataImageBufferType::Depth16];
+        if(dFrame->imagesB.contains(DCImageBufferType::Depth16)){
+            const auto &image   = dFrame->imagesB[DCImageBufferType::Depth16];
             const auto cMode    = std::get<0>(image);
             const auto &buffer  = std::get<1>(image);
             if(cMode == DCCompressionMode::FastPFor){
@@ -346,9 +356,10 @@ private:
 
     auto compute_infra_data() -> void{
 
+        // Logger::message("compute_infra_data\n");
         auto tStart = Time::nanoseconds_since_epoch();
-        if(dFrame->imagesB.contains(DCDataImageBufferType::Infrared16)){
-            const auto &image   = dFrame->imagesB[DCDataImageBufferType::Infrared16];
+        if(dFrame->imagesB.contains(DCImageBufferType::Infrared16)){
+            const auto &image   = dFrame->imagesB[DCImageBufferType::Infrared16];
             const auto cMode    = std::get<0>(image);
             const auto &buffer  = std::get<1>(image);
             if(cMode == DCCompressionMode::FastPFor){
@@ -362,6 +373,7 @@ private:
     }
 
     auto compute_depth_image() -> void{
+        // Logger::message("compute_depth_image\n");
         auto tStart = Time::nanoseconds_since_epoch();
         if(!frame->depth.empty() && gSettings.depthImage){
             frame->compute_rgb_depth_image(frame->rgbDepth);            
@@ -370,6 +382,7 @@ private:
     }
 
     auto compute_infra_image() -> void{
+        // Logger::message("compute_infra_image\n");
         auto tStart = Time::nanoseconds_since_epoch();
         if(!frame->infra.empty() && gSettings.infraImage){
             frame->compute_rgb_infra_image(frame->rgbInfra);
@@ -379,6 +392,7 @@ private:
 
     auto compute_cloud_from_depth() -> void{
 
+        // Logger::message("compute_cloud_from_depth\n");
         if(frame->calibration.empty() || frame->depth.empty() || !gSettings.cloud){
             return;
         }
@@ -413,14 +427,15 @@ private:
             &k4aPointCloudImage
         );
 
+        // Logger::message(std::format("compute_cloud_from_depth 4 [{}] [{}] [{}]\n", frame->depth.size(), dFrame->validVerticesCount, dIndices.depthVertexCorrrespondance.size()));
         frame->cloud.resize(dFrame->validVerticesCount, true);
 
         int currentValidId = 0;
         for(size_t id = 0; id < frame->depth.size(); ++id){
             if(frame->depth[id] != dc_invalid_depth_value){
-                indices.depthVertexCorrrespondance[id] = {static_cast<int>(id), currentValidId++};
+                dIndices.depthVertexCorrrespondance[id] = {static_cast<int>(id), currentValidId++};
             }else{
-                indices.depthVertexCorrrespondance[id] = {static_cast<int>(id), 0};
+                dIndices.depthVertexCorrrespondance[id] = {static_cast<int>(id), 0};
             }
         }
 
@@ -431,8 +446,9 @@ private:
         // ...
     }
 
-    auto create_colored_cloud() -> void{        
+    auto create_colored_cloud() -> void{
 
+        // Logger::message("create_colored_cloud\n");
         if(frame->cloud.empty() || frame->depth.empty() || !gSettings.cloud){
             return;
         }
@@ -452,7 +468,7 @@ private:
         const auto diff = dRange(1) - dRange(0);
 
         auto tStart = Time::nanoseconds_since_epoch();
-        std::for_each(std::execution::par_unseq, std::begin(indices.depthVertexCorrrespondance), std::begin(indices.depthVertexCorrrespondance) + frame->depth.size(), [&](auto idC){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::begin(dIndices.depthVertexCorrrespondance) + frame->depth.size(), [&](auto idC){
 
             auto idD = std::get<0>(idC);
             if(frame->depth[idD] == dc_invalid_depth_value){
@@ -486,7 +502,7 @@ private:
             // 3 X 4
             // 5 6 7
 
-            const auto &idN  = indices.neighbours8Depth1D[idD];
+            const auto &idN  = dIndices.neighbours8Depth1D[idD];
 
             float cD = frame->depth[idD];
             float dB = (idN[1] != -1) ? ((frame->depth[idN[1]] != dc_invalid_depth_value) ? frame->depth[idN[1]] : cD) : cD;

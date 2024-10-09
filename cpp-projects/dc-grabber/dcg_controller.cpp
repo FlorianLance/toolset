@@ -120,7 +120,9 @@ auto DCGController::set_connections() -> void{
     server->quit_signal.connect(&DCGView::exit, view.get());
     server->restart_signal.connect([&](){system("c:\\windows\\system32\\shutdown /R");});
     // ## model
-    s->save_global_settings_file_signal.connect(                &DCGModel::save_global_settings,                           model.get());
+    s->save_global_settings_file_signal.connect(                &DCGModel::save_server_settings_file,                           model.get());
+    s->load_global_settings_file_signal.connect(                &DCGModel::load_server_settings_file,                           model.get());
+
     s->reset_device_settings_signal.connect(                    &DCGModel::reset_device_settings,                          model.get());
     s->reset_filters_settings_signal.connect(                   &DCGModel::reset_filters_filters,                          model.get());
     s->reset_color_settings_signal.connect(                     &DCGModel::reset_color_settings,                           model.get());
@@ -152,7 +154,7 @@ auto DCGController::set_connections() -> void{
     s->update_device_settings_signal.connect(                   &DCDevice::update_device_settings,                         device);
     s->update_filters_signal.connect(                           &DCDevice::update_filters_settings,                        device);        
     s->update_color_settings_signal.connect(                    &DCDevice::update_color_settings,                          device);
-    s->update_delay_settings_signal.connect(                    &DCDevice::update_delay_settings,                          device);
+    s->update_misc_settings_signal.connect(                     &DCDevice::update_misc_settings,                           device);
     // ## recorder
     s->update_model_settings_signal.connect(                    &DCVideoRecorder::update_model,                            recorder);
     s->update_recorder_settings_signal.connect(                 &DCVideoRecorder::update_settings,                         recorder);

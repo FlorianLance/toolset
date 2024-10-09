@@ -183,7 +183,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77cfe0ce1da87a44491220da12189f03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoFilePath: E:/30-07-24-fam-2.kvid
+  videoFilePath: E//newtournage intro1.kvid
   loadAtStart: 1
   playWhenLoaded: 1
   loadDisplaySettingsFilesAfterVideoLoading: 1

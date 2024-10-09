@@ -38,7 +38,7 @@ namespace tool::cam{
 
 struct DCDeviceData{
 
-    auto reset(const DCModeInfos &mInfos) -> void;
+    auto reset(bool hasDepth, size_t depthSize, bool hasColor, size_t colorWidth, size_t colorHeight) -> void;
     auto reset_spans() -> void;
 
     // device data

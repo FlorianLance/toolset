@@ -864,9 +864,9 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 
 }
 
-#include "geometry/cloud.hpp"
+#include "geometry/color_cloud.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
-#include "geometry/voxel_grid.hpp"
+#include "geometry/color_voxel_grid.hpp"
 
 template <typename acc, int _rows, int _cols>
 constexpr auto ccc(const geo::Matrix<acc,_rows,_cols> &lhs, const geo::Matrix<acc, _rows, _cols> &rhs) noexcept -> bool{
@@ -887,7 +887,7 @@ bool comparator(const tool::geo::CVoxel& lhs, const tool::geo::CVoxel& rhs) {
 
 TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
     SECTION("ColoredCloudData"){ Logger::message("geo::ColoredCloudData\n");
-        geo::ColoredCloudData cloud;
+        geo::ColorCloud cloud;
 //        cloud.vertices.reserve(100);
 //        for(size_t ii = 0; ii < 100; ++ii){
 //            cloud.vertices.emplace_back(100.f-ii,2.f*ii,3.f*ii);
@@ -948,7 +948,7 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
         Logger::message("TEST VOXELISATION\n");
         auto minBound = tool::geo::Pt3f{-1.f,-1.f,-1.f};
         auto maxBound = tool::geo::Pt3f{1.f,1.f,1.f};
-        tool::geo::VoxelGrid voxelGrid = tool::geo::VoxelGrid::create_from_point_cloud_within_bounds(
+        tool::geo::ColorVoxelGrid voxelGrid = tool::geo::ColorVoxelGrid::create_from_point_cloud_within_bounds(
             f.cloud,
             0.1f,
             minBound,

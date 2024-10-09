@@ -47,6 +47,7 @@ HEADERS += \
     depth-camera/frame/dc_data_frame.hpp \
     depth-camera/frame/dc_data_frame_buffer.hpp \
     depth-camera/frame/dc_data_frame_generator.hpp \
+    depth-camera/frame/dc_depth_indices.hpp \
     depth-camera/frame/dc_device_data.hpp \
     depth-camera/frame/dc_frame_generator.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
@@ -60,7 +61,22 @@ HEADERS += \
     depth-camera/settings/dc_device_connection_settings.hpp \
     depth-camera/settings/dc_device_data_settings.hpp \
     depth-camera/settings/dc_frame_generation_settings.hpp \
+    depth-camera/settings/dc_misc_settings.hpp \
     depth-camera/settings/dc_server_settings.hpp \
+    geometry/_aabb2.hpp \
+    geometry/_geometry.hpp \
+    geometry/_geometry2.hpp \
+    geometry/_geometry3.hpp \
+    geometry/_interval.hpp \
+    geometry/_line2.hpp \
+    geometry/_line3.hpp \
+    geometry/_octree.hpp \
+    geometry/_ray3.hpp \
+    geometry/_raycast.hpp \
+    geometry/_rectangle.hpp \
+    geometry/_transform.hpp \
+    geometry/color_cloud.hpp \
+    geometry/color_voxel_grid.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
     io/io_enum.hpp \
@@ -71,21 +87,11 @@ HEADERS += \
     io/keyboard.hpp \
     # geometry 
     geometry/triangle.hpp \
-    geometry/cloud.hpp \
-    geometry/geometry.hpp \
-    geometry/transform.hpp \
     geometry/aabb3.hpp \
     geometry/circle.hpp \
     geometry/obb3.hpp \
     geometry/plane3.hpp \
-    geometry/line2.hpp \
-    geometry/line3.hpp \
-    geometry/rectangle.hpp \
     geometry/sphere.hpp \
-    geometry/ray3.hpp \
-    geometry/geometry2.hpp \
-    geometry/geometry3.hpp \
-    geometry/interval.hpp \
     geometry/matrix.hpp \
     geometry/matrix2.hpp \
     geometry/matrix3.hpp \
@@ -94,15 +100,11 @@ HEADERS += \
     geometry/point2.hpp \
     geometry/point3.hpp \
     geometry/point4.hpp \
-    geometry/raycast.hpp \
     geometry/dummy.hpp \
-    geometry/aabb2.hpp \
-    geometry/octree.hpp \
     geometry/maching_cube.hpp \
     geometry/vertices.hpp \
     geometry/voxel.hpp \
     geometry/quaternion.hpp \
-    geometry/voxel_grid.hpp \
     # graphics
     graphics/light.hpp \
     graphics/mesh.hpp \
@@ -158,7 +160,6 @@ HEADERS += \
     depth-camera/dc_video_player.hpp \
     depth-camera/dc_video_recorder.hpp \
     ## frame
-    depth-camera/frame/dc_frame_indices.hpp \
     depth-camera/frame/dc_frame.hpp \
     ## client
     depth-camera/client/dc_client.hpp \
@@ -177,7 +178,6 @@ HEADERS += \
     depth-camera/settings/dc_device_settings.hpp \
     depth-camera/settings/dc_data_settings.hpp \
     depth-camera/settings/dc_color_settings.hpp \
-    depth-camera/settings/dc_delay_settings.hpp \
     depth-camera/settings/dc_display_settings.hpp \
     depth-camera/settings/dc_calibrator_settings.hpp \
     depth-camera/settings/dc_config_settings.hpp \
@@ -316,6 +316,7 @@ SOURCES += \
     depth-camera/frame/dc_data_frame.cpp \
     depth-camera/frame/dc_data_frame_buffer.cpp \
     depth-camera/frame/dc_data_frame_generator.cpp \
+    depth-camera/frame/dc_depth_indices.cpp \
     depth-camera/frame/dc_device_data.cpp \
     depth-camera/frame/dc_frame_generator.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
@@ -328,7 +329,10 @@ SOURCES += \
     depth-camera/settings/dc_data_frame_generation_settings.cpp \
     depth-camera/settings/dc_device_connection_settings.cpp \
     depth-camera/settings/dc_frame_generation_settings.cpp \
+    depth-camera/settings/dc_misc_settings.cpp \
     depth-camera/settings/dc_server_settings.cpp \
+    geometry/color_cloud.cpp \
+    geometry/color_voxel_grid.cpp \
     io/assimp_loader.cpp \
     io/cloud_io.cpp \
     io/settings.cpp \
@@ -350,9 +354,7 @@ SOURCES += \
     ## camera
     graphics/camera/camera.cpp \
     # geometry    
-    geometry/cloud.cpp \
     geometry/vertices.cpp \
-    geometry/voxel_grid.cpp \
     # network
     network/network_types.cpp \
     ## settings    
@@ -389,7 +391,6 @@ SOURCES += \
     depth-camera/dc_video.cpp \
     ## frame
     depth-camera/frame/dc_frame.cpp \
-    depth-camera/frame/dc_frame_indices.cpp \
     ## client
     depth-camera/client/dc_client_processing.cpp \
     depth-camera/client/dc_client_local_device.cpp \
@@ -401,7 +402,6 @@ SOURCES += \
     depth-camera/settings/dc_config_settings.cpp \
     depth-camera/settings/dc_color_settings.cpp \
     depth-camera/settings/dc_display_settings.cpp \
-    depth-camera/settings/dc_delay_settings.cpp \
     depth-camera/settings/dc_data_settings.cpp \
     depth-camera/settings/dc_device_settings.cpp \
     depth-camera/settings/dc_settings_paths.cpp \

@@ -385,8 +385,6 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
     i->k4aConfig   = i->generate_config(i->device->is_sync_in_connected(), i->device->is_sync_out_connected(), configS);
     i->k4aBtConfig = i->generate_bt_config(configS);
 
-
-
     Logger::message("Create k4a capture.\n");
     i->capture = std::make_unique<k4a::capture>();
     try {

@@ -25,7 +25,10 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "voxel_grid.hpp"
+#include "color_voxel_grid.hpp"
+
+// std
+#include <execution>
 
 // local
 #include "geometry/point4.hpp"
@@ -33,38 +36,73 @@
 
 using namespace tool::geo;
 
-VoxelGrid::VoxelGrid(float voxelSize, Pt3f minBound, Pt3f maxBound) : voxelSize(voxelSize), origin(minBound), size(maxBound){
+ColorVoxelGrid::ColorVoxelGrid(float voxelSize, Pt3f origin, Pt3f size) : voxelSize(voxelSize), origin(origin), size(size){
 }
 
-auto VoxelGrid::add_cloud(const ColoredCloudData &cloud, const Mat4f &model) -> void{
+auto ColorVoxelGrid::add_cloud(const ColorCloud &cloud, const Mat4f &model) -> void{
+
+    buffer.resize(cloud.size());
+
+    ids.resize(cloud.size());
+    std::iota(ids.begin(), ids.end(), 0);
 
     bool hasColors = cloud.has_colors();
-    for (size_t ii = 0; ii < cloud.size(); ++ii) {
-
-        const auto &v =  cloud.vertices[ii];
+    std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t id){
+        const auto &v =  cloud.vertices[id];
         Pt4f v4{v.x(),v.y(),v.z(),1};
-        auto vertex = (v4 * model).xyz();
-
+        Pt3f vertex = (v4 * model).xyz();
         if(vertex > origin && vertex < size){
-
             Pt3f refCoord = (vertex - origin) / voxelSize;
-            Pt3<int> voxelIndex = {
+            buffer[id] = {true,{
                 static_cast<int>(std::floor(refCoord(0))),
                 static_cast<int>(std::floor(refCoord(1))),
                 static_cast<int>(std::floor(refCoord(2)))
-            };
+            }};
+        }else{
+            buffer[id] = {false,{}};
+        }
+    });
 
+    voxelindexToAccPoint.reserve(voxelindexToAccPoint.size() + buffer.size());
+    std::for_each(std::execution::unseq, std::begin(ids), std::end(ids), [&](size_t id){
+        if(std::get<0>(buffer[id])){
+            auto &voxelIndex = std::get<1>(buffer[id]);
             if (hasColors) {
-                voxelindexToAccPoint[voxelIndex].add(voxelIndex, cloud.colors[ii]);
+                voxelindexToAccPoint[voxelIndex].add(voxelIndex, cloud.colors[id]);
             } else {
                 voxelindexToAccPoint[voxelIndex].add(voxelIndex);
             }
         }
-    }
+    });
+
+
+    // bool hasColors = cloud.has_colors();
+    // for (size_t ii = 0; ii < cloud.size(); ++ii) {
+
+    //     const auto &v =  cloud.vertices[ii];
+    //     Pt4f v4{v.x(),v.y(),v.z(),1};
+    //     auto vertex = (v4 * model).xyz();
+
+    //     if(vertex > origin && vertex < size){
+
+    //         Pt3f refCoord = (vertex - origin) / voxelSize;
+    //         Pt3<int> voxelIndex = {
+    //             static_cast<int>(std::floor(refCoord(0))),
+    //             static_cast<int>(std::floor(refCoord(1))),
+    //             static_cast<int>(std::floor(refCoord(2)))
+    //         };
+
+    //         if (hasColors) {
+    //             voxelindexToAccPoint[voxelIndex].add(voxelIndex, cloud.colors[ii]);
+    //         } else {
+    //             voxelindexToAccPoint[voxelIndex].add(voxelIndex);
+    //         }
+    //     }
+    // }
 
 }
 
-auto VoxelGrid::compute_grid() -> void{
+auto ColorVoxelGrid::compute_grid() -> void{
 
     if(voxelindexToAccPoint.empty()){
         return;
@@ -83,7 +121,7 @@ auto VoxelGrid::compute_grid() -> void{
     voxelindexToAccPoint.clear();
 }
 
-auto VoxelGrid::convert_to_cloud(ColoredCloudData &cloud) -> void{
+auto ColorVoxelGrid::convert_to_cloud(ColorCloud &cloud) -> void{
 
     cloud.resize(grid.size());
 
@@ -95,9 +133,9 @@ auto VoxelGrid::convert_to_cloud(ColoredCloudData &cloud) -> void{
     }
 }
 
-auto VoxelGrid::create_from_point_cloud_within_bounds(const ColoredCloudData &cloud, float voxelSize, Pt3f minBound, Pt3f maxBound) -> VoxelGrid{
+auto ColorVoxelGrid::create_from_point_cloud_within_bounds(const ColorCloud &cloud, float voxelSize, Pt3f origin, Pt3f size) -> ColorVoxelGrid{
 
-    VoxelGrid voxelGrid(voxelSize, minBound, maxBound);
+    ColorVoxelGrid voxelGrid(voxelSize, origin, size);
     if(voxelSize < 0.f){
         tool::Logger::error("[VoxelGrid::create_from_point_cloud_within_bounds] Voxel size <= 0.\n");
         return voxelGrid;

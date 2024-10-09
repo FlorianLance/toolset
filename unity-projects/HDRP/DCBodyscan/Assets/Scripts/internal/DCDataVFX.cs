@@ -31,6 +31,8 @@ using System.IO;
 // unity
 using UnityEngine;
 using UnityEngine.VFX;
+using System.Collections;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -88,6 +90,9 @@ namespace BS {
         private List<GraphicsBuffer> colorsGBuffers = new List<GraphicsBuffer>();
         private List<GraphicsBuffer> normalsGBuffers = new List<GraphicsBuffer>();
         private Mesh paraboloidMesh = null;
+
+        private IEnumerator dissolveCO;
+        private IEnumerator solveCO;
 
         public void initialize(int nbClouds, int sizeMaxCloud = 640 * 576) {
 
@@ -282,6 +287,47 @@ namespace BS {
                 cloudsGO[idCloud].GetComponent<VisualEffect>().SetFloat("ParticleSize", size);
             }
         }
+
+        public IEnumerator dissolve_co(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS) {
+
+            var eventId = Shader.PropertyToID("GenerateParticles");
+            foreach (var cloud in cloudsGO) {
+                var vfx = cloud.GetComponent<VisualEffect>();
+                vfx.SetFloat("ParticuleLifeTime", particleLifeTimeS);
+            }
+
+            for (int ii = 0; ii < nbTriggerings; ++ii) {
+                foreach (var cloud in cloudsGO) {
+                    var vfx = cloud.GetComponent<VisualEffect>();
+                    vfx.SetInt("Visibility", (int)(1000 - 1000 * (1f * ii / nbTriggerings)));
+                    vfx.SetInt("ParticuleCountCreation", particleCountPerTriggering);
+                    vfx.SendEvent(eventId);
+                }
+                yield return new WaitForSeconds(durationS / nbTriggerings);
+            }
+        }
+
+        public IEnumerator solve_co(float durationS, int nbTriggerings) {
+
+            for (int ii = 0; ii < nbTriggerings; ++ii) {
+                foreach (var cloud in cloudsGO) {
+                    var vfx = cloud.GetComponent<VisualEffect>();
+                    vfx.SetInt("Visibility", (int)(1000 * (1f * ii / nbTriggerings)));
+                }
+                yield return new WaitForSeconds(durationS / nbTriggerings);
+            }
+        }
+
+        public void dissolve(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS) {
+            dissolveCO = dissolve_co(durationS, nbTriggerings, particleCountPerTriggering, particleLifeTimeS);
+            StartCoroutine(dissolveCO);
+        }
+
+        public void solve(float durationS, int nbTriggerings) {
+            solveCO = solve_co(durationS, nbTriggerings);
+            StartCoroutine(solveCO);
+        }
+
 
         private void clean() {
 

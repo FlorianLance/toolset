@@ -34,7 +34,7 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/io_fstream.hpp"
-#include "geometry/voxel_grid.hpp"
+#include "geometry/color_voxel_grid.hpp"
 #include "frame/dc_data_frame_generator.hpp"
 #include "frame/dc_frame_generator.hpp"
 
@@ -103,7 +103,7 @@ auto DCVideo::count_frames_from_all_devices() const noexcept -> size_t{
 
 auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevice, size_t idFrame, DCFrame &frame) -> bool{
     if(const auto camD = get_data_frames_ptr(idDevice)){
-        if(auto cFrame = camD->get_frame_ptr(idFrame)){
+        if(auto cFrame = camD->get_frame_ptr(idFrame)){            
             return generate_frame(fgS, idDevice, cFrame, frame);
         }
     }
@@ -438,7 +438,7 @@ auto DCVideo::generator(size_t idDevice) noexcept -> DCFrameGenerator*{
     return nullptr;
 }
 
-auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
+auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> void{
     
     if(m_devicesDataFrames.empty()){
         return;
@@ -464,7 +464,7 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
 
     auto c0FirstFrameTS = m_devicesDataFrames.front().frames.front()->receivedTS;
 
-    DCDataFrameGenerator compressor;
+    DCDataFrameGenerator dfGen;
     for(size_t idF = 0; idF < nb_frames(0); ++idF){
         
         auto c0Frame = m_devicesDataFrames.front().frames[idF].get();
@@ -487,7 +487,7 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
         final.depth.reset();
         final.infra.reset();
 
-        geo::VoxelGrid grid(voxelSize, minBound, maxBound);
+        geo::ColorVoxelGrid grid(voxelSize, origin, size);
         grid.add_cloud(final.cloud, m_devicesTransforms.front().conv<float>());
 
         for(size_t jj = 1; jj < nb_devices(); ++jj){
@@ -510,6 +510,7 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
         grid.convert_to_cloud(final.cloud);
 
         // compress frame
+        // m_devicesDataFrames.front().frames[idF] = dfGen.generate()
         //m_camerasCompressedFrames.front().frames[idF] = compressor.compress(final, 90);
     }
 
@@ -519,14 +520,14 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
     m_devicesFrameGenerators.resize(1);
 }
 
-auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColoredCloudData &cloud) -> void{
+auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColorCloud &cloud) -> void{
 
     if(idFrame >= min_nb_frames()){
         // ...
         return ;
     }
 
-    geo::VoxelGrid grid(sizeVoxel, minBound, maxBound);
+    geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
 
     DCFrame frame;
     for(size_t ii = 0; ii < nb_devices(); ++ii){
@@ -545,7 +546,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
         return;
     }
 
-    geo::VoxelGrid grid(sizeVoxel, minBound, maxBound);
+    geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
     for(size_t ii = 0; ii < nb_devices(); ++ii){
         DCFrame uFrame;
         generate_frame(gSettings, ii, idFrame, uFrame);

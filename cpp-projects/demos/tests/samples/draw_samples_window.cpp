@@ -326,9 +326,9 @@ auto DrawSampleWindow::init_drawers() -> bool{
     auto skybox = std::make_shared<gl::SkyboxTrianglesDrawer>();
     skybox->initialize(100.f, std::nullopt);
     dm->add_drawer("skybox", std::move(skybox), 1.f);
-
-
-    geo::ColoredCloudData cloud;
+    
+    
+    geo::ColorCloud cloud;
     cloud.resize(100000);
     for(size_t id = 0; id < 100000; ++id){
         cloud.vertices[id] ={

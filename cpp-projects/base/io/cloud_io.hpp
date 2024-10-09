@@ -35,7 +35,7 @@
 // local
 #include "geometry/point2.hpp"
 #include "geometry/point4.hpp"
-#include "geometry/cloud.hpp"
+#include "geometry/color_cloud.hpp"
 
 namespace tool::io {
 
@@ -65,8 +65,8 @@ using namespace std::string_view_literals;
 class CloudIO{
 
 public:
-
-    static auto save_cloud(const std::string &path, const geo::ColoredCloudData &cloud) -> bool{
+    
+    static auto save_cloud(const std::string &path, const geo::ColorCloud &cloud) -> bool{
         if(cloud.is_valid()){
 
             return save_cloud<float, float>(

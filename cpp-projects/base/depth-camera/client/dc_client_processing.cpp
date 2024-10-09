@@ -71,13 +71,22 @@ auto DCClientProcessing::add_device_processor(bool startProcessingThread) -> voi
     i->frameProcessors.push_back(std::move(frameProcessor));
 }
 
-auto DCClientProcessing::remove_device_processor(size_t idD) -> void{
-    if(idD < nb_devices()){
-        i->frameProcessors[idD]->stop_processing_thread();
-        i->frameProcessors[idD]->clean_processing_thread();
-        i->frameProcessors.remove_at(idD);
+auto DCClientProcessing::remove_last_processor() -> void{
+    if(i->frameProcessors.empty()){
+        return;
     }
+    i->frameProcessors.back()->stop_processing_thread();
+    i->frameProcessors.back()->clean_processing_thread();
+    i->frameProcessors.remove_last();
 }
+
+// auto DCClientProcessing::remove_device_processor(size_t idD) -> void{
+//     if(idD < i->frameProcessors.size()){
+//         i->frameProcessors[idD]->stop_processing_thread();
+//         i->frameProcessors[idD]->clean_processing_thread();
+//         i->frameProcessors.remove_at(idD);
+//     }
+// }
 
 auto DCClientProcessing::clean() -> void{
 

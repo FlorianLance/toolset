@@ -47,13 +47,12 @@ struct DCGModel{
     auto initialize() -> bool;
     auto update() -> void;
     auto clean() -> void;
+    
+    // save
+    auto save_server_settings_file(const std::string &settingsFilePath) -> bool;
 
-    auto save_global_settings(const std::string &settingsFilePath) -> bool;
-    auto reset_device_settings() -> void;
-    auto reset_filters_filters() -> void;
-    auto reset_color_settings() -> void;
-    auto update_color_settings_ui_only(const cam::DCColorSettings &colorS) -> void;
-    auto reset_model_settings() -> void;
+    // load
+    auto load_server_settings_file(const std::string &settingsFilePath) -> bool;
     auto load_default_device_settings_file() -> void;
     auto load_default_filters_settings_file() -> void;
     auto load_default_color_settings_file() -> void;
@@ -62,8 +61,18 @@ struct DCGModel{
     auto load_subpart_filters_settings_file(const std::string &settingsFilePath) -> bool;
     auto load_subpart_color_settings_file(const std::string &settingsFilePath) -> bool;
     auto load_subpart_model_settings_file(const std::string &settingsFilePath) -> bool;
-    auto trigger_settings() -> void;
 
+    // reset
+    auto reset_device_settings() -> void;
+    auto reset_filters_filters() -> void;
+    auto reset_color_settings() -> void;
+    auto reset_model_settings() -> void;
+
+    // udpate
+    auto update_color_settings_ui_only(const cam::DCColorSettings &colorS) -> void;
+
+    // trigger
+    auto trigger_settings() -> void;
 
     // ui
     DCGUiSettings uiSettings;

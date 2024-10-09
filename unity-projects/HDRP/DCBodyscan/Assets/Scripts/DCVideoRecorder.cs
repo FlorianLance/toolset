@@ -24,6 +24,8 @@
 // unity
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.VFX;
+
 
 
 #if UNITY_EDITOR
@@ -175,6 +177,7 @@ namespace BS {
         public DCVideoRecorderDLL get_dll() {
             return m_dcVideoRecorderDLL;
         }
+
 
         #endregion
 

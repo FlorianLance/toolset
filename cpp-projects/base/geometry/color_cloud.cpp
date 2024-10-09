@@ -1,4 +1,5 @@
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -24,44 +25,32 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_delay_settings.hpp"
+#include "color_cloud.hpp"
 
-// std
-#include <format>
+using namespace tool::geo;
 
-// local
-#include "utility/logger.hpp"
-#include "data/json_utility.hpp"
+auto ColorCloud::merge(const ColorCloud &cloud) -> void{
 
-using namespace tool::cam;
-using namespace tool::data;
-using json = nlohmann::json;
-using namespace tool::cam;
+    if(!is_valid() || !cloud.is_valid()){
+        return;
+    }
 
-auto DCDelaySettings::init_from_json(const nlohmann::json &json) -> void{
+    if(!empty()){
 
-    size_t unreadCount = 0;
-    // base
-    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
-    // delay
-    read_and_update_value(json, unreadCount, "delay"sv, delayMs);
+        vertices.merge(cloud.vertices);
 
-    if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCDelaySettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        if(has_colors() && cloud.has_colors()){
+            colors.merge(cloud.colors);
+        }
+
+        if(has_normals() && cloud.has_normals()){
+            normals.merge(cloud.normals);
+        }
+
+    }else{
+        *this = cloud;
     }
 }
-
-auto DCDelaySettings::convert_to_json() const -> nlohmann::json{
-
-    json json;
-    // base
-    add_value(json, "base"sv, io::Settings::convert_to_json());
-    // delay
-    add_value(json, "delay"sv,  delayMs);
-
-    return json;
-}
-
 
 
 

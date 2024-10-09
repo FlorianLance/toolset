@@ -61,5 +61,9 @@ struct DCMModel{
     cam::DCVideoRecorder recorder;
     cam::DCVideoPlayer player;
     cam::DCCalibrator calibrator;
+
+private:
+    std::optional<cam::DCClientType> addDeviceEvent = std::nullopt;
+    bool m_removeLastDeviceEvent = false;
 };
 }

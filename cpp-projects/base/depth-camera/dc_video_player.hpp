@@ -78,7 +78,7 @@ public:
     auto remove_until_current_frame() -> void;
     auto remove_after_current_frame() -> void;
     auto merge() -> void;
-    auto merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
+    auto merge_cameras(float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> void;
     auto remove_empty_cameras() -> void;
 
     // settings

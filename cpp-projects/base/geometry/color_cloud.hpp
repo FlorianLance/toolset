@@ -31,6 +31,108 @@
 
 namespace tool::geo {
 
+struct ColorCloud{
+
+    ColorCloud() = default;
+    ColorCloud(const ColorCloud& other) = default;
+    ColorCloud& operator=(const ColorCloud& other) = default;
+    ColorCloud(ColorCloud&& other) = default;
+    ColorCloud& operator=(ColorCloud&& other) = default;
+
+    constexpr explicit ColorCloud(size_t size, bool useNormals = false){
+        resize(size, useNormals);
+    }
+
+    constexpr ColorCloud(const geo::Pt3f &vertex, const geo::Pt3f &color){
+        vertices.push_back(vertex);
+        colors.push_back(color);
+    }
+
+    // get
+    [[nodiscard]] constexpr auto empty() const noexcept -> bool {return vertices.empty();}
+    [[nodiscard]] constexpr auto size() const noexcept -> size_t {return vertices.size();}
+    [[nodiscard]] constexpr auto has_vertices() const noexcept -> bool{return !vertices.empty();}
+    [[nodiscard]] constexpr auto has_colors() const noexcept -> bool{return !colors.empty();}
+    [[nodiscard]] constexpr auto has_normals() const noexcept -> bool{return !normals.empty();}
+    [[nodiscard]] constexpr auto is_valid() const noexcept -> bool{
+        if(has_colors()){
+            if(vertices.size() != colors.size()){
+                return false;
+            }
+        }
+        if(has_normals()){
+            if(vertices.size() != normals.size()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // geometry modifiers
+    constexpr auto remove_outliers(const Pt3f &target, float maxDistance) -> void{
+        keep_from_ids(vertices.get_outliers_id(target, maxDistance));
+    }
+
+    // add
+    auto merge(const ColorCloud &cloud)-> void;
+
+    // remove
+    constexpr auto keep_from_ids(const std::vector<size_t> &ids) noexcept -> void{
+        vertices.keep_from_ids(ids);
+        if(has_colors()){
+            colors.keep_from_ids(ids);
+        }
+        if(has_normals()){
+            normals.keep_from_ids(ids);
+        }
+    }
+
+    // modify
+    constexpr auto fill_colors(const geo::Pt3f &color) -> void{
+        colors.fill(color);
+    }
+
+    // memory
+    constexpr auto resize(size_t size, bool useNormals = false) -> void{
+
+        vertices.resize(size);
+        colors.resize(size);
+
+        if(useNormals){
+            normals.resize(size);
+        }
+    }
+
+    constexpr auto reserve(size_t capacity, bool useNormals = false) -> void{
+
+        vertices.reserve(capacity);
+        colors.reserve(capacity);
+
+        if(useNormals){
+            normals.reserve(capacity);
+        }
+    }
+
+    constexpr auto clear() -> void{
+        vertices.clear();
+        colors.clear();
+        normals.clear();
+    }
+
+    constexpr auto shrink_to_fit() -> void{
+        vertices.shrink_to_fit();
+        colors.shrink_to_fit();
+        normals.shrink_to_fit();
+    }
+
+    Vertices3D vertices;
+    Buffer<geo::Pt3f> colors;
+    Vertices3D normals;
+};
+
+}
+
+
 // struct Geometry {
 
 //     enum class Type : std::int8_t{
@@ -256,92 +358,3 @@ namespace tool::geo {
 // struct Cloud3D{
 
 // };
-
-struct ColoredCloudData{
-
-    ColoredCloudData() = default;
-    ColoredCloudData(const ColoredCloudData& other) = default;
-    ColoredCloudData& operator=(const ColoredCloudData& other) = default;
-    ColoredCloudData(ColoredCloudData&& other) = default;
-    ColoredCloudData& operator=(ColoredCloudData&& other) = default;
-
-    constexpr explicit ColoredCloudData(size_t size, bool useNormals = false){
-        resize(size, useNormals);
-    }    
-
-    constexpr ColoredCloudData(const geo::Pt3f &vertex, const geo::Pt3f &color){
-        vertices.push_back(vertex);
-        colors.push_back(color);
-    }
-
-    // get
-    [[nodiscard]] constexpr auto empty() const noexcept -> bool {return vertices.empty();}
-    [[nodiscard]] constexpr auto size() const noexcept -> size_t {return vertices.size();}
-    [[nodiscard]] constexpr auto has_vertices() const noexcept -> bool{return !vertices.empty();}
-    [[nodiscard]] constexpr auto has_colors() const noexcept -> bool{return !colors.empty();}
-    [[nodiscard]] constexpr auto has_normals() const noexcept -> bool{return !normals.empty();}
-    [[nodiscard]] constexpr auto is_valid() const noexcept -> bool{
-        if(has_colors()){
-            if(vertices.size() != colors.size()){
-                return false;
-            }
-        }
-        if(has_normals()){
-            if(vertices.size() != normals.size()){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // geometry modifiers
-    auto remove_outliers(const Pt3f &target, float maxDistance) -> void;
-
-    // add
-    auto merge(const ColoredCloudData &cloud)-> void;
-
-    // remove
-    auto keep_from_ids(const std::vector<size_t> &ids) noexcept -> void;
-
-    // modify
-    auto fill_colors(const geo::Pt3f &color) -> void;
-
-    // memory
-    constexpr auto resize(size_t size, bool useNormals = false) -> void{
-
-        vertices.resize(size);
-        colors.resize(size);
-
-        if(useNormals){
-            normals.resize(size);
-        }
-    }
-
-    constexpr auto reserve(size_t capacity, bool useNormals = false) -> void{
-
-        vertices.reserve(capacity);
-        colors.reserve(capacity);
-
-        if(useNormals){
-            normals.reserve(capacity);
-        }
-    }
-
-    constexpr auto clear() -> void{
-        vertices.clear();
-        colors.clear();
-        normals.clear();
-    }
-
-    constexpr auto shrink_to_fit() -> void{
-        vertices.shrink_to_fit();
-        colors.shrink_to_fit();
-        normals.shrink_to_fit();
-    }
-
-    Vertices3D vertices;
-    Buffer<geo::Pt3f> colors;
-    Vertices3D normals;
-};
-
-}

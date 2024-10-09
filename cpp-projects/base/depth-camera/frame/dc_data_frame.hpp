@@ -34,23 +34,6 @@
 
 namespace tool::cam{
 
-enum class DCInfoType : std::int8_t{
-    // NbAudioChannels = 30
-};
-
-enum class DCDataBufferType : std::int8_t{
-    Calibration = 0,
-    IMU = 10,
-    Audio = 20,
-    CloudXYZ16RGB8 = 30
-};
-
-enum class DCDataImageBufferType : std::int8_t{
-    OriginalColorRGBA8 = 0, DepthSizedColorRGBA8,
-    Depth16 = 10, Infrared16,
-    DepthRGB8 = 20, InfraredRGB8,
-    BodiesIdMap8 = 30
-};
 
 struct DCDataFrame : Frame{
 
@@ -58,8 +41,8 @@ struct DCDataFrame : Frame{
     DCMode mode;
     size_t validVerticesCount = 0;
     umap<DCInfoType, std::int32_t> infosB;
-    umap<DCDataBufferType, std::tuple<DCCompressionMode, BinaryBuffer>> datasB;
-    umap<DCDataImageBufferType, std::tuple<DCCompressionMode, BinaryImageBuffer>> imagesB;
+    umap<DCBufferType, std::tuple<DCCompressionMode, BinaryBuffer>> datasB;
+    umap<DCImageBufferType, std::tuple<DCCompressionMode, BinaryImageBuffer>> imagesB;
 
     // init
     auto init_from_file_stream(std::ifstream &file) -> void override;    
@@ -74,6 +57,8 @@ struct DCDataFrame : Frame{
     auto init_from_file_stream_legacy2(std::ifstream &file) -> void;
 };
 
+
+// deprecated
 struct DCCompressedFrame : Frame{
 
     // infos

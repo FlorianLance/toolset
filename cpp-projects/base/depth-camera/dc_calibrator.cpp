@@ -55,8 +55,8 @@ auto from_eigen_mat(const Eigen::Matrix4d_u &eMat) -> Mat4f {
 }
 
 struct DCCalibrator::Impl{
-
-    auto process_cloud(const DCCalibratorSettings &settings, const geo::ColoredCloudData &cloud) -> geo::ColoredCloudData;
+    
+    auto process_cloud(const DCCalibratorSettings &settings, const geo::ColorCloud &cloud) -> geo::ColorCloud;
     auto set_model_cloud(const DCCalibratorSettings &settings, size_t idModel, const DCModelSettings &modelTr) -> bool;
     auto set_source_cloud(const DCCalibratorSettings &settings, size_t idSource, const DCModelSettings &sourceTr) -> bool;
     auto do_RANSAC(const DCCalibratorSettings &settings, unsigned int seed) const -> open3d::pipelines::registration::RegistrationResult;
@@ -65,18 +65,18 @@ struct DCCalibrator::Impl{
 
     static auto best_registration_results(const std::vector<std::tuple<open3d::pipelines::registration::RegistrationResult, double>> &results) -> std::tuple<open3d::pipelines::registration::RegistrationResult, double>;
     static auto compute_new_model(const open3d::pipelines::registration::RegistrationResult &result, const geo::Mat4f &model) -> geo::Mat4f;
-    static auto convert_to_opend3d_pc(const ColoredCloudData &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>;
+    static auto convert_to_opend3d_pc(const ColorCloud &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>;
 
     std::mt19937 gen;
     std::vector<DCCalibratorClientData> clientsData;
-    geo::ColoredCloudData modelCloud;
-    geo::ColoredCloudData sourceCloud;
+    geo::ColorCloud modelCloud;
+    geo::ColorCloud sourceCloud;
 
     std::vector<std::optional<DCModelSettings>> calibrations;
 
 private:
-
-    auto preprocess_features(const DCCalibratorSettings &settings, const ColoredCloudData &cloud) -> std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>;
+    
+    auto preprocess_features(const DCCalibratorSettings &settings, const ColorCloud &cloud) -> std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>;
 
     std::shared_ptr<open3d::geometry::PointCloud> m_modelPcCloud = nullptr;
     std::shared_ptr<open3d::pipelines::registration::Feature> m_modelFpfh = nullptr;
@@ -127,7 +127,7 @@ auto DCCalibrator::Impl::set_source_cloud(const DCCalibratorSettings &settings, 
     return true;
 }
 
-auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, const geo::ColoredCloudData &cloud) -> ColoredCloudData{
+auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, const geo::ColorCloud &cloud) -> ColorCloud{
 
     if(!cloud.has_vertices()){
         return {};
@@ -155,14 +155,14 @@ auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, con
     if(settings.computeSphereCenter){
         auto mean = processedCloud.vertices.mean_position();
         mean.z() = processedCloud.vertices.min_z() + settings.ballRay;
-        processedCloud = ColoredCloudData(mean, processedCloud.colors[0]);
+        processedCloud = ColorCloud(mean, processedCloud.colors[0]);
     }
 
     return processedCloud;
 }
 
 
-auto DCCalibrator::Impl::preprocess_features(const DCCalibratorSettings &settings, const ColoredCloudData &cloud) ->
+auto DCCalibrator::Impl::preprocess_features(const DCCalibratorSettings &settings, const ColorCloud &cloud) ->
 
     std::tuple<std::shared_ptr<open3d::geometry::PointCloud>, std::shared_ptr<open3d::pipelines::registration::Feature>>{
 
@@ -251,7 +251,7 @@ auto DCCalibrator::Impl::compute_new_model(const open3d::pipelines::registration
     return from_eigen_mat(result.transformation_) * model;
 }
 
-auto DCCalibrator::Impl::convert_to_opend3d_pc(const ColoredCloudData &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>{
+auto DCCalibrator::Impl::convert_to_opend3d_pc(const ColorCloud &cloud) -> std::shared_ptr<open3d::geometry::PointCloud>{
 
     auto pcd = std::make_shared<open3d::geometry::PointCloud>();
     pcd->points_.reserve(cloud.size());
@@ -328,7 +328,7 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
     }
 
     // retrieve cloud
-    ColoredCloudData &cloud = frame->cloud;
+    ColorCloud &cloud = frame->cloud;
     if(cloud.size() == 0){
         return;
     }
@@ -531,11 +531,11 @@ auto DCCalibrator::update() -> void{
 }
 
 
-auto DCCalibrator::add_to_calibration_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void {
+auto DCCalibrator::add_to_calibration_cloud(size_t idCloud, const geo::ColorCloud &cloud) -> void {
     i->clientsData[idCloud].calibrationCloud.merge(cloud);
 }
 
-auto DCCalibrator::add_to_proccessed_cloud(size_t idCloud, const geo::ColoredCloudData &cloud) -> void{
+auto DCCalibrator::add_to_proccessed_cloud(size_t idCloud, const geo::ColorCloud &cloud) -> void{
     i->clientsData[idCloud].processedCloud.merge(cloud);
 }
 

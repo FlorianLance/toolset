@@ -83,6 +83,7 @@ auto DCVideoRecorder::add_device() -> void{
 }
 
 auto DCVideoRecorder::remove_last_device() -> void{
+
     if(i->videoResource.nb_devices() > 0){
         // video
         i->videoResource.remove_last_device();
@@ -139,7 +140,7 @@ auto DCVideoRecorder::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFram
     }
 }
 
-auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void{
+auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void{   
     add_frame(0, std::move(frame));
 }
 

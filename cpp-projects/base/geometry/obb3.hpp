@@ -38,10 +38,10 @@ namespace tool::geo {
 template<typename acc>
 struct OBB3{
 
-    OBB3() = default;
+    // OBB3() = default;
 
-    constexpr OBB3(const Pt3<acc> &p, const Vec3<acc> &s) noexcept{//}, const Mat3<acc> &o = geo::Mat3<acc>::identity()) noexcept : position(p), size(s), orientation(o){
-    }
+    // constexpr OBB3(const Pt3<acc> &p, const Vec3<acc> &s) noexcept{//}, const Mat3<acc> &o = geo::Mat3<acc>::identity()) noexcept : position(p), size(s), orientation(o){
+    // }
 
     // [[nodiscard]] constexpr auto min() const noexcept -> Vec3<acc>{
     //     const auto p1 = position + size;

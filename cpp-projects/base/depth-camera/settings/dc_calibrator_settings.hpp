@@ -115,8 +115,8 @@ struct DCCalibratorClientData{
 
     size_t id;
     std::vector<std::shared_ptr<DCFrame>> frames;
-    geo::ColoredCloudData calibrationCloud;
-    geo::ColoredCloudData processedCloud;
+    geo::ColorCloud calibrationCloud;
+    geo::ColorCloud processedCloud;
 
     auto clean() -> void{
         frames.clear();

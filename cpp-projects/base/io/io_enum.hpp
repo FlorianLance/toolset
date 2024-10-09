@@ -45,7 +45,7 @@ enum class SettingsType : std::int32_t{
     Udp_server, Dc_client_connection, Udp_connection, Remote_server,
     Dc_client, Dc_client_device,
     Dc_server,
-    Filters, Color, Model, Delay,
+    Filters, Color, Model, Misc,
     Device, Device_config, Device_data, Device_actions,
     Undefined,
     SizeEnum
@@ -64,7 +64,7 @@ static constexpr TupleArray<SettingsType::SizeEnum, TDCSettings> settings = {{
     {SettingsType::Filters,                 "filters"sv},
     {SettingsType::Color,                   "color"sv},
     {SettingsType::Model,                   "model"sv},
-    {SettingsType::Delay,                   "delay"sv},
+    {SettingsType::Misc,                    "misc"sv},
     {SettingsType::Device,                  "device"sv},
     {SettingsType::Device_config,           "device config"sv},
     {SettingsType::Device_data,             "device data"sv},

@@ -24,50 +24,45 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "dc_frame_indices.hpp"
+#include "dc_depth_indices.hpp"
+
 
 using namespace tool::cam;
 
-auto DCFrameIndices::initialize(const DCModeInfos &infos) -> void{
-
-    // set color indices
-    if(infos.has_color()){
-        colors1D.resize(infos.color_size());
-        std::iota(std::begin(colors1D), std::end(colors1D), 0);
-    }else{
-        colors1D.clear();
-    }
+auto DCDepthIndices::initialize(bool hasDepth, size_t depthWidth, size_t depthHeight) -> void{
 
     // set depth indices
-    if(infos.has_depth()){
+    if(hasDepth){
+
+        auto depthSize = depthWidth*depthHeight;
 
         // resize
         // # 1D
-        depths1D.resize(infos.depth_size());
+        depths1D.resize(depthSize);
         depths1DNoBorders.clear();
-        depths1DNoBorders.reserve((infos.depth_width()-2)*(infos.depth_height()-2));
+        depths1DNoBorders.reserve((depthWidth-2)*(depthHeight-2));
 
         neighbours2HDepth1D.clear();
-        neighbours2HDepth1D.reserve(infos.depth_size());
+        neighbours2HDepth1D.reserve(depthSize);
         neighbours2VDepth1D.clear();
-        neighbours2VDepth1D.reserve(infos.depth_size());
+        neighbours2VDepth1D.reserve(depthSize);
 
         neighbours4Depth1D.clear();
-        neighbours4Depth1D.reserve(infos.depth_size());
+        neighbours4Depth1D.reserve(depthSize);
         neighbours8Depth1D.clear();
-        neighbours8Depth1D.reserve(infos.depth_size());
+        neighbours8Depth1D.reserve(depthSize);
 
         // # 3D
-        depths3D.resize(infos.depth_size());
+        depths3D.resize(depthSize);
         // # correspondance
-        depthVertexCorrrespondance.resize(infos.depth_size());
+        depthVertexCorrrespondance.resize(depthSize);
         // depthsSortedCorrespondanceNoBorders.resize((infos.depth_width()-2)*(infos.depth_height()-2));
 
         // fill
         std::iota(std::begin(depths1D), std::end(depths1D), 0);
         std::int32_t id = 0;
-        for(size_t ii = 0; ii < infos.depth_height(); ++ii){
-            for(size_t jj = 0; jj < infos.depth_width(); ++jj){
+        for(size_t ii = 0; ii < depthHeight; ++ii){
+            for(size_t jj = 0; jj < depthWidth; ++jj){
 
                 depths3D[id] = {static_cast<size_t>(id),jj,ii};
 
@@ -84,33 +79,33 @@ auto DCFrameIndices::initialize(const DCModeInfos &infos) -> void{
                 std::int32_t idG = -1;
 
                 bool notOnLeft   = jj > 0;
-                bool notOnRight  = jj < infos.depth_width() - 1;
+                bool notOnRight  = jj < depthWidth - 1;
                 bool notOnTop    = ii > 0;
-                bool notOnBottom = ii < infos.depth_height()-1;
+                bool notOnBottom = ii < depthHeight-1;
 
                 if(notOnLeft){
                     idD = id - 1;
                     if(notOnTop){
-                        idA = id - static_cast<int>(infos.depth_width())-1;
+                        idA = id - static_cast<int>(depthWidth)-1;
                     }
                     if(notOnBottom){
-                        idF = id + static_cast<int>(infos.depth_width())-1;
+                        idF = id + static_cast<int>(depthWidth)-1;
                     }
                 }
                 if(notOnRight){
                     idE = id + 1;
                     if(notOnTop){
-                        idC = id - static_cast<int>(infos.depth_width()) + 1;
+                        idC = id - static_cast<int>(depthWidth) + 1;
                     }
                     if(notOnBottom){
-                        idH = id + static_cast<int>(infos.depth_width()) + 1;
+                        idH = id + static_cast<int>(depthWidth) + 1;
                     }
                 }
                 if(notOnTop){
-                    idB = id - static_cast<int>(infos.depth_width());
+                    idB = id - static_cast<int>(depthWidth);
                 }
                 if(notOnBottom){
-                    idG = id + static_cast<int>(infos.depth_width());
+                    idG = id + static_cast<int>(depthWidth);
                 }
 
                 neighbours2HDepth1D.push_back({idD,idE});

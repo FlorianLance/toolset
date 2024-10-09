@@ -159,7 +159,7 @@ struct DCVideoPlayer::Impl{
             if(auto idF = video.closest_frame_id_from_time(idC, timeMs); idF != -1){
                 if(idF != camerasFrameId[idC]){
                     camerasDataFrame[idC] = video.get_data_frame(idC, idF).lock();
-                    camerasFrameId[idC]         = idF;
+                    camerasFrameId[idC]   = idF;
                 }
             }
         }
@@ -468,13 +468,13 @@ auto DCVideoPlayer::merge() -> void{
     // update_states();
 }
 
-auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void{
+auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> void{
     
     if(i->video.nb_devices() < 1){
         return;
     }
     
-    i->video.merge_all_devices(settings.generation, voxelSize, minBound, maxBound);
+    i->video.merge_all_devices(settings.generation, voxelSize, origin, size);
     i->camerasDataFrame = {nullptr};
     i->camerasFrame = {nullptr};
 

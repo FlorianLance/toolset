@@ -37,10 +37,6 @@
 
 using namespace tool::graphics;
 
-auto DCDeviceDrawer::initialize() -> void{
-    Logger::log("DCDeviceDrawer::initialize\n");
-    DCCloudsSceneDrawer::initialize(1);
-}
 
 auto DCDeviceDrawer::update() -> void{
 

@@ -48,7 +48,7 @@ auto CloudPointsDrawer::initialize(bool dynamic, std::span<const geo::Pt3f> vert
     }
 }
 
-auto CloudPointsDrawer::initialize(bool dynamic, const geo::ColoredCloudData &cloud) -> void{
+auto CloudPointsDrawer::initialize(bool dynamic, const geo::ColorCloud &cloud) -> void{
     initialize(dynamic, cloud.vertices, cloud.colors, cloud.normals);
 }
 
@@ -60,7 +60,7 @@ auto CloudPointsDrawer::update(std::span<const geo::Pt3f> vertices, std::span<co
     }
 }
 
-auto CloudPointsDrawer::update(const geo::ColoredCloudData &cloud) -> void{
+auto CloudPointsDrawer::update(const geo::ColorCloud &cloud) -> void{
     update(cloud.vertices, cloud.colors, cloud.normals);
 }
 

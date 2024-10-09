@@ -1,11 +1,8 @@
 
-
-
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -27,49 +24,41 @@
 **                                                                            **
 ********************************************************************************/
 
-
 #pragma once
 
-// local
-#include "point.hpp"
+// std
+#include <vector>
 
+// geo
+#include "geometry/point3.hpp"
 
-namespace tool::geo {
+namespace tool::cam{
 
-//template <typename acc, std::size_t dim>
-//Vector<acc,dim> project(const Vector<acc,dim> len, const Vector<acc,dim> dir){
-//    return len.project(dir);
-//}
+struct DCDepthIndices{
 
-//template <typename acc, std::size_t dim>
-//Vector<acc,dim> perpendicular(const Vector<acc,dim> len, const Vector<acc,dim> dir){
-//    return len.perpendicular(dir);
-//}
+    auto initialize(bool hasDepth, size_t depthWidth, size_t depthHeight) -> void;
 
+    std::vector<size_t> depths1D;
+    std::vector<size_t> depths1DNoBorders;
+    std::vector<std::array<std::int32_t,2>> neighbours2HDepth1D;    // 0 0 0
+                                                                    // X P X
+                                                                    // 0 0 0
 
-//inline Vec<acc,dim> project(const Vector<acc,dim> &dir) const {
-//    return dir * (dot(*this, dir) / dir.square_norm());
-//}
+    std::vector<std::array<std::int32_t,2>> neighbours2VDepth1D;    // 0 X 0
+                                                                    // 0 P 0
+                                                                    // 0 X 0
 
-//inline Vec<acc,dim> perpendicular(const Vector<acc,dim> &dir) const {
-//    return (*this) - project(dir);
-//}
+    std::vector<std::array<std::int32_t,4>> neighbours4Depth1D;     // 0 X 0
+                                                                    // X P X
+                                                                    // 0 X 0
 
-//inline Vec<acc,dim> reflection(const Vector<acc,dim> &normal) const{
-//    return (*this) - normal * (dot(*this,normal) * acc{2});
-//}
-
-
-//template <typename acc, std::size_t dim>
-//acc angle(const Pt<acc, dim> &l, const Pt<acc, dim> &r){
-//    acc m = sqrt(l.square_norm()*r.square_norm());
-//    return std::acos(dot(l,r)/m);
-//}
-
-//template <typename acc, std::size_t dim>
-//bool is_perpendicular(const vecN<acc, dim> &l, const vecN<acc, dim> &r, int ulp = 3) noexcept{
-//    return almost_equal(dot(l,r), acc{0}, ulp);
-//}
-
-
+    std::vector<std::array<std::int32_t,8>> neighbours8Depth1D;     // X X X
+                                                                    // X P X
+                                                                    // X X X
+    // # 3D
+    std::vector<geo::Pt3<size_t>> depths3D;
+    // # Correspondance
+    std::vector<std::tuple<size_t, std::int32_t>> depthVertexCorrrespondance;
+    // std::vector<std::tuple<size_t, std::int16_t>> depthsSortedCorrespondanceNoBorders;
+};
 }

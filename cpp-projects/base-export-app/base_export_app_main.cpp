@@ -233,8 +233,8 @@ int main(int, char *argv[]){
 #include "dc_video_player_export.hpp"
 
 auto dc_video_player_export_test() -> void{
-
-    geo::ColoredCloudData cloud;
+    
+    geo::ColorCloud cloud;
     std::vector<geo::Pt3f> positions;
     std::vector<geo::Pt3f> normals;
     std::vector<geo::Pt3f> colors;
@@ -264,9 +264,9 @@ auto dc_video_player_export_test() -> void{
 
             std::puts(std::format("Current time {} size {} \n", dcPlayer->current_time_ms(), vvc).c_str());
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-
-            geo::ColoredCloudData cloudN;
+            
+            
+            geo::ColorCloud cloudN;
             cloudN.resize(cloud.size()*1);
             for(int kk = 0; kk < cloud.size(); ++kk){
 

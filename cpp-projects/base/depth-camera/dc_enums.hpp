@@ -250,7 +250,7 @@ enum class DCMode : std::int8_t {
     FB_C4096x3072_DI640x576_MJPG_F15,
     // ## 16:9 color
     FB_C1280x720_DI320x288_NV12_F30,
-    FB_C1280x720_DI640x576_NV12_F30,      
+    FB_C1280x720_DI640x576_NV12_F30,
     // # wide
     // ## 4:3 color
     FB_C2048x1536_DI512x512_MJPG_F30,
@@ -285,12 +285,18 @@ enum class DCMode : std::int8_t {
     // # narrow
     // ## 16:9 color
     FMU_C1280x720_DI640x576_MJPG_F30,
+    // # wide
+    // ## 16:9 color
+    FMU_C1280x720_DI512x512_MJPG_F30,
+
+    // ### 320x288
 
     // other
     Invalid,
     Merged,
     SizeEnum,
 };
+
 
 
 using M     = DCMode;
@@ -302,77 +308,60 @@ using Name  = std::string_view;
 
 using TDCMode = std::tuple<
     DCMode,                                 IF,       CR,         DR,                  FPS,      Dev,       Name>;
-static constexpr TupleArray<DCMode::SizeEnum, TDCMode> dcModes = {{
+static constexpr TupleArray<28, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
     // azure kinect
     // # narrow
-    // ## 4:3 color
-    {M::AK_C2048x1536_DI640x576_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-1536p D-576p  I-MJPG F-30"sv},
-    {M::AK_C4096x3072_DI640x576_MJPG_F15,   IF::MJPG, CR::R3072P, DR::K4A_640x576,     FPS::F15, Dev::AK,   "C-3072p D-576p  I-MJPG F-15"sv},
     // ## 16:9 color
-    {M::AK_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::AK,   "C-720p  D-288p  I-NV12 F-30"sv},
+    // ### 640x576
     {M::AK_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-NV12 F-30"sv},
     {M::AK_C1280x720_DI640x576_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-YUY2 F-30"sv},
     {M::AK_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-MJPG F-30"sv},
+    // ### 320x288
+    {M::AK_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::AK,   "C-720p  D-288p  I-NV12 F-30"sv},
     // # wide
-    // ## 4:3 color
-    {M::AK_C2048x1536_DI512x512_MJPG_F30,   IF::MJPG, CR::R1536P, DR::K4A_512x512,     FPS::F30, Dev::AK,   "C-1536p D-512p  I-MJPG F-30"sv},
-    {M::AK_C2048x1536_DI1024x1024_MJPG_F30, IF::MJPG, CR::R1536P, DR::K4A_1024x1024,   FPS::F15, Dev::AK,   "C-1536p D-1024p I-MJPG F-15"sv},
     // ## 16:9 color
+    // ### 512x512
     {M::AK_C1280x720_DI512x512_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK,   "C-720p  D-512p  I-NV12 F-30"sv},
     {M::AK_C1280x720_DI512x512_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK,   "C-720p  D-512p  I-YUY2 F-30"sv},
     {M::AK_C1280x720_DI512x512_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::AK,   "C-720p  D-512p  I-MJPG F-30"sv},
+    // ### 1024x1024
     {M::AK_C1280x720_DI1024x1024_NV12_F15,  IF::NV12, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK,   "C-720p  D-1024p I-NV12 F-15"sv},
     {M::AK_C1280x720_DI1024x1024_YUY2_F15,  IF::YUY2, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK,   "C-720p  D-1024p I-YUY2 F-15"sv},
     {M::AK_C1280x720_DI1024x1024_MJPG_F15,  IF::MJPG, CR::R720P,  DR::K4A_1024x1024,   FPS::F15, Dev::AK,   "C-720p  D-1024p I-MJPG F-15"sv},
-    // # no depth
-    // ## 4:3 color
-    {M::AK_C2048x1536_MJPG_F30,             IF::MJPG, CR::R1536P, DR::OFF,             FPS::F30, Dev::AK,   "C-1536p D-OFF   I-MJPG F-30"sv},
-    {M::AK_C4096x3072_MJPG_F15,             IF::MJPG, CR::R3072P, DR::OFF,             FPS::F15, Dev::AK,   "C-3072p D-OFF   I-MJPG F-15"sv},
-    // ## 19:9 color
-    {M::AK_C1280x720_NV12_F30,              IF::NV12, CR::R720P,  DR::OFF,             FPS::F30, Dev::AK,   "C-720p  D-OFF   I-NV12 F-30"sv},
-    {M::AK_C1920x1080_MJPG_F30,             IF::MJPG, CR::R1080P, DR::OFF,             FPS::F30, Dev::AK,   "C-1080p D-OFF   I-MJPG F-30"sv},
-    {M::AK_C2560x1440_MJPG_F30,             IF::MJPG, CR::R1440P, DR::OFF,             FPS::F30, Dev::AK,   "C-1440p D-OFF   I-MJPG F-30"sv},
-    {M::AK_C3840x2160_MJPG_F15,             IF::MJPG, CR::R2160P, DR::OFF,             FPS::F15, Dev::AK,   "C-2160p D-OFF   I-MJPG F-15"sv},
 
     // femto bolt orbbec
     // # narrow
-    // ## 4:3 color
     // ## 16:9 color
     {M::FB_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::FB,   "C-720p  D-288p  I-NV12 F-30"sv},
     {M::FB_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FB,   "C-720p  D-576p  I-NV12 F-30"sv},
     // # wide
-    // ## 4:3 color
     // ## 16:9 color
     {M::FB_C1280x720_DI512x512_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FB,   "C-720p  D-512p  I-NV12 F-30"sv},
     // ## no color
     {M::FB_DI512x512_F30,                   IF::NA,   CR::OFF,    DR::K4A_512x512,     FPS::F30, Dev::FB,   "C-OFF   D-512p  I-NA   F-30"sv},
     // # no depth
-    // ## 4:3 color
     // ## 16:9 color
     {M::FB_C1280x720_MJPG_F30,              IF::MJPG, CR::R720P,  DR::OFF,             FPS::F30, Dev::FB,   "C-720p  D-OFF   I-MJPG F-30"sv},
 
     // femto mega orbbec ethernet
     // # narrow
-    // ## 4:3 color    
     // ## 16:9 color
     {M::FME_C1280x720_DI640x576_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FME,  "C-720p  D-576p  I-MJPG F-30"sv},
     // # wide
-    // ## 4:3 color    
     // ## 16:9 color
     {M::FME_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FME,  "C-720p  D-512p  I-MJPG F-30"sv},
     // ## no color
     {M::FME_DI512x512_F30,                  IF::NA,   CR::OFF,    DR::K4A_512x512,     FPS::F30, Dev::FME,  "C-OFF   D-512p  I-NA   F-30"sv},
-    // # no depth
-    // ## 4:3 color
-    // ## 16:9 color
 
-    // femto mega orbbec usb
+    // femto mega orbbec usb        
     // # narrow
-    // ## 4:3 color
     // ## 16:9 color
     {M::FMU_C1280x720_DI640x576_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FME,  "C-720p  D-576p  I-MJPG F-30"sv},
+    // # wide
+    // ## 16:9 color
+    {M::FMU_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FME,  "C-720p  D-512p  I-MJPG F-30"sv},
 
     // others
     {M::Invalid,                            IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::UNDEF,"Merged"sv},
@@ -590,5 +579,26 @@ enum class DCClientType{
 enum class DCApplicationType : std::int8_t {
     DCManager, DCGrabber
 };
+
+enum class DCInfoType : std::int8_t{
+    // NbAudioChannels = 30
+};
+
+enum class DCBufferType : std::int8_t{
+    Calibration = 0,
+    IMU = 10,
+    Audio = 20,
+    CloudXYZ16RGB8 = 30,
+    VoxelCloudX13Y13Z13RGB8 = 31,
+    ColoredCloud = 40,
+    BodyTracking = 50,
+};
+
+enum class DCImageBufferType : std::int8_t{
+    OriginalColorRGBA8 = 0, DepthSizedColorRGBA8,
+    Depth16 = 10, Infrared16,
+    DepthRGB8 = 20, InfraredRGB8,
+    BodiesIdMap8 = 30
+};  
 
 }

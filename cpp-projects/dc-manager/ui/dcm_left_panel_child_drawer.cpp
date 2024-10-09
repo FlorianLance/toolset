@@ -769,10 +769,10 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             ImGui::Spacing();
 
             ImGui::Text("Delay:");
-            int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
+            int delay = static_cast<int>(clientDeviceS.miscS.delayMs);
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-                clientDeviceS.delayS.delayMs = delay;
-                DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
+                clientDeviceS.miscS.delayMs = delay;
+                DCMSignals::get()->update_misc_settings_signal(clientDeviceS.id, clientDeviceS.miscS);
             }
 
             ImGui::Separator();
@@ -794,10 +794,10 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             ImGui::Spacing();
 
             ImGui::Text("Delay:");
-            int delay = static_cast<int>(clientDeviceS.delayS.delayMs);
+            int delay = static_cast<int>(clientDeviceS.miscS.delayMs);
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Current delay (ms)", "delay_others", &delay, ImGuiIntS{0,0, 5000,1.f,100},ImGuiDragS())){
-                clientDeviceS.delayS.delayMs = delay;
-                DCMSignals::get()->update_delay_settings_signal(clientDeviceS.id, clientDeviceS.delayS);
+                clientDeviceS.miscS.delayMs = delay;
+                DCMSignals::get()->update_misc_settings_signal(clientDeviceS.id, clientDeviceS.miscS);
             }
         }
 

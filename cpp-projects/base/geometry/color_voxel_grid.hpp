@@ -27,63 +27,39 @@
 #pragma once
 
 // local
-#include "point2.hpp"
-#include "utility/maths_utility.hpp"
+#include "geometry/voxel.hpp"
+#include "geometry/color_cloud.hpp"
+#include "utility/unordered_map.hpp"
 
-namespace tool::geo {
+namespace tool::geo{
 
-template<typename acc>
-struct AABB2{
+struct ColorVoxelGrid{
 
-
-    AABB2() = default;
-
-    constexpr AABB2(Pt2<acc> o, Vec2<acc> s) noexcept : origin(o), size(s){
-    }
-
-    constexpr Pt2<acc> min() const noexcept{
-        const Vec2<acc> p1{origin + size};
-        const Vec2<acc> p2{origin - size};
-        return Pt2<acc>{std::min(p1.x(), p2.x()), std::min(p1.y(), p2.y())};
-    }
-
-    constexpr Vec2<acc> max() const noexcept{
-        const Vec2<acc> p1{origin + size};
-        const Vec2<acc> p2{origin - size};
-        return Vec2<acc>(std::max(p1.x(), p2.x()), std::max(p1.y(), p2.y()));
-    }
-
-    constexpr std::array<AABB2<acc>,4> subdivide() const noexcept{
-        const Vec2<acc> midSize = size*acc{0.5};
-        return {{AABB2<acc>{origin - midSize,                              midSize},
-                 AABB2<acc>{origin + Vec2<acc>{-midSize.x(), midSize.y()}, midSize},
-                 AABB2<acc>{origin + midSize,                              midSize},
-                 AABB2<acc>{origin + Vec2<acc>{midSize.x(), -midSize.y()}, midSize}}};
-    }
-
-    Pt2<acc> origin = {0,0};
-    Vec2<acc> size  = {1,1};
-};
-
-
-template <typename acc>
-constexpr bool point_in_aabb(const Pt2<acc> &p, const AABB2<acc> &aabb) noexcept{
-
-    const Pt2<acc> pMin = aabb.min();
-    const Pt2<acc> pMax = aabb.max();
-    const bool xMinE = math::almost_equal<acc>(p.x(),pMin.x());
-    const bool yMinE = math::almost_equal<acc>(p.y(),pMin.y());
-
-    if((p.x() > pMin.x() || xMinE) && (p.y() > pMin.y() || yMinE) ){
-
-        const bool xMaxE = math::almost_equal<acc>(p.x(),pMax.x());
-        const bool yMaxE = math::almost_equal<acc>(p.y(),pMax.y());
-        if((p.x() < pMax.x() || xMaxE) && (p.y() < pMax.y() || yMaxE)){
-            return true;
+    struct Pt3IntHashRepresentation {
+        using is_avalanching = void;
+        [[nodiscard]] auto operator()(const tool::geo::Pt3<int> &f) const noexcept -> uint64_t {
+            static_assert(std::has_unique_object_representations_v<tool::geo::Pt3<int>>);
+            return ankerl::unordered_dense::detail::wyhash::hash(&f, sizeof(f));
         }
-    }
+    };
 
-    return false;
-}
+    ColorVoxelGrid(float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size);
+    auto add_cloud(const ColorCloud &cloud, const Mat4f &model) -> void;
+    auto compute_grid() -> void;
 
+    auto convert_to_cloud(ColorCloud &cloud) -> void;
+
+    static auto create_from_point_cloud_within_bounds(const ColorCloud &cloud, float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> ColorVoxelGrid;
+
+    float voxelSize = 0.1f;
+    Pt3f origin = {};
+    Pt3f size = {};
+    umap<Pt3<int>, Voxel, Pt3IntHashRepresentation> grid;
+
+private:
+
+    umap<Pt3<int>, AvgColorVoxel, Pt3IntHashRepresentation> voxelindexToAccPoint;
+    Buffer<std::tuple<bool,Pt3<int>>> buffer;
+    std::vector<size_t> ids;
+};
 }

@@ -294,6 +294,7 @@ namespace BS {
             }
         }
 
+
         #endregion
 
         #region private_functions
@@ -556,23 +557,6 @@ namespace BS {
                 } else {
                     deviceStates.verticesCountToCopy = -1;
                 }
-
-                //if (m_dllPlayer.retrieve_last_frame(deviceStates.deviceId)) {
-
-                //    deviceStates.currentFrameSize = m_dllPlayer.current_frame_cloud_size(deviceStates.deviceId);
-                //    deviceStates.currentId = m_dllPlayer.current_frame_id(deviceStates.deviceId);
-
-                //    deviceStates.verticesCountToCopy = m_dllPlayer.copy_current_frame_vertices_vfx(
-                //        deviceStates.deviceId,
-                //        dataVFX.positions_native_buffer(deviceStates.deviceId),
-                //        dataVFX.colors_native_buffer(deviceStates.deviceId),
-                //        dataVFX.normals_native_buffer(deviceStates.deviceId),
-                //        deviceStates.currentFrameSize,
-                //        true
-                //    );
-                //} else {
-                //    //deviceStates.verticesCountToCopy = -1;
-                //}
             });
             Profiler.EndSample();
 
@@ -581,6 +565,7 @@ namespace BS {
                 m_dcDataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
             }
             Profiler.EndSample();
+
 
         }
 

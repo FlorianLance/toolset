@@ -1,5 +1,7 @@
 
 
+
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -25,24 +27,48 @@
 **                                                                            **
 ********************************************************************************/
 
+
 #pragma once
 
-// loca
-#include "point2.hpp"
+// local
+#include "point.hpp"
 
 namespace tool::geo {
 
-template<typename acc>
-struct Interval{
+//template <typename acc, std::size_t dim>
+//Vector<acc,dim> project(const Vector<acc,dim> len, const Vector<acc,dim> dir){
+//    return len.project(dir);
+//}
 
-    Interval() = default;
-    constexpr Interval(acc vmin, acc vmax) noexcept: v({vmin,vmax}){}
+//template <typename acc, std::size_t dim>
+//Vector<acc,dim> perpendicular(const Vector<acc,dim> len, const Vector<acc,dim> dir){
+//    return len.perpendicular(dir);
+//}
 
-    constexpr auto min() const noexcept -> acc {return v(0);}
-    constexpr auto max() const noexcept -> acc {return v(1);}
-    constexpr auto min() noexcept -> acc &{return v(0);}
-    constexpr auto max() noexcept -> acc &{return v(1);}
 
-    Pt2<acc> v;
-};
+//inline Vec<acc,dim> project(const Vector<acc,dim> &dir) const {
+//    return dir * (dot(*this, dir) / dir.square_norm());
+//}
+
+//inline Vec<acc,dim> perpendicular(const Vector<acc,dim> &dir) const {
+//    return (*this) - project(dir);
+//}
+
+//inline Vec<acc,dim> reflection(const Vector<acc,dim> &normal) const{
+//    return (*this) - normal * (dot(*this,normal) * acc{2});
+//}
+
+
+//template <typename acc, std::size_t dim>
+//acc angle(const Pt<acc, dim> &l, const Pt<acc, dim> &r){
+//    acc m = sqrt(l.square_norm()*r.square_norm());
+//    return std::acos(dot(l,r)/m);
+//}
+
+//template <typename acc, std::size_t dim>
+//bool is_perpendicular(const vecN<acc, dim> &l, const vecN<acc, dim> &r, int ulp = 3) noexcept{
+//    return almost_equal(dot(l,r), acc{0}, ulp);
+//}
+
+
 }

@@ -54,8 +54,8 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
     auto t = TimeDiffGuard(timeM, "INITIALIZE"sv);
     settings.config = newConfigS;
     mInfos.initialize(settings.config.mode);
-    fIndices.initialize(mInfos);
-    fData.reset(mInfos);
+    dIndices.initialize(mInfos.has_depth(), mInfos.depth_width(), mInfos.depth_height());
+    fData.reset(mInfos.has_depth(), mInfos.depth_size(), mInfos.has_color(), mInfos.color_width(), mInfos.color_height());
 }
 
 auto DCDeviceImpl::convert_color_image() -> void{
@@ -129,7 +129,7 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
     std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
 
     // depth/width/height/mask/color/infra filtering
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const Pt3<size_t> &dIndex){
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
 
         size_t id = dIndex.x();
         size_t ii = dIndex.y();
@@ -169,7 +169,7 @@ auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{
     }
 
     auto hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const Pt3<size_t> &dIndex){
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
         size_t id = dIndex.x();
         auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
         if((std::abs(hsv.h()- hsvDiffColor.h()) > settings.filters.maxDiffColor.x()) ||
@@ -237,7 +237,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     auto halfDimensions = settings.filters.oob.size * 500.f;
     auto oobPos = settings.filters.oob.position * 1000.f;
 
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
         auto idD = std::get<0>(idC);
 
@@ -358,7 +358,7 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
     // }
 
     if(settings.filters.doLocalDiffFiltering){
-        maximum_local_depth_difference(fIndices, fData.depth, settings.filters.maxLocalDiff, DCConnectivity::Connectivity_4);
+        maximum_local_depth_difference(dIndices, fData.depth, settings.filters.maxLocalDiff, DCConnectivity::Connectivity_4);
     }
 
     // minimum neighbours filtering
@@ -382,7 +382,7 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
     if(settings.filters.removeAfterClosestPoint){
 
         std::uint16_t minDist = std::numeric_limits<std::uint16_t>::max();
-        std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+        std::for_each(std::execution::unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
             if(fData.depthMask[id] != 0){
                 if(minDist > fData.depth[id]){
                     minDist = fData.depth[id];
@@ -391,7 +391,7 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
         });
 
         std::uint16_t maxDist = minDist + static_cast<std::uint16_t>(1000.f * settings.filters.maxDistanceAfterClosestPoint);
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
             if(fData.depthMask[id] == 0){
                 return;
             }
@@ -422,12 +422,12 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
         }
     }
 
-    std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+    std::for_each(std::execution::unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         if(fData.depthMask[id] == 0){
             fData.depth[id] = dc_invalid_depth_value;
-            fIndices.depthVertexCorrrespondance[id] = {id, -1};
+            dIndices.depthVertexCorrrespondance[id] = {id, -1};
         }else{
-            fIndices.depthVertexCorrrespondance[id] = {id, fData.validDepthValues};
+            dIndices.depthVertexCorrrespondance[id] = {id, fData.validDepthValues};
             fData.validDepthValues++;
         }
     });
@@ -445,7 +445,7 @@ auto DCDeviceImpl::filter_depth_sized_color_from_depth() -> void{
         return;
     }
 
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         if(settings.filters.invalidateColorFromDepth){
             if(fData.depth[id] == dc_invalid_depth_value){
                 fData.depthSizedColor[id] = ColorRGBA8{dc_invalid_color_value};
@@ -457,12 +457,11 @@ auto DCDeviceImpl::filter_depth_sized_color_from_depth() -> void{
             // }
         }
 
-        // if(writeBodies){
-
-        //     if(fData.bodiesIdMap[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
-        //         fData.depthSizedColor[id] = ColorRGBA8{255,0,0,255};
-        //     }
-        // }
+        if(fData.bodiesIdMap.size() == fData.depth.size()){
+            if(fData.bodiesIdMap[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                fData.depthSizedColor[id] = ColorRGBA8{255,0,0,255};
+            }
+        }
     });
 }
 
@@ -478,7 +477,7 @@ auto DCDeviceImpl::filter_infra_from_depth() -> void{
         return;
     }
 
-    std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         if(settings.filters.invalidateInfraFromDepth){
             if(fData.depth[id] == dc_invalid_depth_value){
                 fData.infra[id] = dc_invalid_infra_value;
@@ -563,7 +562,7 @@ auto DCDeviceImpl::update_frame_depth() -> void{
         frame->rgbDepth.resize(mInfos.depth_size());
         frame->rgbDepth.fill(ColorRGB8(0,0,0));
 
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
 
             if(fData.depth[id] == dc_invalid_depth_value){
                 return;
@@ -611,7 +610,7 @@ auto DCDeviceImpl::update_frame_infra() -> void{
         frame->rgbInfra.resize(mInfos.infra_size());
 
         const float max = 2000;
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t id){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
 
             float vF = static_cast<float>(fData.infra[id]);
             if(vF > max){
@@ -653,7 +652,7 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
             {1.f,0.f,0.f},
         };
 
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](auto idC){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](auto idC){
 
             auto idD = std::get<0>(idC);
             if(fData.depth[idD] == dc_invalid_depth_value){
@@ -684,7 +683,7 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
             // 3 X 4
             // 5 6 7
 
-            const auto &idN  = fIndices.neighbours8Depth1D[idD];
+            const auto &idN  = dIndices.neighbours8Depth1D[idD];
 
             float cD = fData.depth[idD];
             float dB = (idN[1] != -1) ? ((fData.depth[idN[1]] != dc_invalid_depth_value) ? fData.depth[idN[1]] : cD) : cD;
@@ -786,7 +785,7 @@ auto DCDeviceImpl::update_data_frame_color() -> void{
     if(!fData.originalSizeColor.empty() && settings.data.sending.addOriginalSizeColor){
         if(settings.data.sending.originalSizeColorCM == DCCompressionMode::JPEG){
             
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, BinaryImageBuffer{}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, BinaryImageBuffer{}}});
             if(!jpegColorEncoder.encode(
                     mInfos.color_width(),
                     mInfos.color_height(),
@@ -794,12 +793,12 @@ auto DCDeviceImpl::update_data_frame_color() -> void{
                     std::get<1>(dInfo.first->second),
                     settings.data.sending.originalSizeColorJPEGCQ
                 )){
-                dFrame->imagesB.erase(DCDataImageBufferType::OriginalColorRGBA8);
+                dFrame->imagesB.erase(DCImageBufferType::OriginalColorRGBA8);
             }
 
         }else if(settings.data.sending.originalSizeColorCM == DCCompressionMode::None){
             
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, BinaryImageBuffer{}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, BinaryImageBuffer{}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.width  = mInfos.color_width();
             image.height = mInfos.color_height();
@@ -820,7 +819,7 @@ auto DCDeviceImpl::update_data_frame_depth_sized_color() -> void{
 
         if(settings.data.sending.depthSizedColorCM == DCCompressionMode::JPEG){
             
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
             if(!jpegDepthSizedColorEncoder.encode(
                     mInfos.depth_width(),
                     mInfos.depth_height(),
@@ -828,12 +827,12 @@ auto DCDeviceImpl::update_data_frame_depth_sized_color() -> void{
                     std::get<1>(dInfo.first->second),
                     settings.data.sending.depthSizedColorJPEGCQ
                 )){
-                dFrame->imagesB.erase(DCDataImageBufferType::DepthSizedColorRGBA8);
+                dFrame->imagesB.erase(DCImageBufferType::DepthSizedColorRGBA8);
             }
 
         }else if(settings.data.sending.depthSizedColorCM == DCCompressionMode::None){
             
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.width  = mInfos.depth_width();
             image.height = mInfos.depth_height();
@@ -854,19 +853,19 @@ auto DCDeviceImpl::update_data_frame_depth() -> void{
 
         if(settings.data.sending.depthCM == DCCompressionMode::FastPFor){
 
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
             if(!fastPForDepthEncoder.encode(
                 mInfos.depth_width(),
                 mInfos.depth_height(),
                 fData.depth,
                 std::get<1>(dInfo.first->second)
             )){
-                dFrame->imagesB.erase(DCDataImageBufferType::Depth16);
+                dFrame->imagesB.erase(DCImageBufferType::Depth16);
             }
 
         }else if(settings.data.sending.depthCM == DCCompressionMode::None){
 
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Depth16, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(mInfos.depth_width(), mInfos.depth_height(), 2);            
             std::copy(fData.depth.begin(), fData.depth.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
@@ -885,25 +884,74 @@ auto DCDeviceImpl::update_data_frame_infra() -> void{
 
         if(settings.data.sending.infraCM == DCCompressionMode::FastPFor){
 
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
             if(!fastPForInfraEncoder.encode(
                     mInfos.infra_width(),
                     mInfos.infra_height(),
                     fData.infra,
                     std::get<1>(dInfo.first->second)
                 )){
-                dFrame->imagesB.erase(DCDataImageBufferType::Infrared16);
+                dFrame->imagesB.erase(DCImageBufferType::Infrared16);
             }
 
         }else if(settings.data.sending.infraCM == DCCompressionMode::None){
 
-            auto dInfo = dFrame->imagesB.insert({DCDataImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
             auto &image = std::get<1>(dInfo.first->second);
             image.resize_image(mInfos.infra_width(), mInfos.infra_height(), 2);
             std::copy(fData.infra.begin(), fData.infra.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
         }
     }
 }
+
+auto DCDeviceImpl::update_data_frame_bodies() -> void{
+
+    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_BODIES"sv);
+    if(dFrame == nullptr){
+        return;
+    }
+
+    // bodies id map
+    if(!fData.bodiesIdMap.empty() && settings.data.sending.addBodyIdMap){
+
+        if(settings.data.sending.bodiesIdMapCM == DCCompressionMode::JPEG){
+
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::BodiesIdMap8, {DCCompressionMode::JPEG, {}}});
+            if(!jpegBodiesIdEncoder.encode(
+                    mInfos.depth_width(),
+                    mInfos.depth_height(),
+                    fData.bodiesIdMap,
+                    std::get<1>(dInfo.first->second),
+                    settings.data.sending.depthSizedColorJPEGCQ
+                )){
+                dFrame->imagesB.erase(DCImageBufferType::BodiesIdMap8);
+            }
+
+        }else if(settings.data.sending.depthSizedColorCM == DCCompressionMode::None){
+
+            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::BodiesIdMap8, {DCCompressionMode::None, {}}});
+            auto &image = std::get<1>(dInfo.first->second);
+            image.width  = mInfos.depth_width();
+            image.height = mInfos.depth_height();
+            image.resize(image.width*image.height*1);
+            std::copy(fData.bodiesIdMap.begin(), fData.bodiesIdMap.end(), reinterpret_cast<ColorGray8*>(image.get_data()));
+        }
+    }
+
+    // body tracking
+    if(!fData.bodies.empty() && settings.data.sending.addBodyTracking){
+
+        auto dInfo = dFrame->datasB.insert({DCBufferType::BodyTracking, {DCCompressionMode::None, {}}});
+        auto &data = std::get<1>(dInfo.first->second);
+        data.resize(fData.bodies.size_bytes());
+
+        auto bBodyData = reinterpret_cast<std::byte*>(fData.bodies.data());
+        std::copy(bBodyData, bBodyData + data.size(), data.begin());
+
+        Logger::message(std::format("body! {}\n", fData.bodies.size_bytes()));
+    }
+}
+
 
 auto DCDeviceImpl::update_data_frame_calibration() -> void{
 
@@ -913,7 +961,7 @@ auto DCDeviceImpl::update_data_frame_calibration() -> void{
     }
 
     if(!fData.binaryCalibration.empty()){
-        auto dInfo = dFrame->datasB.insert({DCDataBufferType::Calibration, {DCCompressionMode::None, {}}});
+        auto dInfo = dFrame->datasB.insert({DCBufferType::Calibration, {DCCompressionMode::None, {}}});
         auto &data = std::get<1>(dInfo.first->second);
         data.resize(fData.binaryCalibration.size());
         std::copy(fData.binaryCalibration.begin(), fData.binaryCalibration.end(), data.begin());
@@ -930,6 +978,37 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
     if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.sending.addCloud){
 
         if(settings.data.sending.cloudCM == DCCompressionMode::FastPFor){
+
+
+            // auto [minX, maxX] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
+            //     return a.x() < b.x();
+            // });
+            // auto [minY, maxY] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
+            //     return a.y() < b.y();
+            // });
+            // auto [minZ, maxZ] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
+            //     return a.z() < b.z();
+            // });
+
+            // // x y z r g b
+            // // retrieve origin
+            // std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
+
+            //     auto idD = std::get<0>(idC);
+            //     if(fData.depth[idD] == dc_invalid_depth_value){
+            //         return;
+            //     }
+
+            //     Pt3f currentP = fData.depthCloud[idD].template conv<float>();
+            // });
+
+            // Pt3f currentP = fData.depthCloud[idD].template conv<float>();
+            // frame->cloud.vertices[idV] = currentP * 0.001f;
+
+            // if(addColors){
+            //     frame->cloud.colors[idV] = (fData.depthSizedColor[idD].template conv<float>()/255.f).xyz();
+            // fData.depthCloud;
+
 
             Buffer<std::uint16_t> processedCloudData;
 
@@ -958,7 +1037,7 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
             };
 
             // fill data
-            std::for_each(std::execution::par_unseq, std::begin(fIndices.depthVertexCorrrespondance), std::end(fIndices.depthVertexCorrrespondance), [&](const auto &idC){
+            std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
                 auto idD = std::get<0>(idC);
                 if(fData.depth[idD] == dc_invalid_depth_value){
@@ -985,10 +1064,10 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
                 }
             });
 
-            auto dInfo = dFrame->datasB.insert({DCDataBufferType::CloudXYZ16RGB8, {DCCompressionMode::FastPFor, {}}});
+            auto dInfo = dFrame->datasB.insert({DCBufferType::CloudXYZ16RGB8, {DCCompressionMode::FastPFor, {}}});
             auto &data = std::get<1>(dInfo.first->second);
             if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), data)){
-                dFrame->datasB.erase(DCDataBufferType::CloudXYZ16RGB8);
+                dFrame->datasB.erase(DCBufferType::CloudXYZ16RGB8);
             }
 
         }else if(settings.data.sending.cloudCM == DCCompressionMode::None){
@@ -1033,37 +1112,6 @@ auto DCDeviceImpl::update_data_frame_imu() -> void{
     // }
 }
 
-auto DCDeviceImpl::update_data_frame_bodies() -> void{
-
-    auto t = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME_BODIES"sv);
-    if(dFrame == nullptr){
-        return;
-    }
-
-    // // body tracking
-    // if(!fData.bodies.empty() && settings.data.compression.addBodyTracking){
-    //     cFrame->bodyTracking.resize(fData.bodies.size());
-    //     std::copy(fData.bodies.begin(), fData.bodies.end(), cFrame->bodyTracking.begin());
-    // }else{
-    //     cFrame->bodyTracking.clear();
-    // }
-
-    // // bodies id map
-    // if(!fData.bodiesIdMap.empty() && settings.data.compression.addBodyIdMap){
-
-    //     if(!jpegBodiesIdEncoder.encode(
-    //         mInfos.depth_width(),
-    //         mInfos.depth_height(),
-    //         fData.bodiesIdMap,
-    //         cFrame->jpegG8BodiesIdMap,
-    //         settings.data.compression.jpegCompressionRate
-    //     )){
-    //         cFrame->jpegG8BodiesIdMap.reset();
-    //     }
-    // }else{
-    //     cFrame->jpegG8BodiesIdMap.reset();
-    // }
-}
 
 
 auto DCDeviceImpl::check_data_validity() -> bool {
@@ -1092,7 +1140,7 @@ auto DCDeviceImpl::check_data_validity() -> bool {
     return true;
 }
 
-auto DCDeviceImpl::maximum_local_depth_difference(const DCFrameIndices &ids, std::span<uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void{
+auto DCDeviceImpl::maximum_local_depth_difference(const DCDepthIndices &ids, std::span<uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void{
 
     std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
@@ -1157,7 +1205,7 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
     // auto depthHeight = mInfos.depth_height();
     auto depthSize   = mInfos.depth_size();
 
-    std::for_each(std::execution::unseq, std::begin(fIndices.depths1D), std::end(fIndices.depths1D), [&](size_t pt){
+    std::for_each(std::execution::unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t pt){
 
         if(fData.zonesId[pt] != 0){
             return;
@@ -1236,7 +1284,7 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
     if(biggestZone != -1){
         Pt2<size_t> meanBiggestZone = {0,0};
         size_t count = 0;
-        std::for_each(std::execution::unseq, std::begin(fIndices.depths3D), std::end(fIndices.depths3D), [&](const auto &pt){
+        std::for_each(std::execution::unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const auto &pt){
             if(fData.zonesId[pt.x()] != biggestZone){
                 fData.depthMask[pt.x()] = 0;
             }
@@ -1261,7 +1309,7 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
         // reset filtering mask
         std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
 
             if(fData.depthMask[id] == 0){
                 return;
@@ -1269,7 +1317,7 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
 
             std::uint8_t count = 0;
             if(connectivity == DCConnectivity::Connectivity_4){
-                for(auto cId : fIndices.neighbours4Depth1D[id]){
+                for(auto cId : dIndices.neighbours4Depth1D[id]){
 
                     if(fData.depthMask[cId] == 1){
                         ++count;
@@ -1277,7 +1325,7 @@ auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, 
                 }
                 fData.filteringMask[id] = count == 4 ? 1 : 0;
             }else{
-                for(auto cId : fIndices.neighbours8Depth1D[id]){
+                for(auto cId : dIndices.neighbours8Depth1D[id]){
 
                     if(fData.depthMask[cId] == 1){
                         ++count;
@@ -1303,7 +1351,7 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
 
         std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
-        std::for_each(std::execution::par_unseq, std::begin(fIndices.depths1DNoBorders), std::end(fIndices.depths1DNoBorders), [&](size_t id){
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
 
             if(fData.depthMask[id] == 0){
                 return;
@@ -1311,7 +1359,7 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
 
             std::uint8_t count = 0;
             if(connectivity == DCConnectivity::Connectivity_4){
-                for(auto cId : fIndices.neighbours4Depth1D[id]){
+                for(auto cId : dIndices.neighbours4Depth1D[id]){
 
                     if(fData.depthMask[cId] == 1){
                         ++count;
@@ -1320,7 +1368,7 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
                 // fData.filteringMask[id] = count == 4 ? 1 : 0;
                 fData.filteringMask[id] = (count >= nbMinValid) ? 1 : 0;
             }else{
-                for(auto cId : fIndices.neighbours8Depth1D[id]){
+                for(auto cId : dIndices.neighbours8Depth1D[id]){
 
                     if(fData.depthMask[cId] == 1){
                         ++count;
@@ -1354,7 +1402,7 @@ auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
     settings.color = colorS;
 }
 
-auto DCDeviceImpl::set_delay_settings(const DCDelaySettings &delayS) -> void{
+auto DCDeviceImpl::set_delay_settings(const DCMiscSettings &delayS) -> void{
     auto lg = LogGuard("DCDeviceImpl::set_delay_settings"sv);
     settings.delay = delayS;
 }
@@ -1418,8 +1466,11 @@ auto DCDeviceImpl::read_frame() -> void{
     }
     {
         auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-        read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
+        read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());        
     }
+    // if(get_duration_micro_s("READ_BODY_TRACKING"sv).has_value()){
+    //     Logger::message(std::format("bt duration {}\n"sv, get_duration_micro_s("READ_BODY_TRACKING"sv).value().count()));
+    // }
     {
         auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
         read_audio(settings.data.capture.audio && mInfos.has_audio());
@@ -1475,7 +1526,7 @@ auto DCDeviceImpl::process_data() -> void{
         }
 
         {
-            auto tFD = TimeDiffGuard(timeM, "FILTER_DEPTH"sv);
+            auto tFD = TimeDiffGuard(timeM, "FILTER"sv);
             filter_depth_basic();
             filter_depth_from_depth_sized_color();
             filter_depth_from_infra();
@@ -1483,10 +1534,7 @@ auto DCDeviceImpl::process_data() -> void{
             filter_depth_from_body_tracking();
             filter_depth_complex();
             update_valid_depth_values();
-        }
 
-        {
-            auto tFO = TimeDiffGuard(timeM, "FILTER_OTHER"sv);
             filter_depth_sized_color_from_depth();
             mix_depth_sized_color_with_body_tracking();
             filter_infra_from_depth();
@@ -1570,12 +1618,6 @@ auto DCDeviceImpl::process_data() -> void{
         mInfos.increment_capture_id();
     }
 }
-
-
-// auto DCDeviceImpl::set_parent_device(DCDevice *dcDevice) -> void{
-//     pDcDevice = dcDevice;
-// }
-
 
 auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{
     // store frame

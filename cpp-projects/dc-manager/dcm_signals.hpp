@@ -39,7 +39,7 @@
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
-#include "depth-camera/settings/dc_delay_settings.hpp"
+#include "depth-camera/settings/dc_misc_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_calibrator_settings.hpp"
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"
@@ -107,7 +107,7 @@ public:
     SSS<size_t, const cam::DCFiltersSettings&> update_filters_settings_ui_only_signal;
     SSS<size_t, const cam::DCFiltersSettings&> update_calibration_filters_settings_signal;
     SSS<size_t, const cam::DCColorSettings &> update_color_settings_signal;
-    SSS<size_t, cam::DCDelaySettings> update_delay_settings_signal;
+    SSS<size_t, cam::DCMiscSettings> update_misc_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_ui_only_signal;
     SSS<const cam::DCVideoRecorderSettings&> update_recorder_settings_signal;

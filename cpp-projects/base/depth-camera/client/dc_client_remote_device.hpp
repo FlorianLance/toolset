@@ -52,7 +52,7 @@ public:
     auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void override;
     auto update_color_settings(const cam::DCColorSettings &colorS) -> void override;
     auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
-    auto update_delay_settings(const cam::DCDelaySettings &delayS) -> void override;
+    auto update_misc_settings(const cam::DCMiscSettings &delayS) -> void override;
 
     constexpr auto type() const noexcept -> DCClientType override {return DCClientType::Remote;}
     auto device_connected() const noexcept -> bool override;

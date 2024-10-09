@@ -35,7 +35,9 @@ using namespace tool::data;
 using json = nlohmann::json;
 
 auto DCDataFrameGenerationSettings::init_from_json(const nlohmann::json &json) -> void{
+
     size_t unreadCount = 0;
+
     read_and_update_value(json, unreadCount, "jpeg_compression_rate"sv,             depthSizedColorJPEGCQ);
     read_and_update_value(json, unreadCount, "original_size_color_jpeg_quality"sv,  originalSizeColorJPEGCQ);
 
@@ -48,11 +50,14 @@ auto DCDataFrameGenerationSettings::init_from_json(const nlohmann::json &json) -
     read_and_update_value(json, unreadCount, "body_tracking"sv,                     addBodyTracking);
     read_and_update_value(json, unreadCount, "audio"sv,                             addAudio);
     read_and_update_value(json, unreadCount, "imu"sv,                               addImu);
+
     cloudColorMode      = static_cast<CloudColorMode>(   read_and_return_value(json, unreadCount, "cloud_color_mode"sv,                     static_cast<int>(cloudColorMode)));
+
     depthCM             = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "depth_compression_mode"sv,               static_cast<int>(depthCM)));
     depthSizedColorCM   = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "depth_sized_color_compression_mode"sv,   static_cast<int>(depthSizedColorCM)));
     originalSizeColorCM = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "color_compression_mode"sv,               static_cast<int>(originalSizeColorCM)));
     infraCM             = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "infra_compression_mode"sv,               static_cast<int>(infraCM)));
+    bodiesIdMapCM       = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "bodies_id_map_compression_mode"sv,       static_cast<int>(bodiesIdMapCM)));
     cloudCM             = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "cloud_compression_mode"sv,               static_cast<int>(cloudCM)));
 
     if(unreadCount != 0){
@@ -79,6 +84,7 @@ auto DCDataFrameGenerationSettings::convert_to_json() const -> nlohmann::json{
     add_value(json, "depth_sized_color_compression_mode"sv, static_cast<int>(depthSizedColorCM));
     add_value(json, "color_compression_mode"sv,             static_cast<int>(originalSizeColorCM));
     add_value(json, "infra_compression_mode"sv,             static_cast<int>(infraCM));
+    add_value(json, "bodies_id_map_compression_mode"sv,     static_cast<int>(bodiesIdMapCM));
     add_value(json, "cloud_compression_mode"sv,             static_cast<int>(cloudCM));
     return json;
 }
