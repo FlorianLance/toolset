@@ -46,7 +46,7 @@ auto DCPlayerDrawer::initialize(const std::vector<cam::DCModelSettings> &models)
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);        
 }
 
-auto DCPlayerDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void{
+auto DCPlayerDrawer::set_frame(size_t idC, std::shared_ptr<cam::DCFrame2> frame) -> void{
 
     if(idC >= m_currentFrames.size()){
         return;

@@ -47,11 +47,11 @@ auto test_kinect4() -> void{
     device.update_device_settings(ds);
 
     int idC = 0;
-    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame2> frame){
         if(idC < 5){
             // std::cout << "frame " << frame->depthWidth << " " << frame->depthHeight << " " << frame->depthData.size() << " "<< frame->imageDepthData.size() << "\n";
-            std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
-            tool::io::CloudIO::save_cloud(std::format("D:/ak_cloud_{}.obj", idC++), frame->cloud);
+            // std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
+            // tool::io::CloudIO::save_cloud(std::format("D:/ak_cloud_{}.obj", idC++), frame->cloud);
 
 
             // geo::ColoredCloudData c;

@@ -64,6 +64,9 @@ auto JpegEncoder::encode(size_t width, size_t height, int format, ConstBinarySpa
     case TJPF_BGRA:
         dim = 4;
         break;
+    case TJPF_GRAY:
+        dim = 1;
+        break;
     default:
         return {};
     }
@@ -97,7 +100,7 @@ auto JpegEncoder::encode(size_t width, size_t height, int format, ConstBinarySpa
     }
 
     return {
-            reinterpret_cast<std::byte*>(i->tjCompressedImage),
+        reinterpret_cast<std::byte*>(i->tjCompressedImage),
         static_cast<size_t>(jpegColorSize)
     };
 }
@@ -164,11 +167,13 @@ auto JpegEncoder::encode(const ImageBuffer<ColorRGBA8> &image, BinaryImageBuffer
 
 auto JpegEncoder::encode(const ImageBuffer<ColorGray8> &image, BinaryImageBuffer &encodedImage, int quality) -> bool{
 
-    if(auto encodedData = encode(image.width, image.height, TJPF_GRAY, image.byte_span(), quality); !encodedData.empty()){
+    Logger::message("jpeg TJPF_GRAY encoder\n");
+    if(auto encodedData = encode(image.width, image.height, TJPF_GRAY, image.byte_span(), quality); !encodedData.empty()){        
         encodedImage.resize(encodedData.size());
         encodedImage.width = image.width;
         encodedImage.height = image.height;
         std::copy(encodedData.begin(), encodedData.end(), encodedImage.begin());
+        Logger::message("jpeg encoder success\n");
         return true;
     }
     return false;
@@ -237,9 +242,12 @@ auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<Colo
     image.width  = encodedImage.width;
     image.height = encodedImage.height;
     image.resize(encodedImage.width*encodedImage.height);
+    Logger::message(std::format("decode gray {} {} {} {} {} {}\n",encodedImage.width, encodedImage.height, encodedImage.size(), image.width, image.height, image.size()));
     if(decode(encodedImage.width, encodedImage.height, TJPF_GRAY, encodedImage.byte_span(), image.byte_span())){
+        Logger::message("end decode gray1\n");
         return true;
     }
+    Logger::message("end decode gray2\n");
     image.reset();
     return false;
 }

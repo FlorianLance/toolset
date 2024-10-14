@@ -48,8 +48,8 @@ struct DCCloudsSceneDrawer{
     inline auto has_to_redraw_clouds() const noexcept -> bool{
         return fboD.is_camera_updated() || fboD.is_screen_updated() || m_redrawClouds;
     }
-
-    auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool;
+    
+    auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> bool;
     auto update_from_colored_cloud_data(size_t idCloud, const geo::ColorCloud &cloud) -> bool;
 
     auto draw_clouds_to_fbo() -> void;
@@ -66,11 +66,13 @@ struct DCCloudsSceneDrawer{
     // imgui
     // # child
     auto draw_color_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
+    auto draw_depth_sized_color_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     auto draw_depth_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     auto draw_infra_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     auto draw_bodies_id_map_texture_imgui_child(size_t idCloud, const std::string &windowName, geo::Pt2f sizeWindow) -> void;
     // # position
-    auto draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::string_view text) -> void;
+    auto draw_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
+    auto draw_depth_sized_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
     auto draw_depth_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
     auto draw_infra_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
     auto draw_bodies_id_map_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = {}) -> void;
@@ -87,6 +89,7 @@ struct DCCloudsSceneDrawer{
 
     // signals
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_pressed_color_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_pressed_depth_sized_color_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_depth_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
     sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_bodies_id_signal;

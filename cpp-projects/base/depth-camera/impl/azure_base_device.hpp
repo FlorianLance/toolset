@@ -47,7 +47,6 @@ struct AzureBaseDevice{
 
     // settings
     auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
-    auto update_from_data_settings(const DCDeviceDataSettings &dataS) -> void;
 
     // getters
     auto is_opened() const noexcept -> bool;

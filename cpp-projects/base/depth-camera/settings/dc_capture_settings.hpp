@@ -36,8 +36,7 @@ struct DCCaptureSettings{
     bool color          = true;
     bool depth          = true;
     bool infra          = false;
-    bool bodyTracking   = false;
-    float btTemporalSmoothing = 0.f;
+    bool bodyTracking   = false;    
     bool audio          = false;
     bool imu            = false;
 

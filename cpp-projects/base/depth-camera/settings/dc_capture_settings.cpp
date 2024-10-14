@@ -41,7 +41,6 @@ auto DCCaptureSettings::init_from_json(const nlohmann::json &json) -> void{
     read_and_update_value(json, unreadCount, "depth"sv,                 depth);
     read_and_update_value(json, unreadCount, "infra"sv,                 infra);
     read_and_update_value(json, unreadCount, "body_tracking"sv,         bodyTracking);
-    read_and_update_value(json, unreadCount, "bt_temporal_smoothing"sv, btTemporalSmoothing);
     read_and_update_value(json, unreadCount, "audio"sv,                 audio);
     read_and_update_value(json, unreadCount, "imu"sv,                   imu);
 
@@ -56,7 +55,6 @@ auto DCCaptureSettings::convert_to_json() const -> nlohmann::json{
     add_value(json, "depth"sv,                  depth);
     add_value(json, "infra"sv,                  infra);
     add_value(json, "body_tracking"sv,          bodyTracking);
-    add_value(json, "bt_temporal_smoothing"sv,  btTemporalSmoothing);
     add_value(json, "audio"sv,                  audio);
     add_value(json, "imu"sv,                    imu);
     return json;

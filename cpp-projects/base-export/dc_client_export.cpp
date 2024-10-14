@@ -49,7 +49,7 @@ DCClientExport::DCClientExport(){
             (*newFeedbackCBP)(static_cast<int>(idD), static_cast<int>(feedback.type), static_cast<int>(feedback.receivedMessageType));
         }
     });
-    client.new_frame_signal.connect([&](size_t idD, std::shared_ptr<cam::DCFrame> frame){
+    client.new_frame_signal.connect([&](size_t idD, std::shared_ptr<cam::DCFrame2> frame){
         framesToDisplay[idD] = std::move(frame);
     });
 }
@@ -233,7 +233,7 @@ auto DCClientExport::current_frame_id(size_t idD) -> size_t{
     return 0;
 }
 
-auto DCClientExport::current_frame(size_t idD) -> std::shared_ptr<DCFrame>{
+auto DCClientExport::current_frame(size_t idD) -> std::shared_ptr<DCFrame2>{
     if(idD < framesToDisplay.size()){
         return framesToDisplay[idD];
     }
@@ -243,7 +243,9 @@ auto DCClientExport::current_frame(size_t idD) -> std::shared_ptr<DCFrame>{
 auto DCClientExport::current_frame_cloud_size(size_t idD) -> size_t{
     if(idD < framesToDisplay.size()){
         if(framesToDisplay[idD] != nullptr){
-            return framesToDisplay[idD]->cloud.size();
+            if(framesToDisplay[idD]->volumesB.contains(DCVolumeBufferType::ColoredCloud)){
+                return framesToDisplay[idD]->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)->size();
+            }
         }
     }
     return 0;
@@ -259,33 +261,36 @@ auto DCClientExport::device_model(size_t idD) -> Mat4f{
 auto DCClientExport::copy_current_frame_vertices(size_t idD, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
 
     if(auto frame = current_frame(idD); frame != nullptr){
-        size_t verticesCountToCopy = std::min(frame->cloud.size(), vertices.size());
 
-        auto tr = device_model(idD);
+        if(auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)){
 
-        if(applyModelTransform){
-            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
-                const auto &pt = frame->cloud.vertices[id];
-                vertices[id].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
-                vertices[id].col = geo::Pt4<std::uint8_t>{
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
-                    255
-                };
-            });
-        }else{
-            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
-                vertices[id].pos = frame->cloud.vertices[id];
-                vertices[id].col = geo::Pt4<std::uint8_t>{
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].x()),
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].y()),
-                    static_cast<std::uint8_t>(255.f*frame->cloud.colors[id].z()),
-                    255
-                };
-            });
+            size_t verticesCountToCopy = std::min(cloud->size(), vertices.size());
+            auto tr = device_model(idD);
+
+            if(applyModelTransform){
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    const auto &pt = cloud->vertices[id];
+                    vertices[id].pos = geo::Pt3f(tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz());
+                    vertices[id].col = geo::Pt4<std::uint8_t>{
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].x()),
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].y()),
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].z()),
+                        255
+                    };
+                });
+            }else{
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    vertices[id].pos = cloud->vertices[id];
+                    vertices[id].col = geo::Pt4<std::uint8_t>{
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].x()),
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].y()),
+                        static_cast<std::uint8_t>(255.f*cloud->colors[id].z()),
+                        255
+                    };
+                });
+            }
+            return verticesCountToCopy;
         }
-        return verticesCountToCopy;
     }
     return 0;
 }
@@ -294,36 +299,39 @@ auto DCClientExport::copy_current_frame_vertices(size_t idD, std::span<geo::Pt3f
 
     if(auto frame = current_frame(idD); frame != nullptr){
 
-        auto verticesCountToCopy = std::min(frame->cloud.size(), positions.size());
-        auto tr = device_model(idD);
+        if(auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)){
 
-        if(applyModelTransform){
-            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
-                const auto &pt = frame->cloud.vertices[id];
-                positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
-                positions[id].x() *= -1.f;
-                const auto &col = frame->cloud.colors[id];
-                colors[id] = {
-                    col.x(), col.y(), col.z()
-                };
-                const auto &norm = frame->cloud.normals[id];
-                normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
-                normals[id].x() *= -1.f;
-            });
-        }else{
-            std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
-                const auto &pt = frame->cloud.vertices[id];;
-                positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
-                positions[id].x() *= -1.f;
-                const auto &col = frame->cloud.colors[id];
-                colors[id] = {
-                    col.x(), col.y(), col.z()
-                };
-                normals[id] = frame->cloud.normals[id];
-                normals[id].x() *= -1.f;
-            });
+            auto verticesCountToCopy = std::min(cloud->size(), positions.size());
+            auto tr = device_model(idD);
+
+            if(applyModelTransform){
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    const auto &pt = cloud->vertices[id];
+                    positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
+                    positions[id].x() *= -1.f;
+                    const auto &col = cloud->colors[id];
+                    colors[id] = {
+                        col.x(), col.y(), col.z()
+                    };
+                    const auto &norm = cloud->normals[id];
+                    normals[id] = normalize(tr.multiply_vector(geo::Pt4f{norm.x(), norm.y(), norm.z(), 1.f}).xyz());
+                    normals[id].x() *= -1.f;
+                });
+            }else{
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    const auto &pt = cloud->vertices[id];;
+                    positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
+                    positions[id].x() *= -1.f;
+                    const auto &col = cloud->colors[id];
+                    colors[id] = {
+                        col.x(), col.y(), col.z()
+                    };
+                    normals[id] = cloud->normals[id];
+                    normals[id].x() *= -1.f;
+                });
+            }
+            return verticesCountToCopy;
         }
-        return verticesCountToCopy;
     }
     return 0;
 }

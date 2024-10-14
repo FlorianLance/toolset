@@ -52,8 +52,8 @@ struct DCVideoRecorderExport{
     auto dissociate_from_client(DCClient &client) -> void;
 
 private:
-
-    auto add_frame(size_t idD, std::shared_ptr<DCFrame> frame) -> void;
+    
+    auto add_frame(size_t idD, std::shared_ptr<DCFrame2> frame) -> void;
 };
 
 }

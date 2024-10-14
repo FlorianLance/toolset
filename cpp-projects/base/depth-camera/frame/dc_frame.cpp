@@ -29,7 +29,7 @@
 using namespace tool::geo;
 using namespace tool::cam;
 
-auto DCFrame::compute_rgb_depth_image(ImageBuffer<ColorRGB8> &rgbDepth) -> void{
+auto DCDeprecatedFrame::compute_rgb_depth_image(ImageBuffer<ColorRGB8> &rgbDepth) -> void{
 
     if(!depth.is_valid_image()){
         return;
@@ -72,7 +72,7 @@ auto DCFrame::compute_rgb_depth_image(ImageBuffer<ColorRGB8> &rgbDepth) -> void{
     }
 }
 
-auto DCFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void{
+auto DCDeprecatedFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra) -> void{
 
     if(!infra.is_valid_image()){
         return;

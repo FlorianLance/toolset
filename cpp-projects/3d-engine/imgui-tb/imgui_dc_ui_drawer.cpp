@@ -944,6 +944,19 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
             update = true;
         }
         ImGui::EndDisabled();
+
+        if(ImGui::Checkbox("bodies id###stor_bodies_id", &rSettings.dataFrameGenS.addBodiesId)){
+            update = true;
+        }
+        // ImGui::SameLine();
+        // ImGui::BeginDisabled(!rSettings.dataFrameGenS.addBodiesId);
+        // compress = rSettings.dataFrameGenS.bodiesIdCM == cam::DCCompressionMode::JPEG;
+        // if(ImGui::Checkbox("compress###stor_bodies_id_comp", &compress)){
+        //     rSettings.dataFrameGenS.bodiesIdCM = compress ? cam::DCCompressionMode::JPEG : cam::DCCompressionMode::None;
+        //     update = true;
+        // }
+        // ImGui::EndDisabled();
+
         ImGui::Unindent();
     }
 
@@ -979,6 +992,10 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("infra###gen_recorder_infra_image", &rSettings.frameGenS.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id###gen_recorder_body_id_map_image", &rSettings.frameGenS.bodiesIdImage)){
             update = true;
         }
 
@@ -1118,6 +1135,10 @@ auto DCUIDrawer::draw_dc_player_tab_item(
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("infra###gen_player_infra_image", &pSettings.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id###gen_player_body_id_map_image", &pSettings.generation.bodiesIdImage)){
             update = true;
         }
 
@@ -1836,19 +1857,19 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
             }
             ImGui::EndDisabled();
 
-            if(ImGui::Checkbox("bodies id map###send_com_bodies_id_map", &data.server.sending.addBodyIdMap)){
+            if(ImGui::Checkbox("bodies id###send_com_bodies_id", &data.server.sending.addBodiesId)){
                 update = true;
             }
-            ImGui::SameLine();
-            ImGui::BeginDisabled(!data.server.sending.addBodyIdMap);
-            compress = data.server.sending.bodiesIdMapCM == cam::DCCompressionMode::JPEG;
-            if(ImGui::Checkbox("compress###send_comp_bodies_id_map", &compress)){
-                data.server.sending.bodiesIdMapCM = compress ? cam::DCCompressionMode::JPEG : cam::DCCompressionMode::None;
-                update = true;
-            }
-            ImGui::EndDisabled();
+            // ImGui::SameLine();
+            // ImGui::BeginDisabled(!data.server.sending.addBodiesId);
+            // compress = data.server.sending.bodiesIdCM == cam::DCCompressionMode::JPEG;
+            // if(ImGui::Checkbox("compress###send_comp_bodies_id_map", &compress)){
+            //     data.server.sending.bodiesIdCM = compress ? cam::DCCompressionMode::JPEG : cam::DCCompressionMode::None;
+            //     update = true;
+            // }
+            // ImGui::EndDisabled();
 
-            if(ImGui::Checkbox("body tracking###send_com_body_tracking", &data.server.sending.addBodyTracking)){
+            if(ImGui::Checkbox("bodies skeleton###send_com_bodies_skeleton", &data.server.sending.addBodiesSkeleton)){
                 update = true;
             }
 
@@ -1887,8 +1908,12 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("depth###gen_server_depth_image", &data.server.generation.depthImage)){
             update = true;
         }
-         ImGui::SameLine();
+        ImGui::SameLine();
         if(ImGui::Checkbox("infra###gen_server_infra_image", &data.server.generation.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id###gen_server_body_id_map_image", &data.server.generation.bodiesIdImage)){
             update = true;
         }
 
@@ -1932,6 +1957,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("infra###gen_client_infra_image", &data. clientGeneration.infraImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies id###gen_client_body_id_map_image", &data. clientGeneration.bodiesIdImage)){
             update = true;
         }
 

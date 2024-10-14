@@ -110,7 +110,7 @@ auto DCClientProcessing::new_data_frame(size_t idD, std::shared_ptr<DCDataFrame>
 }
 
 
-auto DCClientProcessing::new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void {
+auto DCClientProcessing::new_frame(size_t idD, std::shared_ptr<cam::DCFrame2> frame) -> void {
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::new_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
@@ -123,7 +123,7 @@ auto DCClientProcessing::nb_devices() const noexcept -> size_t{
     return i->frameProcessors.size();
 }
 
-auto DCClientProcessing::get_frame(size_t idD) -> std::shared_ptr<DCFrame>{
+auto DCClientProcessing::get_frame(size_t idD) -> std::shared_ptr<DCFrame2>{
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::get_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
@@ -186,7 +186,7 @@ auto DCClientProcessing::process(size_t idD) -> void{
     i->frameProcessors[idD]->process();
 }
 
-auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>{
+auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame2>{
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
@@ -194,7 +194,6 @@ auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame>
     }
     return i->frameProcessors[idD]->generate(frame);
 }
-
 
 auto DCClientProcessing::save_current_cloud(size_t idD, const std::string &path) -> bool{
 
@@ -204,9 +203,12 @@ auto DCClientProcessing::save_current_cloud(size_t idD, const std::string &path)
     }
 
     Logger::message(std::format("save_current_cloud {} {} {}\n", idD, path, i->frameProcessors[idD]->get_frame() != nullptr));
-    if(auto frame = i->frameProcessors[idD]->get_frame(); frame != nullptr){
-        Logger::message(std::format("cloud {}\n", frame->cloud.size()));
-        return io::CloudIO::save_cloud(path, frame->cloud);
+    if(auto frame = i->frameProcessors[idD]->get_frame(); frame != nullptr){        
+        if(frame->volumesB.contains(DCVolumeBufferType::ColoredCloud)){
+            auto &cloud = std::get<geo::ColorCloud>(frame->volumesB[DCVolumeBufferType::ColoredCloud]);
+            Logger::message(std::format("cloud {}\n", cloud.size()));
+            return io::CloudIO::save_cloud(path, cloud);
+        }
     }
     return false;
 }

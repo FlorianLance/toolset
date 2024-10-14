@@ -54,7 +54,7 @@ struct DCClient::Impl{
 
             Logger::message("[DCClient::initialize] Create local device.\n"sv);
             auto lDevice = std::make_unique<DCClientLocalDevice>();
-            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
+            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame2> frame){
                 processing.new_frame(idDevice, std::move(frame));
             });
             device = std::move(lDevice);
@@ -154,7 +154,7 @@ auto DCClient::update() -> void{
     }
 
     // read frames
-    std::vector<std::shared_ptr<cam::DCFrame>> frames(i->processing.nb_devices(), nullptr);
+    std::vector<std::shared_ptr<cam::DCFrame2>> frames(i->processing.nb_devices(), nullptr);
     for(size_t idC = 0; idC < i->processing.nb_devices(); ++idC){
         // check if new frame
         if(auto frame = i->processing.get_frame(idC); frame != nullptr){

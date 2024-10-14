@@ -99,28 +99,22 @@
                         "type_string": "color",
                         "version": 1
                     },
-                    "brightness": 128,
-                    "contrast": 5,
-                    "exposure_time": 0,
-                    "gain": 128,
+                    "brightness": 10,
+                    "contrast": 50,
+                    "exposure_time": 200,
+                    "gain": 40,
                     "hdr": true,
-                    "powerline_frequency": 1,
-                    "saturation": 32,
-                    "sharpness": 4,
-                    "white_balance": 4500
+                    "powerline_frequency": 2,
+                    "saturation": 64,
+                    "sharpness": 24,
+                    "white_balance": 6500
                 },
                 "connection": {
-                    "any_reading_interface": false,
                     "base": {
                         "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Remote",
-                    "id_reading_interface": 0,
-                    "protocol": "ipv4",
-                    "reading_port": 8889,
-                    "sending_address": "localhost",
-                    "sending_port": 8888
+                    "connection_type": "Local"
                 },
                 "device": {
                     "base": {
@@ -159,14 +153,14 @@
                         "ipv4_address_2": 168,
                         "ipv4_address_3": 1,
                         "ipv4_address_4": 10,
-                        "mode": 3,
-                        "open_device": false,
+                        "mode": 23,
+                        "open_device": true,
                         "serial_number_device": "",
-                        "start_reading": false,
+                        "start_reading": true,
                         "subordinate_delay_usec": 0,
                         "synch_mode": 0,
                         "synchronize_color_and_depth": true,
-                        "type_device": 0,
+                        "type_device": 1,
                         "use_serial_number": false
                     },
                     "data": {
@@ -175,65 +169,52 @@
                             "version": 1
                         },
                         "c_generation": {
-                            "audio": false,
-                            "body_id_map_image": false,
-                            "body_tracking": false,
-                            "calibration": true,
-                            "cloud": true,
+                            "bodies_id_image": false,
+                            "bodies_skeleton": false,
+                            "cloud": false,
                             "cloud_color_mode": 1,
-                            "cloud_gen_mode": 0,
                             "color_image": false,
-                            "depth": true,
                             "depth_image": false,
-                            "depth_sized_color_image": true,
-                            "imu": false,
-                            "infra": true,
+                            "depth_sized_color_image": false,
                             "infra_image": false
                         },
                         "s_capture": {
                             "audio": false,
                             "body_tracking": false,
-                            "bt_temporal_smoothing": 0.0,
                             "color": true,
                             "depth": true,
                             "imu": false,
                             "infra": false
                         },
                         "s_generation": {
-                            "audio": false,
-                            "body_id_map_image": false,
-                            "body_tracking": false,
-                            "calibration": true,
+                            "bodies_id_image": false,
+                            "bodies_skeleton": false,
                             "cloud": true,
                             "cloud_color_mode": 1,
-                            "cloud_gen_mode": 0,
                             "color_image": false,
-                            "depth": true,
-                            "depth_image": false,
+                            "depth_image": true,
                             "depth_sized_color_image": true,
-                            "imu": false,
-                            "infra": true,
                             "infra_image": false
                         },
                         "s_sending": {
                             "audio": false,
-                            "body_id_map": false,
-                            "body_tracking": false,
-                            "calibration": true,
+                            "bodies_id": false,
+                            "bodies_id_compression_mode": 0,
+                            "bodies_skeleton": false,
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "cloud_compression_mode": 2,
                             "color": false,
                             "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
+                            "dept_sized_color": false,
+                            "depth": false,
                             "depth_compression_mode": 2,
                             "depth_sized_color_compression_mode": 1,
                             "imu": false,
                             "infra": false,
                             "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 95,
-                            "original_size_color_jpeg_quality": 95
+                            "jpeg_compression_rate": 90,
+                            "original_size_color_jpeg_quality": 80
                         }
                     }
                 },
@@ -316,6 +297,13 @@
                         0.0,
                         1.0
                     ]
+                },
+                "misc": {
+                    "base": {
+                        "type_string": "misc",
+                        "version": 1
+                    },
+                    "delay": 0
                 },
                 "model": {
                     "base": {

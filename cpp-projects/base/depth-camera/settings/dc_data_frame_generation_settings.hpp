@@ -41,8 +41,8 @@ struct DCDataFrameGenerationSettings{
     bool addDepthSizedColor    = true;
     bool addOriginalSizeColor  = false;
     bool addInfra              = false;
-    bool addBodyIdMap          = false;
-    bool addBodyTracking       = false;
+    bool addBodiesId           = false;
+    bool addBodiesSkeleton     = false;
 
     // TODO
     bool addCloud              = false; // TODO
@@ -54,7 +54,7 @@ struct DCDataFrameGenerationSettings{
     DCCompressionMode depthSizedColorCM     = DCCompressionMode::JPEG;
     DCCompressionMode originalSizeColorCM   = DCCompressionMode::JPEG;
     DCCompressionMode infraCM               = DCCompressionMode::FastPFor;
-    DCCompressionMode bodiesIdMapCM         = DCCompressionMode::JPEG;
+    DCCompressionMode bodiesIdCM            = DCCompressionMode::None;
 
     DCCompressionMode cloudCM               = DCCompressionMode::FastPFor;
     std::uint8_t depthSizedColorJPEGCQ      = 95;
@@ -65,7 +65,7 @@ struct DCDataFrameGenerationSettings{
 
     [[nodiscard]] constexpr auto has_data() const noexcept -> bool{
         return  addOriginalSizeColor || addDepth || addDepthSizedColor ||
-                addInfra || addBodyTracking || addAudio || addImu || addCloud;
+               addInfra || addBodiesId || addBodiesSkeleton || addAudio || addImu || addCloud;
     }
 
     auto init_from_json(const nlohmann::json &json) -> void;

@@ -35,7 +35,7 @@ auto DCDeviceData::reset_spans() -> void{
     depthSizedColor     = {};
     depth               = {};
     infra               = {};
-    bodiesIdMap         = {};
+    bodiesId         = {};
     depthCloud          = {};    
     binaryIMU           = {};
     audioChannels       = {0,{}};

@@ -140,11 +140,11 @@ auto FemtoMegaEthernetDeviceImpl::read_IMU(bool enable) -> void {
 auto FemtoMegaEthernetDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){
-        auto bodiesD = orbbecD->read_bodies();
-        fData.bodiesIdMap = std::get<0>(bodiesD);
+        auto bodiesD = orbbecD->read_body_tracking();
+        fData.bodiesId = std::get<0>(bodiesD);
         fData.bodies        = std::get<1>(bodiesD);
     }else{
-        fData.bodiesIdMap = {};
+        fData.bodiesId = {};
         fData.bodies        = {};
     }
 }

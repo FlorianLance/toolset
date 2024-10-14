@@ -75,7 +75,7 @@ struct BinaryImageBuffer : public Buffer<std::byte>{
         Buffer::clear();
     }
 
-    auto resize_image(size_t width, size_t height, std::uint8_t sizeType) -> void{
+    auto resize_image(size_t width, size_t height, size_t sizeType) -> void{
         this->width    = width;
         this->height   = height;
         Buffer::resize(width*height*sizeType);

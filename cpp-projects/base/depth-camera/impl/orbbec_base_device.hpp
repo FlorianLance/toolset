@@ -29,6 +29,7 @@
 // local
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_config_settings.hpp"
+#include "depth-camera/settings/dc_device_data_settings.hpp"
 #include "graphics/color/rgb.hpp"
 #include "utility/buffer.hpp"
 #include "depth-camera/dc_types.hpp"
@@ -46,7 +47,7 @@ struct OrbbecBaseDevice{
     auto close() -> void;
 
     // settings
-    auto update_from_colors_settings(const DCColorSettings &colorS) ->void;
+    auto update_from_colors_settings(const DCColorSettings &colorS) -> void;
 
     // getters
     auto is_opened() const noexcept -> bool;
@@ -59,7 +60,7 @@ struct OrbbecBaseDevice{
     auto read_color_image() -> BinarySpan;
     auto read_depth_image() -> std::span<std::uint16_t>;
     auto read_infra_image() -> std::span<std::uint16_t>;
-    auto read_bodies()      -> std::tuple<std::span<uint8_t>, std::span<DCBody>>;
+    auto read_body_tracking()      -> std::tuple<std::span<uint8_t>, std::span<DCBody>>;
     auto read_from_imu()    -> BinarySpan;
 
     // process data

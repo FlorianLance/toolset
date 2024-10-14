@@ -39,8 +39,8 @@ struct DCDataFrameGenerator{
     DCDataFrameGenerator();
     ~DCDataFrameGenerator();
     
-    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame) -> std::unique_ptr<DCDataFrame>;
-    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame, DCDataFrame *cFrame) -> void;
+    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame) -> std::unique_ptr<DCDataFrame>;
+    auto generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame, DCDataFrame *cFrame) -> void;
 
 private:
     struct Impl;

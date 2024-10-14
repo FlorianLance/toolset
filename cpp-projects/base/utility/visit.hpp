@@ -1,8 +1,8 @@
 
 /*******************************************************************************
-** Toolset-3d-engine                                                          **
+** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,28 +26,9 @@
 
 #pragma once
 
-// local
-#include "imgui_dc_clouds_scene_drawer.hpp"
-
-namespace tool::graphics {
-
-struct DCDirectDrawer : public DCCloudsSceneDrawer{
-
-    auto initialize(size_t nbGrabbers) -> void override;
-    auto update() -> void;
-    auto draw(bool focus) -> void;
-    auto draw_only_clouds() -> void;
-    
-    auto update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame2> frame) -> void;
-    auto save_current_cloud(size_t idC, const std::string &path) -> void;
-
-private:
-
-    std::mutex m_locker;
-    bool m_redrawClouds = false;
-    std::vector<std::shared_ptr<cam::DCFrame2>> m_lastFrames;
-
-    bool m_allTabOpened = false;    
-    size_t m_currentTabOpened = 0;
-};
+namespace tool{
+    template<typename ... Callable>
+    struct Visitor : Callable...{
+        using Callable::operator()...;
+    };
 }

@@ -72,7 +72,7 @@ public:
     auto get_proc_usage() const -> double;
 
     // signals
-    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
+    sigslot::signal<std::shared_ptr<DCFrame2>> new_frame_signal;
     sigslot::signal<std::shared_ptr<DCDataFrame>> new_data_frame_signal;
     sigslot::signal<DCColorSettings> color_settings_reset_signal;
     sigslot::signal<int, std::string> update_device_name_signal;

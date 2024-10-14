@@ -41,17 +41,17 @@ struct DCFrameGenerationSettings{
     bool depthImage             = false;
     bool originalSizeColorImage = false;
     bool infraImage             = false;
+    bool bodiesIdImage          = false;
+    bool bodiesSkeleton         = false;
 
-    bool bodyIdMapImage       = false; // TODO
-    bool bodyTracking         = false; // TODO
     bool imu                  = false; // TODO
     bool audio                = false; // TODO
-    // CloudGenerationMode cloudGenMode = CloudGenerationMode::FromDepth;
+
     CloudColorMode cloudColorMode = CloudColorMode::FromDepthSizedColorImage;
 
     [[nodiscard]] constexpr auto has_data() const noexcept -> bool{
         return  originalSizeColorImage || depthSizedColorImage ||
-                depthImage || infraImage || cloud;
+               depthImage || infraImage || cloud || bodiesIdImage || bodiesSkeleton;
     }
 
     auto init_from_json(const nlohmann::json &json) -> void;

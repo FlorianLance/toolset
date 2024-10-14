@@ -170,11 +170,17 @@ struct OrbbecBaseDevice::Impl{
     k4a::calibration k4aCalibration;
     std::unique_ptr<k4a::transformation> k4aTransformation = nullptr;
 
+    // body tracking
+    k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
+    std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
+    std::vector<DCBody> bodies;
+
     // frames data
     std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
     std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
     std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
     std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
+    k4a::image bodiesIndexImage   = nullptr;
 
     // processing data
     std::vector<std::int8_t> depthSizedColorData;
@@ -184,6 +190,18 @@ struct OrbbecBaseDevice::Impl{
     auto set_property_value(OBPropertyID pId, std::int32_t value) -> void;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCalibrationParam &calibrationParam) -> k4a::calibration;
     static auto k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration;
+    static auto update_k4_body(DCBody &body, const k4abt_body_t &k4aBody) -> void{
+        body.id = static_cast<std::int8_t>(k4aBody.id);
+        for(const auto &jointD : dcJoints.data){
+            const auto &kaKoint = k4aBody.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+            auto &joint = body.skeleton.joints[static_cast<int>(std::get<0>(jointD))];
+            joint.confidence = convert_to_confidence_level(kaKoint.confidence_level);
+            const auto &p = kaKoint.position;
+            joint.position = {-p.v[0],-p.v[1],p.v[2]};
+            const auto &o = kaKoint.orientation;
+            joint.orientation = {o.wxyz.x,o.wxyz.y,o.wxyz.z,o.wxyz.w};
+        }
+    }
 };
 
 auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, bool value) -> void{
@@ -889,6 +907,19 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
         i->k4aCalibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1] += configS.colorAlignmentTr.y();
         i->k4aCalibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2] += configS.colorAlignmentTr.z();
 
+
+        if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
+            Logger::message("[OrbbecBaseDevice::start_device] Start body tracker\n");
+
+            i->k4aBtConfig.gpu_device_id       = configS.btGPUId;
+            i->k4aBtConfig.processing_mode     = convert_to_k4a_body_tracking_processing_mode(configS.btProcessingMode);
+            i->k4aBtConfig.sensor_orientation  = convert_to_k4a_sensor_orientation(configS.btOrientation);
+            i->k4aBtConfig.model_path          = nullptr;
+
+            i->bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(i->k4aCalibration, i->k4aBtConfig));
+            // i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
+        }
+
     }catch(ob::Error &e) {
         Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
         i->device = nullptr;
@@ -920,6 +951,12 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 auto OrbbecBaseDevice::close() -> void{
 
     auto lg = LogGuard("OrbbecBaseDevice::close"sv);
+
+    if(i->bodyTracker != nullptr){
+        Logger::message("Stop body tracker\n");
+        i->bodyTracker->shutdown();
+        i->bodyTracker = nullptr;
+    }
 
     if(i->pipe != nullptr){
         Logger::message("Stop pipeline\n");
@@ -962,6 +999,7 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
         Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
     }
 }
+
 
 auto OrbbecBaseDevice::is_opened() const noexcept -> bool {
     return i->device != nullptr;
@@ -1061,83 +1099,75 @@ auto OrbbecBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
     return {};
 }
 
-auto OrbbecBaseDevice::read_bodies() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
+auto OrbbecBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
 
-    // k4aBtConfig.gpu_device_id       = settings.config.btGPUId;
-    // k4aBtConfig.processing_mode     = static_cast<k4abt_tracker_processing_mode_t>(settings.config.btProcessingMode);
-    // k4aBtConfig.sensor_orientation  = static_cast<k4abt_sensor_orientation_t>(settings.config.btOrientation);
-    // k4aBtConfig.model_path          = nullptr;
-    // if(!depthImage || ! infraredImage){
-    //     return;
-    // }
+    if(i->bodyTracker == nullptr){
+        return {};
+    }
 
-    // if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking && (bodyTracker != nullptr)){
+    try{
 
+        k4a_capture_t captureH = nullptr;
+        k4a_capture_create(&captureH);
+        k4a::capture capture(captureH);
 
-    //     try{
+        k4a::image k4DepthImage = k4a::image::create_from_buffer(
+            K4A_IMAGE_FORMAT_DEPTH16,
+            i->depthImage->width(),
+            i->depthImage->height(),
+            i->depthImage->width()*sizeof(std::uint16_t),
+            reinterpret_cast<std::uint8_t*>(i->depthImage->data()),
+            i->depthImage->dataSize(),
+            nullptr,
+            nullptr
+        );
 
-    //         k4a_capture_t captureH = nullptr;
-    //         k4a_capture_create(&captureH);
-    //         k4a::capture capture(captureH);
+        k4a::image k4IRImage = k4a::image::create_from_buffer(
+            K4A_IMAGE_FORMAT_DEPTH16,
+            i->infraredImage->width(),
+            i->infraredImage->height(),
+            i->infraredImage->width()*sizeof(std::uint16_t),
+            reinterpret_cast<std::uint8_t*>(i->infraredImage.get()->data()),
+            i->infraredImage->dataSize(),
+            nullptr,
+            nullptr
+        );
 
-    //         // std::cout << "create d image\n";
-    //         // std::cout << depthImage->width() << " " << depthImage->height() << " "<< depthImage->width()*depthImage->height() << " " << depthImage->dataSize() << "\n";
-    //         k4a::image k4DepthImage = k4a::image::create_from_buffer(
-    //             K4A_IMAGE_FORMAT_DEPTH16,
-    //             depthImage->width(),
-    //             depthImage->height(),
-    //             depthImage->width()*sizeof(std::uint16_t),
-    //             reinterpret_cast<std::uint8_t*>(depthImage.get()->data()),
-    //             depthImage->dataSize(),
-    //             nullptr,
-    //             nullptr
-    //         );
+        capture.set_depth_image(k4DepthImage);
+        capture.set_ir_image(k4IRImage);
 
-    //         // std::cout << "create ir image\n";
-    //         // std::cout << infraredImage->width() << " " << infraredImage->height() << " "<< infraredImage->width()*infraredImage->height() << " " << infraredImage->dataSize() << "\n";
-    //         k4a::image k4IRImage = k4a::image::create_from_buffer(
-    //             K4A_IMAGE_FORMAT_DEPTH16,
-    //             infraredImage->width(),
-    //             infraredImage->height(),
-    //             infraredImage->width()*sizeof(std::uint16_t),
-    //             reinterpret_cast<std::uint8_t*>(infraredImage.get()->data()),
-    //             infraredImage->dataSize(),
-    //             nullptr,
-    //             nullptr
-    //         );
+        if(!i->bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
+            return {};
+        }
 
-    //         // std::cout << "set depth image\n";
-    //         capture.set_depth_image(k4DepthImage);
+        if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
 
-    //         // std::cout << "set ir image\n";
-    //         capture.set_ir_image(k4IRImage);
+            auto bodiesCount = bodyFrame.get_num_bodies();
+            if(i->bodies.size() < bodiesCount){
+                i->bodies.resize(bodiesCount);
+            }
+            for(size_t ii = 0; ii < bodiesCount; ++ii){
+                i->update_k4_body(i->bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
+            }
+            i->bodiesIndexImage = bodyFrame.get_body_index_map();
 
+            std::span<ColorGray8> biISpan = {};
+            if(i->bodiesIndexImage.is_valid()){
+                biISpan = std::span<ColorGray8>{
+                    reinterpret_cast<ColorGray8*>(i->bodiesIndexImage.get_buffer()),
+                    static_cast<size_t>(i->bodiesIndexImage.get_width_pixels() * i->bodiesIndexImage.get_height_pixels())
+                };
+            }
+            return std::make_tuple(biISpan, std::span<DCBody>{i->bodies});
+        }
 
-    //         // std::cout << "enqueue capture\n";
-    //         if(bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
-    //             if(k4abt::frame bodyFrame = bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
-    //                 auto bodiesCount = bodyFrame.get_num_bodies();
-    //                 if(data.bodies.size() < bodiesCount){
-    //                     data.bodies.resize(bodiesCount);
-    //                 }
-    //                 // std::cout << "bodiesCount " << bodiesCount << "\n";
-    //                 for(size_t ii = 0; ii < bodiesCount; ++ii){
-    //                     update_body(data.bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
-    //                 }
-    //                 timing.bodiesTS = bodyFrame.get_system_timestamp();
-    //                 bodiesIndexImage = bodyFrame.get_body_index_map();
-    //             }
-    //         }
+    }  catch (k4a::error error) {
+        Logger::error("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what());
+    }  catch (std::runtime_error error) {
+        Logger::error("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what());
+    }
 
-    //     }  catch (k4a::error error) {
-    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
-    //     }  catch (std::runtime_error error) {
-    //         Logger::error("[FemtoOrbbecDeviceImpl::read_bodies] error: {}\n", error.what());
-    //     }
-
-    // }
-
-    return {};
+    return {{},{}};
 }
 
 auto OrbbecBaseDevice::read_from_imu() -> tool::BinarySpan{

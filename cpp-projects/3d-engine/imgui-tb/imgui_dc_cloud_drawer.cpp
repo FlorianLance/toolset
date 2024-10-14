@@ -36,12 +36,14 @@ auto DCCloudDrawer::initialize() -> void {
 
     // init textures
     colorT.init_or_update_8ui(100,100,4, reset4.data());
+    depthSizedColorT.init_or_update_8ui(100,100,4, reset4.data());
     depthT.init_or_update_8ui(100,100,3, reset4.data());
     infraT.init_or_update_8ui(100,100,3, reset4.data());
-    bodiesIdMapT.init_or_update_8ui(100, 100, 1, reset4.data());
+    bodiesIdMapT.init_or_update_8ui(100, 100, 3, reset4.data());
 
     // init textures drawers
     colorD.init(&colorT);
+    depthSizedColorD.init(&depthSizedColorT);
     depthD.init(&depthT);
     infraD.init(&infraT);
     bodiesIdMapD.init(&bodiesIdMapT);
@@ -70,6 +72,7 @@ auto DCCloudDrawer::reset() -> void{
 
     std::vector<std::uint8_t> reset4(4* 100*100, 50);
     colorT.init_or_update_8ui(100,100,4, reset4.data());
+    depthSizedColorT.init_or_update_8ui(100,100,4, reset4.data());
     depthT.init_or_update_8ui(100,100,3, reset4.data());
     infraT.init_or_update_8ui(100,100,3, reset4.data());
     bodiesIdMapT.init_or_update_8ui(100,100,3, reset4.data());
@@ -77,7 +80,7 @@ auto DCCloudDrawer::reset() -> void{
     cpD.set_indice_count(0);
 }
 
-auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
+auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame2> frame) -> bool {
 
     if(lastFrameId == frame->idCapture){
         return false;
@@ -90,51 +93,72 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     auto diff   = range.y() - range.x();
     frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x() + filtersS.minDepthF*diff, range.x() + filtersS.maxDepthF*diff);
 
-    if(!frame->rgbaDepthSizedColor.empty()){
-        colorT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->rgbaDepthSizedColor.width),
-            static_cast<GLsizei>(frame->rgbaDepthSizedColor.height), 4, reinterpret_cast<uint8_t *>(frame->rgbaDepthSizedColor.get_data()));
-    } else if(!frame->rgbaColor.empty()){
-        colorT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->rgbaColor.width),
-            static_cast<GLsizei>(frame->rgbaColor.height), 4, reinterpret_cast<uint8_t *>(frame->rgbaColor.get_data()));
+    if(auto image = frame->image_buffer<ColorRGBA8>(cam::DCImageBufferType::DepthSizedColorRGBA8)){
+
+        depthSizedColorT.init_or_update_8ui(
+            static_cast<GLsizei>(image->width),
+            static_cast<GLsizei>(image->height), 4, reinterpret_cast<uint8_t *>(image->get_data()));
     }
-    
-    if(!frame->rgbDepth.empty()){
+
+    if(auto image = frame->image_buffer<ColorRGBA8>(cam::DCImageBufferType::OriginalColorRGBA8)){
+
+        colorT.init_or_update_8ui(
+            static_cast<GLsizei>(image->width),
+            static_cast<GLsizei>(image->height), 4, reinterpret_cast<uint8_t *>(image->get_data()));
+    }
+
+    if(auto image = frame->image_buffer<ColorRGB8>(cam::DCImageBufferType::DepthRGB8)){
+
         depthT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->rgbDepth.width),
-            static_cast<GLsizei>(frame->rgbDepth.height), 3, reinterpret_cast<uint8_t *>(frame->rgbDepth.get_data()));
+            static_cast<GLsizei>(image->width),
+            static_cast<GLsizei>(image->height), 3, reinterpret_cast<uint8_t *>(image->get_data()));
     }
-    
-    if(!frame->rgbInfra.empty()){
+
+    if(auto image = frame->image_buffer<ColorRGB8>(cam::DCImageBufferType::InfraredRGB8)){
+
         infraT.init_or_update_8ui(
-            static_cast<GLsizei>(frame->rgbInfra.width),
-            static_cast<GLsizei>(frame->rgbInfra.height), 3, reinterpret_cast<uint8_t *>(frame->rgbInfra.get_data()));
-    }
-
-    // ...
-
-
-    if(frame->cloud.is_valid()){
-        cpD.update(frame->cloud);
-        cpD.set_indice_count(frame->cloud.vertices.size());
+            static_cast<GLsizei>(image->width),
+            static_cast<GLsizei>(image->height), 3, reinterpret_cast<uint8_t *>(image->get_data()));
     }
     
-    nbBodies = frame->bodyTracking.size();
-    if(jointsModels.size() < nbBodies){
-        jointsModels.resize(nbBodies);
+    if(auto image = frame->image_buffer<ColorRGB8>(cam::DCImageBufferType::BodiesIdMapRGB8)){
+
+        bodiesIdMapT.init_or_update_8ui(
+            static_cast<GLsizei>(image->width),
+            static_cast<GLsizei>(image->height), 3, reinterpret_cast<uint8_t *>(image->get_data()));
     }
-    for(size_t ii = 0; ii < nbBodies; ++ii){
-        for(size_t jj = 0; jj < frame->bodyTracking[ii].skeleton.joints.size(); ++jj){
-            const auto &j = frame->bodyTracking[ii].skeleton.joints[jj];
-            jointsModels[ii][jj] = std::make_tuple(j.good_confidence(),
-                geo::transform(
-                    {{1.f,1.f,1.f}},
-                    euler_angles(j.orientation)*d180_PI<float>,
-                    j.position*0.001f
-                )
-            );
+
+    if(auto cloud = frame->volume_buffer<ColorCloud>(cam::DCVolumeBufferType::ColoredCloud)){
+        if(cloud->is_valid()){
+            cpD.update(*cloud);
+            cpD.set_indice_count(cloud->size());
         }
+    }
+
+    if(auto bodiesSkeleton = frame->data_buffer(cam::DCDataBufferType::BodiesSkeleton)){
+
+        nbBodies = bodiesSkeleton->size();
+        if(jointsModels.size() < nbBodies){
+            jointsModels.resize(nbBodies);
+        }
+
+        auto btData = reinterpret_cast<cam::DCBody*>(bodiesSkeleton->get_data());
+
+        for(size_t ii = 0; ii < nbBodies; ++ii){
+            for(size_t jj = 0; jj < btData[ii].skeleton.joints.size(); ++jj){
+                const auto &j = btData[ii].skeleton.joints[jj];
+                jointsModels[ii][jj] = std::make_tuple(j.good_confidence(),
+                    geo::transform(
+                        {{1.f,1.f,1.f}},
+                        euler_angles(j.orientation)*d180_PI<float>,
+                        j.position*0.001f
+                    )
+                );
+            }
+        }
+
+    }else{
+        nbBodies = 0;
     }
 
     // update last frame

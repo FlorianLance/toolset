@@ -143,7 +143,7 @@ HEADERS += \
     network/tcp_sender.hpp \
     network/tcp_server.hpp \
     network/udp_reader.hpp \
-    network/udp_sender.hpp \    
+    network/udp_sender.hpp \
     ## settings
     network/settings/udp_server_settings.hpp \
     # camera
@@ -239,6 +239,7 @@ HEADERS += \
     utility/io_file.hpp \
     utility/monitoring.hpp \
     utility/time_diff.hpp \
+    utility/visit.hpp \
     # algorithms
     algorithms/marching_cube.hpp \
     # data

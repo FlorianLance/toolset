@@ -51,7 +51,7 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
     auto lg = LogGuard("[DCClientLocalDevice::initialize]");
 
     i->device = std::make_unique<DCDevice>();
-    i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame2> frame){
 
         if(frame){
 

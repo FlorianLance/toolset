@@ -55,10 +55,6 @@ auto AzureKinectDeviceImpl::close() -> void{
     azureD->close();
 }
 
-auto AzureKinectDeviceImpl::update_from_data_settings() -> void{
-    azureD->update_from_data_settings(settings.data);
-}
-
 auto AzureKinectDeviceImpl::update_from_colors_settings() -> void {
     azureD->update_from_colors_settings(settings.color);
 }
@@ -123,12 +119,12 @@ auto AzureKinectDeviceImpl::read_IMU(bool enable) -> void {
 auto AzureKinectDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){
-        auto bodiesD = azureD->read_body_tracking();
-        fData.bodiesIdMap = std::get<0>(bodiesD);
-        fData.bodies      = std::get<1>(bodiesD);
+        auto bodiesD    = azureD->read_body_tracking();
+        fData.bodiesId  = std::get<0>(bodiesD);
+        fData.bodies    = std::get<1>(bodiesD);
     }else{
-        fData.bodiesIdMap = {};
-        fData.bodies      = {};
+        fData.bodiesId  = {};
+        fData.bodies    = {};
     }
 }
 

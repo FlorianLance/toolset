@@ -50,7 +50,6 @@ private:
 
     // settings
     auto update_from_colors_settings() -> void override final;
-    auto update_from_data_settings() -> void override final;
 
     // read data
     auto capture_frame(std::int32_t timeoutMs) -> bool override final;

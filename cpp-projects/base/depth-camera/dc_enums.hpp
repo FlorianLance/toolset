@@ -443,6 +443,8 @@ static constexpr TupleArray<DCType::SizeEnum, TDCDevices> dcDevices = {{
 [[maybe_unused]] static constexpr std::int16_t dc_invalid_infra_value = 0;
 [[maybe_unused]] static constexpr geo::Pt4<std::uint8_t> dc_invalid_color_value = {0,0,0,0};
 
+[[maybe_unused]] static constexpr std::uint16_t dc_invalid_unsigned_depth_value = 0;
+
 
 
 // # synch
@@ -581,24 +583,32 @@ enum class DCApplicationType : std::int8_t {
 };
 
 enum class DCInfoType : std::int8_t{
+    DCMode, NbValidVertices
     // NbAudioChannels = 30
 };
 
-enum class DCBufferType : std::int8_t{
+enum class DCDataBufferType : std::int8_t{
     Calibration = 0,
     IMU = 10,
     Audio = 20,
-    CloudXYZ16RGB8 = 30,
-    VoxelCloudX13Y13Z13RGB8 = 31,
-    ColoredCloud = 40,
-    BodyTracking = 50,
+    BodiesSkeleton = 30,
+    // CloudXYZ16RGB8 = 30,
+    // VoxelCloudX13Y13Z13RGB8 = 31,
+    // ColoredCloud = 40,
 };
 
 enum class DCImageBufferType : std::int8_t{
-    OriginalColorRGBA8 = 0, DepthSizedColorRGBA8,
-    Depth16 = 10, Infrared16,
-    DepthRGB8 = 20, InfraredRGB8,
-    BodiesIdMap8 = 30
-};  
+    OriginalColorRGBA8 = 0, DepthSizedColorRGBA8, Depth16, Infrared16, BodiesIdMap8,
+    DepthRGB8 = 30, InfraredRGB8, BodiesIdMapRGB8,
+};
+
+enum class DCVolumeBufferType : std::int8_t{
+    ColoredCloud   = 0,
+    CloudXYZ16RGB8,
+    VoxelCloudX13Y13Z13RGB8 = 11,
+};
+
+
+
 
 }

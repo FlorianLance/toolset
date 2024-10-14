@@ -56,9 +56,9 @@ struct DCDeviceDataSettings{
         sending.addDepthSizedColor        = true;
         sending.addOriginalSizeColor      = false;
         sending.addInfra                  = false;
-        sending.addBodyIdMap              = false;
+        sending.addBodiesId              = false;
         sending.addCloud                  = false;
-        sending.addBodyTracking           = false;
+        sending.addBodiesSkeleton           = false;
         sending.addAudio                  = false;
         sending.addImu                    = false;
         sending.cloudColorMode            = CloudColorMode::FromDepthSizedColorImage;
@@ -86,9 +86,9 @@ struct DCDeviceDataSettings{
         sending.addDepthSizedColor          = false;
         sending.addOriginalSizeColor        = false;
         sending.addInfra                    = false;
-        sending.addBodyIdMap                = false;
+        sending.addBodiesId                = false;
         sending.addCloud                    = false;
-        sending.addBodyTracking             = false;
+        sending.addBodiesSkeleton             = false;
         sending.addAudio                    = false;
         sending.addImu                      = false;
         sending.cloudColorMode              = CloudColorMode::FromDepthSizedColorImage;

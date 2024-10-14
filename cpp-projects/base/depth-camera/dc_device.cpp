@@ -175,7 +175,7 @@ auto DCDevice::process() -> void{
             }
 
             // set connections
-            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame2> frame){
                 new_frame_signal(std::move(frame));
             });
             i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
@@ -190,49 +190,30 @@ auto DCDevice::process() -> void{
 
             if(!i->device->is_opened()){
 
-                bool canOpenDevice = true;
-                // if(i->deviceS.configS.typeDevice != DCType::FemtoMegaEthernet){
-                //     auto deviceCount = i->device->nb_devices();
-                //     Logger::message(std::format("NB DEVICES {}\n", deviceCount));
-                //     if(deviceCount == 0){
-                //         canOpenDevice = false;
-                //         Logger::error("[DCDevice::open] No device found\n");
-                //     }else if(i->deviceS.configS.useSerialNumber){
-                //         // ...
-                //     }else{
-                //         if(i->deviceS.configS.idDevice >= deviceCount){
-                //             canOpenDevice = false;
-                //             Logger::error(std::format("[DCDevice::open] Invalid device id: [{}], available: [{}]\n", i->deviceS.configS.idDevice, deviceCount));
-                //         }
-                //     }
-                // }
+                if(i->device->open(i->deviceS.configS)){
 
-                if(canOpenDevice){
+                    i->deviceOpened = true;
 
-                    if(i->device->open(i->deviceS.configS)){
+                    // update settings
+                    {
+                        std::unique_lock<std::mutex> lock(i->locker);
+                        i->device->set_data_settings(i->deviceS.dataS.server);
+                        i->device->set_filters_settings(i->filtersS);
+                        i->device->set_delay_settings(i->delayS);
 
-                        i->deviceOpened = true;
-
-                        // update settings
-                        {
-                            std::unique_lock<std::mutex> lock(i->locker);
-                            i->device->set_data_settings(i->deviceS.dataS.server);
-                            i->device->set_filters_settings(i->filtersS);
-                            i->device->set_delay_settings(i->delayS);
-
-                            if(dAction.resetColorSettings){
-                                i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
-                                color_settings_reset_signal(i->colorsS);
-                            }
-
-                            i->device->set_color_settings(i->colorsS);
-                            i->device->update_from_colors_settings();
+                        if(dAction.resetColorSettings){
+                            i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                            color_settings_reset_signal(i->colorsS);
                         }
 
-                        // update device name
-                        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
+                        i->device->set_color_settings(i->colorsS);
+                        i->device->update_from_colors_settings();
                     }
+
+                    // update device name
+                    update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
                 }
+
             }
         }
 

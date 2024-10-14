@@ -84,8 +84,8 @@ public:
     // auto get_audio_samples_all_channels(size_t idD, std::vector<float> &audioBuffer) -> void;
 
     // generate
-    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, size_t idF, DCFrame &frame) -> bool;
-    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, DCDataFrame *cFrame, DCFrame &frame) -> bool;
+    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, size_t idF, DCFrame2 &frame) -> bool;
+    auto generate_frame(const DCFrameGenerationSettings &dfgS, size_t idD, DCDataFrame *cFrame, DCFrame2 &frame) -> bool;
 
     // modify
     // # devices
@@ -96,7 +96,7 @@ public:
     // # modify devices/frames
     // #### TEST
     auto merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f minBound, tool::geo::Pt3f maxBound) -> void;
-    auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame &frame) -> void;
+    auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, cam::DCFrame2 &frame) -> void;
     auto merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idF, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColorCloud &cloud) -> void;
     // # frames
     auto add_data_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> void;

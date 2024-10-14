@@ -26,9 +26,15 @@
 
 #pragma once
 
+// std
+#include <variant>
+
 // local
 #include "dc_enums.hpp"
 #include "geometry/quaternion.hpp"
+#include "graphics/color/rgb.hpp"
+#include "utility/image_buffer.hpp"
+#include "geometry/color_cloud.hpp"
 
 namespace tool::cam {
 
@@ -238,5 +244,15 @@ struct SettingsAction{
     }
 };
 
+using InfoV = std::variant<
+    std::int64_t>;
 
+using ImageBufferV = std::variant<
+    ImageBuffer<ColorRGBA8>,
+    ImageBuffer<ColorRGB8>,
+    ImageBuffer<ColorGray8>,
+    ImageBuffer<ColorGray16>>;
+
+using VolumeBufferV = std::variant<
+    geo::ColorCloud>;
 }

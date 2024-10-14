@@ -54,7 +54,7 @@ auto DCDeviceDrawer::update() -> void{
     m_redrawClouds = false;
 }
 
-auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
+auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame2> frame) -> void{
     m_locker.lock();
     m_lastFrame = std::move(frame);
     m_locker.unlock();
@@ -74,14 +74,16 @@ auto DCDeviceDrawer::save_current_cloud(const std::string &path) -> void{
 
     if(frame != nullptr){
         Logger::message(std::format("save_cloud: {}\n", path));
-        tool::io::CloudIO::save_cloud(path, frame->cloud);
-        auto c = frame->cloud;
-        for(size_t ii = 0; ii < c.size(); ++ii){
-            c.colors[ii] = c.normals[ii];
-        }
 
-        auto nPath = path;
-        tool::String::replace_first(nPath, ".obj", "_normals_colors.obj");
-        tool::io::CloudIO::save_cloud(nPath, c);
+        if(auto cloud = frame->volume_buffer<geo::ColorCloud>(cam::DCVolumeBufferType::ColoredCloud)){
+            tool::io::CloudIO::save_cloud(path, *cloud);
+
+            for(size_t ii = 0; ii < cloud->size(); ++ii){
+                cloud->colors[ii] = cloud->normals[ii];
+            }
+            auto nPath = path;
+            tool::String::replace_first(nPath, ".obj", "_normals_colors.obj");
+            tool::io::CloudIO::save_cloud(nPath, *cloud);
+        }
     }
 }

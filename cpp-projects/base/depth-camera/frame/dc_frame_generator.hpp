@@ -39,7 +39,7 @@ struct DCFrameGenerator{
     ~DCFrameGenerator();
 
     auto initialize(DCDataFrame *cFrame) -> void;
-    auto generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *cFrame, DCFrame &frame) -> bool;
+    auto generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *cFrame, DCFrame2 &frame) -> bool;
 
 private:
 

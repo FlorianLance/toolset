@@ -264,6 +264,7 @@ namespace BS {
                 gameObject.AddComponent<ExecuteFromMainThread>();
             }
 
+
             // start loading video job
             loadVideoJob.parameter                 = System.IO.Path.Combine(Application.dataPath, videoFilePath);
             loadVideoJob.function                  = m_dcVideoPlayerDLL.load_from_file;

@@ -55,11 +55,11 @@ auto DCGMainMenuBarDrawer::draw() -> void{
             if (ImGui::BeginMenu("Save")){
                 if(ImGui::MenuItem("PC Host server JSON file###save_pc_host_server_json_file")){
                     Logger::message("Save to PC Host server JSON file\n");
-                    ImGuiFileDialog::Instance()->OpenDialog("Save PC Host server JSON file", "Choose file to save", ".json", ".");
+                    DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->server.string());
                 }
                 if(ImGui::MenuItem("Specific server JSON file###save_specific_server_json_file")){
                     Logger::message("Save to specific server JSON file\n");
-                    DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->server.string());
+                    ImGuiFileDialog::Instance()->OpenDialog("Save PC Host server JSON file", "Choose file to save", ".json", ".");
                 }
                 if(ImGui::MenuItem("Default server JSON FILE###save_default_server_json_file")){
                     Logger::message("Save to default server JSON file\n");
@@ -71,11 +71,11 @@ auto DCGMainMenuBarDrawer::draw() -> void{
             if (ImGui::BeginMenu("Load")){
                 if(ImGui::MenuItem("PC Host server JSON file###load_pc_host_server_json_file")){
                     Logger::message("Load PC Host server JSON file\n");
-                    ImGuiFileDialog::Instance()->OpenDialog("Load PC Host server JSON file", "Choose file to load", ".json", ".");
+                    DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->server.string());
                 }
                 if(ImGui::MenuItem("Specific server JSON file###load_specific_server_json_file")){
                     Logger::message("Load specific server JSON file\n");
-                    DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->server.string());
+                    ImGuiFileDialog::Instance()->OpenDialog("Load PC Host server JSON file", "Choose file to load", ".json", ".");
                 }
                 if(ImGui::MenuItem("Default server JSON file###load_default_server_json_file")){
                     Logger::message("Load default server JSON file\n");

@@ -426,6 +426,7 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
         if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
             Logger::message("[AzureBaseDevice::start_device] Start body tracker\n");
             i->bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(i->calibration, i->k4aBtConfig));
+            // i->bodyTracker->set_temporal_smoothing();
         }
 
     }  catch (k4a::error error) {
@@ -467,13 +468,6 @@ auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS)
         Logger::error(std::format("[AzureBaseDevice::update_from_colors_settings) Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
     }
 }
-
-auto AzureBaseDevice::update_from_data_settings(const DCDeviceDataSettings &dataS) -> void{
-    if(i->bodyTracker != nullptr){
-        i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
-    }
-}
-
 
 auto AzureBaseDevice::is_opened() const noexcept -> bool{
     return i->device != nullptr;

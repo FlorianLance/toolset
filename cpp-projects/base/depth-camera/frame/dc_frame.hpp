@@ -26,36 +26,143 @@
 
 #pragma once
 
-// std
-#include <variant>
-
 // local
-#include "utility/image_buffer.hpp"
-#include "geometry/color_cloud.hpp"
-#include "graphics/color/rgb.hpp"
-
 #include "camera/frame.hpp"
 #include "depth-camera/dc_types.hpp"
 #include "utility/unordered_map.hpp"
+// #include "utility/visit.hpp"
 
 namespace tool::cam{
-
-using ImageBufferV = std::variant<
-    ImageBuffer<ColorRGBA8>,
-    ImageBuffer<ColorRGB8>,
-    ImageBuffer<ColorGray8>,
-    ImageBuffer<ColorGray16>>;
 
 struct DCFrame2 : Frame{
 
     DCMode mode;
-    size_t validVerticesCount = 0;
-    umap<DCInfoType, std::int32_t> infosB;
-    umap<DCBufferType, BinaryBuffer> datasB;
-    umap<DCImageBufferType, ImageBufferV> imagesB;
+    umap<DCInfoType,         std::int64_t> infosB;
+    umap<DCDataBufferType,   BinaryBuffer> datasB;
+    umap<DCImageBufferType,  ImageBufferV> imagesB;
+    umap<DCVolumeBufferType, VolumeBufferV> volumesB;
+
+    // insert buffer
+    auto insert_data_buffer(DCDataBufferType type, const std::span<const std::byte> iData) -> std::span<std::byte>{
+
+        if(!datasB.contains(type)){
+            datasB.insert({type, BinaryBuffer{}});
+        }
+
+        auto &dataB = datasB[type];
+        dataB.resize(iData.size());
+        std::copy(iData.begin(), iData.end(), dataB.begin());
+        return dataB.span();
+    }
+
+    template <class T>
+    auto insert_image_buffer(DCImageBufferType type, size_t width, size_t height, const std::span<const T> iData) -> std::span<T>{
+
+        if(!imagesB.contains(type)){
+            imagesB.insert({type, ImageBuffer<T>{}});
+        }
+
+        auto &imageB = std::get<ImageBuffer<T>>(imagesB[type]);
+        imageB.resize_image(width, height);
+        std::copy(iData.begin(), iData.end(), imageB.begin());
+        return imageB.span();
+    }
+
+    template <class T>
+    auto insert_image_buffer(DCImageBufferType type, size_t width, size_t height, std::optional<T> defaultValue = std::nullopt) -> std::span<T>{
+
+        if(!imagesB.contains(type)){
+            imagesB.insert({type, ImageBuffer<T>{}});
+        }
+
+        auto &imageB = std::get<ImageBuffer<T>>(imagesB[type]);
+        imageB.resize_image(width,height);
+        if(defaultValue.has_value()){
+            imageB.fill(defaultValue.value());
+        }
+        return imageB.span();
+    }
+
+    auto insert_volume_buffer(DCVolumeBufferType type, const geo::ColorCloud &cloud = {}) -> geo::ColorCloud*{
+
+        if(!volumesB.contains(type)){
+            volumesB.insert({type, cloud});
+        }
+
+        return &std::get<geo::ColorCloud>(volumesB[type]);
+    }
+
+    // get buffer
+    auto data_buffer(DCDataBufferType type) -> BinaryBuffer*{
+        if(datasB.contains(type)){
+            return &datasB[type];
+        }
+        return nullptr;
+    }
+
+    template <class T>
+    auto image_buffer(DCImageBufferType type) -> ImageBuffer<T>*{
+        if(imagesB.contains(type)){
+            return &std::get<ImageBuffer<T>>(imagesB[type]);
+        }
+        return nullptr;
+    }
+
+    template <class T>
+    auto volume_buffer(DCVolumeBufferType type) -> T*{
+        if(volumesB.contains(type)){
+            return &std::get<T>(volumesB[type]);
+        }
+        return nullptr;
+    }
+
+    // get buffer size
+    auto data_buffer_size(DCDataBufferType type) -> size_t{
+        if(datasB.contains(type)){
+            return datasB[type].size();
+        }
+        return 0;
+    }
+
+    // auto image_buffer_size(DCImageBufferType type) -> size_t{
+
+    //     if(imagesB.contains(type)){
+
+    //         const auto &imageB = imagesB[type];
+    //         std::visit(Visitor{
+    //             [](const ImageBuffer<ColorRGBA8> &sImg){
+    //                 return sImg.size();
+    //             },
+    //             [](const ImageBuffer<ColorRGB8> &sImg){
+    //                 return sImg.size();
+    //             },
+    //             [](const ImageBuffer<ColorGray8> &sImg){
+    //                 return sImg.size();
+    //             },
+    //             [](const ImageBuffer<ColorGray16> &sImg){
+    //                 return sImg.size();
+    //             }
+    //             }, imageB
+    //         );
+    //     }
+    //     return 0;
+    // }
+
+    // auto volume_buffer_size(DCVolumeBufferType type) -> size_t{
+    //     if(volumesB.contains(type)){
+    //         auto &volumeB = volumesB[type];
+    //         std::visit(Visitor{
+    //             [&](geo::ColorCloud &cloud){
+    //                 return cloud.size();
+    //             }
+    //         }, volumeB
+    //         );
+    //     }
+    //     return 0;
+    // }
 };
 
-struct DCFrame : Frame{
+struct DCDeprecatedFrame : Frame{
 
     // info
     DCMode mode;

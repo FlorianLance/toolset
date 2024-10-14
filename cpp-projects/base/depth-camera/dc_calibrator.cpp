@@ -317,7 +317,7 @@ auto DCCalibrator::calibration_client_data(size_t idGrabber) const -> const DCCa
     return nullptr;
 }
 
-auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void{
+auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> void{
 
     if(!states.isRegistering){
         return;
@@ -328,8 +328,11 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
     }
 
     // retrieve cloud
-    ColorCloud &cloud = frame->cloud;
-    if(cloud.size() == 0){
+    ColorCloud *cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
+    if(cloud == nullptr){
+        return;
+    }
+    if(cloud->size() == 0){
         return;
     }
 
@@ -344,8 +347,8 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
     states.nbFramesRegistered[idCloud]++;
     clientData.frames.push_back(frame);
 
-    add_to_calibration_cloud(idCloud, cloud);
-    add_to_proccessed_cloud(idCloud, i->process_cloud(settings, cloud));
+    add_to_calibration_cloud(idCloud, *cloud);
+    add_to_proccessed_cloud(idCloud, i->process_cloud(settings, *cloud));
     trigger_data_updated();
 }
 
@@ -356,8 +359,10 @@ auto DCCalibrator::process_all_frames() -> void{
         clientData.processedCloud.clear();
 
         for(auto &frame : clientData.frames){
-            add_to_calibration_cloud(clientData.id, frame->cloud);
-            add_to_proccessed_cloud(clientData.id, i->process_cloud(settings, frame->cloud));
+            if(auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+                add_to_calibration_cloud(clientData.id, *cloud);
+                add_to_proccessed_cloud(clientData.id, i->process_cloud(settings, *cloud));
+            }
         }
     }
     trigger_data_updated();

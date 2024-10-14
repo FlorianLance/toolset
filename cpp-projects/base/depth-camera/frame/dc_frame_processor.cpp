@@ -44,10 +44,10 @@ struct DCFrameProcessor::Impl{
     std::unique_ptr<std::mutex> locker          = nullptr;
 
     std::shared_ptr<DCDataFrame> lastDF = nullptr;
-    std::shared_ptr<DCFrame>lastF       = nullptr;
+    std::shared_ptr<DCFrame2>lastF       = nullptr;
 
     std::shared_ptr<DCDataFrame> dFrame = nullptr;
-    std::shared_ptr<DCFrame> frame      = nullptr;
+    std::shared_ptr<DCFrame2> frame      = nullptr;
 
     std::unique_ptr<DCFrameGenerator> frameGenerator;
     DCFrameGenerationSettings generationS;
@@ -93,12 +93,12 @@ auto DCFrameProcessor::new_data_frame(std::shared_ptr<DCDataFrame> frame) -> voi
     i->lastDF = frame;
 }
 
-auto DCFrameProcessor::new_frame(std::shared_ptr<DCFrame> frame) -> void {
+auto DCFrameProcessor::new_frame(std::shared_ptr<DCFrame2> frame) -> void {
     std::lock_guard<std::mutex> guard(*i->locker);
     i->lastF = frame;
 }
 
-auto DCFrameProcessor::get_frame() -> std::shared_ptr<DCFrame> {
+auto DCFrameProcessor::get_frame() -> std::shared_ptr<DCFrame2> {
     std::lock_guard<std::mutex> guard(*i->locker);
     return i->frame;
 }
@@ -150,7 +150,7 @@ auto DCFrameProcessor::process() -> bool{
     {
         if(dataFrameToBeProccessed != nullptr){
 
-            auto frame = std::make_shared<DCFrame>();
+            auto frame = std::make_shared<DCFrame2>();
             if(i->frameGenerator->generate(i->generationS, dataFrameToBeProccessed.get(), *frame)){
                 std::lock_guard<std::mutex> guard(*i->locker);
                 i->frame = frame;
@@ -162,14 +162,14 @@ auto DCFrameProcessor::process() -> bool{
     return false;
 }
 
-auto DCFrameProcessor::generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>{
+auto DCFrameProcessor::generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame2>{
 
     std::lock_guard<std::mutex> guard(*i->locker);
     if(!dFrame){
         return nullptr;
     }
 
-    auto frame = std::make_shared<DCFrame>();
+    auto frame = std::make_shared<DCFrame2>();
     if(i->frameGenerator->generate(i->generationS, dFrame.get(), *frame)){
         return frame;
     }

@@ -50,7 +50,7 @@ struct DCDeviceData{
     std::span<ColorRGBA8> depthSizedColor;    
     std::span<std::uint16_t> depth;
     std::span<std::uint16_t> infra;
-    std::span<ColorGray8> bodiesIdMap;
+    std::span<ColorGray8> bodiesId;
     std::span<geo::Pt3<std::int16_t>> depthCloud;    
     BinarySpan binaryIMU;
     std::pair<size_t, std::span<float>> audioChannels;    

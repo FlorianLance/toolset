@@ -80,7 +80,7 @@ auto DCVideoRecorderExport::dissociate_from_client(DCClient &client) -> void{
     client.new_frame_signal.disconnect(&DCVideoRecorderExport::add_frame, this);
 }
 
-auto DCVideoRecorderExport::add_frame(size_t idD, std::shared_ptr<DCFrame> frame) -> void{
+auto DCVideoRecorderExport::add_frame(size_t idD, std::shared_ptr<DCFrame2> frame) -> void{
     recorder.add_frame(idD, std::move(frame));
 }
 

@@ -42,7 +42,7 @@ struct DCVideoRecorder::Impl{
     nanoseconds recordingStartTimestamp;
     StopWatch recordingStopWatch;
     std::vector<std::shared_ptr<DCDataFrame>> currentDataFrames;
-    std::vector<std::shared_ptr<DCFrame>> currentFrames;
+    std::vector<std::shared_ptr<DCFrame2>> currentFrames;
 
     DCVideo videoResource;
 
@@ -96,7 +96,7 @@ auto DCVideoRecorder::remove_last_device() -> void{
     }
 }
 
-auto DCVideoRecorder::uncompress_frame(size_t idDevice, DCFrame &frame) -> bool{
+auto DCVideoRecorder::uncompress_frame(size_t idDevice, DCFrame2 &frame) -> bool{
 
     if(idDevice >= i->currentFrames.size()){
         return false;
@@ -140,11 +140,11 @@ auto DCVideoRecorder::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFram
     }
 }
 
-auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void{   
+auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame2> frame) -> void{
     add_frame(0, std::move(frame));
 }
 
-auto DCVideoRecorder::add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void{
+auto DCVideoRecorder::add_frame(size_t idDevice, std::shared_ptr<DCFrame2> frame) -> void{
 
     if(!is_recording() || idDevice >= i->videoResource.nb_devices()){
         return;
@@ -191,7 +191,7 @@ auto DCVideoRecorder::update() -> void{
         }
 
         if(i->currentFrames[idC] == nullptr){
-            i->currentFrames[idC] = std::make_shared<DCFrame>();
+            i->currentFrames[idC] = std::make_shared<DCFrame2>();
         }
 
         if(uncompress_frame(idC, *i->currentFrames[idC])){

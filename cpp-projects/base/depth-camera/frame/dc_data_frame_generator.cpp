@@ -44,7 +44,7 @@ using namespace tool::cam;
 struct DCDataFrameGenerator::Impl{
     data::JpegEncoder colorEncoder;
     data::JpegEncoder depthSizedColorEncoder;
-    data::JpegEncoder bodiesIdEncoder;
+    // data::JpegEncoder bodiesIdEncoder;
     data::FastPForEncoder depthEncoder;
     data::FastPForEncoder infraEncoder;
 };
@@ -55,13 +55,13 @@ DCDataFrameGenerator::DCDataFrameGenerator() : i(std::make_unique<Impl>()){
 DCDataFrameGenerator::~DCDataFrameGenerator(){
 }
 
-auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame) -> std::unique_ptr<DCDataFrame>{
+auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame) -> std::unique_ptr<DCDataFrame>{
     auto dFrame = std::make_unique<DCDataFrame>();
     generate(dfgS, frame, dFrame.get());
     return dFrame;
 }
 
-auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame, DCDataFrame *dFrame) -> void{
+auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame, DCDataFrame *dFrame) -> void{
 
     // frame
     dFrame->idCapture          = frame.idCapture;
@@ -70,80 +70,99 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
 
     // info
     dFrame->mode               = frame.mode;
-    dFrame->validVerticesCount = frame.cloud.size();
-
-    // calibration
-    if(!frame.calibration.empty()){
-        dFrame->datasB.insert({DCBufferType::Calibration, {DCCompressionMode::None, frame.calibration}});
+    if(frame.volumesB.contains(DCVolumeBufferType::ColoredCloud)){
+        dFrame->validVerticesCount = std::get<geo::ColorCloud>(frame.volumesB[DCVolumeBufferType::ColoredCloud]).size();
+    }else{
+        dFrame->validVerticesCount = 0;
     }
 
-    // depth
-    if(dfgS.addDepth && !frame.depth.empty()){
-        if(dfgS.depthCM == DCCompressionMode::FastPFor){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::FastPFor, {}}});
-            i->depthEncoder.encode(frame.depth, std::get<1>(dInfo.first->second));
-        }else if(dfgS.depthCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Depth16, {DCCompressionMode::None, {}}});
-            auto &image = std::get<1>(dInfo.first->second);
-            image.resize_image(frame.depth.width, frame.depth.height, 2);
-            std::copy(frame.depth.begin(), frame.depth.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
+    // data buffers
+    // # calibration
+    if(auto iBuffer = frame.data_buffer(DCDataBufferType::Calibration)){
+        dFrame->insert_data_buffer(DCDataBufferType::Calibration, DCCompressionMode::None, iBuffer->byte_span());
+    }    
+    // # imu
+    if(dfgS.addImu){
+        if(auto iBuffer = frame.data_buffer(DCDataBufferType::IMU)){
+            dFrame->insert_data_buffer(DCDataBufferType::IMU, DCCompressionMode::None, iBuffer->byte_span());
         }
     }
 
-    // infrared
-    if(dfgS.addInfra && !frame.infra.empty()){
-        if(dfgS.infraCM == DCCompressionMode::FastPFor){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::FastPFor, {}}});
-            i->infraEncoder.encode(frame.infra, std::get<1>(dInfo.first->second));
-        }else if(dfgS.infraCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::Infrared16, {DCCompressionMode::None, {}}});
-            auto &image = std::get<1>(dInfo.first->second);
-            image.resize_image(frame.infra.width, frame.infra.height, 2);
-            std::copy(frame.infra.begin(), frame.infra.end(), reinterpret_cast<std::uint16_t*>(image.get_data()));
+    // image buffers
+    // # depth
+    if(dfgS.addDepth){
+
+        if(auto iBuffer = frame.image_buffer<std::uint16_t>(DCImageBufferType::Depth16)){
+
+            if(dfgS.depthCM == DCCompressionMode::FastPFor){
+
+                if(auto eBuffer = dFrame->insert_image_buffer(DCImageBufferType::Depth16, DCCompressionMode::FastPFor)){
+                    i->depthEncoder.encode(*iBuffer, *eBuffer);
+                }
+
+            }else if(dfgS.depthCM == DCCompressionMode::None){                
+                dFrame->insert_image_buffer(DCImageBufferType::Depth16, DCCompressionMode::None, iBuffer->width, iBuffer->height, 2, iBuffer->byte_span());
+            }
         }
     }
 
-    // depth-sized color
-    if(dfgS.addDepthSizedColor && !frame.rgbaDepthSizedColor.empty()){
-        if(dfgS.depthSizedColorCM == DCCompressionMode::JPEG){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::JPEG, {}}});
-            i->depthSizedColorEncoder.encode(frame.rgbaDepthSizedColor, std::get<1>(dInfo.first->second), dfgS.depthSizedColorJPEGCQ);
-        }else if(dfgS.depthSizedColorCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::DepthSizedColorRGBA8, {DCCompressionMode::None, {}}});
-            auto &image = std::get<1>(dInfo.first->second);
-            image.resize_image(frame.rgbaDepthSizedColor.width, frame.rgbaDepthSizedColor.height, 4);
-            std::copy(frame.rgbaDepthSizedColor.begin(), frame.rgbaDepthSizedColor.end(), reinterpret_cast<ColorRGBA8*>(image.get_data()));
+    // # infrared
+    if(dfgS.addInfra){
+
+        if(auto iBuffer = frame.image_buffer<std::uint16_t>(DCImageBufferType::Infrared16)){
+
+            if(dfgS.infraCM == DCCompressionMode::FastPFor){
+
+                if(auto eBuffer = dFrame->insert_image_buffer(DCImageBufferType::Infrared16, DCCompressionMode::FastPFor)){
+                    i->infraEncoder.encode(*iBuffer, *eBuffer);
+                }
+
+            }else if(dfgS.infraCM == DCCompressionMode::None){
+                dFrame->insert_image_buffer(DCImageBufferType::Infrared16, DCCompressionMode::None, iBuffer->width, iBuffer->height, 2, iBuffer->byte_span());
+            }
         }
     }
 
+    // # depth-sized color
+    if(dfgS.addDepthSizedColor){
 
-    // original color
-    if(dfgS.addOriginalSizeColor && !frame.rgbaColor.empty()){
-        if(dfgS.originalSizeColorCM == DCCompressionMode::JPEG){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::JPEG, {}}});
-            i->colorEncoder.encode(frame.rgbaColor, std::get<1>(dInfo.first->second), dfgS.depthSizedColorJPEGCQ);
-        }else if(dfgS.originalSizeColorCM == DCCompressionMode::None){
-            auto dInfo = dFrame->imagesB.insert({DCImageBufferType::OriginalColorRGBA8, {DCCompressionMode::None, {}}});
-            auto &image = std::get<1>(dInfo.first->second);
-            image.resize_image(frame.rgbaColor.width, frame.rgbaColor.height, 4);
-            std::copy(frame.rgbaColor.begin(), frame.rgbaColor.end(), reinterpret_cast<ColorRGBA8*>(image.get_data()));
+        if(auto iBuffer = frame.image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8)){
+
+            if(dfgS.depthSizedColorCM == DCCompressionMode::JPEG){
+
+                if(auto eBuffer = dFrame->insert_image_buffer(DCImageBufferType::DepthSizedColorRGBA8, DCCompressionMode::JPEG)){
+                    i->depthSizedColorEncoder.encode(*iBuffer, *eBuffer, dfgS.depthSizedColorJPEGCQ);
+                }
+
+            }else if(dfgS.depthSizedColorCM == DCCompressionMode::None){                
+                dFrame->insert_image_buffer(DCImageBufferType::DepthSizedColorRGBA8, DCCompressionMode::None, iBuffer->width, iBuffer->height, 4, iBuffer->byte_span());
+            }
         }
     }
 
-    // // gray bodies id
-    // if(dfgS.addBodyIdMap && !frame.grayBodiesIdMap.empty()){
-    //     // i->bodiesIdEncoder.encode(frame.grayBodiesIdMap, dFrame->jpegG8BodiesIdMap, dsS.jpegCompressionRate);
-    // }
+    // # original size color
+    if(dfgS.addOriginalSizeColor){
 
-    // // imu
-    // if(dfgS.addImu && !frame.imu.empty()){
-    //     dFrame->datasB.insert({DCDataBufferType::IMU, {DCCompressionMode::None, frame.imu}});
-    // }
+        if(auto iBuffer = frame.image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
 
-    // // audio
-    // if(dfgS.addAudio && !frame.audioFrames.empty()){
-    //     // dFrame->audioFrames = frame.audioFrames;
-    // }
+            if(dfgS.originalSizeColorCM == DCCompressionMode::JPEG){
+
+                if(auto eBuffer = dFrame->insert_image_buffer(DCImageBufferType::OriginalColorRGBA8, DCCompressionMode::JPEG)){
+                    i->colorEncoder.encode(*iBuffer, *eBuffer, dfgS.depthSizedColorJPEGCQ);
+                }
+
+            }else if(dfgS.originalSizeColorCM == DCCompressionMode::None){
+                dFrame->insert_image_buffer(DCImageBufferType::OriginalColorRGBA8, DCCompressionMode::None, iBuffer->width, iBuffer->height, 4, iBuffer->byte_span());
+            }
+        }
+    }
+
+    // # bodies id map
+    if(dfgS.addBodiesId){
+        if(auto iBuffer = frame.image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8)){
+            dFrame->insert_image_buffer(DCImageBufferType::BodiesIdMap8, DCCompressionMode::None, iBuffer->width, iBuffer->height, 1, iBuffer->byte_span());
+        }
+    }
 }
 
 

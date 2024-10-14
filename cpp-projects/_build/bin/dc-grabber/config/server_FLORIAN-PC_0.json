@@ -91,15 +91,15 @@
             "type_string": "color",
             "version": 1
         },
-        "brightness": 128,
-        "contrast": 5,
-        "exposure_time": 33330,
-        "gain": 128,
-        "hdr": false,
+        "brightness": 10,
+        "contrast": 50,
+        "exposure_time": 200,
+        "gain": 40,
+        "hdr": true,
         "powerline_frequency": 2,
-        "saturation": 32,
-        "sharpness": 2,
-        "white_balance": 4500
+        "saturation": 64,
+        "sharpness": 24,
+        "white_balance": 6500
     },
     "device": {
         "base": {
@@ -112,7 +112,7 @@
                 "version": 1
             },
             "bt_GPU_id": 0,
-            "bt_enabled": false,
+            "bt_enabled": true,
             "bt_orientation": 0,
             "bt_processing_mode": 4,
             "color_alignment_rot": [
@@ -138,14 +138,14 @@
             "ipv4_address_2": 168,
             "ipv4_address_3": 1,
             "ipv4_address_4": 10,
-            "mode": 3,
+            "mode": 23,
             "open_device": true,
             "serial_number_device": "",
             "start_reading": true,
             "subordinate_delay_usec": 0,
             "synch_mode": 0,
             "synchronize_color_and_depth": true,
-            "type_device": 0,
+            "type_device": 1,
             "use_serial_number": false
         },
         "data": {
@@ -154,50 +154,38 @@
                 "version": 1
             },
             "c_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
+                "bodies_id_image": false,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
                 "color_image": false,
-                "depth": true,
                 "depth_image": false,
                 "depth_sized_color_image": true,
-                "imu": false,
-                "infra": true,
                 "infra_image": false
             },
             "s_capture": {
                 "audio": false,
                 "body_tracking": false,
-                "bt_temporal_smoothing": 0.0,
                 "color": true,
                 "depth": true,
                 "imu": false,
                 "infra": true
             },
             "s_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
+                "bodies_id_image": true,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
                 "color_image": true,
-                "depth": true,
                 "depth_image": true,
                 "depth_sized_color_image": true,
-                "imu": false,
-                "infra": true,
                 "infra_image": true
             },
             "s_sending": {
                 "audio": false,
-                "body_id_map": false,
-                "body_tracking": false,
+                "bodies_id": true,
+                "bodies_id_compression_mode": 0,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
                 "cloud_compression_mode": 0,
@@ -294,6 +282,13 @@
             0.0,
             1.0
         ]
+    },
+    "misc": {
+        "base": {
+            "type_string": "misc",
+            "version": 1
+        },
+        "delay": 0
     },
     "model": {
         "base": {

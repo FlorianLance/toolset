@@ -55,7 +55,7 @@ public:
     auto reset_registering() -> void;    
 
     // frames
-    auto add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void;
+    auto add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> void;
     auto process_all_frames() -> void;
 
     // calibrate

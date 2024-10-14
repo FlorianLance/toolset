@@ -709,8 +709,8 @@ auto test_femto_mega() -> void{
     device.update_device_settings(ds);
 
     int idC = 0;
-    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
-        std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
+    device.new_frame_signal.connect([&](std::shared_ptr<DCFrame2> frame){
+        // std::cout << "save cloud: " << frame->cloud.vertices.size() << " " << frame->cloud.has_vertices() << " " << frame->cloud.has_colors() << " " << frame->cloud.has_normals() << "\n";
         // tool::io::CloudIO::save_cloud(std::format("D:/fm_cloud_{}.obj", idC++), frame->cloud);
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(4000));

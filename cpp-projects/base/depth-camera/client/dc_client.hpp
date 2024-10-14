@@ -87,7 +87,7 @@ public:
     // signals
     sigslot::signal<size_t, tool::net::Feedback> feedback_received_signal;
     sigslot::signal<size_t, std::shared_ptr<cam::DCDataFrame>> new_data_frame_signal;
-    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame2>> new_frame_signal;
     sigslot::signal<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     sigslot::signal<size_t, const cam::DCDeviceDisplaySettings&> update_device_display_settings_signal;
 

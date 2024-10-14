@@ -96,7 +96,7 @@ auto DCDirectDrawer::update() -> void{
     m_redrawClouds = false;
 }
 
-auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
+auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame2> frame) -> void{
     m_locker.lock();
     m_lastFrames[idGrabber] = std::move(frame);
     m_locker.unlock();
@@ -151,7 +151,9 @@ auto DCDirectDrawer::save_current_cloud(size_t idC, const std::string &path) -> 
     m_locker.unlock();
 
     if(frame != nullptr){
-        io::CloudIO::save_cloud(path, frame->cloud);
+        if(auto cloud = frame->volume_buffer<geo::ColorCloud>(cam::DCVolumeBufferType::ColoredCloud)){
+            io::CloudIO::save_cloud(path, *cloud);
+        }
     }
 }
 

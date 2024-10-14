@@ -40,13 +40,13 @@ struct DCFrameProcessor{
 
     // set
     auto new_data_frame(std::shared_ptr<DCDataFrame> frame) -> void;
-    auto new_frame(std::shared_ptr<DCFrame> frame) -> void;
+    auto new_frame(std::shared_ptr<DCFrame2> frame) -> void;
     auto invalid_frame() -> void;
     auto invalid_data_frame() -> void;
     auto update_generation_settings(const DCFrameGenerationSettings &generationS) -> void;
 
     // get
-    auto get_frame() -> std::shared_ptr<DCFrame>;
+    auto get_frame() -> std::shared_ptr<DCFrame2>;
     auto get_data_frame() -> std::shared_ptr<DCDataFrame>;
 
     // processing thread
@@ -56,7 +56,7 @@ struct DCFrameProcessor{
 
     // processing
     auto process() -> bool;
-    auto generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>;
+    auto generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame2>;
 
     std::atomic<double> ucUsage = 0.0;
 
