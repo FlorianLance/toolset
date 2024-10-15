@@ -68,7 +68,7 @@ auto DCCloudsSceneDrawer::reset() -> void{
     }
 }
 
-auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> bool {
+auto DCCloudsSceneDrawer::update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool {
     if(idCloud < cloudsD.size()){
         return cloudsD[idCloud]->init_from_frame(std::move(frame));
     }

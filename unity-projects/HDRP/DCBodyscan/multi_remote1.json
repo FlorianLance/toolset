@@ -1,5 +1,5 @@
 {
-    "_client_id": 1,
+    "_client_id": 0,
     "base": {
         "type_string": "DC client",
         "version": 1
@@ -110,11 +110,17 @@
                     "white_balance": 6500
                 },
                 "connection": {
+                    "any_reading_interface": false,
                     "base": {
                         "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote",
+                    "id_reading_interface": 0,
+                    "protocol": "ipv4",
+                    "reading_port": 8889,
+                    "sending_address": "localhost",
+                    "sending_port": 8888
                 },
                 "device": {
                     "base": {
@@ -171,11 +177,11 @@
                         "c_generation": {
                             "bodies_id_image": false,
                             "bodies_skeleton": false,
-                            "cloud": false,
+                            "cloud": true,
                             "cloud_color_mode": 1,
                             "color_image": false,
                             "depth_image": false,
-                            "depth_sized_color_image": false,
+                            "depth_sized_color_image": true,
                             "infra_image": false
                         },
                         "s_capture": {
@@ -189,11 +195,11 @@
                         "s_generation": {
                             "bodies_id_image": false,
                             "bodies_skeleton": false,
-                            "cloud": true,
+                            "cloud": false,
                             "cloud_color_mode": 1,
                             "color_image": false,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
+                            "depth_image": false,
+                            "depth_sized_color_image": false,
                             "infra_image": false
                         },
                         "s_sending": {
@@ -206,15 +212,15 @@
                             "cloud_compression_mode": 2,
                             "color": false,
                             "color_compression_mode": 1,
-                            "dept_sized_color": false,
-                            "depth": false,
+                            "dept_sized_color": true,
+                            "depth": true,
                             "depth_compression_mode": 2,
                             "depth_sized_color_compression_mode": 1,
                             "imu": false,
                             "infra": false,
                             "infra_compression_mode": 2,
                             "jpeg_compression_rate": 90,
-                            "original_size_color_jpeg_quality": 80
+                            "original_size_color_jpeg_quality": 90
                         }
                     }
                 },

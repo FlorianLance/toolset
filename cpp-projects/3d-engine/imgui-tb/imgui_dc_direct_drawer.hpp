@@ -38,14 +38,14 @@ struct DCDirectDrawer : public DCCloudsSceneDrawer{
     auto draw(bool focus) -> void;
     auto draw_only_clouds() -> void;
     
-    auto update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame2> frame) -> void;
+    auto update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto save_current_cloud(size_t idC, const std::string &path) -> void;
 
 private:
 
     std::mutex m_locker;
     bool m_redrawClouds = false;
-    std::vector<std::shared_ptr<cam::DCFrame2>> m_lastFrames;
+    std::vector<std::shared_ptr<cam::DCFrame>> m_lastFrames;
 
     bool m_allTabOpened = false;    
     size_t m_currentTabOpened = 0;

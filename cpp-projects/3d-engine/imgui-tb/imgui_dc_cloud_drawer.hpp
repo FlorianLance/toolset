@@ -47,7 +47,7 @@ struct DCCloudDrawer{
 
     // info
     std::int32_t lastFrameId = -1;
-    std::shared_ptr<cam::DCFrame2> lastFrame = nullptr;
+    std::shared_ptr<cam::DCFrame> lastFrame = nullptr;
 
     // joints sub models
     size_t nbBodies = 0;
@@ -83,7 +83,7 @@ struct DCCloudDrawer{
     auto initialize() -> void;
     auto reset() -> void;
     // # from frame
-    auto init_from_frame(std::shared_ptr<cam::DCFrame2> frame) -> bool;
+    auto init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool;
     // # from data
     auto init_from_colored_cloud_data(const geo::ColorCloud &cloudData) -> bool;
 };

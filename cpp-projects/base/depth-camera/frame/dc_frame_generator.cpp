@@ -84,7 +84,7 @@ struct DCFrameGenerator::Impl{
 
     // local task data
     DCDataFrame *dFrame = nullptr;
-    DCFrame2 *frame = nullptr;
+    DCFrame *frame = nullptr;
     DCFrameGenerationSettings gSettings;
 
     Impl(){
@@ -142,7 +142,7 @@ struct DCFrameGenerator::Impl{
 
         // Logger::message("I2");
         // dFrame = initCFrame;
-        // DCFrame2 initFrame;
+        // DCFrame initFrame;
         // frame = &initFrame;
         // reset_transformation();
         // Logger::message("I3");
@@ -178,7 +178,7 @@ struct DCFrameGenerator::Impl{
                   << "tot [" << tTotal.count() << "]\n";
     }
 
-    auto do_work_task(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame2 &frame) -> void{
+    auto do_work_task(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> void{
 
         // frame
         frame.idCapture         = dFrame->idCapture;
@@ -209,7 +209,7 @@ struct DCFrameGenerator::Impl{
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
     }
 
-    auto do_work(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame2 &frame) -> void{
+    auto do_work(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> void{
 
         // frame
         frame.idCapture         = dFrame->idCapture;
@@ -657,7 +657,7 @@ auto DCFrameGenerator::initialize(DCDataFrame *dFrame) -> void{
     i->initialize(dFrame);
 }
 
-auto DCFrameGenerator::generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame2 &frame) -> bool{
+auto DCFrameGenerator::generate(const DCFrameGenerationSettings &gSettings, DCDataFrame *dFrame, DCFrame &frame) -> bool{
 
     i->reset_timings();
 

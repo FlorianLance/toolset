@@ -49,7 +49,7 @@ struct DCCloudsSceneDrawer{
         return fboD.is_camera_updated() || fboD.is_screen_updated() || m_redrawClouds;
     }
     
-    auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> bool;
+    auto update_from_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> bool;
     auto update_from_colored_cloud_data(size_t idCloud, const geo::ColorCloud &cloud) -> bool;
 
     auto draw_clouds_to_fbo() -> void;

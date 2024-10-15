@@ -170,7 +170,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sharedVisualEffectAsset: {fileID: 8926484042661614526, guid: caee5be3d010ffa4696e6a97048fad13, type: 3}
   cloudsGO: []
-  displaySettings: []
+  settings:
+    parentTransform:
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    cloudsDisplayS: []
 --- !u!114 &120923588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,11 +188,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77cfe0ce1da87a44491220da12189f03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoFilePath: E:/aaaa.kvid
+  videoFilePath: E:/_kvid/aaaa.kvid
   loadAtStart: 1
   playWhenLoaded: 1
   loadDisplaySettingsFilesAfterVideoLoading: 1
-  displaySettingsFilesBasePath: ./display_settings
+  dataVFXSettingsFilePath: ./data_vfx_settings.json
   visualEffectAsset: {fileID: 8926484042661614526, guid: caee5be3d010ffa4696e6a97048fad13, type: 3}
   externalAudioSource: {fileID: 0}
   audioTimeOffsetS: 0

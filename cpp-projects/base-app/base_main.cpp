@@ -463,7 +463,7 @@ auto process_kvid() -> void{
         std::cout << "CAMERA " << idC << "\n";
         for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
             std::cout << idF << " " << std::flush;
-            DCFrame2 frame;
+            DCFrame frame;
             // std::cout << "uncompress " << idC << " " << idF << "\n";
             video.generate_frame(settings, idC, idF, frame);
             
@@ -603,23 +603,23 @@ int main(int argc, char *argv[]){
                 auto buffer = frame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8);
                 std::cout << "#### " << buffer->width << " " << buffer->height << " " << buffer->size() << "\n";// << frame->image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8) << "\n";
 
-                const auto &imageB = frame->imagesB[DCImageBufferType::DepthSizedColorRGBA8];
-                std::visit(Visitor{
-                       [](const ImageBuffer<ColorRGBA8> &sImg){
-                        std::cout << "A: " << sImg.size() << "\n";
-                           return sImg.size();
-                       },
-                       [](const ImageBuffer<ColorRGB8> &sImg){
-                           return sImg.size();
-                       },
-                       [](const ImageBuffer<ColorGray8> &sImg){
-                           return sImg.size();
-                       },
-                       [](const ImageBuffer<ColorGray16> &sImg){
-                           return sImg.size();
-                       }
-                   }, imageB
-                   );
+                // const auto &imageB = frame->imagesB[DCImageBufferType::DepthSizedColorRGBA8];
+                // std::visit(Visitor{
+                //        [](const ImageBuffer<ColorRGBA8> &sImg){
+                //         std::cout << "A: " << sImg.size() << "\n";
+                //            return sImg.size();
+                //        },
+                //        [](const ImageBuffer<ColorRGB8> &sImg){
+                //            return sImg.size();
+                //        },
+                //        [](const ImageBuffer<ColorGray8> &sImg){
+                //            return sImg.size();
+                //        },
+                //        [](const ImageBuffer<ColorGray16> &sImg){
+                //            return sImg.size();
+                //        }
+                //    }, imageB
+                //    );
             }
             // if(frame->volumesB.size() > 0){
                 // std::cout << " --- > " << frame->volume_buffer_size(DCVolumeBufferType::ColoredCloud) << "\n";

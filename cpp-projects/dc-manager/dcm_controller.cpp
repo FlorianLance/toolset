@@ -45,12 +45,12 @@ DCMController::~DCMController(){
     view  = nullptr;
 }
 
-auto DCMController::initialize() -> bool{
+auto DCMController::initialize(size_t id) -> bool{
 
     auto lg = LogGuard("DCMController::initialize"sv);
 
     // create view
-    view = std::make_unique<DCMView>();
+    view = std::make_unique<DCMView>(id);
 
     // create model
     model = std::make_unique<DCMModel>();

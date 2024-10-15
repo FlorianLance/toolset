@@ -37,7 +37,7 @@ namespace tool{
 class DCMView {
 public:
 
-    DCMView();
+    DCMView(size_t id);
     ~DCMView();
 
     auto initialize(int nbGrabbers) -> void;

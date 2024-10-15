@@ -40,7 +40,7 @@ struct DCClientExport{
     cam::DCClient client;
 
     // frames
-    std::vector<std::shared_ptr<DCFrame2>> framesToDisplay;
+    std::vector<std::shared_ptr<DCFrame>> framesToDisplay;
 
     // state
     std::vector<size_t> ids;
@@ -77,7 +77,7 @@ struct DCClientExport{
     auto devices_nb() const noexcept -> size_t;
     auto is_device_connected(size_t idD) const noexcept -> bool;
     auto current_frame_id(size_t idD) -> size_t;
-    auto current_frame(size_t idD) -> std::shared_ptr<DCFrame2>;
+    auto current_frame(size_t idD) -> std::shared_ptr<DCFrame>;
     auto current_frame_cloud_size(size_t idD) -> size_t;
     auto device_model(size_t idD) -> geo::Mat4f;
 

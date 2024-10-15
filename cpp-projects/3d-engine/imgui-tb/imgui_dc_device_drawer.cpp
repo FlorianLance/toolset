@@ -54,7 +54,7 @@ auto DCDeviceDrawer::update() -> void{
     m_redrawClouds = false;
 }
 
-auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame2> frame) -> void{
+auto DCDeviceDrawer::update_frame(std::shared_ptr<cam::DCFrame> frame) -> void{
     m_locker.lock();
     m_lastFrame = std::move(frame);
     m_locker.unlock();

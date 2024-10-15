@@ -101,7 +101,7 @@ auto DCVideo::count_frames_from_all_devices() const noexcept -> size_t{
     return count;
 }
 
-auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevice, size_t idFrame, DCFrame2 &frame) -> bool{
+auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevice, size_t idFrame, DCFrame &frame) -> bool{
     if(const auto camD = get_data_frames_ptr(idDevice)){
         if(auto cFrame = camD->get_frame_ptr(idFrame)){            
             return generate_frame(fgS, idDevice, cFrame, frame);
@@ -110,7 +110,7 @@ auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevi
     return false;
 }
 
-auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevice, DCDataFrame *dFrame, DCFrame2 &frame) -> bool{
+auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevice, DCDataFrame *dFrame, DCFrame &frame) -> bool{
     if(auto unc = generator(idDevice); unc != nullptr){
         return unc->generate(fgS, dFrame, frame);
     }
@@ -471,7 +471,7 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
     //     auto c0Time  = c0Frame->receivedTS;
     //     auto c0TimeMs= std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(c0Time - c0FirstFrameTS));
 
-    //     DCFrame2 final;
+    //     DCFrame final;
     //     if(!generate_frame(gSettings, 0, idF, final)){
     //         continue;
     //     }
@@ -529,7 +529,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
 
     geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
 
-    DCFrame2 frame;
+    DCFrame frame;
     for(size_t ii = 0; ii < nb_devices(); ++ii){
         generate_frame(gSettings, ii, idFrame, frame);
         if(auto fCloud = frame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
@@ -540,9 +540,9 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
     grid.convert_to_cloud(cloud);
 }
 
-auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame2 &frame) -> void{
+auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
 
-    frame = DCFrame2();
+    frame = DCFrame();
     if(idFrame >= min_nb_frames()){
         // ...
         return;
@@ -550,7 +550,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
 
     geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
     for(size_t ii = 0; ii < nb_devices(); ++ii){
-        DCFrame2 uFrame;
+        DCFrame uFrame;
         generate_frame(gSettings, ii, idFrame, uFrame);
 
         if(auto fCloud = uFrame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){

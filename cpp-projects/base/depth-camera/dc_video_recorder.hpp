@@ -49,11 +49,11 @@ public:
     auto video() -> DCVideo*;
 
     // frames
-    auto uncompress_frame(size_t idDevice, DCFrame2 &frame) -> bool;
+    auto uncompress_frame(size_t idDevice, DCFrame &frame) -> bool;
     auto add_data_frame_to_default_device(std::shared_ptr<DCDataFrame> dFrame) -> void;
     auto add_data_frame(size_t idDevice, std::shared_ptr<DCDataFrame> dFrame) -> void;
-    auto add_frame_to_default_device(std::shared_ptr<DCFrame2> frame) -> void;
-    auto add_frame(size_t idDevice, std::shared_ptr<DCFrame2> frame) -> void;
+    auto add_frame_to_default_device(std::shared_ptr<DCFrame> frame) -> void;
+    auto add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void;
 
     // recordings
     auto is_recording() const noexcept -> bool;
@@ -73,7 +73,7 @@ public:
     DCVideoRecorderStates states;
 
     // signals
-    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame2>> new_frame_signal;
+    sigslot::signal<size_t, std::shared_ptr<cam::DCFrame>> new_frame_signal;
 
 private:
 

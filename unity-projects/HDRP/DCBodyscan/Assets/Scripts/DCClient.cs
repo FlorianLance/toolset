@@ -41,9 +41,9 @@ namespace BS {
 #if UNITY_EDITOR
 
     [CustomEditor(typeof(DCClient))]
-    public class DCNetworkDirectPlayerEditorVFX : Editor {
+    public class DCClientEditor : Editor {
 
-        private DCClient dcNetworkDIrectPlayer { get { return target as DCClient; } }
+        private DCClient dcClient { get { return target as DCClient; } }
 
         public override bool RequiresConstantRepaint() {
             return true;
@@ -53,7 +53,7 @@ namespace BS {
 
             base.OnInspectorGUI();
 
-            var dcNDP = dcNetworkDIrectPlayer;
+            var dcNDP = dcClient;
             var origFontStyle = EditorStyles.label.fontStyle;
 
             EditorGUILayout.Separator();
@@ -93,12 +93,12 @@ namespace BS {
         [Header("###### ACTIONS TO DO######")]
         public bool initAtAwake = true;
         public bool connectAtStart = true;
-        public bool readProcessAtStart = true;        
-        public bool applyDeviceSettingsAfterConnection = true;       
+        public bool readProcessAtStart = true;
+        public bool applyDeviceSettingsAfterConnection = true;
         public bool applyFiltersSettingsAfterConnection = false;
         public bool applyColorSettingsAfterConnection = false;
         public bool loadDisplaySettingsFilesAfterInitializing = false;
-        public string displaySettingsFilesBasePath = "./display_settings";
+        public string dataVFXSettingsFilePath = "./data_vfx_settings.json";
 
         [Header("###### SETTINGS FILES PATHS ######")]
         public string clientSettingsFilePath = "";
@@ -121,7 +121,7 @@ namespace BS {
 
         // jobs
         private List<DCReadNetworkDataJob> m_readNetworkDataJobs = new List<DCReadNetworkDataJob>();
-        private List<DCTriggerReceivedPacketsJob> m_triggerReceievedPacketsJobs = new List<DCTriggerReceivedPacketsJob>();       
+        private List<DCTriggerReceivedPacketsJob> m_triggerReceievedPacketsJobs = new List<DCTriggerReceivedPacketsJob>();
         private List<DCProcessDataJob> m_processDataJobs = new List<DCProcessDataJob>();
 
         // callbacks
@@ -138,9 +138,19 @@ namespace BS {
             // init dll
             m_dcClientDLL = new DCClientDLL();
             m_dcClientDLL.init_callbacks(logMessageCB, newFeedbackCB);
-            if (m_dcClientDLL.initialize(clientSettingsFilePath, false)) {
+
+            string path = clientSettingsFilePath;
+            if (clientSettingsFilePath.StartsWith("./")) {
+                var basePath = Application.dataPath;
+                var platform = Application.platform;
+                if (platform == RuntimePlatform.WindowsPlayer || platform == RuntimePlatform.WindowsEditor) {
+                    path = basePath + "/../" + clientSettingsFilePath.Replace("./", "");
+                }
+            } 
+
+            if (m_dcClientDLL.initialize(path, false)) {
                 initialize_data();
-            }            
+            }
         }
 
         public void clean() {
@@ -173,11 +183,6 @@ namespace BS {
 
             if (m_dcClientDLL != null) {
 
-                //foreach (var deviceS in devicesStates) {
-                //    deviceS.cloudUpdated = 0;
-                //    deviceS.averageCloudUpdatedPerSecond = 0;
-                //    deviceS.sw.Start();
-                //}
 
                 foreach (var rndJob in m_readNetworkDataJobs) {
                     rndJob.start_reading();
@@ -207,15 +212,12 @@ namespace BS {
 
                 foreach (var trJob in m_triggerReceievedPacketsJobs) {
                     trJob.stop_triggering();
-                }                
+                }
 
                 foreach (var pdJob in m_processDataJobs) {
                     pdJob.stop_processing();
                 }
 
-                //foreach (var deviceS in devicesStates) {
-                //    deviceS.sw.Stop();
-                //}
                 streamingEndedEvent.Invoke();
             }
         }
@@ -276,10 +278,10 @@ namespace BS {
         // settings
         public void apply_device_settings() {
             if (m_dcClientDLL != null) {
-                for (int idD = 0; idD < m_dcClientDLL.devices_nb(); ++idD) {                    
-                    UnityEngine.Debug.Log(string.Format("[DClient::apply_device_settings] Wait device [{0}] to be updated. ", idD));
+                for (int idD = 0; idD < m_dcClientDLL.devices_nb(); ++idD) {
+                    UnityEngine.Debug.Log(string.Format("[DCClient] Wait device [{0}] to be updated. ", idD));
                     Thread.Sleep(250);
-                    m_dcClientDLL.apply_devices_settings(idD);      
+                    m_dcClientDLL.apply_devices_settings(idD);
                 }
             }
         }
@@ -312,11 +314,7 @@ namespace BS {
             }
 
             if (loadDisplaySettingsFilesAfterInitializing) {
-                for (int idG = 0; idG < m_dcDataVFX.displaySettings.Count; ++idG) {
-                    string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                    UnityEngine.Debug.Log(string.Format("[DClient::initialize_data] Load display settings file with path [{0}]. ", path));
-                    m_dcDataVFX.update_display_parameters_from_json_file(idG, path);
-                }
+                m_dcDataVFX.load_settings_file(dataVFXSettingsFilePath);
             }
 
             create_jobs(nbDevices);
@@ -358,44 +356,7 @@ namespace BS {
                 m_processDataJobs.Add(pdJob);
             }
         }
-        private void new_feedback(int idC, int messageType, int feedbackType) {
-
-            string messageTypeStr;
-            switch (messageType) {
-                case 0:
-                    messageTypeStr = "init_network_infos";
-                    break;
-                case 1:
-                    messageTypeStr = "update_device_settings";
-                    break;
-                case 2:
-                    messageTypeStr = "update_color_settings";
-                    break;
-                case 3:
-                    messageTypeStr = "update_filters";
-                    break;
-                case 4:
-                    messageTypeStr = "compressed_frame_data";
-                    break;
-                case 5:
-                    messageTypeStr = "command";
-                    break;
-                case 6:
-                    messageTypeStr = "feedback";
-                    break;
-                case 7:
-                    messageTypeStr = "delay";
-                    break;
-                case 8:
-                    messageTypeStr = "synchro";
-                    break;
-                case 9:
-                    messageTypeStr = "ping";
-                    break;
-                default:
-                    messageTypeStr = "invalid";
-                    break;
-            }
+        private void new_feedback(int idC, int feedbackType, int messageType) {
 
             string feedbackTypeStr;
             switch (feedbackType) {
@@ -417,20 +378,65 @@ namespace BS {
                 case 5:
                     feedbackTypeStr = "restart";
                     break;
+                case 6:
+                    feedbackTypeStr = "ping";
+                    break;
                 default:
-                    feedbackTypeStr = "invalid";
+                    feedbackTypeStr = "undefined";
                     break;
             }
 
-            UnityEngine.Debug.Log(string.Format("[DClient::new_feedback] Receive message of type [{0}] from device [{1}] with feeback [{2}] from Thread [{3}]", messageTypeStr, idC, feedbackTypeStr, Thread.CurrentThread.Name));
-
-            if (messageType == 0 && feedbackType == 0) {
-                devicesStates[idC].connected = true;
+            string messageTypeStr;
+            switch (messageType) {
+                case 0:
+                    messageTypeStr = "undefined";
+                    break;
+                case 1:
+                    messageTypeStr = "init_server_client_connection";
+                    break;
+                case 2:
+                    messageTypeStr = "update_device_settings";
+                    break;
+                case 3:
+                    messageTypeStr = "update_color_settings";
+                    break;
+                case 4:
+                    messageTypeStr = "update_filters_settings";
+                    break;
+                case 5:
+                    messageTypeStr = "update_misc_settings";
+                    break;
+                case 6:
+                    messageTypeStr = "data_frame";
+                    break;
+                case 7:
+                    messageTypeStr = "command";
+                    break;
+                case 8:
+                    messageTypeStr = "feedback";
+                    break;
+                case 9:
+                    messageTypeStr = "synchro";
+                    break;
+                case 10:
+                    messageTypeStr = "ping";
+                    break;
+                default:
+                    messageTypeStr = "invalid";
+                    break;
             }
 
-            if (messageType == 6 && feedbackType == 2) {
+            UnityEngine.Debug.Log(string.Format("[DCClient] Message of type [{0}] from device [{1}] with feeback [{2}] from Thread [{3}] received.", messageTypeStr, idC, feedbackTypeStr, Thread.CurrentThread.Name));
+
+            if (messageType == 1 && feedbackType == 0) {
+                devicesStates[idC].connected = true;
+                UnityEngine.Debug.Log(string.Format("[DCClient] Device [{0}] connected.", idC));
+            }
+
+            if (messageType == 7 && feedbackType == 2) {
                 devicesStates[idC].connected = false;
                 m_allDevicesConnected = false;
+                UnityEngine.Debug.Log(string.Format("[DCClient] Device [{0}] disconnected.", idC));
             }
 
             check_devices_connected_state();
@@ -446,13 +452,14 @@ namespace BS {
                         break;
                     }
                 }
+
                 m_allDevicesConnected = allConnected;
 
                 if (m_allDevicesConnected) {
 
                     allClientsConnectedEvent.Invoke();
 
-                    UnityEngine.Debug.Log(string.Format("[DClient::check_devices_connected_state] All devices are connected [{0}].", devicesStates.Count));
+                    UnityEngine.Debug.Log(string.Format("[DCClient] All devices are connected [{0}].", devicesStates.Count));
                     if (applyDeviceSettingsAfterConnection) {
                         apply_device_settings();
                     }
@@ -485,8 +492,8 @@ namespace BS {
                 };
             }
 
-            newFeedbackCB = (int idC, int messageType, int feedbackType) => {
-                new_feedback(idC, messageType, feedbackType);
+            newFeedbackCB = (int idC, int feedbackType, int messageType) => {
+                new_feedback(idC, feedbackType, messageType);
             };
 
             m_dcDataVFX = GetComponent<DCDataVFX>();
@@ -523,20 +530,18 @@ namespace BS {
                 return;
             }
 
-            // update shaders parameters
-            foreach (var deviceStates in devicesStates) {
-                m_dcDataVFX.update_shader_from_display_parameters(deviceStates.deviceId);
-            }
+
+            m_dcDataVFX.update_shader_from_display_parameters();
 
             if (!m_threadsStarted) {
                 return;
             }
 
-            Profiler.BeginSample("[DClient::update] Update DLL");
+            Profiler.BeginSample("[DClient::update] dll update");
             m_dcClientDLL.update();
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DClient::update] uncompress_frame / copy_current_frame_vertices_vfx");
+            Profiler.BeginSample("[DClient::update] dll copy_current_frame_vertices_vfx");
             Parallel.ForEach(devicesStates, deviceStates => {
 
                 if (m_dcClientDLL.is_frame_available(deviceStates.deviceId)) {
@@ -560,13 +565,11 @@ namespace BS {
             });
             Profiler.EndSample();
 
-            Profiler.BeginSample("[DClient::update] Update VFX data");
+            Profiler.BeginSample("[DClient::update] VFX update");
             foreach (var deviceStates in devicesStates) {
                 m_dcDataVFX.update_data(deviceStates.deviceId, deviceStates.verticesCountToCopy);
             }
             Profiler.EndSample();
-
-
         }
 
         private void OnApplicationQuit() {

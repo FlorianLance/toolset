@@ -114,7 +114,7 @@ struct DCCalibratorDisplaySettings{
 struct DCCalibratorClientData{
 
     size_t id;
-    std::vector<std::shared_ptr<DCFrame2>> frames;
+    std::vector<std::shared_ptr<DCFrame>> frames;
     geo::ColorCloud calibrationCloud;
     geo::ColorCloud processedCloud;
 

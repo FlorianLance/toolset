@@ -34,12 +34,12 @@ namespace tool::graphics {
 struct DCRecorderDrawer : public DCCloudsSceneDrawer{
 
     auto initialize(size_t nbGrabbers) -> void;
-    auto set_frame(size_t idC, std::shared_ptr<cam::DCFrame2> frame) -> void;
+    auto set_frame(size_t idC, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto draw(bool focusWindow) -> void;
 
 private:
     
-    std::vector<std::shared_ptr<cam::DCFrame2>> m_currentFrames;
+    std::vector<std::shared_ptr<cam::DCFrame>> m_currentFrames;
     bool m_redrawClouds = false;
     bool m_allTabOpened = false;
 };

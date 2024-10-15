@@ -37,7 +37,7 @@ public:
 
     ~DCMController();
 
-    auto initialize() -> bool;
+    auto initialize(size_t id) -> bool;
     auto set_connections() -> void;
 
     auto start() -> void;

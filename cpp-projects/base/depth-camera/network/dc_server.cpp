@@ -298,7 +298,6 @@ auto DCServer::Impl::stop_sending_thread() -> void{
     }
 }
 
-
 auto DCServer::Impl::send_messages_loop() -> void{
 
     sendMessages = true;

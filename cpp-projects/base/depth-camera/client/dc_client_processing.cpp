@@ -110,7 +110,7 @@ auto DCClientProcessing::new_data_frame(size_t idD, std::shared_ptr<DCDataFrame>
 }
 
 
-auto DCClientProcessing::new_frame(size_t idD, std::shared_ptr<cam::DCFrame2> frame) -> void {
+auto DCClientProcessing::new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void {
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::new_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
@@ -123,7 +123,7 @@ auto DCClientProcessing::nb_devices() const noexcept -> size_t{
     return i->frameProcessors.size();
 }
 
-auto DCClientProcessing::get_frame(size_t idD) -> std::shared_ptr<DCFrame2>{
+auto DCClientProcessing::get_frame(size_t idD) -> std::shared_ptr<DCFrame>{
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::get_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
@@ -186,7 +186,7 @@ auto DCClientProcessing::process(size_t idD) -> void{
     i->frameProcessors[idD]->process();
 }
 
-auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame2>{
+auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>{
 
     if(idD >= i->frameProcessors.size()){
         Logger::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));

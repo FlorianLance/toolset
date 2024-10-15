@@ -80,7 +80,7 @@ auto DCCloudDrawer::reset() -> void{
     cpD.set_indice_count(0);
 }
 
-auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame2> frame) -> bool {
+auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
 
     if(lastFrameId == frame->idCapture){
         return false;

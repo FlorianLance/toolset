@@ -53,7 +53,7 @@ struct DCVideoRecorderExport{
 
 private:
     
-    auto add_frame(size_t idD, std::shared_ptr<DCFrame2> frame) -> void;
+    auto add_frame(size_t idD, std::shared_ptr<DCFrame> frame) -> void;
 };
 
 }

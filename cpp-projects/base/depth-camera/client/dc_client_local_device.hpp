@@ -57,7 +57,7 @@ public:
     auto device_connected() const noexcept -> bool override;
 
     // signals
-    sigslot::signal<std::shared_ptr<cam::DCFrame2>> local_frame_signal;
+    sigslot::signal<std::shared_ptr<cam::DCFrame>> local_frame_signal;
 
 private:
 

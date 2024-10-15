@@ -18,7 +18,7 @@ struct DCVideoPlayer::Impl{
     DCVideo video;
     std::vector<size_t> camerasFrameId;
     std::vector<std::shared_ptr<DCDataFrame>> camerasDataFrame;
-    std::vector<std::shared_ptr<DCFrame2>> camerasFrame;
+    std::vector<std::shared_ptr<DCFrame>> camerasFrame;
     std::vector<size_t> ids;
 
     auto initialize(const DCVideo &nVideo) -> void{
@@ -43,7 +43,6 @@ struct DCVideoPlayer::Impl{
 
         if(video.load_from_file(path)){
             
-
             size_t nbDevices = video.nb_devices();
             camerasFrameId.resize(nbDevices);
             camerasDataFrame.resize(nbDevices);
@@ -53,60 +52,11 @@ struct DCVideoPlayer::Impl{
             std::fill(std::begin(camerasDataFrame), std::end(camerasDataFrame), nullptr);
 
             for(auto &cameraFrame : camerasFrame){
-                cameraFrame = std::make_shared<DCFrame2>();
+                cameraFrame = std::make_shared<DCFrame>();
             }
-
-            // Logger::message("PLAYER3\n");
-            // for(size_t idD = 0; idD < nbDevices; ++idD){
-
-            //     Logger::message("PLAYER4\n");
-            //     if(auto cFrame = video.get_data_frame(idD, 0).lock(); cFrame){
-
-            //         auto firstMode = cFrame->mode;
-            //         for(size_t idF = 1; idF < video.nb_frames(idD); ++idF){
-            //             if(firstMode != video.get_data_frame(idD, idF).lock()->mode){
-            //                 tool::Logger::error("[DCVideoPlayer::load_from_file] Inconsistent modes for cameras.\n");
-            //                 return false;
-            //             }
-            //         }
-
-            //         if(auto generator = video.generator(idD); generator != nullptr){
-            //             Logger::message("UC:\n");
-            //             generator->initialize(cFrame.get());
-            //             Logger::message("END UC]\n");
-            //         }else{
-            //             tool::Logger::error("[DCVideoPlayer::load_from_file] Invalid uncompressor.\n");
-            //         }
-
-            //     }else{
-            //         tool::Logger::error("[DCVideoPlayer::load_from_file] Invalid nb of frames.\n");
-            //         return false;
-            //     }
-            // }
-
-            // Logger::message("PLAYERE\n");
 
             ids.resize(1024*1024);
             std::iota(ids.begin(), ids.end(), 0);
-
-            // std::cout << "VIDEO " << video.nb_cameras() << " " << video.duration_ms() << "\n";
-            // for(size_t idC = 0; idC < video.nb_cameras(); ++idC){
-            //     std::cout << "FROM idc " << idC << " " << video.nb_frames(idC) <<  "\n";
-            //     auto firstC = video.get_compressed_frames_ptr(idC)->first_frame_received_timestamp();
-            //     auto lastC = video.get_compressed_frames_ptr(idC)->last_frame_received_timestamp();
-            //     std::cout << firstC << " " << lastC << " " << video.camera_duration_ms(idC) << "\n";
-
-            //     for(size_t idF = 0; idF < video.nb_frames(idC); ++idF){
-            //         if(auto camD = video.get_compressed_frame(idC, idF).lock()){
-            //             std::cout << " -> " << camD->idCapture << " " << camD->afterCaptureTS << " " << camD->receivedTS << " " << camD->cloud_vertices_size() << " " <<
-            //                 std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(camD->receivedTS-firstC)).count() << "ms\n";
-            //         }
-            //     }
-            //     auto duration = video.duration_ms();
-            //     for(int t = 0; t < duration; t += 50){
-            //         std::cout << "T " << t << " " << video.closest_frame_id_from_time(idC, t) << "\n";
-            //     }
-            // }
 
             return true;
         }
@@ -159,8 +109,7 @@ struct DCVideoPlayer::Impl{
         return 0;
     }
 
-
-    auto update_current_compressed_frames(double timeMs) -> void{
+    auto update_current_data_frame_from_time(double timeMs) -> void{
         for(size_t idC = 0; idC < video.nb_devices(); ++idC){
             if(auto idF = video.closest_frame_id_from_time(idC, timeMs); idF != -1){
                 if(idF != camerasFrameId[idC]){
@@ -171,13 +120,13 @@ struct DCVideoPlayer::Impl{
         }
     }
 
-    auto uncompress_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera) -> bool{
+    auto generate_current_frame(const DCFrameGenerationSettings &gSettings, size_t idCamera) -> bool{
 
         if(idCamera < camerasFrameId.size()){
             if(camerasDataFrame[idCamera] != nullptr){
 
                 if(camerasFrame[idCamera] == nullptr){
-                    camerasFrame[idCamera] = std::make_shared<DCFrame2>();
+                    camerasFrame[idCamera] = std::make_shared<DCFrame>();
                 }
 
                 if(camerasDataFrame[idCamera]->idCapture != camerasFrame[idCamera]->idCapture){
@@ -416,7 +365,7 @@ auto DCVideoPlayer::update() -> void{
     std::vector<size_t> currentCamerasFrameId = i->camerasFrameId;
 
     // retrieve current frames to uncompress
-    i->update_current_compressed_frames(cTime);
+    i->update_current_data_frame_from_time(cTime);
 
     // uncompress frames
     std::vector<bool> uncompressResults(video()->nb_devices(), false);
@@ -428,7 +377,7 @@ auto DCVideoPlayer::update() -> void{
     std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t id){
         if(video()->nb_frames(id) != 0){
             if(i->current_frame_id(id) == 0 || (i->current_frame_id(id) != currentCamerasFrameId[id])){
-                uncompressResults[id] = i->uncompress_frame(settings.generation, id);
+                uncompressResults[id] = i->generate_current_frame(settings.generation, id);
             }
         }
     });
@@ -530,7 +479,7 @@ auto DCVideoPlayer::current_frame_cloud_size(size_t idCamera) -> size_t{
     return 0;
 }
 
-auto DCVideoPlayer::current_frame(size_t idCamera) -> std::shared_ptr<DCFrame2>{
+auto DCVideoPlayer::current_frame(size_t idCamera) -> std::shared_ptr<DCFrame>{
     if(idCamera < i->camerasFrame.size()){
         return i->camerasFrame[idCamera];
     }
@@ -680,8 +629,8 @@ auto DCVideoPlayer::video() -> DCVideo* {
 
 auto DCVideoPlayer::load_from_file(std::string_view path) -> bool{
 
-    Logger::message("load_from_file\n");
     if(i->load_from_file(path)){
+
         states.fileName = path;
 
         go_to_start_time();

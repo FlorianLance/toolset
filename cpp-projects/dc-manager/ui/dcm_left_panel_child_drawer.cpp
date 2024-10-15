@@ -680,6 +680,7 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
                 // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+                Logger::message(std::format("ID READING PORT {}\n", clientDeviceS.connectionS.readingPort));
             }
 
             ImGui::Text("Sending address:");

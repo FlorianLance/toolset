@@ -23,18 +23,40 @@
 
 // system
 using System;
+using System.Collections.Generic;
+
+// unity
+using UnityEngine;
 
 namespace BS {
 
+    [Serializable]
+    public class TransformValue {
+        public TransformValue() { }
+        public TransformValue(Vector3 position, Quaternion rotation, Vector3 scale) {
+            this.position = position;
+            this.rotation = rotation;
+            this.scale    = scale;
+        }
+        public Vector3 position = Vector3.zero;
+        public Quaternion rotation = Quaternion.identity;
+        public Vector3 scale = Vector3.one;
+    }
 
     [Serializable]
-    public class DCDisplaySettingsVFX {
-        public bool display = true;                 // shall the cloud be displayed ?
-        public bool update = true;                  // shall the cloud be updated ?
+    public class DCCloudDisplaySettings {
+        public bool display = true;                     // shall the cloud be displayed ?
+        public bool update = true;                      // shall the cloud be updated ?
         public bool enableBackFaceCulling = false;
-        public UnityEngine.Color tint = new UnityEngine.Color(1f, 1f, 1f, 1f); // tint color to be mixed with input cloud color (VFX)
-        public float colorFactor = 3.0f;            // color multiplier factor applied at the end (VFX)
-        public float particleSize = 0.005f;         // particle size (VFX)
-        public float octogonCropFactor = 0.125f;    // octogon output mesh crop factor (VFX)
+        public Color tint = new Color(1f, 1f, 1f, 1f);  // tint color to be mixed with input cloud color (VFX)
+        public float colorFactor = 3.0f;                // color multiplier factor applied at the end (VFX)
+        public float particleSize = 0.005f;             // particle size (VFX)
+        public float octogonCropFactor = 0.125f;        // octogon output mesh crop factor (VFX)                
+    }
+
+    [Serializable]
+    public class DCDataVFXSettings {
+        public TransformValue parentTransform = new TransformValue();
+        public List<DCCloudDisplaySettings> cloudsDisplayS = new List<DCCloudDisplaySettings>();
     }
 }

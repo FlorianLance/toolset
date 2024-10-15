@@ -55,13 +55,13 @@ DCDataFrameGenerator::DCDataFrameGenerator() : i(std::make_unique<Impl>()){
 DCDataFrameGenerator::~DCDataFrameGenerator(){
 }
 
-auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame) -> std::unique_ptr<DCDataFrame>{
+auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame) -> std::unique_ptr<DCDataFrame>{
     auto dFrame = std::make_unique<DCDataFrame>();
     generate(dfgS, frame, dFrame.get());
     return dFrame;
 }
 
-auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame2 &frame, DCDataFrame *dFrame) -> void{
+auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, DCFrame &frame, DCDataFrame *dFrame) -> void{
 
     // frame
     dFrame->idCapture          = frame.idCapture;

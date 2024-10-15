@@ -31,7 +31,7 @@
 
 using namespace tool;
 
-DCMView::DCMView(){
+DCMView::DCMView(size_t id){
 
     // init main window
     // # screen
@@ -45,8 +45,8 @@ DCMView::DCMView(){
     context.minorVersion      = 6;
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
-    const std::string numVersion = "2.7";
-    m_glW = std::make_unique<graphics::DCMGlWindow>(std::format("DC manager v{}", numVersion), screen,context);
+    const std::string numVersion = "2.8";
+    m_glW = std::make_unique<graphics::DCMGlWindow>(std::format("DC manager id[{}] v[{}]", id, numVersion), screen,context);
     m_glW->init();
 }
 

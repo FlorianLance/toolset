@@ -34,7 +34,7 @@
 
 namespace tool::cam{
 
-struct DCFrame2 : Frame{
+struct DCFrame : Frame{
 
     DCMode mode;
     umap<DCInfoType,         std::int64_t> infosB;

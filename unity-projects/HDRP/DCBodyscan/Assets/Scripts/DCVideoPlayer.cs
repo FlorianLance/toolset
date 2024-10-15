@@ -34,8 +34,6 @@ using UnityEngine;
 using UnityEngine.VFX;
 using UnityEngine.Profiling;
 using UnityEngine.Events;
-using System.Collections;
-using UnityEditor.PackageManager;
 
 
 namespace BS {
@@ -76,8 +74,8 @@ namespace BS {
             EditorGUI.BeginDisabledGroup(!Application.isPlaying);
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Video file path: ");
-            dcVideoPlayer.videoFilePath = EditorGUILayout.TextField(dcVideoPlayer.videoFilePath);
+            //EditorGUILayout.LabelField("Video file path: ");
+            //dcVideoPlayer.videoFilePath = EditorGUILayout.TextField(dcVideoPlayer.videoFilePath);
             if (GUILayout.Button("Load video")) {
                 dcVideoPlayer.load_video_from_file(dcVideoPlayer.videoFilePath);
             }
@@ -169,7 +167,7 @@ namespace BS {
 
         [Header("#### DISPLAY ####")]
         public bool loadDisplaySettingsFilesAfterVideoLoading = false;
-        public string displaySettingsFilesBasePath = "./display_settings";
+        public string dataVFXSettingsFilePath = "./data_vfx_settings.json";
         public VisualEffectAsset visualEffectAsset = null;
 
         [Header("#### AUDIO ####")]
@@ -231,11 +229,7 @@ namespace BS {
 
                 m_videoLoaded = true;
                 if (loadDisplaySettingsFilesAfterVideoLoading) {
-                    for (int idG = 0; idG < dataVFX.displaySettings.Count; ++idG) {
-                        string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayer::initialize_data_from_video] Load display settings file with path [{0}]. ", path));
-                        dataVFX.update_display_parameters_from_json_file(idG, path);
-                    }
+                    dataVFX.load_settings_file(dataVFXSettingsFilePath);
                 }
                 videoLoadedEvent.Invoke();
 
@@ -515,11 +509,7 @@ namespace BS {
 
                 // load display settings
                 if (loadDisplaySettingsFilesAfterVideoLoading) {
-                    for (int idG = 0; idG < count; ++idG) {
-                        string path = string.Format("{0}_{1}.json", displaySettingsFilesBasePath, idG);
-                        UnityEngine.Debug.Log(string.Format("[DCVideoPlayer::set_vfx_asset] Load display settings file with path [{0}]. ", path));
-                        dataVFX.update_display_parameters_from_json_file(idG, path);
-                    }
+                    dataVFX.load_settings_file(dataVFXSettingsFilePath);
                 }
             }
         }
@@ -559,11 +549,8 @@ namespace BS {
 
         void Update() {
 
-
             // update shaders parameters
-            foreach (var deviceStates in devicesStates) {
-                dataVFX.update_shader_from_display_parameters(deviceStates.deviceId);
-            }
+            dataVFX.update_shader_from_display_parameters();
 
             if (is_playing()) {
                 update();

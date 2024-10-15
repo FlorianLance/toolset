@@ -49,7 +49,13 @@ namespace BS {
         protected bool m_disposed = false;
 
         // I/O
-        public bool load_from_file(string videoFilePath) { return load_from_file__dc_video_player(_handle, videoFilePath) == 1; }
+        public bool load_from_file(string videoFilePath) { 
+            if(load_from_file__dc_video_player(_handle, videoFilePath) == 1) {
+                return true;
+            }
+            UnityEngine.Debug.LogError(string.Format("[DCVideoPlayerDLL::load_from_file] Cannot load video with path [{0}].", videoFilePath));
+            return false;
+        }
 
         public bool set_video_from_recorder(DCVideoRecorder dCVideoRecorder) {
             set_video_from_recorder__dc_video_player(_handle, dCVideoRecorder.get_dll().get_handle());

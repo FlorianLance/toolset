@@ -175,7 +175,7 @@ auto DCDevice::process() -> void{
             }
 
             // set connections
-            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame2> frame){
+            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
                 new_frame_signal(std::move(frame));
             });
             i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){

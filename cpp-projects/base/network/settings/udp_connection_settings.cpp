@@ -43,8 +43,8 @@ auto UdpConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
     // base
     io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
     // settings
-    read_and_update_value(json, unreadCount, "udp_sending_address"sv,   address);
-    read_and_update_value(json, unreadCount, "udp_sending_port"sv,      port);
+    read_and_update_value(json, unreadCount, "address"sv,   address);
+    read_and_update_value(json, unreadCount, "port"sv,      port);
     read_and_update_value(json, unreadCount, "max_size_udp_packet"sv,   maxPacketSize);
 
     if(unreadCount != 0){
@@ -57,8 +57,8 @@ auto UdpConnectionSettings::convert_to_json() const -> nlohmann::json{
     // base
     add_value(json, "base"sv, io::Settings::convert_to_json());
     // settings
-    add_value(json, "udp_sending_address"sv,    address);
-    add_value(json, "udp_sending_port"sv,       port);
+    add_value(json, "address"sv,    address);
+    add_value(json, "port"sv,       port);
     add_value(json, "max_size_udp_packet"sv,    maxPacketSize);
 
     return json;

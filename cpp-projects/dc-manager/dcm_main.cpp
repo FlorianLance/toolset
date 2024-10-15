@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 
     // init controller
     DCMController controller;
-    controller.initialize();
+    controller.initialize(id.value());
     controller.start();
     Logger::message("Exit DC-manager.\n");
 

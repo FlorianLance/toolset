@@ -48,7 +48,7 @@ namespace BS {
     public class DCDataVFXEditor : Editor {
 
         private DCDataVFX dataVFX { get { return target as DCDataVFX; } }
-        public string baseJsongDisplaySettingsPath = "display_settings";
+        public string dataVFXSettingsJsonFilePath = "./data_vfx_settings.json";
 
         public override bool RequiresConstantRepaint() {
             return true;
@@ -56,16 +56,11 @@ namespace BS {
 
         public override void OnInspectorGUI() {
 
-            GUILayout.TextArea("Type the base path for the JSON file (id of the grabber and JSON ext will be added automatically");
-            baseJsongDisplaySettingsPath = GUILayout.TextField(baseJsongDisplaySettingsPath);
-            if (GUILayout.Button("Save display settings to JSON files")) {
-                int idG = 0;
+            //GUILayout.TextArea("Type the base path for the JSON file (id of the grabber and JSON ext will be added automatically");
+            dataVFXSettingsJsonFilePath = GUILayout.TextField(dataVFXSettingsJsonFilePath);
+            if (GUILayout.Button("Save DataVFX settings to JSON file")) {                
                 try {
-                    foreach (var dS in dataVFX.displaySettings) {
-                        string path = string.Format("{0}_{1}.json", baseJsongDisplaySettingsPath, idG++);
-                        File.WriteAllText(path, JsonUtility.ToJson(dS));
-                        UnityEngine.Debug.Log(string.Format("[DCDataVFXEditor::OnInspectorGUI] Display settings file with path [{0}] saved. ", path));
-                    }
+                    File.WriteAllText(dataVFXSettingsJsonFilePath, JsonUtility.ToJson(dataVFX.settings));
                 } catch (System.Exception ex) {
                     UnityEngine.Debug.LogError(string.Format("[DCDataVFXEditor::OnInspectorGUI] Cannot save JSON settings, error: [{0}] ", ex.Message));
                 }
@@ -81,7 +76,7 @@ namespace BS {
 
         public VisualEffectAsset sharedVisualEffectAsset = null;
         public List<GameObject> cloudsGO = new List<GameObject>();
-        public List<DCDisplaySettingsVFX> displaySettings = new List<DCDisplaySettingsVFX>();
+        public DCDataVFXSettings settings = new DCDataVFXSettings();
 
         private List<NativeDLLVec3> positionsNativeBuffers = new List<BS.NativeDLLVec3>();
         private List<NativeDLLVec3> colorsNativeBuffers = new List<BS.NativeDLLVec3>();
@@ -109,7 +104,8 @@ namespace BS {
             clean();
 
             cloudsGO = new List<GameObject>(nbClouds);
-            displaySettings = new List<DCDisplaySettingsVFX>(nbClouds);
+            settings = new DCDataVFXSettings();
+            settings.cloudsDisplayS = new List<DCCloudDisplaySettings>(nbClouds);
 
             // create new graphic buffers list
             positionsGBuffers = new List<GraphicsBuffer>(nbClouds);
@@ -126,12 +122,12 @@ namespace BS {
                 // create GO
                 var cloudGO = new GameObject();
                 cloudGO.transform.SetParent(transform);
-                cloudGO.name = "Cloud " + idC;
+                cloudGO.name = string.Format("Cloud {0}", idC);
                 cloudGO.transform.localPosition = Vector3.zero;
                 cloudGO.transform.localRotation = Quaternion.identity;
                 cloudGO.transform.localScale = Vector3.one;
 
-                displaySettings.Add(new DCDisplaySettingsVFX());
+                settings.cloudsDisplayS.Add(new DCCloudDisplaySettings());
 
                 // create graphics buffers
                 var posGB = new GraphicsBuffer(GraphicsBuffer.Target.Structured, sizeMaxCloud, 3 * sizeof(float));
@@ -164,55 +160,61 @@ namespace BS {
             }
         }
 
-        public void update_display_parameters_from_json_file(int idCloud, string displaySettingsJsonFilePath) {
+        public void load_settings_file(string settingsFilePath) {
 
-            if (idCloud >= displaySettings.Count) {
-                return;
-            }
-
-            if (!File.Exists(displaySettingsJsonFilePath)) {
-                UnityEngine.Debug.LogWarning(string.Format("[DCDataVFX::update_parameters] File with path [{0}] doesn't exist. ", displaySettingsJsonFilePath));
+            if (!File.Exists(settingsFilePath)) {
+                UnityEngine.Debug.LogWarning(string.Format("[DCDataVFX::load_settings_file] File with path [{0}] doesn't exist. ", settingsFilePath));
                 return;
             }
 
             try {
-                string jsonContent = File.ReadAllText(displaySettingsJsonFilePath);
-                var newSettings = JsonUtility.FromJson<DCDisplaySettingsVFX>(jsonContent);
+                string jsonContent = File.ReadAllText(settingsFilePath);
+                var newSettings = JsonUtility.FromJson<DCDataVFXSettings>(jsonContent);
                 if (newSettings != null) {
-                    displaySettings[idCloud] = newSettings;
+                    if(newSettings.cloudsDisplayS.Count == settings.cloudsDisplayS.Count) {
+                        settings = newSettings;
+                    } else{
+                        UnityEngine.Debug.LogWarning(string.Format("[DCDataVFX::load_settings_file] Inconsistencies bewteen current cloud settings and loaded file number of clouds settings with path [{0}] with text: [{1}]", settingsFilePath, jsonContent));
+                    }
                 } else {
-                    UnityEngine.Debug.LogError(string.Format("[DCDataVFX::update_parameters] Cannot convert text to JSON from file with path [{0}] with text: [{1}] ", displaySettingsJsonFilePath, jsonContent));
+                    UnityEngine.Debug.LogError(string.Format("[DCDataVFX::load_settings_file] Cannot convert text to JSON from file with path [{0}] with text: [{1}] ", settingsFilePath, jsonContent));
                 }
 
             } catch (System.Exception ex) {
-                UnityEngine.Debug.LogError(string.Format("[DCDataVFX::update_parameters] Cannot read file with path [{0}], error: [{1}] ", displaySettingsJsonFilePath, ex.Message));
+                UnityEngine.Debug.LogError(string.Format("[DCDataVFX::load_settings_file] Cannot read file with path [{0}], error: [{1}] ", settingsFilePath, ex.Message));
             }
         }
 
-        public void update_shader_from_display_parameters(int idCloud) {
+        public void update_shader_from_display_parameters() {
 
-            if (idCloud >= displaySettings.Count) {
+            if (settings.cloudsDisplayS.Count != cloudsGO.Count) {
+                UnityEngine.Debug.LogError("Invalid DataVFX settings file.");
                 return;
             }
 
             // set shader parameters
-            var currentDisplaySettings = displaySettings[idCloud];
-            var visualEffect = cloudsGO[idCloud].GetComponent<VisualEffect>();
-            visualEffect.SetBool("EnableBackFaceCulling", currentDisplaySettings.enableBackFaceCulling);
-            visualEffect.SetVector4("Tint", currentDisplaySettings.tint);
-            visualEffect.SetFloat("OctogonCropFactor", currentDisplaySettings.octogonCropFactor);
-            visualEffect.SetFloat("ColorFactor", currentDisplaySettings.colorFactor);
-            visualEffect.SetFloat("ParticleSize", currentDisplaySettings.particleSize);
-            visualEffect.enabled = currentDisplaySettings.display;
+            for(int idC = 0; idC < settings.cloudsDisplayS.Count; ++idC) {
+                var currentS = settings.cloudsDisplayS[idC];
+                var visualEffect = cloudsGO[idC].GetComponent<VisualEffect>();
+                visualEffect.SetBool("EnableBackFaceCulling", currentS.enableBackFaceCulling);
+                visualEffect.SetVector4("Tint", currentS.tint);
+                visualEffect.SetFloat("OctogonCropFactor", currentS.octogonCropFactor);
+                visualEffect.SetFloat("ColorFactor", currentS.colorFactor);
+                visualEffect.SetFloat("ParticleSize", currentS.particleSize);
+                visualEffect.enabled = currentS.display;
+            }
+            transform.localPosition = settings.parentTransform.position;
+            transform.localRotation = settings.parentTransform.rotation;
+            transform.localScale    = settings.parentTransform.scale;
         }
 
         public void update_data(int idCloud, int nbPoints) {
 
-            if (idCloud >= displaySettings.Count) {
+            if (idCloud >= settings.cloudsDisplayS.Count) {
                 return;
             }
 
-            if ((nbPoints >= 0) && displaySettings[idCloud].update) {
+            if ((nbPoints >= 0) && settings.cloudsDisplayS[idCloud].update) {
 
                 // set data
                 colorsGBuffers[idCloud].SetData(colorsNativeBuffers[idCloud].native, 0, 0, nbPoints);
@@ -225,21 +227,21 @@ namespace BS {
         }
 
         public NativeDLLVec3 positions_native_buffer(int idCloud) {
-            if (idCloud < displaySettings.Count) {
+            if (idCloud < settings.cloudsDisplayS.Count) {
                 return positionsNativeBuffers[idCloud];
             }
             return null;
         }
 
         public NativeDLLVec3 colors_native_buffer(int idCloud) {
-            if (idCloud < displaySettings.Count) {
+            if (idCloud < settings.cloudsDisplayS.Count) {
                 return colorsNativeBuffers[idCloud];
             }
             return null;
         }
 
         public NativeDLLVec3 normals_native_buffer(int idCloud) {
-            if (idCloud < displaySettings.Count) {
+            if (idCloud < settings.cloudsDisplayS.Count) {
                 return normalsNativeBuffers[idCloud];
             }
             return null;
@@ -250,40 +252,40 @@ namespace BS {
         }
 
         public void set_tint(int idCloud, UnityEngine.Color color) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].tint = color;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].tint = color;
                 cloudsGO[idCloud].GetComponent<VisualEffect>().SetVector4("Tint", color);
             }
         }
         public void set_display_state(int idCloud, bool state) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].display = state;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].display = state;
                 cloudsGO[idCloud].GetComponent<VisualEffect>().enabled = state;
             }
         }
         public void set_update_state(int idCloud, bool state) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].update = state;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].update = state;
             }
         }
 
         public void set_octogon_crop_factor(int idCloud, float factor) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].octogonCropFactor = factor;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].octogonCropFactor = factor;
                 cloudsGO[idCloud].GetComponent<VisualEffect>().SetFloat("OctogonCropFactor", factor);
             }
         }
 
         public void set_color_factor(int idCloud, float factor) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].colorFactor = factor;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].colorFactor = factor;
                 cloudsGO[idCloud].GetComponent<VisualEffect>().SetFloat("ColorFactor", factor);
             }
         }
 
         public void set_particle_size(int idCloud, float size) {
-            if (idCloud < displaySettings.Count) {
-                displaySettings[idCloud].particleSize = size;
+            if (idCloud < settings.cloudsDisplayS.Count) {
+                settings.cloudsDisplayS[idCloud].particleSize = size;
                 cloudsGO[idCloud].GetComponent<VisualEffect>().SetFloat("ParticleSize", size);
             }
         }

@@ -96,7 +96,7 @@ auto DCDirectDrawer::update() -> void{
     m_redrawClouds = false;
 }
 
-auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame2> frame) -> void{
+auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
     m_locker.lock();
     m_lastFrames[idGrabber] = std::move(frame);
     m_locker.unlock();

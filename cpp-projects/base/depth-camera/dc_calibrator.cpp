@@ -317,7 +317,7 @@ auto DCCalibrator::calibration_client_data(size_t idGrabber) const -> const DCCa
     return nullptr;
 }
 
-auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame2> frame) -> void{
+auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame) -> void{
 
     if(!states.isRegistering){
         return;

@@ -49,7 +49,7 @@ DCClientExport::DCClientExport(){
             (*newFeedbackCBP)(static_cast<int>(idD), static_cast<int>(feedback.type), static_cast<int>(feedback.receivedMessageType));
         }
     });
-    client.new_frame_signal.connect([&](size_t idD, std::shared_ptr<cam::DCFrame2> frame){
+    client.new_frame_signal.connect([&](size_t idD, std::shared_ptr<cam::DCFrame> frame){
         framesToDisplay[idD] = std::move(frame);
     });
 }
@@ -233,7 +233,7 @@ auto DCClientExport::current_frame_id(size_t idD) -> size_t{
     return 0;
 }
 
-auto DCClientExport::current_frame(size_t idD) -> std::shared_ptr<DCFrame2>{
+auto DCClientExport::current_frame(size_t idD) -> std::shared_ptr<DCFrame>{
     if(idD < framesToDisplay.size()){
         return framesToDisplay[idD];
     }

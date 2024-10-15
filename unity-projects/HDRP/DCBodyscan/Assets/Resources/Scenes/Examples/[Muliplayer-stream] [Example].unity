@@ -176,7 +176,7 @@ MonoBehaviour:
   applyColorSettingsAfterConnection: 1
   loadDisplaySettingsFilesAfterInitializing: 0
   dataVFXSettingsFilePath: ./data_vfx_settings.json
-  clientSettingsFilePath: E:/_json/client_remote1_test.json
+  clientSettingsFilePath: ./multi_remote1.json
   m_allDevicesConnected: 0
   m_threadsStarted: 0
   devicesStates: []
@@ -436,7 +436,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3edae7616d2522d4a851257e3ad22385, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedT: 0.5
+  speedT: 0.2
   speedRH: 3
   speedRV: 3
   speedRR: 3

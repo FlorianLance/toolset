@@ -1448,7 +1448,7 @@ auto DCDeviceImpl::process_data() -> void{
         framerateB.add_frame();
 
         if(settings.data.generation.has_data()){
-            frame = std::make_shared<DCFrame2>();
+            frame = std::make_shared<DCFrame>();
         }else{
             frame = nullptr;
         }
@@ -1577,7 +1577,7 @@ auto DCDeviceImpl::process_data() -> void{
     }
 }
 
-auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame2> frame) -> void{
+auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{
     // store frame
     auto afterCaptureTS = std::chrono::nanoseconds(frame->afterCaptureTS);
     frames.push_back(std::make_tuple(afterCaptureTS, std::move(frame)));
@@ -1589,7 +1589,7 @@ auto DCFramesBuffer::add_data_frame(std::shared_ptr<DCDataFrame> dFrame) -> void
     dataFrames.push_back(std::make_tuple(afterCaptureTS, std::move(dFrame)));
 }
 
-auto DCFramesBuffer::take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCFrame2>{
+auto DCFramesBuffer::take_frame_with_delay(std::chrono::nanoseconds afterCaptureTS, int64_t delayMs) -> std::shared_ptr<DCFrame>{
 
     // check delay
     using namespace std::chrono;
