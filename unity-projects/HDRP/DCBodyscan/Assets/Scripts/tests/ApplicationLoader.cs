@@ -94,11 +94,12 @@ namespace BS {
 
 
 
-    //[Serializable]
-    //public class ApplicationParameters {
-    //    public int a = 55;
-    //    //public Dictionary<string, object> parameters = new Dictionary<string, object>();
-    //}
+    [Serializable]
+    public class RealstreamManagerSettings {
+        public string clientJSONFilePath = "E:/_json/client_local1_test.json";
+        public int a = 2;
+        //public Dictionary<string, object> parameters = new Dictionary<string, object>();
+    }
 
     public class ApplicationLoader : MonoBehaviour {
         public enum ApplicationType {
@@ -149,8 +150,11 @@ namespace BS {
             add_application("RSM1", ApplicationType.RealstreamManager);
             add_application("RSM2", ApplicationType.RealstreamManager);
 
-            //ApplicationParameters parameters = new ApplicationParameters();
-            //update_application_parameters("RSM1", JsonUtility.ToJson(parameters));
+            RealstreamManagerSettings parameters = new RealstreamManagerSettings();
+            Debug.Log("[QtMainThread] update_application_parameters: " + JsonUtility.ToJson(parameters));
+            update_application_parameters("RSM1", JsonUtility.ToJson(parameters));
+            parameters.a = 15;
+            update_application_parameters("RSM2", JsonUtility.ToJson(parameters));
         }
 
         private void OnApplicationQuit() {
@@ -160,7 +164,6 @@ namespace BS {
 #else
             quit();
 #endif
-
             Debug.Log("[QtApplicationWrapper] Dispose");
             dllQtAppWrapper.dispose();
 

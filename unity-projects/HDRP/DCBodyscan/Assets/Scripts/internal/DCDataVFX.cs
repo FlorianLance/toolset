@@ -32,6 +32,8 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.VFX;
 using System.Collections;
+using UnityEngine.Video;
+
 
 
 #if UNITY_EDITOR
@@ -55,6 +57,18 @@ namespace BS {
         }
 
         public override void OnInspectorGUI() {
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Dissolve")) {
+                dataVFX.dissolve(10f, 1000, 25, 12);
+            }
+            if (GUILayout.Button("Solve")) {
+                dataVFX.solve(5f, 1000);
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Separator();
 
             //GUILayout.TextArea("Type the base path for the JSON file (id of the grabber and JSON ext will be added automatically");
             dataVFXSettingsJsonFilePath = GUILayout.TextField(dataVFXSettingsJsonFilePath);
@@ -203,9 +217,12 @@ namespace BS {
                 visualEffect.SetFloat("ParticleSize", currentS.particleSize);
                 visualEffect.enabled = currentS.display;
             }
-            transform.localPosition = settings.parentTransform.position;
-            transform.localRotation = settings.parentTransform.rotation;
-            transform.localScale    = settings.parentTransform.scale;
+
+            if (settings.applyParentTransform) {
+                transform.localPosition = settings.parentTransform.position;
+                transform.localRotation = settings.parentTransform.rotation;
+                transform.localScale    = settings.parentTransform.scale;
+            }
         }
 
         public void update_data(int idCloud, int nbPoints) {

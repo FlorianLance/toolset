@@ -29,11 +29,14 @@
 
 // Qt
 #include <QObject>
+#include <QMap>
 
 // local
 #include "qt_str.hpp"
 
 namespace tool {
+
+
 
 class QtLogger : public QObject{
 

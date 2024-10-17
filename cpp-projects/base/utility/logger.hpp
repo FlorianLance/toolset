@@ -58,7 +58,6 @@ public:
 
     static auto get() -> Logger*;
 
-    static auto no_file_generate(bool doFormat = false) -> std::unique_ptr<Logger, LoggerCleaner>;
     static auto init(std::string_view logDirectoryPath = "", std::string_view logFileName ="default_log.html", bool doFormat = false) -> bool;
     static auto no_file_init(bool doFormat = false) -> void;
     static auto take_ownership() -> std::unique_ptr<Logger, LoggerCleaner>;

@@ -56,6 +56,7 @@ namespace BS {
 
     [Serializable]
     public class DCDataVFXSettings {
+        public bool applyParentTransform = false;
         public TransformValue parentTransform = new TransformValue();
         public List<DCCloudDisplaySettings> cloudsDisplayS = new List<DCCloudDisplaySettings>();
     }

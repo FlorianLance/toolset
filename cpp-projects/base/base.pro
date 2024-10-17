@@ -150,7 +150,7 @@ HEADERS += \
     camera/frame.hpp \
     # depth-camera    
     depth-camera/dc_device.hpp \
-    depth-camera/dc_enums.hpp \    
+    depth-camera/dc_enums.hpp \
     depth-camera/dc_packed_data.hpp \
     depth-camera/dc_types.hpp \
     depth-camera/dc_player_settings.hpp \
@@ -240,6 +240,7 @@ HEADERS += \
     utility/monitoring.hpp \
     utility/time_diff.hpp \
     utility/visit.hpp \
+    utility/log.hpp \
     # algorithms
     algorithms/marching_cube.hpp \
     # data
@@ -367,6 +368,7 @@ SOURCES += \
     utility/cmd_args.cpp \
     utility/decimal.cpp \
     utility/io_file.cpp \
+    utility/log.cpp \
     utility/logger.cpp \
     utility/paths.cpp \
     utility/string.cpp \

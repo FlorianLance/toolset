@@ -133,16 +133,7 @@ namespace BS {
                 EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.Separator();
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Dissolve")) {
-                dcVideoPlayer.GetComponent<DCDataVFX>().dissolve(10f, 1000, 25, 12);
-            }
-            if (GUILayout.Button("Solve")) {
-                dcVideoPlayer.GetComponent<DCDataVFX>().solve(5f, 1000);
-            }
 
-            EditorGUILayout.EndHorizontal();
 
             EditorGUI.EndDisabledGroup();
 

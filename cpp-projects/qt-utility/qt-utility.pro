@@ -45,12 +45,15 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # global    
+    base_app_controller.hpp \
     gui/widgets/base_qt_sfml_gl_widget.hpp \
     gui/widgets/logger_w.hpp \
     qstring_unordered_map.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
+    qt_log.hpp \
     qt_logger.hpp \
+    qt_paths.hpp \
     qt_process.hpp \
     qt_str.hpp \
     qt_style.hpp \
@@ -106,7 +109,9 @@ SOURCES += \
     gui/widgets/base_qt_sfml_gl_widget.cpp \
     gui/widgets/logger_w.cpp \
     qt_highlighting.cpp \
+    qt_log.cpp \
     qt_logger.cpp \
+    qt_paths.cpp \
     qt_str.cpp \
     qt_style.cpp \
     qt_ui.cpp \

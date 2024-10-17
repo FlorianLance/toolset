@@ -111,8 +111,6 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
     }
     settings.filePath = clientSettingsPath;
     for(auto &device : settings.devicesS){
-        // device.connectionS.connectionType == DCClientType::Remote
-        // device.deviceS;
         device.connectionS.startReadingThread = startThreads;
     }
 
