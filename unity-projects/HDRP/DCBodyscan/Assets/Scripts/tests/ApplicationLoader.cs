@@ -88,10 +88,11 @@ namespace BS {
         [DllImport("realstream-export", EntryPoint = "update_application_parameter_from_json_str__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
         static private extern void update_application_parameter_from_json_str__qt_application_wrapper(HandleRef qtAppW, string applicationName, string jsonStrUTF8);
 
+        [DllImport("realstream-export", EntryPoint = "get_application__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
+        static private extern IntPtr get_application__qt_application_wrapper(string applicationName);
+
         #endregion
     }
-
-
 
 
     [Serializable]
@@ -147,14 +148,14 @@ namespace BS {
         }
 
         private void Start() {
-            add_application("RSM1", ApplicationType.RealstreamManager);
-            add_application("RSM2", ApplicationType.RealstreamManager);
+            //add_application("RSM1", ApplicationType.RealstreamManager);
+            //add_application("RSM2", ApplicationType.RealstreamManager);
 
-            RealstreamManagerSettings parameters = new RealstreamManagerSettings();
-            Debug.Log("[QtMainThread] update_application_parameters: " + JsonUtility.ToJson(parameters));
-            update_application_parameters("RSM1", JsonUtility.ToJson(parameters));
-            parameters.a = 15;
-            update_application_parameters("RSM2", JsonUtility.ToJson(parameters));
+            //RealstreamManagerSettings parameters = new RealstreamManagerSettings();
+            //Debug.Log("[QtMainThread] update_application_parameters: " + JsonUtility.ToJson(parameters));
+            //update_application_parameters("RSM1", JsonUtility.ToJson(parameters));
+            //parameters.a = 15;
+            //update_application_parameters("RSM2", JsonUtility.ToJson(parameters));
         }
 
         private void OnApplicationQuit() {
@@ -194,6 +195,10 @@ namespace BS {
                 dllQtAppWrapper.update_application_parameters(applicationName, jsonParametersStr);
             }
         }
+
+        //public IntPtr get_application() {
+            //return
+        //}
 
         #endregion
     }

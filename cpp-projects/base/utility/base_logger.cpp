@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-dc-grabber                                                         **
+** Toolset-base                                                               **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -24,57 +24,22 @@
 **                                                                            **
 ********************************************************************************/
 
-// base
-#include "utility/log.hpp"
-#include "utility/logger.hpp"
-#include "utility/paths.hpp"
-#include "depth-camera/settings/dc_settings_paths.hpp"
+#include "base_logger.hpp"
 
-// local
-#include "dcg_controller.hpp"
-#include "depth-camera/settings/dc_settings_paths.hpp"
 
 using namespace tool;
-using namespace cam;
 
-int main(int argc, char *argv[]){
+struct GlobalBL{
+    static inline std::unique_ptr<BaseLogger> instance = nullptr;
+};
 
-    // check application arguments
-    std::optional<size_t> id = std::nullopt;
-    for(int ii = 0; ii < argc; ++ii){
-        std::string arg = argv[ii];
-        if(arg.starts_with("-i")){
-            id = std::stoi(arg.substr(2,1));
-        }
+auto BaseLogger::set_logger_instance(std::unique_ptr<BaseLogger> logger) noexcept -> void{
+    GlobalBL::instance = std::move(logger);
+}
+
+auto BaseLogger::get_instance() noexcept -> BaseLogger*{
+    if(GlobalBL::instance){
+        return GlobalBL::instance.get();
     }
-
-    // init paths
-    DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id.has_value() ? id.value() : 0);
-
-
-    auto logger = std::make_unique<Logger2>();
-    logger->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-    BaseLogger::set_logger_instance(std::move(logger));
-    // init logger
-    // auto log = std::make_shared<Log>();
-    // log->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-    // SLog::set_current_static_log(log);
-    // Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-
-    Logger::message("Start DC grabber.\n"sv);
-    Logger::message(std::format("Args {}.\n"sv, argc));
-    if(!id.has_value()){
-        Logger::warning("No id argument found, use 0 instead.\n"sv);
-        id = 0;
-    }
-
-    // init controller
-    DCGController controller;
-    if(controller.initialize(id.value())){
-        controller.start();
-        Logger::message("Exit DC grabber.\n"sv);
-        return 0;
-    }
-
-    return -1;
+    return nullptr;
 }

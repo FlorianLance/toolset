@@ -155,7 +155,8 @@ HEADERS += \
     depth-camera/dc_types.hpp \
     depth-camera/dc_player_settings.hpp \
     depth-camera/dc_calibrator.hpp \
-    depth-camera/dc_device_impl.hpp \    
+    depth-camera/dc_device_impl.hpp \
+    utility/base_logger.hpp \
     depth-camera/dc_video.hpp \
     depth-camera/dc_video_player.hpp \
     depth-camera/dc_video_recorder.hpp \
@@ -364,6 +365,7 @@ SOURCES += \
     network/settings/udp_connection_settings.cpp \
     network/settings/udp_server_settings.cpp \
     # utility    
+    utility/base_logger.cpp \
     utility/benchmark.cpp \
     utility/cmd_args.cpp \
     utility/decimal.cpp \

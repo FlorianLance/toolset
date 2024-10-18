@@ -1,8 +1,9 @@
 
+
 /*******************************************************************************
-** Toolset-dc-grabber                                                         **
+** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -24,57 +25,35 @@
 **                                                                            **
 ********************************************************************************/
 
-// base
-#include "utility/log.hpp"
-#include "utility/logger.hpp"
-#include "utility/paths.hpp"
-#include "depth-camera/settings/dc_settings_paths.hpp"
+#pragma once
+
+// std
+#include <memory>
+#include <string>
 
 // local
-#include "dcg_controller.hpp"
-#include "depth-camera/settings/dc_settings_paths.hpp"
+#include "thirdparty/sigslot/signal.hpp"
 
-using namespace tool;
-using namespace cam;
+namespace tool {
 
-int main(int argc, char *argv[]){
+class BaseLogger{
+public:
 
-    // check application arguments
-    std::optional<size_t> id = std::nullopt;
-    for(int ii = 0; ii < argc; ++ii){
-        std::string arg = argv[ii];
-        if(arg.starts_with("-i")){
-            id = std::stoi(arg.substr(2,1));
-        }
-    }
+    enum class MessageType : int{
+        normal, warning, error, log, unknow,
+    };
 
-    // init paths
-    DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id.has_value() ? id.value() : 0);
+    virtual ~BaseLogger(){}
 
+    virtual auto nofile_init() -> void{}
+    virtual auto clean() -> void{}
 
-    auto logger = std::make_unique<Logger2>();
-    logger->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-    BaseLogger::set_logger_instance(std::move(logger));
-    // init logger
-    // auto log = std::make_shared<Log>();
-    // log->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-    // SLog::set_current_static_log(log);
-    // Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
+    static auto set_logger_instance(std::unique_ptr<BaseLogger> logger) noexcept -> void;
+    static auto get_instance() noexcept -> BaseLogger*;
 
-    Logger::message("Start DC grabber.\n"sv);
-    Logger::message(std::format("Args {}.\n"sv, argc));
-    if(!id.has_value()){
-        Logger::warning("No id argument found, use 0 instead.\n"sv);
-        id = 0;
-    }
-
-    // init controller
-    DCGController controller;
-    if(controller.initialize(id.value())){
-        controller.start();
-        Logger::message("Exit DC grabber.\n"sv);
-        return 0;
-    }
-
-    return -1;
+    virtual auto message(std::string_view message)  -> void{static_cast<void>(message);}
+    virtual auto warning(std::string_view warning)  -> void{static_cast<void>(warning);}
+    virtual auto error(std::string_view error)      -> void{static_cast<void>(error);}
+    virtual auto log(std::string_view error)        -> void{static_cast<void>(error);}
+};
 }

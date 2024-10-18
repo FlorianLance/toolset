@@ -28,7 +28,7 @@
 
 // std
 #include <memory>
-// #include <string>
+
 
 // local
 #include "thirdparty/sigslot/signal.hpp"
@@ -52,7 +52,7 @@ struct Log{
     auto warning(std::string_view warning) -> void;
     auto error(std::string_view error) -> void;
     auto log(std::string_view log) -> void;
-    auto log_title(std::string_view error, int level) -> void;
+    auto log_title(std::string_view log, int level) -> void;
 
     // signals
     sigslot::signal<std::string> message_signal;

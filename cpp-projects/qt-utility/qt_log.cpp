@@ -42,7 +42,7 @@
 
 // base
 #include "utility/time.hpp"
-
+#include "utility/log.hpp"
 
 using namespace tool;
 using namespace Qt::Literals::StringLiterals;
@@ -164,8 +164,6 @@ auto QtLog::initialize(QStringView logDirectoryPath, QStringView logFileName, bo
 
 auto QtLog::message(QStringView message) -> void{
 
-
-
     const auto &conf = i->mTypeConfig[MessageType::normal];
     if(conf.displayToConsole){
         qInfo() << message;
@@ -284,6 +282,8 @@ auto QtLog::log_title(QStringView log, int level) -> void{
         }
     }
 }
+
+
 
 auto QtLog::set_type_color(MessageType type, const QColor &color) -> void{
     auto &conf = i->mTypeConfig[type];

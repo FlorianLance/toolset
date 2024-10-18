@@ -31,10 +31,114 @@
 #include <QObject>
 #include <QMap>
 
+// base
+#include "utility/logger.hpp"
+
 // local
 #include "qt_str.hpp"
 
 namespace tool {
+
+class QtLogger2 : public BaseLogger{//, QObject{
+// Q_OBJECT
+public:
+
+    static auto get_instance() noexcept -> QtLogger2*{
+        if(auto instance = BaseLogger::get_instance()){
+            return dynamic_cast<QtLogger2*>(instance);
+        }
+        return nullptr;
+    }
+
+    QtLogger2();
+    virtual ~QtLogger2();
+
+
+    auto init(QStringView logDirectoryPath = QStringLiteral(""), QStringView logFileName = QStringLiteral("default_log.html"), bool copyPreviousLog = true)  -> void;
+    auto nofile_init() -> void override{}
+    auto clean()  -> void override;
+
+    auto message(std::string_view message) -> void override;
+    auto warning(std::string_view warning) -> void override;
+    auto error(std::string_view error) -> void override;
+    auto log(std::string_view log) -> void override;
+    auto log_title(std::string_view log, int level) -> void;
+
+    auto message(QStringView message) -> void;
+    auto warning(QStringView warning) -> void;
+    auto error(QStringView error) -> void;
+    auto log(QStringView log) -> void;
+    auto log_title(QStringView log, int level) -> void;
+
+    auto set_type_color(MessageType type, const QColor &color) -> void;
+    auto set_html_file_background_color(const QString &color) -> void;
+
+// signals:
+
+//     auto message_signal(QString message) -> void;
+//     auto error_signal(QString error) -> void;
+//     auto warning_signal(QString warning) -> void;
+//     auto log_signal(QString log) -> void;
+    // signals
+    sigslot::signal<QString> message_signal;
+    sigslot::signal<QString> warning_signal;
+    sigslot::signal<QString> error_signal;
+    sigslot::signal<QString> log_signal;
+
+private:
+
+    auto to_html_paragraph(QStringView colorCode, QStringView text, bool addTimestamp) -> QString;
+    auto insert_to_log_file(QStringView message, bool flush = true) -> void;
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
+};
+
+class QtLog2{
+public:
+
+    static auto message(std::string_view message) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->message(message);
+        }
+    }
+    static auto warning(std::string_view warning) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->warning(warning);
+        }
+    }
+    static auto error(std::string_view error) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->error(error);
+        }
+    }
+    static auto log(std::string_view log) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->log(log);
+        }
+    }
+
+    static auto message(QStringView message) -> void{
+        if(auto instance = QtLogger2::get_instance()){
+            instance->message(message);
+        }
+    }
+    static auto warning(QStringView warning) -> void{
+        if(auto instance = QtLogger2::get_instance()){
+            instance->warning(warning);
+        }
+    }
+    static auto error(QStringView error) -> void{
+        if(auto instance = QtLogger2::get_instance()){
+            instance->error(error);
+        }
+    }
+    static auto log(QStringView log) -> void{
+        if(auto instance = QtLogger2::get_instance()){
+            instance->log(log);
+        }
+    }
+};
 
 
 

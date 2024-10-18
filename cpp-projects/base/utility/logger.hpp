@@ -32,9 +32,67 @@
 #include <string>
 
 // local
-#include "thirdparty/sigslot/signal.hpp"
+#include "base_logger.hpp"
 
 namespace tool {
+
+class Logger2 : public BaseLogger{
+
+public:
+
+    Logger2();
+    virtual ~Logger2();
+
+    auto init(std::string_view logDirectoryPath = "", std::string_view logFileName ="default_log.html") -> bool;
+    auto nofile_init() -> void override;
+    auto clean() -> void override;
+
+    auto message(std::string_view message) -> void override;
+    auto warning(std::string_view warning) -> void override;
+    auto error(std::string_view error) -> void override;
+    auto log(std::string_view log) -> void override;
+    auto log_title(std::string_view log, int level) -> void;
+
+    // signals
+    sigslot::signal<std::string> message_signal;
+    sigslot::signal<std::string> warning_signal;
+    sigslot::signal<std::string> error_signal;
+    sigslot::signal<std::string> log_signal;
+
+private:
+
+    auto to_html_paragraph(std::string_view colorCode, std::string_view text, bool addTimestamp = false) -> std::string;
+    auto insert_to_log_file(std::string_view message, bool flush = true) -> void;
+
+    struct Impl;
+    std::unique_ptr<Impl> i;
+};
+
+class Log2{
+public:
+
+    static auto message(std::string_view message) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->message(message);
+        }
+    }
+    static auto warning(std::string_view warning) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->warning(warning);
+        }
+    }
+    static auto error(std::string_view error) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->error(error);
+        }
+    }
+    static auto log(std::string_view log) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->log(log);
+        }
+    }
+};
+
 
 class Logger;
 struct LoggerCleaner {

@@ -26,9 +26,6 @@
 
 #pragma once
 
-// base
-#include "utility/log.hpp"
-
 // Qt
 #include <QObject>
 
