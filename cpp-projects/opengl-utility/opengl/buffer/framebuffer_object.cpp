@@ -60,7 +60,7 @@ FBO::~FBO(){
 auto FBO::initialize() -> void{
 
     if(m_handle != 0){
-        Logger::error(std::format("[FBO::generate] FBO already generated: {}\n", m_handle));
+        Log::error(std::format("[FBO::generate] FBO already generated: {}\n", m_handle));
         return;
     }
     GL::create_framebuffers(1, &m_handle);
@@ -146,7 +146,7 @@ auto FBO::attach_color3_texture(const TBO &color3Texture, GLint mipmapLevel) -> 
 auto FBO::attach_color_texture(const TBO &colorTexture, size_t id, GLint mipmapLevel) -> void{
 
     if(id >= colorsAttachmentsEnums.size()){
-        Logger::error("[FBO::attach_color_texture] Id color texture attachment too large\n.");
+        Log::error("[FBO::attach_color_texture] Id color texture attachment too large\n.");
         return;
     }
 
@@ -186,7 +186,7 @@ auto FBO::check_validity() -> bool{
     if(result == GL_FRAMEBUFFER_COMPLETE) {
         return true;
     }
-    Logger::error(std::format("[FBO::check_validity] Framebuffer error: {}\n", result));
+    Log::error(std::format("[FBO::check_validity] Framebuffer error: {}\n", result));
     return false;
 }
 

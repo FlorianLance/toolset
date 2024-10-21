@@ -49,12 +49,12 @@ namespace fs = std::filesystem;
 auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_ptr<ModelMesh>{
 
     if(verbose){
-        Logger::message(std::format("[AiLoader] Load model with path [{}].\n", path));
+        Log::message(std::format("[AiLoader] Load model with path [{}].\n", path));
     }
 
     fs::path pathModel = path;
     if(!fs::exists(pathModel)){
-        Logger::error(std::format("[AiLoader] Path [{}] not found, model cannot be loaded.\n", path));
+        Log::error(std::format("[AiLoader] Path [{}] not found, model cannot be loaded.\n", path));
         return nullptr;
     }
 
@@ -63,7 +63,7 @@ auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_pt
     auto importFlag = aiProcess_Triangulate; // aiProcess_EmbedTextures / aiProcess_FlipUVs
     const aiScene *scene = import.ReadFile(path.data(), importFlag);
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
-        Logger::error(std::format("[AiLoader] Assimp importer failure: [{}] for model with path [{}].\n", import.GetErrorString(), path));
+        Log::error(std::format("[AiLoader] Assimp importer failure: [{}] for model with path [{}].\n", import.GetErrorString(), path));
         return nullptr;
     }
 
@@ -73,7 +73,7 @@ auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_pt
     model->name      = scene->mRootNode->mName.C_Str();
 
     if(verbose){
-        Logger::message(std::format("[AiLoader] Loaded model name [{}].\n", model->name));
+        Log::message(std::format("[AiLoader] Loaded model name [{}].\n", model->name));
     }
 
     // retrieve global inverse transform

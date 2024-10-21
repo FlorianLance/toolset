@@ -44,11 +44,11 @@ DCServerSettings::DCServerSettings(){
     // retrieve interfaces
     ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
     if(ipv4Interfaces.size() == 0){
-        Logger::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
+        Log::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
     }
     ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
     if(ipv6Interfaces.size() == 0){
-        Logger::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
+        Log::warning("[DCServerSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
     }
 }
 
@@ -67,7 +67,7 @@ auto DCServerSettings::init_from_json(const nlohmann::json &json) -> void{
     miscS.init_from_json(read_and_return_object(json, unreadCount, "misc"sv));
 
     if(unreadCount != 0){
-        Logger::warning(std::format("[DCServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        Log::warning(std::format("[DCServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 
     update_reading_interface();
@@ -98,6 +98,6 @@ auto DCServerSettings::update_reading_interface() -> void{
             udpReadingInterface = Interface(udpServerS.protocol, "any");
         }
     }else{
-        Logger::error("[DCServerSettings::update_reading_interface] Invalid reading interface id, not enough interfaces.\n");
+        Log::error("[DCServerSettings::update_reading_interface] Invalid reading interface id, not enough interfaces.\n");
     }
 }

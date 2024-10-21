@@ -234,7 +234,7 @@ auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
 
 auto DCDataFrame::init_from_file_stream_legacy3(std::ifstream &file) -> void{
 
-    // Logger::message("LEGACY3\n");
+    // Log::message("LEGACY3\n");
 
     Frame::init_from_file_stream(file);
 
@@ -307,7 +307,7 @@ auto DCDataFrame::init_from_file_stream_legacy3(std::ifstream &file) -> void{
     }
 
 
-    // Logger::message(std::format("{} : {} {} {} {} {} {} {} {}\n",
+    // Log::message(std::format("{} : {} {} {} {} {} {} {} {}\n",
     //     validVerticesCount,
     //     image_buffer_size(DCImageBufferType::OriginalColorRGBA8),
     //     image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8),
@@ -318,12 +318,12 @@ auto DCDataFrame::init_from_file_stream_legacy3(std::ifstream &file) -> void{
     //     data_buffer_size(DCDataBufferType::Calibration),
     //     data_buffer_size(DCDataBufferType::IMU)
     // ));
-    // Logger::message("END\n");
+    // Log::message("END\n");
 }
 
 auto DCDataFrame::init_from_file_stream_legacy2(std::ifstream &file) -> void{
 
-    // Logger::message("LEGACY2\n");
+    // Log::message("LEGACY2\n");
 
     read(afterCaptureTS, file);
     read(mode, file);

@@ -135,7 +135,7 @@ auto DCPlayerDrawer::draw(bool focusWindow) -> void{
 
 //    if (ImGuiFileDialog::Instance()->Display("Save recording")) {
 //        if (ImGuiFileDialog::Instance()->IsOk()){
-//            Logger::message(std::format("Save recording to {}\n", ImGuiFileDialog::Instance()->GetFilePathName()));
+//            Log::message(std::format("Save recording to {}\n", ImGuiFileDialog::Instance()->GetFilePathName()));
 //            player->save_to_file(ImGuiFileDialog::Instance()->GetFilePathName());
 //        }
 //        ImGuiFileDialog::Instance()->Close();
@@ -143,7 +143,7 @@ auto DCPlayerDrawer::draw(bool focusWindow) -> void{
 
 //    if (ImGuiFileDialog::Instance()->Display("Save cloud")) {
 //        if (ImGuiFileDialog::Instance()->IsOk()){
-//            Logger::message(std::format("Save cloud to {}\n", ImGuiFileDialog::Instance()->GetFilePathName()));
+//            Log::message(std::format("Save cloud to {}\n", ImGuiFileDialog::Instance()->GetFilePathName()));
 //            cam::K4Frame f;
 //            player->uncompress_frame(0, f);
 //            files::CloudIO::save_cloud(ImGuiFileDialog::Instance()->GetFilePathName(), f.cloud);

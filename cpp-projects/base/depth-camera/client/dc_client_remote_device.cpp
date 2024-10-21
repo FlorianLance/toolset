@@ -70,11 +70,11 @@ DCClientRemoteDevice::~DCClientRemoteDevice(){
 }
 
 auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool {
-
-    auto lg = LogGuard("[DCClientRemoteDevice::initialize]");
+    
+    auto lg = LogG("[DCClientRemoteDevice::initialize]");
     i->remoteServerS = connectionS;
-
-    Logger::message(
+    
+    Log::message(
         std::format(
             "DCServerRemoteDevice: initialize:"
             "\n\tReading interface id: [{}]"
@@ -96,7 +96,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
 
     // init reader
     if(!i->udpReader.init_socket(i->remoteServerS.anyReadingInterface ? "" : i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
-        Logger::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
+        Log::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
 
@@ -105,9 +105,9 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     // init sender
-    Logger::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
+    Log::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
     if(!i->udpSender.init_socket(i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
-        Logger::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
+        Log::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
         return false;
     }
 
@@ -130,39 +130,39 @@ auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
 }
 
 auto DCClientRemoteDevice::clean() -> void{
-
-    auto lg = LogGuard("[DCClientRemoteDevice::clean]"sv);
+    
+    auto lg = LogG("[DCClientRemoteDevice::clean]"sv);
 
     // clean sender
     // # disconnect client
     if(i->udpSender.is_connected()){
-        Logger::log("[DCClientRemoteDevice::clean] Send disconnect message.\n"sv);
+        Log::log("[DCClientRemoteDevice::clean] Send disconnect message.\n"sv);
         Command command = Command::disconnect;
         i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
     }
     // # clean socket
-    Logger::log("[DCClientRemoteDevice::clean] Clean sender socket.\n"sv);
+    Log::log("[DCClientRemoteDevice::clean] Clean sender socket.\n"sv);
     i->udpSender.clean_socket();
 
     // clean reader
     // # remove connections
-    Logger::log("[DCClientRemoteDevice::clean] Remove connection.\n"sv);
+    Log::log("[DCClientRemoteDevice::clean] Remove connection.\n"sv);
     i->udpReader.packed_received_signal.disconnect(&DCClientRemoteDevice::process_received_packet, this);
 
     i->remoteDeviceConnected = false;
     // # stop reading loop
     if(i->udpReader.are_threads_started()){
-        Logger::log("[DCClientRemoteDevice::clean] Stop reading loop.\n"sv);
+        Log::log("[DCClientRemoteDevice::clean] Stop reading loop.\n"sv);
         i->udpReader.stop_threads();
     }
     // # clean socket
-    Logger::log("[DCClientRemoteDevice::clean] Clean reader socket.\n"sv);
+    Log::log("[DCClientRemoteDevice::clean] Clean reader socket.\n"sv);
     i->udpReader.clean_socket();
 }
 
 auto DCClientRemoteDevice::apply_command(Command command) -> void{
-
-    Logger::message("APPLY\n");
+    
+    Log::message("APPLY\n");
 
     bool isCommandValid = false;
     switch(command){
@@ -183,8 +183,8 @@ auto DCClientRemoteDevice::apply_command(Command command) -> void{
     if(isCommandValid){
         i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
     }
-
-    Logger::message("END APPLY\n");
+    
+    Log::message("END APPLY\n");
 }
 
 auto DCClientRemoteDevice::ping() -> void{
@@ -243,7 +243,7 @@ auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header h
         Feedback feedback;
         std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
 
-        // Logger::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.type, dataToProcess.size_bytes(), dataToProcess.size()));
+        // Log::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.type, dataToProcess.size_bytes(), dataToProcess.size()));
 
         // process feedback
         receive_feedback(std::move(header), feedback);
@@ -300,7 +300,7 @@ auto DCClientRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
         }
         break;
     case FeedbackType::disconnect:
-        Logger::message("DCServerRemoteDevice: device disconnected\n");
+        Log::message("DCServerRemoteDevice: device disconnected\n");
         i->remoteDeviceConnected = false;
         break;
     case FeedbackType::quit:

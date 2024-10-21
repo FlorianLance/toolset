@@ -43,67 +43,67 @@ static auto __stdcall gl_debug_output(
     if(id == 131169 || id == 131185 || id == 131218 || id == 131204) {
         return;
     }
-
-    Logger::error(std::format("[GL] Debug message ({}): {} \n", id, message));
+    
+    Log::error(std::format("[GL] Debug message ({}): {} \n", id, message));
 
     switch (source){
-        case GL_DEBUG_SOURCE_API:               Logger::error("\tSource: API\n"); break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     Logger::error("\tSource: Window System\n"); break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER:   Logger::error("\tSource: Shader Compiler\n"); break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:       Logger::error("\tSource: Third Party\n"); break;
-        case GL_DEBUG_SOURCE_APPLICATION:       Logger::error("\tSource: Application\n"); break;
-        case GL_DEBUG_SOURCE_OTHER:             Logger::error("\tSource: Other\n"); break;
+    case GL_DEBUG_SOURCE_API:               Log::error("\tSource: API\n"); break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     Log::error("\tSource: Window System\n"); break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:   Log::error("\tSource: Shader Compiler\n"); break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:       Log::error("\tSource: Third Party\n"); break;
+    case GL_DEBUG_SOURCE_APPLICATION:       Log::error("\tSource: Application\n"); break;
+    case GL_DEBUG_SOURCE_OTHER:             Log::error("\tSource: Other\n"); break;
     }
 
     switch (type){
-        case GL_DEBUG_TYPE_ERROR:               Logger::error("\tType: Error\n"); break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: Logger::error("\tType: Deprecated Behaviour\n"); break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  Logger::error("\tType: Undefined Behaviour\n"); break;
-        case GL_DEBUG_TYPE_PORTABILITY:         Logger::error("\tType: Portability\n"); break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         Logger::error("\tType: Performance\n"); break;
-        case GL_DEBUG_TYPE_MARKER:              Logger::error("\tType: Marker\n"); break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          Logger::error("\tType: Push Group\n"); break;
-        case GL_DEBUG_TYPE_POP_GROUP:           Logger::error("\tType: Pop Group\n"); break;
-        case GL_DEBUG_TYPE_OTHER:               Logger::error("\tType: Other\n"); break;
+    case GL_DEBUG_TYPE_ERROR:               Log::error("\tType: Error\n"); break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: Log::error("\tType: Deprecated Behaviour\n"); break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  Log::error("\tType: Undefined Behaviour\n"); break;
+    case GL_DEBUG_TYPE_PORTABILITY:         Log::error("\tType: Portability\n"); break;
+    case GL_DEBUG_TYPE_PERFORMANCE:         Log::error("\tType: Performance\n"); break;
+    case GL_DEBUG_TYPE_MARKER:              Log::error("\tType: Marker\n"); break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:          Log::error("\tType: Push Group\n"); break;
+    case GL_DEBUG_TYPE_POP_GROUP:           Log::error("\tType: Pop Group\n"); break;
+    case GL_DEBUG_TYPE_OTHER:               Log::error("\tType: Other\n"); break;
     }
 
     bool abort = false;
     switch (severity){
     case GL_DEBUG_SEVERITY_HIGH:
-        Logger::error("Severity: high\n");
+        Log::error("Severity: high\n");
         abort = true;
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        Logger::error("Severity: medium\n");
+        Log::error("Severity: medium\n");
         abort = true;
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        Logger::error("Severity: low\n");
+        Log::error("Severity: low\n");
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        Logger::error("Severity: notification\n");
+        Log::error("Severity: notification\n");
         break;
     }
 
     if(abort){
-        Logger::error("Program will now abort.\n");
+        Log::error("Program will now abort.\n");
         std::abort();
     }
 }
 
 
 auto GL::init_glew() -> bool{
-
-    Logger::message("Init glew.\n");
+    
+    Log::message("Init glew.\n");
     if(GLenum initGlew = glewInit() != GLEW_OK){
-        Logger::error(std::format("[GL::init_glew] init error: {}\n", reinterpret_cast<const char*>(glewGetErrorString(initGlew))));
+        Log::error(std::format("[GL::init_glew] init error: {}\n", reinterpret_cast<const char*>(glewGetErrorString(initGlew))));
         return false;
     }
 
     GLint flags;
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
     if (flags & GL_CONTEXT_FLAG_DEBUG_BIT){
-        Logger::message("Debug context available, debug message callback enabled.\n");
+        Log::message("Debug context available, debug message callback enabled.\n");
         GL::enable(GL_DEBUG_OUTPUT);
         GL::enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(gl_debug_output, nullptr);
@@ -121,7 +121,7 @@ auto GL::init_glew() -> bool{
 }
 
 auto GL::display_glew_info() -> void{
-    Logger::message(
+    Log::message(
         std::format(
             "----------------------OpenGL Info----------------------------\n"
             "Glew version: {} \n"

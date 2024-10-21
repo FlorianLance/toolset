@@ -41,7 +41,7 @@ PBO::~PBO(){
 auto PBO::initialize() -> void{
     
     if(m_handle != 0){
-        Logger::error(std::format("[PBO::initialize] Already initialized (id:{}).\n", m_handle));
+        Log::error(std::format("[PBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -62,17 +62,17 @@ auto PBO::clean() -> void{
 auto PBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[PBO::load_data] Not initialized.\n");
+        Log::error("[PBO::load_data] Not initialized.\n");
         return false;
     }
 
     if(is_data_loaded()){
-        Logger::error(std::format("[PBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        Log::error(std::format("[PBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
         return false;
     }
 
     if(size == 0){
-        Logger::error(std::format("[PBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        Log::error(std::format("[PBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
         return false;
     }
 
@@ -89,7 +89,7 @@ auto PBO::load_data(const GLuint *data, GLsizeiptr size, GLbitfield usage) -> bo
 auto PBO::bind_pack(GLuint index) const -> bool{
 
     if(!is_initialized()){
-        Logger::error("[PBO::bind_pack] Not initialized.\n");
+        Log::error("[PBO::bind_pack] Not initialized.\n");
         return false;
     }
 
@@ -110,7 +110,7 @@ auto PBO::bind_pack(GLuint index) const -> bool{
 auto PBO::bind_unpack(GLuint index) const -> bool{
 
     if(!is_initialized()){
-        Logger::error("[PBO::bind_unpack] Not initialized.\n");
+        Log::error("[PBO::bind_unpack] Not initialized.\n");
         return false;
     }
 

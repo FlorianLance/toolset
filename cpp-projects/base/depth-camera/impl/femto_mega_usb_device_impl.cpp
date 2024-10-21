@@ -36,27 +36,27 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 FemtoMegaUSBDeviceImpl::FemtoMegaUSBDeviceImpl(){
-    auto lg = LogGuard("FemtoMegaUSBDeviceImpl::FemtoMegaUSBDeviceImpl"sv);
+    auto lg = LogG("FemtoMegaUSBDeviceImpl::FemtoMegaUSBDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMegaUSB);
     // orbbecD->query_devices("Femto Mega"sv, false);
 }
 
 auto FemtoMegaUSBDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
-
-    auto lg = LogGuard("FemtoMegaUSBDeviceImpl::open"sv);
+    
+    auto lg = LogG("FemtoMegaUSBDeviceImpl::open"sv);
     initialize(newConfigS);
 
     if(orbbecD->open(mInfos, settings.config, settings.color)){
         fData.binaryCalibration = orbbecD->read_calibration();
         return true;
     }
-
-    Logger::error("[FemtoMegaUSBDeviceImpl::open] Cannot open device\n");
+    
+    Log::error("[FemtoMegaUSBDeviceImpl::open] Cannot open device\n");
     return false;
 }
 
 auto FemtoMegaUSBDeviceImpl::close() -> void {
-    auto lg = LogGuard("FemtoMegaUSBDeviceImpl::close"sv);
+    auto lg = LogG("FemtoMegaUSBDeviceImpl::close"sv);
     orbbecD->close();
 }
 

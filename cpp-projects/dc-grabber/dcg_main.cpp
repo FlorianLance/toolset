@@ -25,7 +25,6 @@
 ********************************************************************************/
 
 // base
-#include "utility/log.hpp"
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
 #include "depth-camera/settings/dc_settings_paths.hpp"
@@ -50,21 +49,15 @@ int main(int argc, char *argv[]){
 
     // init paths
     DCSettingsPaths::get()->initialize(argv, DCApplicationType::DCGrabber, id.has_value() ? id.value() : 0);
-
-
-    auto logger = std::make_unique<Logger2>();
+    
+    auto logger = std::make_unique<Logger>();
     logger->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
     BaseLogger::set_logger_instance(std::move(logger));
-    // init logger
-    // auto log = std::make_shared<Log>();
-    // log->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
-    // SLog::set_current_static_log(log);
-    // Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
 
-    Logger::message("Start DC grabber.\n"sv);
-    Logger::message(std::format("Args {}.\n"sv, argc));
+    Log::message("Start DC grabber.\n"sv);
+    Log::message(std::format("Args {}.\n"sv, argc));
     if(!id.has_value()){
-        Logger::warning("No id argument found, use 0 instead.\n"sv);
+        Log::warning("No id argument found, use 0 instead.\n"sv);
         id = 0;
     }
 
@@ -72,8 +65,8 @@ int main(int argc, char *argv[]){
     DCGController controller;
     if(controller.initialize(id.value())){
         controller.start();
-        Logger::message("Exit DC grabber.\n"sv);
-        return 0;
+        Log::message("Exit DC grabber.\n"sv);
+        return 1;
     }
 
     return -1;

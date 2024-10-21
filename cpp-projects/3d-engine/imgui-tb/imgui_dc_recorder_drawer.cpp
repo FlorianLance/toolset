@@ -40,8 +40,8 @@
 using namespace tool::graphics;
 
 auto DCRecorderDrawer::initialize(size_t nbGrabbers) -> void {
-
-    auto lg = LogGuard("DCRecorderDrawer::initialize");
+    
+    auto lg = LogG("DCRecorderDrawer::initialize");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
     m_currentFrames.resize(nbGrabbers);
     std::fill(std::begin(m_currentFrames), std::end(m_currentFrames), nullptr);

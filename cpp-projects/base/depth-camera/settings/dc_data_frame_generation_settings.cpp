@@ -61,7 +61,7 @@ auto DCDataFrameGenerationSettings::init_from_json(const nlohmann::json &json) -
     cloudCM             = static_cast<DCCompressionMode>(read_and_return_value(json, unreadCount, "cloud_compression_mode"sv,               static_cast<int>(cloudCM)));
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCFrameCompressionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[DCFrameCompressionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

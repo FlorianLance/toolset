@@ -172,7 +172,7 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
 // auto DCFrameCompressor::add_cloud(DCMode mode, const geo::ColoredCloudData &cloud, std::vector<uint8_t> &encodedCloudData) -> void{
 
 //     if(!cloud.has_colors() || !cloud.has_vertices()){
-//         tool::Logger::error("[DCFrameCompressor::add_cloud] Invalid cloud.\n");
+//         tool::Log::error("[DCFrameCompressor::add_cloud] Invalid cloud.\n");
 //         return;
 //     }
 

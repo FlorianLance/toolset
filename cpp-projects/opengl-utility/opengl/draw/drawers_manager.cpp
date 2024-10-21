@@ -51,12 +51,12 @@ auto DrawersManager::get_instance() -> DrawersManager*{
 // auto DrawersManager::add_drawer(const std::string &alias, std::shared_ptr<gl::Drawer> drawer, float scaleHint) -> void{
 
 //     if(drawer == nullptr){
-//         Logger::error(std::format("[DrawersManager] Drawer with alias: {} is null.\n",alias));
+//         Log::error(std::format("[DrawersManager] Drawer with alias: {} is null.\n",alias));
 //         return;
 //     }
 
 //     if(drawers.has_alias(alias)){
-//         Logger::error(std::format("[DrawersManager] Drawer alias already used: {}.\n",alias));
+//         Log::error(std::format("[DrawersManager] Drawer alias already used: {}.\n",alias));
 //         return;
 //     }
 
@@ -67,12 +67,12 @@ auto DrawersManager::get_instance() -> DrawersManager*{
 auto DrawersManager::add_drawer(const std::string &alias, std::shared_ptr<gl::BaseDrawer> drawer, float scaleHint) -> void{
 
     if(drawer == nullptr){
-        Logger::error(std::format("[DrawersManager] Drawer with alias: {} is null.\n"sv,alias));
+        Log::error(std::format("[DrawersManager] Drawer with alias: {} is null.\n"sv,alias));
         return;
     }
 
     if(drawers2.has_alias(alias)){
-        Logger::error(std::format("[DrawersManager] Drawer alias already used: {}.\n"sv,alias));
+        Log::error(std::format("[DrawersManager] Drawer alias already used: {}.\n"sv,alias));
         return;
     }
 
@@ -91,7 +91,7 @@ auto DrawersManager::get_alias(Id id) const noexcept -> std::string_view{
     if(drawers2.has_id(id)){
         return drawers2.get_alias(id).value();
     }
-    Logger::error(std::format("[DrawersManager] No drawer with id {}.\n"sv,id));
+    Log::error(std::format("[DrawersManager] No drawer with id {}.\n"sv,id));
     return ""sv;
 }
 
@@ -99,7 +99,7 @@ auto DrawersManager::get_id(std::string_view alias) const -> size_t{
     if(drawers2.has_alias(alias)){
         return drawers2.get_id(alias).value();
     }
-    Logger::error(std::format("[DrawersManager] Drawer with alias {} not found.\n"sv,alias));
+    Log::error(std::format("[DrawersManager] Drawer with alias {} not found.\n"sv,alias));
     return 0;
 }
 
@@ -127,11 +127,11 @@ auto DrawersManager::sub(std::vector<std::string_view> aliases) const -> IdAlias
 auto DrawersManager::debug() -> void {
     // drawers.debug();
 //    for(size_t ii = 0; ii < drawers.count(); ++ii){
-//        Logger::message(std::format("drawer {}:{}\n", ii, drawers.has_id(ii)));
+//        Log::message(std::format("drawer {}:{}\n", ii, drawers.has_id(ii)));
 //    }
 
 //    for(size_t ii = 0; ii < drawers.count(); ++ii){
-//        Logger::message(std::format("drawer {}:{}\n", ii, drawers.get_alias(ii).value()));
+//        Log::message(std::format("drawer {}:{}\n", ii, drawers.get_alias(ii).value()));
 //    }
 }
 

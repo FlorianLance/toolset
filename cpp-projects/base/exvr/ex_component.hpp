@@ -70,9 +70,9 @@ public:
     int key() override{
         return get<int>(ParametersContainer::Global, "component_key");
     }
-
-    Logger::SenderT sender_type() override{
-        return Logger::SenderT::Component;
+    
+    ExLoggerM::SenderT sender_type() override{
+        return ExLoggerM::SenderT::Component;
     }
 
     // callbacks

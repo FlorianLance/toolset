@@ -24,21 +24,23 @@ using namespace tool::graphics;
 
 DrawSampleWindow::DrawSampleWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) :
     BaseSfmlGlWindow(title, screen, context){
+    
+    auto logger = std::make_unique<Logger>();
+    logger->init("./", "draw_sample.html");
 
-    Logger::init("./", "draw_sample.html", false);
-    Logger::get()->message_signal.connect([=](std::string message){
+    logger->message_signal.connect([=](std::string message){
         std::cout << message;
         std::flush(std::cout);
     });
-    Logger::get()->warning_signal.connect([=](std::string warning){
+    logger->warning_signal.connect([=](std::string warning){
         std::cout << "[W] " <<  warning;
         std::flush(std::cout);
     });
-    Logger::get()->error_signal.connect([=](std::string error){
+    logger->error_signal.connect([=](std::string error){
         std::cerr << "[E] " << error;
         std::flush(std::cerr);
     });
-
+    Logger::set_logger_instance(std::move(logger));
 }
 
 
@@ -102,11 +104,11 @@ auto DrawSampleWindow::init_shaders() -> bool{
         }
 
         if(!Managers::shaders->load_shader(shaderName.first, paths)){
-            Logger::error("Fail to load all shaders.\n");
+            Log::error("Fail to load all shaders.\n");
             Managers::shaders->unbind();
             return false;
         }
-        Logger::message(std::format("Shader [{}] loaded.\n", shaderName.first));
+        Log::message(std::format("Shader [{}] loaded.\n", shaderName.first));
     }
 
     Managers::shaders->add_shader("colored-cloud", gl::ColoredCloudShader());
@@ -147,26 +149,26 @@ auto DrawSampleWindow::init_textures() -> bool{
         {"me_textile",        "me_textile.png"},
         {"hardwood_diffuse",  "hardwood2_diffuse.jpg"},
     };
-
-    Logger::message(std::format("# Load textures from path [{}].\n", path));
+    
+    Log::message(std::format("# Load textures from path [{}].\n", path));
     if(!Managers::textures->load_textures_from_directory(path, texturesInfo)){
         return false;
     }
 
     // cubemaps
-    Logger::message("# Load cubemaps\n");
+    Log::message("# Load cubemaps\n");
     bool loaded = true;
     loaded &= Managers::textures->load_cube_map(path + "/pisa/pisa_", {"posx.png","negx.png","posy.png","negy.png","posz.png","negz.png"}, "pisa", false);
     loaded &= Managers::textures->load_cube_map(path + "/grace/grace_",{"posx.hdr","negx.hdr","posy.hdr","negy.hdr","posz.hdr","negz.hdr"}, "grace", false);
     loaded &= Managers::textures->load_cube_map(path + "/grace-diffuse/grace-diffuse_",{"posx.hdr","negx.hdr","posy.hdr","negy.hdr","posz.hdr","negz.hdr"}, "grace-diffuse", false);
     if(!loaded){
-        Logger::error("Error during cubemaps loading.\n");
+        Log::error("Error during cubemaps loading.\n");
         return false;
     }
 
     // tbo
     // # texture 2d
-    Logger::message("# Generate texture 2d TBO\n");
+    Log::message("# Generate texture 2d TBO\n");
     loaded = true;
     loaded &= Managers::textures->generate_texture2d_tbo("me_textile",      "me_textile");
     loaded &= Managers::textures->generate_texture2d_tbo("cement",          "cement");
@@ -182,22 +184,22 @@ auto DrawSampleWindow::init_textures() -> bool{
     loaded &= Managers::textures->generate_texture2d_tbo("flower",          "flower");
 
     if(!loaded){
-        Logger::error("Error during texture 2d TBO generation.\n");
+        Log::error("Error during texture 2d TBO generation.\n");
         return false;
     }
     // # cubemaps
-    Logger::message("# Generate cubemaps TBO\n");
+    Log::message("# Generate cubemaps TBO\n");
     loaded = true;
     loaded &= Managers::textures->generate_cubemap_tbo("pisa", "pisa");
     loaded &= Managers::textures->generate_cubemap_tbo("grace-diffuse", "grace-diffuse");
     loaded &= Managers::textures->generate_cubemap_tbo("grace", "grace");
     if(!loaded){
-        Logger::error("Error during cubemap TBO generation.\n");
+        Log::error("Error during cubemap TBO generation.\n");
         return false;
     }
 
     // others
-    Logger::message("# Other\n");
+    Log::message("# Other\n");
     loaded &= Managers::textures->generate_texture2d_tbo("flower-projected",  "flower");
 
     return true;
@@ -208,7 +210,7 @@ auto DrawSampleWindow::init_models() -> bool{
     std::string mesh = Paths::get()->resourcesDir.string() + "/meshes";
     bool loaded = true;
     {
-        Logger::message("Add models.\n");
+        Log::message("Add models.\n");
         loaded &= Managers::models->add({
                 {"crysis",  mesh + "/crysis-nano-suit-2/scene.fbx"},
                 {"pig",     mesh + "/pig/pig_triangulated.obj"},
@@ -253,8 +255,8 @@ auto DrawSampleWindow::init_drawers() -> bool{
     auto dm = Managers::drawers;
     auto tm = Managers::textures;
     auto mm = Managers::models;
-
-    Logger::message("PROCEDURAL\n");
+    
+    Log::message("PROCEDURAL\n");
 
     // # procedural
     auto noTextplane10x10 = std::make_shared<gl::GridQuadTrianglesDrawer>();
@@ -346,9 +348,9 @@ auto DrawSampleWindow::init_drawers() -> bool{
     auto cloudD = std::make_shared<gl::CloudPointsDrawer>();
     cloudD->initialize(false, cloud);
     dm->add_drawer("cloud", std::move(cloudD), 1.f);
-
-
-    Logger::message("MODELS\n");
+    
+    
+    Log::message("MODELS\n");
 
     if(auto model = mm->get("spot").lock(); model != nullptr){
         {
@@ -404,8 +406,8 @@ auto DrawSampleWindow::init_drawers() -> bool{
         mmD->initialize(*model);
         dm->add_drawer("storm", std::move(mmD),0.01f);
     }
-
-    Logger::message(("SUB.\n"));
+    
+    Log::message(("SUB.\n"));
 
     // ui drawers
     uiDrawers2 = dm->sub({
@@ -413,8 +415,8 @@ auto DrawSampleWindow::init_drawers() -> bool{
     });
 
     // dynamic_cast<gl::ModelDrawer*>(uiDrawers.get_element_ptr("storm"))->model()->display_hierarchy();
-
-    Logger::message(("Drawers loaded.\n"));
+    
+    Log::message(("Drawers loaded.\n"));
     return true;
 }
 
@@ -465,17 +467,17 @@ auto DrawSampleWindow::init_samples() -> bool{
     uiSamples.add_element("ch8ShadowPcf",  std::make_unique<Ch8ShadowPcf>(&m_camera));
 
     for(auto &sample : uiSamples.get_span()){
-        Logger::message(std::format("Init sample {}\n", std::get<0>(sample)));
+        Log::message(std::format("Init sample {}\n", std::get<0>(sample)));
         if(!std::get<1>(sample)->parent_init()){
-            Logger::error(std::format("Cannot init sample {}\n", std::get<0>(sample)));
+            Log::error(std::format("Cannot init sample {}\n", std::get<0>(sample)));
             return false;
         }
         std::get<1>(sample)->update_parameters();
     }
 
     uiSamples.set_current_id(0);
-
-    Logger::message("End sample init.\n");
+    
+    Log::message("End sample init.\n");
     return true;
 }
 
@@ -494,32 +496,32 @@ auto DrawSampleWindow::initialize_gl() -> bool{
     Managers::initialize();
 
     // models
-    Logger::message("Init models\n");
+    Log::message("Init models\n");
     if(!init_models()){
         return m_glInitialized = false;
     }
 
     // textures
-    Logger::message("Init textures\n");
+    Log::message("Init textures\n");
     if(!init_textures()){
         return m_glInitialized = false;
     }
 
     // shaders
-    Logger::message("Init shaders\n");
+    Log::message("Init shaders\n");
     if(!init_shaders()){
         return m_glInitialized = false;
     }
 
     // camera
-    Logger::message("Init camera\n");
+    Log::message("Init camera\n");
     m_camera.set_position({0.,0.,5.});
     m_camera.set_direction({0.,0.,-1.},{0.,1.,0.});
-
-    Logger::message("Init drawers\n");
+    
+    Log::message("Init drawers\n");
     init_drawers();
-
-    Logger::message("Init samples\n");
+    
+    Log::message("Init samples\n");
     if(!init_samples()){
         return m_glInitialized = false;
     }

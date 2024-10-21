@@ -52,7 +52,7 @@ auto Frame::init_from_json(const nlohmann::json &json) -> void {
     read_and_update_value(json, unreadCount, "received_ts"sv,       receivedTS);
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[Frame::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));
+        tool::Log::warning(std::format("[Frame::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));
     }
 }
 
@@ -79,7 +79,7 @@ auto Frame::init_from_json_binary(std::span<const uint8_t> jsonData) -> bool{
         init_from_json(json::from_bson(jsonData));
         return true;
     }catch (const json::parse_error& e){
-        Logger::error(std::format("Frame::init_from_json_binary] Error while reading JSON binary [{}] \n", e.what()));
+        Log::error(std::format("Frame::init_from_json_binary] Error while reading JSON binary [{}] \n", e.what()));
     }
     return false;
 }
@@ -89,7 +89,7 @@ auto Frame::init_from_json_str(std::string_view jsonStr) -> bool{
         init_from_json(json::parse(jsonStr));
         return true;
     }catch (const json::parse_error& e){
-        Logger::error(std::format("Frame::init_from_json_str] Error while reading JSON string [{}]\n", e.what()));
+        Log::error(std::format("Frame::init_from_json_str] Error while reading JSON string [{}]\n", e.what()));
     }
     return false;
 }

@@ -34,7 +34,7 @@ using namespace std::string_view_literals;
 
 DCGView::DCGView(size_t id){
 
-    auto lg = LogGuard("DCGView::DCGView"sv);
+    auto lg = LogG("DCGView::DCGView"sv);
     // init main window
     // # screen
     graphics::Screen screen(1920, 1080, 0,0);
@@ -53,12 +53,12 @@ DCGView::DCGView(size_t id){
 }
 
 auto DCGView::initialize() -> void{
-    auto lg = LogGuard("DCGView::initialize"sv);
+    auto lg = LogG("DCGView::initialize"sv);
     mainW.initialize();
 }
 
 auto DCGView::start() -> void{
-    auto lg = LogGuard("DCGView::start"sv);
+    auto lg = LogG("DCGView::start"sv);
     m_glW->start();
 }
 
@@ -71,6 +71,6 @@ auto DCGView::draw(geo::Pt2f size, DCGModel *model) -> void{
 }
 
 auto DCGView::exit() -> void{
-    auto lg = LogGuard("DCGView::exit"sv);
+    auto lg = LogG("DCGView::exit"sv);
     m_glW->quit();
 }

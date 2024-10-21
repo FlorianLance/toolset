@@ -29,10 +29,7 @@
 
 // std
 #include <memory>
-#include <string>
-
-// local
-#include "thirdparty/sigslot/signal.hpp"
+#include <string_view>
 
 namespace tool {
 
@@ -47,6 +44,14 @@ public:
 
     virtual auto nofile_init() -> void{}
     virtual auto clean() -> void{}
+
+    template<typename T>
+    static auto generate_logger_instance() -> T*{
+        auto instance = std::make_unique<T>();
+        auto ptr = instance.get();
+        set_logger_instance(std::move(instance));
+        return ptr;
+    }
 
     static auto set_logger_instance(std::unique_ptr<BaseLogger> logger) noexcept -> void;
     static auto get_instance() noexcept -> BaseLogger*;

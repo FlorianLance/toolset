@@ -47,8 +47,8 @@ DCClientLocalDevice::~DCClientLocalDevice(){
 }
 
 auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectionS) -> bool{
-
-    auto lg = LogGuard("[DCClientLocalDevice::initialize]");
+    
+    auto lg = LogG("[DCClientLocalDevice::initialize]");
 
     i->device = std::make_unique<DCDevice>();
     i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
@@ -78,7 +78,7 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
 }
 
 auto DCClientLocalDevice::clean() -> void {
-    auto lg = LogGuard("[DCClientLocalDevice::clean]");
+    auto lg = LogG("[DCClientLocalDevice::clean]");
     if(i->device){
         i->device->stop_thread();
         i->device = nullptr;

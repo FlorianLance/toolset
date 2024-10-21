@@ -59,7 +59,7 @@ auto DCMGlWindow::init_shaders() -> bool{
     };
 
     if(!std::filesystem::exists(Paths::get()->shadersDir)){
-        Logger::error("No shaders directory found.\n");
+        Log::error("No shaders directory found.\n");
         return false;
     }
 
@@ -75,14 +75,14 @@ auto DCMGlWindow::init_shaders() -> bool{
         if(paths.size() == 0){
             continue;
         }
-
-        Logger::message(std::format("Load shader [{}] from path [{}].\n", shaderName.first, paths.front()));
+        
+        Log::message(std::format("Load shader [{}] from path [{}].\n", shaderName.first, paths.front()));
         if(!Managers::shaders->load_shader(shaderName.first, paths)){
-            Logger::error("Fail to load all shaders.\n");
+            Log::error("Fail to load all shaders.\n");
             Managers::shaders->unbind();
             return false;
         }
-        Logger::message(std::format("Shader [{}] loaded.\n", shaderName.first));
+        Log::message(std::format("Shader [{}] loaded.\n", shaderName.first));
     }
     Managers::shaders->unbind();
 
@@ -91,8 +91,8 @@ auto DCMGlWindow::init_shaders() -> bool{
 
 
 auto DCMGlWindow::initialize_gl() -> bool{
-
-    Logger::message("K4ScanerManagerWindow::initialize_gl\n");
+    
+    Log::message("K4ScanerManagerWindow::initialize_gl\n");
 
     // flags
     GL::enable(GL_MULTISAMPLE); // msaa
@@ -105,13 +105,13 @@ auto DCMGlWindow::initialize_gl() -> bool{
     Managers::initialize();
 
     // shaders
-    Logger::message("Init shaders\n");
+    Log::message("Init shaders\n");
     if(!init_shaders()){
         return m_glInitialized = false;
     }
 
     // camera
-    Logger::message("Init camera\n");
+    Log::message("Init camera\n");
     m_camera.set_direction(0.,0.,0.);
 
     VAO::unbind();

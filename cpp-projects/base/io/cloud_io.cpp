@@ -39,7 +39,7 @@ auto CloudIO::open_file(const std::string &path, std::ofstream &file) -> bool {
 
     file.open(path);
     if(!file.is_open()){
-        Logger::error(std::format("[CloudIO::save_cloud] Cannot open file from path {}.\n", path));
+        Log::error(std::format("[CloudIO::save_cloud] Cannot open file from path {}.\n", path));
         return false;
     }
     return true;
@@ -48,11 +48,11 @@ auto CloudIO::open_file(const std::string &path, std::ofstream &file) -> bool {
 auto CloudIO::check_buffers_sizes(size_t sizeVertices, size_t sizeColors) -> bool {
 
     if(sizeVertices == 0){
-        Logger::error("[CloudIO::save_cloud] No vertices.\n");
+        Log::error("[CloudIO::save_cloud] No vertices.\n");
         return false;
     }
     if(sizeColors != 0 && (sizeVertices != sizeColors)){
-        Logger::error("[CloudIO::save_cloud] Not the same number of vertices and colors\n");
+        Log::error("[CloudIO::save_cloud] Not the same number of vertices and colors\n");
         return false;
     }
     return true;
@@ -69,7 +69,7 @@ auto CloudIO::check_input_values(size_t size, bool hasVertices, bool hasColors, 
     }
 
     if(!isValid){
-        Logger::error("[CloudIO::save_cloud] Invalid inputs values.\n");
+        Log::error("[CloudIO::save_cloud] Invalid inputs values.\n");
     }
     return isValid;
 }

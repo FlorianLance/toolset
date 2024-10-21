@@ -108,18 +108,18 @@
 //}
 
 //auto CmdLineArgsParser::display_arguments() const -> void{
-//    Logger::message("Command line arguments:\n");
+//    Log::message("Command line arguments:\n");
 //    for(const auto &value : Global::args->vm){
 //        if(value.second.value().type() == typeid(int)){
-//            Logger::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<int>()));
+//            Log::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<int>()));
 //        } else if(value.second.value().type() == typeid(float)){
-//            Logger::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<float>()));
+//            Log::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<float>()));
 //        } else if(value.second.value().type() == typeid(double)){
-//            Logger::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<double>()));
+//            Log::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<double>()));
 //        } else if(value.second.value().type() == typeid(std::string)){
-//            Logger::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<std::string>()));
+//            Log::message(std::format("Arg [{}] with value [{}]\n", value.first, value.second.as<std::string>()));
 //        }else{
-//            Logger::message(std::format("Arg [{}] with no value.\n",value.first));
+//            Log::message(std::format("Arg [{}] with no value.\n",value.first));
 //        }
 //    }
 //}

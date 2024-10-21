@@ -34,7 +34,7 @@ using namespace std::literals::string_view_literals;
 
 
 auto TimeDiffManager::start(std::string_view id) -> void{
-    // Logger::log(std::format("[Start::{}] "sv, id));
+    // Log::log(std::format("[Start::{}] "sv, id));
     auto sTime = tool::Time::nanoseconds_since_epoch();    
     if(!times.contains(id)){
         locker.lock();
@@ -46,7 +46,7 @@ auto TimeDiffManager::start(std::string_view id) -> void{
 }
 
 auto TimeDiffManager::end(std::string_view id) -> void{
-    // Logger::log(std::format("[End::{}] "sv, id));
+    // Log::log(std::format("[End::{}] "sv, id));
     auto eTime = tool::Time::nanoseconds_since_epoch();
     if(times.contains(id)){
         times[id].end = eTime;
@@ -107,13 +107,13 @@ auto TimeDiffManager::display() -> void{
 }
 
 TimeDiffGuard::TimeDiffGuard(TimeDiffManager &t, std::string_view id) : m_id(id){
-    // Logger::log(id);
+    // Log::log(id);
     m_t = &t;
     m_t->start(m_id);
 }
 
 TimeDiffGuard::~TimeDiffGuard(){
-    // Logger::log(std::format("end: {}", m_id));
+    // Log::log(std::format("end: {}", m_id));
     m_t->end(m_id);
 }
 

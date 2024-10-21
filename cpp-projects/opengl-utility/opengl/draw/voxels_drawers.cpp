@@ -45,7 +45,7 @@ auto VoxelsDrawer2::initialize(bool dynamic, std::span<const geo::Pt3<int>> vert
     }
     vm->initialize(!colors.empty());
     if(!vm->load_data(vertices, colors)){
-        Logger::error("[VoxelsDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[VoxelsDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -53,7 +53,7 @@ auto VoxelsDrawer2::update(std::span<const geo::Pt3<int>> vertices, std::span<co
 
     auto vm = dynamic_cast<VoxelsRenderer*>(m_vaoRenderer.get());
     if(!vm->update_data(vertices, 0, colors, 0)){
-        Logger::error("[VoxelsDrawer::update] Error during update.\n"sv);
+        Log::error("[VoxelsDrawer::update] Error during update.\n"sv);
         return;
     }
 }

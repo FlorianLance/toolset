@@ -51,8 +51,8 @@ struct DCClient::Impl{
 
         std::unique_ptr<DCClientDevice> device = nullptr;
         if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Local){
-
-            Logger::message("[DCClient::initialize] Create local device.\n"sv);
+            
+            Log::message("[DCClient::initialize] Create local device.\n"sv);
             auto lDevice = std::make_unique<DCClientLocalDevice>();
             lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
                 processing.new_frame(idDevice, std::move(frame));
@@ -60,8 +60,8 @@ struct DCClient::Impl{
             device = std::move(lDevice);
 
         }else if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Remote){
-
-            Logger::message("[DCClient::initialize] Create remote device.\n"sv);
+            
+            Log::message("[DCClient::initialize] Create remote device.\n"sv);
             auto rDevice = std::make_unique<DCClientRemoteDevice>();
             rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
                 readMessagesL.lock();
@@ -83,10 +83,10 @@ struct DCClient::Impl{
         device->data_status_signal.connect([&,idDevice](net::UdpDataStatus status){
             settings.devicesS[idDevice].receivedDataStatus = status;
         });
-
-        Logger::message("[DCClient::initialize] Initialize device.\n"sv);
+        
+        Log::message("[DCClient::initialize] Initialize device.\n"sv);
         if(!device->initialize(settings.devicesS[idDevice].connectionS)){
-            Logger::error("[DCClient::initialize] Cannot initialize device.\n"sv);
+            Log::error("[DCClient::initialize] Cannot initialize device.\n"sv);
         }
 
         return device;
@@ -123,16 +123,16 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
 }
 
 auto DCClient::clean() -> void{
-
-    Logger::log("[DCClient::clean] Clean devices.\n"sv);
+    
+    Log::log("[DCClient::clean] Clean devices.\n"sv);
     for(auto &device : i->cDevices){
         device->clean();
     }
-    Logger::log("[DCClient::clean] Clean processing.\n"sv);
+    Log::log("[DCClient::clean] Clean processing.\n"sv);
     i->processing.clean();
     i->cDevices.clear();
-
-    Logger::log("[DCClient::clean] Clear settings.\n"sv);
+    
+    Log::log("[DCClient::clean] Clear settings.\n"sv);
     settings.devicesS.clear();
 
 }
@@ -228,7 +228,7 @@ auto DCClient::device_type(size_t idC) const noexcept -> DCClientType{
 auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::init_remote_connection] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::init_remote_connection] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
 
@@ -240,7 +240,7 @@ auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
 auto DCClient::read_data_from_external_thread(size_t idC) -> size_t{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::read_data_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::read_data_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return 0;
     }
     return i->cDevices[idC]->read_data_from_external_thread();
@@ -249,7 +249,7 @@ auto DCClient::read_data_from_external_thread(size_t idC) -> size_t{
 auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::trigger_packets_from_remote_device] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::trigger_packets_from_remote_device] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
 
@@ -322,7 +322,7 @@ auto DCClient::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
 
 auto DCClient::apply_command(size_t idC, net::Command command) -> void{
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_command] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_command] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
 
@@ -330,7 +330,7 @@ auto DCClient::apply_command(size_t idC, net::Command command) -> void{
 }
 
 auto DCClient::add_device(DCClientType connectionType) -> void{
-    auto lg = LogGuard("DCClient::add_device"sv);
+    auto lg = LogG("DCClient::add_device"sv);
     settings.add_device(connectionType);
     i->processing.add_device_processor(true);
     i->cDevices.push_back(i->generate_client(settings, settings.devicesS.size()-1));
@@ -338,7 +338,7 @@ auto DCClient::add_device(DCClientType connectionType) -> void{
 
 auto DCClient::remove_last_device() -> void{
     if(devices_nb() > 0){
-        auto lg = LogGuard("DCClient::remove_last_device"sv);
+        auto lg = LogG("DCClient::remove_last_device"sv);
         settings.devicesS.remove_last();
         i->processing.remove_last_processor();
         i->cDevices.back()->clean();
@@ -349,7 +349,7 @@ auto DCClient::remove_last_device() -> void{
 auto DCClient::reset_remote_device(size_t idD) -> void{
     if(idD < devices_nb()){
         if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->cDevices[idD].get())){
-            auto lg = LogGuard("DCClient::reset_remote_device"sv);
+            auto lg = LogG("DCClient::reset_remote_device"sv);
             settings.update_connection_settings(settings.devicesS[idD].connectionS);
             rD->clean();
             rD->initialize(settings.devicesS[idD].connectionS);
@@ -368,7 +368,7 @@ auto DCClient::use_calibration_filters() -> void{
 auto DCClient::update_filters_settings(size_t idC, const DCFiltersSettings &filtersS) -> void{
     
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::update_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::update_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     
@@ -381,7 +381,7 @@ auto DCClient::update_filters_settings(size_t idC, const DCFiltersSettings &filt
 auto DCClient::update_calibration_filters_settings(size_t idC, const DCFiltersSettings &filtersS) -> void{
     
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::update_calibration_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::update_calibration_filters] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     
@@ -394,7 +394,7 @@ auto DCClient::update_calibration_filters_settings(size_t idC, const DCFiltersSe
 auto DCClient::update_device_settings(size_t idC, const DCDeviceSettings &deviceS) -> void{
     
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::update_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::update_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
         
@@ -405,7 +405,7 @@ auto DCClient::update_device_settings(size_t idC, const DCDeviceSettings &device
 auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) -> void{
     
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::update_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::update_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     
@@ -416,7 +416,7 @@ auto DCClient::update_color_settings(size_t idC, const DCColorSettings &colorS) 
 auto DCClient::update_misc_settings(size_t idC, const DCMiscSettings &miscS) -> void{
     
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::update_misc_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::update_misc_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     
@@ -432,7 +432,7 @@ auto DCClient::update_model_settings(size_t idC, const DCModelSettings &modelS) 
 auto DCClient::apply_device_settings(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_device_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     if(i->cDevices[idC]->device_connected()){
@@ -444,7 +444,7 @@ auto DCClient::apply_device_settings(size_t idC) -> void{
 auto DCClient::apply_filters_settings(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     if(i->cDevices[idC]->device_connected()){
@@ -455,7 +455,7 @@ auto DCClient::apply_filters_settings(size_t idC) -> void{
 auto DCClient::apply_calibration_filters_settings(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_calibration_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_calibration_filters_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     if(i->cDevices[idC]->device_connected()){
@@ -466,7 +466,7 @@ auto DCClient::apply_calibration_filters_settings(size_t idC) -> void{
 auto DCClient::apply_color_settings(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_color_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     if(i->cDevices[idC]->device_connected()){
@@ -477,7 +477,7 @@ auto DCClient::apply_color_settings(size_t idC) -> void{
 auto DCClient::apply_misc_settings(size_t idC) -> void{
 
     if(idC > devices_nb()){
-        Logger::error(std::format("[DCClient::apply_delay_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        Log::error(std::format("[DCClient::apply_delay_settings] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
         return;
     }
     if(i->cDevices[idC]->device_connected()){
@@ -499,7 +499,7 @@ auto DCClient::trigger_all_device_display_settings() -> void{
 
 auto DCClient::process_frames_from_external_thread(size_t idD) -> void{
     if(idD > devices_nb()){
-        Logger::error(std::format("[DCClient::process_frames_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idD, devices_nb()));
+        Log::error(std::format("[DCClient::process_frames_from_external_thread] Invalid id [{}], nb of devices available [{}].\n"sv, idD, devices_nb()));
         return;
     }
     i->processing.process(idD);

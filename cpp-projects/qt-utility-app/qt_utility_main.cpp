@@ -46,7 +46,7 @@
 
 using namespace tool;
 using namespace tool::ui;
-
+using namespace Qt::Literals::StringLiterals;
 
 auto tree_widget() -> void{
     auto treeWidget = new tool::ui::TestTreeView(nullptr);
@@ -92,13 +92,16 @@ auto tree_widget() -> void{
 auto main(int argc, char *argv[]) -> int{
 
     QApplication a(argc, argv);
-    QLocale::setDefault(QLocale::c());    
+    QLocale::setDefault(QLocale::c());
 
-    tool::QtLogger::init("","");
-    QApplication::connect(QtLogger::get(), &QtLogger::message_signal,  [&](QString message){
+    QtLoggerM::set_logger_instance(std::make_unique<QtLoggerM>());
+    auto logger = QtLoggerM::get_instance();
+    logger->init(u""_s,u""_s);
+    QObject::connect(logger, &QtLoggerM::message_signal, [&](QString message){
         qDebug() << "M " << message;
     });
-    QtLogger::message(QSL("Qt-utility"));
+
+    QtLog::message(QSL("Qt-utility"));
 
     BaseQtSfmlGlWidget *sampleQtGlW = new BaseQtSfmlGlWidget();
     sampleQtGlW->resize(1920,1080);

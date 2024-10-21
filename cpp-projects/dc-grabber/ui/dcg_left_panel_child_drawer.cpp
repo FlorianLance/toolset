@@ -318,7 +318,7 @@ auto DCGLeftPanelChildDrawer::draw_audio_tab_item() -> void {
     //                    if(channelsData2[0].size() > 0){
     //                        ImPlot::PlotLine("Signal 1", channelsData2[0].data(), channelsData2[0].size(), 0.01f);
     //                        auto sum_of_elems = std::accumulate(channelsData2[0].begin(), channelsData2[0].end(), 0.f);
-    //                        Logger::message(std::format("sum_of_elems: {}\n", sum_of_elems));
+    //                        Log::message(std::format("sum_of_elems: {}\n", sum_of_elems));
     //                    }
 
 

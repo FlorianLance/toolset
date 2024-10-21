@@ -43,7 +43,7 @@ auto Mesh::mean_position() const noexcept -> Pt3f{
 auto Mesh::generate_normals() noexcept -> void{
 
     if(vertices.size() == 0 || triIds.size() == 0){
-        Logger::warning("[Mesh::generate_normals] No vertices or triangles.\n");
+        Log::warning("[Mesh::generate_normals] No vertices or triangles.\n");
         return;
     }
 
@@ -96,12 +96,12 @@ auto Mesh::generate_normals() noexcept -> void{
 auto Mesh::generate_tangents() noexcept -> void{
 
     if(normals.size() != vertices.size()){
-        Logger::warning("[Mesh::generate_tangents] Invalid normals number of no vertices.\n");
+        Log::warning("[Mesh::generate_tangents] Invalid normals number of no vertices.\n");
         return;
     }
 
     if(normals.size() != tCoords.size()){
-        Logger::warning("[Mesh::generate_tangents] No texture coordinates defined.\n");
+        Log::warning("[Mesh::generate_tangents] No texture coordinates defined.\n");
         return;
     }
 
@@ -153,7 +153,7 @@ auto Mesh::generate_tangents() noexcept -> void{
 auto Mesh::check() const -> void{
 
     if(vertices.size() == 0){
-        Logger::warning("no vertices\n");
+        Log::warning("no vertices\n");
         return;
     }
 
@@ -169,7 +169,7 @@ auto Mesh::check() const -> void{
     std::cout << "          [point] " << sum << " " << mean  << " " << countNull << "\n";
 
     if(normals.size() == 0){
-        Logger::warning("no normals\n");
+        Log::warning("no normals\n");
         return;
     }
 

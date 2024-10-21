@@ -138,21 +138,21 @@ struct DCVideoPlayer::Impl{
     }
 
     auto remove_empty_cameras() -> void{
-        tool::Logger::error("[DCVideoPlayer::remove_empty_cameras] Not implemented.\n");
+        tool::Log::error("[DCVideoPlayer::remove_empty_cameras] Not implemented.\n");
 
         // for(size_t ii = 0; ii < i->video.nb_cameras(); ++ii){
-        //     Logger::message(std::format("\n\ncam {} nb frames {}\n",ii, i->video.nb_frames(ii)));
+        //     Log::message(std::format("\n\ncam {} nb frames {}\n",ii, i->video.nb_frames(ii)));
 
         //     for(size_t jj = 0; jj < i->video.nb_frames(ii); ++jj){
         //         auto nbV = i->video.get_compressed_frames_ptr(ii)->valid_vertices_count(ii);
-        //         Logger::message(std::format(" {}",nbV));
+        //         Log::message(std::format(" {}",nbV));
         //     }
         // }
 
         // size_t idC = 0;
         // for(const auto &ccf : i->camerasCompressedFrame){
         //     if(ccf != nullptr){
-        //         Logger::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
+        //         Log::message(std::format(" cam {} size {} \n", idC, ccf->cloud_vertices_size()));
         //     }
         //     idC++;
         // }
@@ -160,7 +160,7 @@ struct DCVideoPlayer::Impl{
         // std::vector<size_t> idCamerasToKeep;
         // for(size_t ii = 0; ii < i->videoResource.nb_cameras(); ++ii){
         //     if(i->videoResource.nb_frames(ii) > 0){
-        //         Logger::message(std::format("keep camera {}",ii));
+        //         Log::message(std::format("keep camera {}",ii));
         //         idCamerasToKeep.push_back(ii);
         //     }
         // }
@@ -190,16 +190,16 @@ struct DCVideoPlayer::Impl{
 
     auto merge_before(DCVideo &other) -> void{
         static_cast<void>(other);
-        tool::Logger::error("[DCVideoPlayer::merge_before] Not implemented.\n");
+        tool::Log::error("[DCVideoPlayer::merge_before] Not implemented.\n");
 
         // if(other.nb_cameras() != video.nb_cameras()){
-        //     tool::Logger::error("[DCPlayerData::merge_before] Incompatible number of cameras.\n");
+        //     tool::Log::error("[DCPlayerData::merge_before] Incompatible number of cameras.\n");
         //     return;
         // }
 
         // for(size_t idCamera = 0; idCamera < video.nb_cameras(); ++idCamera){
         //     if(video.get_transform(idCamera)  != other.get_transform(idCamera)){
-        //         tool::Logger::warning("[DCPlayerData::merge_before] The video to be merged has different transforms.\n");
+        //         tool::Log::warning("[DCPlayerData::merge_before] The video to be merged has different transforms.\n");
         //         break;
         //     }
         // }
@@ -421,7 +421,7 @@ auto DCVideoPlayer::remove_after_current_frame() -> void{
 }
 
 auto DCVideoPlayer::merge() -> void{
-    Logger::error("[DCVideoPlayer::merge] Not implemented.\n");
+    Log::error("[DCVideoPlayer::merge] Not implemented.\n");
     // remove_empty_cameras();
 //    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
     // update_states();
@@ -680,15 +680,15 @@ auto DCVideoPlayer::update_states() noexcept -> void{
 
 auto DCVideoPlayer::save_cloud_to_file(std::string_view path) -> bool{
     static_cast<void>(path);
-    Logger::error("[DCVideoPlayer::save_cloud_to_file] Not implemented.\n");
+    Log::error("[DCVideoPlayer::save_cloud_to_file] Not implemented.\n");
     // ...
     return true;
 }
 
 
 auto DCVideoPlayer::display_infos() -> void{
-
-    Logger::error("[DCVideoPlayer::display_infos] Not implemented.\n");
+    
+    Log::error("[DCVideoPlayer::display_infos] Not implemented.\n");
 
     // using namespace std::chrono;
     // for(size_t idC = 0; idC < video()->nb_cameras(); ++idC){

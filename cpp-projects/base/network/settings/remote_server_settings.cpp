@@ -48,7 +48,7 @@ auto RemoteServerSettings::init_from_json(const nlohmann::json &json) -> void{
     protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[RemoteServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[RemoteServerSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

@@ -44,7 +44,7 @@ auto DCVideoRecorderExport::dll_log_message(const std::string &message) -> void{
     if(logMessageCBP != nullptr){
         (*logMessageCBP)(message.c_str(),0);
     }else{
-        tool::Logger::message(message);
+        tool::Log::message(message);
     }
 }
 
@@ -52,7 +52,7 @@ auto DCVideoRecorderExport::dll_log_warning(const std::string &message) -> void{
     if(logMessageCBP != nullptr){
         (*logMessageCBP)(message.c_str(),1);
     }else{
-        tool::Logger::warning(message);
+        tool::Log::warning(message);
     }
 }
 
@@ -60,7 +60,7 @@ auto DCVideoRecorderExport::dll_log_error(const std::string &message) -> void{
     if(logMessageCBP != nullptr){
         (*logMessageCBP)(message.c_str(),2);
     }else{
-        tool::Logger::error(message);
+        tool::Log::error(message);
     }
 }
 

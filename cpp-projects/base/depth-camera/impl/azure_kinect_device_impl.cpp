@@ -33,25 +33,25 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 AzureKinectDeviceImpl::AzureKinectDeviceImpl(){
-    auto lg = LogGuard("AzureKinectDeviceImpl::AzureKinectDeviceImpl"sv);
+    auto lg = LogG("AzureKinectDeviceImpl::AzureKinectDeviceImpl"sv);
     azureD = std::make_unique<AzureBaseDevice>();
 }
 
 auto AzureKinectDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool {
-
-    auto lg = LogGuard("AzureKinectDeviceImpl::open"sv);
+    
+    auto lg = LogG("AzureKinectDeviceImpl::open"sv);
     initialize(newConfigS);
 
     if(azureD->open(mInfos, settings.config)){
         fData.binaryCalibration = azureD->read_calibration();
         return true;
     }
-    Logger::error("[AzureKinectDeviceImpl::open] Cannot open device\n");
+    Log::error("[AzureKinectDeviceImpl::open] Cannot open device\n");
     return false;
 }
 
 auto AzureKinectDeviceImpl::close() -> void{
-    auto lg = LogGuard("AzureKinectDeviceImpl::close"sv);
+    auto lg = LogG("AzureKinectDeviceImpl::close"sv);
     azureD->close();
 }
 

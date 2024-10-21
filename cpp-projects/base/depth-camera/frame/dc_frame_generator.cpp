@@ -132,7 +132,7 @@ struct DCFrameGenerator::Impl{
 
     auto initialize(DCDataFrame *initCFrame) -> void{
         
-        // Logger::message("I1");
+        // Log::message("I1");
         // if(initCFrame->imagesB.contains(DCImageBufferType::Depth16)){
         //     auto &dImage = std::get<1>(initCFrame->imagesB[DCImageBufferType::Depth16]);
         //     dIndices.initialize(true, dImage.width, dImage.height);
@@ -140,12 +140,12 @@ struct DCFrameGenerator::Impl{
         //     dIndices.initialize(false, 0, 0);
         // }
 
-        // Logger::message("I2");
+        // Log::message("I2");
         // dFrame = initCFrame;
         // DCFrame initFrame;
         // frame = &initFrame;
         // reset_transformation();
-        // Logger::message("I3");
+        // Log::message("I3");
     }
 
     auto reset_timings() -> void{

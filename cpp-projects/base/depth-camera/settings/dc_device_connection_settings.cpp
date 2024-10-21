@@ -58,7 +58,7 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     }
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCDeviceConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[DCDeviceConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 
@@ -95,13 +95,13 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
     if(!json.contains(arrayN)){
         arrayN = "clients"; // old name
         if(!json.contains(arrayN)){
-            Logger::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid json file.\n"));
+            Log::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid json file.\n"));
             return;
         }
     }
 
     if(!json[arrayN].is_array()){
-        Logger::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid json file.\n"));
+        Log::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid json file.\n"));
         return;
     }
 
@@ -117,7 +117,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
 
                 const auto &interfaces = (dcCRDS->serverS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
                 if(dcCRDS->serverS.idReadingInterface >= interfaces.size()){
-                    Logger::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid id reading interface.\n"));
+                    Log::error(std::format("[DCClientConnectionSettings::init_from_json] Invalid id reading interface.\n"));
                     return;
                 }
                 dcCRDS->serverS.readingAdress = interfaces[dcCRDS->serverS.idReadingInterface].ipAddress;
@@ -126,8 +126,8 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
                     dcCRDS->serverS.isLocalhost = true;
                     dcCRDS->serverS.sendingAddress = interfaces[dcCRDS->serverS.idReadingInterface].ipAddress;
                 }
-
-                Logger::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
+                
+                Log::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
                         dcCRDS->serverS.idReadingInterface, dcCRDS->serverS.readingAdress, dcCRDS->serverS.readingPort,
                                             dcCRDS->serverS.sendingAddress, dcCRDS->serverS.sendingPort,
                         dcCRDS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
@@ -144,7 +144,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_json(const nlohmann::json &
     }
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCClientConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[DCClientConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 
@@ -180,19 +180,19 @@ auto DCDeprecatedClientConnectionSettings::initialize(const std::string &filePat
     // retrieve interfaces
     ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
     if(ipv4Interfaces.size() == 0){
-        Logger::warning("[DCClientConnectionSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
+        Log::warning("[DCClientConnectionSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
     }
 
     ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
     if(ipv6Interfaces.size() == 0){
-        Logger::warning("[DCClientConnectionSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
+        Log::warning("[DCClientConnectionSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
     }
 
     if(filePath.length() > 0){
         return load_from_file(this->filePath = filePath);
     }
-
-    Logger::error("[DCClientConnectionSettings::initialize] Empty path.\n"sv);
+    
+    Log::error("[DCClientConnectionSettings::initialize] Empty path.\n"sv);
     return false;
 }
 
@@ -230,7 +230,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
                 const auto &interfaces = (devS->serverS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
                 size_t idReadingInterface = String::to_int(values[1]);
                 if(idReadingInterface >= interfaces.size()){
-                    Logger::error(std::format("[DCClientConnectionSettings::init_from_text] Invalid network config file format.\n"));
+                    Log::error(std::format("[DCClientConnectionSettings::init_from_text] Invalid network config file format.\n"));
                     return;
                 }
                 devS->serverS.idReadingInterface = idReadingInterface;
@@ -244,8 +244,8 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
                     devS->serverS.sendingAddress = values[3];
                 }
                 devS->serverS.sendingPort = String::to_int(values[4]);
-
-                Logger::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
+                
+                Log::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
                                             devS->serverS.idReadingInterface, devS->serverS.readingAdress, devS->serverS.readingPort, devS->serverS.sendingAddress, devS->serverS.sendingPort,
                     devS->serverS.protocol == Protocol::ipv6 ? "ipv6" : "ipv4"));
                 
@@ -258,7 +258,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
             }
 
         }else{
-            Logger::error("[DCClientConnectionSettings::init_from_text] Invalid line format.\n");
+            Log::error("[DCClientConnectionSettings::init_from_text] Invalid line format.\n");
         }
     }
 }
@@ -270,7 +270,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
 //     auto serverInfo = nServerInfo;
 //     const auto &interfaces   = (serverInfo.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
 //     if(serverInfo.idReadingInterface >= interfaces.size()){
-//         Logger::error("UdpClientSettings::add_server: Invalid interface id.\n");
+//         Log::error("UdpClientSettings::add_server: Invalid interface id.\n");
 //         return;
 //     }
 
@@ -286,7 +286,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
 // auto UdpClientSettings::update_server(size_t idC, const net::ReadSendNetworkInfos &nServerInfo) -> void{
 
 //     if(idC >= serversInfo.size()){
-//         Logger::error("UdpClientSettings::update_server: Invalid server id.\n");
+//         Log::error("UdpClientSettings::update_server: Invalid server id.\n");
 //         return;
 //     }
 
@@ -295,7 +295,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
 //     auto &serverInfo = serversInfo[idC];
 //     const auto &interfaces  = (serverInfo.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
 //     if(serverInfo.idReadingInterface >= interfaces.size()){
-//         Logger::error("UdpClientSettings::update_server: Invalid interface id.\n");
+//         Log::error("UdpClientSettings::update_server: Invalid interface id.\n");
 //         return;
 //     }
 //     serverInfo.readingAdress = interfaces[serverInfo.idReadingInterface].ipAddress;

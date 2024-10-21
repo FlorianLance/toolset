@@ -45,7 +45,7 @@ Sampler::~Sampler(){
 auto Sampler::initialize() -> void{
 
     if(is_initialized()){
-        Logger::error(std::format("[Sampler::initialize] Already initialized (id:{}).\n", m_handle));
+        Log::error(std::format("[Sampler::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
 
@@ -66,7 +66,7 @@ auto Sampler::clean() -> void{
 auto Sampler::update(const graphics::TextureOptions &textureOptions) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[Sampler::update] Not initialized.\n");
+        Log::error("[Sampler::update] Not initialized.\n");
         return false;
     }
 

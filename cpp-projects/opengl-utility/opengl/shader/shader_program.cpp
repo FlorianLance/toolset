@@ -47,7 +47,7 @@ auto UniformBlockInfo::get_offset(const std::string_view elementName) const -> G
     if(elements.count(elementName) != 0){
         return elements.at(elementName).offset;
     }
-    Logger::error(std::format("[UniformBlockInfo::get_offset] Element [{}] not found in block uniform info [{}].\n"sv, elementName, name));
+    Log::error(std::format("[UniformBlockInfo::get_offset] Element [{}] not found in block uniform info [{}].\n"sv, elementName, name));
     return {};
 }
 
@@ -60,7 +60,7 @@ auto UniformBlockInfo::get_offsets(std::span<const std::string_view> elementsNam
         if(elements.count(elementName) != 0){
             offsets.push_back(elements.at(elementName).offset);
         }else{
-            Logger::error(std::format("[UniformBlockInfo::get_offsets] Element [{}] not found in block uniform info [{}].\n"sv, elementName, name));
+            Log::error(std::format("[UniformBlockInfo::get_offsets] Element [{}] not found in block uniform info [{}].\n"sv, elementName, name));
             return {};
         }
     }
@@ -69,18 +69,18 @@ auto UniformBlockInfo::get_offsets(std::span<const std::string_view> elementsNam
 
 ShaderProgram::~ShaderProgram(){
     if(is_initialized()){
-        Logger::error(std::format("[ShaderProgram::~ShaderProgram] ShaderProgram has not been cleaned (id:{}).\n", m_handle));
+        Log::error(std::format("[ShaderProgram::~ShaderProgram] ShaderProgram has not been cleaned (id:{}).\n", m_handle));
     }
 }
 
 auto ShaderProgram::use() -> void{
 
     if(m_handle <= 0){
-        Logger::error("[ShaderProgram::use] Shader program has not been created.\n"sv);
+        Log::error("[ShaderProgram::use] Shader program has not been created.\n"sv);
         return;
     }
     if(!m_linked){
-        Logger::error("[ShaderProgram::use] Shader program has not been linked.\n"sv);
+        Log::error("[ShaderProgram::use] Shader program has not been linked.\n"sv);
         return;
     }
     GL::use_program(m_handle);
@@ -107,10 +107,10 @@ auto ShaderProgram::get_uniform_info(std::string_view name, GlType type) const -
         if(info.type == type){
             return uniforms.at(name);
         }
-        Logger::error(std::format("[ShaderProgram::get_uniform_info] Invalid type for uniform [{}], type prodived: [{}], expected: [{}]. \n"sv, name, get_name(type), get_name(info.type)));
+        Log::error(std::format("[ShaderProgram::get_uniform_info] Invalid type for uniform [{}], type prodived: [{}], expected: [{}]. \n"sv, name, get_name(type), get_name(info.type)));
         return {};
     }
-    // Logger::error(std::format("[ShaderProgram::get_uniform_info] Uniform with name [{}] doesn't exist in shader files [{}].\n"sv, name, String::join(m_shadersFilePaths)));
+    // Log::error(std::format("[ShaderProgram::get_uniform_info] Uniform with name [{}] doesn't exist in shader files [{}].\n"sv, name, String::join(m_shadersFilePaths)));
     return {};
 }
 
@@ -261,24 +261,24 @@ auto ShaderProgram::set_camera_matrices_uniforms(const graphics::CameraMatrices 
 }
 
 auto ShaderProgram::debug_display() -> void{
-
-    Logger::message("[shader files]:\n");
+    
+    Log::message("[shader files]:\n");
     for(const auto& file : m_loadedShadersFileNames){
-        Logger::message(std::format("  -{}\n", file));
+        Log::message(std::format("  -{}\n", file));
     }
-    Logger::message("[attribs]:\n");
+    Log::message("[attribs]:\n");
     for(const auto& attrib : attribs){
-        Logger::message(std::format("  -{}\n", attrib.first));
+        Log::message(std::format("  -{}\n", attrib.first));
     }
-    Logger::message("[uniforms]:\n");
+    Log::message("[uniforms]:\n");
     for(const auto& uniform : uniforms){
-        Logger::message(std::format("  -[{}][{}]\n", uniform.first, get_name(uniform.second.type)));
+        Log::message(std::format("  -[{}][{}]\n", uniform.first, get_name(uniform.second.type)));
     }
-    Logger::message("[uniforms blocks]:\n");
+    Log::message("[uniforms blocks]:\n");
     for(const auto& uniformBlock : uniformBlocks){
-        Logger::message(std::format("  -[{}][size: {}][loc: {}]\n", uniformBlock.first, uniformBlock.second.size, uniformBlock.second.location));
+        Log::message(std::format("  -[{}][size: {}][loc: {}]\n", uniformBlock.first, uniformBlock.second.size, uniformBlock.second.location));
         for(const auto &element : uniformBlock.second.elements){
-            Logger::message(std::format("    -[name: {}][index: {}][offset: {}]\n", element.first, element.second.index, element.second.offset));
+            Log::message(std::format("    -[name: {}][index: {}][offset: {}]\n", element.first, element.second.index, element.second.offset));
         }
     }
 }
@@ -301,12 +301,12 @@ auto ShaderProgram::loaded_files_names_to_str() const -> std::string{
 auto ShaderProgram::link_program() -> bool{
 
     if(m_linked){
-        Logger::error("[ShaderProgram::link] Program is already linked.\n"sv);
+        Log::error("[ShaderProgram::link] Program is already linked.\n"sv);
         return true;
     }
 
     if(m_handle <= 0){
-        Logger::error("[ShaderProgram::link] Program has not been compiled.\n"sv);
+        Log::error("[ShaderProgram::link] Program has not been compiled.\n"sv);
         return false;
     }
 
@@ -321,8 +321,8 @@ auto ShaderProgram::link_program() -> bool{
 
         // GLint logSize = 0;
         // GL::get_program_iv(m_handle, GL_INFO_LOG_LENGTH, &logSize);
-
-        Logger::error(std::format("[ShaderProgram::link] Program link failed: {}\n"sv, m_infoLog.data()));
+        
+        Log::error(std::format("[ShaderProgram::link] Program link failed: {}\n"sv, m_infoLog.data()));
         return m_linked = false;
     }
 
@@ -462,7 +462,7 @@ auto ShaderProgram::clean() -> void{
 auto ShaderProgram::load_from_files(std::span<const std::string> shadersPaths) -> bool{
 
     for(const auto& sh : shadersPaths){
-        Logger::message(std::format("s:{}\n", sh));
+        Log::message(std::format("s:{}\n", sh));
     }
 
     m_shadersFilePaths.resize(shadersPaths.size());
@@ -481,7 +481,7 @@ auto ShaderProgram::load_from_files(std::span<const std::string> shadersPaths) -
 
         // check if exists
         if(!fs::exists(path)){
-            Logger::error(std::format("[ShaderProgram::load_from_files] Shader path [{}] [{}] doesn't exists.\n"sv, path.string(), shaderPath));
+            Log::error(std::format("[ShaderProgram::load_from_files] Shader path [{}] [{}] doesn't exists.\n"sv, path.string(), shaderPath));
             return false;
         }
 
@@ -490,19 +490,19 @@ auto ShaderProgram::load_from_files(std::span<const std::string> shadersPaths) -
         if(auto id = ext.find("."); id != std::string::npos){
             ext.erase(ext.begin(), ext.begin() + id);
         }else{
-            Logger::error("[ShaderProgram::load_from_files] Invalid shader file name.\n"sv);
+            Log::error("[ShaderProgram::load_from_files] Invalid shader file name.\n"sv);
             return false;
         }
 
         if(shadersTypeExtensions.count(ext) == 0){
-            Logger::error(std::format("[ShaderProgram::load_from_files] Extension {} of shader file {} is not valid.\n"sv, ext, path.string()));
+            Log::error(std::format("[ShaderProgram::load_from_files] Extension {} of shader file {} is not valid.\n"sv, ext, path.string()));
             return false;
         }
 
         // open file
         std::ifstream shaderFile(path, std::ios::in);
         if(!shaderFile.is_open()){
-            Logger::error(std::format("[ShaderProgram::load_from_files] Cannot open shader file {} \n"sv, path.string()));
+            Log::error(std::format("[ShaderProgram::load_from_files] Cannot open shader file {} \n"sv, path.string()));
             return false;
         }
 
@@ -529,7 +529,7 @@ auto ShaderProgram::load_from_source_code(std::span<const std::tuple<ShaderType,
     for(const auto &shaderSourceCode : shadersSourceCode){
         GLuint shader = 0;
         if(!create_shader_from_source_code(shader, std::get<0>(shaderSourceCode), std::get<1>(shaderSourceCode))){
-            Logger::error(std::format(
+            Log::error(std::format(
                 "[ShaderProgram::load_from_source_code] Cannot load shader source code : {} of type: {}.\n"sv,
                 std::get<1>(shaderSourceCode),
                 get_name(std::get<0>(shaderSourceCode)))
@@ -560,8 +560,8 @@ auto ShaderProgram::create_shader_from_source_code(GLuint &shader, ShaderType sh
     if(compilationStatus == GL_FALSE){
 
         GL::get_shader_info_log(shader, static_cast<GLsizei>(m_infoLog.size()), nullptr, m_infoLog.data());
-
-        Logger::error(std::format("[ShaderProgram::create_shader_from_source_code] Shader compilation failed: {} \n"sv, std::string_view(m_infoLog)));
+        
+        Log::error(std::format("[ShaderProgram::create_shader_from_source_code] Shader compilation failed: {} \n"sv, std::string_view(m_infoLog)));
         clean();
         return false;
     }

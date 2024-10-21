@@ -49,7 +49,7 @@ auto TexturesManager::load_textures_from_directory(const std::string &directoryP
 
         // check alias
         if(textures2DPerAlias.count(info.alias) != 0){
-            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Texture alias already used: {}\n", info.alias));
+            Log::error(std::format("[TexturesManager::load_textures_from_directory] Texture alias already used: {}\n", info.alias));
             continue;
         }
 
@@ -59,14 +59,14 @@ auto TexturesManager::load_textures_from_directory(const std::string &directoryP
 
             // find previously loaded texture
             textures2DPerAlias[info.alias] = textures2DPerAlias[aliasPerPath[textureFilePath]];
-            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Texture file {} has already been loaded with alias {}\n", textureFilePath, info.alias));
+            Log::error(std::format("[TexturesManager::load_textures_from_directory] Texture file {} has already been loaded with alias {}\n", textureFilePath, info.alias));
             continue;
         }
 
         // load texture
         auto texture = std::make_shared<graphics::Texture2D>();
         if(!texture->load_2d_image_file_data(textureFilePath, info.flip, info.targetNbChannels)){
-            Logger::error(std::format("[TexturesManager::load_textures_from_directory] Cannot load texture file: {}\n", textureFilePath));
+            Log::error(std::format("[TexturesManager::load_textures_from_directory] Cannot load texture file: {}\n", textureFilePath));
             return false;
         }
 
@@ -82,7 +82,7 @@ auto TexturesManager::load_cube_map(const std::string &basePath, const std::arra
 
     // check alias
     if(cubeMapsPerAlias.count(alias) != 0){
-        Logger::error(std::format("[TexturesManager::load_cube_map] CubeMap alias already used: {}\n", alias));
+        Log::error(std::format("[TexturesManager::load_cube_map] CubeMap alias already used: {}\n", alias));
         return false;
     }
 
@@ -91,7 +91,7 @@ auto TexturesManager::load_cube_map(const std::string &basePath, const std::arra
     for(size_t ii = 0; ii < extensions.size(); ++ii){
         texturesPath[ii] = {basePath + extensions[ii]};
         if(aliasPerPath.count(texturesPath[ii]) != 0){
-            Logger::error(std::format("[TexturesManager::load_cube_map] Cubemap texture file already loaded: {}\n", texturesPath[ii]));
+            Log::error(std::format("[TexturesManager::load_cube_map] Cubemap texture file already loaded: {}\n", texturesPath[ii]));
             continue;
         }
     }
@@ -99,14 +99,14 @@ auto TexturesManager::load_cube_map(const std::string &basePath, const std::arra
     // load cube map
     auto cubeMap = std::make_shared<graphics::CubeMap>();
     if(!cubeMap->load_2d_images_files(texturesPath, flip)){
-        Logger::error("[TexturesManager::load_cube_map] Cannot load cubemap files. \n");
+        Log::error("[TexturesManager::load_cube_map] Cannot load cubemap files. \n");
         return false;
     }
 
     // add to map
     for(const auto &path : texturesPath){
         aliasPerPath[path] = alias;
-        Logger::message(std::format("Add {} to alias {}\n", path, alias));
+        Log::message(std::format("Add {} to alias {}\n", path, alias));
     }
     cubeMapsPerAlias[alias] = cubeMap;
 
@@ -134,12 +134,12 @@ TextureInfo TexturesManager::get_texture_info(const std::string &textureAlias, T
 auto TexturesManager::generate_texture2d_tbo(const std::string &tboAlias, const std::string &textureAlias, TextureOptions options) -> bool{
 
     if(textures2DPerAlias.count(textureAlias) == 0){
-        Logger::error(std::format("[TexturesManager::generate_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
+        Log::error(std::format("[TexturesManager::generate_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
         return false;
     }
 
     if(textures2DTboPerAlias.count(tboAlias) != 0){
-        Logger::error(std::format("[TexturesManager::generate_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
+        Log::error(std::format("[TexturesManager::generate_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 
@@ -153,12 +153,12 @@ auto TexturesManager::generate_texture2d_tbo(const std::string &tboAlias, const 
 auto TexturesManager::generate_projected_texture2d_tbo(const std::string &tboAlias, const std::string &textureAlias) -> bool{
 
     if(textures2DPerAlias.count(textureAlias) == 0){
-        Logger::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
+        Log::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] Texture alias {} doesn't exist\n", textureAlias));
         return false;
     }
 
     if(textures2DTboPerAlias.count(tboAlias) != 0){
-        Logger::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
+        Log::error(std::format("[TexturesManager::generate_projected_texture2d_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 
@@ -172,12 +172,12 @@ auto TexturesManager::generate_projected_texture2d_tbo(const std::string &tboAli
 auto TexturesManager::generate_cubemap_tbo(const std::string &tboAlias, const std::string &cubemapAlias) -> bool{
 
     if(cubeMapsPerAlias.count(cubemapAlias) == 0){
-        Logger::error(std::format("[TexturesManager::generate_cubemap_tbo] Texture alias {} doesn't exist\n", cubemapAlias));
+        Log::error(std::format("[TexturesManager::generate_cubemap_tbo] Texture alias {} doesn't exist\n", cubemapAlias));
         return false;
     }
 
     if(cubeMapsTboPerAlias.count(tboAlias) != 0){
-        Logger::error(std::format("[TexturesManager::generate_cubemap_tbo] TBO alias already used: {}\n", tboAlias));
+        Log::error(std::format("[TexturesManager::generate_cubemap_tbo] TBO alias already used: {}\n", tboAlias));
         return false;
     }
 

@@ -31,7 +31,7 @@
 #include "utility/logger.hpp"
 
 TEST_CASE( "1: All test cases reside in other .cpp files (empty)", "[multi-file:1]" ) {
-    tool::Logger::message("All tests\n");
+    tool::Log::message("All tests\n");
 }
 
 // REQUIRE( expression ) : quit if failed

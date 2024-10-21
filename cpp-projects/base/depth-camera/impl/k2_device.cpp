@@ -204,7 +204,7 @@
 // }
 
 // K2Device::K2Device() : m_p(std::make_unique<Impl>()){
-//     Logger::message("Init kinect2");
+//     Log::message("Init kinect2");
 // }
 
 // K2Device::~K2Device(){
@@ -270,12 +270,12 @@
 //         if(ret == E_PENDING){
 //             auto currenTime = duration_cast<milliseconds>(high_resolution_clock::now() - timeStart).count();
 //             if(currenTime > 3000){
-//                 Logger::error("Failed: AcquireLatestFrame still pending");
+//                 Log::error("Failed: AcquireLatestFrame still pending");
 //                 return false;
 //             }
 //             continue;
 //         }else if(!check_func_sucess(ret)){
-//             Logger::error("Failed: AcquireLatestFrame");
+//             Log::error("Failed: AcquireLatestFrame");
 //             return false;
 //         }
 //         break;
@@ -288,7 +288,7 @@
 // bool K2Device::acquire_color_frame(){
 
 //     if(!check_func_sucess(m_p->multiSouceFrame->get_ColorFrameReference(&m_p->colorFrameRef))){
-//         Logger::warning("Fail get_ColorFrameReference");
+//         Log::warning("Fail get_ColorFrameReference");
 //         return false;
 //     }
 
@@ -313,8 +313,8 @@
 
 //         }
 //         m_p->colorFrameInfosInitialized = true;
-//         // Logger::message(QSL("Color FOV: ") % QString::number(m_p->colorFovDiago) % QSL(" ") % QString::number(m_p->colorFovHori) % QSL(" ") % QString::number(m_p->colorFovVerti));
-//         // Logger::message(QSL("Color Lengths: ") % QString::number(m_p->colorWidth) % QSL(" ") % QString::number(m_p->colorHeight) % QSL(" ") % QString::number(m_p->colorLengthInPixels)% QSL(" ") % QString::number(m_p->colorBytesPerPixel));
+//         // Log::message(QSL("Color FOV: ") % QString::number(m_p->colorFovDiago) % QSL(" ") % QString::number(m_p->colorFovHori) % QSL(" ") % QString::number(m_p->colorFovVerti));
+//         // Log::message(QSL("Color Lengths: ") % QString::number(m_p->colorWidth) % QSL(" ") % QString::number(m_p->colorHeight) % QSL(" ") % QString::number(m_p->colorLengthInPixels)% QSL(" ") % QString::number(m_p->colorBytesPerPixel));
 //     }
 
 //     return true;
@@ -323,13 +323,13 @@
 // bool K2Device::acquire_depth_frame(){
 
 //     if(!check_func_sucess(m_p->multiSouceFrame->get_DepthFrameReference(&m_p->depthFrameRef))){
-//         Logger::warning("Fail get_DepthFrameReference");
+//         Log::warning("Fail get_DepthFrameReference");
 //         return false;
 //     }
 
 //     auto ret = m_p->depthFrameRef->AcquireFrame(&m_p->depthFrame);
 //     if(!check_func_sucess(ret)){
-//         Logger::warning("Fail to acquire depth frame");
+//         Log::warning("Fail to acquire depth frame");
 //         return false;
 //     }
 
@@ -347,8 +347,8 @@
 //         }
 
 //         m_p->depthFrameInfosInitialized = true;
-//         // Logger::message(QSL("Depth FOV: ") % QString::number(m_p->depthFovDiago) % QSL(" ") % QString::number(m_p->depthFovHori) % QSL(" ") % QString::number(m_p->depthFovVerti));
-//         // Logger::message(QSL("Depth Lengths: ") % QString::number(m_p->depthWidth) % QSL(" ") % QString::number(m_p->depthHeight) % QSL(" ") % QString::number(m_p->depthLengthInPixels)% QSL(" ") % QString::number(m_p->colorBytesPerPixel));
+//         // Log::message(QSL("Depth FOV: ") % QString::number(m_p->depthFovDiago) % QSL(" ") % QString::number(m_p->depthFovHori) % QSL(" ") % QString::number(m_p->depthFovVerti));
+//         // Log::message(QSL("Depth Lengths: ") % QString::number(m_p->depthWidth) % QSL(" ") % QString::number(m_p->depthHeight) % QSL(" ") % QString::number(m_p->depthLengthInPixels)% QSL(" ") % QString::number(m_p->colorBytesPerPixel));
 //     }
 
 
@@ -358,7 +358,7 @@
 // bool K2Device::acquire_infra_frame(){
 
 //     if(!check_func_sucess(m_p->multiSouceFrame->get_InfraredFrameReference(&m_p->infraFrameRef))){
-//          Logger::warning("Fail get_InfraredFrameReference");
+//          Log::warning("Fail get_InfraredFrameReference");
 //         return false;
 //     }
 //     if(!check_func_sucess(m_p->infraFrameRef->AcquireFrame(&m_p->infraFrame))){
@@ -371,7 +371,7 @@
 // bool K2Device::acquire_long_exposure_infra_frame(){
 
 //     if(!check_func_sucess(m_p->multiSouceFrame->get_LongExposureInfraredFrameReference(&m_p->longExposureInfraFrameRef))){
-//          Logger::warning("Fail get_LongExposureInfraredFrameReference");
+//          Log::warning("Fail get_LongExposureInfraredFrameReference");
 //         return false;
 //     }
 //     if(!check_func_sucess(m_p->longExposureInfraFrameRef->AcquireFrame(&m_p->longExposureInfraFrame))){
@@ -383,7 +383,7 @@
 // bool K2Device::acquire_body_frame(){
 
 //     if(!check_func_sucess(m_p->multiSouceFrame->get_BodyFrameReference(&m_p->bodyFrameRef))){
-//          Logger::warning("Fail get_BodyFrameReference");
+//          Log::warning("Fail get_BodyFrameReference");
 //         return false;
 //     }
 //     if(!check_func_sucess(m_p->bodyFrameRef->AcquireFrame(&m_p->bodyFrame))){
@@ -399,22 +399,22 @@
 //     // initialize sensor
 //     if(!m_p->cameraInitialized){
 //         if(!check_func_sucess(GetDefaultKinectSensor(&m_p->sensor))){
-//             Logger::error("Failed get default kinect sensor");
+//             Log::error("Failed get default kinect sensor");
 //             return false;
 //         }
 
 //         if (m_p->sensor == nullptr) {
-//             Logger::error("Failed opening sensor");
+//             Log::error("Failed opening sensor");
 //             return false;
 //         }
 
 //         if(!check_func_sucess(m_p->sensor->Open())){
-//             Logger::error("Cannot open kinect");
+//             Log::error("Cannot open kinect");
 //             return false;
 //         }
 
 //         if(!check_func_sucess(m_p->sensor->get_CoordinateMapper(&m_p->mapper))){
-//             Logger::error("Fail get coordinate mapper");
+//             Log::error("Fail get coordinate mapper");
 //             return false;
 //         }
 //         m_p->cameraInitialized = true;
@@ -450,7 +450,7 @@
 
 //     // open frame source
 //     if(!check_func_sucess(m_p->sensor->OpenMultiSourceFrameReader(m_p->frameSource, &m_p->reader))){
-//         Logger::error("Failed: OpenMultiSourceFrameReader");
+//         Log::error("Failed: OpenMultiSourceFrameReader");
 //         return false;
 //     }
 
@@ -461,7 +461,7 @@
 // std::optional<K2Frame> K2Device::get_kinect_data() {
 
 //     if(m_p->reader == nullptr){
-//         Logger::error("Kinect not opened");
+//         Log::error("Kinect not opened");
 //         return {};
 //     }
 
@@ -668,7 +668,7 @@
 // ////    m_p->swapLocker.lock();
 // //    m_p->availableFrame->parameters = parameters;
 // //    if(!m_p->availableFrame->copy_to(f)){
-// //        Logger::error("Available frame color size is 0");
+// //        Log::error("Available frame color size is 0");
 // //    }
 // ////    m_p->swapLocker.unlock();
 // //    std::cout << "[COP2_" <<  std::this_thread::get_id() << "]";
@@ -820,7 +820,7 @@
 //     if(m_p->previousSumDepthValues > 0){
 //         if(sumDepthValues == m_p->previousSumDepthValues){
 //             // identical frame
-//             Logger::error("Identical depth frame");
+//             Log::error("Identical depth frame");
 //             return false;
 //         }
 //     }
@@ -1366,7 +1366,7 @@
 //     int ret = tjCompress2(m_p->jpegCompressor, buffer, width, 0, height, TJPF_RGB,
 //               &m_p->tjCompressedImage, &m_p->processedFrame->jpegColorSize, TJSAMP_444, jpegQuality, TJFLAG_FASTDCT);
 //     if(ret == -1){
-//         Logger::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
+//         Log::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
 //         return;
 //     }
 
@@ -1404,7 +1404,7 @@
 //     int ret = tjCompress2(m_p->jpegCompressor, buffer, width, 0, height, TJPF_RGB,
 //               &m_p->tjCompressedImage, &m_p->processedFrame->jpegColorSize, TJSAMP_444, jpegQuality, TJFLAG_FASTDCT);
 //     if(ret == -1){
-//         Logger::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
+//         Log::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
 //         return;
 //     }
 
@@ -1455,7 +1455,7 @@
 //     int ret = tjCompress2(m_p->jpegCompressor, buffer, width, 0, height, TJPF_RGB,
 //               &m_p->tjCompressedImage, &m_p->processedFrame->jpegColorSize, TJSAMP_444, jpegQuality, TJFLAG_FASTDCT);
 //     if(ret == -1){
-//         Logger::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
+//         Log::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
 //         return;
 //     }
 
@@ -1516,7 +1516,7 @@
 //     int ret = tjCompress2(m_p->jpegCompressor, buffer, width, 0, height, TJPF_RGB,
 //               &m_p->tjCompressedImage, &m_p->processedFrame->jpegColorSize, TJSAMP_444, jpegQuality, TJFLAG_FASTDCT);
 //     if(ret == -1){
-//         Logger::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
+//         Log::error(("tjCompress2 error with code: ") + std::to_string(tjGetErrorCode(m_p->jpegCompressor)));
 //         return;
 //     }
 

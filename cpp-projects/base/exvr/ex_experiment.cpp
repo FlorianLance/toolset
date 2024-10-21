@@ -30,16 +30,19 @@
 using namespace tool::ex;
 
 bool ExExperiment::generate_logger(std::string_view pathDir, std::string_view fileName){
-    if(!Logger::init(pathDir, fileName)){
+
+    auto logger = std::make_unique<ExLoggerM>();
+    if(!logger->init(pathDir, fileName)){
         return false;
     }
-    logger = Logger::take_ownership();
+    ExLoggerM::set_logger_instance(std::move(logger));
     return true;
 }
 
 void ExExperiment::generate_logger_no_file(){
-    Logger::no_file_init();
-    logger = Logger::take_ownership();
+    auto logger = std::make_unique<ExLoggerM>();
+    logger->nofile_init();
+    ExLoggerM::set_logger_instance(std::move(logger));
 }
 
 void ExExperiment::init_callbacks(
@@ -95,42 +98,43 @@ void ExExperiment::init_callbacks(
     signalDoubleCBP           = std::make_unique<SignalDoubleCB>(signalDoubleCB);
     signalStringCBP           = std::make_unique<SignalStringCB>(signalStringCB);
 
+    auto logger = ExLoggerM::get_instance();
     logger->message_signal.connect([&](std::string message){
         if(logMessageCBP != nullptr){
             (*logMessageCBP)(message.c_str());
         }else{
-            Logger::message(std::format("[DLL] {}", message));
+            Log::message(std::format("[DLL] {}", message));
         }
     });
     logger->warning_signal.connect([&](std::string warning){
         if(logWarningCBP != nullptr){
             (*logWarningCBP)(warning.c_str());
         }else{
-            Logger::warning(std::format("[DLL] {}", warning));
+            Log::warning(std::format("[DLL] {}", warning));
         }
     });
     logger->error_signal.connect([&](std::string error){
         if(logErrorCBP != nullptr){
             (*logErrorCBP)(error.c_str());
         }else{
-            Logger::error(std::format("[DLL] {}", error));
+            Log::error(std::format("[DLL] {}", error));
         }
     });
-    logger->message_id_signal.connect([&](std::string message, Logger::SenderT sType, int sKey){
+    logger->message_id_signal.connect([&](std::string message, ExLoggerM::SenderT sType, int sKey){
         if(logMessageIdCBP != nullptr){
             (*logMessageIdCBP)(message.c_str(), static_cast<int>(sType), sKey);
         }else{
 
         }
     });
-    logger->warning_id_signal.connect([&](std::string warning, Logger::SenderT sType, int sKey){
+    logger->warning_id_signal.connect([&](std::string warning, ExLoggerM::SenderT sType, int sKey){
         if(logWarningIdCBP != nullptr){
             (*logWarningIdCBP)(warning.c_str(), static_cast<int>(sType), sKey);
         }else{
 
         }
     });
-    logger->error_id_signal.connect([&](std::string error, Logger::SenderT sType, int sKey){
+    logger->error_id_signal.connect([&](std::string error, ExLoggerM::SenderT sType, int sKey){
         if(logErrorIdCBP != nullptr){
             (*logErrorIdCBP)(error.c_str(), static_cast<int>(sType), sKey);
         }else{

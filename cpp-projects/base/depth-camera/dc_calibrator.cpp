@@ -339,7 +339,7 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
     auto &clientData = i->clientsData[idCloud];
     if(clientData.frames.size() > 0){
         if(clientData.frames.back()->idCapture == frame->idCapture){
-            Logger::error("[DCCalibrator] Previous cloud already added.\n");
+            Log::error("[DCCalibrator] Previous cloud already added.\n");
             return;
         }
     }
@@ -372,7 +372,7 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
 
     size_t idModel = settings.modelSelectionId;
     if(states.nbFramesRegistered[idModel] == 0){
-        Logger::error(std::format("[DCCalibrator] No frames registered for model with id [{}], calibration aborted.\n",idModel));
+        Log::error(std::format("[DCCalibrator] No frames registered for model with id [{}], calibration aborted.\n",idModel));
         return false;
     }
 
@@ -382,11 +382,11 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         for(size_t ii = 0; ii < settings.models.size(); ++ii){
             if(ii != idModel){
                 if(states.nbFramesRegistered[ii] == 0){
-                    Logger::warning(std::format("[DCCalibrator] No frames registered for source with id [{}], source removed from calibration list.\n", ii));
+                    Log::warning(std::format("[DCCalibrator] No frames registered for source with id [{}], source removed from calibration list.\n", ii));
                     continue;
                 }
                 idSources.push_back(ii);
-                Logger::message(std::format("Add source [{}] to list: \n", ii));
+                Log::message(std::format("Add source [{}] to list: \n", ii));
             }
         }
     }else{
@@ -394,47 +394,47 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         if(settings.sourceSelectionId != idModel){
             idSources.push_back(settings.sourceSelectionId);
         }else{
-            Logger::error("[DCCalibrator] Source must be different from model, calibration aborted.\n");
+            Log::error("[DCCalibrator] Source must be different from model, calibration aborted.\n");
             return false;
         }
     }
 
     if(idSources.size() == 0){
-        Logger::error("[DCCalibrator] No source set, calibration aborted.\n");
+        Log::error("[DCCalibrator] No source set, calibration aborted.\n");
         return false;
     }
 
-    // Logger::message(std::format("Model {}\n", idModel));
+    // Log::message(std::format("Model {}\n", idModel));
     // for(auto &s : idSources){
-    //     Logger::message(std::format("source {}\n", s));
+    //     Log::message(std::format("source {}\n", s));
     // }
 
     if(!i->set_model_cloud(settings, idModel, models[idModel])){
-        Logger::error("[DCCalibrator] Model cloud is empty, calibration aborted.\n");
+        Log::error("[DCCalibrator] Model cloud is empty, calibration aborted.\n");
         return false;
     }
-
-    Logger::message("Start calibration.\n");
+    
+    Log::message("Start calibration.\n");
     for(auto &calibration : i->calibrations){
         calibration = std::nullopt;
     }
 
     for(auto idSource : idSources){
-
-        Logger::message(std::format("Calibrate with source [{}] and model [{}].\n", idSource, idModel));
+        
+        Log::message(std::format("Calibrate with source [{}] and model [{}].\n", idSource, idModel));
 
         if(idSource == idModel){
-            Logger::error("[DCCalibrator] Id model and source are the same, source ignored.\n");
+            Log::error("[DCCalibrator] Id model and source are the same, source ignored.\n");
             continue;
         }
 
         if(!i->set_source_cloud(settings, idSource, models[idSource])){
-            Logger::error("[DCCalibrator] Source cloud is empty, source ignored.\n");
+            Log::error("[DCCalibrator] Source cloud is empty, source ignored.\n");
             return false;
         }
 
         // do registration
-        Logger::message(std::format("Register cloud [{}]\n",idSource));
+        Log::message(std::format("Register cloud [{}]\n",idSource));
         std::vector<std::tuple<open3d::pipelines::registration::RegistrationResult, double>> results;
         if(settings.doRansac){
             // RANSAC
@@ -444,19 +444,19 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
                 auto resMat    = from_eigen_mat(result.transformation_);
                 auto distance  = i->compute_charmfer_distance_between_with_current_source(resMat);
                 results.push_back({result,distance});
-                Logger::message(std::format("RANSAC [ID TRY:{}] [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", ii, result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
+                Log::message(std::format("RANSAC [ID TRY:{}] [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", ii, result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
             }
         }else{ // ICP
             auto result    = i->do_ICP(settings);
             auto resMat    = from_eigen_mat(result.transformation_);
             auto distance  = i->compute_charmfer_distance_between_with_current_source(resMat);
             results.push_back({result,distance});
-            Logger::message(std::format("ICP [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
+            Log::message(std::format("ICP [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", result.fitness_, result.inlier_rmse_, distance, tool::to_string(resMat)));
         }
 
         // retrieve best calibration
         auto bestResult =  Impl::best_registration_results(results);
-        Logger::message(std::format("Best [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", std::get<0>(bestResult).fitness_, std::get<0>(bestResult).inlier_rmse_, std::get<1>(bestResult), tool::to_string(from_eigen_mat(std::get<0>(bestResult).transformation_))));
+        Log::message(std::format("Best [Fitness:{:.4f}] [RMSE{:.4f}] [Dist:{:.4f}] [Res:{}]\n", std::get<0>(bestResult).fitness_, std::get<0>(bestResult).inlier_rmse_, std::get<1>(bestResult), tool::to_string(from_eigen_mat(std::get<0>(bestResult).transformation_))));
 
         // update models with new calibration
         DCModelSettings newM;
@@ -465,10 +465,10 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
         // send calibration
         i->calibrations[idSource] = newM;
         new_calibration_signal(idSource, i->calibrations[idSource].value());
-
-        Logger::message(std::format("Calibration updated for cloud [{}]\n", idSource));
+        
+        Log::message(std::format("Calibration updated for cloud [{}]\n", idSource));
     }
-    Logger::message("End calibration.\n");
+    Log::message("End calibration.\n");
 
     return true;
 }
@@ -531,7 +531,7 @@ auto DCCalibrator::update() -> void{
 
     if(states.isRegistering && size_all_calibration_cloud() > 5000000){
         states.isRegistering = false;
-        Logger::message("Max calibration cloud size reached.\n");
+        Log::message("Max calibration cloud size reached.\n");
     }
 }
 

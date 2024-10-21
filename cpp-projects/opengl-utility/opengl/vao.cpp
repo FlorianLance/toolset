@@ -38,7 +38,7 @@ VAO::~VAO(){
 
 auto VAO::initialize() -> void{
     if(m_handle != 0){
-        Logger::warning(std::format("[VAO::generate] VAO already generated: {}\n", m_handle));
+        Log::warning(std::format("[VAO::generate] VAO already generated: {}\n", m_handle));
         return;
     }
     glCreateVertexArrays(1, &m_handle);
@@ -47,7 +47,7 @@ auto VAO::initialize() -> void{
 auto VAO::bind() const -> void{
 
     if(m_handle == 0){
-        Logger::error("[VAO::bind] VAO not generated, cannot bind it.\n");
+        Log::error("[VAO::bind] VAO not generated, cannot bind it.\n");
         return;
     }
 

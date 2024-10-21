@@ -51,14 +51,14 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
     if(path.empty()){
         return;
     }
-
-    Logger::message(std::format("Convert_kvid: {}\n", path));
+    
+    Log::message(std::format("Convert_kvid: {}\n", path));
 
 
     // open file
     std::ifstream file(path.data(), std::ios_base::binary);
     if(!file.is_open()){
-        Logger::error(std::format("Cannot open binary file with path: [{}].\n", path));
+        Log::error(std::format("Cannot open binary file with path: [{}].\n", path));
         return;
     }
     file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
@@ -191,7 +191,7 @@ auto convert_kvid(const std::string &path, const std::string &dest) -> void{
                     //     paddedUncompressedSize,
                     //     decodedVertices.data());
                     // if(decodedBytesNb == 0){
-                    //     Logger::error("[K4FrameUncompressor::uncompress_lossless_16_bits_128padded_data] Error decoding data.\n");
+                    //     Log::error("[K4FrameUncompressor::uncompress_lossless_16_bits_128padded_data] Error decoding data.\n");
                     // }
 
                     // decodedVertices.resize(uncompressedSize);
@@ -548,7 +548,7 @@ auto test_device_idle() -> void{
 
     for(int ii = 0; ii < 20; ++ii){
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        Logger::warning(std::format("idle {}\n",ii));
+        Log::warning(std::format("idle {}\n",ii));
     }
 }
 
@@ -563,21 +563,25 @@ int main(int argc, char *argv[]){
     }
 
     std::cout << "start\n";
-    Logger::init("./");
-    Logger::get()->message_signal.connect([&](std::string message){
+    
+    auto logger = std::make_unique<Logger>();
+    logger->init("./");
+    logger->message_signal.connect([&](std::string message){
         std::cout << message;
     });
-    Logger::get()->warning_signal.connect([&](std::string warning){
+    logger->warning_signal.connect([&](std::string warning){
         std::cerr << warning;
     });
-    Logger::get()->error_signal.connect([&](std::string error){
+    logger->error_signal.connect([&](std::string error){
         std::cerr << error;
     });
+    Logger::set_logger_instance(std::move(logger));
+
 
     DCVideoPlayer p;
     DCVideo v1;
-    Logger::message("load\n");
-    v1.load_from_file("E:/aaaa.kvid");
+    Log::message("load\n");
+    v1.load_from_file("E:/_kvid/aaaa.kvid");
     p.set_video(v1);
 
     DCVideoPlayerSettings ps;
@@ -767,13 +771,13 @@ int main(int argc, char *argv[]){
 
 
     DCVideo v;
-    Logger::message("load\n");
+    Log::message("load\n");
     v.load_from_file("E:/07-09-fam2.kvid");
     player.set_video(v);
     // auto dfp = v.get_data_frames_ptr(0);
     // auto df = dfp->get_data_frame(dfp->nb_frames()/2);
-
-    Logger::message("loaded\n");
+    
+    Log::message("loaded\n");
     DCFrameGenerationSettings fgS;
     DCDeprecatedFrame frame;
 
@@ -787,19 +791,19 @@ int main(int argc, char *argv[]){
         auto frame = player.current_frame(idD);
         // cGrid.add_cloud(frame->cloud, v.get_transform(idD).conv<float>());
     }
-    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
     cGrid.compute_grid();
-    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
 
     ColorCloud vCloud;
-    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
     cGrid.convert_to_cloud(vCloud);
-    Logger::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
     io::CloudIO::save_cloud("E:/agg_c1.obj", vCloud);
-
-    Logger::message("ended\n");
+    
+    Log::message("ended\n");
     // if(auto frame = df.lock()){
-    //     Logger::message(std::format("size {}\n", frame->validVerticesCount));
+    //     Log::message(std::format("size {}\n", frame->validVerticesCount));
 
     //
     //     // cGrid.add_cloud(frame->)

@@ -83,7 +83,7 @@ auto tool::gl::VoxelsRenderer::load_data(std::span<const geo::Pt3<int>> vertices
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[VoxelsRenderer::load_data] No vertices.\n");
+        Log::error("[VoxelsRenderer::load_data] No vertices.\n");
         return false;
     }
 
@@ -96,7 +96,7 @@ auto tool::gl::VoxelsRenderer::load_data(std::span<const geo::Pt3<int>> vertices
                 colorBufferUsage
             );
         }else{
-            Logger::error("[VoxelsRenderer::load_data] Invalid color buffer size.\n");
+            Log::error("[VoxelsRenderer::load_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -110,24 +110,24 @@ auto tool::gl::VoxelsRenderer::update_data(std::span<const geo::Pt3<int> > verti
 
 
     if(!initialized()){
-        Logger::error("[VoxelsRenderer::update_data] Buffers must be initialized.\n");
+        Log::error("[VoxelsRenderer::update_data] Buffers must be initialized.\n");
         return false;
     }
 
     if(!data_loaded()){
-        Logger::error("[VoxelsRenderer::update_data] Data must be loaded.\n");
+        Log::error("[VoxelsRenderer::update_data] Data must be loaded.\n");
         return false;
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[VoxelsRenderer::update_data] No vertices.\n");
+        Log::error("[VoxelsRenderer::update_data] No vertices.\n");
         return false;
     }
 
     if(!vertices.empty()){
 
         if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[VoxelsRenderer::update_data] Vertex buffer storage not dynamic.\n");
+            Log::error("[VoxelsRenderer::update_data] Vertex buffer storage not dynamic.\n");
             return false;
         }
 
@@ -138,7 +138,7 @@ auto tool::gl::VoxelsRenderer::update_data(std::span<const geo::Pt3<int> > verti
                 static_cast<GLintptr>(verticesOffset)
             );
         }else{
-            Logger::error("[VoxelsRenderer::update_data] Invalid vertex buffer size.\n");
+            Log::error("[VoxelsRenderer::update_data] Invalid vertex buffer size.\n");
             return false;
         }
     }
@@ -146,7 +146,7 @@ auto tool::gl::VoxelsRenderer::update_data(std::span<const geo::Pt3<int> > verti
     if(m_hasColors && (!colors.empty())){
 
         if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[VoxelsRenderer::update_data] Color buffer storage not dynamic.\n");
+            Log::error("[VoxelsRenderer::update_data] Color buffer storage not dynamic.\n");
             return false;
         }
 
@@ -157,7 +157,7 @@ auto tool::gl::VoxelsRenderer::update_data(std::span<const geo::Pt3<int> > verti
                 static_cast<GLintptr>(colorsOffset)
             );
         }else{
-            Logger::error("[VoxelsRenderer::update_data] Invalid color buffer size.\n");
+            Log::error("[VoxelsRenderer::update_data] Invalid color buffer size.\n");
             return false;
         }
     }

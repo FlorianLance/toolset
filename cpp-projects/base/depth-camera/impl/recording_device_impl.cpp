@@ -45,8 +45,8 @@ RecordingDeviceImpl::RecordingDeviceImpl(){
 auto RecordingDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool {
 
     initialize(newConfigS);
-
-    Logger::error("[RecordingDeviceImpl::open] Not implemented"sv);
+    
+    Log::error("[RecordingDeviceImpl::open] Not implemented"sv);
     return false;
 
     // if(!video.load_from_file(path)){

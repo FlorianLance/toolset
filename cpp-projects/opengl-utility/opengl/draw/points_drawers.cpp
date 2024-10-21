@@ -44,7 +44,7 @@ auto CloudPointsDrawer::initialize(bool dynamic, std::span<const geo::Pt3f> vert
     }
     pm->initialize(!colors.empty(), !normals.empty());
     if(!pm->load_data(vertices, colors, normals)){
-        Logger::error("[CloudPointsDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[CloudPointsDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -55,7 +55,7 @@ auto CloudPointsDrawer::initialize(bool dynamic, const geo::ColorCloud &cloud) -
 auto CloudPointsDrawer::update(std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals) -> void{
     auto pm = dynamic_cast<PointsRenderer*>(m_vaoRenderer.get());
     if(!pm->update_data(vertices, 0, colors, 0, normals, 0)){
-        Logger::error("[CloudPointsDrawer::update] Error during update.\n"sv);
+        Log::error("[CloudPointsDrawer::update] Error during update.\n"sv);
         return;
     }
 }

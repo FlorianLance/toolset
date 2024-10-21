@@ -171,6 +171,7 @@ MonoBehaviour:
   sharedVisualEffectAsset: {fileID: 8926484042661614526, guid: caee5be3d010ffa4696e6a97048fad13, type: 3}
   cloudsGO: []
   settings:
+    applyParentTransform: 0
     parentTransform:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}

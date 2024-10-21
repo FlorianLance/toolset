@@ -40,8 +40,8 @@ using namespace tool::cam;
 using namespace tool::net;
 
 auto DCGMainW::initialize() -> bool{
-
-    Logger::log("DCGMainW::initialize\n");
+    
+    Log::log("DCGMainW::initialize\n");
 
     // init drawers
     deviceD.initialize(1);

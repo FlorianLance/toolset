@@ -50,7 +50,7 @@ DCDeviceImpl::~DCDeviceImpl(){
 }
 
 auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
-    auto lg = LogGuard("DCDeviceImpl::initialize"sv);
+    auto lg = LogG("DCDeviceImpl::initialize"sv);
     auto t = TimeDiffGuard(timeM, "INITIALIZE"sv);
     settings.config = newConfigS;
     mInfos.initialize(settings.config.mode);
@@ -83,7 +83,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         );
 
         if(!success){
-            Logger::error("DCDeviceImpl::convert_color_image: Uncompression error.\n");
+            Log::error("DCDeviceImpl::convert_color_image: Uncompression error.\n");
             return;
         }
     }else if(mInfos.image_format() == DCImageFormat::BGRA){
@@ -100,7 +100,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         cv::cvtColor(rawMat, convMat, cv::COLOR_YUV2RGBA_YUY2);
 
     }else{
-        Logger::error("DCDeviceImpl::convert_color_image: Invalid color format.\n");
+        Log::error("DCDeviceImpl::convert_color_image: Invalid color format.\n");
         return;
     }
 
@@ -911,7 +911,7 @@ auto DCDeviceImpl::update_data_frame_body_tracking() -> void{
                 mInfos.depth_width(), mInfos.depth_height(), 1,
                 std::span<std::byte>(reinterpret_cast<std::byte*>(fData.bodiesId.data()), fData.bodiesId.size_bytes()));
 
-        // Logger::message(std::format("body data size {}\n", dFrame->image_buffer(DCImageBufferType::BodiesIdMap8)->size()));
+        // Log::message(std::format("body data size {}\n", dFrame->image_buffer(DCImageBufferType::BodiesIdMap8)->size()));
         // }
     }
 
@@ -1077,21 +1077,21 @@ auto DCDeviceImpl::check_data_validity() -> bool {
 
     if(mInfos.has_color() && settings.data.capture.color){
         if(fData.rawColor.empty()){
-            Logger::log("Invalid raw color, frame canceled.\n");
+            Log::log("Invalid raw color, frame canceled.\n");
             return false;
         }
     }
 
     if(mInfos.has_depth() && settings.data.capture.depth){
         if(fData.depth.empty()){
-            Logger::log("Invalid depth, frame canceled.\n");
+            Log::log("Invalid depth, frame canceled.\n");
             return false;
         }
     }
 
     if(mInfos.has_infra() && settings.data.capture.infra){
         if(fData.infra.empty()){
-            Logger::log("Invalid infra, frame canceled.\n");
+            Log::log("Invalid infra, frame canceled.\n");
             return false;
         }
     }
@@ -1347,22 +1347,22 @@ auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint
 }
 
 auto DCDeviceImpl::set_data_settings(const DCDeviceDataSettings &dataS) -> void {
-    auto lg = LogGuard("DCDeviceImpl::set_data_settings"sv);
+    auto lg = LogG("DCDeviceImpl::set_data_settings"sv);
     settings.data = dataS;
 }
 
 auto DCDeviceImpl::set_filters_settings(const DCFiltersSettings &filtersS) -> void{
-    auto lg = LogGuard("DCDeviceImpl::set_filters_settings"sv);
+    auto lg = LogG("DCDeviceImpl::set_filters_settings"sv);
     settings.filters = filtersS;
 }
 
 auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
-    auto lg = LogGuard("DCDeviceImpl::set_color_settings"sv);
+    auto lg = LogG("DCDeviceImpl::set_color_settings"sv);
     settings.color = colorS;
 }
 
 auto DCDeviceImpl::set_delay_settings(const DCMiscSettings &delayS) -> void{
-    auto lg = LogGuard("DCDeviceImpl::set_delay_settings"sv);
+    auto lg = LogG("DCDeviceImpl::set_delay_settings"sv);
     settings.delay = delayS;
 }
 

@@ -150,10 +150,9 @@ public:
 
 
     virtual auto key() -> int = 0;
-    virtual auto sender_type() -> Logger::SenderT = 0;
+    virtual auto sender_type() -> ExLoggerM::SenderT = 0;
 
     tool::ex::ExExperiment *exp = nullptr;
-    tool::Logger *logger = nullptr;
 
 protected:
 

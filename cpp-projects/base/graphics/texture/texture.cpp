@@ -54,7 +54,7 @@ auto Texture::copy_2d_data(int width, int height, int nbChannels, unsigned char 
 auto Texture::copy_2d_data(int width, int height, int nbChannels, const std::vector<unsigned char> &data) -> void{
 
     if(data.size() < static_cast<size_t>(width*height*nbChannels)){
-        Logger::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
+        Log::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
         return;
     }
     m_sizes = {width, height, 1};
@@ -66,7 +66,7 @@ auto Texture::copy_2d_data(int width, int height, int nbChannels, const std::vec
 auto Texture::copy_2d_data(int width, int height, const std::vector<geo::Pt3<unsigned char>> &data) -> void{
 
     if(data.size() < static_cast<size_t>(width*height)){
-        Logger::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
+        Log::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
         return;
     }
     m_sizes = {width, height, 1};
@@ -80,7 +80,7 @@ auto Texture::copy_2d_data(int width, int height, const std::vector<geo::Pt3<uns
 auto Texture::copy_2d_data(int width, int height, int nbChannels, const std::vector<float> &data) -> void{
 
     if(data.size() < static_cast<size_t>(width*height*nbChannels)){
-        Logger::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
+        Log::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
         return;
     }
     m_sizes = {width, height, 1};
@@ -94,7 +94,7 @@ auto Texture::copy_2d_data(int width, int height, int nbChannels, const std::vec
 auto Texture::copy_2d_data(int width, int height, const std::vector<geo::Pt3<float>> &data) -> void{
 
     if(data.size() < static_cast<size_t>(width*height)){
-        Logger::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
+        Log::error("[Texture::copy_2d_data] Cannot copy data to texture, invalid array size.\n"sv);
         return;
     }
 
@@ -110,7 +110,7 @@ auto Texture::copy_2d_data(int width, int height, const std::vector<geo::Pt3<flo
 auto Texture::load_2d_image_file_data(const std::string &pathTexture, bool flip, int targetNbChannels) -> bool{
 
     if(targetNbChannels <= 0 || targetNbChannels > 4){
-        Logger::error(std::format("[Texture::load_2d_image_file_data] Invalid input target nb of channels with texture: {}\n"sv, pathTexture));
+        Log::error(std::format("[Texture::load_2d_image_file_data] Invalid input target nb of channels with texture: {}\n"sv, pathTexture));
         return false;
     }
 
@@ -137,7 +137,7 @@ auto Texture::load_2d_image_file_data(const std::string &pathTexture, bool flip,
         // load data with stb
         loadedDataF = stbi_loadf(pathTexture.c_str(), &width, &height, &m_nbChannels, targetNbChannels);
         if(!loadedDataF){
-            Logger::error(std::format("[Texture::load_2d_image_file_data] Cannot load texture: {}\n"sv, pathTexture));
+            Log::error(std::format("[Texture::load_2d_image_file_data] Cannot load texture: {}\n"sv, pathTexture));
             return false;
         }
 
@@ -153,7 +153,7 @@ auto Texture::load_2d_image_file_data(const std::string &pathTexture, bool flip,
         // load data with stb
         loadedData = stbi_load(pathTexture.c_str(), &width, &height, &m_nbChannels, targetNbChannels);
         if(!loadedData){
-            Logger::error(std::format("[Texture::load_2d_image_file_data] Cannot load texture: {}\n"sv, pathTexture));
+            Log::error(std::format("[Texture::load_2d_image_file_data] Cannot load texture: {}\n"sv, pathTexture));
             return false;
         }
 
@@ -182,7 +182,7 @@ auto Texture::write_2d_image_file_data(const std::string &pathTexture) -> bool{
     const auto path = fs::path(pathTexture);
     const auto parentDir = path.parent_path();
     if(!fs::exists(parentDir)){
-        Logger::error(std::format("[Texture::write_2d_image_file_data] Cannot save texture at path: {}\n"sv, pathTexture));
+        Log::error(std::format("[Texture::write_2d_image_file_data] Cannot save texture at path: {}\n"sv, pathTexture));
         return false;
     }
 
@@ -245,12 +245,12 @@ auto Texture::write_2d_image_file_data(const std::string &pathTexture) -> bool{
             res = stbi_write_hdr(filePath.c_str(), m_sizes[0], m_sizes[1], m_nbChannels, reinterpret_cast<float*>(m_data.data()));
         }
     }else{
-        Logger::error(std::format("[Texture::write_2d_image_file_data] Cannot save texture at path: {}, extension not managed.\n"sv, pathTexture));
+        Log::error(std::format("[Texture::write_2d_image_file_data] Cannot save texture at path: {}, extension not managed.\n"sv, pathTexture));
         return false;
     }
 
     if(res == 0){
-        Logger::error(std::format("[Texture::write_2d_image_file_data] Fail to save texture: {}\n"sv, pathTexture));
+        Log::error(std::format("[Texture::write_2d_image_file_data] Fail to save texture: {}\n"sv, pathTexture));
         return false;
     }
 

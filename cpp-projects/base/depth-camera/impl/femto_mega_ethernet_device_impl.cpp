@@ -35,18 +35,18 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 FemtoMegaEthernetDeviceImpl::FemtoMegaEthernetDeviceImpl(){
-
-    auto lg = LogGuard("FemtoMegaEthernetDeviceImpl::FemtoMegaEthernetDeviceImpl"sv);
+    
+    auto lg = LogG("FemtoMegaEthernetDeviceImpl::FemtoMegaEthernetDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoMegaEthernet);
 }
 
 auto FemtoMegaEthernetDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
-
-    auto lg = LogGuard("FemtoMegaEthernetDeviceImpl::open"sv);
+    
+    auto lg = LogG("FemtoMegaEthernetDeviceImpl::open"sv);
     initialize(newConfigS);
 
     if(mInfos.image_format() != DCImageFormat::MJPG){
-        Logger::warning("Femto Mega must use MJPG image format, format ignored.\n");
+        Log::warning("Femto Mega must use MJPG image format, format ignored.\n");
         mInfos.force_image_format(DCImageFormat::MJPG);
     }
 
@@ -58,13 +58,13 @@ auto FemtoMegaEthernetDeviceImpl::open(const DCConfigSettings &newConfigS) -> bo
         fData.binaryCalibration = orbbecD->read_calibration();
         return true;
     }
-
-    Logger::error("[FemtoMegaEthernetDeviceImpl::open] Cannot open device\n");
+    
+    Log::error("[FemtoMegaEthernetDeviceImpl::open] Cannot open device\n");
     return false;
 }
 
 auto FemtoMegaEthernetDeviceImpl::close() -> void {
-    auto lg = LogGuard("FemtoMegaEthernetDeviceImpl::close"sv);
+    auto lg = LogG("FemtoMegaEthernetDeviceImpl::close"sv);
     if(orbbecD != nullptr){
         orbbecD->close();
         orbbecD = nullptr;

@@ -41,12 +41,12 @@ auto Sample::parent_init() -> bool{
 
         // store
         // commonShaders["cloud"sv]                = shadersM->get_shader("others/cloud"sv).lock();
-
-        Logger::message("1\n");
+        
+        Log::message("1\n");
         commonShaders["floor"sv]                = shadersM->get_shader("ch5/scene-texture"sv).lock();
-        Logger::message("2\n");
+        Log::message("2\n");
         commonShaders["unicolor"sv]             = shadersM->get_shader("others/unicolor"sv).lock();
-        Logger::message("3\n");
+        Log::message("3\n");
         commonShaders["skybox"sv]               = shadersM->get_shader("others/skybox"sv).lock();
         commonShaders["ch7-solid"sv]            = shadersM->get_shader("ch7/solid"sv).lock();
         commonShaders["ch8-solid"sv]            = shadersM->get_shader("ch8/solid"sv).lock();
@@ -56,7 +56,7 @@ auto Sample::parent_init() -> bool{
         // check
         for(const auto &shader : commonShaders){
             if(shader.second == nullptr){
-                Logger::error(std::format("[Sample::parent_init] Shader with alias [{}] is null.\n", shader.first));
+                Log::error(std::format("[Sample::parent_init] Shader with alias [{}] is null.\n", shader.first));
                 return false;
             }
         }
@@ -85,7 +85,7 @@ auto Sample::parent_init() -> bool{
         // check
         for(const auto &drawer : commonDrawers){
             if(drawer.second == nullptr){
-                Logger::error(std::format("[Sample::parent_init] Drawer with alias [{}] is null.\n", drawer.first));
+                Log::error(std::format("[Sample::parent_init] Drawer with alias [{}] is null.\n", drawer.first));
                 return false;
             }
         }
@@ -155,7 +155,7 @@ auto Sample::parent_draw(tool::gl::BaseDrawer *drawer) -> void {
 
     //             durationAnimation = static_cast<float>(model->animations[idAnimation].duration);
 
-    //             Logger::message(std::format("animate {} {} {}\n", model->animations[idAnimation].name, timeAnimation, durationAnimation));
+    //             Log::message(std::format("animate {} {} {}\n", model->animations[idAnimation].name, timeAnimation, durationAnimation));
     //             modelDrawer->update_animation(
     //                 model->animations[idAnimation].name,
     //                 stopAnimation ? timeAnimation : elapsedSeconds
@@ -472,7 +472,7 @@ auto Sample::draw_scene1(tool::gl::ShaderProgram *shader) -> void{
 
 auto Sample::reload_shader() -> void{
     if(sampleShader != nullptr){
-        Logger::message("Try to reload current shader.\n");
+        Log::message("Try to reload current shader.\n");
         if(auto reloadedShader = shadersM->reload_shader(sampleShader.get()); reloadedShader != nullptr){
             sampleShader = reloadedShader;
         }

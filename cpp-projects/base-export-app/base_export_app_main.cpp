@@ -58,20 +58,20 @@ struct CloudData{
 #include "dc_client_export.hpp"
 
 auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useExtenalThreads) -> void{
-
-    Logger::message("Create DCClientExport\n");
+    
+    Log::message("Create DCClientExport\n");
     auto dcCE = create__dc_client_export();
-
-    Logger::message("Initialize\n");
+    
+    Log::message("Initialize\n");
     if(initialize__dc_client_export(dcCE, clientSettingsFilePath.c_str(), useExtenalThreads ? 0 : 1) == 1){
-        Logger::message("Initialization successful\n");
+        Log::message("Initialization successful\n");
     }else{
-        Logger::error("Initialization failure\n");
+        Log::error("Initialization failure\n");
         return;
     }
 
     int nbDevices = devices_nb__dc_client_export(dcCE);
-    Logger::message(std::format("Number of devices: {}\n", nbDevices));
+    Log::message(std::format("Number of devices: {}\n", nbDevices));
 
     std::atomic_bool runThreads = false;
     Buffer<std::unique_ptr<std::thread>> rndT;
@@ -103,34 +103,34 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
             });
         }
     }
-
-    Logger::message("Connect to devices\n");
+    
+    Log::message("Connect to devices\n");
     connect_to_devices__dc_client_export(dcCE);
-
-    Logger::message("Wait...\n");
+    
+    Log::message("Wait...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    Logger::message("Devices connection state:\n");
+    
+    Log::message("Devices connection state:\n");
     for(int idD = 0; idD < nbDevices; ++idD){
         if(is_device_connected__dc_client_export(dcCE, idD)){
-            Logger::message(std::format("\tDevice n°{} connected\n", idD).c_str());
+            Log::message(std::format("\tDevice n°{} connected\n", idD).c_str());
         }else{
-            Logger::message(std::format("\tDevice n°{} not connected\n", idD).c_str());
+            Log::message(std::format("\tDevice n°{} not connected\n", idD).c_str());
         }
     }
-
-    Logger::message("Apply settings\n");
+    
+    Log::message("Apply settings\n");
     for(int idD = 0; idD < nbDevices; ++idD){
         apply_device_settings__dc_client_export(dcCE, idD);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     apply_color_settings__dc_client_export(dcCE);
     apply_filters_settings__dc_client_export(dcCE);
-
-    Logger::message("Wait...\n");
+    
+    Log::message("Wait...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    Logger::message("Start reading\n");
+    
+    Log::message("Start reading\n");
 
     int nbIterations = 1000;
     std::vector<CloudData> data;
@@ -158,8 +158,8 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
                     sizeVertices,
                     true
                 );
-
-                Logger::message(std::format("\t{} -> {} -> {} -> {}\n",
+                
+                Log::message(std::format("\t{} -> {} -> {} -> {}\n",
                     idC,
                     current_frame_id__dc_client_export(dcCE, idC),
                     sizeVertices,
@@ -174,14 +174,14 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
     }
 
     runThreads = false;
-
-    Logger::message("Wait...\n");
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));   
-
-    Logger::message("Disconnect from devices\n");
+    
+    Log::message("Wait...\n");
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    
+    Log::message("Disconnect from devices\n");
     disconnect_from_devices__dc_client_export(dcCE);
-
-    Logger::message("Wait...\n");
+    
+    Log::message("Wait...\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     if(useExtenalThreads){
@@ -195,9 +195,9 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
             t->join();
         }
     }
-
-
-    Logger::message("Delete DCClientExport\n");
+    
+    
+    Log::message("Delete DCClientExport\n");
     delete__dc_client_export(dcCE);
 }
 
@@ -205,19 +205,22 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
 int main(int, char *argv[]){
 
     Paths::get()->initialize(argv);
-
-    Logger::init("./");
-    Logger::get()->message_signal.connect([&](std::string message){
-        std::cout << message << "\n";
+    
+    auto logger = std::make_unique<Logger>();
+    logger->init("./");
+    logger->message_signal.connect([&](std::string message){
+        std::cout << message;
     });
-    Logger::get()->warning_signal.connect([&](std::string warning){
-        std::cerr << warning << "\n";
+    logger->warning_signal.connect([&](std::string warning){
+        std::cerr << warning;
     });
-    Logger::get()->error_signal.connect([&](std::string error){
-        std::cerr << error << "\n";
+    logger->error_signal.connect([&](std::string error){
+        std::cerr << error;
     });
-
-    Logger::message("Start base-export-app\n");
+    Logger::set_logger_instance(std::move(logger));
+    
+    
+    Log::message("Start base-export-app\n");
 
     // dc_client_export_test((Paths::get()->configDir / "client_default.json").string());
     dc_client_export_test("E:/client_local8_test.json", true);
@@ -385,13 +388,13 @@ auto test_multi_device() -> void{
     //         cam::DCDeviceSettings ds;
     //         ds.apply_remote_profile();
 
-    //         Logger::message("open\n");
+    //         Log::message("open\n");
     //         if(devices.back()->open(idD)){
 
     //             ds.configS.idDevice = idD;
     //             ds.configS.typeDevice = tool::cam::DCType::AzureKinect;
 
-    //             Logger::message("start\n");
+    //             Log::message("start\n");
     //             if(devices.back()->start(ds.configS)){
 
     //                 devices.back()->new_compressed_frame_signal.connect([&, idD](std::shared_ptr<cam::DCCompressedFrame> cFrame){

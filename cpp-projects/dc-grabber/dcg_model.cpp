@@ -38,7 +38,7 @@ using namespace cam;
 using namespace std::string_view_literals;
 
 DCGModel::DCGModel(){
-    auto lg = LogGuard("DCGModel::DCGModel"sv);
+    auto lg = LogG("DCGModel::DCGModel"sv);
     device = std::make_unique<cam::DCDevice>();
     device->start_thread();
 
@@ -57,14 +57,14 @@ DCGModel::DCGModel(){
 }
 
 DCGModel::~DCGModel(){
-    auto lg = LogGuard("~DCGModel::DCGModel"sv);
+    auto lg = LogG("~DCGModel::DCGModel"sv);
     device->stop_thread();
     device = nullptr;
 }
 
 auto DCGModel::initialize() -> bool{
-
-    auto lg = LogGuard("DCGModel::initialize"sv);
+    
+    auto lg = LogG("DCGModel::initialize"sv);
     
     // check if path exist
     if(auto filePath = DCSettingsPaths::get()->server_settings_file(); !filePath.empty()){
@@ -128,7 +128,7 @@ auto DCGModel::update() -> void{
 }
 
 auto DCGModel::clean() -> void{
-    auto lg = LogGuard("DCGModel::clean"sv);
+    auto lg = LogG("DCGModel::clean"sv);
     server.clean();
 }
 
@@ -242,7 +242,7 @@ auto DCGModel::load_subpart_model_settings_file(const std::string &settingsFileP
 auto DCGModel::save_server_settings_file(const std::string &settingsFilePath) -> bool{
 
     if(server.settings.save_to_json_str_file(settingsFilePath)){
-        Logger::message(std::format("Server settings file saved at [{}].\n", settingsFilePath));
+        Log::message(std::format("Server settings file saved at [{}].\n", settingsFilePath));
         return true;
     }
     return false;
@@ -250,7 +250,7 @@ auto DCGModel::save_server_settings_file(const std::string &settingsFilePath) ->
 
 auto DCGModel::load_server_settings_file(const std::string &settingsFilePath) -> bool{
     if(server.settings.load_from_file(settingsFilePath)){
-        Logger::message(std::format("Server settings file loaded from [{}].\n", settingsFilePath));
+        Log::message(std::format("Server settings file loaded from [{}].\n", settingsFilePath));
         return true;
     }
     return false;

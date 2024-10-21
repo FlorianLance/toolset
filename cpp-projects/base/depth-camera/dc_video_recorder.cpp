@@ -124,7 +124,7 @@ auto DCVideoRecorder::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFram
     }
 
     if(i->recordingStartTimestamp.count() > dFrame->receivedTS){
-        Logger::error("[DCVideoRecorder::add_data_frame] Invalid frame timestamp.\n");
+        Log::error("[DCVideoRecorder::add_data_frame] Invalid frame timestamp.\n");
         return;
     }
 
@@ -151,7 +151,7 @@ auto DCVideoRecorder::add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame)
     }
 
     if(i->recordingStartTimestamp.count() > frame->receivedTS){
-        Logger::error("[DCVideoRecorder::add_frame] Invalid frame timestamp.\n");
+        Log::error("[DCVideoRecorder::add_frame] Invalid frame timestamp.\n");
         return;
     }
 
@@ -270,7 +270,7 @@ auto DCVideoRecorder::save_to_file(std::string_view path) -> bool{
 //    std::vector<std::vector<float>> buffer;
 //    fullVideoManager.audio_samples_all_channels(0, buffer);
 //    for(size_t ii = 0; ii < buffer.size(); ++ii){
-//        Logger::message(std::format("channel {} with size {}\n", ii, buffer[ii].size()));
+//        Log::message(std::format("channel {} with size {}\n", ii, buffer[ii].size()));
 //    }
 //    auto startT = fullVideoResource.start_time(0);
 //    auto endT   = fullVideoResource.end_time(0);
@@ -278,14 +278,14 @@ auto DCVideoRecorder::save_to_file(std::string_view path) -> bool{
 //    double samplingRate = buffer[0].size() / time;
 //    af.setSampleRate(48000);//static_cast<int>(samplingRate));
 
-//    Logger::message(std::format("time {} {} {}\n",
+//    Log::message(std::format("time {} {} {}\n",
 //                                time, buffer[0].size(), samplingRate));
 //    af.setAudioBuffer(buffer);
-//    Logger::message(std::format("{} {} {} {}\n",
+//    Log::message(std::format("{} {} {} {}\n",
 //                                af.getLengthInSeconds(), af.getBitDepth(), af.getNumChannels(), af.getNumSamplesPerChannel()));
 
 //    std::string audioFilePath = filePathName;
 //    str::replace_all2(audioFilePath, ".kvid", ".wav");
 //    if(!af.save (audioFilePath, AudioFileFormat::Wave)){
-//        Logger::error(std::format("Cannot save audio file {}.\n", audioFilePath));
+//        Log::error(std::format("Cannot save audio file {}.\n", audioFilePath));
 //    }

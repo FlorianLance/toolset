@@ -139,7 +139,7 @@ auto SphereTrianglesDrawer::initialize(float radius, size_t nSlices, size_t nSta
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(true, true);
     if(!tm->load_data(elements, vertices, normals, texCoords)){
-        Logger::error("[SphereTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[SphereTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -165,7 +165,7 @@ auto CubeTrianglesDrawer::initialize(float side) -> void{
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(true, true);
     if(!tm->load_data(cubeElements, vertices, cubeNormals, cubeTexCoords)){
-        Logger::error("[CubeTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[CubeTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -195,7 +195,7 @@ auto SkyboxTrianglesDrawer::initialize(float side, std::optional<GLuint> cubemap
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(false, true);
     if(!tm->load_data(cubeElements, vertices, {}, cubeTexCoords)){
-        Logger::error("[SkyboxTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[SkyboxTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -245,7 +245,7 @@ auto GridQuadTrianglesDrawer::initialize(float xsize, float zsize, size_t xdivs,
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(true, true, true);
     if(!tm->load_data(elements, vertices, normals, texCoords, tangents)){
-        Logger::error("[GridQuadTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[GridQuadTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -286,7 +286,7 @@ auto QuadTrianglesDrawer::initialize(bool dynamic) -> void{
     tm->initialize(true, true);
     if(!tm->load_data(elements, vertices, normals, texCoords
     )){
-        Logger::error("[QuadTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[QuadTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -302,7 +302,7 @@ auto QuadTrianglesDrawer::update(std::span<const geo::Pt3f, 4> vertices) -> void
         vertices,   0,
         normals,    0
     )){
-        Logger::error("[QuadTrianglesDrawer::update] Error during update.\n"sv);
+        Log::error("[QuadTrianglesDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -350,7 +350,7 @@ auto TorusTrianglesDrawer::initialize(float outerRadius, float innerRadius, size
     auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
     tm->initialize(true, true);
     if(!tm->load_data(elements, vertices, normals, texCoords)){
-        Logger::error("[TorusTrianglesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[TorusTrianglesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -567,7 +567,7 @@ auto MeshDrawer::initialize(const graphics::Mesh &mesh) -> void{
             mesh.bones.span(),
             mesh.colors.span()
         )){
-        Logger::error("[MeshDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[MeshDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -622,7 +622,7 @@ auto GMeshDrawer::initialize(const graphics::SubModelMesh &gmesh, const std::vec
             mesh.bones.span(),
             mesh.colors.span()
         )){
-        Logger::error("[GMeshDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[GMeshDrawer::initialize] Error during loading.\n"sv);
     }
 }
 

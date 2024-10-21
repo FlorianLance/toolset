@@ -51,7 +51,7 @@ auto DCFrameGenerationSettings::init_from_json(const nlohmann::json &json) -> vo
     cloudColorMode  = static_cast<CloudColorMode>(read_and_return_value(json, unreadCount,  "cloud_color_mode"sv,   static_cast<int>(cloudColorMode)));
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCFrameGenerationSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[DCFrameGenerationSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

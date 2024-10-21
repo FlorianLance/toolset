@@ -53,12 +53,12 @@ ShadersManager::~ShadersManager(){
 auto ShadersManager::load_shader(const std::string &alias, std::span<const std::string> paths) -> bool{
 
     if(shaders.count(alias) != 0){
-        Logger::warning(std::format("[ShadersManager] Shader alias {} already exists, shader replaced.\n", alias));
+        Log::warning(std::format("[ShadersManager] Shader alias {} already exists, shader replaced.\n", alias));
     }
 
     auto shader = std::make_shared<gl::ShaderProgram>();
     if(!shader->load_from_files(paths)){
-        Logger::error(std::format("[ShadersManager] Cannot generate ShaderProgram from paths:\n{}", String::join(paths, "\n")));
+        Log::error(std::format("[ShadersManager] Cannot generate ShaderProgram from paths:\n{}", String::join(paths, "\n")));
         return false;
     }
 
@@ -71,7 +71,7 @@ auto ShadersManager::load_shader(const std::string &alias, std::span<const std::
 auto ShadersManager::add_shader(const std::string &alias, ShaderProgram&& shader) -> void{
 
     if(shaders.count(alias) != 0){
-        Logger::warning(std::format("[ShadersManager] Shader alias {} already exists, shader replaced.\n", alias));
+        Log::warning(std::format("[ShadersManager] Shader alias {} already exists, shader replaced.\n", alias));
     }
 
     aliases.push_back(std::make_unique<std::string>(alias));
@@ -91,14 +91,14 @@ auto ShadersManager::reload_shader(std::string_view alias) -> std::shared_ptr<Sh
 
         shaders[alias]->clean();
         shaders[alias] = std::make_shared<ShaderProgram>();
-        Logger::message(std::format("[ShadersM] Reload ShaderProgram with alias {}:\n", alias));
+        Log::message(std::format("[ShadersM] Reload ShaderProgram with alias {}:\n", alias));
         if(!shaders[alias]->load_from_files(shadersFilesPaths)){
-            Logger::error(std::format("[ShadersM] Cannot reload ShaderProgram with alias {}:\n", alias));
+            Log::error(std::format("[ShadersM] Cannot reload ShaderProgram with alias {}:\n", alias));
             return nullptr;
         }
         return shaders[alias];
     }
-    Logger::error(std::format("[ShadersManager] Cannot find ShaderProgram with alias {}:\n", alias));
+    Log::error(std::format("[ShadersManager] Cannot find ShaderProgram with alias {}:\n", alias));
     return nullptr;
 }
 
@@ -110,7 +110,7 @@ auto ShadersManager::reload_shader(ShaderProgram *shaderToBeReloaded) -> std::sh
             return reload_shader(shader.first);
         }
     }
-    Logger::error("[ShadersManager] ShaderProgram pointer not found in manager.\n");
+    Log::error("[ShadersManager] ShaderProgram pointer not found in manager.\n");
     return nullptr;
 }
 
@@ -145,7 +145,7 @@ auto ShadersManager::unbind() -> void{
 
 auto ShadersManager::display_all() -> void{
     for(const auto &shader : shaders){
-        Logger::message(std::format("Shader [{}] [{}]\n", shader.first, shader.second->id()));
+        Log::message(std::format("Shader [{}] [{}]\n", shader.first, shader.second->id()));
     }
 }
 

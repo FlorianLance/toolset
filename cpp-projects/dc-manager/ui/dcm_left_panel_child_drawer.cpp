@@ -680,7 +680,7 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
             if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
                 // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
-                Logger::message(std::format("ID READING PORT {}\n", clientDeviceS.connectionS.readingPort));
+                Log::message(std::format("ID READING PORT {}\n", clientDeviceS.connectionS.readingPort));
             }
 
             ImGui::Text("Sending address:");
@@ -854,7 +854,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
                     allIds.insert(id);
                     ids.push_back(static_cast<size_t>(id));
                 }else{
-                    Logger::error("Invalid order cameras ids.");
+                    Log::error("Invalid order cameras ids.");
                     ids.clear();
                     break;
                 }
@@ -870,7 +870,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
                 }
             }
         }else{
-            Logger::error("Invalid order cameras count.");
+            Log::error("Invalid order cameras count.");
         }
     }
     ImGui::SameLine();
@@ -892,7 +892,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
             );
 
             if(currentDeviceType != clientDeviceS.deviceS.configS.typeDevice){
-                tool::Logger::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
+                tool::Log::message("DEVICE CHANGED COLOR SETTINGS DEFAULTED\n");
                 clientDeviceS.colorS.set_default_values(clientDeviceS.deviceS.configS.typeDevice);
                 // DCMSignals::get()->color_settings_reset_signal(clientDeviceS.id, clientDeviceS.colorS);
                 DCMSignals::get()->update_color_settings_signal(clientDeviceS.id, clientDeviceS.colorS);

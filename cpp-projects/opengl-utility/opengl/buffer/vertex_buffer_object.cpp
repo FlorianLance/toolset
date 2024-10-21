@@ -41,7 +41,7 @@ VBO::~VBO(){
 auto VBO::initialize() -> void{
 
     if(is_initialized()){
-        Logger::error(std::format("[VBO::initialize] Already initialized (id:{}).\n", m_handle));
+        Log::error(std::format("[VBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -70,17 +70,17 @@ auto VBO::load_data(const GLfloat *data, GLsizeiptr size, GLbitfield  usage) -> 
 auto VBO::load_data(const GLvoid *data, GLsizeiptr size, GLbitfield usage) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[VBO::load_data] Not initialized.\n");
+        Log::error("[VBO::load_data] Not initialized.\n");
         return false;
     }
 
     if(is_data_loaded()){
-        Logger::error(std::format("[VBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        Log::error(std::format("[VBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
         return false;
     }
 
     if(size == 0){
-        Logger::error(std::format("[VBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        Log::error(std::format("[VBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
         return false;
     }
 
@@ -105,22 +105,22 @@ auto VBO::update_data(const GLfloat *data, GLsizeiptr size, GLintptr offset) -> 
 auto VBO::update_data(const GLvoid *data, GLsizeiptr size, GLintptr offset) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[VBO::update_data] Not initialized.\n");
+        Log::error("[VBO::update_data] Not initialized.\n");
         return false;
     }
 
     if(!is_data_loaded()){
-        Logger::error(std::format("[VBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
+        Log::error(std::format("[VBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
         return false;
     }
 
     if(!is_dynamic()){
-        Logger::error(std::format("[VBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
+        Log::error(std::format("[VBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
         return false;
     }
 
     if(size + offset > loaded_data_size()){
-        Logger::error(std::format("[VBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
+        Log::error(std::format("[VBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
         m_loadedDataSize, size, offset, m_handle));
         return false;
     }

@@ -30,6 +30,7 @@
 #include <qt_logger.hpp>
 
 using namespace tool::ex;
+using namespace Qt::Literals::StringLiterals;
 
 IdKey::IdKey(IdKey::Type type, int id) : m_type(type){
 
@@ -78,7 +79,7 @@ IdKey::~IdKey(){
         if(m_keys[m_type][sId].contains(m_id)){
             m_keys[m_type][sId].erase(m_id);
         }else{
-            QtLogger::error(QSL("Id [") % QString::number(m_id) % QSL("] of type [") % from_view(type_name()) % QSL("] cannot be removed from set."));
+            QtLog::error(u"Id [%1] of type [%2] cannot be removed from set."_s.arg(QString::number(m_id), from_view(type_name())));
         }
     }
 }
@@ -97,13 +98,12 @@ void IdKey::reset(){
 }
 
 void IdKey::debug_display(){
-    QtLogger::message("[START ################# IdKeys::debug_display]");
-    QtLogger::message("Current id:");
+    QtLog::message(QSL("[START ################# IdKeys::debug_display]"));
+    QtLog::message(QSL("Current id:"));
     for(const auto &pId : m_currentId){
-        QtLogger::message(QSL("Type: [") % from_view(to_string(pId.first)) %
-            QSL("] Id: [c:") % QString::number(pId.second[0]) % QSL("|i:") % QString::number(pId.second[1]) % QSL("]") );
+        QtLog::message(u"Type: [%1] Id: [c:%2|i:%2]"_s.arg(from_view(to_string(pId.first)), QString::number(pId.second[0]), QString::number(pId.second[1])));
     }
-    QtLogger::message("Set size:");
+    QtLog::message(u"Set size:"_s);
     for(const auto &pId : m_keys){
 
         int maxC = -10;
@@ -124,12 +124,11 @@ void IdKey::debug_display(){
                 maxI = val;
             }
         }
-        QtLogger::message(QSL("Type: [") % from_view(to_string(pId.first)) %
-            QSL("] Size: [c:") % QString::number(pId.second[0].size()) % QSL("|i:") % QString::number(pId.second[1].size()) %
-            QSL("] Min: [c:") % QString::number(minC) % QSL("|i:") %QString::number(minI) %
-            QSL("] Max: [c:") % QString::number(maxC) % QSL("|i:") %QString::number(maxI) % QSL("]"));
+        QtLog::message(u"Type: [%1] Size: [c:%2|i:] Min: [c:%3|i:%4] Max: [c:|i:%5]"_s.arg(
+            from_view(to_string(pId.first)),
+            QString::number(pId.second[0].size()),QString::number(minC), QString::number(minI), QString::number(maxC), QString::number(maxI)));
     }
-    QtLogger::message("[END ################# IdKeys::debug_display]");
+    QtLog::message(u"[END ################# IdKeys::debug_display]"_s);
 }
 
 constexpr IdKey::TypeStr IdKey::type_name() const {

@@ -51,7 +51,7 @@ auto DCDeviceSettings::init_from_json(const nlohmann::json &json) -> void{
     dataS.init_from_json(read_and_return_object(json, unreadCount, "data"sv));
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

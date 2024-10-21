@@ -85,7 +85,7 @@ TcpReader::~TcpReader(){
 bool TcpReader::init_socket(std::string serverName, int readingPort){
 
     if(is_reading()){
-        Logger::error(std::format("TcpReader: Cannot init socket while reading thread is still active.\n"));
+        Log::error(std::format("TcpReader: Cannot init socket while reading thread is still active.\n"));
         return false;
     }
 
@@ -95,22 +95,22 @@ bool TcpReader::init_socket(std::string serverName, int readingPort){
     }
 
     try {
-
-
-        Logger::message("TCP query\n");
+        
+        
+        Log::message("TCP query\n");
         tcp::resolver::query query(serverName, std::to_string(readingPort));
 
         tcp::resolver resolver(i->ioService);
-        Logger::message("TCP resolve\n");
+        Log::message("TCP resolve\n");
         tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
         i->socket   = std::make_unique<tcp::socket>(i->ioService);
-
-        Logger::message(std::format("TCP connect {} {} \n", endpoint_iterator->service_name(), endpoint_iterator->host_name()));
+        
+        Log::message(std::format("TCP connect {} {} \n", endpoint_iterator->service_name(), endpoint_iterator->host_name()));
         boost::asio::connect(*i->socket, endpoint_iterator);
-
-
-        Logger::message("connect\n");
+        
+        
+        Log::message("connect\n");
 //        i->endpoint = tcp::endpoint(address::from_string(readingAdress), static_cast<unsigned short>(readingPort));
 
 
@@ -120,7 +120,7 @@ bool TcpReader::init_socket(std::string serverName, int readingPort){
 
 
     }catch (const boost::system::system_error &error){
-        Logger::error(std::format("TcpReader: Cannot connect {}, {}, error message: {}.\n",
+        Log::error(std::format("TcpReader: Cannot connect {}, {}, error message: {}.\n",
             serverName, readingPort, error.what()));
         clean_socket();
         return false;
@@ -137,7 +137,7 @@ void TcpReader::clean_socket(){
             i->socket->close();
             i->ioService.stop();
         }catch (const boost::system::system_error &error){
-            Logger::error(std::format("TcpReader::clean_socket: Cannot shutdown socket, error message: {}.\n", error.what()));
+            Log::error(std::format("TcpReader::clean_socket: Cannot shutdown socket, error message: {}.\n", error.what()));
         }
     }
     i->socket = nullptr;
@@ -150,19 +150,19 @@ void TcpReader::clean_socket(){
 void TcpReader::start_reading(){
 
     if(is_reading()){
-        Logger::error("TcpReader::start_reading: Reading already started.\n");
+        Log::error("TcpReader::start_reading: Reading already started.\n");
         return;
     }
 
     if(!is_connected()){
-        Logger::error("TcpReader::start_reading: Socket not connected.\n");
+        Log::error("TcpReader::start_reading: Socket not connected.\n");
         return;
     }
 
     if(i->thread == nullptr){
         i->thread = std::make_unique<std::thread>(&TcpReader::read_data, this);
     }else{
-        Logger::error("TcpReader::start_reading: Cannot start reading, thread not cleaned.\n");
+        Log::error("TcpReader::start_reading: Cannot start reading, thread not cleaned.\n");
         return;
     }
 }
@@ -170,7 +170,7 @@ void TcpReader::start_reading(){
 void TcpReader::stop_reading(){
 
     if(!is_reading()){
-        Logger::error("TcpReader::stop_reading: Reading not started.\n");
+        Log::error("TcpReader::stop_reading: Reading not started.\n");
         return;
     }
 
@@ -216,16 +216,16 @@ void TcpReader::read_data(){
             if(error.code() == boost::asio::error::timed_out){
                 timeout_packet_signal();
             }else{
-                Logger::error("TcpReader::read_data: Cannot read from socket, error message: {}  code: {}\n",
+                Log::error(std::format("TcpReader::read_data: Cannot read from socket, error message: {}  code: {}\n",
                     error.what(),
-                    error.code().value());
+                    error.code().value()));
                  connection_state_signal(i->connectionValid = false);
             }
             continue;
         }
 
         if(nbBytesReceived == 0){
-            Logger::warning("TcpReader::read_data: No bytes received.");
+            Log::warning("TcpReader::read_data: No bytes received.");
             continue;
         }
 

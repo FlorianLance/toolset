@@ -41,7 +41,7 @@ SSBO::~SSBO(){
 auto SSBO::generate() -> void{
 
     if(m_handle != 0){
-        Logger::error(std::format("[SSBO::generate] SSBO already generated [{}]\n", m_handle));
+        Log::error(std::format("[SSBO::generate] SSBO already generated [{}]\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -59,7 +59,7 @@ auto SSBO::clean() -> void {
 auto SSBO::bind_to_index(GLuint index) const -> bool{
 
     if(m_handle == 0){
-        Logger::error("[SSBO::bind_to_index] SSBO not generated, cannot bind it.\n");
+        Log::error("[SSBO::bind_to_index] SSBO not generated, cannot bind it.\n");
         return false;
     }
 

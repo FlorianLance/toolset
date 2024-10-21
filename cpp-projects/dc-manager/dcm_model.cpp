@@ -46,7 +46,7 @@ DCMModel::~DCMModel(){
 }
 
 auto DCMModel::clean() -> void {
-    auto lg = LogGuard("DCMModel::clean"sv);
+    auto lg = LogG("DCMModel::clean"sv);
     client.clean();
 }
 
@@ -91,23 +91,23 @@ auto DCMModel::initialize() -> bool{
 
             // read filters settings file
             if(!deviceClientS.filtersS.load_from_file(paths->client_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No filters settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Log::error(std::format("[DCMModel] No filters settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read calibration filters settings file
             if(!deviceClientS.calibrationFiltersS.load_from_file(paths->client_calibration_filters_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No calibration settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Log::error(std::format("[DCMModel] No calibration settings file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read device settings file
             if(!deviceClientS.deviceS.load_from_file(paths->client_device_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No device file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Log::error(std::format("[DCMModel] No device file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read color settings file
             if(!deviceClientS.colorS.load_from_file(paths->client_color_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No color file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Log::error(std::format("[DCMModel] No color file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
             // read model settings file
             if(!deviceClientS.modelS.load_from_file(paths->client_model_settings_file(deviceClientS.id))){
-                Logger::error(std::format("[DCMModel] No model file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
+                Log::error(std::format("[DCMModel] No model file found for client with id [{}], default parameters used instead.\n", deviceClientS.id));
             }
         }
     }
@@ -175,8 +175,8 @@ auto DCMModel::update() -> void{
 
     // events
     if(addDeviceEvent.has_value()){
-
-        auto lg = LogGuard("DCMModel::update::addDeviceEvent"sv);
+        
+        auto lg = LogG("DCMModel::update::addDeviceEvent"sv);
         client.add_device(addDeviceEvent.value());
         client.apply_device_settings(client.devices_nb()-1);
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -197,7 +197,7 @@ auto DCMModel::update() -> void{
     if(m_removeLastDeviceEvent){
 
         if(client.devices_nb() > 0){
-            auto lg = LogGuard("DCMModel::update::removeLastDeviceEvent"sv);
+            auto lg = LogG("DCMModel::update::removeLastDeviceEvent"sv);
             int newDeviceNb = client.devices_nb() -1;
             client.remove_last_device();
             recorder.remove_last_device();
@@ -283,7 +283,7 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                             }
                         }
                     }else{
-                        Logger::error(std::format("Cannot load sub settings from file [{}] for all devices, incompatible number of devices, current: [{}], from file: [{}]\n", path, cSettings.devicesS.size(), client.devices_nb()));
+                        Log::error(std::format("Cannot load sub settings from file [{}] for all devices, incompatible number of devices, current: [{}], from file: [{}]\n", path, cSettings.devicesS.size(), client.devices_nb()));
                     }
 
                 }else if(sAction.target == STarget::Individual){
@@ -301,7 +301,7 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                         }
 
                     }else{
-                        Logger::error(std::format("Cannot load sub settings with id [{}] from file [{}], not enough devices from avaiable: [{}]\n", sAction.id, path, cSettings.devicesS.size()));
+                        Log::error(std::format("Cannot load sub settings with id [{}] from file [{}], not enough devices from avaiable: [{}]\n", sAction.id, path, cSettings.devicesS.size()));
                     }
                 }
             }else{

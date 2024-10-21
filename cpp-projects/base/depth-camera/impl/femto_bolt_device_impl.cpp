@@ -36,26 +36,26 @@ using namespace tool::geo;
 using namespace tool::cam;
 
 FemtoBoltDeviceImpl::FemtoBoltDeviceImpl(){
-    auto lg = LogGuard("FemtoBoltDeviceImpl::FemtoBoltDeviceImpl"sv);
+    auto lg = LogG("FemtoBoltDeviceImpl::FemtoBoltDeviceImpl"sv);
     orbbecD  = std::make_unique<OrbbecBaseDevice>(DCType::FemtoBolt);
     // orbbecD->query_devices("Femto Bolt"sv, false);
 }
 
 auto FemtoBoltDeviceImpl::open(const DCConfigSettings &newConfigS) -> bool{
-
-    auto lg = LogGuard("FemtoBoltDeviceImpl::open"sv);
+    
+    auto lg = LogG("FemtoBoltDeviceImpl::open"sv);
     initialize(newConfigS);
 
     if(orbbecD->open(mInfos, settings.config, settings.color)){
         fData.binaryCalibration = orbbecD->read_calibration();
         return true;
     }
-    Logger::error("[FemtoBoltDeviceImpl::open] Cannot open device\n");
+    Log::error("[FemtoBoltDeviceImpl::open] Cannot open device\n");
     return false;
 }
 
 auto FemtoBoltDeviceImpl::close() -> void{
-    auto lg = LogGuard("FemtoBoltDeviceImpl::close"sv);
+    auto lg = LogG("FemtoBoltDeviceImpl::close"sv);
     orbbecD->close();
 }
 
@@ -161,7 +161,7 @@ auto FemtoBoltDeviceImpl::generate_cloud(bool enable) -> void{
 
 // try {
 
-//     Logger::message("[FemtoOrbbecDeviceImpl] Start reading:\n");
+//     Log::message("[FemtoOrbbecDeviceImpl] Start reading:\n");
 
 //     // configure which streams to enable or disable for the Pipeline by creating a Config
 //     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
@@ -386,15 +386,15 @@ auto FemtoBoltDeviceImpl::generate_cloud(bool enable) -> void{
 //     if((depth_resolution(settings.config.mode) != DCDepthResolution::K4_OFF) && settings.config.enableBodyTracking){
 
 //         try{
-//             Logger::message("[FemtoOrbbecDeviceImpl::start_cameras] Start body tracker\n");
+//             Log::message("[FemtoOrbbecDeviceImpl::start_cameras] Start body tracker\n");
 //             bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(k4Calibration, k4aBtConfig));
 //         }catch (k4a::error error) {
-//             Logger::error("[FemtoOrbbecDeviceImpl::start_reading] body tracker error: {}\n", error.what());
+//             Log::error("[FemtoOrbbecDeviceImpl::start_reading] body tracker error: {}\n", error.what());
 //         }
 //     }
 
 // }catch(ob::Error &e) {
-//     Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
+//     Log::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
 //     device = nullptr;
 //     return false;
 // }

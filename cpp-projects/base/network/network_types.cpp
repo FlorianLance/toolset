@@ -60,7 +60,7 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
             interfaces.emplace_back(Interface{protocol,addr.to_string()});
         }
     }catch (const boost::system::system_error &error){
-        Logger::error(std::format("list_local_interfaces: Cannot list interfaces, error message: {}\n", error.what()));
+        Log::error(std::format("list_local_interfaces: Cannot list interfaces, error message: {}\n", error.what()));
     }
 
     ioService.stop();
@@ -74,7 +74,7 @@ auto Interface::list_local_interfaces(Protocol protocol) -> std::vector<Interfac
 //     if(ipAdressStr.size() <= 45){
 //         std::copy(std::begin(ipAdressStr), std::end(ipAdressStr), ipAdress.begin());
 //     }else{
-//         Logger::error(std::format("UdpNetworkSendingSettings::UdpNetworkSendingSettings invalid ip adresss: [{}]\n", ipAdressStr));
+//         Log::error(std::format("UdpNetworkSendingSettings::UdpNetworkSendingSettings invalid ip adresss: [{}]\n", ipAdressStr));
 //     }
 // }
 
@@ -83,7 +83,7 @@ Header::Header(std::span<const std::byte> packet){
     if(packet.size_bytes() == sizeof(Header)){
         std::copy(std::begin(packet), std::end(packet), reinterpret_cast<std::byte*>(this));
     }else{
-        Logger::error(std::format("[Header::Header] Invalid packet size, size: [{}], expected: [{}] \n", packet.size_bytes(),  sizeof(Header)));
+        Log::error(std::format("[Header::Header] Invalid packet size, size: [{}], expected: [{}] \n", packet.size_bytes(),  sizeof(Header)));
     }
 }
 
@@ -134,7 +134,7 @@ auto UdpMessageReception::check_message_timeout() -> size_t{
     for(const auto &idM : timeoutIdPacketsToRemove){
         {
             const auto &info = infos[idM];
-            Logger::warning(std::format("[MultiPacketsUdpReception::check_message_timeout] Message [{}] dropped for timeout, packets received: [{}], expected: [{}].\n"sv, idM, info.nbPacketsReceived, info.totalNumberOfPacket));
+            Log::warning(std::format("[MultiPacketsUdpReception::check_message_timeout] Message [{}] dropped for timeout, packets received: [{}], expected: [{}].\n"sv, idM, info.nbPacketsReceived, info.totalNumberOfPacket));
         }
         infos.erase(idM);
         messageReceived.set_current(0);
@@ -158,12 +158,12 @@ auto UdpMessageReception::message_fully_received(const Header &header) -> std::o
             }else{
                 messageReceived.set_current(0);
                 messageReceived.increment();
-                Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] Message [{}] dropped, a newer message was sent before.\n"sv, info.idMessage));
+                Log::error(std::format("[MultiPacketsUdpReception::message_fully_received] Message [{}] dropped, a newer message was sent before.\n"sv, info.idMessage));
             }
         }else{
             messageReceived.set_current(0);
             messageReceived.increment();
-            Logger::error(std::format("[MultiPacketsUdpReception::message_fully_received] All packets for message [{}] received, but with invalid size: [{}], expected: [{}].\n"sv, info.idMessage, info.totalBytesReceived, info.totalSizeBytes));
+            Log::error(std::format("[MultiPacketsUdpReception::message_fully_received] All packets for message [{}] received, but with invalid size: [{}], expected: [{}].\n"sv, info.idMessage, info.totalBytesReceived, info.totalSizeBytes));
         }
         infos.erase(header.messageId);
     }

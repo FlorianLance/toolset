@@ -155,7 +155,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
         }else{
-            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n"sv);
+            Log::error("[DCCloudsSceneDrawer] Shaders with aliases \"cloud\" and \"voxelCloud\" must be available in the shader manager.\n"sv);
             break;
         }
 
@@ -244,7 +244,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
 
         }else{
-            Logger::error("[DCCloudsSceneDrawer] Shaders with aliases \"solid\" must be available in the shader manager.\n"sv);
+            Log::error("[DCCloudsSceneDrawer] Shaders with aliases \"solid\" must be available in the shader manager.\n"sv);
             break;
         }
     }
@@ -659,7 +659,7 @@ auto DCCloudsSceneDrawer::update_device_display_settings(size_t idCloud, const D
         m_redrawClouds = true;
     }
     // else{
-    //     Logger::error("invalid id cloud\n");
+    //     Log::error("invalid id cloud\n");
     // }
 }
 

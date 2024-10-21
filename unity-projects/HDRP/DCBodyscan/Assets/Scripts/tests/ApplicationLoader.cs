@@ -32,6 +32,25 @@ using UnityEditor;
 namespace BS {
 
 
+    public class DLLRSMApplication {
+        public DLLRSMApplication(IntPtr handle) {
+            m_handle = new HandleRef(this, handle);
+        }
+
+        public void connect() {
+            connect__rsm(m_handle);
+        }
+
+        private HandleRef m_handle;
+
+        #region dll_import
+
+        [DllImport("realstream-export", EntryPoint = "connect__rsm", CallingConvention = CallingConvention.Cdecl)]
+        static private extern void connect__rsm(HandleRef rsmApp);
+
+        #endregion
+    }
+
     public class DLLQtApplicationWrapper {
 
         public DLLQtApplicationWrapper(string exePath, LogMessageCB logCB) {
@@ -48,16 +67,16 @@ namespace BS {
             quit__qt_application_wrapper(_handle);
         }
 
-        public void load_application(string applicationName, int appType) {
-            load_application__qt_application_wrapper(_handle, applicationName, appType);
+        public void load_application(string applicationName, int appType, string jsonParametersStr) {
+            load_application__qt_application_wrapper(_handle, applicationName, appType, jsonParametersStr);
         }
 
         public void unload_application(string applicationName) {
             unload_application__qt_application_wrapper(_handle, applicationName);
         }
 
-        public void update_application_parameters(string applicationName, string jsonParametersStr) {
-            update_application_parameter_from_json_str__qt_application_wrapper(_handle, applicationName, jsonParametersStr);
+        public IntPtr get_application(string applicationName) {
+            return get_application__qt_application_wrapper(_handle, applicationName);
         }
 
         ~DLLQtApplicationWrapper() {
@@ -80,16 +99,13 @@ namespace BS {
         static private extern void quit__qt_application_wrapper(HandleRef qtAppW);
 
         [DllImport("realstream-export", EntryPoint = "load_application__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void load_application__qt_application_wrapper(HandleRef qtAppW, string applicationName, int appType);
+        static private extern void load_application__qt_application_wrapper(HandleRef qtAppW, string applicationName, int appType, string jsonParametersStr);
 
         [DllImport("realstream-export", EntryPoint = "unload_application__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
         static private extern void unload_application__qt_application_wrapper(HandleRef qtAppW, string applicationName);
 
-        [DllImport("realstream-export", EntryPoint = "update_application_parameter_from_json_str__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
-        static private extern void update_application_parameter_from_json_str__qt_application_wrapper(HandleRef qtAppW, string applicationName, string jsonStrUTF8);
-
         [DllImport("realstream-export", EntryPoint = "get_application__qt_application_wrapper", CallingConvention = CallingConvention.Cdecl)]
-        static private extern IntPtr get_application__qt_application_wrapper(string applicationName);
+        static private extern IntPtr get_application__qt_application_wrapper(HandleRef qtAppW, string applicationName);
 
         #endregion
     }
@@ -128,6 +144,12 @@ namespace BS {
 
             string exePath = "";
 
+            var basePath = Application.dataPath;
+            var platform = Application.platform;
+            if (platform == RuntimePlatform.WindowsPlayer || platform == RuntimePlatform.WindowsEditor) {
+                exePath = basePath + "/..";
+            }
+
             Debug.Log("[QtMainThread] Init callbacks");
             logMessageCB = (string message, int type) => {
                 if (type == 0) {
@@ -139,7 +161,7 @@ namespace BS {
                 }
             };
 
-            Debug.Log("[QtMainThread] Create DLL");
+            Debug.Log("[QtMainThread] Create DLL: " + exePath);
             dllQtAppWrapper = new DLLQtApplicationWrapper(exePath, logMessageCB);
 
 #if UNITY_EDITOR
@@ -148,10 +170,16 @@ namespace BS {
         }
 
         private void Start() {
-            //add_application("RSM1", ApplicationType.RealstreamManager);
-            //add_application("RSM2", ApplicationType.RealstreamManager);
 
-            //RealstreamManagerSettings parameters = new RealstreamManagerSettings();
+            RealstreamManagerSettings parameters = new RealstreamManagerSettings();
+
+            add_application("RSM1", ApplicationType.RealstreamManager, JsonUtility.ToJson(parameters));
+
+            var rsm = new DLLRSMApplication(get_application("RSM1"));
+            rsm.connect();
+
+            //add_application("RSM2", ApplicationType.RealstreamManager
+
             //Debug.Log("[QtMainThread] update_application_parameters: " + JsonUtility.ToJson(parameters));
             //update_application_parameters("RSM1", JsonUtility.ToJson(parameters));
             //parameters.a = 15;
@@ -176,10 +204,10 @@ namespace BS {
 
         #region public_functions
 
-        public void add_application(string applicationName, ApplicationType type) {
+        public void add_application(string applicationName, ApplicationType type, string jsonParametersStr) {
             if (dllQtAppWrapper != null) {
                 Debug.Log(string.Format("[QtApplicationWrapper] Load application [{0}] [{1}]", applicationName, type));
-                dllQtAppWrapper.load_application(applicationName, (int)type);
+                dllQtAppWrapper.load_application(applicationName, (int)type, jsonParametersStr);
             }
         }
 
@@ -190,15 +218,14 @@ namespace BS {
             }
         }
 
-        public void update_application_parameters(string applicationName, string jsonParametersStr) {
+        public IntPtr get_application(string applicationName) {
             if (dllQtAppWrapper != null) {
-                dllQtAppWrapper.update_application_parameters(applicationName, jsonParametersStr);
+                return dllQtAppWrapper.get_application(applicationName);
             }
+            return IntPtr.Zero;
         }
 
-        //public IntPtr get_application() {
-            //return
-        //}
+
 
         #endregion
     }

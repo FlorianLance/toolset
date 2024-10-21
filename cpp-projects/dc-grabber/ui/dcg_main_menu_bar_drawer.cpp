@@ -54,15 +54,15 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
             if (ImGui::BeginMenu("Save")){
                 if(ImGui::MenuItem("PC Host server JSON file###save_pc_host_server_json_file")){
-                    Logger::message("Save to PC Host server JSON file\n");
+                    Log::message("Save to PC Host server JSON file\n");
                     DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->server.string());
                 }
                 if(ImGui::MenuItem("Specific server JSON file###save_specific_server_json_file")){
-                    Logger::message("Save to specific server JSON file\n");
+                    Log::message("Save to specific server JSON file\n");
                     ImGuiFileDialog::Instance()->OpenDialog("Save PC Host server JSON file", "Choose file to save", ".json", ".");
                 }
                 if(ImGui::MenuItem("Default server JSON FILE###save_default_server_json_file")){
-                    Logger::message("Save to default server JSON file\n");
+                    Log::message("Save to default server JSON file\n");
                     DCGSignals::get()->save_global_settings_file_signal(DCSettingsPaths::get()->defaultServer.string());
                 }
                 ImGui::EndMenu();
@@ -70,15 +70,15 @@ auto DCGMainMenuBarDrawer::draw() -> void{
 
             if (ImGui::BeginMenu("Load")){
                 if(ImGui::MenuItem("PC Host server JSON file###load_pc_host_server_json_file")){
-                    Logger::message("Load PC Host server JSON file\n");
+                    Log::message("Load PC Host server JSON file\n");
                     DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->server.string());
                 }
                 if(ImGui::MenuItem("Specific server JSON file###load_specific_server_json_file")){
-                    Logger::message("Load specific server JSON file\n");
+                    Log::message("Load specific server JSON file\n");
                     ImGuiFileDialog::Instance()->OpenDialog("Load PC Host server JSON file", "Choose file to load", ".json", ".");
                 }
                 if(ImGui::MenuItem("Default server JSON file###load_default_server_json_file")){
-                    Logger::message("Load default server JSON file\n");
+                    Log::message("Load default server JSON file\n");
                     DCGSignals::get()->load_global_settings_file_signal(DCSettingsPaths::get()->defaultServer.string());
                 }
 
@@ -104,19 +104,19 @@ auto DCGMainMenuBarDrawer::draw() -> void{
             if (ImGui::BeginMenu("Reset")){
 
                 if(ImGui::MenuItem("Device###reset_device_settings")){
-                    Logger::message("Reset device settings\n");
+                    Log::message("Reset device settings\n");
                     DCGSignals::get()->reset_device_settings_signal();
                 }
                 if(ImGui::MenuItem("Filters###reset_filters_settings")){
-                    Logger::message("Reset filters settings\n");
+                    Log::message("Reset filters settings\n");
                     DCGSignals::get()->reset_filters_settings_signal();
                 }
                 if(ImGui::MenuItem("Color###reset_color_settings")){
-                    Logger::message("Reset color settings\n");
+                    Log::message("Reset color settings\n");
                     DCGSignals::get()->reset_color_settings_signal();
                 }
                 if(ImGui::MenuItem("Model###reset_model_settings")){
-                    Logger::message("Reset model settings\n");
+                    Log::message("Reset model settings\n");
                     DCGSignals::get()->reset_model_settings_signal();
                 }
 
@@ -227,14 +227,14 @@ auto DCGMainMenuBarDrawer::draw() -> void{
     // # save global settings file
     if (ImGuiFileDialog::Instance()->Display("Save PC Host server JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Save PC Host server JSON file\n");
+            Log::message("Save PC Host server JSON file\n");
             DCGSignals::get()->save_global_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }
     if (ImGuiFileDialog::Instance()->Display("Load PC Host server JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load PC Host server JSON file\n");
+            Log::message("Load PC Host server JSON file\n");
             DCGSignals::get()->load_global_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
@@ -243,28 +243,28 @@ auto DCGMainMenuBarDrawer::draw() -> void{
     // # load
     if (ImGuiFileDialog::Instance()->Display("Load device subpart from specific JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load device subpart from specific JSON file\n");
+            Log::message("Load device subpart from specific JSON file\n");
             DCGSignals::get()->load_subpart_device_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }
     if (ImGuiFileDialog::Instance()->Display("Load filters subpart from specific JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load filters subpart from specific JSON file\n");
+            Log::message("Load filters subpart from specific JSON file\n");
             DCGSignals::get()->load_subpart_filters_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }
     if (ImGuiFileDialog::Instance()->Display("Load color subpart from specific JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load color subpart from specific JSON file\n");
+            Log::message("Load color subpart from specific JSON file\n");
             DCGSignals::get()->load_subpart_color_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
     }
     if (ImGuiFileDialog::Instance()->Display("Load model subpart from specific JSON file", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Load model subpart from specific JSON file\n");
+            Log::message("Load model subpart from specific JSON file\n");
             DCGSignals::get()->load_subpart_model_settings_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
@@ -273,7 +273,7 @@ auto DCGMainMenuBarDrawer::draw() -> void{
     // # save current recorder cloud
     if (ImGuiFileDialog::Instance()->Display("Save cloud", flags, ImVec2(500,200))) {
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("save cloud to file\n");
+            Log::message("save cloud to file\n");
             DCGSignals::get()->save_cloud_to_file_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();

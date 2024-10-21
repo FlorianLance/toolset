@@ -64,10 +64,10 @@ auto FastPForEncoder::encode(ConstBinarySpan buffer, BinaryBuffer &encodedBuffer
         encodedBuffer.resize(outputSizeInt32 * 4);
 
     }catch(const std::logic_error &e){
-        Logger::error(std::format("[FastPForEncoding::encode] Logic error: {}\n", e.what()));
+        Log::error(std::format("[FastPForEncoding::encode] Logic error: {}\n", e.what()));
         return false;
     }catch(std::exception e){
-        Logger::error(std::format("[FastPForEncoding::encode] Error: {}\n", e.what()));
+        Log::error(std::format("[FastPForEncoding::encode] Error: {}\n", e.what()));
         return false;
     }
 
@@ -115,10 +115,10 @@ auto FastPForDecoder::decode(ConstBinarySpan encodedBuffer, BinarySpan buffer) -
             decodedSize
         );
     }catch(const std::logic_error &e){
-        Logger::error(std::format("[FastPForEncoding::decode] Logic error: {}\n", e.what()));
+        Log::error(std::format("[FastPForEncoding::decode] Logic error: {}\n", e.what()));
         return false;
     }catch(std::exception e){
-        Logger::error(std::format("[FastPForEncoding::decode] Error: {}\n", e.what()));
+        Log::error(std::format("[FastPForEncoding::decode] Error: {}\n", e.what()));
         return false;
     }
     return true;

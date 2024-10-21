@@ -1,10 +1,9 @@
 
 
-
 /*******************************************************************************
-** Toolset-dc-grabber                                                  **
+** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [20224] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,40 +25,39 @@
 **                                                                            **
 ********************************************************************************/
 
-#include "udp_connection_settings.hpp"
+#pragma once
 
 // local
 #include "utility/logger.hpp"
-#include "data/json_utility.hpp"
 
-using namespace tool;
-using namespace tool::net;
-using namespace tool::data;
-using json = nlohmann::json;
+namespace tool {
 
-auto UdpConnectionSettings::init_from_json(const nlohmann::json &json) -> void{
+class ExLoggerM : public Logger{
 
-    size_t unreadCount = 0;
-    // base
-    io::Settings::init_from_json(read_and_return_object(json, unreadCount, "base"sv));
-    // settings
-    read_and_update_value(json, unreadCount, "address"sv,   address);
-    read_and_update_value(json, unreadCount, "port"sv,      port);
-    read_and_update_value(json, unreadCount, "max_size_udp_packet"sv,   maxPacketSize);
+public:
 
-    if(unreadCount != 0){
-        tool::Log::warning(std::format("[UdpConnectionSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+    enum class SenderT : int {
+        GUI, Component, Resource
+    };
+
+    static auto get_instance() noexcept -> ExLoggerM*{
+        if(auto instance = BaseLogger::get_instance()){
+            return dynamic_cast<ExLoggerM*>(instance);
+        }
+        return nullptr;
     }
+
+    auto message_id(std::string_view message, SenderT sType, int sKey) -> void;
+    auto warning_id(std::string_view warning, SenderT sType, int sKey) -> void;
+    auto error_id(std::string_view error, SenderT sType, int sKey) -> void;    
+
+    // signals
+    sigslot::signal<std::string, SenderT, int> message_id_signal;
+    sigslot::signal<std::string, SenderT, int> warning_id_signal;
+    sigslot::signal<std::string, SenderT, int> error_id_signal;
+    sigslot::signal<std::string, int> status_signal;
+    sigslot::signal<int> progress_signal;
+};
+
 }
 
-auto UdpConnectionSettings::convert_to_json() const -> nlohmann::json{
-    json json;
-    // base
-    add_value(json, "base"sv, io::Settings::convert_to_json());
-    // settings
-    add_value(json, "address"sv,    address);
-    add_value(json, "port"sv,       port);
-    add_value(json, "max_size_udp_packet"sv,    maxPacketSize);
-
-    return json;
-}

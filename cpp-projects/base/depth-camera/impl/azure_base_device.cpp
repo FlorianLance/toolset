@@ -94,20 +94,20 @@ auto AzureBaseDevice::Impl::generate_config(bool synchInConnected, bool synchOut
     if(ka4Config.wired_sync_mode == K4A_WIRED_SYNC_MODE_SUBORDINATE){
         if(!synchInConnected){
             ka4Config.wired_sync_mode = K4A_WIRED_SYNC_MODE_STANDALONE;
-            Logger::warning("[AzureBaseDevice::generate_config] No input synchronisation cable found, switch from [Subordinate] to [Standalone] mode and set subordinate delay to [0].\n");
+            Log::warning("[AzureBaseDevice::generate_config] No input synchronisation cable found, switch from [Subordinate] to [Standalone] mode and set subordinate delay to [0].\n");
         }
     }else if(ka4Config.wired_sync_mode == K4A_WIRED_SYNC_MODE_MASTER){
         if(!synchOutConnected){
             ka4Config.wired_sync_mode = K4A_WIRED_SYNC_MODE_STANDALONE;
-            Logger::warning("[AzureBaseDevice::generate_config] No output synchronisation cable found, switch from [Master] to [Standalone] mode.\n");
+            Log::warning("[AzureBaseDevice::generate_config] No output synchronisation cable found, switch from [Master] to [Standalone] mode.\n");
         }
     }
 
     if((ka4Config.wired_sync_mode == K4A_WIRED_SYNC_MODE_MASTER) && (config.subordinateDelayUsec != 0)){
-        Logger::warning("[AzureBaseDevice::generate_config] Subordinate delay != 0 for mode [Master], subordinate delay is now set to [0].\n");
+        Log::warning("[AzureBaseDevice::generate_config] Subordinate delay != 0 for mode [Master], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
     }else if ((ka4Config.wired_sync_mode == K4A_WIRED_SYNC_MODE_STANDALONE) && (config.subordinateDelayUsec != 0)){
-        Logger::warning("[AzureBaseDevice::generate_config] Subordinate delay != 0 for mode [Standalone], subordinate delay is now set to [0].\n");
+        Log::warning("[AzureBaseDevice::generate_config] Subordinate delay != 0 for mode [Standalone], subordinate delay is now set to [0].\n");
         ka4Config.subordinate_delay_off_master_usec = 0;
     }
 
@@ -174,29 +174,29 @@ auto AzureBaseDevice::Impl::update_k4_body(DCBody &body, const k4abt_body_t &k4a
 
 
 AzureBaseDevice::AzureBaseDevice() : i(std::make_unique<Impl>()){
-    auto lg = LogGuard("AzureBaseDevice::AzureBaseDevice"sv);
+    auto lg = LogG("AzureBaseDevice::AzureBaseDevice"sv);
 }
 
 AzureBaseDevice::~AzureBaseDevice(){
 }
 
 auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
-
-    auto lg = LogGuard("AzureBaseDevice::open"sv);
+    
+    auto lg = LogG("AzureBaseDevice::open"sv);
 
     // init audio manager
     // auto audioM = k4a::K4AAudioManager::get_instance();
     // if(!audioM->is_initialized()){
     //     const int audioInitStatus = audioM->initialize();
     //     if (audioInitStatus != SoundIoErrorNone){
-    //         Logger::error("[AzureBaseDevice] Failed to initialize audio backend: {}\n", soundio_strerror(audioInitStatus));
+    //         Log::error("[AzureBaseDevice] Failed to initialize audio backend: {}\n", soundio_strerror(audioInitStatus));
     //     }
     // }
 
     if(i->device != nullptr){
-        Logger::message("Destroy device.\n");
+        Log::message("Destroy device.\n");
         i->device = nullptr;
-        Logger::message("Device destroyed.\n");
+        Log::message("Device destroyed.\n");
     }
 
     if(configS.useSerialNumber){
@@ -217,24 +217,24 @@ auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &co
         }
 
         if(i->device == nullptr){
-            Logger::error(std::format("[AzureBaseDevice::open] Cannot open device with serial number [{}].\n", configS.serialNumber));
+            Log::error(std::format("[AzureBaseDevice::open] Cannot open device with serial number [{}].\n", configS.serialNumber));
             return false;
         }
     }else{
-        Logger::message(std::format("Create device from id [{}].\n", configS.idDevice));
+        Log::message(std::format("Create device from id [{}].\n", configS.idDevice));
         try{
             i->device = std::make_unique<k4a::device>(k4a::device::open(configS.idDevice));
         }catch(const std::runtime_error &er){
-            Logger::error(std::format("[AzureBaseDevice::open] Cannot open device with id [{}], error: [{}].\n",configS.idDevice, er.what()));
+            Log::error(std::format("[AzureBaseDevice::open] Cannot open device with id [{}], error: [{}].\n",configS.idDevice, er.what()));
             return false;
         }
-        Logger::message("Device created.\n");
+        Log::message("Device created.\n");
     }
 
     try {
 
         i->deviceName = i->device->get_serialnum();
-        Logger::message(std::format("Device with name {} created.\n",i->deviceName));
+        Log::message(std::format("Device with name {} created.\n",i->deviceName));
 
         const auto version  = i->device->get_version();
         const auto fb       = version.firmware_build;
@@ -252,58 +252,58 @@ auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &co
             fsStr = "Unsigned";
             break;
         }
-
-        Logger::message("Azure Kinect device opened:\n");
-        Logger::message(std::format("  Serialnum: {}\n", i->device->get_serialnum()));
-        Logger::message("  Version:\n");
-        Logger::message(std::format("      Firmware build: {}\n", (debugFB ? "[debug]" : "[release]")));
-        Logger::message(std::format("      Firmware signature: {}\n", fsStr));
-        Logger::message(std::format("      Color camera firmware version {}.{}.{}\n", version.rgb.major, version.rgb.minor, version.rgb.iteration));
-        Logger::message(std::format("      Depth camera firmware version {}.{}.{}\n", version.depth.major, version.depth.minor, version.depth.iteration));
-        Logger::message(std::format("      Audio device firmware version {}.{}.{}\n", version.audio.major, version.audio.minor, version.audio.iteration));
-        Logger::message(std::format("      Depth device firmware version {}.{}.{}\n", version.depth_sensor.major, version.depth_sensor.minor, version.depth_sensor.iteration));
-        Logger::message("  Synch:\n");
-        Logger::message(std::format("      IN connected {}\n", i->device->is_sync_in_connected()));
-        Logger::message(std::format("      OUT connected {}\n",i->device->is_sync_out_connected()));
+        
+        Log::message("Azure Kinect device opened:\n");
+        Log::message(std::format("  Serialnum: {}\n", i->device->get_serialnum()));
+        Log::message("  Version:\n");
+        Log::message(std::format("      Firmware build: {}\n", (debugFB ? "[debug]" : "[release]")));
+        Log::message(std::format("      Firmware signature: {}\n", fsStr));
+        Log::message(std::format("      Color camera firmware version {}.{}.{}\n", version.rgb.major, version.rgb.minor, version.rgb.iteration));
+        Log::message(std::format("      Depth camera firmware version {}.{}.{}\n", version.depth.major, version.depth.minor, version.depth.iteration));
+        Log::message(std::format("      Audio device firmware version {}.{}.{}\n", version.audio.major, version.audio.minor, version.audio.iteration));
+        Log::message(std::format("      Depth device firmware version {}.{}.{}\n", version.depth_sensor.major, version.depth_sensor.minor, version.depth_sensor.iteration));
+        Log::message("  Synch:\n");
+        Log::message(std::format("      IN connected {}\n", i->device->is_sync_in_connected()));
+        Log::message(std::format("      OUT connected {}\n",i->device->is_sync_out_connected()));
 
 
     }  catch (std::runtime_error error) {
-        Logger::error(std::format("[AzureBaseDevice::open_device] open error: {}\n", error.what()));
+        Log::error(std::format("[AzureBaseDevice::open_device] open error: {}\n", error.what()));
         i->device = nullptr;
         return false;
     }
 
 
 
-    // Logger::message("Refresh audio device list.\n");
+    // Log::message("Refresh audio device list.\n");
     // audioM->refresh_devices();
     // size_t nbDevices = audioM->get_devices_count();
-    // Logger::message(std::format("Audio devices count: {}\n", nbDevices));
+    // Log::message(std::format("Audio devices count: {}\n", nbDevices));
 
     // for(size_t ii = 0; ii < nbDevices; ++ii){
     //     std::string deviceName = audioM->get_device_name(ii);
-    //     Logger::message(std::format(" - {}\n", deviceName));
+    //     Log::message(std::format(" - {}\n", deviceName));
     //     if (deviceName.find("Azure Kinect Microphone Array") != std::string::npos) {
-    //         Logger::message(std::format("Found Azure kinect microphones array.\n"));
+    //         Log::message(std::format("Found Azure kinect microphones array.\n"));
 
     //         i->microphone = audioM->get_microphone_for_device(deviceName);
     //         if(i->microphone == nullptr){
-    //             Logger::error(std::format("[AzureBaseDevice::open_device] Cannot retrieve microphone.\n"));
+    //             Log::error(std::format("[AzureBaseDevice::open_device] Cannot retrieve microphone.\n"));
     //             i->audioListener = nullptr;
     //             return false;
     //         }
 
-    //         Logger::message("Start microphone. \n");
+    //         Log::message("Start microphone. \n");
     //         if(i->microphone->Start() != SoundIoErrorNone){
-    //             Logger::error(std::format("[AzureBaseDevice] Cannot start microphone.\n"));
+    //             Log::error(std::format("[AzureBaseDevice] Cannot start microphone.\n"));
     //             return false;
     //         }
 
     //         if(i->microphone->IsStarted()){
-    //             Logger::message("Create listener. \n");
+    //             Log::message("Create listener. \n");
     //             i->audioListener = i->microphone->CreateListener();
     //             if(i->audioListener == nullptr){
-    //                 Logger::error(std::format("[AzureBaseDevice] Cannot init audio listener.\n"));
+    //                 Log::error(std::format("[AzureBaseDevice] Cannot init audio listener.\n"));
     //                 return false;
     //             }
     //         }
@@ -311,32 +311,32 @@ auto AzureBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &co
     // }
 
     // if(i->audioListener != nullptr){
-    //     Logger::message("Microphone listener created. \n");
+    //     Log::message("Microphone listener created. \n");
     // }
 
     return initialize(mInfos, configS);
 }
 
 auto AzureBaseDevice::close() -> void{
-
-    auto lg = LogGuard("AzureBaseDevice::close"sv);
+    
+    auto lg = LogG("AzureBaseDevice::close"sv);
 
     if(i->bodyTracker != nullptr){
-        Logger::message("Stop body tracker\n");
+        Log::message("Stop body tracker\n");
         i->bodyTracker->shutdown();
         i->bodyTracker = nullptr;
     }
 
     if(is_opened()){
-        Logger::message("Stop IMU\n");
+        Log::message("Stop IMU\n");
         i->device->stop_imu();
-
-        Logger::message("Stop cameras\n");
+        
+        Log::message("Stop cameras\n");
         i->device->stop_cameras();
     }
 
     // if(i->microphone != nullptr){
-    //     Logger::message("Clean audio.\n");
+    //     Log::message("Clean audio.\n");
     //     if(i->microphone->IsStarted()){
     //         i->microphone->Stop();
     //     }
@@ -345,16 +345,16 @@ auto AzureBaseDevice::close() -> void{
     // }
 
     if(is_opened()){
-        Logger::message("Close device.\n");
+        Log::message("Close device.\n");
         i->device->close();
         i->device = nullptr;
     }
-    Logger::message("Device closed.\n");
+    Log::message("Device closed.\n");
 }
 
 auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS) -> bool{
-
-    auto lg = LogGuard("AzureBaseDevice::initialize"sv);
+    
+    auto lg = LogG("AzureBaseDevice::initialize"sv);
 
     // reset images
     i->colorImage           = nullptr;
@@ -384,18 +384,18 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
     // init k4a configs
     i->k4aConfig   = i->generate_config(i->device->is_sync_in_connected(), i->device->is_sync_out_connected(), configS);
     i->k4aBtConfig = i->generate_bt_config(configS);
-
-    Logger::message("Create k4a capture.\n");
+    
+    Log::message("Create k4a capture.\n");
     i->capture = std::make_unique<k4a::capture>();
     try {
-
-        Logger::message("Start cameras\n");
-        Logger::message("[Config]\n");
-        Logger::message(std::format("   color format: {}\n",    static_cast<int>(i->k4aConfig.color_format)));
-        Logger::message(std::format("   depth mode: {}\n",      static_cast<int>(i->k4aConfig.depth_mode)));
+        
+        Log::message("Start cameras\n");
+        Log::message("[Config]\n");
+        Log::message(std::format("   color format: {}\n",    static_cast<int>(i->k4aConfig.color_format)));
+        Log::message(std::format("   depth mode: {}\n",      static_cast<int>(i->k4aConfig.depth_mode)));
         i->device->start_cameras(&i->k4aConfig);
-
-        Logger::message("Retrieve calibration\n");
+        
+        Log::message("Retrieve calibration\n");
         i->calibration = i->device->get_calibration(i->k4aConfig.depth_mode, i->k4aConfig.color_resolution);
 
         // specify color-depth alignment
@@ -409,37 +409,37 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
         display_calibration(i->calibration);
 
         const auto &c = i->calibration;
-        Logger::message("[Calibration]\n");
-        Logger::message(std::format("  color resolution: {}\n",     static_cast<int>(c.color_resolution)));
-        Logger::message("  color camera:\n");
-        Logger::message(std::format("      width: {}\n",            c.color_camera_calibration.resolution_width));
-        Logger::message(std::format("      height: {}\n",           c.color_camera_calibration.resolution_height));
-        Logger::message(std::format("      metric radius: {}\n",    c.color_camera_calibration.metric_radius));
-        Logger::message("  depth mode:\n");
-        Logger::message(std::format("      width: {}\n",            c.depth_camera_calibration.resolution_width));
-        Logger::message(std::format("      height: {}\n",           c.depth_camera_calibration.resolution_height));
-        Logger::message(std::format("      metric radius: {}\n",    c.depth_camera_calibration.metric_radius));
-
-        Logger::message("Start imu\n");
+        Log::message("[Calibration]\n");
+        Log::message(std::format("  color resolution: {}\n",     static_cast<int>(c.color_resolution)));
+        Log::message("  color camera:\n");
+        Log::message(std::format("      width: {}\n",            c.color_camera_calibration.resolution_width));
+        Log::message(std::format("      height: {}\n",           c.color_camera_calibration.resolution_height));
+        Log::message(std::format("      metric radius: {}\n",    c.color_camera_calibration.metric_radius));
+        Log::message("  depth mode:\n");
+        Log::message(std::format("      width: {}\n",            c.depth_camera_calibration.resolution_width));
+        Log::message(std::format("      height: {}\n",           c.depth_camera_calibration.resolution_height));
+        Log::message(std::format("      metric radius: {}\n",    c.depth_camera_calibration.metric_radius));
+        
+        Log::message("Start imu\n");
         i->device->start_imu();
 
         if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
-            Logger::message("[AzureBaseDevice::start_device] Start body tracker\n");
+            Log::message("[AzureBaseDevice::start_device] Start body tracker\n");
             i->bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(i->calibration, i->k4aBtConfig));
             // i->bodyTracker->set_temporal_smoothing();
         }
 
     }  catch (k4a::error error) {
-        Logger::error("[AzureBaseDevice::start_device] start_cameras k4a error: {}\n", error.what());
+        Log::error(std::format("[AzureBaseDevice::start_device] start_cameras k4a error: {}\n", error.what()));
         i->k4aConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
         return false;
     }  catch (std::runtime_error error) {
-        Logger::error("[AzureBaseDevice::start_device] start_cameras runtime error: {}\n", error.what());
+        Log::error(std::format("[AzureBaseDevice::start_device] start_cameras runtime error: {}\n", error.what()));
         i->k4aConfig = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
         return false;
     }
-
-    Logger::message("Device started.\n");
+    
+    Log::message("Device started.\n");
 
     return true;
 }
@@ -465,7 +465,7 @@ auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS)
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,      convert_to_k4a_powerline_frequency_value(colorS.powerlineFrequency), true);
 
     }  catch (std::runtime_error error) {
-        Logger::error(std::format("[AzureBaseDevice::update_from_colors_settings) Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
+        Log::error(std::format("[AzureBaseDevice::update_from_colors_settings) Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));
     }
 }
 
@@ -498,7 +498,7 @@ auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
     try{
         success = i->device->get_capture(i->capture.get(), std::chrono::milliseconds(timeoutMs));
     }catch(const std::runtime_error &e){
-        Logger::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
+        Log::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
     }
 
     return success;
@@ -578,10 +578,10 @@ auto AzureBaseDevice::read_from_microphones() -> std::pair<size_t, std::span<flo
     //     });
 
     //     if (i->audioListener->GetStatus() != SoundIoErrorNone){
-    //         Logger::error(std::format("[AzureBaseDevice::read_from_microphones] Error while recording {}\n", soundio_strerror(i->audioListener->GetStatus())));
+    //         Log::error(std::format("[AzureBaseDevice::read_from_microphones] Error while recording {}\n", soundio_strerror(i->audioListener->GetStatus())));
     //         return {};
     //     }else if (i->audioListener->Overflowed()){
-    //         Logger::warning(std::format("[AzureBaseDevice::read_from_microphones] Warning: sound overflow detected!\n"));
+    //         Log::warning(std::format("[AzureBaseDevice::read_from_microphones] Warning: sound overflow detected!\n"));
     //         i->audioListener->ClearOverflowed();
     //         return {};
     //     }
@@ -678,7 +678,7 @@ auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos
         );
 
     }catch(const std::runtime_error &error){
-        Logger::error(std::format("[AzureBaseDevice::resize_color_image_to_depth_size] Error: {}\n", error.what()));
+        Log::error(std::format("[AzureBaseDevice::resize_color_image_to_depth_size] Error: {}\n", error.what()));
         return {};
     }
 
@@ -699,7 +699,7 @@ auto AzureBaseDevice::generate_cloud() -> std::span<geo::Pt3<std::int16_t>>{
         );
 
     }catch(const std::runtime_error &error){
-        Logger::error(std::format("[AzureBaseDevice::generate_cloud] Error: {}\n", error.what()));
+        Log::error(std::format("[AzureBaseDevice::generate_cloud] Error: {}\n", error.what()));
         return {};
     }
 
@@ -716,10 +716,10 @@ auto AzureBaseDevice::generate_cloud() -> std::span<geo::Pt3<std::int16_t>>{
 //     try{
 //     auto dev = k4a::device::open(idD);
 //         if(dev){
-//             Logger::log(std::format("SERIAL NUMBER: {} {}\n", idD, dev.get_serialnum()));
+//             Log::log(std::format("SERIAL NUMBER: {} {}\n", idD, dev.get_serialnum()));
 //             dev.close();
 //         }else{
-//             Logger::log("ALREADY OPENED\n");
+//             Log::log("ALREADY OPENED\n");
 //         }
 
 // }

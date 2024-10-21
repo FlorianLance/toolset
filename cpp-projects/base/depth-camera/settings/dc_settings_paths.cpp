@@ -143,14 +143,14 @@ auto DCSettingsPaths::client_settings_file() -> std::string{
     if(std::filesystem::exists(client)){
         return client.string();
     }
-    Logger::warning(std::format("Cannot find client file [{}].\n", client.string()));
+    Log::warning(std::format("Cannot find client file [{}].\n", client.string()));
 
     if(std::filesystem::exists(defaultClient)){
         return defaultClient.string();
     }
-    Logger::warning(std::format("Cannot find default client settings file [{}].\n", defaultClient.string()));
-
-    Logger::warning("[DCSettingsPaths::client_settings_file] Cannot find any client file.\n");
+    Log::warning(std::format("Cannot find default client settings file [{}].\n", defaultClient.string()));
+    
+    Log::warning("[DCSettingsPaths::client_settings_file] Cannot find any client file.\n");
     return {};
 }
 
@@ -159,14 +159,14 @@ auto DCSettingsPaths::server_settings_file() -> std::string{
     if(std::filesystem::exists(server)){
         return server.string();
     }
-    Logger::warning(std::format("Cannot find server file [{}].\n", server.string()));
+    Log::warning(std::format("Cannot find server file [{}].\n", server.string()));
 
     if(std::filesystem::exists(defaultServer)){
         return defaultServer.string();
     }
-    Logger::warning(std::format("Cannot find default server settings file [{}].\n", defaultServer.string()));
-
-    Logger::warning("[DCSettingsPaths::server_settings_file] Cannot find any server file.\n");
+    Log::warning(std::format("Cannot find default server settings file [{}].\n", defaultServer.string()));
+    
+    Log::warning("[DCSettingsPaths::server_settings_file] Cannot find any server file.\n");
     return {};
 }
 
@@ -175,19 +175,19 @@ auto DCSettingsPaths::network_settings_file() -> std::string{
     if(std::filesystem::exists(jsonNetwork)){
         return jsonNetwork.string();
     }
-    Logger::warning(std::format("Cannot find JSON network file [{}]\n", jsonNetwork.string()));
+    Log::warning(std::format("Cannot find JSON network file [{}]\n", jsonNetwork.string()));
 
     if(std::filesystem::exists(configNetwork)){
         return configNetwork.string();
     }
-    Logger::warning(std::format("Cannot find config network file [{}]\n", configNetwork.string()));
+    Log::warning(std::format("Cannot find config network file [{}]\n", configNetwork.string()));
 
     if(std::filesystem::exists(defaultJsonNetwork)){
         return defaultJsonNetwork.string();
     }
-    Logger::warning(std::format("Cannot find default JSON network file [{}]\n", defaultJsonNetwork.string()));
-
-    Logger::error("[DCSettingsPaths::network_settings_file] Cannot find any network file.\n");
+    Log::warning(std::format("Cannot find default JSON network file [{}]\n", defaultJsonNetwork.string()));
+    
+    Log::error("[DCSettingsPaths::network_settings_file] Cannot find any network file.\n");
     return {};
 }
 
@@ -201,14 +201,14 @@ auto DCSettingsPaths::client_filters_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].filters.string();
         }
     }else{
-        Logger::warning(std::format("Invalid client id [{}] for filters settings file.\n"sv, idG));
+        Log::warning(std::format("Invalid client id [{}] for filters settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.filters)){
-        Logger::warning(std::format("Cannot find filters settings file for client [{}], use default instead.\n"sv, idG));
+        Log::warning(std::format("Cannot find filters settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.filters.string();
     }else{
-        Logger::warning(std::format("Cannot find default filters settings file [{}].\n"sv, defaultJson.filters.string()));
+        Log::warning(std::format("Cannot find default filters settings file [{}].\n"sv, defaultJson.filters.string()));
     }
     return {};
 }
@@ -223,14 +223,14 @@ auto DCSettingsPaths::client_calibration_filters_settings_file(size_t idG) -> st
             return clientsConfig[idG].calibrationFilters.string();
         }
     }else{
-        Logger::warning(std::format("Invalid client id [{}] for calibration filters settings file.\n"sv, idG));
+        Log::warning(std::format("Invalid client id [{}] for calibration filters settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.calibrationFilters)){
-        Logger::warning(std::format("Cannot find calibration filters settings file for client [{}], use default instead.\n"sv, idG));
+        Log::warning(std::format("Cannot find calibration filters settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.calibrationFilters.string();
     }else{
-        Logger::warning(std::format("Cannot find default calibration filters settings file [{}].\n"sv, defaultJson.calibrationFilters.string()));
+        Log::warning(std::format("Cannot find default calibration filters settings file [{}].\n"sv, defaultJson.calibrationFilters.string()));
     }
     return {};
 }
@@ -245,14 +245,14 @@ auto DCSettingsPaths::client_device_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].device.string();
         }
     }else{
-        Logger::warning(std::format("Invalid client id [{}] for device settings file.\n"sv, idG));
+        Log::warning(std::format("Invalid client id [{}] for device settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.device)){
-        Logger::warning(std::format("Cannot find device settings file for client [{}], use default instead.\n"sv, idG));
+        Log::warning(std::format("Cannot find device settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.device.string();
     }else{
-        Logger::warning(std::format("Cannot find default device settings file [{}].\n"sv, defaultJson.device.string()));
+        Log::warning(std::format("Cannot find default device settings file [{}].\n"sv, defaultJson.device.string()));
     }
     return {};
 }
@@ -267,14 +267,14 @@ auto DCSettingsPaths::client_color_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].color.string();
         }
     }else{
-        Logger::warning(std::format("Invalid client id [{}] for color settings file.\n"sv, idG));
+        Log::warning(std::format("Invalid client id [{}] for color settings file.\n"sv, idG));
     }
 
     if(std::filesystem::exists(defaultJson.color)){
-        Logger::warning(std::format("Cannot find color settings file for client [{}], use default instead.\n"sv, idG));
+        Log::warning(std::format("Cannot find color settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.color.string();
     }else{
-        Logger::warning(std::format("Cannot find default color settings file [{}].\n"sv, defaultJson.color.string()));
+        Log::warning(std::format("Cannot find default color settings file [{}].\n"sv, defaultJson.color.string()));
     }
     return {};
 }
@@ -289,15 +289,15 @@ auto DCSettingsPaths::client_model_settings_file(size_t idG) -> std::string{
             return clientsConfig[idG].model.string();
         }
     }else{
-        Logger::warning(std::format("Invalid client id [{}] for model settings file.\n", idG));
+        Log::warning(std::format("Invalid client id [{}] for model settings file.\n", idG));
     }
 
 
     if(std::filesystem::exists(defaultJson.model)){
-        Logger::warning(std::format("Cannot find model settings file for client [{}], use default instead.\n"sv, idG));
+        Log::warning(std::format("Cannot find model settings file for client [{}], use default instead.\n"sv, idG));
         return defaultJson.model.string();
     }else{
-        Logger::warning(std::format("Cannot find default modelsettings file [{}].\n"sv, defaultJson.model.string()));
+        Log::warning(std::format("Cannot find default modelsettings file [{}].\n"sv, defaultJson.model.string()));
     }
     return {};
 }

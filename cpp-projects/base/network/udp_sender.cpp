@@ -115,11 +115,11 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
                 port
             ));
         }
-
-        Logger::message(std::format("ENDPOINT {} {}\n", targetName, port));
+        
+        Log::message(std::format("ENDPOINT {} {}\n", targetName, port));
 
     }catch (const boost::system::system_error& error){
-        Logger::error(std::format("[UdpSender::init_socket] Cannot resolve target name [{}] with writing port [{}], error [{}].\n", targetName, port, error.what()));
+        Log::error(std::format("[UdpSender::init_socket] Cannot resolve target name [{}] with writing port [{}], error [{}].\n", targetName, port, error.what()));
         clean_socket();
         return false;
     }
@@ -137,7 +137,7 @@ auto UdpSender::clean_socket() -> void{
             std::this_thread::sleep_for (std::chrono::milliseconds(300));
             i->socket->close();
         }catch (const boost::system::system_error& error){
-            Logger::error(std::format("[UdpSender::clean_socket] Cannot shutdown socket with adress {}, error message: {}.\n",
+            Log::error(std::format("[UdpSender::clean_socket] Cannot shutdown socket with adress {}, error message: {}.\n",
                 i->endpoint->endpoint().address().to_string(),
                 error.what())
             );
@@ -165,7 +165,7 @@ auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_
             }
         }
     } catch (const boost::system::system_error& error) {
-        Logger::error(std::format("[UdpSender::send_packet_data] Cannot sent data to endpoint {}, error message: {}.\n",
+        Log::error(std::format("[UdpSender::send_packet_data] Cannot sent data to endpoint {}, error message: {}.\n",
             i->endpoint->endpoint().address().to_string(),
             error.what())
         );
@@ -299,7 +299,7 @@ auto UdpSender::set_sender_id(size_t idClient) -> void{
 auto UdpSender::send_message(MessageTypeId messageType, std::span<const std::byte> data) -> size_t{
 
     if(!is_connected()){
-        Logger::error("[UdpSender::send_message] Sender not opened, message canceled.\n"sv);
+        Log::error("[UdpSender::send_message] Sender not opened, message canceled.\n"sv);
         return 0;
     }
 
@@ -311,7 +311,7 @@ auto UdpSender::send_message(MessageTypeId messageType, std::span<const std::byt
         // send data
         size_t nbBytesSent = send_data(header, data);
         if(nbBytesSent != header.totalSizeBytes){
-            Logger::error(std::format("[UdpSender::send_message] Invalid nb of bytes send, {} instead of {}.\n"sv, nbBytesSent, header.totalSizeBytes));
+            Log::error(std::format("[UdpSender::send_message] Invalid nb of bytes send, {} instead of {}.\n"sv, nbBytesSent, header.totalSizeBytes));
         }
 
         return nbBytesSent;

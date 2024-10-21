@@ -41,7 +41,7 @@ RBO::~RBO(){
 auto RBO::initialize() -> void{
 
     if(m_handle != 0){
-        Logger::error(std::format("[RBO::generate] RBO already generated: {}\n", m_handle));
+        Log::error(std::format("[RBO::generate] RBO already generated: {}\n", m_handle));
         return;
     }
     glCreateRenderbuffers(1, &m_handle);

@@ -36,6 +36,6 @@ using namespace tool::graphics;
 Texture2D::Texture2D(const std::string &pathTexture, bool flip, int targetNbChannels) : m_flipped(flip){
     // path = pathTexture;
     if(!load_2d_image_file_data(pathTexture, m_flipped, targetNbChannels)){
-        Logger::error("[Texture2D] Error during file texture loading.\n");
+        Log::error("[Texture2D] Error during file texture loading.\n");
     }
 }

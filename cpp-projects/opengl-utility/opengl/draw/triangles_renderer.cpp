@@ -108,7 +108,7 @@ auto TrianglesRenderer::load_data(
     std::span<const ColorRGBA32> colors) -> bool{
 
     if(!initialized()){
-        Logger::error("[TriangleMesh::load_data] Buffers must be initialized.\n");
+        Log::error("[TriangleMesh::load_data] Buffers must be initialized.\n");
         return false;
     }
 
@@ -124,7 +124,7 @@ auto TrianglesRenderer::load_data(
     }
 
     if(m_nbIndices == 0){
-        Logger::error("[TriangleMeshVAO::load_data] No indices.\n");
+        Log::error("[TriangleMeshVAO::load_data] No indices.\n");
         return false;
     }
 
@@ -138,7 +138,7 @@ auto TrianglesRenderer::load_data(
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[TriangleMeshVAO::load_data] No vertices.\n");
+        Log::error("[TriangleMeshVAO::load_data] No vertices.\n");
         return false;
     }
 
@@ -150,7 +150,7 @@ auto TrianglesRenderer::load_data(
                 normalBufferUsage
             );
         }else{
-            Logger::error("[TriangleMeshVAO::load_data] Invalid normal buffer size.\n");
+            Log::error("[TriangleMeshVAO::load_data] Invalid normal buffer size.\n");
             return false;
         }
     }
@@ -163,7 +163,7 @@ auto TrianglesRenderer::load_data(
                 texCoordsBufferUsage
             );
         }else{
-            Logger::error("[TriangleMeshVAO::load_data] Invalid texture coordinates buffer size.\n");
+            Log::error("[TriangleMeshVAO::load_data] Invalid texture coordinates buffer size.\n");
             return false;
         }
     }
@@ -176,7 +176,7 @@ auto TrianglesRenderer::load_data(
                 tangentsBufferUsage
             );
         }else{
-            Logger::error("[TriangleMeshVAO::load_data] Invalid tangent buffer size.\n");
+            Log::error("[TriangleMeshVAO::load_data] Invalid tangent buffer size.\n");
             return false;
         }
     }
@@ -189,7 +189,7 @@ auto TrianglesRenderer::load_data(
             //     bonesBufferUsage
             // );
         }else{
-            Logger::error("[TriangleMeshVAO::load_data] Invalid bones buffer size.\n");
+            Log::error("[TriangleMeshVAO::load_data] Invalid bones buffer size.\n");
             return false;
         }
     }
@@ -202,7 +202,7 @@ auto TrianglesRenderer::load_data(
                 colorBufferUsage
             );
         }else{
-            Logger::error("[TriangleMeshVAO::load_data] Invalid colors buffer size.\n");
+            Log::error("[TriangleMeshVAO::load_data] Invalid colors buffer size.\n");
             return false;
         }
     }
@@ -221,29 +221,29 @@ auto TrianglesRenderer::update_data(
     std::span<const ColorRGBA32> colors,        size_t colorsOffset) -> bool{
 
     if(!initialized()){
-        Logger::error("[TriangleMesh::update_data] Buffers must be initialized.\n");
+        Log::error("[TriangleMesh::update_data] Buffers must be initialized.\n");
         return false;
     }
 
     if(!data_loaded()){
-        Logger::error("[TriangleMesh::update_data] Data must be loaded.\n");
+        Log::error("[TriangleMesh::update_data] Data must be loaded.\n");
         return false;
     }
 
     if(m_nbIndices == 0){
-        Logger::error("[TriangleMeshVAO::update_data] No indices.\n");
+        Log::error("[TriangleMeshVAO::update_data] No indices.\n");
         return false;
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[TriangleMeshVAO::update_data] No vertices.\n");
+        Log::error("[TriangleMeshVAO::update_data] No vertices.\n");
         return false;
     }
 
     if(!indices.empty()){
 
         if(!(indicesBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Index buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Index buffer storage not dynamic.\n");
             return false;
         }
 
@@ -254,7 +254,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(indicesOffset)
             );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid index buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid index buffer size.\n");
             return false;
         }
     }
@@ -262,7 +262,7 @@ auto TrianglesRenderer::update_data(
     if(!vertices.empty()){
 
         if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Vertex buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Vertex buffer storage not dynamic.\n");
             return false;
         }
 
@@ -273,7 +273,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(verticesOffset)
             );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid vertex buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid vertex buffer size.\n");
             return false;
         }
     }
@@ -281,7 +281,7 @@ auto TrianglesRenderer::update_data(
     if(m_hasNormals && (!normals.empty())){
 
         if(!(normalBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Normal buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Normal buffer storage not dynamic.\n");
             return false;
         }
 
@@ -292,7 +292,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(normalsOffset)
             );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid normal buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid normal buffer size.\n");
             return false;
         }
     }
@@ -300,7 +300,7 @@ auto TrianglesRenderer::update_data(
     if(m_hasTexCoord && (!texCoords.empty())){
 
         if(!(texCoordsBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Texture coordinates buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Texture coordinates buffer storage not dynamic.\n");
             return false;
         }
 
@@ -311,7 +311,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(textCoordsOffset)
             );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid texture coordinates buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid texture coordinates buffer size.\n");
             return false;
         }
     }
@@ -319,7 +319,7 @@ auto TrianglesRenderer::update_data(
     if(m_hasTangents && (!tangents.empty())){
 
         if(!(tangentsBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Tangent buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Tangent buffer storage not dynamic.\n");
             return false;
         }
 
@@ -330,7 +330,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(tangentsOffset)
             );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid tangent buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid tangent buffer size.\n");
             return false;
         }
     }
@@ -338,7 +338,7 @@ auto TrianglesRenderer::update_data(
     if(m_hasBones && (!bones.empty())){
 
         if(!(bonesBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Bones buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Bones buffer storage not dynamic.\n");
             return false;
         }
 
@@ -350,7 +350,7 @@ auto TrianglesRenderer::update_data(
         //         static_cast<GLintptr>(tangentsOffset)
         //     );
         // }else{
-        //     Logger::error("[TriangleMeshVAO::update_data] Invalid bones buffer size.\n");
+        //     Log::error("[TriangleMeshVAO::update_data] Invalid bones buffer size.\n");
         //     return false;
         // }
     }
@@ -358,7 +358,7 @@ auto TrianglesRenderer::update_data(
     if(m_hasColors && (!colors.empty())){
 
         if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[TriangleMeshVAO::update_data] Color buffer storage not dynamic.\n");
+            Log::error("[TriangleMeshVAO::update_data] Color buffer storage not dynamic.\n");
             return false;
         }
 
@@ -369,7 +369,7 @@ auto TrianglesRenderer::update_data(
                 static_cast<GLintptr>(colorsOffset)
                 );
         }else{
-            Logger::error("[TriangleMeshVAO::update_data] Invalid color buffer size.\n");
+            Log::error("[TriangleMeshVAO::update_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -612,12 +612,12 @@ auto TrianglesRenderer::init_and_load_3d_mesh(
     std::span<const ColorRGBA32> colors) -> void{
 
     if(indices.empty()){
-        Logger::error("[TriangleMeshVAO::init_and_load_3d_mesh] No indices.\n");
+        Log::error("[TriangleMeshVAO::init_and_load_3d_mesh] No indices.\n");
         return;
     }
 
     if(points.empty()){
-        Logger::error("[TriangleMeshVAO::init_and_load_3d_mesh] No points.\n");
+        Log::error("[TriangleMeshVAO::init_and_load_3d_mesh] No points.\n");
         return;
     }
 
@@ -655,7 +655,7 @@ auto TrianglesRenderer::init_and_load_3d_mesh(
 auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<GLfloat> *points, std::vector<GLfloat> *normals, std::vector<GLfloat> *texCoords, std::vector<GLfloat> *tangents, std::vector<GLfloat> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
-        Logger::error("[TriangleMesh::init_buffers] error, no indices or points buffers.\n");
+        Log::error("[TriangleMesh::init_buffers] error, no indices or points buffers.\n");
         return;
     }
 
@@ -663,7 +663,7 @@ auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<G
         hasNormals = points->size() == normals->size();
 
         if(!hasNormals && normals->size() > 0){
-            Logger::error("[TriangleMesh::init_buffers] Invalid size of normals.\n");
+            Log::error("[TriangleMesh::init_buffers] Invalid size of normals.\n");
             return;
         }
     }
@@ -672,7 +672,7 @@ auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<G
         hasTexCoord = (points->size()/3) == (texCoords->size()/2);
 
         if(!hasTexCoord && texCoords->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of tex coord.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of tex coord.\n");
             return;
         }
     }
@@ -681,7 +681,7 @@ auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<G
         hasTangents = (points->size()/3) == (tangents->size()/4);
 
         if(!hasTangents && tangents->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of tangents.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of tangents.\n");
             return;
         }
     }
@@ -690,7 +690,7 @@ auto TrianglesRenderer::init_buffers(std::vector<GLuint> *indices, std::vector<G
         hasColors = (points->size()/3) == (colors->size()/4);
 
         if(!hasColors && colors->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of colors.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of colors.\n");
             return;
         }
     }
@@ -785,7 +785,7 @@ auto TrianglesRenderer::init_buffers(
     std::vector<Pt2f> *texCoords, std::vector<Pt4f> *tangents, std::vector<graphics::BoneData> *bones, std::vector<ColorRGBA32> *colors) -> void{
 
     if(indices == nullptr || points == nullptr){
-        Logger::error("[TriangleMeshData::init_buffers] error, no indices or points buffers.\n");
+        Log::error("[TriangleMeshData::init_buffers] error, no indices or points buffers.\n");
         return;
     }
 
@@ -793,7 +793,7 @@ auto TrianglesRenderer::init_buffers(
         hasNormals = points->size() == normals->size();
 
         if(!hasNormals && normals->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of normals.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of normals.\n");
             return;
         }
     }
@@ -802,7 +802,7 @@ auto TrianglesRenderer::init_buffers(
         hasTexCoord = points->size() == texCoords->size();
 
         if(!hasTexCoord && texCoords->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of tex coord.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of tex coord.\n");
             return;
         }
     }
@@ -811,7 +811,7 @@ auto TrianglesRenderer::init_buffers(
         hasTangents = points->size() == tangents->size();
 
         if(!hasTangents && tangents->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of tangents.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of tangents.\n");
             return;
         }
     }
@@ -820,7 +820,7 @@ auto TrianglesRenderer::init_buffers(
         hasBones = points->size() == bones->size();
 
         if(!hasBones && bones->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of bones.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of bones.\n");
             return;
         }
     }
@@ -829,7 +829,7 @@ auto TrianglesRenderer::init_buffers(
         hasColors = points->size() == colors->size();
 
         if(!hasColors && colors->size() > 0){
-            Logger::error("[TriangleMeshData::init_buffers] Invalid size of colors.\n");
+            Log::error("[TriangleMeshData::init_buffers] Invalid size of colors.\n");
             return;
         }
     }

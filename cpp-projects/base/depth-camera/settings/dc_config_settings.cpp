@@ -76,7 +76,7 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
     data::read_and_update_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRot.array);
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

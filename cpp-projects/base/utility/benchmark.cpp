@@ -94,7 +94,7 @@ struct Bench::Impl{
             std::stringstream ss;
             ss << tId;
             Impl::tData[tId].tIdStr = ss.str();
-            Logger::message(std::format("[Bench::First start call from thread {}]\n", Impl::tData[tId].tIdStr));
+            Log::message(std::format("[Bench::First start call from thread {}]\n", Impl::tData[tId].tIdStr));
         }
         return tId;
     }
@@ -132,7 +132,7 @@ void Bench::check(OTID otId){
     for(auto &id : d.order){
         const auto &t = d.times[id];
         if(t.startTime.size() != t.stopTime.size()){
-            Logger::error(std::format("Bench::Error: Id [{}] has not been stopped, (started:{}, stopped:{}).\n",
+            Log::error(std::format("Bench::Error: Id [{}] has not been stopped, (started:{}, stopped:{}).\n",
                 id, t.startTime.size(), t.stopTime.size()
             ));
         }
@@ -143,12 +143,12 @@ void Bench::start(BenchId id, bool display, OTID otId){
 
     auto &d = Impl::tData[Impl::check_thread_id(otId)];
     if(id.size() == 0 && Impl::displayEnabled){
-        Logger::message(std::format("Bench::Error: empty id\n"));
+        Log::message(std::format("Bench::Error: empty id\n"));
         return;
     }
 
     if(display && Impl::displayEnabled){
-        Logger::message(std::format("[Bench::Start{}]\n", id));
+        Log::message(std::format("[Bench::Start{}]\n", id));
     }
 
     auto idV = d.idStrsView.find(id);
@@ -168,7 +168,7 @@ void Bench::start(BenchId id, bool display, OTID otId){
     // check if already running
     if(d.times[*idV].started){
         if(Impl::displayEnabled){
-            Logger::error(std::format("Error with id {}, already started\n", id));
+            Log::error(std::format("Error with id {}, already started\n", id));
         }
         return;
     }
@@ -196,14 +196,14 @@ void Bench::stop(BenchId id, OTID otId){
         if(it != d.stack.end()){
             d.stack.erase(std::remove(d.stack.begin(), d.stack.end(), id), d.stack.end());
         }else{
-            Logger::error(std::format("Bench::Error: cannot stop id [{}], no element in stack. \n.", id));
+            Log::error(std::format("Bench::Error: cannot stop id [{}], no element in stack. \n.", id));
             return;
         }
     }
 
     if(d.times.count(id) == 0){
         if(Impl::displayEnabled){
-            Logger::error(std::format("Bench::Error: cannot stop id [{}] \n.", id));
+            Log::error(std::format("Bench::Error: cannot stop id [{}] \n.", id));
         }
         return;
     }
@@ -215,7 +215,7 @@ void Bench::stop(BenchId id, OTID otId){
         --d.currentLevel;
     }else{
         if(Impl::displayEnabled){
-            Logger::error("Bench::Error: Invalid level.\n");
+            Log::error("Bench::Error: Invalid level.\n");
         }
         d.currentLevel = 0;
     }

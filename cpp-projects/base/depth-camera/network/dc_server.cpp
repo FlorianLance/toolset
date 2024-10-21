@@ -150,8 +150,8 @@ DCServer::Impl::Impl(){
             reception.update(header, dataToProcess, messagesBuffer);
 
             if(auto info = reception.message_fully_received(header); info.has_value()){
-
-                Logger::message("[DCServer] init_server_client_connection message received.\n");
+                
+                Log::message("[DCServer] init_server_client_connection message received.\n");
                 UdpConnectionSettings cs(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes()));
 
                 std::lock_guard l(messagesL);
@@ -164,8 +164,8 @@ DCServer::Impl::Impl(){
 
         }break;
         case DCMessageType::command:{
-
-            Logger::message("[DCServer] command message received.\n");
+            
+            Log::message("[DCServer] command message received.\n");
             Command command;
             std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Command), reinterpret_cast<std::byte*>(&command));
 
@@ -188,8 +188,8 @@ DCServer::Impl::Impl(){
             reception.update(header, dataToProcess, messagesBuffer);
 
             if(auto info = reception.message_fully_received(header); info.has_value()){
-
-                Logger::message("[DCServer] update_device_settings message received.\n");
+                
+                Log::message("[DCServer] update_device_settings message received.\n");
 
                 std::lock_guard l(messagesL);
                 rMessages->push_back(EndPtr<DCDeviceSettings>{std::move(endpoint),  std::make_shared<DCDeviceSettings>(
@@ -208,7 +208,7 @@ DCServer::Impl::Impl(){
             reception.update(header, dataToProcess, messagesBuffer);
 
             if(auto info = reception.message_fully_received(header); info.has_value()){
-                Logger::message("[DCServer] update_filters_settings message received.\n");
+                Log::message("[DCServer] update_filters_settings message received.\n");
 
                 std::lock_guard l(messagesL);
                 rMessages->push_back(EndPtr<DCFiltersSettings>{std::move(endpoint),  std::make_shared<DCFiltersSettings>(
@@ -227,8 +227,8 @@ DCServer::Impl::Impl(){
             reception.update(header, dataToProcess, messagesBuffer);
 
             if(auto info = reception.message_fully_received(header); info.has_value()){
-
-                Logger::message("[DCServer] update_color_settings message received.\n");
+                
+                Log::message("[DCServer] update_color_settings message received.\n");
 
                 std::lock_guard l(messagesL);
                 rMessages->push_back(EndPtr<DCColorSettings>{std::move(endpoint),  std::make_shared<DCColorSettings>(
@@ -242,8 +242,8 @@ DCServer::Impl::Impl(){
 
         }break;
         case DCMessageType::update_misc_settings:{
-
-            Logger::message("[DCServer] update_delay_settings message received.\n");
+            
+            Log::message("[DCServer] update_delay_settings message received.\n");
             
             DCMiscSettings delay;
             std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCMiscSettings), reinterpret_cast<std::byte*>(&delay));
@@ -334,22 +334,22 @@ auto DCServer::Impl::send_messages_loop() -> void{
                             feedback.type = FeedbackType::message_received;
                             feedback.receivedMessageType = static_cast<MessageTypeId>(DCMessageType::init_server_client_connection);
                             udpSenders[endPoint.id]->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
-
-                            Logger::message(std::format("[DCServer] New client connected [{}].\n", endPoint.id));
+                            
+                            Log::message(std::format("[DCServer] New client connected [{}].\n", endPoint.id));
                             client_connected_signal(endPoint.id);
                         }else{
                             udpSenders.erase(endPoint.id);
-                            Logger::error(std::format("[DCServer] Cannot connect to client [{}].\n", endPoint.id));
+                            Log::error(std::format("[DCServer] Cannot connect to client [{}].\n", endPoint.id));
                         }
                     }else{
-                        Logger::warning(std::format("[DCServer] Client already connected [{}].\n", endPoint.id));
+                        Log::warning(std::format("[DCServer] Client already connected [{}].\n", endPoint.id));
                     }
 
                 },
                 [&](EndVal<Feedback> m){
 
                     Feedback feedback = m.second;
-                    Logger::message(std::format("[DCServer] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
+                    Log::message(std::format("[DCServer] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
                     const auto &endPoint = m.first;
 
                     if(endPoint.id.empty()){ // if empty, apply feedback to all clients
@@ -378,7 +378,7 @@ auto DCServer::Impl::send_messages_loop() -> void{
 
                             // disconnect command received
                             if(feedback.type == FeedbackType::disconnect){
-                                Logger::message(std::format("[DCServer] Client disconnected [{}].\n", endPoint.id));
+                                Log::message(std::format("[DCServer] Client disconnected [{}].\n", endPoint.id));
                                 udpSenders[endPoint.id]->clean_socket();
                                 udpSenders.erase(endPoint.id);
                                 client_disconnected_signal(endPoint.id);
@@ -485,7 +485,7 @@ auto DCServer::reset_network() -> void{
     settings.update_reading_interface();
 
     if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
-        Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
+        Log::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return;
     }
 }
@@ -497,13 +497,13 @@ auto DCServer::disconnect_clients() -> void{
 auto DCServer::initialize(const std::string &serverSettingsPath) -> bool{
 
     if(!settings.load_from_file(serverSettingsPath)){
-        Logger::error(std::format("[DCServer::initialize] Error while reading server settings file at path [{}].\n", serverSettingsPath));
+        Log::error(std::format("[DCServer::initialize] Error while reading server settings file at path [{}].\n", serverSettingsPath));
         return false;
     }
     settings.globalFilePath = serverSettingsPath;
 
     if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
-        Logger::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
+        Log::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return false;
     }
 

@@ -37,10 +37,7 @@ using namespace cam;
 
 
 int main(int argc, char *argv[]){
-
-    Logger::message("Start DC-Manager.\n");
-    Logger::message(std::format("Args {}.\n", argc));
-
+    
     // check application arguments
     std::optional<size_t> id = std::nullopt;
     for(int ii = 0; ii < argc; ++ii){
@@ -49,22 +46,27 @@ int main(int argc, char *argv[]){
             id = std::stoi(arg.substr(2,1));
         }
     }
-    if(!id.has_value()){
-        Logger::warning("No id argument found, use 0 instead.\n"sv);
-        id = 0;
-    }
 
     // init paths
-    DCSettingsPaths::get()->initialize(argv, cam::DCApplicationType::DCManager, id.value());
+    DCSettingsPaths::get()->initialize(argv, cam::DCApplicationType::DCManager, id.has_value() ? id.value() : 0);
+    
+    auto logger = std::make_unique<Logger>();
+    logger->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
+    Logger::set_logger_instance(std::move(logger));
 
-    // init logger
-    Logger::init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
+    Log::message("Start DC-Manager.\n");
+    Log::message(std::format("Args {}.\n", argc));
+
+    if(!id.has_value()){
+        Log::warning("No id argument found, use 0 instead.\n"sv);
+        id = 0;
+    }
 
     // init controller
     DCMController controller;
     controller.initialize(id.value());
     controller.start();
-    Logger::message("Exit DC-manager.\n");
+    Log::message("Exit DC-manager.\n");
 
     return 0;
 }

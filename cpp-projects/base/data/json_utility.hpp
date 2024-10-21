@@ -42,7 +42,7 @@ namespace tool::data{
             value = j[key].template get<T>();
             return;
         }
-        Logger::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
+        Log::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
         ++unreadCount;
     }
 
@@ -52,7 +52,7 @@ namespace tool::data{
         if(j.contains(key)){
             return j[key].template get<T>();
         }
-        Logger::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
+        Log::warning(std::format("Cannot read value with key [{}] from json data.\n"sv, key));
         ++unreadCount;
         return defaultValue;
     }
@@ -62,7 +62,7 @@ namespace tool::data{
         if(j.contains(key)){
             return j[key];            
         }
-        Logger::warning(std::format("Cannot read object with key [{}] from json data.\n"sv, key));
+        Log::warning(std::format("Cannot read object with key [{}] from json data.\n"sv, key));
         ++unreadCount;
         return {};
     }
@@ -76,10 +76,10 @@ namespace tool::data{
                     std::move(array.begin(), array.end(), values.begin());
                     return;
                 }else{
-                    Logger::warning(std::format("Cannot read array with key [{}] from json data, invalid size.\n"sv, key));
+                    Log::warning(std::format("Cannot read array with key [{}] from json data, invalid size.\n"sv, key));
                 }
             }else{
-                Logger::warning(std::format("Cannot read array with key [{}] from json data, value found is not an array.\n"sv, key));
+                Log::warning(std::format("Cannot read array with key [{}] from json data, value found is not an array.\n"sv, key));
             }
         }
         ++unreadCount;
@@ -90,7 +90,7 @@ namespace tool::data{
         if(!j.contains(key)){
             j[key] = data;
         }else{
-            Logger::warning(std::format("Value with key [{}] already added in json data.\n"sv, key));
+            Log::warning(std::format("Value with key [{}] already added in json data.\n"sv, key));
         }
     }
 
@@ -99,7 +99,7 @@ namespace tool::data{
         if(!j.contains(key)){
             j[key] = value;
         }else{
-            Logger::warning(std::format("Value with key [{}] already added in json data.\n"sv, key));
+            Log::warning(std::format("Value with key [{}] already added in json data.\n"sv, key));
         }
     }
 
@@ -116,7 +116,7 @@ namespace tool::data{
     //             };
     //         }
     //     }
-    //     Logger::warning(std::format("Cannot read Pt3f with key [{}] from json data.\n"sv, key));
+    //     Log::warning(std::format("Cannot read Pt3f with key [{}] from json data.\n"sv, key));
     //     ++unreadCount;
     //     return {};
     // }
@@ -133,7 +133,7 @@ namespace tool::data{
     //             };
     //         }
     //     }
-    //     Logger::warning(std::format("Cannot read ColorRGB32 with key [{}] from json data.\n"sv, key));
+    //     Log::warning(std::format("Cannot read ColorRGB32 with key [{}] from json data.\n"sv, key));
     //     ++unreadCount;
     //     return {};
     // }

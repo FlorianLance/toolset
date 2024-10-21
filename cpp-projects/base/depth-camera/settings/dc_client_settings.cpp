@@ -43,11 +43,11 @@ DCClientSettings::DCClientSettings(){
     // retrieve interfaces
     ipv4Interfaces = Interface::list_local_interfaces(Protocol::ipv4);
     if(ipv4Interfaces.size() == 0){
-        Logger::warning("[DCClientSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
+        Log::warning("[DCClientSettings::reset_interfaces] Cannot find any ipv4 interface.\n"sv);
     }
     ipv6Interfaces = Interface::list_local_interfaces(Protocol::ipv6);
     if(ipv6Interfaces.size() == 0){
-        Logger::warning("[DCClientSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
+        Log::warning("[DCClientSettings::reset_interfaces] Cannot find any ipv6 interface.\n"sv);
     }
 }
 
@@ -61,7 +61,7 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
     read_and_update_value(json, unreadCount, "_client_id"sv, clientId);
     // local
     if(!json.contains("client_devices"sv)){
-        Logger::error(std::format("[DCClientSettings::init_from_json] Invalid json file.\n"));
+        Log::error(std::format("[DCClientSettings::init_from_json] Invalid json file.\n"));
         return;
     }
 
@@ -74,7 +74,7 @@ auto DCClientSettings::init_from_json(const nlohmann::json &json) -> void{
     }
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCClientSettings::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));
+        tool::Log::warning(std::format("[DCClientSettings::init_from_json] [{}] values have not been initialized from json data.\n"sv, unreadCount));
     }
 }
 
@@ -125,7 +125,7 @@ auto DCClientSettings::update_connection_settings(DCDeviceConnectionSettings &co
         // retrieve interfaces from current protocol
         const auto &interfaces = (connectionS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
         if(connectionS.idReadingInterface >= interfaces.size()){
-            Logger::error(std::format("[DCClientSettings::update_connection_settings] Invalid id reading interface.\n"sv));
+            Log::error(std::format("[DCClientSettings::update_connection_settings] Invalid id reading interface.\n"sv));
             return;
         }
 

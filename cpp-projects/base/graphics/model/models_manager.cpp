@@ -72,7 +72,7 @@ auto ModelsManager::add(std::vector<std::pair<Alias, Path>> &&aliasPaths, bool f
 
         if(!forceReload){
             if(aliasPerPath.count(ap.second) != 0){
-                Logger::error(std::format("[ModelsManager] Model with alias {} and path {} already loaded with alias {}, loading canceled.\n",
+                Log::error(std::format("[ModelsManager] Model with alias {} and path {} already loaded with alias {}, loading canceled.\n",
                         ap.first, ap.second, aliasPerPath[ap.second]));
                 continue;
             }
@@ -99,7 +99,7 @@ auto ModelsManager::add(std::vector<std::pair<Alias, Path>> &&aliasPaths, bool f
 auto ModelsManager::add(const std::string &alias, const std::string &path) -> bool{
 
     if(aliasPerPath.count(path) != 0){
-        Logger::error(std::format(
+        Log::error(std::format(
             "[ModelsManager] Model with alias {} and path {} already loaded with alias {}, loading canceled.\n",
             alias, path, aliasPerPath[path])
         );
@@ -107,7 +107,7 @@ auto ModelsManager::add(const std::string &alias, const std::string &path) -> bo
     }
 
     if(models.has_alias(alias)){
-        Logger::error(std::format(
+        Log::error(std::format(
             "[ModelsManager] Model alias {} already used, it will be replaced by newly loaded model.\n",
             alias)
         );

@@ -137,7 +137,7 @@ auto ColorVoxelGrid::create_from_point_cloud_within_bounds(const ColorCloud &clo
 
     ColorVoxelGrid voxelGrid(voxelSize, origin, size);
     if(voxelSize < 0.f){
-        tool::Logger::error("[VoxelGrid::create_from_point_cloud_within_bounds] Voxel size <= 0.\n");
+        tool::Log::error("[VoxelGrid::create_from_point_cloud_within_bounds] Voxel size <= 0.\n");
         return voxelGrid;
     }
     voxelGrid.add_cloud(cloud, Mat4f::identity());

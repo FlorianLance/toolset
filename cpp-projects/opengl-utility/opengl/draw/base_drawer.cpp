@@ -55,7 +55,7 @@ BaseDrawer::BaseDrawer(DrawerType type) : m_type(type){
         m_vaoRenderer = std::make_unique<TrianglesRenderer>();
     }break;
     case ::DrawerType::Invalid:
-        Logger::error("[BaseDrawer] Invalid type.\n");
+        Log::error("[BaseDrawer] Invalid type.\n");
         break;
     }
 }
@@ -90,7 +90,7 @@ auto BaseDrawer::draw() -> void{
         GL::draw_elements_instanced_base_vertex_base_instance(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr, 1, 0, 0);
     }break;
     case ::DrawerType::Invalid:
-        Logger::error("[BaseDrawer::draw] Invalid type.\n");
+        Log::error("[BaseDrawer::draw] Invalid type.\n");
         break;
     }
 

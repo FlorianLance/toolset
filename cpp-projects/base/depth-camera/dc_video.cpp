@@ -192,12 +192,12 @@ auto DCVideo::get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t t2) noexc
 auto DCVideo::closest_frame_id_from_time(size_t idDevice, double timeMs) const noexcept -> std::int64_t{
 
     if(idDevice >= nb_devices()){
-        Logger::error("[DCVideo::closest_frame_id_from_time] Camera id invalid.\n"sv);
+        Log::error("[DCVideo::closest_frame_id_from_time] Camera id invalid.\n"sv);
         return -1;
     }
 
     if(nb_frames(idDevice) == 0){
-        //Logger::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
+        //Log::error("[DCVideo::closest_frame_id_from_time] No frame available.\n"sv);
         return -1;
     }    
 
@@ -247,7 +247,7 @@ auto DCVideo::get_data_frames_ptr(size_t idDevice) const noexcept -> const DCDat
     if(idDevice < nb_devices()){
         return &m_devicesDataFrames[idDevice];
     }
-    Logger::error(std::format("[DCVideo::get_data_frames_ptr] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
+    Log::error(std::format("[DCVideo::get_data_frames_ptr] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
     return nullptr;
 }
 
@@ -306,7 +306,7 @@ auto DCVideo::get_transform(size_t idDevice) const -> tool::geo::Mat4d{
     if(idDevice < nb_devices()){
         return m_devicesTransforms[idDevice];
     }
-    Logger::error(std::format("[DCVideo::get_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
+    Log::error(std::format("[DCVideo::get_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
     return geo::Mat4d::identity();
 }
 
@@ -315,7 +315,7 @@ auto DCVideo::set_transform(size_t idDevice, geo::Mat4d tr) -> void{
         m_devicesTransforms[idDevice] = tr;
         return;
     }
-    Logger::error(std::format("[DCVideo::set_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
+    Log::error(std::format("[DCVideo::set_transform] Invalid device id: [{}], number of devices available: [{}]\n", idDevice, nb_devices()));
 }
 
 auto DCVideo::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFrame> frame) -> void{
@@ -329,19 +329,19 @@ auto DCVideo::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFrame> frame
 auto DCVideo::save_to_file(std::string_view path) -> bool{
 
     if(path.length() == 0){
-        Logger::error("[DCVideo::save_to_file] Empty path.\n");
+        Log::error("[DCVideo::save_to_file] Empty path.\n");
         return false;
     }
 
     if(count_frames_from_all_devices() == 0){
-        Logger::error("[DCVideo::save_to_file] No available frames to save.\n");
+        Log::error("[DCVideo::save_to_file] No available frames to save.\n");
         return false;
     }
 
     std::ofstream file;
     file.open(path.data(), std::ios_base::binary);
     if(!file.is_open()){
-        Logger::error(std::format("[DCVideo::save_to_file] Cannot save compressed frames to {}.\n", path));
+        Log::error(std::format("[DCVideo::save_to_file] Cannot save compressed frames to {}.\n", path));
         return false;
     }
     file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
@@ -352,7 +352,7 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
         write_file(file);
         success = true;
     }catch(const std::exception &e){
-        Logger::error(std::format("[DCVideo::save_to_file] Error happend during writing file [{}].\n", e.what()));
+        Log::error(std::format("[DCVideo::save_to_file] Error happend during writing file [{}].\n", e.what()));
     }
     file.close();
 
@@ -364,12 +364,12 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
 //     // TESTS
 
 //     if(path.length() == 0){
-//         Logger::error("[DCVideo::save_to_json_file] Empty path.\n");
+//         Log::error("[DCVideo::save_to_json_file] Empty path.\n");
 //         return false;
 //     }
 
 //     if(count_frames_from_all_devices() == 0){
-//         Logger::error("[DCVideo::save_to_json_file] No available frames to save.\n");
+//         Log::error("[DCVideo::save_to_json_file] No available frames to save.\n");
 //         return false;
 //     }
 
@@ -394,7 +394,7 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
 //     }
 
 //     if(!File::write_binary_content(std::string(path), json::to_bson(json))){
-//         Logger::error(std::format("[DCVideo::save_to_json_file] Cannot save video to json text file, impossible to open file with path: [{}]\n", path));
+//         Log::error(std::format("[DCVideo::save_to_json_file] Cannot save video to json text file, impossible to open file with path: [{}]\n", path));
 //         return false;
 //     }
 
@@ -404,14 +404,14 @@ auto DCVideo::save_to_file(std::string_view path) -> bool{
 auto DCVideo::load_from_file(std::string_view path) -> bool{
 
     if(path.length() == 0){
-        Logger::error("[DCVideo::load_from_file] Empty path.\n");
+        Log::error("[DCVideo::load_from_file] Empty path.\n");
         return false;
     }
 
     // open file
     std::ifstream file(path.data(), std::ios_base::binary);    
     if(!file.is_open()){
-        Logger::error(std::format("[DCVideo::load_from_file] Cannot open compressed frames file: [{}].\n", path));
+        Log::error(std::format("[DCVideo::load_from_file] Cannot open compressed frames file: [{}].\n", path));
         return false;
     }
     file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit);
@@ -424,7 +424,7 @@ auto DCVideo::load_from_file(std::string_view path) -> bool{
     try{
         success = read_file(file);
     }catch(const std::exception &e){
-        Logger::error(std::format("[DCVideo::load_from_file] Error happend during reading file [{}].\n", e.what()));
+        Log::error(std::format("[DCVideo::load_from_file] Error happend during reading file [{}].\n", e.what()));
         return false;
     }
 
@@ -450,14 +450,14 @@ auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, floa
 
     // for(const auto &cData : m_devicesDataFrames){
     //     if(!cData.check_same_mode_for_every_frame()){
-    //         Logger::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
+    //         Log::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
     //         return;
     //     }
     // }
     // auto mode = m_devicesDataFrames.front().first_frame_ptr()->mode;
     // for(const auto &cData : m_devicesDataFrames){
     //     if(cData.first_frame_ptr()->mode != mode){
-    //         Logger::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
+    //         Log::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
     //         return;
     //     }
     // }
@@ -583,7 +583,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
 //         }
 //         return total;
 //     }
-//     Logger::error("[DCVideo::total_audio_frames_size] Invalid device id.\n");
+//     Log::error("[DCVideo::total_audio_frames_size] Invalid device id.\n");
 //     return 0;
 // }
 
@@ -599,7 +599,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
 //     }
 
 //     if(samplesCount == 0){
-//         Logger::error("");
+//         Log::error("");
 //         return;
 //     }
 
@@ -629,7 +629,7 @@ auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings,
 //     }
 
 //     if(samplesCount == 0){
-//         Logger::error("");
+//         Log::error("");
 //         return;
 //     }
 
@@ -659,11 +659,11 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
     //     read_legacy_cloud_video_file(file);
     //     return true;
     // }
-
-    Logger::message(std::format("Video file type: [{}]\n", static_cast<int>(videoType)));
+    
+    Log::message(std::format("Video file type: [{}]\n", static_cast<int>(videoType)));
 
     if(!valid(videoType)){
-        Logger::error("[DCVideo::read_file] Invalid video type.\n");
+        Log::error("[DCVideo::read_file] Invalid video type.\n");
         return false;
     }
 
@@ -720,8 +720,8 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
             }
         }
     }
-
-    Logger::message("END LOADING VIDEO\n");
+    
+    Log::message("END LOADING VIDEO\n");
     return true;
 }
 

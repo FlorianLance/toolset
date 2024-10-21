@@ -51,7 +51,6 @@ HEADERS += \
     qstring_unordered_map.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
-    qt_log.hpp \
     qt_logger.hpp \
     qt_paths.hpp \
     qt_process.hpp \
@@ -109,7 +108,6 @@ SOURCES += \
     gui/widgets/base_qt_sfml_gl_widget.cpp \
     gui/widgets/logger_w.cpp \
     qt_highlighting.cpp \
-    qt_log.cpp \
     qt_logger.cpp \
     qt_paths.cpp \
     qt_str.cpp \

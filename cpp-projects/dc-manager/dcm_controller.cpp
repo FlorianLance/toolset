@@ -46,8 +46,8 @@ DCMController::~DCMController(){
 }
 
 auto DCMController::initialize(size_t id) -> bool{
-
-    auto lg = LogGuard("DCMController::initialize"sv);
+    
+    auto lg = LogG("DCMController::initialize"sv);
 
     // create view
     view = std::make_unique<DCMView>(id);
@@ -65,8 +65,8 @@ auto DCMController::initialize(size_t id) -> bool{
 }
 
 auto DCMController::set_connections() -> void{
-
-    auto lg = LogGuard("DCMController::set_connections"sv);
+    
+    auto lg = LogG("DCMController::set_connections"sv);
 
     // pointers
     auto s              = DCMSignals::get();
@@ -84,17 +84,18 @@ auto DCMController::set_connections() -> void{
     auto calibrator     = &model->calibrator;
 
     // from logger
-    Logger::get()->message_signal.connect([&](std::string message){
+    auto logger = Logger::get_instance();
+    logger->message_signal.connect([&](std::string message){
         view->mainW.append_global_log(message);
-        std::cout << message;
+        // std::cout << message;
     });
-    Logger::get()->warning_signal.connect([&](std::string warning){
+    logger->warning_signal.connect([&](std::string warning){
         view->mainW.append_global_log(warning);
-        std::cerr << warning;
+        // std::cerr << warning;
     });
-    Logger::get()->error_signal.connect([&](std::string error){
+    logger->error_signal.connect([&](std::string error){
         view->mainW.append_global_log(error);
-        std::cerr << error;
+        // std::cerr << error;
     });
 
     // ui
@@ -214,7 +215,7 @@ auto DCMController::set_connections() -> void{
 }
 
 auto DCMController::start() -> void{
-    auto lg = LogGuard("DCMController::start"sv);
+    auto lg = LogG("DCMController::start"sv);
     view->start();
 }
 

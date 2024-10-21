@@ -49,7 +49,7 @@ DCGController::~DCGController(){
 
 auto DCGController::initialize(size_t id) -> bool{
 
-    auto lg = LogGuard("DCGController::initialize"sv);
+    auto lg = LogG("DCGController::initialize"sv);
 
     // init view
     view  = std::make_unique<DCGView>(id);
@@ -64,7 +64,7 @@ auto DCGController::initialize(size_t id) -> bool{
     // initialize
     // # model
     if(!model->initialize()){
-        Logger::error("Invalid initialization.\n");
+        Log::error("Invalid initialization.\n");
         return false;
     }
 
@@ -78,7 +78,7 @@ auto DCGController::initialize(size_t id) -> bool{
 
 auto DCGController::set_connections() -> void{
 
-    auto lg = LogGuard("DCGController::set_connections"sv);
+    auto lg = LogG("DCGController::set_connections"sv);
 
     // pointers
     auto s         = DCGSignals::get();
@@ -91,17 +91,18 @@ auto DCGController::set_connections() -> void{
     auto server    = &model->server;
 
     // from logger
-    Logger::get()->message_signal.connect([&](std::string message){
+    auto logger = Logger::get_instance();
+    logger->message_signal.connect([&](std::string message){
         view->mainW.append_log(message);
-        std::cout << message;
+        // std::cout << message;
     });
-    Logger::get()->warning_signal.connect([&](std::string warning){
+    logger->warning_signal.connect([&](std::string warning){
         view->mainW.append_log(warning);
-        std::cerr << warning;
+        // std::cerr << warning;
     });
-    Logger::get()->error_signal.connect([&](std::string error){
+    logger->error_signal.connect([&](std::string error){
         view->mainW.append_log(error);
-        std::cerr << error;
+        // std::cerr << error;
     });
 
     device->update_device_name_signal.connect( [&](int deviceId, std::string deviceName){
@@ -181,7 +182,7 @@ auto DCGController::set_connections() -> void{
 }
 
 auto DCGController::start() -> void{
-    auto lg = LogGuard("DCGController::start"sv);
+    auto lg = LogG("DCGController::start"sv);
     view->start();
 }
 

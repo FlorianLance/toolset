@@ -34,7 +34,7 @@
 //             socket->set_option(udp::socket::reuse_address(true));
 //             socket->set_option(udp::socket::receive_buffer_size(receiveBufferSize));
 //         }catch (const boost::system::system_error &error){
-//             // Logger::error(std::format("[UdpReader::init_connection] Cannot bind endpoint {}, {}, error message: {}.\n",
+//             // Log::error(std::format("[UdpReader::init_connection] Cannot bind endpoint {}, {}, error message: {}.\n",
 //                                       // readingAdress, port, error.what()));
 //             clean_socket();
 //             return false;
@@ -58,7 +58,7 @@
 //                 std::this_thread::sleep_for (std::chrono::milliseconds(75));
 //                 socket->close();
 //             }catch (const boost::system::system_error &error){
-//                 // Logger::error(std::format("[UdpReader::clean_connection] Cannot shutdown socket, error message: {}.\n", error.what()));
+//                 // Log::error(std::format("[UdpReader::clean_connection] Cannot shutdown socket, error message: {}.\n", error.what()));
 //             }
 //             socket = nullptr;
 //         }
@@ -72,19 +72,19 @@
 
 //     auto start_reading_thread() -> void{
 //         if(is_reading_thread_started()){
-//             // Logger::error("[UdpReader::start_reading_thread] Reading thread already started.\n");
+//             // Log::error("[UdpReader::start_reading_thread] Reading thread already started.\n");
 //             return;
 //         }
 
 //         if(!is_connected()){
-//             // Logger::error("[UdpReader::start_reading_thread] Socket not connected.\n");
+//             // Log::error("[UdpReader::start_reading_thread] Socket not connected.\n");
 //             return;
 //         }
 
 //         if(thread == nullptr){
 //             thread = std::make_unique<std::thread>(&UdpServer::read_data_thread, this);
 //         }else{
-//             // Logger::error("[UdpReader::start_reading_thread] Cannot start reading, thread not cleaned.\n");
+//             // Log::error("[UdpReader::start_reading_thread] Cannot start reading, thread not cleaned.\n");
 //             return;
 //         }
 //     }
@@ -92,7 +92,7 @@
 //     auto stop_reading_thread() -> void{
 
 //         if(!is_reading_thread_started()){
-//             // Logger::error("[UdpReader::stop_reading_thread] Reading thread not started.\n");
+//             // Log::error("[UdpReader::stop_reading_thread] Reading thread not started.\n");
 //             return;
 //         }
 
@@ -154,7 +154,7 @@
 //             if(error.code() == boost::asio::error::timed_out){
 //                 // timeout_packet_signal();
 //             }else{
-//                 // Logger::error("[UdpReader::read_packet] Cannot read from socket, error message: {}\n", error.what());
+//                 // Log::error("[UdpReader::read_packet] Cannot read from socket, error message: {}\n", error.what());
 //                 connected = false;
 //                 // connection_state_signal(false);
 //             }
@@ -162,7 +162,7 @@
 //         }
 
 //         if(nbBytesReceived == 0){
-//             // Logger::warning("[UdpReader::read_packet] No bytes received.");
+//             // Log::warning("[UdpReader::read_packet] No bytes received.");
 //             return 0;
 //         }
 

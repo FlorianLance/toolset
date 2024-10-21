@@ -51,8 +51,8 @@ DCGGlWindow::DCGGlWindow(std::string_view title, graphics::Screen screen, std::o
 }
 
 auto DCGGlWindow::init_shaders() -> bool{
-
-    Logger::log("DCGGlWindow::init_shaders\n");
+    
+    Log::log("DCGGlWindow::init_shaders\n");
 
     const std::vector<ShaderType> VS_FS         = {ShaderType::vertex,ShaderType::fragment};
     const std::vector<ShaderType> VS_FS_GS      = {ShaderType::vertex,ShaderType::fragment, ShaderType::geometry};
@@ -64,7 +64,7 @@ auto DCGGlWindow::init_shaders() -> bool{
     };
 
     if(!std::filesystem::exists(Paths::get()->shadersDir)){
-        Logger::error("No shaders directory found.\n");
+        Log::error("No shaders directory found.\n");
         return false;
     }
 
@@ -76,14 +76,14 @@ auto DCGGlWindow::init_shaders() -> bool{
         for(const auto &shaderType : *shaderName.second){
             paths.push_back(Paths::get()->get_shader(shaderName.first, get_ext(shaderType)).string());
         }
-
-        Logger::message(std::format("Load shader [{}].\n", shaderName.first));
+        
+        Log::message(std::format("Load shader [{}].\n", shaderName.first));
         if(!Managers::shaders->load_shader(shaderName.first, paths)){
-            Logger::error("Fail to load all shaders.\n");
+            Log::error("Fail to load all shaders.\n");
             Managers::shaders->unbind();
             return false;
         }
-        Logger::message(std::format("Shader [{}] loaded with path [{}].\n", shaderName.first, paths.front()));
+        Log::message(std::format("Shader [{}] loaded with path [{}].\n", shaderName.first, paths.front()));
     }
     Managers::shaders->unbind();
 
@@ -92,8 +92,8 @@ auto DCGGlWindow::init_shaders() -> bool{
 
 
 auto DCGGlWindow::initialize_gl() -> bool{
-
-    Logger::log("DCGGlWindow::initialize_gl\n");
+    
+    Log::log("DCGGlWindow::initialize_gl\n");
 
     // flags
     GL::enable(GL_MULTISAMPLE); // msaa

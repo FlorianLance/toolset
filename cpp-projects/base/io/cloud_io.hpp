@@ -47,7 +47,7 @@ namespace tool::io {
 //         std::ofstream file;
 //         file.open(path);
 //         if(!file.is_open()){
-//             //Logger::error(std::format("[ImageIO::save_image] Cannot open file from path {}.\n", path));
+//             //Log::error(std::format("[ImageIO::save_image] Cannot open file from path {}.\n", path));
 //             return false;
 //         }
 

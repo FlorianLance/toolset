@@ -91,12 +91,12 @@ DCDevice::~DCDevice(){
 auto DCDevice::start_thread() -> void{
 
     if(i->loopT != nullptr){
-        Logger::error("[DCDevice::start_thread] Thread already running."sv);
+        Log::error("[DCDevice::start_thread] Thread already running."sv);
         return;
     }
 
     i->loopT = std::make_unique<std::thread>([&](){
-        Logger::message("[DCDevice::start_thread]\n"sv);
+        Log::message("[DCDevice::start_thread]\n"sv);
         i->doLoopA = true;
         size_t loopCounter = 0;
         while(i->doLoopA){
@@ -156,19 +156,19 @@ auto DCDevice::process() -> void{
 
             auto type = i->deviceS.configS.typeDevice;
             if(type == DCType::AzureKinect){
-                auto lg = LogGuard("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
+                auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
                 i->device = std::make_unique<AzureKinectDeviceImpl>();
             }else if(type == DCType::FemtoBolt){
-                auto lg = LogGuard("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
+                auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
                 i->device = std::make_unique<FemtoBoltDeviceImpl>();
             }else if(type == DCType::FemtoMegaEthernet){
-                auto lg = LogGuard("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
+                auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
                 i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
             }else if(type == DCType::FemtoMegaUSB){
-                auto lg = LogGuard("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
+                auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
                 i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
             }else if(type == DCType::Recording){
-                auto lg = LogGuard("DCDevice::DCDevice RecordingDeviceImpl"sv);
+                auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
                 i->device = std::make_unique<RecordingDeviceImpl>();
             }else{
                 return;

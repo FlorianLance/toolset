@@ -65,15 +65,15 @@ auto DCDeviceDrawer::draw(bool focusWindow) -> void{
 }
 
 auto DCDeviceDrawer::save_current_cloud(const std::string &path) -> void{
-
-    Logger::log("DCDeviceDrawer::save_cloud\n");
+    
+    Log::log("DCDeviceDrawer::save_cloud\n");
 
     m_locker.lock();
     auto frame = cloudsD.front()->lastFrame;
     m_locker.unlock();
 
     if(frame != nullptr){
-        Logger::message(std::format("save_cloud: {}\n", path));
+        Log::message(std::format("save_cloud: {}\n", path));
 
         if(auto cloud = frame->volume_buffer<geo::ColorCloud>(cam::DCVolumeBufferType::ColoredCloud)){
             tool::io::CloudIO::save_cloud(path, *cloud);

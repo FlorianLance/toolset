@@ -43,7 +43,7 @@ auto DCDataFrameBuffer::first_frame_ptr() const -> DCDataFrame*{
     if(!frames.empty()){
         return frames.front().get();
     }
-    Logger::error("[DCCameraData::first_frame] No frame available.\n");
+    Log::error("[DCCameraData::first_frame] No frame available.\n");
     return nullptr;
 }
 
@@ -51,7 +51,7 @@ auto DCDataFrameBuffer::last_frame_ptr() const -> DCDataFrame*{
     if(!frames.empty()){
         return frames.back().get();
     }
-    Logger::error("[DCCameraData::last_frame] No frame available.\n");
+    Log::error("[DCCameraData::last_frame] No frame available.\n");
     return nullptr;
 }
 
@@ -59,7 +59,7 @@ auto DCDataFrameBuffer::get_frame_ptr(size_t idFrame) const -> DCDataFrame*{
     if(idFrame < nb_frames()){
         return frames[idFrame].get();
     }
-    Logger::error(std::format("[DCCameraData::get_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
+    Log::error(std::format("[DCCameraData::get_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
     return nullptr;
 }
 
@@ -99,7 +99,7 @@ auto DCDataFrameBuffer::get_data_frame(size_t idFrame) const noexcept -> std::we
     if(idFrame < nb_frames()){
         return frames[idFrame];
     }
-    Logger::error(std::format("[DCCameraData::get_data_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
+    Log::error(std::format("[DCCameraData::get_data_frame] Invalid frame id [{}], current number of frames [{}].\n", idFrame, nb_frames()));
     return {};
 }
 

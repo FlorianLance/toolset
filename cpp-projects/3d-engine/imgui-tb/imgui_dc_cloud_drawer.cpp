@@ -184,7 +184,7 @@ auto DCCloudDrawer::init_from_colored_cloud_data(const geo::ColorCloud &cloudDat
 //        for(size_t idFrame = 0; idFrame < currentData->audioFramesCount; ++idFrame){
 //            for(size_t idChannel = 0; idChannel < channelsData2.size(); ++idChannel){
 //                //                        if(idChannel == 0){
-//                //                            Logger::message(std::to_string(currentData->audioChannelsData[idChannel][idFrame]) + " ");
+//                //                            Log::message(std::to_string(currentData->audioChannelsData[idChannel][idFrame]) + " ");
 //                //                        }
 //                channelsData2[idChannel].push_back(currentData->audioChannelsData[idChannel][idFrame]);
 //            }

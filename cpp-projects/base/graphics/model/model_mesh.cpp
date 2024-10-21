@@ -215,8 +215,8 @@ auto tool::graphics::ModelMesh::update_animation(std::string_view animationName,
 }
 
 auto tool::graphics::ModelMesh::display_hierarchy() const -> void{
-
-    Logger::message(std::format("{} with name [{}] has [{}] meshes, [{}] animations and [{}] sub nodes.\n"sv,
+    
+    Log::message(std::format("{} with name [{}] has [{}] meshes, [{}] animations and [{}] sub nodes.\n"sv,
                                 parent != nullptr ? "Node"sv : "Root node"sv,
                                 name,
                                 meshes.size(),
@@ -224,12 +224,12 @@ auto tool::graphics::ModelMesh::display_hierarchy() const -> void{
                                 children.size())
                     );
     if(meshes.size() > 0){
-        Logger::message("#Meshes:\n");
+        Log::message("#Meshes:\n");
         size_t id = 0;
         for(const auto &gmesh : meshes){
-            Logger::message(std::format("subMesh: [{}]\n", id++));
+            Log::message(std::format("subMesh: [{}]\n", id++));
             const Mesh *mesh = &gmesh->mesh;
-            Logger::message(std::format("\tvertices: [{}]\n\tnormals: [{}]\n\ttriangles: [{}]\n\ttextures coords: [{}]\n\ttangents: [{}]\n\tbones: [{}]\n"sv,
+            Log::message(std::format("\tvertices: [{}]\n\tnormals: [{}]\n\ttriangles: [{}]\n\ttextures coords: [{}]\n\ttangents: [{}]\n\tbones: [{}]\n"sv,
                 mesh->vertices.size(),
                 mesh->normals.size(),
                 mesh->triIds.size(),
@@ -240,10 +240,10 @@ auto tool::graphics::ModelMesh::display_hierarchy() const -> void{
         }
     }
     if(animations.size() > 0){
-        Logger::message("#Animations:\n");
+        Log::message("#Animations:\n");
         size_t id = 0;
         for(const auto &animation : animations){
-            Logger::message(std::format("\tanimation: [{}][{}]\n\tduration: [{}]\n\tticks per second: [{}]\n"sv,
+            Log::message(std::format("\tanimation: [{}][{}]\n\tduration: [{}]\n\tticks per second: [{}]\n"sv,
                                         id++,
                                         animation.name,
                                         animation.duration,

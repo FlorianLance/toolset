@@ -148,7 +148,7 @@ auto LinesRenderer::initialize(bool hasColors) -> void{
 auto LinesRenderer::load_data(std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> bool {
 
     if(!initialized()){
-        Logger::error("[LinesMeshVAO::load_data] Buffers must be initialized.\n");
+        Log::error("[LinesMeshVAO::load_data] Buffers must be initialized.\n");
         return false;
     }
 
@@ -164,7 +164,7 @@ auto LinesRenderer::load_data(std::span<const GLuint> indices, std::span<const g
     }
 
     if(m_nbIndices == 0){
-        Logger::error("[LinesMeshVAO::load_data] No indices.\n");
+        Log::error("[LinesMeshVAO::load_data] No indices.\n");
         return false;
     }
 
@@ -178,7 +178,7 @@ auto LinesRenderer::load_data(std::span<const GLuint> indices, std::span<const g
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[LinesMeshVAO::load_data] No vertices.\n");
+        Log::error("[LinesMeshVAO::load_data] No vertices.\n");
         return false;
     }
 
@@ -190,7 +190,7 @@ auto LinesRenderer::load_data(std::span<const GLuint> indices, std::span<const g
                 colorBufferUsage
             );
         }else{
-            Logger::error("[LinesMeshVAO::load_data] Invalid color buffer size.\n");
+            Log::error("[LinesMeshVAO::load_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -207,29 +207,29 @@ auto LinesRenderer::update_data(
     std::span<const geo::Pt3f> colors,      size_t colorsOffset) -> bool{
 
     if(!initialized()){
-        Logger::error("[LinesMeshVAO::update_data] Buffers must be initialized.\n");
+        Log::error("[LinesMeshVAO::update_data] Buffers must be initialized.\n");
         return false;
     }
 
     if(!data_loaded()){
-        Logger::error("[LinesMeshVAO::update_data] Data must be loaded.\n");
+        Log::error("[LinesMeshVAO::update_data] Data must be loaded.\n");
         return false;
     }
 
     if(m_nbIndices == 0){
-        Logger::error("[LinesMeshVAO::update_data] No indices.\n");
+        Log::error("[LinesMeshVAO::update_data] No indices.\n");
         return false;
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[LinesMeshVAO::update_data] No vertices.\n");
+        Log::error("[LinesMeshVAO::update_data] No vertices.\n");
         return false;
     }
 
     if(!indices.empty()){
 
         if(!(indicesBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[LinesMeshVAO::update_data] Index buffer storage not dynamic.\n");
+            Log::error("[LinesMeshVAO::update_data] Index buffer storage not dynamic.\n");
             return false;
         }
 
@@ -240,7 +240,7 @@ auto LinesRenderer::update_data(
                 static_cast<GLintptr>(indicesOffset)
             );
         }else{
-            Logger::error("[LinesMeshVAO::update_data] Invalid index buffer size.\n");
+            Log::error("[LinesMeshVAO::update_data] Invalid index buffer size.\n");
             return false;
         }
     }
@@ -248,7 +248,7 @@ auto LinesRenderer::update_data(
     if(!vertices.empty()){
 
         if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[LinesMeshVAO::update_data] Vertex buffer storage not dynamic.\n");
+            Log::error("[LinesMeshVAO::update_data] Vertex buffer storage not dynamic.\n");
             return false;
         }
 
@@ -259,7 +259,7 @@ auto LinesRenderer::update_data(
                 static_cast<GLintptr>(verticesOffset)
             );
         }else{
-            Logger::error("[LinesMeshVAO::update_data] Invalid vertex buffer size.\n");
+            Log::error("[LinesMeshVAO::update_data] Invalid vertex buffer size.\n");
             return false;
         }
     }
@@ -267,7 +267,7 @@ auto LinesRenderer::update_data(
     if(!colors.empty()){
 
         if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[LinesMeshVAO::update_data] Color buffer storage not dynamic.\n");
+            Log::error("[LinesMeshVAO::update_data] Color buffer storage not dynamic.\n");
             return false;
         }
 
@@ -278,7 +278,7 @@ auto LinesRenderer::update_data(
                 static_cast<GLintptr>(colorsOffset)
             );
         }else{
-            Logger::error("[LinesMeshVAO::update_data] Invalid color buffer size.\n");
+            Log::error("[LinesMeshVAO::update_data] Invalid color buffer size.\n");
             return false;
         }
     }

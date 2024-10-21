@@ -99,8 +99,8 @@ auto BaseSfmlGlWindow::init() -> bool{
 }
 
 auto BaseSfmlGlWindow::start() -> void{
-
-    auto lg = LogGuard("BaseSfmlGlWindow::start"sv);
+    
+    auto lg = LogG("BaseSfmlGlWindow::start"sv);
     if(!m_glInitialized){
         return;
     }
@@ -110,7 +110,7 @@ auto BaseSfmlGlWindow::start() -> void{
     startL = Time::nanoseconds_since_epoch();
 
     running = true;
-    Logger::log("Start GL loop\n"sv);
+    Log::log("Start GL loop\n"sv);
     bool firstLoop = true;
 
     ImGui::GetIO().MouseDrawCursor = true;
@@ -129,7 +129,7 @@ auto BaseSfmlGlWindow::start() -> void{
             ImGui::SFML::ProcessEvent(m_scene, event.value());
 
             if (const auto* sE = event->getIf<sf::Event::Closed>()){ // The window requested to be closed
-                Logger::message("Close window.\n");
+                Log::message("Close window.\n");
                 running = false;
                 break;
             }else if(const auto* sE = event->getIf<sf::Event::Resized>()){ // The window was resized
@@ -182,17 +182,17 @@ auto BaseSfmlGlWindow::start() -> void{
 
         // update
         if(firstLoop){
-            Logger::log("Pre-update\n"sv);
+            Log::log("Pre-update\n"sv);
         }
         pre_update();
         pre_update_signal();
         if(firstLoop){
-            Logger::log("Update\n"sv);
+            Log::log("Update\n"sv);
         }
         update();
         update_signal();
         if(firstLoop){
-            Logger::log("Post-Update\n"sv);
+            Log::log("Post-Update\n"sv);
         }
         post_update();
         post_update_signal();
@@ -201,7 +201,7 @@ auto BaseSfmlGlWindow::start() -> void{
 
         // draw opengl
         if(firstLoop){
-            Logger::log("Draw-GL\n"sv);
+            Log::log("Draw-GL\n"sv);
         }
         draw_gl();
         draw_gl_signal();
@@ -217,7 +217,7 @@ auto BaseSfmlGlWindow::start() -> void{
             ImGui::SFML::Update(m_scene, deltaClock.restart());
 
             if(firstLoop){
-                Logger::log("Draw-ImGUI\n"sv);
+                Log::log("Draw-ImGUI\n"sv);
             }
 
             // imgui
@@ -231,7 +231,7 @@ auto BaseSfmlGlWindow::start() -> void{
             ImGui::EndFrame();
 
             if(firstLoop){
-                Logger::log("Draw-SFML\n"sv);
+                Log::log("Draw-SFML\n"sv);
             }
 
             // render sfml scene
@@ -244,7 +244,7 @@ auto BaseSfmlGlWindow::start() -> void{
         m_scene.popGLStates();
 
         if(firstLoop){
-            Logger::log("Sleep\n"sv);
+            Log::log("Sleep\n"sv);
         }
 
         // sleep for fps
@@ -258,7 +258,7 @@ auto BaseSfmlGlWindow::start() -> void{
         firstLoop = false;
 
         if(firstLoop){
-            Logger::log("End loop\n"sv);
+            Log::log("End loop\n"sv);
         }
     }
 
@@ -280,8 +280,8 @@ auto BaseSfmlGlWindow::quit() -> void{
 }
 
 auto BaseSfmlGlWindow::init_sfml_window() -> bool{
-
-    auto lg = LogGuard("BaseSfmlGlWindow::init_sfml_window"sv);
+    
+    auto lg = LogG("BaseSfmlGlWindow::init_sfml_window"sv);
     // close previously opened window
     if(m_scene.isOpen()){
         m_scene.close();
@@ -296,8 +296,8 @@ auto BaseSfmlGlWindow::init_sfml_window() -> bool{
 }
 
 auto BaseSfmlGlWindow::base_resize_windows(sf::Event::Resized event) -> void{
-
-    auto lg = LogGuard("BaseSfmlGlWindow::base_resize_windows"sv);
+    
+    auto lg = LogG("BaseSfmlGlWindow::base_resize_windows"sv);
     m_screen = graphics::Screen{event.size.x, event.size.y};
     m_camera.update_projection();
     glViewport(0, 0, static_cast<GLsizei>(m_screen.width()), static_cast<GLsizei>(m_screen.height()));

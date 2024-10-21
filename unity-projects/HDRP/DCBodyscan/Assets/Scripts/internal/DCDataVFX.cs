@@ -23,18 +23,14 @@
 ** SOFTWARE.                                                                      **
 ************************************************************************************/
 
-
 // system
 using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 
 // unity
 using UnityEngine;
 using UnityEngine.VFX;
-using System.Collections;
-using UnityEngine.Video;
-
-
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -42,12 +38,76 @@ using UnityEditor;
 
 namespace BS {
 
-
 #if UNITY_EDITOR
 
+    public class VFXBaseProfile  : MonoBehaviour{
+
+        public GameObject dataVFXGO = null;
+        protected IEnumerator applyProfileCO = null;
+        protected DCDataVFX dataVFX = null;        
+        public void apply() {
+            if(dataVFXGO != null) {
+                dataVFX = dataVFXGO.GetComponent<DCDataVFX>();
+            }
+
+            if(dataVFX == null) {
+                return;
+            }
+
+            init_shader_values();
+
+            if(dataVFXGO != null ) {
+                applyProfileCO = profile_co();
+                StartCoroutine(applyProfileCO);
+            }
+        }
+
+        protected virtual void init_shader_values() {
+
+            if (dataVFX == null) {
+                return;
+            }
+
+            for(int idC = 0; idC <  dataVFX.clouds_count(); ++idC) {
+                dataVFX.set_tint(idC, Color.white);
+                dataVFX.set_display_state(idC, true);
+                dataVFX.set_update_state(idC, true);
+                dataVFX.set_color_factor(idC, 1f);
+                dataVFX.set_octogon_crop_factor(idC, 0.175f);
+                dataVFX.set_particle_size(idC, 0.0118f);
+                // ...
+            }
+        }
+
+        protected virtual IEnumerator profile_co() {
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    public class VFXProfile1 : VFXBaseProfile {
+
+        protected override void init_shader_values() {
+            // ...
+        }
+
+        protected override IEnumerator profile_co() {    
+            yield return new WaitForSeconds(0.1f);
+            // change somes values
+            yield return new WaitForSeconds(0.1f);
+            // trigger particles
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
 
     [CustomEditor(typeof(DCDataVFX))]
     public class DCDataVFXEditor : Editor {
+
+        private float durationS = 10f;
+        private int nbTriggering = 1000;
+        private int particleCountPerTriggering = 25;
+        private float particleLifeTimeS = 12f;
+        private bool reduceCloudVisibilityWhileGenerating = false;
+        private Color forceColor = Color.blue;
 
         private DCDataVFX dataVFX { get { return target as DCDataVFX; } }
         public string dataVFXSettingsJsonFilePath = "./data_vfx_settings.json";
@@ -58,17 +118,62 @@ namespace BS {
 
         public override void OnInspectorGUI() {
 
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Dissolve")) {
-                dataVFX.dissolve(10f, 1000, 25, 12);
-            }
-            if (GUILayout.Button("Solve")) {
-                dataVFX.solve(5f, 1000);
-            }
+            EditorGUILayout.LabelField("[PARTICLES]");            
 
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Duration (S):");
+            durationS = EditorGUILayout.Slider(durationS, 0.1f, 100f);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Triggering count:");
+            nbTriggering = EditorGUILayout.IntSlider(nbTriggering, 1, 100000);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Particle count per trighgering:");
+            particleCountPerTriggering = EditorGUILayout.IntSlider(particleCountPerTriggering, 1, 1000);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Particle lifetime (S):");
+            particleLifeTimeS = EditorGUILayout.Slider(particleLifeTimeS, 0.1f, 120f);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Reduce cloud visibility while generating:");
+            reduceCloudVisibilityWhileGenerating = EditorGUILayout.Toggle(reduceCloudVisibilityWhileGenerating);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Force color:");
+            forceColor = EditorGUILayout.ColorField(forceColor);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Separator();
+
+            EditorGUILayout.BeginHorizontal();                      
+            if (GUILayout.Button("Generate")) {
+                dataVFX.generate_particles(durationS, nbTriggering, particleCountPerTriggering, particleLifeTimeS, reduceCloudVisibilityWhileGenerating);
+            }
+            if (GUILayout.Button("Restore visibility")) {
+                dataVFX.restore_visibility(durationS, nbTriggering);                
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Fade to color")) {
+                dataVFX.fade_to_color(durationS, forceColor);
+            }
+            if (GUILayout.Button("Restore color")) {
+                dataVFX.restore_color();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Separator();
+            EditorGUILayout.Separator();
+
+            EditorGUILayout.LabelField("[JSON]");
 
             //GUILayout.TextArea("Type the base path for the JSON file (id of the grabber and JSON ext will be added automatically");
             dataVFXSettingsJsonFilePath = GUILayout.TextField(dataVFXSettingsJsonFilePath);
@@ -100,8 +205,9 @@ namespace BS {
         private List<GraphicsBuffer> normalsGBuffers = new List<GraphicsBuffer>();
         private Mesh paraboloidMesh = null;
 
-        private IEnumerator dissolveCO;
-        private IEnumerator solveCO;
+        private IEnumerator fadeToColorCo = null;
+        private IEnumerator generateParticlesCo = null;
+        private IEnumerator solveCO = null;
 
         public void initialize(int nbClouds, int sizeMaxCloud = 640 * 576) {
 
@@ -307,7 +413,28 @@ namespace BS {
             }
         }
 
-        public IEnumerator dissolve_co(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS) {
+        public IEnumerator fade_to_color_co(float durationS, Color color) {
+
+            float offestTime = durationS / 1000f;
+
+            foreach (var cloud in cloudsGO) {
+                var vfx = cloud.GetComponent<VisualEffect>();
+                vfx.SetFloat("ForceColorFactor", 0f);
+                vfx.SetVector4("ForceColor", color);
+            }
+
+            for (int ii = 0; ii < 1000; ++ii) {
+
+                foreach (var cloud in cloudsGO) {
+                    var vfx = cloud.GetComponent<VisualEffect>();
+                    vfx.SetFloat("ForceColorFactor", ii / 1000f);
+                }
+                yield return new WaitForSeconds(offestTime);
+            }            
+        }
+
+
+        public IEnumerator generate_particles_co(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS, bool reduceCloudVisibiltyWhileGenerating) {
 
             var eventId = Shader.PropertyToID("GenerateParticles");
             foreach (var cloud in cloudsGO) {
@@ -318,7 +445,9 @@ namespace BS {
             for (int ii = 0; ii < nbTriggerings; ++ii) {
                 foreach (var cloud in cloudsGO) {
                     var vfx = cloud.GetComponent<VisualEffect>();
-                    vfx.SetInt("Visibility", (int)(1000 - 1000 * (1f * ii / nbTriggerings)));
+                    if (reduceCloudVisibiltyWhileGenerating) {
+                        vfx.SetInt("Visibility", (int)(1000 - 1000 * (1f * ii / nbTriggerings)));
+                    }
                     vfx.SetInt("ParticuleCountCreation", particleCountPerTriggering);
                     vfx.SendEvent(eventId);
                 }
@@ -326,7 +455,7 @@ namespace BS {
             }
         }
 
-        public IEnumerator solve_co(float durationS, int nbTriggerings) {
+        public IEnumerator restore_visibility_co(float durationS, int nbTriggerings) {
 
             for (int ii = 0; ii < nbTriggerings; ++ii) {
                 foreach (var cloud in cloudsGO) {
@@ -337,16 +466,29 @@ namespace BS {
             }
         }
 
-        public void dissolve(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS) {
-            dissolveCO = dissolve_co(durationS, nbTriggerings, particleCountPerTriggering, particleLifeTimeS);
-            StartCoroutine(dissolveCO);
+
+        public void fade_to_color(float durationS, Color color) {
+            fadeToColorCo = fade_to_color_co(durationS, color);
+            StartCoroutine(fadeToColorCo);
         }
 
-        public void solve(float durationS, int nbTriggerings) {
-            solveCO = solve_co(durationS, nbTriggerings);
+
+        public void generate_particles(float durationS, int nbTriggerings, int particleCountPerTriggering, float particleLifeTimeS, bool reduceCloudVisibiltyWhileGenerating) {
+            generateParticlesCo = generate_particles_co(durationS, nbTriggerings, particleCountPerTriggering, particleLifeTimeS, reduceCloudVisibiltyWhileGenerating);
+            StartCoroutine(generateParticlesCo);
+        }
+
+        public void restore_visibility(float durationS, int nbTriggerings) {
+            solveCO = restore_visibility_co(durationS, nbTriggerings);
             StartCoroutine(solveCO);
         }
 
+        public void restore_color() {
+            foreach (var cloud in cloudsGO) {
+                var vfx = cloud.GetComponent<VisualEffect>();
+                vfx.SetFloat("ForceColorFactor", 0f);
+            }
+        }
 
         private void clean() {
 

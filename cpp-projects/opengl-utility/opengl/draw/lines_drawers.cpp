@@ -54,14 +54,14 @@ auto LineDrawer2::initialize(bool dynamic) -> void{
     }
     lm->initialize(true);
     if(!lm->load_data(indices, vertices, vertices)){
-        Logger::error("[LineDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[LineDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
 auto LineDrawer2::update(std::span<const Pt3f, 2> vertices, std::span<const Pt3f> colors) -> void{
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0, colors, 0)){
-        Logger::error("[LineDrawer::update] Error during update.\n"sv);
+        Log::error("[LineDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -74,14 +74,14 @@ auto LinesDrawer2::initialize(bool dynamic, std::span<const GLuint> indices, std
     }
     lm->initialize(!colors.empty());
     if(!lm->load_data(indices, vertices, colors)){
-        Logger::error("[LinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[LinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
 auto LinesDrawer2::update(std::span<const GLuint> indices, std::span<const geo::Pt3f> vertices, std::span<const geo::Pt3f> colors) -> void{
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data(indices, 0, vertices, 0, colors, 0)){
-        Logger::error("[LinesDrawer::update] Error during update.\n"sv);
+        Log::error("[LinesDrawer::update] Error during update.\n"sv);
         return;
     }
 }
@@ -110,7 +110,7 @@ auto AxesLinesDrawer::initialize(float length) -> void{
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     lm->initialize(true);
     if(!lm->load_data(indices, vertices, colors)){
-        Logger::error("[AxesLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[AxesLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -141,14 +141,14 @@ auto TriangleLinesDrawer::initialize(bool dynamic) -> void{
     }
     lm->initialize(true);
     if(!lm->load_data(indices, vertices, colors)){
-        Logger::error("[TriangleLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[TriangleLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
 auto TriangleLinesDrawer::update(std::span<const geo::Pt3f, 3> vertices, std::span<const geo::Pt3f> colors) -> void{
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0, colors, 0)){
-        Logger::error("[TriangleLinesDrawer::update] Error during update.\n"sv);
+        Log::error("[TriangleLinesDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -181,14 +181,14 @@ auto QuadLinesDrawer::initialize(bool dynamic) -> void{
     }
     lm->initialize(true);
     if(!lm->load_data(indices, vertices, colors)){
-        Logger::error("[QuadLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[QuadLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
 auto QuadLinesDrawer::update(std::span<const Pt3f, 4> vertices, std::span<const Pt3f> colors) -> void{
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0, colors, 0)){
-        Logger::error("[QuadLinesDrawer::update] Error during update.\n"sv);
+        Log::error("[QuadLinesDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -236,7 +236,7 @@ auto GridLinesDrawer::initialize(float width, float height, int nbX, int nbY, bo
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     lm->initialize(false);
     if(!lm->load_data(indices, vertices)){
-        Logger::error("[GridLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[GridLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -268,7 +268,7 @@ auto FrustumDrawerLinesDrawer::initialize(bool dynamic, float fovy, float ar, fl
     }
     lm->initialize(false);
     if(!lm->load_data(indices, vertices)){
-        Logger::error("[FrustumDrawerLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[FrustumDrawerLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -292,7 +292,7 @@ auto FrustumDrawerLinesDrawer::update(float fovy, float ar, float nearDist, floa
     
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0)){
-        Logger::error("[FrustumDrawerLinesDrawer::update] Error during update.\n"sv);
+        Log::error("[FrustumDrawerLinesDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -330,7 +330,7 @@ auto OrientedBoundingBoxLinesDrawer::initialize(bool dynamic, const geo::OBB3<fl
     }
     lm->initialize(false);
     if(!lm->load_data(indices, vertices)){
-        Logger::error("[OrientedBoundingBoxLinesDrawer::initialize] Error during loading.\n"sv);
+        Log::error("[OrientedBoundingBoxLinesDrawer::initialize] Error during loading.\n"sv);
     }
 }
 
@@ -355,7 +355,7 @@ auto OrientedBoundingBoxLinesDrawer::update(const geo::OBB3<float> &obb) -> void
 
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0)){
-        Logger::error("[OrientedBoundingBoxLinesDrawer::update] Error during update.\n"sv);
+        Log::error("[OrientedBoundingBoxLinesDrawer::update] Error during update.\n"sv);
     }
 }
 

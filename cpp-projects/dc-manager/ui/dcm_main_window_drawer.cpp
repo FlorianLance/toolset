@@ -329,7 +329,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
         if (ImGui::BeginMenu("Recordings")){
             if (ImGui::BeginMenu("All###recording_all")){
                 if(ImGui::MenuItem("Save all current clouds files")){
-                    Logger::message("Save all current clouds\n");
+                    Log::message("Save all current clouds\n");
                     ImGuiFileDialog::Instance()->OpenDialog("Save all current clouds", "Choose base name file to save", ".obj", ".");
                 }
                 ImGui::EndMenu();
@@ -418,7 +418,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
     if (ImGuiFileDialog::Instance()->Display("Save all current clouds", flags, ImVec2(500,200))) {
 
         if (ImGuiFileDialog::Instance()->IsOk()){
-            Logger::message("Save all current cloudsl\n");
+            Log::message("Save all current cloudsl\n");
             // DCMSignals::get()->save_all_current_clouds_signal(ImGuiFileDialog::Instance()->GetFilePathName());
         }
         ImGuiFileDialog::Instance()->Close();
@@ -427,7 +427,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
     for(size_t ii = 0; ii < m_nbDevices; ++ii){
         if (ImGuiFileDialog::Instance()->Display(std::format("Save current cloud {}",ii), flags,  ImVec2(500,200))) {
             if (ImGuiFileDialog::Instance()->IsOk()){
-                Logger::message((std::format("Save current cloud {}\n",ii)));
+                Log::message((std::format("Save current cloud {}\n",ii)));
                 DCMSignals::get()->save_current_cloud_signal(ii, ImGuiFileDialog::Instance()->GetFilePathName());
             }
             ImGuiFileDialog::Instance()->Close();

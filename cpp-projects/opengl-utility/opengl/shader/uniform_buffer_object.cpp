@@ -41,7 +41,7 @@ UBO::~UBO(){
 auto UBO::initialize() -> void{
 
     if(is_initialized()){
-        Logger::error(std::format("[UBO::initialize] Already initialized (id:{}).\n", m_handle));
+        Log::error(std::format("[UBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_buffers(1, &m_handle);
@@ -63,17 +63,17 @@ auto UBO::clean() -> void{
 auto UBO::load_data(const GLvoid *data, GLsizeiptr size, GLenum usage) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[UBO::load_data] Not initialized.\n");
+        Log::error("[UBO::load_data] Not initialized.\n");
         return false;
     }
 
     if(is_data_loaded()){
-        Logger::error(std::format("[UBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
+        Log::error(std::format("[UBO::load_data] Data has already been loaded (id:{}).\n", m_handle));
         return false;
     }
 
     if(size == 0){
-        Logger::error(std::format("[UBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
+        Log::error(std::format("[UBO::load_data] Size must be > 0 (id:{}).\n", m_handle));
         return false;
     }
 
@@ -90,22 +90,22 @@ auto UBO::load_data(const GLvoid *data, GLsizeiptr size, GLenum usage) -> bool{
 auto UBO::update_data(const GLvoid *data, GLsizeiptr size, GLintptr offset) -> bool{
 
     if(!is_initialized()){
-        Logger::error("[UBO::update_data] Not initialized.\n");
+        Log::error("[UBO::update_data] Not initialized.\n");
         return false;
     }
 
     if(!is_data_loaded()){
-        Logger::error(std::format("[UBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
+        Log::error(std::format("[UBO::update_data] Data must be loaded before update (id:{}).\n", m_handle));
         return false;
     }
 
     if(!is_dynamic()){
-        Logger::error(std::format("[UBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
+        Log::error(std::format("[UBO::update_data] Buffet storage is not dynamic with usage [{}] (id:{}).\n", m_usage, m_handle));
         return false;
     }
 
     if(size + offset > loaded_data_size()){
-        Logger::error(std::format("[UBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
+        Log::error(std::format("[UBO::update_data] Loaded data size [{}] is to small with update size [{}] and offset [{}] (id:{}).\n",
         m_loadedDataSize, size, offset, m_handle));
         return false;
     }
@@ -125,13 +125,13 @@ auto UBO::set_data_space_from_shader(ShaderProgram *shader, GLenum usage) -> voi
     // shared, packed, std140, and std430
     // https://www.khronos.org/opengl/wiki/Interface_Block_(GLSL)
     if(shader == nullptr){
-        Logger::error("[UBO::set_data_space_from_shader] Shader program is null.\n");
+        Log::error("[UBO::set_data_space_from_shader] Shader program is null.\n");
         return;
     }
 
     const auto nameStr = get_block_name();
     if(shader->uniformBlocks.count(nameStr) == 0){
-        Logger::error("[UBO::set_data_space_from_shader] UBO block uniform not found in shader.\n");
+        Log::error("[UBO::set_data_space_from_shader] UBO block uniform not found in shader.\n");
         return;
     }
 

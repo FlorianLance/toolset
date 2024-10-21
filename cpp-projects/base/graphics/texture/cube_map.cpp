@@ -35,7 +35,7 @@ auto CubeMap::load_2d_images_files(const std::array<std::string, 6> &pathTexture
 
     for(size_t ii = 0; ii < pathTextures.size(); ++ii){
         if(!textures[ii].load_2d_image_file_data(pathTextures[ii], flip, targetNbChannels)){
-            Logger::error("[CubeMap] Error during files textures loading.\n");
+            Log::error("[CubeMap] Error during files textures loading.\n");
             return false;
         }
     }
@@ -46,7 +46,7 @@ auto CubeMap::load_2d_images_files(const std::string &basePath, std::array<std::
 
     for(size_t ii = 0; ii < extensions.size(); ++ii){
         if(!textures[ii].load_2d_image_file_data(basePath + extensions[ii], flip, targetNbChannels)){
-            Logger::error("[CubeMap] Error during files textures loading.\n");
+            Log::error("[CubeMap] Error during files textures loading.\n");
             return false;
         }
     }

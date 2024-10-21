@@ -44,9 +44,9 @@ public:
     int key() override{
         return get<int>(ParametersContainer::Global, "resource_key");
     }
-
-    Logger::SenderT sender_type() override{
-        return Logger::SenderT::Resource;
+    
+    ExLoggerM::SenderT sender_type() override{
+        return ExLoggerM::SenderT::Resource;
     }
 };
 }

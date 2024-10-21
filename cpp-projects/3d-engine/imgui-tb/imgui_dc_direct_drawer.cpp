@@ -39,8 +39,8 @@
 using namespace tool::graphics;
 
 auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
-
-    auto lg = LogGuard("DCDirectDrawer::initialize");
+    
+    auto lg = LogG("DCDirectDrawer::initialize");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
 
     if(nbGrabbers > m_lastFrames.size()){
@@ -143,8 +143,8 @@ auto DCDirectDrawer::draw_only_clouds() -> void{
 }
 
 auto DCDirectDrawer::save_current_cloud(size_t idC, const std::string &path) -> void{
-
-    Logger::log("DCDirectDrawer::save_current_cloud\n");
+    
+    Log::log("DCDirectDrawer::save_current_cloud\n");
 
     m_locker.lock();
     auto frame = cloudsD[idC]->lastFrame;

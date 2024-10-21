@@ -96,7 +96,7 @@ auto PointsRenderer::load_data(
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[PointsRenderer::load_data] No vertices.\n");
+        Log::error("[PointsRenderer::load_data] No vertices.\n");
         return false;
     }
 
@@ -108,7 +108,7 @@ auto PointsRenderer::load_data(
                 colorBufferUsage
             );
         }else{
-            Logger::error("[PointsRenderer::load_data] Invalid color buffer size.\n");
+            Log::error("[PointsRenderer::load_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -121,7 +121,7 @@ auto PointsRenderer::load_data(
                 normalBufferUsage
             );
         }else{
-            Logger::error("[PointsRenderer::load_data] Invalid normal buffer size.\n");
+            Log::error("[PointsRenderer::load_data] Invalid normal buffer size.\n");
             return false;
         }
     }
@@ -138,24 +138,24 @@ auto PointsRenderer::update_data(
     ) -> bool{
 
     if(!initialized()){
-        Logger::error("[PointsRenderer::update_data] Buffers must be initialized.\n");
+        Log::error("[PointsRenderer::update_data] Buffers must be initialized.\n");
         return false;
     }
 
     if(!data_loaded()){
-        Logger::error("[PointsRenderer::update_data] Data must be loaded.\n");
+        Log::error("[PointsRenderer::update_data] Data must be loaded.\n");
         return false;
     }
 
     if(m_nbVertices == 0){
-        Logger::error("[PointsRenderer::update_data] No vertices.\n");
+        Log::error("[PointsRenderer::update_data] No vertices.\n");
         return false;
     }
 
     if(!vertices.empty()){
 
         if(!(positionBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[PointsRenderer::update_data] Vertex buffer storage not dynamic.\n");
+            Log::error("[PointsRenderer::update_data] Vertex buffer storage not dynamic.\n");
             return false;
         }
 
@@ -166,7 +166,7 @@ auto PointsRenderer::update_data(
                 static_cast<GLintptr>(verticesOffset)
             );
         }else{
-            Logger::error("[PointsRenderer::update_data] Invalid vertex buffer size.\n");
+            Log::error("[PointsRenderer::update_data] Invalid vertex buffer size.\n");
             return false;
         }
     }
@@ -174,7 +174,7 @@ auto PointsRenderer::update_data(
     if(m_hasColors && (!colors.empty())){
 
         if(!(colorBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
+            Log::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
             return false;
         }
 
@@ -185,7 +185,7 @@ auto PointsRenderer::update_data(
                 static_cast<GLintptr>(colorsOffset)
             );
         }else{
-            Logger::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
+            Log::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -193,7 +193,7 @@ auto PointsRenderer::update_data(
     if(m_hasNormals && (!normals.empty())){
 
         if(!(normalBufferUsage & GL_DYNAMIC_STORAGE_BIT)){
-            Logger::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
+            Log::error("[PointsRenderer::update_data] Color buffer storage not dynamic.\n");
             return false;
         }
 
@@ -204,7 +204,7 @@ auto PointsRenderer::update_data(
                 static_cast<GLintptr>(normalsOffset)
             );
         }else{
-            Logger::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
+            Log::error("[PointsRenderer::update_data] Invalid color buffer size.\n");
             return false;
         }
     }
@@ -439,7 +439,7 @@ auto PointsRenderer::vertex_array_attrib_binding() -> void{
 auto PointsRenderer::initialize(size_t size, bool hasColors, bool hasNormals) -> void{
 
     if(size == 0){
-        Logger::error("[PointsMesh::init_3d_points] No points.\n");
+        Log::error("[PointsMesh::init_3d_points] No points.\n");
         return;
     }
     
@@ -489,7 +489,7 @@ auto PointsRenderer::initialize(size_t size, bool hasColors, bool hasNormals) ->
 auto PointsRenderer::init_and_load_2d_points(std::span<const Pt2f> points, std::span<const Pt3f> colors, std::span<const Pt2f> normals) -> void {
 
     if(points.empty()){
-        Logger::error("[PointsMesh::init_and_load_2d_points] No points.\n");
+        Log::error("[PointsMesh::init_and_load_2d_points] No points.\n");
         return;
     }
     
@@ -537,7 +537,7 @@ auto PointsRenderer::init_and_load_2d_points(std::span<const Pt2f> points, std::
 auto PointsRenderer::update_3d_points(std::span<const geo::Pt3f> points, std::span<const geo::Pt3f> colors, std::span<const geo::Pt3f> normals, GLintptr offset) -> void{
     
     if(!m_buffersInitialized){
-        Logger::error("[PointsMesh::load_3d_points] Buffer not initialized.\n");
+        Log::error("[PointsMesh::load_3d_points] Buffer not initialized.\n");
         return;
     }
 
@@ -567,7 +567,7 @@ auto PointsRenderer::update_3d_points(std::span<const geo::Pt3f> points, std::sp
 auto PointsRenderer::init_and_load_3d_points(std::span<const Pt3f> points, std::span<const Pt3f> colors, std::span<const Pt3f> normals) -> void{
 
     if(points.empty()){
-        Logger::error("[PointsMesh::init_and_load_3d_points] No points.\n");
+        Log::error("[PointsMesh::init_and_load_3d_points] No points.\n");
         return;
     }
     
@@ -613,7 +613,7 @@ auto PointsRenderer::init_and_load_3d_points(std::span<const Pt3f> points, std::
 auto PointsRenderer::init_and_load_3d_voxels(std::span<const Pt3<int>> voxels, std::span<const Pt3f> colors) -> void{
 
     if(voxels.empty()){
-        Logger::error("[PointsMesh::init_and_load_3d_voxels] No voxels.\n");
+        Log::error("[PointsMesh::init_and_load_3d_voxels] No voxels.\n");
         return;
     }
     

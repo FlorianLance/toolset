@@ -87,7 +87,7 @@ struct OrbbecDeviceManager{
     ob::Context context;
 
     OrbbecDeviceManager(){
-        tool::LogGuard lg("[OrbbecDeviceManager::OrbbecDeviceManager]");
+        tool::LogG lg("[OrbbecDeviceManager::OrbbecDeviceManager]");
         try{
             context.setLoggerSeverity(OB_LOG_SEVERITY_WARN);
             context.enableNetDeviceEnumeration(false);
@@ -96,12 +96,12 @@ struct OrbbecDeviceManager{
             std::fill(validity.begin(), validity.end(), false);
 
         }catch(const ob::Error &e) {
-            tool::Logger::error(std::format("Orbbec query device list error: [{}]\n"sv, e.getMessage()));
+            tool::Log::error(std::format("Orbbec query device list error: [{}]\n"sv, e.getMessage()));
         }catch(const std::exception &e){
-            tool::Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+            tool::Log::error(std::format("Error: [{}]\n"sv, e.what()));
         }
-
-        tool::Logger::message(std::format("Devices founds: [{}]\n", devicesList->deviceCount()));
+        
+        tool::Log::message(std::format("Devices founds: [{}]\n", devicesList->deviceCount()));
         for(size_t idD = 0; idD < devicesList->deviceCount(); ++idD){
             try{
                 auto dev  = devicesList->getDevice(static_cast<int>(idD));
@@ -113,34 +113,34 @@ struct OrbbecDeviceManager{
 
                 if(deviceName.contains("Femto Bolt")){
                     femtoBoltDevices.push_back(dev);
-                    Logger::message(std::format("[{}] Femto Bolt:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n", idD, info->serialNumber(), info->pid(), connectionT));
+                    Log::message(std::format("[{}] Femto Bolt:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n", idD, info->serialNumber(), info->pid(), connectionT));
                     if(!connectionT.contains("USB3")){
-                        Logger::warning("Connection is not USB3, bandwitch will be too low!\n");
+                        Log::warning("Connection is not USB3, bandwitch will be too low!\n");
                     }
                 }else if(deviceName.contains("Femto Mega")){
                     if(connectionT.contains("Ethernet")){
                         femtoMegaEthernetDevices.push_back(dev);
-                        Logger::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n\tIP Address: [{}]\n",
+                        Log::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}] \n\tIP Address: [{}]\n",
                             idD, info->serialNumber(), info->pid(), connectionT, info->ipAddress()));
 
                     }else if(connectionT.contains("USB")){
                         femtoMegaUSBDevices.push_back(dev);
-                        Logger::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}]\n",
+                        Log::message(std::format("[{}] Femto Mega:\n\tSerial number: [{}]\n\tPID: [{}]\n\tConnection: [{}]\n",
                             idD, info->serialNumber(), info->pid(), connectionT));
                         if(!connectionT.contains("USB3")){
-                            Logger::warning("Connection is not USB3, bandwitch will be too low!\n");
+                            Log::warning("Connection is not USB3, bandwitch will be too low!\n");
                         }
                     }
                 }
 
             }catch(const ob::Error &) {
-                Logger::message(std::format("[{}] Unavailable device, may be used in another program\n",idD));
+                Log::message(std::format("[{}] Unavailable device, may be used in another program\n",idD));
             }
         }
     }
 
     ~OrbbecDeviceManager(){
-        tool::LogGuard lg("[OrbbecDeviceManager::~OrbbecDeviceManager]");
+        tool::LogG lg("[OrbbecDeviceManager::~OrbbecDeviceManager]");
     }
 
     std::vector<std::shared_ptr<ob::Device>> femtoBoltDevices;
@@ -238,8 +238,8 @@ auto OrbbecBaseDevice::Impl::set_property_value(OBPropertyID pId, int32_t value)
 }
 
 auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, const OBCameraParam &cameraParam) -> k4a::calibration{
-
-    auto lg = LogGuard("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
 
     const auto &obDepthIntrinsics = cameraParam.depthIntrinsic;
     const auto &obDepthDistorsion = cameraParam.depthDistortion;
@@ -360,8 +360,8 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
     // k4a_calibration_extrinsics_t extrinsics[K4A_CALIBRATION_TYPE_NUM][K4A_CALIBRATION_TYPE_NUM];
     // k4a_depth_mode_t depth_mode;             /**< Depth camera mode for which calibration was obtained. */
     // k4a_color_resolution_t color_resolution; /**< Color camera resolution for which calibration was obtained. */
-
-    auto lg = LogGuard("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::Impl::k4a_convert_calibration"sv);
 
     const auto &obDepthIntrinsics = calibrationParam.intrinsics[OB_SENSOR_DEPTH];
     const auto &obDepthDistorsion = calibrationParam.distortion[OB_SENSOR_DEPTH];
@@ -479,8 +479,8 @@ auto OrbbecBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, 
 
 
 OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>()){
-
-    auto lg = LogGuard("OrbbecBaseDevice::OrbbecBaseDevice"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::OrbbecBaseDevice"sv);
     if(i->devicesM == nullptr){         
         i->devicesM = std::make_unique<OrbbecDeviceManager>();
     }
@@ -488,15 +488,15 @@ OrbbecBaseDevice::OrbbecBaseDevice(DCType deviceType) : i(std::make_unique<Impl>
 }
 
 OrbbecBaseDevice::~OrbbecBaseDevice(){
-    auto lg = LogGuard("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
+    auto lg = LogG("~OrbbecBaseDevice::OrbbecBaseDevice"sv);
 }
 
 
 auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
-
-    auto lg = LogGuard("OrbbecBaseDevice::open"sv);
-
-    Logger::message("### Open device ###\n"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::open"sv);
+    
+    Log::message("### Open device ###\n"sv);
 
     i->device = nullptr;
 
@@ -506,10 +506,10 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
             if(!configS.useSerialNumber){
                 if(configS.idDevice >= i->devicesM->femtoBoltDevices.size()){
-                    Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
+                    Log::error("[OrbbecDevice] Invalid id device.\n"sv);
                     return false;
                 }
-                Logger::message("Retrieve from devices list.\n");
+                Log::message("Retrieve from devices list.\n");
                 i->device     = i->devicesM->femtoBoltDevices[configS.idDevice];
             }else{
                 for(auto &dev : i->devicesM->femtoBoltDevices){
@@ -526,11 +526,11 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
             if(!configS.useSerialNumber){
                 if(configS.idDevice >= i->devicesM->femtoMegaUSBDevices.size()){
-                    Logger::error("[OrbbecDevice] Invalid id device.\n"sv);
+                    Log::error("[OrbbecDevice] Invalid id device.\n"sv);
                     return false;
                 }
-
-                Logger::message("Retrieve from devices list.\n");
+                
+                Log::message("Retrieve from devices list.\n");
                 i->device     = i->devicesM->femtoMegaUSBDevices[configS.idDevice];
             }else{
 
@@ -550,7 +550,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
             bool found = false;
             for(auto &dev : i->devicesM->femtoMegaEthernetDevices){
-                Logger::message(std::format("compare [{}] [{}]\n", dev->getDeviceInfo()->ipAddress(), wantedAddress));
+                Log::message(std::format("compare [{}] [{}]\n", dev->getDeviceInfo()->ipAddress(), wantedAddress));
                 if(dev->getDeviceInfo()->ipAddress() == wantedAddress){
                     i->device = dev;
                     found = true;
@@ -559,20 +559,20 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
             }
 
             if(!found){
-                Logger::message("Device not avaialble from list, create new net device.\n");
-                Logger::message(std::format("Open device from ip address: [{}]\n", wantedAddress));
+                Log::message("Device not avaialble from list, create new net device.\n");
+                Log::message(std::format("Open device from ip address: [{}]\n", wantedAddress));
                 i->device = i->devicesM->context.createNetDevice(wantedAddress.c_str() , 8090);
             }
         }
 
         if(i->device == nullptr){
-            Logger::error("Invalid device.\n");
+            Log::error("Invalid device.\n");
             return false;
         }
 
         // Update the configuration items of the configuration file, and keep the original configuration for other items
         auto synchConfig = i->device->getMultiDeviceSyncConfig();
-        Logger::message(std::format("CURRENT SYNC CONFIG BEFORE:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
+        Log::message(std::format("CURRENT SYNC CONFIG BEFORE:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
             (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
 
         // // check if changes
@@ -581,7 +581,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         // switch (configS.synchMode) {
         // case DCSynchronisationMode::Standalone:
 
-        //     Logger::message("### STANDALONE ###\n");
+        //     Log::message("### STANDALONE ###\n");
         //     // The device does not synchronize with other devices.
         //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized.
         //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_STANDALONE;
@@ -590,7 +590,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         //     break;
         // case DCSynchronisationMode::Main:
 
-        //     Logger::message("### PRIMARY ###\n");
+        //     Log::message("### PRIMARY ###\n");
         //     // The device is the primary device in the multi-device system, it will output the trigger signal via VSYNC_OUT pin on synchronization port by default.
         //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref depthDelayUs or @ref trigger2ImageDelayUs.
         //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_PRIMARY;
@@ -603,7 +603,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
         // case DCSynchronisationMode::Subordinate:
 
-        //     Logger::message("### SUBORDINATE ###\n");
+        //     Log::message("### SUBORDINATE ###\n");
         //     // The device is the secondary device in the multi-device system, it will receive the trigger signal via VSYNC_IN pin on synchronization port. It
         //     // will out the trigger signal via VSYNC_OUT pin on synchronization port by default.
         //     // The Color and Depth should be set to same frame rates, the Color and Depth will be synchronized and can be adjusted by @ref colorDelayUs, @ref
@@ -620,7 +620,7 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 
         //     break;
         // default:
-        //     Logger::message("### DEFAULT ###\n");
+        //     Log::message("### DEFAULT ###\n");
         //     // The device does not synchronize with other devices,
         //     // The Color and Depth can be set to different frame rates.
         //     synchConfig.syncMode                = OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN;
@@ -647,38 +647,38 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         // std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         // synchConfig = i->device->getMultiDeviceSyncConfig();
-        // Logger::message(std::format("SYNC CONFIG AFTER:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
+        // Log::message(std::format("SYNC CONFIG AFTER:\n syncMode: {} \n trigger2ImageDelayUs: {} \n colorDelayUs: {} \n tdepthDelayUs: {} \n triggerOutEnable: {} \n triggerOutDelayUs: {} \n framesPerTrigger: {} \n",
         //                             (int)synchConfig.syncMode, synchConfig.trigger2ImageDelayUs, synchConfig.colorDelayUs, synchConfig.depthDelayUs, synchConfig.triggerOutEnable, synchConfig.triggerOutDelayUs, synchConfig.framesPerTrigger));
-
-
-        Logger::message("Retrieve sensor list.\n");
+        
+        
+        Log::message("Retrieve sensor list.\n");
         i->sensorList = i->device->getSensorList();
-
-        Logger::message(std::format("[{}] sensors found.\n", i->sensorList->count()));
+        
+        Log::message(std::format("[{}] sensors found.\n", i->sensorList->count()));
 
         for(uint32_t idS = 0; idS < i->sensorList->count(); idS++) {
             auto sensor = i->sensorList->getSensor(idS);
             switch(sensor->type()) {
             case OB_SENSOR_COLOR:
-                Logger::message("   Color sensor found.\n"sv);
+                Log::message("   Color sensor found.\n"sv);
                 break;
             case OB_SENSOR_DEPTH:
-                Logger::message("   Depth sensor found.\n"sv);
+                Log::message("   Depth sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR:
-                Logger::message("   Infrared sensor found.\n"sv);
+                Log::message("   Infrared sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR_LEFT:
-                Logger::message("   Infrared left sensor found.\n"sv);
+                Log::message("   Infrared left sensor found.\n"sv);
                 break;
             case OB_SENSOR_IR_RIGHT:
-                Logger::message("   Infrared right sensor found.\n"sv);
+                Log::message("   Infrared right sensor found.\n"sv);
                 break;
             case OB_SENSOR_GYRO:
-                Logger::message("   Gyro sensor found.\n"sv);
+                Log::message("   Gyro sensor found.\n"sv);
                 break;
             case OB_SENSOR_ACCEL:
-                Logger::message("   Accel sensor found.\n"sv);
+                Log::message("   Accel sensor found.\n"sv);
                 break;
             default:
                 break;
@@ -686,20 +686,20 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
         }
 
         auto dInfos     = i->device->getDeviceInfo();
-        Logger::message("Device infos:\n"sv);
-        Logger::message(std::format("  Name: {}\nsv", dInfos->name()));
-        Logger::message(std::format("  Chip type: {}\n"sv, dInfos->asicName()));
-        Logger::message(std::format("  Serialnum: {}\n"sv, dInfos->serialNumber()));
-        Logger::message(std::format("  PID: {}\n"sv, dInfos->pid()));
-        Logger::message(std::format("  VID: {}\n"sv, dInfos->vid()));
-        Logger::message(std::format("  UID: {}\n"sv, dInfos->uid()));
-
-        Logger::message("  Version:\n"sv);
-        Logger::message(std::format("      Firmware: {}\n"sv, dInfos->firmwareVersion()));
-        Logger::message(std::format("      Hardware: {}\n"sv, dInfos->hardwareVersion()));
-        Logger::message(std::format("      SDK minimum supported: {}\n"sv, dInfos->supportedMinSdkVersion()));
-        Logger::message(std::format("      Extension info: {}\n"sv, dInfos->extensionInfo()));
-        Logger::message("  Types:\n"sv);
+        Log::message("Device infos:\n"sv);
+        Log::message(std::format("  Name: {}\nsv", dInfos->name()));
+        Log::message(std::format("  Chip type: {}\n"sv, dInfos->asicName()));
+        Log::message(std::format("  Serialnum: {}\n"sv, dInfos->serialNumber()));
+        Log::message(std::format("  PID: {}\n"sv, dInfos->pid()));
+        Log::message(std::format("  VID: {}\n"sv, dInfos->vid()));
+        Log::message(std::format("  UID: {}\n"sv, dInfos->uid()));
+        
+        Log::message("  Version:\n"sv);
+        Log::message(std::format("      Firmware: {}\n"sv, dInfos->firmwareVersion()));
+        Log::message(std::format("      Hardware: {}\n"sv, dInfos->hardwareVersion()));
+        Log::message(std::format("      SDK minimum supported: {}\n"sv, dInfos->supportedMinSdkVersion()));
+        Log::message(std::format("      Extension info: {}\n"sv, dInfos->extensionInfo()));
+        Log::message("  Types:\n"sv);
         std::string deviceT;
         switch(dInfos->deviceType()){
         case OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA:
@@ -712,18 +712,18 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
             deviceT = "Time-of-flight camera"sv;
             break;
         }
-        Logger::message(std::format("      Device: {}\n"sv, deviceT));
-        Logger::message(std::format("      Connection: {}\n"sv, dInfos->connectionType()));
+        Log::message(std::format("      Device: {}\n"sv, deviceT));
+        Log::message(std::format("      Connection: {}\n"sv, dInfos->connectionType()));
         if(std::string(dInfos->connectionType()) == "Ethernet"sv){
-            Logger::message(std::format("  IP: {}\n"sv, dInfos->ipAddress()));
+            Log::message(std::format("  IP: {}\n"sv, dInfos->ipAddress()));
         }
 
     }catch(const ob::Error &e) {
-        Logger::error(std::format("Open error: [{}]\n"sv, e.getMessage()));
+        Log::error(std::format("Open error: [{}]\n"sv, e.getMessage()));
         i->device = nullptr;
         return false;
     }catch(const std::exception &e){
-        Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+        Log::error(std::format("Error: [{}]\n"sv, e.what()));
         i->device = nullptr;
         return false;
     }
@@ -735,8 +735,8 @@ auto OrbbecBaseDevice::open(const DCModeInfos &mInfos, const DCConfigSettings &c
 auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettings &configS, const DCColorSettings &colorS) -> bool{
 
     static_cast<void>(configS);
-
-    auto lg = LogGuard("OrbbecBaseDevice::initialize"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::initialize"sv);
 
     i->frameSet      = nullptr;
     i->colorImage    = nullptr;
@@ -761,29 +761,29 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 
 
     //i->deviceType = mInfos.device();
-
-    Logger::message("### Start pipeline ###.\n");
-    Logger::message("Create config.\n");
+    
+    Log::message("### Start pipeline ###.\n");
+    Log::message("Create config.\n");
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
     try {
 
         if(i->pipe != nullptr){
-            Logger::message("Close pipeline.\n");
+            Log::message("Close pipeline.\n");
             i->pipe->stop();
-            Logger::message("Destroy pipeline.\n");
+            Log::message("Destroy pipeline.\n");
             i->pipe = nullptr;
         }
-        Logger::message("Create new pipeline.\n");
+        Log::message("Create new pipeline.\n");
         i->pipe = std::make_unique<ob::Pipeline>(i->device);
-
-        Logger::message("Retrieve sensors.\n");
+        
+        Log::message("Retrieve sensors.\n");
         bool hasColorSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_COLOR) != nullptr;
-        Logger::message(std::format("   Color sensor found [{}].\n", hasColorSensor));
+        Log::message(std::format("   Color sensor found [{}].\n", hasColorSensor));
         bool hasDepthSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_DEPTH) != nullptr;
-        Logger::message(std::format("   Depth sensor found [{}].\n", hasDepthSensor));
+        Log::message(std::format("   Depth sensor found [{}].\n", hasDepthSensor));
         bool hasInfraSensor = i->sensorList->getSensor(OBSensorType::OB_SENSOR_IR)    != nullptr;
-        Logger::message(std::format("   Infra sensor found [{}].\n", hasInfraSensor));
+        Log::message(std::format("   Infra sensor found [{}].\n", hasInfraSensor));
 
         // retrieve color profile
         if(hasColorSensor && mInfos.has_color()){
@@ -796,7 +796,7 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
                         convert_to_ob_image_format(mInfos.image_format()),
                         mInfos.framerate_value()
                         );
-                    Logger::message("Color profile found.\n");
+                    Log::message("Color profile found.\n");
                 }catch(...) {
                     colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -817,7 +817,7 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
                         );
-                    Logger::message("Depth profile found.\n");
+                    Log::message("Depth profile found.\n");
                 }catch(...) {
                     depthProfile = depthStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -839,7 +839,7 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
                         OB_FORMAT_Y16,
                         mInfos.framerate_value()
                         );
-                    Logger::message("Infra profile found.\n");
+                    Log::message("Infra profile found.\n");
                 }catch(...) {
                     infraProfile = infraStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
@@ -873,15 +873,15 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 
 
         // disable align mode
-        Logger::message("Disable align mode.\n");
+        Log::message("Disable align mode.\n");
         config->setAlignMode(ALIGN_DISABLE);
 
         // frame synch
         if(configS.synchronizeColorAndDepth){
-            Logger::message("Enable frame synch.\n");
+            Log::message("Enable frame synch.\n");
             i->pipe->enableFrameSync();
         }else{
-            Logger::message("Disable frame synch.\n");
+            Log::message("Disable frame synch.\n");
             i->pipe->disableFrameSync();
         }
 
@@ -889,17 +889,17 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
         i->set_property_value(OB_PROP_INDICATOR_LIGHT_BOOL, !configS.disableLED);
 
         // start pipe with current config
-        Logger::message("Start pipeline with new config.\n");
+        Log::message("Start pipeline with new config.\n");
         i->pipe->start(config);
 
         // get camera intrinsic and extrinsic parameters form pipeline and set to point cloud filter
-        Logger::message("Retrieve camera parameters.\n");
+        Log::message("Retrieve camera parameters.\n");
         i->cameraParam   = i->pipe->getCameraParam();
         // get calibration parameters
-        Logger::message("Retrieve calibration parameters.\n");
+        Log::message("Retrieve calibration parameters.\n");
         i->calibrationParam = i->pipe->getCalibrationParam(config);
-
-        Logger::message("Generate k4a calibration.\n");
+        
+        Log::message("Generate k4a calibration.\n");
         i->k4aCalibration = i->k4a_convert_calibration(mInfos, i->calibrationParam);
 
         // specify color-depth alignment
@@ -909,7 +909,7 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 
 
         if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
-            Logger::message("[OrbbecBaseDevice::start_device] Start body tracker\n");
+            Log::message("[OrbbecBaseDevice::start_device] Start body tracker\n");
 
             i->k4aBtConfig.gpu_device_id       = configS.btGPUId;
             i->k4aBtConfig.processing_mode     = convert_to_k4a_body_tracking_processing_mode(configS.btProcessingMode);
@@ -921,27 +921,27 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
         }
 
     }catch(ob::Error &e) {
-        Logger::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
+        Log::error(std::format("[OrbbecDevice::start_reading] Start reading error: {}\n", e.getMessage()));
         i->device = nullptr;
         return false;
     }catch(const std::exception &e){
-        Logger::error(std::format("[OrbbecDevice::start_reading] Error: {}\nsv", e.what()));
+        Log::error(std::format("[OrbbecDevice::start_reading] Error: {}\nsv", e.what()));
         i->device = nullptr;
         return false;
     }catch(...){
-        Logger::error("[OrbbecDevice::start_reading] Unknow error\n");
+        Log::error("[OrbbecDevice::start_reading] Unknow error\n");
         i->device = nullptr;
         return false;
     }
 
     display_calibration(i->k4aCalibration);
-
-    Logger::message("Generate k4a transformation.\n");
+    
+    Log::message("Generate k4a transformation.\n");
     i->k4aTransformation = std::make_unique<k4a::transformation>(i->k4aCalibration);
-
-    Logger::message("### Pipeline started ###.\n");
-
-    Logger::message("### Update colors settings ###.\n");
+    
+    Log::message("### Pipeline started ###.\n");
+    
+    Log::message("### Update colors settings ###.\n");
     update_from_colors_settings(colorS);
 
     return true;
@@ -949,35 +949,35 @@ auto OrbbecBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSetti
 
 
 auto OrbbecBaseDevice::close() -> void{
-
-    auto lg = LogGuard("OrbbecBaseDevice::close"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::close"sv);
 
     if(i->bodyTracker != nullptr){
-        Logger::message("Stop body tracker\n");
+        Log::message("Stop body tracker\n");
         i->bodyTracker->shutdown();
         i->bodyTracker = nullptr;
     }
 
     if(i->pipe != nullptr){
-        Logger::message("Stop pipeline\n");
+        Log::message("Stop pipeline\n");
         i->pipe->stop();
-
-        Logger::message("Clean pipeline\n");
+        
+        Log::message("Clean pipeline\n");
         i->pipe = nullptr;
     }
-
-    Logger::message("Close device\n");
+    
+    Log::message("Close device\n");
     i->device = nullptr;
     // i->deviceList.clear();
-
-    Logger::message("Device closed\n");
+    
+    Log::message("Device closed\n");
 }
 
 
 
 auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
-
-    auto lg = LogGuard("OrbbecBaseDevice::update_from_colors_settings"sv);
+    
+    auto lg = LogG("OrbbecBaseDevice::update_from_colors_settings"sv);
     if(!is_opened()){
         return;
     }
@@ -996,7 +996,7 @@ auto OrbbecBaseDevice::update_from_colors_settings(const DCColorSettings &colorS
         i->set_property_value(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,     static_cast<int>(colorS.powerlineFrequency));
 
     }catch(ob::Error &e) {
-        Logger::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
+        Log::error(std::format("[OrbbecDevice] Error: {}\n", e.getMessage()));
     }
 }
 
@@ -1030,7 +1030,7 @@ auto OrbbecBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
         try{
             i->frameSet = i->pipe->waitForFrames(timeoutMs);
         }catch(ob::Error &e) {
-            Logger::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
+            Log::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
         }
 
         return i->frameSet != nullptr;
@@ -1059,7 +1059,7 @@ auto OrbbecBaseDevice::read_color_image() -> BinarySpan{
             };
         }
     }
-    Logger::message("invalid color.\n");
+    Log::message("invalid color.\n");
     return {};
 }
 
@@ -1077,7 +1077,7 @@ auto OrbbecBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
             };
         }
     }
-    Logger::message("invalid depth.\n");
+    Log::message("invalid depth.\n");
     return {};
 }
 
@@ -1158,13 +1158,14 @@ auto OrbbecBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, st
                     static_cast<size_t>(i->bodiesIndexImage.get_width_pixels() * i->bodiesIndexImage.get_height_pixels())
                 };
             }
+
             return std::make_tuple(biISpan, std::span<DCBody>{i->bodies});
         }
 
     }  catch (k4a::error error) {
-        Logger::error("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what());
+        Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
     }  catch (std::runtime_error error) {
-        Logger::error("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what());
+        Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
     }
 
     return {{},{}};
@@ -1221,25 +1222,8 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
             &k4aDepthSizedColorImage
         );
 
-        // cv::Mat output2(static_cast<int>(mInfos.depth_height()), static_cast<int>(mInfos.depth_width()), CV_8UC4, depthSizedColorDataBuffer);
-        // cv::imwrite("D:/output2.png", output2);
-
-        // std::int64_t count1=0;
-        // std::int64_t count2=0;
-        // std::int64_t count3=0;
-        // for(const auto &d : depthData){
-        //     count1 += d;
-        // }
-        // for(const auto &d : colorData){
-        //     count2 += d.r();
-        // }
-        // for(const auto &d : i->depthSizedColorData){
-        //     count3 += d;
-        // }
-        // std::cout << "resize: " << count1 << " " << count2 << " "<< count3 << " " << 1.f*count1/depthData.size() << " " << 1.f*count2/colorData.size() << " " << 1.f*count3/i->depthSizedColorData.size() << "\n";
-
     }catch(const std::runtime_error &error){
-        Logger::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));
+        Log::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));
         return {};
     }
 
@@ -1280,7 +1264,7 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
         );
 
     }catch(const std::runtime_error &error){
-        Logger::error(std::format("[OrbbecBaseDevice::k4a_generate_cloud] Runtime error: {}", error.what()));
+        Log::error(std::format("[OrbbecBaseDevice::k4a_generate_cloud] Runtime error: {}", error.what()));
         return {};
     }
 
@@ -1301,21 +1285,21 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
 //             context = std::make_unique<ob::Context>();
 //             context->setLoggerSeverity(OB_LOG_SEVERITY_WARN);
 //         }catch(const ob::Error &e) {
-//             Logger::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
+//             Log::error(std::format("Orbbec error: [{}]\n"sv, e.getMessage()));
 //         }catch(const std::exception &e){
-//             Logger::error(std::format("Error: [{}]\n"sv, e.what()));
+//             Log::error(std::format("Error: [{}]\n"sv, e.what()));
 //         }
 //     }
 
 //     // context->setLoggerToCallback(OB_LOG_SEVERITY_WARN, [&](OBLogSeverity severity, const char *logMsg){
 //     //     if((severity == OBLogSeverity::OB_LOG_SEVERITY_ERROR) || (severity == OBLogSeverity::OB_LOG_SEVERITY_FATAL)){
-//     //         Logger::error(logMsg);
+//     //         Log::error(logMsg);
 //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_WARN){
-//     //         Logger::warning(logMsg);
+//     //         Log::warning(logMsg);
 //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_INFO){
-//     //         Logger::message(logMsg);
+//     //         Log::message(logMsg);
 //     //     }else if(severity == OBLogSeverity::OB_LOG_SEVERITY_DEBUG){
-//     //         //Logger::log(logMsg);
+//     //         //Log::log(logMsg);
 //     //     }
 //     // });
 // }

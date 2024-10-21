@@ -95,7 +95,7 @@ auto JpegEncoder::encode(size_t width, size_t height, int format, ConstBinarySpa
     );
 
     if(ret == -1){
-        Logger::error(std::format("[JpegEncoder:encode] Error with code: {}\n", tjGetErrorStr2(i->handle)));
+        Log::error(std::format("[JpegEncoder:encode] Error with code: {}\n", tjGetErrorStr2(i->handle)));
         return {};
     }
 
@@ -166,14 +166,14 @@ auto JpegEncoder::encode(const ImageBuffer<ColorRGBA8> &image, BinaryImageBuffer
 }
 
 auto JpegEncoder::encode(const ImageBuffer<ColorGray8> &image, BinaryImageBuffer &encodedImage, int quality) -> bool{
-
-    Logger::message("jpeg TJPF_GRAY encoder\n");
+    
+    Log::message("jpeg TJPF_GRAY encoder\n");
     if(auto encodedData = encode(image.width, image.height, TJPF_GRAY, image.byte_span(), quality); !encodedData.empty()){        
         encodedImage.resize(encodedData.size());
         encodedImage.width = image.width;
         encodedImage.height = image.height;
         std::copy(encodedData.begin(), encodedData.end(), encodedImage.begin());
-        Logger::message("jpeg encoder success\n");
+        Log::message("jpeg encoder success\n");
         return true;
     }
     return false;
@@ -194,7 +194,7 @@ JpegDecoder::~JpegDecoder(){
 auto JpegDecoder::decode(size_t width, size_t height, int tjpfFormat, ConstBinarySpan encodedImage, BinarySpan decodedImage) -> bool{
 
     if(decodedImage.size() < encodedImage.size()){
-        Logger::error("[JpegDecoder::decode] Invalid inputs.\n");
+        Log::error("[JpegDecoder::decode] Invalid inputs.\n");
     }
 
     // uncompress
@@ -210,7 +210,7 @@ auto JpegDecoder::decode(size_t width, size_t height, int tjpfFormat, ConstBinar
         TJFLAG_FASTDCT
     );
     if(ret == -1){
-        Logger::error(std::format("[JpegEncoder:decode] Error with code: {}\n", tjGetErrorStr2(i->handle)));
+        Log::error(std::format("[JpegEncoder:decode] Error with code: {}\n", tjGetErrorStr2(i->handle)));
         return false;
     }
     return true;
@@ -242,12 +242,12 @@ auto JpegDecoder::decode(const BinaryImageBuffer &encodedImage, ImageBuffer<Colo
     image.width  = encodedImage.width;
     image.height = encodedImage.height;
     image.resize(encodedImage.width*encodedImage.height);
-    Logger::message(std::format("decode gray {} {} {} {} {} {}\n",encodedImage.width, encodedImage.height, encodedImage.size(), image.width, image.height, image.size()));
+    Log::message(std::format("decode gray {} {} {} {} {} {}\n",encodedImage.width, encodedImage.height, encodedImage.size(), image.width, image.height, image.size()));
     if(decode(encodedImage.width, encodedImage.height, TJPF_GRAY, encodedImage.byte_span(), image.byte_span())){
-        Logger::message("end decode gray1\n");
+        Log::message("end decode gray1\n");
         return true;
     }
-    Logger::message("end decode gray2\n");
+    Log::message("end decode gray2\n");
     image.reset();
     return false;
 }

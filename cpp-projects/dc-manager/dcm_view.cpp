@@ -54,7 +54,7 @@ DCMView::~DCMView(){
 }
 
 auto DCMView::initialize(int nbDevices) -> void{
-    auto lg = LogGuard("DCMView::initialize");
+    auto lg = LogG("DCMView::initialize");
     mainW.initialize(nbDevices);
 }
 

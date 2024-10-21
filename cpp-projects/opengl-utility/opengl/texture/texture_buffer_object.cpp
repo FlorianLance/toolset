@@ -44,7 +44,7 @@ TBO::~TBO(){
 auto TBO::initialize() -> void{
 
     if(is_initialized()){
-        Logger::error(std::format("[TBO::initialize] Already initialized (id:{}).\n", m_handle));
+        Log::error(std::format("[TBO::initialize] Already initialized (id:{}).\n", m_handle));
         return;
     }
     GL::create_textures(to_gl(m_mode), 1, &m_handle);
@@ -100,7 +100,7 @@ auto TBO::init_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChann
         m_format            = GL_RG;
         m_internalFormat    = GL_RG8;
     }else{
-        Logger::error("[TBO::init_data_u8] Channels nb not managed.\n");
+        Log::error("[TBO::init_data_u8] Channels nb not managed.\n");
         return;
     }
     texture_storage();
@@ -131,7 +131,7 @@ auto TBO::init_data_u32(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         m_format            = GL_RG_INTEGER;
         m_internalFormat    = GL_RG32UI;
     }else{
-        Logger::error("[TBO::init_data_u32] Channels nb not managed.\n");
+        Log::error("[TBO::init_data_u32] Channels nb not managed.\n");
         return;
     }
 
@@ -163,7 +163,7 @@ auto TBO::init_data_f16(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         m_format            = GL_RG;
         m_internalFormat    = GL_RG16F;
     }else{
-        Logger::error("[TBO::init_data_f16] Channels nb not managed.\n");
+        Log::error("[TBO::init_data_f16] Channels nb not managed.\n");
         return;
     }
     texture_storage();
@@ -194,7 +194,7 @@ auto TBO::init_data_f32(GLsizei width, GLsizei height, GLsizei depth, int nbChan
         m_format            = GL_RG;
         m_internalFormat    = GL_RG32F;
     }else{
-        Logger::error("[TBO::init_data_f32] Channels nb not managed.\n");
+        Log::error("[TBO::init_data_f32] Channels nb not managed.\n");
         return;
     }
     texture_storage();
@@ -225,7 +225,7 @@ auto TBO::init_multisample_data_u8(GLsizei width, GLsizei height, GLsizei depth,
         m_format = GL_RG;
         m_internalFormat = GL_RG8;
     }else{
-        Logger::error("[TBO::init_multisample_data_u8] Channels nb not managed.\n");
+        Log::error("[TBO::init_multisample_data_u8] Channels nb not managed.\n");
         return;
     }
 
@@ -264,7 +264,7 @@ auto TBO::init_multisample_data_f16(GLsizei width, GLsizei height, GLsizei depth
         m_format = GL_RG;
         m_internalFormat = GL_RG16F;
     }else{
-        Logger::error("[TBO::init_multisample_data_f16] Channels nb not managed.\n");
+        Log::error("[TBO::init_multisample_data_f16] Channels nb not managed.\n");
         return;
     }
 
@@ -303,7 +303,7 @@ auto TBO::init_multisample_data_f32(GLsizei width, GLsizei height, GLsizei depth
         m_format = GL_RG;
         m_internalFormat = GL_RG32F;
     }else{
-        Logger::error("[TBO::init_multisample_data_f32] Channels nb not managed.\n");
+        Log::error("[TBO::init_multisample_data_f32] Channels nb not managed.\n");
         return;
     }
 
@@ -319,7 +319,7 @@ auto TBO::init_multisample_data_f32(GLsizei width, GLsizei height, GLsizei depth
 
 auto TBO::update_data(const GLubyte *data, GLsizei width, GLsizei height, GLsizei depth, GLint xOffset, GLint yOffset, GLint zOffset) -> void{
     if((width > m_width) || (height > m_width) || (depth > m_depth)){
-        Logger::error("[TBO::update_data] Invalid input dimensions.\n");
+        Log::error("[TBO::update_data] Invalid input dimensions.\n");
         return;
     }
     texture_sub_image(data, 0, width, height, depth, xOffset, yOffset, zOffset);
@@ -327,7 +327,7 @@ auto TBO::update_data(const GLubyte *data, GLsizei width, GLsizei height, GLsize
 
 auto TBO::update_data(const GLuint *data, GLsizei width, GLsizei height, GLsizei depth, GLint xOffset, GLint yOffset, GLint zOffset) -> void{
     if((width > m_width) || (height > m_width) || (depth > m_depth)){
-        Logger::error("[TBO::update_data] Invalid input dimensions.\n");
+        Log::error("[TBO::update_data] Invalid input dimensions.\n");
         return;
     }
     texture_sub_image(data, 0, width, height, depth, xOffset, yOffset, zOffset);
@@ -335,7 +335,7 @@ auto TBO::update_data(const GLuint *data, GLsizei width, GLsizei height, GLsizei
 
 auto TBO::update_data(const GLfloat *data, GLsizei width, GLsizei height, GLsizei depth, GLint xOffset, GLint yOffset, GLint zOffset) -> void{
     if((width > m_width) || (height > m_width) || (depth > m_depth)){
-        Logger::error("[TBO::update_data] Invalid input dimensions.\n");
+        Log::error("[TBO::update_data] Invalid input dimensions.\n");
         return;
     }
     texture_sub_image(data, 0, width, height, depth, xOffset, yOffset, zOffset);
@@ -379,7 +379,7 @@ auto TBO::texture_storage() -> void{
         );
 
     }else{
-        Logger::error("[TBO::gl_texture_storage] Texture mode not managed.\n");
+        Log::error("[TBO::gl_texture_storage] Texture mode not managed.\n");
     }
 }
 
@@ -415,7 +415,7 @@ auto TBO::texture_sub_image(const void *data, GLint level, GLsizei width, GLsize
         );
 
     }else{
-        Logger::error("[TBO::gl_texture_sub_image] Texture mode not managed.\n");
+        Log::error("[TBO::gl_texture_sub_image] Texture mode not managed.\n");
     }
 }
 
@@ -428,7 +428,7 @@ auto TBO::bind(GLuint unit) -> void{
 
 //     for(const auto &texture : textures){
 //         if(texture ==0){
-//             Logger::error("[TBO::bind) TBO not generated, cannot bind it.\n");
+//             Log::error("[TBO::bind) TBO not generated, cannot bind it.\n");
 //             return;
 //         }
 //     }
@@ -439,7 +439,7 @@ auto TBO::bind(std::vector<GLuint> textures, GLuint first) -> void{
 
     for(const auto &n : textures){
         if(n==0){
-            Logger::error("[TBO::bind) TBO not generated, cannot bind it.\n");
+            Log::error("[TBO::bind) TBO not generated, cannot bind it.\n");
             return;
         }
     }
@@ -514,7 +514,7 @@ auto TBO::get_hdr_texture_data(std::vector<GLfloat> &data) -> void{
 
 //     for(const auto &n : textures){
 //         if(n==0){
-//             Logger::error("[TBO::bind_image_textures] TBO not generated, cannot bind it.\n");
+//             Log::error("[TBO::bind_image_textures] TBO not generated, cannot bind it.\n");
 //             return false;
 //         }
 //     }

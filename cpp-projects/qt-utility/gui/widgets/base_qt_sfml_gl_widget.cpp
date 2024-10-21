@@ -39,6 +39,7 @@
 
 using namespace tool;
 using namespace tool::gl;
+using namespace Qt::Literals::StringLiterals;
 
 BaseQtSfmlGlWidget::BaseQtSfmlGlWidget(QWidget *Parent) : QWidget(Parent), m_camera(&m_screen){
 
@@ -90,7 +91,7 @@ auto BaseQtSfmlGlWidget::showEvent(QShowEvent *) -> void{
     GL::display_glew_info();
 
     // init gl
-    QtLogger::message("BaseQtSfmlGlWidget::on_init");
+    QtLog::message(u"BaseQtSfmlGlWidget::on_init"_s);
     if(!on_init()){
         return;
     }

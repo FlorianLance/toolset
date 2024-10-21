@@ -83,8 +83,8 @@ bool TcpSender::init_socket(std::string targetName, std::string writingPort){
         }
 
     }catch (const boost::system::system_error& error){
-
-        Logger::error(std::format("TcpSender: Cannot resolve target name {} with writing port {}, error message: {}.\n",
+        
+        Log::error(std::format("TcpSender: Cannot resolve target name {} with writing port {}, error message: {}.\n",
             targetName, writingPort, error.what()));
         clean_socket();
         return false;
@@ -95,7 +95,7 @@ bool TcpSender::init_socket(std::string targetName, std::string writingPort){
     try{
         boost::asio::connect(*i->socket.get(), i->endpoint);
     }catch (const boost::system::system_error& error){
-        Logger::error(std::format("TcpSender: Cannot connect socket withg adress {}, error message: {}.\n",
+        Log::error(std::format("TcpSender: Cannot connect socket withg adress {}, error message: {}.\n",
             i->solvedAdress, error.what()));
         clean_socket();
         return false;
@@ -114,7 +114,7 @@ void TcpSender::clean_socket(){
             std::this_thread::sleep_for (std::chrono::milliseconds(300));
             i->socket->close();
         }catch (const boost::system::system_error& error){
-            Logger::error(std::format("TcpSender: Cannot shutdown socket with adress {}, error message: {}.\n",
+            Log::error(std::format("TcpSender: Cannot shutdown socket with adress {}, error message: {}.\n",
                 i->solvedAdress, error.what()));
         }
     }
@@ -132,8 +132,8 @@ void TcpSender::send_data(std::int8_t *data, std::int32_t size){
         i->socket->send(boost::asio::buffer(data, size));
 
     }catch (const boost::system::system_error& error){
-
-        Logger::error(std::format("TcpSender: Cannot send data of size {} to adress {}, error message: {}.\n",
+        
+        Log::error(std::format("TcpSender: Cannot send data of size {} to adress {}, error message: {}.\n",
             size, i->solvedAdress, error.what()));
     }
 }

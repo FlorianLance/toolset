@@ -59,7 +59,7 @@ auto DCDataSettings::init_from_json(const nlohmann::json &json) -> void{
     clientGeneration.init_from_json(read_and_return_object(json,   unreadCount, json.contains("c_generation"sv)   ? "c_generation"sv   : "server_generation"sv));
 
     if(unreadCount != 0){
-        tool::Logger::warning(std::format("[DCFiltersSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
+        tool::Log::warning(std::format("[DCFiltersSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
 }
 

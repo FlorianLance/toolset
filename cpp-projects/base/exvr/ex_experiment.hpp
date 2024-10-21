@@ -36,7 +36,7 @@
 // local
 #include "utility/format.hpp"
 #include "utility/tuple_array.hpp"
-#include "utility/logger.hpp"
+#include "ex_logger.hpp"
 
 
 typedef void (__stdcall * LogMessageCB)(const char*);
@@ -76,8 +76,8 @@ public:
 
     bool generate_logger(std::string_view pathDir, std::string_view fileName);
     void generate_logger_no_file();
-
-    std::unique_ptr<Logger, LoggerCleaner> logger = nullptr;
+    
+    // std::unique_ptr<Logger, LoggerCleaner> logger = nullptr;
 
     std::unique_ptr<LogMessageCB> logMessageCBP = nullptr;
     std::unique_ptr<LogWarningCB> logWarningCBP = nullptr;

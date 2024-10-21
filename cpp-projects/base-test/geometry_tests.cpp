@@ -81,9 +81,9 @@ using namespace tool;
 //}
 
 
-TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
-
-    SECTION("geo::Point2 constructors"){ Logger::message("geo::Point2 constructors\n");
+TEST_CASE("geo::Point"){ Log::message("geo::Point\n");
+    
+    SECTION("geo::Point2 constructors"){ Log::message("geo::Point2 constructors\n");
 
         constexpr auto pt00 = geo::Point<float,2>{{0.f,0.f}};
         constexpr auto pt10 = geo::Point<float,2>{{1.f}};
@@ -129,7 +129,7 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
         // {constexpr geo::Pt2f pt2{1.f,2.f,3.f};                       REQUIRE(pt2 == pt12);} // NOK
         // {constexpr geo::Pt2f pt2 = {1.f,2.f,3.f};                    REQUIRE(pt2 == pt12);} // NOK
     }
-    SECTION("geo::Point2 operators"){ Logger::message("geo::Point2 operators\n");
+    SECTION("geo::Point2 operators"){ Log::message("geo::Point2 operators\n");
 
         constexpr auto pt12  = geo::Point<float,2>{{1.f,2.f}};
         constexpr auto pt21  = geo::Point<float,2>{{2.f,1.f}};
@@ -147,14 +147,14 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
         // {constexpr auto res = 2.f / pt12;   REQUIRE(res == geo::Pt2f{2,4});} // NOK
         // {constexpr auto res = pt12 * pt21;} // NOK
     }
-    SECTION("geo::Point2 getters"){ Logger::message("geo::Point2 getters\n");
+    SECTION("geo::Point2 getters"){ Log::message("geo::Point2 getters\n");
         constexpr auto pt12  = geo::Pt2f{1.f,2.f};
         pt12.x();
         pt12.y();
 //        pt12.z(); // NOK
 //        pt12.xyz(); // NOK
     }
-    SECTION("geo::Point2 GLM comparison"){ Logger::message("geo::Point2 GLM comparison\n");
+    SECTION("geo::Point2 GLM comparison"){ Log::message("geo::Point2 GLM comparison\n");
 
         constexpr glm::vec2 glmPt1(1,2);
         constexpr glm::vec2 glmPt2(4,5);
@@ -175,10 +175,10 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
         REQUIRE(glm::dot(glmPt1,glmPt2) == geo::dot(pt1,pt2));
 
 //        REQUIRE(glm::cross(glmPt1,glmPt2) == geo::cross(pt1,pt2));
-
-        Logger::message(std::format("dotglm {} dot {}\n", glm::dot(glmPt1,glmPt2), geo::dot(pt1,pt2)));
-        Logger::message(std::format("pt3 {}\n", to_string(pt1)));
-        Logger::message(std::format("pt4 {}\n", to_string(pt2)));
+        
+        Log::message(std::format("dotglm {} dot {}\n", glm::dot(glmPt1,glmPt2), geo::dot(pt1,pt2)));
+        Log::message(std::format("pt3 {}\n", to_string(pt1)));
+        Log::message(std::format("pt4 {}\n", to_string(pt2)));
 
 
 
@@ -187,10 +187,10 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
         REQUIRE(from_glm(glm::normalize(glmPt1)) == geo::normalize(pt1));
         REQUIRE(from_glm(glm::normalize(glm::vec2(4,5))) == normalize(geo::Pt2f{4,5}));
     }
-
-
-
-    SECTION("geo::Point3"){ Logger::message("geo::Point3\n");
+    
+    
+    
+    SECTION("geo::Point3"){ Log::message("geo::Point3\n");
 
         {
             constexpr auto pt000 = geo::Point<float,3>{{0.f,0.f,0.f}};
@@ -247,9 +247,9 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
 
             constexpr glm::vec4 glmPt3(1,2,3,1);
             constexpr glm::vec4 glmPt4(4,5,6,1);
-
-            Logger::message(std::format("cross {}\n", to_string(geo::cross(pt1,pt2))));
-    //        Logger::message(std::format("glm cross {}\n", to_string(from_glm(glm::cross(glmPt3,glmPt4)))));
+            
+            Log::message(std::format("cross {}\n", to_string(geo::cross(pt1,pt2))));
+    //        Log::message(std::format("glm cross {}\n", to_string(from_glm(glm::cross(glmPt3,glmPt4)))));
     //        const glm::vec3 v(0);
     //        auto v2 = glm::normalize(v);
     //        // getters
@@ -275,15 +275,15 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
     //        REQUIRE(tool::almost_equal(glm::length(glmPt1)*glm::length(glmPt1),sqn));
     //        REQUIRE(from_glm(glm::normalize(glmPt1)) == geo::normalize(pt1));
     //        REQUIRE(from_glm(glm::normalize(glm::vec3(4,5,6))) == normalize(geo::Pt3f{4,5,6}));
-            Logger::message(std::format("cross {}\n", to_string(geo::cross(pt1,pt2))));
-            Logger::message(std::format("glm cross {}\n", to_string(from_glm(glm::cross(glmPt1,glmPt2)))));
-            Logger::message(std::format("glm mul {}\n", to_string(from_glm(glmPt1*glmPt2))));
+            Log::message(std::format("cross {}\n", to_string(geo::cross(pt1,pt2))));
+            Log::message(std::format("glm cross {}\n", to_string(from_glm(glm::cross(glmPt1,glmPt2)))));
+            Log::message(std::format("glm mul {}\n", to_string(from_glm(glmPt1*glmPt2))));
         }
     }
 
     SECTION("Point4"){
 
-//        Logger::message("geo::Point operations: Point4\n");
+//        Log::message("geo::Point operations: Point4\n");
 //        constexpr glm::vec4 pt1(1,2,3,4);
 //        constexpr glm::vec4 pt2(5,6,7,8);
 //        constexpr geo::Pt4f pt3{1,2,3,4};
@@ -320,9 +320,9 @@ TEST_CASE("geo::Point"){ Logger::message("geo::Point\n");
     }
 }
 
-TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
-
-    SECTION("Constructor"){ Logger::message("geo::Matrix - Constructor\n");
+TEST_CASE("geo::Matrix"){ Log::message("geo::Matrix\n");
+    
+    SECTION("Constructor"){ Log::message("geo::Matrix - Constructor\n");
 
         constexpr auto pt00 = geo::Point<float,2>{{0.f,0.f}};
         REQUIRE(almost_equal(pt00.x(),0.f));
@@ -360,15 +360,15 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
         // {std::array<float,1> a1 = {1.f}; geo::Matrix<float, 1,2> m(a1);} // NOK
         // {geo::Matrix<float, 1,2> m(std::array<float,2>{1.f,2.f,3.f});} // NOK
     }
-
-    SECTION("Functions"){ Logger::message("geo::Matrix - Functions\n");
+    
+    SECTION("Functions"){ Log::message("geo::Matrix - Functions\n");
 
 //        {constexpr auto m = geo::Matrix<float, 3,3>::identity();}
 //        {constexpr geo::Matrix<float,1, 2> r = m1.row(0);}
 
     }
-
-    SECTION("Matrix 2x2"){ Logger::message("geo::Mat2x2\n");
+    
+    SECTION("Matrix 2x2"){ Log::message("geo::Mat2x2\n");
 
         constexpr geo::Mat2f m1{
             7.f,2,
@@ -435,11 +435,11 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 //            0,-1
 //        };
 
-//        Logger::message(to_string(m3*m4));
-//        Logger::message(to_string(m4*m3));
+//        Log::message(to_string(m3*m4));
+//        Log::message(to_string(m4*m3));
     }
-
-    SECTION("Matrix 3x3"){ Logger::message("geo::Mat3x3\n");
+    
+    SECTION("Matrix 3x3"){ Log::message("geo::Mat3x3\n");
 
         constexpr geo::Mat3f m1{
             7.f,2,1,
@@ -502,8 +502,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 
 //        REQUIRE(compare(m1.multiply_point(v1), v1*m1));
     }
-
-    SECTION("Matrix 4x4"){ Logger::message("geo::Mat4x4\n");
+    
+    SECTION("Matrix 4x4"){ Log::message("geo::Mat4x4\n");
 
         constexpr geo::Mat4f m1{
             7.f,2,1,-4,
@@ -583,8 +583,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 
 
     }
-
-    SECTION("Look at"){ Logger::message("Look at\n");
+    
+    SECTION("Look at"){ Log::message("Look at\n");
         auto glmLookAt = glm::lookAt(
             glm::vec3(-2.0f, 4.0f, -1.0f),
             glm::vec3( 0.0f, 2.0f,  0.0f),
@@ -602,10 +602,10 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 //        std::cout << lootAt << "\n";
 //        REQUIRE(compare(clean(glmLookAt),clean(lootAt)));
     }
-
-
-
-    SECTION("Transform combination 1"){Logger::message("Transform combination 1\n");
+    
+    
+    
+    SECTION("Transform combination 1"){Log::message("Transform combination 1\n");
 
         // scale
         auto scale    = geo::scale(geo::Mat4f::identity(),geo::Vec3f{0.5f, 0.5f, 0.5f});
@@ -667,9 +667,9 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
         c1          = geo::rotate(c1, geo::Vec3f{1.f,0.f,0.f}, 90.f);
 
 //        std::cout << "RR:\n";
-////        Logger::message(to_string(clean(from_glm(glmC1))));
-//        Logger::message(to_string( geo::translate(geo::Mat4f::identity(), {{-1.0, 17.0, 56.0}})));
-//        Logger::message(to_string( from_glm(glm::translate(glm::mat4(1.0f), glm::vec3(-1.0, 17.0, 56.0)))));
+////        Log::message(to_string(clean(from_glm(glmC1))));
+//        Log::message(to_string( geo::translate(geo::Mat4f::identity(), {{-1.0, 17.0, 56.0}})));
+//        Log::message(to_string( from_glm(glm::translate(glm::mat4(1.0f), glm::vec3(-1.0, 17.0, 56.0)))));
 ////        CHECK(compare(c1,glmC1));
 
         glmC1 = glm::scale(glm::mat4(1.0f), glm::vec3(0.5, 0.5, 0.5));
@@ -678,8 +678,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
         glmC1 = glm::rotate(glmC1, glm::radians(-47.0f), glm::vec3(1.0, 0.0, 0.0));
         c1 = geo::rotate(c1, geo::Vec3f{1.f,0.f,0.f}, -47.f);
         CHECK(compare(c1,glmC1));
-                                       Logger::message(to_string( c1));
-                                       Logger::message(to_string( from_glm(glmC1)));
+        Log::message(to_string( c1));
+        Log::message(to_string( from_glm(glmC1)));
         glmC1 = glm::translate(glmC1, glm::vec3(-1.0, 17.0, 56.0));
         c1 = geo::translate(c1, geo::Vec3f{-1.0, 17.0, 56.0});
 //        CHECK(compare(c1,glmC1));
@@ -701,8 +701,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 
         auto glmP = glm::perspective(60.f*PI_180<float>, 1.4f, 0.02f, 1000.f);
         auto p1 = geo::perspective(60.f*PI_180<float>, 1.4f, 0.02f, 1000.f);
-//        Logger::message(to_string(clean(from_glm(glmP))));
-//        Logger::message(to_string(clean(p1)));
+//        Log::message(to_string(clean(from_glm(glmP))));
+//        Log::message(to_string(clean(p1)));
         CHECK(compare(clean(glmP),clean(p1)));
 
 
@@ -711,8 +711,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 
 
 //       std::cout << "RRé:\n";
-//       Logger::message(to_string(clean(from_glm(glmC1))));
-//       Logger::message(to_string(clean(c1)));
+//       Log::message(to_string(clean(from_glm(glmC1))));
+//       Log::message(to_string(clean(c1)));
 
 
     }
@@ -781,8 +781,8 @@ TEST_CASE("geo::Matrix"){ Logger::message("geo::Matrix\n");
 //    auto e2 = euler_angles(q2);
 //    auto e3 = euler_angles(q3);
 //    auto e4 = euler_angles(q4);
-
-    SECTION("Quaternion"){ Logger::message("Quaternion\n");
+    
+    SECTION("Quaternion"){ Log::message("Quaternion\n");
 
         REQUIRE(from_glm(gq1) == q1);
         REQUIRE(from_glm(gq2) == q2);
@@ -885,8 +885,8 @@ bool comparator(const tool::geo::CVoxel& lhs, const tool::geo::CVoxel& rhs) {
     return *c1 < *c2;
 }
 
-TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
-    SECTION("ColoredCloudData"){ Logger::message("geo::ColoredCloudData\n");
+TEST_CASE("geo::Cloud"){ Log::message("geo::Cloud\n");
+    SECTION("ColoredCloudData"){ Log::message("geo::ColoredCloudData\n");
         geo::ColorCloud cloud;
 //        cloud.vertices.reserve(100);
 //        for(size_t ii = 0; ii < 100; ++ii){
@@ -903,36 +903,36 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
         auto pt3 = cloud.vertices[2];
 
         cloud.vertices.resize(5);
-        Logger::message(std::format("<: {}\n", pt1 < pt1));
-        Logger::message(std::format(">: {}\n", pt1 > pt2));
-        Logger::message(std::format("<: {}\n", pt1 < pt3));
-        Logger::message(std::format(">: {}\n", pt1 > pt3));
+        Log::message(std::format("<: {}\n", pt1 < pt1));
+        Log::message(std::format(">: {}\n", pt1 > pt2));
+        Log::message(std::format("<: {}\n", pt1 < pt3));
+        Log::message(std::format(">: {}\n", pt1 > pt3));
 
         geo::Pt3f pt{1.f,2.f,3.f};
-        Logger::message(std::format("sum: {}\n", geo::sum(pt)));
-
-        Logger::message(std::format("sum: {}\n", geo::sum(pt1)));
-        Logger::message(std::format("sum: {}\n", geo::sum(pt2)));
-
-        Logger::message(std::format("sum: {}\n", to_string(cloud.vertices.sum())));
-        Logger::message(std::format("mean: {}\n", to_string(cloud.vertices.mean_position())));
-        Logger::message(std::format("minx: {}\n", std::to_string(cloud.vertices.min_x())));
-        Logger::message(std::format("maxx: {}\n", std::to_string(cloud.vertices.max_x())));
-        Logger::message(std::format("miny: {}\n", std::to_string(cloud.vertices.min_y())));
-        Logger::message(std::format("maxy: {}\n", std::to_string(cloud.vertices.max_y())));
-        Logger::message(std::format("minz: {}\n", std::to_string(cloud.vertices.min_z())));
-        Logger::message(std::format("maxz: {}\n", std::to_string(cloud.vertices.max_z())));
-        Logger::message(std::format("min: {}\n", to_string(cloud.vertices.min())));
-        Logger::message(std::format("max: {}\n", to_string(cloud.vertices.max())));
-
-        Logger::message(std::format("minx_id: {}\n", cloud.vertices.min_x_id()));
-        Logger::message(std::format("maxx_id: {}\n", cloud.vertices.max_x_id()));
-        Logger::message(std::format("miny_id: {}\n", cloud.vertices.min_y_id()));
-        Logger::message(std::format("maxy_id: {}\n", cloud.vertices.max_y_id()));
-        Logger::message(std::format("minz_id: {}\n", cloud.vertices.min_z_id()));
-        Logger::message(std::format("maxz_id: {}\n", cloud.vertices.max_z_id()));
-        Logger::message(std::format("min_id: {}\n", cloud.vertices.min_id()));
-        Logger::message(std::format("max_id: {}\n", cloud.vertices.max_id()));
+        Log::message(std::format("sum: {}\n", geo::sum(pt)));
+        
+        Log::message(std::format("sum: {}\n", geo::sum(pt1)));
+        Log::message(std::format("sum: {}\n", geo::sum(pt2)));
+        
+        Log::message(std::format("sum: {}\n", to_string(cloud.vertices.sum())));
+        Log::message(std::format("mean: {}\n", to_string(cloud.vertices.mean_position())));
+        Log::message(std::format("minx: {}\n", std::to_string(cloud.vertices.min_x())));
+        Log::message(std::format("maxx: {}\n", std::to_string(cloud.vertices.max_x())));
+        Log::message(std::format("miny: {}\n", std::to_string(cloud.vertices.min_y())));
+        Log::message(std::format("maxy: {}\n", std::to_string(cloud.vertices.max_y())));
+        Log::message(std::format("minz: {}\n", std::to_string(cloud.vertices.min_z())));
+        Log::message(std::format("maxz: {}\n", std::to_string(cloud.vertices.max_z())));
+        Log::message(std::format("min: {}\n", to_string(cloud.vertices.min())));
+        Log::message(std::format("max: {}\n", to_string(cloud.vertices.max())));
+        
+        Log::message(std::format("minx_id: {}\n", cloud.vertices.min_x_id()));
+        Log::message(std::format("maxx_id: {}\n", cloud.vertices.max_x_id()));
+        Log::message(std::format("miny_id: {}\n", cloud.vertices.min_y_id()));
+        Log::message(std::format("maxy_id: {}\n", cloud.vertices.max_y_id()));
+        Log::message(std::format("minz_id: {}\n", cloud.vertices.min_z_id()));
+        Log::message(std::format("maxz_id: {}\n", cloud.vertices.max_z_id()));
+        Log::message(std::format("min_id: {}\n", cloud.vertices.min_id()));
+        Log::message(std::format("max_id: {}\n", cloud.vertices.max_id()));
         
         
         cam::DCDeprecatedFrame f;
@@ -944,8 +944,8 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
             f.cloud.colors.push_back({(rand()%1000)*0.001f,(rand()%1000)*0.001f,(rand()%1000)*0.001f});
 
         }
-
-        Logger::message("TEST VOXELISATION\n");
+        
+        Log::message("TEST VOXELISATION\n");
         auto minBound = tool::geo::Pt3f{-1.f,-1.f,-1.f};
         auto maxBound = tool::geo::Pt3f{1.f,1.f,1.f};
         tool::geo::ColorVoxelGrid voxelGrid = tool::geo::ColorVoxelGrid::create_from_point_cloud_within_bounds(
@@ -954,21 +954,21 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
             minBound,
             maxBound
         );
-
-        Logger::message(std::format("frame cloud: {}\n", cloud.vertices.size()));
-        Logger::message(std::format("minx_id: {}\n", f.cloud.vertices.min_x()));
-        Logger::message(std::format("maxx_id: {}\n", f.cloud.vertices.max_x()));
-        Logger::message(std::format("miny_id: {}\n", f.cloud.vertices.min_y()));
-        Logger::message(std::format("maxy_id: {}\n", f.cloud.vertices.max_y()));
-        Logger::message(std::format("minz_id: {}\n", f.cloud.vertices.min_z()));
-        Logger::message(std::format("maxz_id: {}\n", f.cloud.vertices.max_z()));
-
-        Logger::message(std::format("voxel size: {}\n", sizeof(geo::Voxel)));
-        Logger::message(std::format("CVoxel size: {}\n", sizeof(geo::CVoxel)));
-        Logger::message(std::format("std::int64_t size: {}\n", sizeof(std::int64_t)));
-        Logger::message(std::format("std::int32_t size: {}\n", sizeof(std::int32_t)));
-        Logger::message(std::format("geo::Pt3<int> size: {}\n", sizeof(geo::Pt3<int>)));
-        Logger::message(std::format("geo::Pt3f size: {}\n", sizeof(geo::Pt3f)));
+        
+        Log::message(std::format("frame cloud: {}\n", cloud.vertices.size()));
+        Log::message(std::format("minx_id: {}\n", f.cloud.vertices.min_x()));
+        Log::message(std::format("maxx_id: {}\n", f.cloud.vertices.max_x()));
+        Log::message(std::format("miny_id: {}\n", f.cloud.vertices.min_y()));
+        Log::message(std::format("maxy_id: {}\n", f.cloud.vertices.max_y()));
+        Log::message(std::format("minz_id: {}\n", f.cloud.vertices.min_z()));
+        Log::message(std::format("maxz_id: {}\n", f.cloud.vertices.max_z()));
+        
+        Log::message(std::format("voxel size: {}\n", sizeof(geo::Voxel)));
+        Log::message(std::format("CVoxel size: {}\n", sizeof(geo::CVoxel)));
+        Log::message(std::format("std::int64_t size: {}\n", sizeof(std::int64_t)));
+        Log::message(std::format("std::int32_t size: {}\n", sizeof(std::int32_t)));
+        Log::message(std::format("geo::Pt3<int> size: {}\n", sizeof(geo::Pt3<int>)));
+        Log::message(std::format("geo::Pt3f size: {}\n", sizeof(geo::Pt3f)));
 
         std::vector<tool::geo::CVoxel> cvoxels;
         cvoxels.reserve(voxelGrid.grid.size());
@@ -993,43 +993,43 @@ TEST_CASE("geo::Cloud"){ Logger::message("geo::Cloud\n");
 
         std::vector<std::uint8_t> encoded;
         encoded.resize(cvoxels.size()*16);
-        Logger::message(std::format("cvoxels size: {} : bytes {}\n", cvoxels.size(), cvoxels.size()*sizeof(tool::geo::CVoxel)));
-        Logger::message(std::format("encoded size: {}\n", encoded.size()));
+        Log::message(std::format("cvoxels size: {} : bytes {}\n", cvoxels.size(), cvoxels.size()*sizeof(tool::geo::CVoxel)));
+        Log::message(std::format("encoded size: {}\n", encoded.size()));
 
         // size_t encodedBytesNb = p4nzenc64(
         //     reinterpret_cast<std::uint64_t*>(cvoxels.data()),
         //     cvoxels.size(),
         //     encoded.data()
         // );
-        // Logger::message(std::format("p4nzenc64: {}\n", encodedBytesNb));
+        // Log::message(std::format("p4nzenc64: {}\n", encodedBytesNb));
 
         //  encodedBytesNb = p4nd1enc64(
         //      reinterpret_cast<std::uint64_t*>(cvoxels.data()),
         //      cvoxels.size(),
         //      encoded.data()
         //  );
-        //  Logger::message(std::format("p4nd1enc64: {}\n", encodedBytesNb));
+        //  Log::message(std::format("p4nd1enc64: {}\n", encodedBytesNb));
 
         // encodedBytesNb = p4ndenc64(
         //   reinterpret_cast<std::uint64_t*>(cvoxels.data()),
         //   cvoxels.size(),
         //   encoded.data()
         // );
-        // Logger::message(std::format("p4ndenc64: {}\n", encodedBytesNb));
+        // Log::message(std::format("p4ndenc64: {}\n", encodedBytesNb));
 
         //  encodedBytesNb = p4nenc64(
         //    reinterpret_cast<std::uint64_t*>(cvoxels.data()),
         //    cvoxels.size(),
         //    encoded.data()
         //  );
-        //  Logger::message(std::format("p4nenc64: {}\n", encodedBytesNb));
+        //  Log::message(std::format("p4nenc64: {}\n", encodedBytesNb));
 
         //   encodedBytesNb = p4nenc128v64(
         //     reinterpret_cast<std::uint64_t*>(cvoxels.data()),
         //     cvoxels.size(),
         //     encoded.data()
         //   );
-        //   Logger::message(std::format("p4nenc128v64: {}\n", encodedBytesNb));
+        //   Log::message(std::format("p4nenc128v64: {}\n", encodedBytesNb));
 
 
 //                                  p4nenc128v64

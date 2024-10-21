@@ -85,7 +85,7 @@ UdpReader::~UdpReader(){
 auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
 
     if(are_threads_started()){
-        Logger::error(std::format("[UdpReader::init_socket] Cannot init socket while reading thread is still active.\n"sv));
+        Log::error(std::format("[UdpReader::init_socket] Cannot init socket while reading thread is still active.\n"sv));
         return false;
     }
 
@@ -105,15 +105,15 @@ auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protoc
         // bind socket
         if(readingAdress.empty()){
             i->endPoint = udp::endpoint(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4(), static_cast<unsigned short>(port));
-            Logger::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [any_address], [{}].\n"sv, port));
+            Log::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [any_address], [{}].\n"sv, port));
         }else{
             i->endPoint = udp::endpoint(address::from_string(readingAdress), static_cast<unsigned short>(port));
-            Logger::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [{}], [{}].\n"sv, readingAdress, port));
+            Log::message(std::format("[UdpReader::init_socket] Init socket with binded enpoint [{}], [{}].\n"sv, readingAdress, port));
         }
         i->socket->bind(i->endPoint);        
 
     }catch (const boost::system::system_error &error){
-        Logger::error(std::format("[UdpReader::init_socket] Cannot bind endpoint [{}], [{}], error message: [{}].\n"sv, readingAdress, port, error.what()));
+        Log::error(std::format("[UdpReader::init_socket] Cannot bind endpoint [{}], [{}], error message: [{}].\n"sv, readingAdress, port, error.what()));
         clean_socket();
         return false;
     }
@@ -131,7 +131,7 @@ auto UdpReader::clean_socket() -> void{
             std::this_thread::sleep_for (std::chrono::milliseconds(75));
             i->socket->close();
         }catch (const boost::system::system_error &error){
-            Logger::error(std::format("[UdpReader::clean_socket] Cannot shutdown socket, error message: [{}].\n", error.what()));
+            Log::error(std::format("[UdpReader::clean_socket] Cannot shutdown socket, error message: [{}].\n", error.what()));
         }
     }
     i->socket = nullptr;
@@ -144,34 +144,34 @@ auto UdpReader::clean_socket() -> void{
 auto UdpReader::start_threads() -> void{
 
     if(are_threads_started()){
-        Logger::error("[UdpReader::start_threads] Reading thread already started.\n");
+        Log::error("[UdpReader::start_threads] Reading thread already started.\n");
         return;
     }
 
     if(!is_connected()){
-        Logger::error("[UdpReader::start_threads] Socket not connected.\n");
+        Log::error("[UdpReader::start_threads] Socket not connected.\n");
         return;
     }
 
     if((i->readPacketsT == nullptr) && (i->processPacketsT == nullptr)){
-
-        auto lg = LogGuard("[UdpReader::start_threads] Start threads"sv);
+        
+        auto lg = LogG("[UdpReader::start_threads] Start threads"sv);
         i->threadsStarted  = true;
         i->readPacketsT    = std::make_unique<std::thread>([&](){
-            auto lgS = LogGuard("[UdpReader::start_threads] Receiving thread"sv);
+            auto lgS = LogG("[UdpReader::start_threads] Receiving thread"sv);
             while(i->threadsStarted){
                 receive_data();
             }
         });
-        i->processPacketsT    = std::make_unique<std::thread>([&](){            
-            auto lgS = LogGuard("[UdpReader::start_threads] Triggering thread"sv);
+        i->processPacketsT    = std::make_unique<std::thread>([&](){
+            auto lgS = LogG("[UdpReader::start_threads] Triggering thread"sv);
             while(i->threadsStarted){
                 trigger_received_packets();
             }
         });
 
     }else{
-        Logger::error("[UdpReader::start_threads] Cannot start reading, thread not cleaned.\n");
+        Log::error("[UdpReader::start_threads] Cannot start reading, thread not cleaned.\n");
         return;
     }
 }
@@ -179,7 +179,7 @@ auto UdpReader::start_threads() -> void{
 auto UdpReader::stop_threads() -> void{
 
     if(!are_threads_started()){
-        Logger::error("[UdpReader::stop_threads] Reading thread not started.\n");
+        Log::error("[UdpReader::stop_threads] Reading thread not started.\n");
         return;
     }
 
@@ -187,19 +187,19 @@ auto UdpReader::stop_threads() -> void{
 
     if(i->readPacketsT != nullptr){        
         if(i->readPacketsT->joinable()){
-            Logger::log("[UdpReader::stop_threads] Join readPacketsT.\n"sv);
+            Log::log("[UdpReader::stop_threads] Join readPacketsT.\n"sv);
             i->readPacketsT->join();
         }
-        Logger::log("[UdpReader::stop_threads] Destroy readPacketsT.\n"sv);
+        Log::log("[UdpReader::stop_threads] Destroy readPacketsT.\n"sv);
         i->readPacketsT = nullptr;
     }
 
     if(i->processPacketsT != nullptr){
         if(i->processPacketsT->joinable()){
-            Logger::log("[UdpReader::stop_threads] Join processPacketsT.\n"sv);
+            Log::log("[UdpReader::stop_threads] Join processPacketsT.\n"sv);
             i->processPacketsT->join();
         }
-        Logger::log("[UdpReader::stop_threads] Destroy processPacketsT.\n"sv);
+        Log::log("[UdpReader::stop_threads] Destroy processPacketsT.\n"sv);
         i->processPacketsT = nullptr;
     }
 }
@@ -228,7 +228,7 @@ auto UdpReader::receive_data() -> size_t{
         );
     } catch (const boost::system::system_error &error) {
         if(error.code() != boost::asio::error::timed_out){
-            Logger::error("[UdpReader::receive_data] Cannot read from socket, error message: [{}]\n"sv, error.what());
+            Log::error(std::format("[UdpReader::receive_data] Cannot read from socket, error message: [{}]\n"sv, error.what()));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             return 0;
         }
@@ -244,7 +244,7 @@ auto UdpReader::receive_data() -> size_t{
         // check packet size
         if(header.currentPacketSizeBytes != pkd.size_bytes()){
             invalid_packet_size_signal();
-            Logger::error(std::format("[UdpReader::receive_data] Invalid packet size: [{}], expected: [{}]\n"sv, header.currentPacketSizeBytes, pkd.size_bytes()));
+            Log::error(std::format("[UdpReader::receive_data] Invalid packet size: [{}], expected: [{}]\n"sv, header.currentPacketSizeBytes, pkd.size_bytes()));
             return nbBytesReceived;
         }
 
@@ -253,7 +253,7 @@ auto UdpReader::receive_data() -> size_t{
             auto checksum = data::Checksum::gen_crc16(dataToProcess);
             if(checksum != header.checkSum){
                 invalid_checksum_signal();
-                Logger::error(std::format("[UdpReader::receive_data] Invalid checksum size: [{}], expected: [{}]\n"sv, checksum, header.checkSum));
+                Log::error(std::format("[UdpReader::receive_data] Invalid checksum size: [{}], expected: [{}]\n"sv, checksum, header.checkSum));
                 return nbBytesReceived;
             }
         }
@@ -269,7 +269,7 @@ auto UdpReader::receive_data() -> size_t{
         if(i->packetsReceived->size() < 200){
             i->packetsReceived->push_back(std::make_tuple(endPoint, std::move(header), std::move(dataToProcess)));
         }else{
-            Logger::error("[UdpReader::receive_data] To many packets received, last packet dropped.\n"sv);
+            Log::error("[UdpReader::receive_data] To many packets received, last packet dropped.\n"sv);
         }
         i->locker.unlock();
     }
@@ -306,7 +306,7 @@ auto UdpReader::is_connected() const noexcept -> bool{
 auto UdpReader::receive_data_from_external_thread() -> size_t{
 
     if(are_threads_started()){
-        Logger::error("[UdpReader::receive_data_from_external_thread] Thread is already started, cannot be called from main thread.\n");
+        Log::error("[UdpReader::receive_data_from_external_thread] Thread is already started, cannot be called from main thread.\n");
         return 0;
     }
 
@@ -316,7 +316,7 @@ auto UdpReader::receive_data_from_external_thread() -> size_t{
 auto UdpReader::trigger_received_packets_from_external_thread() -> void{
 
     if(are_threads_started()){
-        Logger::error("[UdpReader::generate_packets_from_external_thread] Thread is already started, cannot be called from main thread.\n");
+        Log::error("[UdpReader::generate_packets_from_external_thread] Thread is already started, cannot be called from main thread.\n");
         return;
     }
     trigger_received_packets();

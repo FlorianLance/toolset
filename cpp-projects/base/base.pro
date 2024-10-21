@@ -63,6 +63,7 @@ HEADERS += \
     depth-camera/settings/dc_frame_generation_settings.hpp \
     depth-camera/settings/dc_misc_settings.hpp \
     depth-camera/settings/dc_server_settings.hpp \
+    exvr/ex_logger.hpp \
     geometry/_aabb2.hpp \
     geometry/_geometry.hpp \
     geometry/_geometry2.hpp \
@@ -241,7 +242,6 @@ HEADERS += \
     utility/monitoring.hpp \
     utility/time_diff.hpp \
     utility/visit.hpp \
-    utility/log.hpp \
     # algorithms
     algorithms/marching_cube.hpp \
     # data
@@ -334,6 +334,7 @@ SOURCES += \
     depth-camera/settings/dc_frame_generation_settings.cpp \
     depth-camera/settings/dc_misc_settings.cpp \
     depth-camera/settings/dc_server_settings.cpp \
+    exvr/ex_logger.cpp \
     geometry/color_cloud.cpp \
     geometry/color_voxel_grid.cpp \
     io/assimp_loader.cpp \
@@ -370,7 +371,6 @@ SOURCES += \
     utility/cmd_args.cpp \
     utility/decimal.cpp \
     utility/io_file.cpp \
-    utility/log.cpp \
     utility/logger.cpp \
     utility/paths.cpp \
     utility/string.cpp \

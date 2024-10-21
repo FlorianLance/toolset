@@ -31,6 +31,7 @@
 
 using namespace tool;
 using namespace tool::ui;
+using namespace Qt::Literals::StringLiterals;
 
 auto W::init_frame_on_off(QFrame *f, bool on, bool enabled) -> QFrame*{
     const QSignalBlocker blocker(f);
@@ -354,7 +355,7 @@ auto F::grid(std::vector<WA> widgets, std::vector<int> rowsS, std::vector<int> c
     frame->setLayout(layout);
 
     if(widgets.size() > rowsS.size()*colsS.size()){
-        QtLogger::error("F::grid error");
+        QtLog::error(u"F::grid error"_s);
         return frame;
     }
 

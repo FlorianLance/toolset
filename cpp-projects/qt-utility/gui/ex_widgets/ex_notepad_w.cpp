@@ -28,6 +28,7 @@
 #include "qt_logger.hpp"
 
 using namespace tool::ex;
+using namespace Qt::Literals::StringLiterals;
 
 ExNotepadW::ExNotepadW(QString name) : ExItemW<QFrame>(UiType::Notepad, name){
 
@@ -68,7 +69,7 @@ void ExNotepadW::update_from_arg(const Arg &arg){
 
     auto args = arg.split_value_to_atoms_args();
     if(args.size() != 2){
-        QtLogger::error("ExNotepadW::Invalid arg.");
+        QtLog::error(u"ExNotepadW::Invalid arg."_s);
         return;
     }
     type.update_from_arg(args[0]);
