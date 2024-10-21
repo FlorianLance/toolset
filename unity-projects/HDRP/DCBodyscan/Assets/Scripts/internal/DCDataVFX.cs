@@ -91,7 +91,12 @@ namespace BS {
         }
 
         protected override IEnumerator profile_co() {    
+
+            // geneate aprticles from cloud
             yield return new WaitForSeconds(0.1f);
+
+            // 
+
             // change somes values
             yield return new WaitForSeconds(0.1f);
             // trigger particles
