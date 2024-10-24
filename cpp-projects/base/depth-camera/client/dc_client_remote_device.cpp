@@ -162,7 +162,7 @@ auto DCClientRemoteDevice::clean() -> void{
 
 auto DCClientRemoteDevice::apply_command(Command command) -> void{
     
-    Log::message("APPLY\n");
+    Log::log("DCClientRemoteDevice::apply_command\n");
 
     bool isCommandValid = false;
     switch(command){
@@ -184,7 +184,7 @@ auto DCClientRemoteDevice::apply_command(Command command) -> void{
         i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
     }
     
-    Log::message("END APPLY\n");
+    Log::log("DCClientRemoteDevice::apply_command end\n");
 }
 
 auto DCClientRemoteDevice::ping() -> void{

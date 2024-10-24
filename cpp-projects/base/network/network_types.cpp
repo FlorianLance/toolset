@@ -134,7 +134,7 @@ auto UdpMessageReception::check_message_timeout() -> size_t{
     for(const auto &idM : timeoutIdPacketsToRemove){
         {
             const auto &info = infos[idM];
-            Log::warning(std::format("[MultiPacketsUdpReception::check_message_timeout] Message [{}] dropped for timeout, packets received: [{}], expected: [{}].\n"sv, idM, info.nbPacketsReceived, info.totalNumberOfPacket));
+            Log::warning(std::format("[UdpMessageReception::check_message_timeout] Message [{}] dropped for timeout, packets received: [{}], expected: [{}].\n"sv, idM, info.nbPacketsReceived, info.totalNumberOfPacket));
         }
         infos.erase(idM);
         messageReceived.set_current(0);

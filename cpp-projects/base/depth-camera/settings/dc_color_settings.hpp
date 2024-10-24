@@ -60,16 +60,16 @@ using DCColorSettingsTypes = TupleArray<ColorSettingsType::SizeEnum, TDCColorSet
 
 static constexpr DCColorSettingsTypes foColorSettingsP = {{
     TDCColorSettingsTypes
-    {ColorSettingsType::Exposure,               true,           1,      300,    1,      200},
+    {ColorSettingsType::Exposure,               true,           1,      2000,   1,      200},
     {ColorSettingsType::Auto_exposure,          true,           0,      1,      1,      1},
     {ColorSettingsType::White_balance,          true,           2000,   11000,  100,    6500},
     {ColorSettingsType::Auto_white_balance,     true,           0,      1,      1,      1},
-    {ColorSettingsType::Brightness,             true,           1,      20,     1,      10},
-    {ColorSettingsType::Contrast,               true,           1,      99,     1,      50},
-    {ColorSettingsType::Sharpness,              true,           1,      40,     1,      24},
-    {ColorSettingsType::Saturation,             true,           1,      255,    1,      64},
-    {ColorSettingsType::Gain,                   true,           0,      80,     1,      40},
-    {ColorSettingsType::Power_line_frequency,   true,           0,      2,      1,      2},
+    {ColorSettingsType::Brightness,             true,           0,      128,    1,      0},
+    {ColorSettingsType::Contrast,               true,           1,      60,     1,      32},
+    {ColorSettingsType::Sharpness,              true,           1,      15,     1,      6},
+    {ColorSettingsType::Saturation,             true,           1,      80,     1,      54},
+    {ColorSettingsType::Gain,                   true,           1,      240,    1,      60},
+    {ColorSettingsType::Power_line_frequency,   true,           0,      2,      1,      1},
     {ColorSettingsType::Backlight_compensation, false,          0,      0,      0,      0},
     {ColorSettingsType::HDR,                    true,           0,      1,      1,      1},
 }};
