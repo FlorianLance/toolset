@@ -32,6 +32,7 @@
 
 namespace tool::net{
 
+
 class UdpReader {
 
 public:
@@ -60,7 +61,8 @@ public:
     sigslot::signal<> timeout_packet_signal;
     sigslot::signal<> invalid_packet_size_signal;
     sigslot::signal<> invalid_checksum_signal;
-    sigslot::signal<EndPointId, Header, std::span<const std::byte>> packed_received_signal;
+    // sigslot::signal<PData> packet_received_signal;
+    sigslot::signal<std::span<PData>> packets_received_signal;
 
 private :
 

@@ -123,11 +123,6 @@ auto DCVideoRecorder::add_data_frame(size_t idDevice, std::shared_ptr<DCDataFram
         return;
     }
 
-    if(i->recordingStartTimestamp.count() > dFrame->receivedTS){
-        Log::error("[DCVideoRecorder::add_data_frame] Invalid frame timestamp.\n");
-        return;
-    }
-
     if((i->videoResource.nb_frames(idDevice) < settings.deviceMaxFramesToRecord) && (i->recordingStopWatch.ellapsed_milli_s() < settings.maxDurationS*1000.0)){
 
         // add frame to video
@@ -147,11 +142,6 @@ auto DCVideoRecorder::add_frame_to_default_device(std::shared_ptr<DCFrame> frame
 auto DCVideoRecorder::add_frame(size_t idDevice, std::shared_ptr<DCFrame> frame) -> void{
 
     if(!is_recording() || idDevice >= i->videoResource.nb_devices()){
-        return;
-    }
-
-    if(i->recordingStartTimestamp.count() > frame->receivedTS){
-        Log::error("[DCVideoRecorder::add_frame] Invalid frame timestamp.\n");
         return;
     }
 
@@ -178,6 +168,7 @@ auto DCVideoRecorder::set_time(double timeMs) -> void{
         if(auto idF = video()->closest_frame_id_from_time(idC, states.currentTime); idF != -1){
             i->currentDataFrames[idC] = i->videoResource.get_data_frame(idC, idF).lock();
             states.currentFrames[idC] = idF;
+            // Log::message(std::format("current time {} {} {} {}\n", idC, timeMs, video()->duration_ms(), idF));
         }
     }
 }

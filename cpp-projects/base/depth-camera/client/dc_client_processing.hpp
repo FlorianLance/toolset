@@ -64,6 +64,7 @@ public:
     auto get_frame(size_t idD) -> std::shared_ptr<cam::DCFrame>;
     auto get_data_frame(size_t idD) -> std::shared_ptr<cam::DCDataFrame>;
     auto get_uc_usage(size_t idD) const noexcept -> double;
+    auto get_average_process_duration_micro_s(size_t idD) const noexcept -> double;
 
     // I/O
     auto save_current_cloud(size_t idD, const std::string &path) -> bool;

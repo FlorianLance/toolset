@@ -117,11 +117,11 @@ auto DCVideo::generate_frame(const DCFrameGenerationSettings &fgS, size_t idDevi
     return false;
 }
 
-auto DCVideo::first_frame_received_timestamp() const noexcept -> std::int64_t{
+auto DCVideo::first_frame_timestamp() const noexcept -> std::int64_t{
     auto start = std::numeric_limits<std::int64_t>::max();
     bool found = false;
-    for(const auto &deviceCompressedFrames : m_devicesDataFrames){
-        if(auto devStartTS = deviceCompressedFrames.first_frame_received_timestamp(); devStartTS != -1){
+    for(const auto &deviceDataFrames : m_devicesDataFrames){
+        if(auto devStartTS = deviceDataFrames.first_frame_timestamp(); devStartTS != -1){
             if(start > devStartTS){
                 start = devStartTS;
                 found = true;
@@ -134,11 +134,11 @@ auto DCVideo::first_frame_received_timestamp() const noexcept -> std::int64_t{
     return -1;
 }
 
-auto DCVideo::last_frame_received_timestamp() const noexcept -> std::int64_t{
+auto DCVideo::last_frame_timestamp() const noexcept -> std::int64_t{
     std::int64_t end = -1;
     bool found = false;
-    for(const auto &deviceCompressedFrames : m_devicesDataFrames){
-        if(auto devEndTS = deviceCompressedFrames.last_frame_received_timestamp(); devEndTS!=-1){
+    for(const auto &deviceDataFrames : m_devicesDataFrames){
+        if(auto devEndTS = deviceDataFrames.last_frame_timestamp(); devEndTS!=-1){
             if(end < devEndTS){
                 end = devEndTS;
                 found = true;
@@ -158,18 +158,18 @@ auto DCVideo::device_duration_ms(size_t idDevice) const noexcept -> double{
     return m_devicesDataFrames[idDevice].duration_ms();
 }
 
-auto DCVideo::device_first_frame_received_timestamp(size_t idDevice) const noexcept -> int64_t{
+auto DCVideo::device_first_frame_timestamp(size_t idDevice) const noexcept -> int64_t{
     if(idDevice >= nb_devices()){
         return -1;
     }
-    return m_devicesDataFrames[idDevice].first_frame_received_timestamp();
+    return m_devicesDataFrames[idDevice].first_frame_timestamp();
 }
 
-auto DCVideo::device_last_frame_received_timestamp(size_t idDevice) const noexcept -> int64_t{
+auto DCVideo::device_last_frame_timestamp(size_t idDevice) const noexcept -> int64_t{
     if(idDevice >= nb_devices()){
         return -1;
-    }
-    return m_devicesDataFrames[idDevice].last_frame_received_timestamp();
+    }    
+    return m_devicesDataFrames[idDevice].last_frame_timestamp();
 }
 
 auto DCVideo::duration_ms() const noexcept -> double {
@@ -177,9 +177,9 @@ auto DCVideo::duration_ms() const noexcept -> double {
     if(nb_devices() == 0){
         return 0.0;
     }
-    auto lfc = last_frame_received_timestamp();
-    auto ffc = first_frame_received_timestamp();
-    if(lfc != -1&& ffc != -1 ){
+    auto lfc = last_frame_timestamp();
+    auto ffc = first_frame_timestamp();
+    if(lfc != -1 && ffc != -1 ){
         return duration_cast<microseconds>(nanoseconds(lfc-ffc)).count()*0.001;
     }
     return 0.0;
@@ -206,17 +206,39 @@ auto DCVideo::closest_frame_id_from_time(size_t idDevice, double timeMs) const n
         return 0;
     }
 
-    auto ffTS = nanoseconds(first_frame_received_timestamp());
-    // init with first diff
-    double prevDiff = std::abs(get_timestamp_diff_time_ms(ffTS.count(), device_first_frame_received_timestamp(idDevice))-timeMs);
+    auto ffTS = nanoseconds(first_frame_timestamp());
 
-    for(size_t idFrame = 1; idFrame < framesPtr->nb_frames(); ++idFrame){        
-        auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->receivedTS);
-        auto diffMs      = std::abs(timeFrameMs-timeMs);
-        if(diffMs > prevDiff){
+    // set current time relative to first timestamp
+    auto currentTimeMicroS = microseconds(static_cast<std::int64_t>(timeMs*1000.0));
+    auto currentTimeTS     = ffTS + duration_cast<nanoseconds>(currentTimeMicroS);
+
+    // init with first diff
+    // double prevDiff = std::abs(get_timestamp_diff_time_ms(ffTS.count(), device_first_frame_timestamp(idDevice))-timeMs);
+    std::int64_t prevDiffNS = std::numeric_limits<std::int64_t>::max();//std::abs(currentTimeTS.count()-ffTS.count());
+
+    // Log::message(std::format("INIT [{} {} {} {}]\n", currentTimeMicroS.count(), ffTS.count(), currentTimeTS.count(),duration_cast<microseconds>(nanoseconds(prevDiffNS)).count()));
+
+    for(size_t idFrame = 0; idFrame < framesPtr->nb_frames(); ++idFrame){
+
+        auto currentFrameTS = framesPtr->frames[idFrame]->afterCaptureTS;
+        auto currentDiffNS  = std::abs(currentTimeTS.count()-currentFrameTS);
+
+        // auto prevDiffMicrosS = duration_cast<microseconds>(nanoseconds(prevDiffNS));
+        // auto currentDiffMicrosS = duration_cast<microseconds>(nanoseconds(currentDiffNS));
+        // Log::message(std::format("F[{} : {} : {}\n", idFrame, prevDiffMicrosS.count(), currentDiffMicrosS.count()));
+
+        if(currentDiffNS > prevDiffNS){
             return idFrame-1;
         }
-        prevDiff = diffMs;
+        prevDiffNS = currentDiffNS;
+
+        // auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->receivedTS);
+        // auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->afterCaptureTS);
+        // auto diffMs      = std::abs(timeFrameMs-timeMs);
+        // if(diffMs > prevDiff){
+        //     return idFrame-1;
+        // }
+        // prevDiff = diffMs;
     }
     return framesPtr->nb_frames()-1;
 }
@@ -709,11 +731,17 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
             case VideoType::Current:
                 frame->init_from_file_stream(file);
                 break;
+            case VideoType::Legacy4:
+                frame->init_from_file_stream(file);
+                frame->afterCaptureTS = frame->receivedTS;
+                break;
             case VideoType::Legacy3:
                 frame->init_from_file_stream_legacy3(file);
+                frame->afterCaptureTS = frame->receivedTS;
                 break;
             case VideoType::Legacy2:
                 frame->init_from_file_stream_legacy2(file);
+                frame->afterCaptureTS = frame->receivedTS;
                 break;
             default:
                 break;

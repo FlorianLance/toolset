@@ -149,6 +149,13 @@ auto DCClientProcessing::get_uc_usage(size_t idD) const noexcept -> double{
     return 0.0;
 }
 
+auto DCClientProcessing::get_average_process_duration_micro_s(size_t idD) const noexcept -> double{
+    if(idD < i->frameProcessors.size()){
+        return i->frameProcessors[idD]->avegageProcessMs;
+    }
+    return 0.0;
+}
+
 
 auto DCClientProcessing::invalid_last_frame(size_t idD) -> void {
 

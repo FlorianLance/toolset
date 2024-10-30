@@ -88,6 +88,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo() -> void{
     m_redrawClouds = false;
 }
 
+#include "utility/time.hpp"
 auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
     if(fboD.texture_id() == 0){
@@ -151,6 +152,9 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             }
             
             if(cloudD->display.showCapture){
+                // if(cloudD->lastFrame){
+                //     Log::message(std::format("[{}|{}] ", idC, Time::difference_micro_s(std::chrono::nanoseconds(cloudD->lastFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count()));
+                // }
                 cloudD->cpD.draw();                
             }
 
@@ -798,6 +802,8 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(Pt2f parentSize, const std
 }
 
 auto DCCloudsSceneDrawer::draw_fbo(Pt2<int> size) -> void{
+
+
     fboD.bind();
     fboD.draw();
     fboD.unbind();

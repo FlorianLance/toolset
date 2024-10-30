@@ -203,7 +203,8 @@ auto DCClient::update() -> void{
     }
 
     for(size_t idD = 0; idD < devices_nb(); ++idD){
-        settings.devicesS[idD].processindUCUsage = static_cast<int>(100.0*i->processing.get_uc_usage(idD));
+        settings.devicesS[idD].processindUCUsage          = static_cast<int>(100.0*i->processing.get_uc_usage(idD));
+        settings.devicesS[idD].averageProcesingDurationMicroS = i->processing.get_average_process_duration_micro_s(idD);
     }
 }
 

@@ -555,6 +555,12 @@ auto test_device_idle() -> void{
 #include "depth-camera/settings/dc_client_settings.hpp"
 #include "depth-camera/settings/dc_server_settings.hpp"
 
+
+// #include "xsimd/xsimd.hpp"
+
+// namespace xs = xsimd;
+
+
 int main(int argc, char *argv[]){
 
     std::cout << "argc " << argc << "\n";
@@ -577,7 +583,22 @@ int main(int argc, char *argv[]){
     });
     Logger::set_logger_instance(std::move(logger));
 
+    // xs::batch<double, xs::avx2> a;// = {1.5, 2.5, 3.5, 4.5};
 
+    // xs::batch<double, xs::avx2> b;// = {2.5, 3.5, 4.5, 5.5};
+    // auto mean = (a + b) / 2.0;
+    // std::cout << mean << std::endl;
+
+    // std::vector<int> a;
+    // std::cout << "a: " << a.size() << " " << a.capacity() << " " << a.max_size() << "\n";
+    // std::vector<int> b(10,0);
+    // std::cout << "b1: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
+    // b.resize(5);
+    // std::cout << "b2: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
+    // b.resize(100);
+    // std::cout << "b3: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
+
+    return 0;
     DCVideoPlayer p;
     DCVideo v1;
     Log::message("load\n");

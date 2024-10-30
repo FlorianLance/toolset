@@ -94,7 +94,8 @@ auto UdpMessageReception::update(const Header &header, std::span<const std::byte
         // first packet of a new frame to be received
         UdpReceptionInfo info;
         info.idMessage              = header.messageId;
-        info.firstPacketReceivedTS  = Time::nanoseconds_since_epoch();
+        info.firstPacketEmissionTS  = std::chrono::nanoseconds(header.creationTimestampNs);
+        info.firstPacketReceptionTS = std::chrono::nanoseconds(header.receptionTimestampNs);
         info.totalNumberOfPacket    = header.totalNumberPackets;
         info.totalSizeBytes         = header.totalSizeBytes;
         info.totalHeaderSizeBytes   = info.totalNumberOfPacket * sizeof(Header);
@@ -111,11 +112,6 @@ auto UdpMessageReception::update(const Header &header, std::span<const std::byte
     
     UdpReceptionInfo &info = infos[header.messageId];
 
-    if(header.currentPacketId == 0){
-        // packet n°1 of the frame received
-        info.firstPacketSentTS = std::chrono::nanoseconds(header.currentPacketTimestampNs);
-    }
-
     // copy data
     std::copy(dataToProcess.data(), dataToProcess.data() + header.currentPacketSizeBytes - sizeof(Header), info.messageData.data() + header.dataOffset);
     info.totalBytesReceived += header.currentPacketSizeBytes;
@@ -123,14 +119,16 @@ auto UdpMessageReception::update(const Header &header, std::span<const std::byte
 }
 
 auto UdpMessageReception::check_message_timeout() -> size_t{
+
     // sanity remover
     auto ts = Time::nanoseconds_since_epoch();
     timeoutIdPacketsToRemove.clear();
     for(const auto &info : infos){
-        if(Time::difference_ms(info.second.firstPacketReceivedTS, ts).count() > 1000){
+        if(Time::difference_ms(info.second.firstPacketReceptionTS, ts).count() > 1000){
             timeoutIdPacketsToRemove.push_back(info.first);
         }
     }
+
     for(const auto &idM : timeoutIdPacketsToRemove){
         {
             const auto &info = infos[idM];
@@ -140,6 +138,7 @@ auto UdpMessageReception::check_message_timeout() -> size_t{
         messageReceived.set_current(0);
         messageReceived.increment();
     }
+
     return timeoutIdPacketsToRemove.size();
 }
 
@@ -149,10 +148,11 @@ auto UdpMessageReception::message_fully_received(const Header &header) -> std::o
 
     std::optional<UdpReceptionInfo> oInfo = {};
     if(info.all_packets_received()){
+
         if(info.all_bytes_received()){
-            if(lastFullMessageSentTS < info.firstPacketSentTS){
+            if(lastFullMessageSentTS < info.firstPacketReceptionTS){
                 oInfo = info;
-                lastFullMessageSentTS = info.firstPacketSentTS;
+                lastFullMessageSentTS = info.firstPacketReceptionTS;
                 messageReceived.set_current(1);
                 messageReceived.increment();
             }else{

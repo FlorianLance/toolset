@@ -39,6 +39,7 @@
 
 using namespace tool::net;
 using namespace tool::cam;
+using namespace std::chrono;
 
 struct DCClientRemoteDevice::Impl{
 
@@ -55,10 +56,10 @@ struct DCClientRemoteDevice::Impl{
     DoubleRingBuffer<std::byte> messagesBuffer;
     AverageSynchBuffer synchro;
     AverageBandwidthBuffer bandwidth;
+    AverageBuffer receptionDurationNS;
+
     UdpMessageReception dFramesReception;
     std::atomic<size_t> totalReceivedBytes = 0;
-
-    std::int64_t averageTimestampDiffNs = 0;    
 };
 
 DCClientRemoteDevice::DCClientRemoteDevice() : i(std::make_unique<DCClientRemoteDevice::Impl>()){
@@ -112,7 +113,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     // set connection
-    i->udpReader.packed_received_signal.connect(&DCClientRemoteDevice::process_received_packet, this);
+    i->udpReader.packets_received_signal.connect(&DCClientRemoteDevice::process_received_packets, this);
 
     return true;
 }
@@ -147,7 +148,7 @@ auto DCClientRemoteDevice::clean() -> void{
     // clean reader
     // # remove connections
     Log::log("[DCClientRemoteDevice::clean] Remove connection.\n"sv);
-    i->udpReader.packed_received_signal.disconnect(&DCClientRemoteDevice::process_received_packet, this);
+    i->udpReader.packets_received_signal.disconnect(&DCClientRemoteDevice::process_received_packets, this);
 
     i->remoteDeviceConnected = false;
     // # stop reading loop
@@ -225,68 +226,155 @@ auto DCClientRemoteDevice::trigger_received_packets() -> void{
     i->udpReader.trigger_received_packets_from_external_thread();
 }
 
-auto DCClientRemoteDevice::process_received_packet(EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess) -> void{
+auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packetsToProcess) -> void{
 
-    switch (static_cast<DCMessageType>(header.type)) {
-    case DCMessageType::synchro:{
+    // read synchro packets
+    bool triggerSynch = false;
+    for(const auto &packet : packetsToProcess){
 
-        // update synchro
-        i->synchro.update_average_difference(header.currentPacketTimestampNs);
-
-        // trigger synchro signal
-        remote_synchro_signal(i->synchro.averageDiffNs);
-
-
-    }break;
-    case DCMessageType::feedback:{
-
-        Feedback feedback;
-        std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
-
-        // Log::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.type, dataToProcess.size_bytes(), dataToProcess.size()));
-
-        // process feedback
-        receive_feedback(std::move(header), feedback);
-
-    }break;
-    case DCMessageType::data_frame:{
-
-        i->dFramesReception.update(header, dataToProcess, i->messagesBuffer);
-
-        if(auto info = i->dFramesReception.message_fully_received(header); info.has_value()){
-
-            // create compressed frame from data
-            auto dFrame = std::make_shared<DCDataFrame>();
-
-            // init compressed frame from data packets
-            size_t offset = 0;
-            dFrame->init_from_data(info->messageData, offset);
-
-            // update received TS with first packet received TS
-            auto diffCaptureSending = (info->firstPacketSentTS.count() - dFrame->afterCaptureTS);
-            dFrame->receivedTS = info->firstPacketReceivedTS.count() - diffCaptureSending;
-
-            // add average diff to capture timestamp
-            dFrame->afterCaptureTS += i->synchro.averageDiffNs;
-
-            // update bandwitdh
-            i->bandwidth.add_size(info->totalBytesReceived);
-
-            // send compressed frame
-            receive_data_frame(std::move(header), std::move(dFrame));
+        if(static_cast<DCMessageType>(packet.header.type) == DCMessageType::synchro){
+            // update synchro
+            i->synchro.update_average_difference(packet.header.receptionTimestampNs - packet.header.creationTimestampNs);
+            triggerSynch = true;
         }
+    }
 
-        if(auto nbMessageTimeout = i->dFramesReception.check_message_timeout(); nbMessageTimeout != 0){
-            timeout_messages_signal(nbMessageTimeout);
+    // read data frames
+    bool triggerNetwork = false;
+    size_t nbTimeout = 0;
+    for(const auto &packet : packetsToProcess){
+
+        if(static_cast<DCMessageType>(packet.header.type) == DCMessageType::data_frame){
+
+            i->dFramesReception.update(packet.header, packet.data, i->messagesBuffer);
+
+            if(auto info = i->dFramesReception.message_fully_received(packet.header); info.has_value()){
+
+                // create compressed frame from data
+                auto dFrame = std::make_shared<DCDataFrame>();
+
+                // init compressed frame from data packets
+                size_t offset = 0;
+                dFrame->init_from_data(info->messageData, offset);
+
+                // update received TS with first packet received TS
+                dFrame->receivedTS = info->firstPacketReceptionTS.count();
+
+                // add average diff to capture timestamp
+                dFrame->afterCaptureTS += i->synchro.averageDiffNS;
+
+                auto receptionDurationNs  =
+                    Time::nanoseconds_since_epoch().count() - info->firstPacketEmissionTS.count() + i->synchro.averageDiffNS;
+
+                // send compressed frame
+                receive_data_frame(std::move(packet.header), std::move(dFrame));
+
+                // update duration reception
+                i->receptionDurationNS.add_value(receptionDurationNs);
+
+                // update bandwitdh
+                i->bandwidth.add_size(info->totalBytesReceived);
+            }
+
+            nbTimeout += i->dFramesReception.check_message_timeout();
+            triggerNetwork = true;
         }
+    }
 
-        receive_network_status(UdpNetworkStatus{i->dFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
+    // read feedbacks
+    for(const auto &packet : packetsToProcess){
 
-    }break;
-    default:
-        break;
+        if(static_cast<DCMessageType>(packet.header.type) == DCMessageType::feedback){
+
+            Feedback feedback;
+            std::copy(packet.data.data(), packet.data.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
+
+            // process feedback
+            receive_feedback(std::move(packet.header), feedback);
+        }
+    }
+
+    // trigger
+    if(triggerSynch){
+        remote_synchro_signal(i->synchro.averageDiffNS);
+    }
+
+    if(nbTimeout != 0){
+        timeout_messages_signal(nbTimeout);
+    }
+
+    if(triggerNetwork){
+        receive_network_status(UdpNetworkStatus{i->dFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth(), i->receptionDurationNS.get()});
     }
 }
+
+// auto DCClientRemoteDevice::process_received_packet(net::PData packetToProcess) -> void{
+
+//     switch (static_cast<DCMessageType>(packetToProcess.header.type)) {
+//     case DCMessageType::synchro:{
+
+//         // update synchro
+//         i->synchro.update_average_difference(packetToProcess.header.receptionTimestampNs - packetToProcess.header.creationTimestampNs);
+
+//         // trigger synchro signal
+//         // remote_synchro_signal(i->synchro.averageDiffNs);
+//         remote_synchro_signal(i->synchro.averageDiffNS);
+
+//         // Log::message(std::format("[S-{}|{}] ", header.messageId, Time::difference_micro_s(std::chrono::nanoseconds(header.currentPacketTimestampNs), Time::nanoseconds_since_epoch()).count()));
+
+
+//     }break;
+//     case DCMessageType::feedback:{
+
+//         Feedback feedback;
+//         std::copy(packetToProcess.data.data(), packetToProcess.data.data() + sizeof(feedback), reinterpret_cast<std::byte*>(&feedback));
+
+//         // Log::message(std::format("RECEIVED FEEDBACK {} {} {} {}\n", (int)feedback.receivedMessageType, (int)feedback.type, dataToProcess.size_bytes(), dataToProcess.size()));
+
+//         // process feedback
+//         receive_feedback(std::move(packetToProcess.header), feedback);
+
+//     }break;
+//     case DCMessageType::data_frame:{
+
+//         i->dFramesReception.update(packetToProcess.header, packetToProcess.data, i->messagesBuffer);
+
+//         if(auto info = i->dFramesReception.message_fully_received(packetToProcess.header); info.has_value()){
+
+//             // create compressed frame from data
+//             auto dFrame = std::make_shared<DCDataFrame>();
+
+//             // init compressed frame from data packets
+//             size_t offset = 0;
+//             dFrame->init_from_data(info->messageData, offset);
+
+//             // update received TS with first packet received TS
+//             dFrame->receivedTS = info->firstPacketReceivedTS.count();
+//             // auto diffCaptureSending = (info->firstPacketSentTS.count() - dFrame->afterCaptureTS);
+//             // dFrame->receivedTS = info->firstPacketReceivedTS.count() - diffCaptureSending;
+
+//             // add average diff to capture timestamp
+//             // dFrame->afterCaptureTS += i->synchro.averageDiffNs;
+//             dFrame->afterCaptureTS += i->synchro.averageDiffNS;
+
+//             // update bandwitdh
+//             i->bandwidth.add_size(info->totalBytesReceived);
+
+//             // send compressed frame
+//             receive_data_frame(std::move(packetToProcess.header), std::move(dFrame));
+//         }
+
+//         if(auto nbMessageTimeout = i->dFramesReception.check_message_timeout(); nbMessageTimeout != 0){
+//             timeout_messages_signal(nbMessageTimeout);
+//         }
+
+//         receive_network_status(UdpNetworkStatus{i->dFramesReception.get_percentage_success(), i->bandwidth.get_bandwidth()});
+
+//     }break;
+//     default:
+//         break;
+//     }
+// }
 
 auto DCClientRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
 
@@ -330,6 +418,7 @@ auto DCClientRemoteDevice::receive_data_frame(Header h, std::shared_ptr<cam::DCD
 
         // update latency
         latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(dFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
+        // Log::message(std::format("[{}] ", Time::difference_micro_s(std::chrono::nanoseconds(dFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count()));
 
         // send frame
         remote_data_frame_signal(std::move(dFrame));

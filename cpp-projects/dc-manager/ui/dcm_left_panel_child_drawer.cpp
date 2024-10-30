@@ -481,10 +481,10 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
         ImGui::Spacing();
         ImGuiUiDrawer::title("STATUS");
         ImGui::Spacing();
-        ImGui::Text("Network:");
-        {
 
-            ImGui::Indent();
+        ImGui::Text("Network:");
+        ImGui::Indent();
+        {            
             ImGui::Text("# Percentage success (/100):");
             ImGui::Indent();
             for(const auto &deviceS : model->client.settings.devicesS){
@@ -503,7 +503,23 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
             }
             ImGui::Unindent();
 
-            ImGui::Text("Data");
+
+
+            ImGui::Text("# Reception duration  (µs):");
+            ImGui::Indent();
+            for(const auto &deviceS : model->client.settings.devicesS){
+                if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
+                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, duration_cast<microseconds>(nanoseconds(static_cast<std::int64_t>(deviceS.receivedNetworkStatus.receptionDurationNs))).count()));
+                }
+            }
+            ImGui::Unindent();
+
+            ImGui::Unindent();
+        }
+
+        ImGui::Text("Data");
+        ImGui::Indent();
+        {
             ImGui::Text("# Framerate (fps):");
             ImGui::Indent();
             for(const auto &deviceS : model->client.settings.devicesS){
@@ -513,18 +529,19 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
             }
             ImGui::Unindent();
 
+
             ImGui::Text("Total latency (from capture to reception) (µs):");
-                ImGui::Indent();
+            ImGui::Indent();
             for(const auto &deviceS : model->client.settings.devicesS){
                 if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
                     ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));
                 }
             }
             ImGui::Unindent();
+
+            ImGui::Unindent();
         }
 
-
-        ImGui::Unindent();
         ImGui::Text("Synchronization:");
         ImGui::Indent();
         {
@@ -582,12 +599,12 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
         ImGui::Indent();
         int id = 0;
         for(const auto &clientDeviceS : model->client.settings.devicesS){
-            ImGuiUiDrawer::text(std::format("[D{}: {}]", clientDeviceS.id, clientDeviceS.processindUCUsage));
-            if(id % 3 == 0 && (id != 0)){
+            ImGuiUiDrawer::text(std::format("[D{}: {} (%) | {} (µs)]", clientDeviceS.id, clientDeviceS.processindUCUsage, clientDeviceS.averageProcesingDurationMicroS));
+            // if(id % 3 == 0 && (id != 0)){
 
-            }else{
-                ImGui::SameLine();
-            }
+            // }else{
+            //     ImGui::SameLine();
+            // }
             ++id;
         }
         ImGui::Text("");

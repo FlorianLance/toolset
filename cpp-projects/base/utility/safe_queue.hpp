@@ -32,7 +32,33 @@
 #include <queue>
 #include <mutex>
 
+// local
+#include "ring_buffer.hpp"
+
 namespace tool{
+
+// template<class T>
+// struct SQueue{
+
+//     SQueue(size_t maxSize){
+//         buffer.resize(maxSize, T{});
+//     }
+
+
+//     auto push(T&& item) -> void{
+
+//         buffer.set_current(item);
+//         buffer.increment();
+
+//         buffer[start + size] = std::forward(item);
+//         ++size;
+//     }
+
+//     SingleRingBuffer<T> buffer;
+//     size_t start = 0;
+//     size_t size = 0;
+// };
+
 
 template<class T>
 class SafeQueue{
@@ -45,7 +71,7 @@ class SafeQueue{
 
 public:
     template<class U>
-    auto push_back(U&& item) -> void {
+    auto push_back(U&& item) -> bool {
 
         std::unique_lock lock(mutex_);
         //        while(MaxQueueSize == queue_.size()){
@@ -53,9 +79,11 @@ public:
         ////            producer_.wait(lock);
         //        }
         queue_.push(std::forward<U>(item));
-        if(queue_.size() > 20){
+        if(queue_.size() > 1000){ // 20
             queue_.pop();
+            return true;
         }
+        return false;
         //        consumer_.notify_one();
     }
 
@@ -73,6 +101,8 @@ public:
         //        auto full = MaxQueueSize == queue_.size();
         auto item = queue_.front();
         queue_.pop();
+
+
         //        if(full){
         //            producer_.notify_all();
         //        }
@@ -87,16 +117,16 @@ public:
 }
 
 // template<typename T, typename Container = std::queue<T>>
-// class Queue
+// class Queue2
 // {
 // public:
-//     Queue() = default;
-//     ~Queue() = default;
+//     Queue2() = default;
+//     ~Queue2() = default;
 //     //禁止拷贝和移动，编译器会自动delete
-//     Queue(const Queue&) = delete;
-//     Queue(Queue&&) = delete;
-//     Queue& operator=(const Queue&) = delete;
-//     Queue& operator=(Queue&&) = delete;
+//     Queue2(const Queue2&) = delete;
+//     Queue2(Queue2&&) = delete;
+//     Queue2& operator=(const Queue2&) = delete;
+//     Queue2& operator=(Queue2&&) = delete;
 //     void push(const T& val)
 //     {
 //         emplace(val);
@@ -117,10 +147,12 @@ public:
 //         q_.push(std::forward<Args>(args)...);
 //         cv_.notify_one();
 //     }
-//     T pop()//阻塞
+//     T pop() // blocage
 //     {
 //         std::unique_lock<std::mutex> lk{ mtx_ };
-//         cv_.wait(lk, [this] {return !q_.empty(); });//如果队列不为空就继续执行，否则阻塞
+//         cv_.wait(lk, [this] {
+//             return !q_.empty();
+//         });// Si la file d'attente n'est pas vide, l'exécution se poursuit, sinon elle se bloque.
 //         assert(!q_.empty());
 //         T ret{ std::move_if_noexcept(q_.front()) };
 //         q_.pop();

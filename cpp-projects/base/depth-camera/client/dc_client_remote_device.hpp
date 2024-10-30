@@ -70,7 +70,8 @@ public:
 
 private:
     
-    auto process_received_packet(net::EndPointId endpoint, net::Header header, std::span<const std::byte> dataToProcess) -> void;
+    auto process_received_packets(std::span<net::PData> packetsToProcess) -> void;
+    // auto process_received_packet(net::PData packetToProcess) -> void;
     auto receive_feedback(net::Header h, net::Feedback message) -> void;
     auto receive_data_frame(net::Header h, std::shared_ptr<cam::DCDataFrame> dFrame) -> void;
     auto receive_network_status(net::UdpNetworkStatus status) -> void;

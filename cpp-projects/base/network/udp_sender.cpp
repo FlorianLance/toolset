@@ -98,8 +98,8 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
         i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
         i->socket->set_option(detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ 5 });
         i->socket->set_option(ip::udp::socket::reuse_address(true));
-        i->socket->set_option(ip::udp::socket::send_buffer_size(9000*1000));
-        i->socket->set_option(ip::udp::socket::receive_buffer_size(9000*1000));
+        i->socket->set_option(ip::udp::socket::send_buffer_size(9000*100));
+        i->socket->set_option(ip::udp::socket::receive_buffer_size(9000*5));
 
         // init resolver
         ip::udp::resolver resolver(i->ioService);
@@ -204,29 +204,25 @@ auto UdpSender::generate_data_packets(MessageTypeId messageType, std::span<const
         // init header informations
         Header header = commonHeader;
         header.currentPacketId          = static_cast<std::uint16_t>(idP);
-        header.currentPacketSizeBytes   = static_cast<std::uint16_t>(dataPackets[idP].size());
-        header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
-
-        // update offset
+        header.currentPacketSizeBytes   = static_cast<std::uint16_t>(dataPackets[idP].size());        
         header.dataOffset               = static_cast<std::uint32_t>(idP * sizePacketData);
 
         // retrieve data subpart
         auto dataS = std::span(dataToSend.data() + header.dataOffset, header.currentPacketSizeBytes - sizePacketHeader);
 
-        // compute data checksum
-        header.checkSum = data::Checksum::gen_crc16(dataS);
-
-        // copy header
-        std::copy(
-            reinterpret_cast<std::byte*>(&header),
-            reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
-            dataPackets[idP].begin()
-        );
-
         // copy packet data
         std::copy(
             dataS.begin(), dataS.end(),
             dataPackets[idP].begin() + sizePacketHeader
+        );
+
+        // copy header
+        header.creationTimestampNs = Time::nanoseconds_since_epoch().count();
+        // header.checkSum = data::Checksum::gen_crc16(dataS);
+        std::copy(
+            reinterpret_cast<std::byte*>(&header),
+            reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
+            dataPackets[idP].begin()
         );
     });
 }
@@ -253,8 +249,7 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
             header.currentPacketSizeBytes = static_cast<std::uint16_t>(i->sizeUdpPacket);
         }else{
             header.currentPacketSizeBytes = static_cast<std::uint16_t>(rest + sizePacketHeader);
-        }        
-        header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
+        }
 
         // copy data
         auto dataS = std::span(dataToSend.data() + header.dataOffset, header.currentPacketSizeBytes - sizePacketHeader);
@@ -263,10 +258,9 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
             i->packetBuffer.begin() + sizePacketHeader
         );
 
-        // compute data checksum
-        header.checkSum = data::Checksum::gen_crc16(dataS);
-
         // copy header
+        header.creationTimestampNs = Time::nanoseconds_since_epoch().count();
+        // header.checkSum = data::Checksum::gen_crc16(dataS);
         std::copy(
             reinterpret_cast<std::byte*>(&header),
             reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
@@ -354,7 +348,7 @@ auto UdpSender::generate_dataless_header(MessageTypeId type) -> Header{
     header.totalNumberPackets       = 1;
     header.currentPacketId          = 0;
     header.currentPacketSizeBytes   = static_cast<std::uint16_t>(header.totalSizeBytes);
-    header.currentPacketTimestampNs = Time::nanoseconds_since_epoch().count();
+    header.creationTimestampNs = Time::nanoseconds_since_epoch().count();
     header.dataOffset               = 0;
 
     if(i->currentIdMessages.contains(type)){

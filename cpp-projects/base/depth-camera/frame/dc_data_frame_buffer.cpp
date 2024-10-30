@@ -63,24 +63,24 @@ auto DCDataFrameBuffer::get_frame_ptr(size_t idFrame) const -> DCDataFrame*{
     return nullptr;
 }
 
-auto DCDataFrameBuffer::first_frame_received_timestamp() const noexcept -> std::int64_t {
+auto DCDataFrameBuffer::first_frame_timestamp() const noexcept -> std::int64_t {
     if(!frames.empty()){
-        return frames.front()->receivedTS;
+        return frames.front()->afterCaptureTS;
     }
     return -1;
 }
 
-auto DCDataFrameBuffer::last_frame_received_timestamp() const noexcept ->  std::int64_t {
+auto DCDataFrameBuffer::last_frame_timestamp() const noexcept ->  std::int64_t {
     if(!frames.empty()){
-        return frames.back()->receivedTS;
+        return frames.back()->afterCaptureTS;
     }
     return -1;
 }
 
 auto DCDataFrameBuffer::duration_ms() const noexcept -> double {
     using namespace std::chrono;
-    auto lfc = last_frame_received_timestamp();
-    auto ffc = first_frame_received_timestamp();
+    auto lfc = last_frame_timestamp();
+    auto ffc = first_frame_timestamp();
     if(lfc != -1&& ffc != -1 ){
         return duration_cast<microseconds>(nanoseconds(lfc-ffc)).count()*0.001;
     }

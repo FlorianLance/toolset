@@ -76,11 +76,12 @@ struct Header{
     std::int32_t messageId = -1;
     std::uint32_t totalSizeBytes = 0;
     std::uint32_t dataOffset = 0;
-    std::int64_t currentPacketTimestampNs = 0;
+    std::int64_t creationTimestampNs = 0;
     std::uint32_t checkSum = 0;
     std::uint16_t totalNumberPackets = 0;
     std::uint16_t currentPacketId = 0;
-    std::uint16_t currentPacketSizeBytes = 0;    
+    std::uint16_t currentPacketSizeBytes = 0;
+    std::uint64_t receptionTimestampNs = 0;
     MessageTypeId type = 0;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{
@@ -91,11 +92,18 @@ struct Header{
     }
 };
 
+struct PData{
+    EndPointId endPoint;
+    Header header;
+    std::span<const std::byte> data;
+};
+
+
 struct UdpReceptionInfo{
 
     std::int32_t idMessage = 0;
-    std::chrono::nanoseconds firstPacketReceivedTS = {};
-    std::chrono::nanoseconds firstPacketSentTS = {};
+    std::chrono::nanoseconds firstPacketEmissionTS = {};
+    std::chrono::nanoseconds firstPacketReceptionTS = {};
     std::span<std::byte> messageData = {};
 
     size_t totalBytesReceived   = 0;

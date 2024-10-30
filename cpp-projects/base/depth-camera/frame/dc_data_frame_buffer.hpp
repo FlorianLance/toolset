@@ -42,8 +42,8 @@ struct DCDataFrameBuffer{
     // getters
     auto nb_frames() const noexcept -> size_t;
     auto valid_vertices_count(size_t idFrame) const noexcept -> size_t;
-    auto first_frame_received_timestamp() const noexcept -> std::int64_t;
-    auto last_frame_received_timestamp() const noexcept -> std::int64_t;
+    auto first_frame_timestamp() const noexcept -> std::int64_t;
+    auto last_frame_timestamp() const noexcept -> std::int64_t;
     auto duration_ms() const noexcept -> double;
 
     // modifiers

@@ -204,7 +204,7 @@ auto DCMController::set_connections() -> void{
     // ## player
     player->new_frame_signal.connect(                       &DCPlayerDrawer::set_frame,                         playerD);
     // ## recorder
-    client->new_data_frame_signal.connect(                  &DCVideoRecorder::add_data_frame,                   recorder);
+    // client->new_data_frame_signal.connect(                  &DCVideoRecorder::add_data_frame,                   recorder);
     client->new_frame_signal.connect(                       &DCVideoRecorder::add_frame,                        recorder);
     // ## calibrator
     client->new_frame_signal.connect(                       &DCCalibrator::add_frame,                           calibrator);

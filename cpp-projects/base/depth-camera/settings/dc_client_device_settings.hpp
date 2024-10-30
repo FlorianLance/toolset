@@ -68,6 +68,7 @@ struct DCClientDeviceSettings : public io::Settings{
     net::UdpNetworkStatus receivedNetworkStatus;
     net::UdpDataStatus receivedDataStatus;
     int processindUCUsage = 0;
+    double averageProcesingDurationMicroS = 0.0;
 };
 
 }

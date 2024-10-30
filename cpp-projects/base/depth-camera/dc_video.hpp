@@ -38,11 +38,12 @@ enum class VideoType : std::int8_t{
     Legacy1 = 0,
     Legacy2 = 1,
     Legacy3 = 2,
-    Current = 3,
+    Legacy4 = 3,
+    Current = 4,
 };
 
 [[maybe_unused]] static constexpr auto valid(VideoType vt) noexcept -> bool{
-    return (vt == VideoType::Legacy3) || (vt == VideoType::Current);
+    return (vt == VideoType::Legacy4) || (vt == VideoType::Legacy3) || (vt == VideoType::Current);
 }
 
 
@@ -64,11 +65,11 @@ public:
     auto get_transform(size_t idD) const -> geo::Mat4d;
     // # times
     auto duration_ms() const noexcept -> double;
-    auto first_frame_received_timestamp() const noexcept -> std::int64_t;
-    auto last_frame_received_timestamp() const noexcept -> std::int64_t;
+    auto first_frame_timestamp() const noexcept -> std::int64_t;
+    auto last_frame_timestamp() const noexcept -> std::int64_t;
     auto device_duration_ms(size_t idD) const noexcept -> double;
-    auto device_first_frame_received_timestamp(size_t idD) const noexcept -> std::int64_t;
-    auto device_last_frame_received_timestamp(size_t idD) const noexcept -> std::int64_t;
+    auto device_first_frame_timestamp(size_t idD) const noexcept -> std::int64_t;
+    auto device_last_frame_timestamp(size_t idD) const noexcept -> std::int64_t;
     static auto get_timestamp_diff_time_ms(std::int64_t t1, std::int64_t t2) noexcept -> double;
     // # frames
     auto nb_frames(size_t idD) const noexcept -> size_t;

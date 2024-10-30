@@ -141,119 +141,122 @@ DCServer::Impl::Impl(){
     receptions[static_cast<std::int8_t>(DCMessageType::update_filters_settings)] = {};
     receptions[static_cast<std::int8_t>(DCMessageType::update_color_settings)] = {};
 
-    udpReader.packed_received_signal.connect([&](EndPointId endpoint, Header header, std::span<const std::byte> dataToProcess){
+    udpReader.packets_received_signal.connect([&](std::span<PData> packets){
 
-        switch (static_cast<DCMessageType>(header.type)) {
-        case DCMessageType::init_server_client_connection:{
+        for(const auto &packet : packets){
 
-            auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::init_server_client_connection)];
-            reception.update(header, dataToProcess, messagesBuffer);
+            switch (static_cast<DCMessageType>(packet.header.type)) {
+            case DCMessageType::init_server_client_connection:{
 
-            if(auto info = reception.message_fully_received(header); info.has_value()){
-                
-                Log::message("[DCServer] init_server_client_connection message received.\n");
-                UdpConnectionSettings cs(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes()));
+                auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::init_server_client_connection)];
+                reception.update(packet.header, packet.data, messagesBuffer);
 
-                std::lock_guard l(messagesL);
-                rMessages->push_back(EndVal<UdpConnectionSettings>{std::move(endpoint), cs});
-            }
+                if(auto info = reception.message_fully_received(packet.header); info.has_value()){
 
-            if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
-                timeout_messages_signal(nbMessageTimeout);
-            }
+                    Log::message("[DCServer] init_server_client_connection message received.\n");
+                    UdpConnectionSettings cs(std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes()));
 
-        }break;
-        case DCMessageType::command:{
-            
-            Log::message("[DCServer] command message received.\n");
-            Command command;
-            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Command), reinterpret_cast<std::byte*>(&command));
+                    std::lock_guard l(messagesL);
+                    rMessages->push_back(EndVal<UdpConnectionSettings>{std::move(packet.endPoint), cs});
+                }
 
-            std::lock_guard l(messagesL);
-            rMessages->push_back(EndVal<Command>{std::move(endpoint), command});
+                if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
+                    timeout_messages_signal(nbMessageTimeout);
+                }
 
-        }break;
-        case DCMessageType::feedback:{
+            }break;
+            case DCMessageType::command:{
 
-            Feedback feedback;
-            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(Feedback), reinterpret_cast<std::byte*>(&feedback));
-
-            std::lock_guard l(messagesL);
-            rMessages->push_back(EndVal<Feedback>{std::move(endpoint), feedback});
-
-        }break;
-        case DCMessageType::update_device_settings:{
-
-            auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_device_settings)];
-            reception.update(header, dataToProcess, messagesBuffer);
-
-            if(auto info = reception.message_fully_received(header); info.has_value()){
-                
-                Log::message("[DCServer] update_device_settings message received.\n");
+                Log::message("[DCServer] command message received.\n");
+                Command command;
+                std::copy(packet.data.data(), packet.data.data() + sizeof(Command), reinterpret_cast<std::byte*>(&command));
 
                 std::lock_guard l(messagesL);
-                rMessages->push_back(EndPtr<DCDeviceSettings>{std::move(endpoint),  std::make_shared<DCDeviceSettings>(
-                    std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
-                )});
-            }
+                rMessages->push_back(EndVal<Command>{std::move(packet.endPoint), command});
 
-            if(auto nbMessageTimeout =  reception.check_message_timeout(); nbMessageTimeout != 0){
-                timeout_messages_signal(nbMessageTimeout);
-            }
+            }break;
+            case DCMessageType::feedback:{
 
-        }break;
-        case DCMessageType::update_filters_settings:{
-
-            auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_filters_settings)];
-            reception.update(header, dataToProcess, messagesBuffer);
-
-            if(auto info = reception.message_fully_received(header); info.has_value()){
-                Log::message("[DCServer] update_filters_settings message received.\n");
+                Feedback feedback;
+                std::copy(packet.data.data(), packet.data.data() + sizeof(Feedback), reinterpret_cast<std::byte*>(&feedback));
 
                 std::lock_guard l(messagesL);
-                rMessages->push_back(EndPtr<DCFiltersSettings>{std::move(endpoint),  std::make_shared<DCFiltersSettings>(
-                    std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
-                )});
-            }
+                rMessages->push_back(EndVal<Feedback>{std::move(packet.endPoint), feedback});
 
-            if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
-                timeout_messages_signal(nbMessageTimeout);
-            }
+            }break;
+            case DCMessageType::update_device_settings:{
 
-        }break;
-        case DCMessageType::update_color_settings:{
+                auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_device_settings)];
+                reception.update(packet.header, packet.data, messagesBuffer);
 
-            auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_color_settings)];
-            reception.update(header, dataToProcess, messagesBuffer);
+                if(auto info = reception.message_fully_received(packet.header); info.has_value()){
 
-            if(auto info = reception.message_fully_received(header); info.has_value()){
-                
-                Log::message("[DCServer] update_color_settings message received.\n");
+                    Log::message("[DCServer] update_device_settings message received.\n");
+
+                    std::lock_guard l(messagesL);
+                    rMessages->push_back(EndPtr<DCDeviceSettings>{std::move(packet.endPoint),  std::make_shared<DCDeviceSettings>(
+                        std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+                    )});
+                }
+
+                if(auto nbMessageTimeout =  reception.check_message_timeout(); nbMessageTimeout != 0){
+                    timeout_messages_signal(nbMessageTimeout);
+                }
+
+            }break;
+            case DCMessageType::update_filters_settings:{
+
+                auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_filters_settings)];
+                reception.update(packet.header, packet.data, messagesBuffer);
+
+                if(auto info = reception.message_fully_received(packet.header); info.has_value()){
+                    Log::message("[DCServer] update_filters_settings message received.\n");
+
+                    std::lock_guard l(messagesL);
+                    rMessages->push_back(EndPtr<DCFiltersSettings>{std::move(packet.endPoint),  std::make_shared<DCFiltersSettings>(
+                        std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+                    )});
+                }
+
+                if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
+                    timeout_messages_signal(nbMessageTimeout);
+                }
+
+            }break;
+            case DCMessageType::update_color_settings:{
+
+                auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_color_settings)];
+                reception.update(packet.header, packet.data, messagesBuffer);
+
+                if(auto info = reception.message_fully_received(packet.header); info.has_value()){
+
+                    Log::message("[DCServer] update_color_settings message received.\n");
+
+                    std::lock_guard l(messagesL);
+                    rMessages->push_back(EndPtr<DCColorSettings>{std::move(packet.endPoint),  std::make_shared<DCColorSettings>(
+                        std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
+                    )});
+                }
+
+                if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
+                    timeout_messages_signal(nbMessageTimeout);
+                }
+
+            }break;
+            case DCMessageType::update_misc_settings:{
+
+                Log::message("[DCServer] update_delay_settings message received.\n");
+
+                DCMiscSettings delay;
+                std::copy(packet.data.data(), packet.data.data() + sizeof(DCMiscSettings), reinterpret_cast<std::byte*>(&delay));
 
                 std::lock_guard l(messagesL);
-                rMessages->push_back(EndPtr<DCColorSettings>{std::move(endpoint),  std::make_shared<DCColorSettings>(
-                    std::span<const std::uint8_t>(reinterpret_cast<const std::uint8_t*>(info->messageData.data()),info->messageData.size_bytes())
-                )});
+                rMessages->push_back(EndVal<DCMiscSettings>{std::move(packet.endPoint), std::move(delay)});
+
+            }break;
+            default:
+                break;
             }
-
-            if(auto nbMessageTimeout = reception.check_message_timeout(); nbMessageTimeout != 0){
-                timeout_messages_signal(nbMessageTimeout);
-            }
-
-        }break;
-        case DCMessageType::update_misc_settings:{
-            
-            Log::message("[DCServer] update_delay_settings message received.\n");
-            
-            DCMiscSettings delay;
-            std::copy(dataToProcess.data(), dataToProcess.data() + sizeof(DCMiscSettings), reinterpret_cast<std::byte*>(&delay));
-
-            std::lock_guard l(messagesL);
-            rMessages->push_back(EndVal<DCMiscSettings>{std::move(endpoint), std::move(delay)});
-
-        }break;
-        default:
-            break;
         }
     });
 }
@@ -390,6 +393,7 @@ auto DCServer::Impl::send_messages_loop() -> void{
 
                     if(!udpSenders.empty()){
 
+                        // auto t1 = Time::nanoseconds_since_epoch();
                         auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 
                         std::shared_ptr<cam::DCDataFrame> f = std::move(m.second);
@@ -399,14 +403,19 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         if(senderBuffer.size() < totalDataSizeBytes){
                             senderBuffer.resize(totalDataSizeBytes);
                         }
+                        // auto t2 = Time::nanoseconds_since_epoch();
 
                         // write data to buffer
                         size_t offset = 0;
                         auto bData = std::span(senderBuffer.data(), totalDataSizeBytes);
                         f->write_to_data(bData, offset);
 
+                        // auto t3 = Time::nanoseconds_since_epoch();
+
                         // generate all packets
                         (*udpSenders.begin()).second->generate_data_packets(static_cast<MessageTypeId>(DCMessageType::data_frame), bData, frameDataPackets);
+
+                        // auto t4 = Time::nanoseconds_since_epoch();
 
                         // send all packets
                         std::atomic<size_t> count = 0;
@@ -421,6 +430,8 @@ auto DCServer::Impl::send_messages_loop() -> void{
                             }
                         });
 
+                        // auto t5 = Time::nanoseconds_since_epoch();
+
                         // update last frame id sent if at least on frame sent
                         if(count != 0){
                             frameSent = true;
@@ -428,6 +439,10 @@ auto DCServer::Impl::send_messages_loop() -> void{
                             std::chrono::nanoseconds lastFrameSentTS = Time::nanoseconds_since_epoch();
                             last_frame_sent_signal(f->idCapture, lastFrameSentTS, std::chrono::duration_cast<std::chrono::microseconds>(lastFrameSentTS - beforeSendingFrameTS).count());
                         }
+
+                        // Log::message(std::format("TIME SEND: {} {} {} {}\n",
+                        //     Time::difference_micro_s(t1,t2).count(),
+                        //     Time::difference_micro_s(t2,t3).count(),Time::difference_micro_s(t3,t4).count(),Time::difference_micro_s(t4,t5).count()));
                     }
                 }
             },

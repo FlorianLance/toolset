@@ -59,6 +59,7 @@ struct DCFrameProcessor{
     auto generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>;
 
     std::atomic<double> ucUsage = 0.0;
+    std::atomic<double> avegageProcessMs = 0.0;
 
 private:
 

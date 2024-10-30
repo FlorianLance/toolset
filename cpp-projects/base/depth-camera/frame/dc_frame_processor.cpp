@@ -36,6 +36,7 @@
 #include "utility/monitoring.hpp"
 
 using namespace tool::cam;
+using namespace std::chrono;
 
 struct DCFrameProcessor::Impl{
 
@@ -54,6 +55,7 @@ struct DCFrameProcessor::Impl{
 
     SumBuffer processB;
     SumBuffer sleepB;
+    AverageBuffer averageProcessB;
 };
 
 DCFrameProcessor::DCFrameProcessor() : i(std::make_unique<Impl>()){
@@ -185,8 +187,8 @@ auto DCFrameProcessor::process_thread() -> void {
     while(i->processingThreadStarted){
 
         auto t1 = Time::nanoseconds_since_epoch();
-        process();
-        auto t2 = Time::nanoseconds_since_epoch();
+        bool newFrame = process();
+        auto t2 = Time::nanoseconds_since_epoch();        
 
         // sleep        
         using namespace std::chrono_literals;
@@ -196,11 +198,16 @@ auto DCFrameProcessor::process_thread() -> void {
         i->processB.add_value(Time::difference_ms(t1,t2).count());
         i->sleepB.add_value(Time::difference_ms(t2,t3).count());
 
+        if(newFrame){
+            i->averageProcessB.add_value(1.0*duration_cast<microseconds>(t2-t1).count());
+            avegageProcessMs = i->averageProcessB.get();
+        }
+
         ++idP;
         if(idP % 100 == 0){
             idP = 0;
             auto aP = i->processB.get();
-            ucUsage = aP / (aP + i->sleepB.get());
+            ucUsage = aP / (aP + i->sleepB.get());            
         }
     }
 }

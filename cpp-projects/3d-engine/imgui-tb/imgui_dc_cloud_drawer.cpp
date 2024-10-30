@@ -165,6 +165,9 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
     lastFrameId = frame->idCapture;
     lastFrame   = frame;
 
+    // updateTS = frame->afterCaptureTS;
+    // Log::message(std::format("[U:{}]", Time::difference_micro_s(std::chrono::nanoseconds(frame->afterCaptureTS), Time::nanoseconds_since_epoch())));
+
     return true;
 }
 

@@ -37,6 +37,7 @@ namespace tool::net{
 struct UdpNetworkStatus{
     int percentageSuccess = 0;
     size_t bandwidthBytes = 0;
+    double receptionDurationNs = 0.0;
 };
 
 struct UdpDataStatus{

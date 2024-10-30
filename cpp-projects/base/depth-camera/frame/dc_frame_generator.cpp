@@ -661,8 +661,8 @@ auto DCFrameGenerator::generate(const DCFrameGenerationSettings &gSettings, DCDa
 
     i->reset_timings();
 
-    i->do_work_task(gSettings, dFrame, frame);
-    // i->do_work(gSettings, dFrame, frame);
+    // i->do_work_task(gSettings, dFrame, frame); // TOO SLOW
+    i->do_work(gSettings, dFrame, frame);
 
     return true;
 }
