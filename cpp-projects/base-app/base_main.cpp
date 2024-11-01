@@ -42,11 +42,13 @@
 
 #include "depth-camera/frame/dc_data_frame_generator.hpp"
 
-using namespace tool;
-using namespace tool::geo;
-using namespace tool::cam;
+
 
 auto convert_kvid(const std::string &path, const std::string &dest) -> void{
+
+    using namespace tool;
+    using namespace tool::geo;
+    using namespace tool::cam;
 
     if(path.empty()){
         return;
@@ -287,6 +289,10 @@ static auto read_callback(struct SoundIoInStream *instream, int frame_count_min,
 
 auto test_microphone() -> void{
 
+
+    using namespace tool;
+    using namespace tool::geo;
+    using namespace tool::cam;
     std::cout << "test_microphone\n";
 
     enum SoundIoBackend backend = SoundIoBackendWasapi;
@@ -442,6 +448,11 @@ auto test_microphone() -> void{
 
 auto process_kvid() -> void{
 
+
+    using namespace tool;
+    using namespace tool::geo;
+    using namespace tool::cam;
+
     DCVideo video;
     std::string path = "E:/newtournage outro1b.kvid";
     video.load_from_file(path);
@@ -536,6 +547,11 @@ auto process_kvid() -> void{
 
 auto test_device_idle() -> void{
 
+
+    using namespace tool;
+    using namespace tool::geo;
+    using namespace tool::cam;
+
     DCDevice device;
     device.start_thread();
 
@@ -559,9 +575,70 @@ auto test_device_idle() -> void{
 // #include "xsimd/xsimd.hpp"
 
 // namespace xs = xsimd;
+#define VCL_NAMESPACE
+#include "vectorclass.h"
+
+struct Vec16bBuffer{
+    std::vector<VCL_NAMESPACE::Vec16sb> data;
+    auto init(size_t size) -> void{
+        if(size%16 != 0){
+            std::cerr << "error\n";
+            return;
+        }
+        data.resize(size/16);
+
+        Vec16sb initV(true);
+        for(auto &d : data){
+            d = initV;
+        }
+    }
+};
+
+struct Vec16usBuffer{
+    // size_t size = 640*576;
+    // static constexpr size_t maxSize = 1024*1024/16;
+    std::vector<VCL_NAMESPACE::Vec16us> data;
+    // std::vector<size_t> ids;
+
+    auto init(size_t size) -> void{
+        if(size%16 != 0){
+            std::cerr << "error\n";
+            return;
+        }
+        data.resize(size/16);
+        // ids.resize(data.size());
+        // std::iota(ids.begin(), ids.begin(), 0);
+    }
+
+    auto load(std::span<std::uint16_t> iData) -> void{
+
+        if(iData.size() !=  data.size()*16){
+            std::cerr << "error\n";
+            return;
+        }
+
+        // data.resize(iData.size()/16);
+
+        // std::vector<size_t> ids;
+        // ids.resize(data.size());
+        // std::iota(ids.begin(), ids.begin(), 0);
+        // std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](const auto &id){
+            // data[id].load(iData.data() + 16*id);
+        // });
+
+        for(size_t id = 0; id < data.size(); ++id){
+            data[id].load(iData.data() + 16*id);
+        }
+    }
+};
 
 
 int main(int argc, char *argv[]){
+
+    using namespace tool;
+    using namespace tool::geo;
+    using namespace tool::cam;
+    using namespace std::chrono;
 
     std::cout << "argc " << argc << "\n";
     for(int ii = 0; ii < argc; ++ii){
@@ -583,247 +660,493 @@ int main(int argc, char *argv[]){
     });
     Logger::set_logger_instance(std::move(logger));
 
-    // xs::batch<double, xs::avx2> a;// = {1.5, 2.5, 3.5, 4.5};
+    // auto now = system_clock::now();
+    // auto t = now.time_since_epoch();
 
-    // xs::batch<double, xs::avx2> b;// = {2.5, 3.5, 4.5, 5.5};
-    // auto mean = (a + b) / 2.0;
-    // std::cout << mean << std::endl;
+    {
+        auto t1 = Time::nanoseconds_since_epoch();
+        auto t2 = t1 - nanoseconds(10000);
+        auto t3 = t1 + nanoseconds(10000);
 
-    // std::vector<int> a;
-    // std::cout << "a: " << a.size() << " " << a.capacity() << " " << a.max_size() << "\n";
-    // std::vector<int> b(10,0);
-    // std::cout << "b1: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
-    // b.resize(5);
-    // std::cout << "b2: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
-    // b.resize(100);
-    // std::cout << "b3: " << b.size() << " " << b.capacity() << " " << b.max_size() << "\n";
+
+        auto t4 = t2 - t1;
+        auto t5 = t1 - t2;
+
+        auto t6 = t3 - t1;
+        auto t7 = t1 - t3;
+
+        std::cout << "t4 " << t4.count() << "\n";
+        std::cout << "t5 " << t5.count() << "\n";
+        std::cout << "t6 " << t6.count() << "\n";
+        std::cout << "t7 " << t7.count() << "\n";
+    }
+
+  // Time::difference_micro_s(nanoseconds(diff), Time::nanoseconds_since_epoch()).count(),
+    // auto timestamp1 = system_clock::now().time_since_epoch();
+    // std::this_thread::sleep_for(1000ms);
+    // auto timestamp2 = system_clock::now().time_since_epoch();
+    // std::cout << "timestamp1: " << timestamp1.count() << "\n";
+    // std::cout << "timestamp2: " << timestamp2.count() << "\n";
+    // std::cout << "timestamp2: " << (timestamp2 - timestamp1).count() << "\n";
+    // std::cout << "timestamp : " << duration_cast<microseconds>(timestamp2 - timestamp1).count() << "\n";
+
+    // std::cout << "timestampT: " << duration_cast<microseconds>(nanoseconds(timestamp2) - nanoseconds(timestamp1)).count() << "\n";
+
 
     return 0;
-    DCVideoPlayer p;
-    DCVideo v1;
-    Log::message("load\n");
-    v1.load_from_file("E:/_kvid/aaaa.kvid");
-    p.set_video(v1);
 
-    DCVideoPlayerSettings ps;
-    ps.doLoop = false;
-    p.update_settings(ps);
-    p.start_video();
+    VCL_NAMESPACE::Vec4i a(10 , 11, 12, 13);
+    VCL_NAMESPACE::Vec4i b(20 , 21, 22, 23);
+    VCL_NAMESPACE::Vec4i c = a + b;
 
-    int idF = -5;
-    while(p.is_playing()){
 
-        p.update();
 
-        std::cout << p.current_frame_id(0) << " " << p.current_compressed_frame_cloud_size(0) << "\n";
 
-        if(auto frame = p.current_frame(0); frame != nullptr){
+    for(size_t ii = 0; ii < c.size(); ++ii){
+        std::cout << c[ii] << "\n";
+    }
 
-            // std::cout << " --- > " << frame->volumesB.size() << " " << frame->imagesB.contains(DCImageBufferType::DepthSizedColorRGBA8) << " " <<  frame->image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8) << " " <<  frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) <<  "\n";
-            if(frame->volumesB.contains(DCVolumeBufferType::ColoredCloud)){
-                auto buffer = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
-                // std::cout << "[ -- " << buffer->vertices.size() <<  " " << frame->volume_buffer_size(DCVolumeBufferType::ColoredCloud) << "\n";
-            }
-            if(frame->imagesB.contains(DCImageBufferType::DepthSizedColorRGBA8)){
-                auto buffer = frame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8);
-                std::cout << "#### " << buffer->width << " " << buffer->height << " " << buffer->size() << "\n";// << frame->image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8) << "\n";
 
-                // const auto &imageB = frame->imagesB[DCImageBufferType::DepthSizedColorRGBA8];
-                // std::visit(Visitor{
-                //        [](const ImageBuffer<ColorRGBA8> &sImg){
-                //         std::cout << "A: " << sImg.size() << "\n";
-                //            return sImg.size();
-                //        },
-                //        [](const ImageBuffer<ColorRGB8> &sImg){
-                //            return sImg.size();
-                //        },
-                //        [](const ImageBuffer<ColorGray8> &sImg){
-                //            return sImg.size();
-                //        },
-                //        [](const ImageBuffer<ColorGray16> &sImg){
-                //            return sImg.size();
-                //        }
-                //    }, imageB
-                //    );
-            }
-            // if(frame->volumesB.size() > 0){
-                // std::cout << " --- > " << frame->volume_buffer_size(DCVolumeBufferType::ColoredCloud) << "\n";
+
+    // 640 x 576
+    // -> 512
+    // -> 256
+    // -> 128
+
+    // Vec16us / Vec16s -> 16 bits integers - 16 elements - 256 bits
+    // -> 23040 vectors
+    // 1 for each dimension
+
+
+    // Mask bool
+    // Vec16sb | 16
+
+    // compare x coordinates and fill mask
+    // compare y coordinates and fill mask
+    // compare z coordinates and fill mask
+
+
+
+    std::vector<std::uint16_t> dvalues;
+    dvalues.resize(640*576);
+    std::iota(dvalues.begin(), dvalues.end(), 0);
+    VCL_NAMESPACE::Vec16us v1;
+    v1.load(dvalues.data());
+
+    VCL_NAMESPACE::Vec16us v2;
+    v2.load_a(dvalues.data()+16);
+
+    for(auto &v : dvalues){
+        v = rand()% 200;
+    }
+
+    for(size_t ii = 0; ii < v1.size(); ++ii){
+        std::cout << static_cast<int>(v1[ii]) << " ";
+    }
+    std::cout << "\n";
+
+    for(size_t ii = 0; ii < v2.size(); ++ii){
+        std::cout << static_cast<int>(v2[ii]) << " ";
+    }
+    std::cout << "\n";
+
+
+    std::vector<VCL_NAMESPACE::Vec16us> array;
+    array.resize(1024*1024/16);
+
+    for(size_t id = 0; id < 640*576/16; ++id){
+        array[id].load(dvalues.data() + id*16);
+
+        // for(int ii = 0; ii < array[id].size(); ++ii){
+        //     std::cout << (int)array[id].extract(ii) << " ";
+        // }
+        // std::cout <<  "|";
+    }
+
+    // array[0].load(dvalues.data());
+    // array[1].load(dvalues.data()+16);
+
+    // std::cout << "v: " << array[0].extract(5) << "\n";
+
+    // Vec16usBuffer array2;
+    // array2.init(dvalues.size());
+
+    // Vec16usBuffer array3;
+    // array3.init(dvalues.size());
+
+    // auto t1 = Time::nanoseconds_since_epoch();
+    // for(int ii = 0; ii < 1000; ++ii){
+    //     array2.load(dvalues);
+    //     // std::iota(dvalues.begin(), dvalues.end(), ii);
+    // }
+    // auto t2 = Time::nanoseconds_since_epoch();
+    // std::cout << "time " << Time::difference_micro_s(t1,t2).count() << " " << array2.data.size() << " " << (int)array2.data.front()[0]  <<  "\n";
+
+    // Vec16bBuffer barray;
+    // barray.init(array.size());
+
+    std::vector<VCL_NAMESPACE::Vec16sb> barray;
+    barray.resize(array.size());
+
+    VCL_NAMESPACE::Vec16us min(35);
+    VCL_NAMESPACE::Vec16us max(157);
+    std::cout << max[0] << " " << max[15] << "\n";
+
+
+    {
+        VCL_NAMESPACE::Vec16us vv(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+        VCL_NAMESPACE::Vec16us v1 = vv;
+        VCL_NAMESPACE::Vec16us v2(0);
+        vv = select(vv >= 3 && vv <= 10, v1, v2);
+
+        // for(int ii = 0; ii < vv.size(); ++ii){
+        //     std::cout << (int)vv.extract(ii) << " ";
+        // }
+    }
+    // return 0;
+
+
+    auto t3 = Time::nanoseconds_since_epoch();
+    VCL_NAMESPACE::Vec16us vnull(0);
+
+    for(int jj = 0; jj < 100; ++jj){
+
+
+        for(int ii = 0; ii < array.size(); ++ii){
+            array[ii] = select(array[ii] >= 30 && array[ii] <= 75, array[ii], vnull);
+
+            // barray[ii] = array[ii] >= 30 && array[ii] <= 75;
+            // array[ii] = select(barray[ii], array[ii], vnull);
+
+            // for(int ii = 0; ii < array[ii].size(); ++ii){
+                // std::cout << (int)array[ii].extract(ii) << " ";
             // }
-
+            // std::cout <<  "|";
         }
-
-        if(p.current_time_ms() > p.end_time_ms()){
-            break;
-        }
-
-
-        // if(auto cloud = frame->volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
     }
 
+    // std::cout << "\n";
+
+    // for(int ii = 0; ii < array2.data.size(); ++ii){
+
+    //     auto &vv = array2.data[ii];
+
+    //     // array3.data[ii] = VCL_NAMESPACE::Vec16us(ii%1,ii%2,ii%3,ii%4,ii%1,ii%2,ii%3,ii%4,ii%1,ii%2,ii%3,ii%4,ii%1,ii%2,ii%3,ii%4);
+    //     // array3.data[ii].
+    //     array3.data[ii] = VCL_NAMESPACE::Vec16us (
+    //         vv[0] ? 1 : 0, vv[1]  ? 1 : 0,vv[2]  ? 1 : 0,vv[3] ? 1 : 0,
+    //         vv[4] ? 1 : 0, vv[5]  ? 1 : 0,vv[6]  ? 1 : 0,vv[7] ? 1 : 0,
+    //         vv[8] ? 1 : 0, vv[9]  ? 1 : 0,vv[10]  ? 1 : 0,vv[11] ? 1 : 0,
+    //         vv[12] ? 1 : 0, vv[13]  ? 1 : 0,vv[14]  ? 1 : 0,vv[15] ? 1 : 0);
+
+    //     array2.data[ii] *= array3.data[ii];
+    // }
+    // for(int ii = 0; ii < array2.data.size(); ++ii){
+    //     barray.data[ii] &= array2.data[ii] > min;
+    // }
+    // for(int ii = 0; ii < array2.data.size(); ++ii){
+    //     barray.data[ii] &= array2.data[ii] < max;
+    // }
+    auto t4 = Time::nanoseconds_since_epoch();
+    std::cout << "time simd: " << Time::difference_micro_s(t3,t4).count() <<  " " << array.size() << "\n";
     return 0;
+    // auto vb = array2.data.front() < max;
 
-    std::string baseGrabberPath = "C:/Users/SDKim/Desktop/conversions/copy/dc-grabber/config/";
-    std::string baseManagerPath = "C:/Users/SDKim/Desktop/conversions/copy/dc-manager/config/";
-    //
-    // settings/device_ALL_HERE_NUC2_G0.json
-    // settings/device_ALL_HERE_NUC3_G0.json
-    // settings/device_ALL_HERE_NUC4_G0.json
-
-    // network/network_ALL_HERE_NUC1_G0.config
-    // id_interface | reading_port | ipv4/ipv6
-    // 0 8888 ipv4
-    // 0 8890 ipv4
-    // 0 8892 ipv4
-    // 0 8894 ipv4
-
-    DCServerSettings serverS;
-    serverS.udpServerS.protocol = net::Protocol::ipv4;
-    serverS.udpServerS.readingInterfaceId = 0;
-    serverS.udpServerS.readingPort = 8888;
-    serverS.udpServerS.anyReadingInterface = false;
-    // serverS.deviceS.load_from_file(baseGrabberPath + "settings/device_ALL_HERE_NUC1_G0.json");
-    auto &c = serverS.deviceS.configS;
-    c.openDevice    = true;
-    c.startReading  = true;
-    c.typeDevice    = DCType::FemtoBolt;
-    c.idDevice      = 0;
-    c.mode          = DCMode::FB_C1280x720_DI640x576_NV12_F30;
-
-    auto &d = serverS.deviceS.dataS;
-    auto &cap = d.server.capture;
-    cap.depth = true;
-    cap.color = true;
-
-    auto &send = d.server.sending;
-    send.addDepth               = true;
-    send.addDepthSizedColor     = true;
-    send.addOriginalSizeColor   = false;
-    send.addInfra               = false;
-    send.addBodiesId            = false;
-    send.addBodiesSkeleton      = false;
-    send.depthCM                = DCCompressionMode::FastPFor;
-    send.depthSizedColorCM      = DCCompressionMode::JPEG;
-    d.server.generation.depthSizedColorImage = true;
-    d.server.generation.cloud                = true;
-
-    serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC1_0.json");
-    serverS.udpServerS.readingPort = 8890;
-    serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC2_0.json");
-    serverS.udpServerS.readingPort = 8892;
-    serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC3_0.json");
-    serverS.udpServerS.readingPort = 8894;
-    serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC4_0.json");
-
-    // DCDeviceDataSettings server;
-    // DCFrameGenerationSettings clientGeneration;
-
-    // std::cout << serverS.deviceS.configS.
+    VCL_NAMESPACE::Vec16us vv1(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+    VCL_NAMESPACE::Vec16b bb1(0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1);
 
 
-    DCClientSettings clientS;
-    clientS.devicesS.resize(4);
+    {
+        VCL_NAMESPACE::Vec4ib b(1,0,1,0);
+        VCL_NAMESPACE::Vec4ui c = VCL_NAMESPACE::Vec4ui(b);
 
-    auto &co1 = clientS.devicesS[0].connectionS;
-    co1.connectionType      = DCClientType::Remote;
-    co1.protocol            = net::Protocol::ipv4;
-    co1.readingPort         = 8889;
-    co1.sendingPort         = 8888;
-    co1.sendingAddress      = "ALL_HERE_NUC1";
-    co1.idReadingInterface  = 0;
-    co1.anyReadingInterface = false;
-
-    auto &co2 = clientS.devicesS[1].connectionS;
-    co2.connectionType      = DCClientType::Remote;
-    co2.protocol            = net::Protocol::ipv4;
-    co2.readingPort         = 8891;
-    co2.sendingPort         = 8890;
-    co2.sendingAddress      = "ALL_HERE_NUC2";
-    co2.idReadingInterface  = 0;
-    co2.anyReadingInterface = false;
-
-    auto &co3 = clientS.devicesS[2].connectionS;
-    co3.connectionType      = DCClientType::Remote;
-    co3.protocol            = net::Protocol::ipv4;
-    co3.readingPort         = 8893;
-    co3.sendingPort         = 8892;
-    co3.sendingAddress      = "ALL_HERE_NUC3";
-    co3.idReadingInterface  = 0;
-    co3.anyReadingInterface = false;
-
-    auto &co4 = clientS.devicesS[3].connectionS;
-    co4.connectionType      = DCClientType::Remote;
-    co4.protocol            = net::Protocol::ipv4;
-    co4.readingPort         = 8895;
-    co4.sendingPort         = 8894;
-    co4.sendingAddress      = "ALL_HERE_NUC4";
-    co4.idReadingInterface  = 0;
-    co4.anyReadingInterface = false;
-
-    clientS.devicesS[0].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G0.json");
-    clientS.devicesS[1].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G1.json");
-    clientS.devicesS[2].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G2.json");
-    clientS.devicesS[3].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G3.json");
-
-    clientS.devicesS[0].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G0.json");
-    clientS.devicesS[1].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G1.json");
-    clientS.devicesS[2].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G2.json");
-    clientS.devicesS[3].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G3.json");
-
-    clientS.devicesS[0].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G0.config");
-    clientS.devicesS[1].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G1.config");
-    clientS.devicesS[2].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G2.config");
-    clientS.devicesS[3].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G3.config");
-
-    clientS.devicesS[0].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G0.json");
-    clientS.devicesS[1].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G1.json");
-    clientS.devicesS[2].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G2.json");
-    clientS.devicesS[3].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G3.json");
-
-    clientS.devicesS[0].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G0.json");
-    clientS.devicesS[1].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G1.json");
-    clientS.devicesS[2].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G2.json");
-    clientS.devicesS[3].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G3.json");
-
-    clientS.save_to_json_str_file("C:/Users/SDKim/Desktop/client_ALL_HERE_VRPC_0.json");
-
-    return 0;
-
-    DCVideoPlayer player;
-
-
-    DCVideo v;
-    Log::message("load\n");
-    v.load_from_file("E:/07-09-fam2.kvid");
-    player.set_video(v);
-    // auto dfp = v.get_data_frames_ptr(0);
-    // auto df = dfp->get_data_frame(dfp->nb_frames()/2);
-    
-    Log::message("loaded\n");
-    DCFrameGenerationSettings fgS;
-    DCDeprecatedFrame frame;
-
-    player.set_current_time(25000.0);
-    player.update();
-
-    ColorVoxelGrid cGrid(0.0025f, {-2.f,-2.f,-2.f}, {+2.f,+2.f,+2.f});
-
-    auto t1 = Time::nanoseconds_since_epoch();
-    for(size_t idD = 0; idD < v.nb_devices(); ++idD){
-        auto frame = player.current_frame(idD);
-        // cGrid.add_cloud(frame->cloud, v.get_transform(idD).conv<float>());
+        std::cout << "c: ";
+        for(int ii = 0; ii < c.size(); ++ii){
+            std::cout << c.extract(ii) << " ";
+        }
     }
-    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
-    cGrid.compute_grid();
-    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
 
-    ColorCloud vCloud;
-    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
-    cGrid.convert_to_cloud(vCloud);
-    Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
-    io::CloudIO::save_cloud("E:/agg_c1.obj", vCloud);
+    // VCL_NAMESPACE::Vec16s vBB1 = VCL_NAMESPACE::Vec16s(bb1);
+    // VCL_NAMESPACE::Vec16us r = vv1. && bb1;
+    // VCL_NAMESPACE::Vec16us vv2;
+    auto resb = VCL_NAMESPACE::to_bits(bb1);
+    std::cout << "vv1: ";
+
+    {
+        VCL_NAMESPACE::Vec4i aaa(0,1,2,3);
+        VCL_NAMESPACE::Vec4i bbb(4,5,6,7);
+        auto fff = aaa > bbb;
+        VCL_NAMESPACE::Vec4i ggg = VCL_NAMESPACE::Vec4i(fff);
+    }
+
+    VCL_NAMESPACE::Vec16us vb1(
+        bb1[0] ? 1 : 0, bb1[1]  ? 1 : 0,bb1[2]  ? 1 : 0,bb1[3] ? 1 : 0,
+        bb1[4] ? 1 : 0, bb1[5]  ? 1 : 0,bb1[6]  ? 1 : 0,bb1[7] ? 1 : 0,
+        bb1[8] ? 1 : 0, bb1[9]  ? 1 : 0,bb1[10]  ? 1 : 0,bb1[11] ? 1 : 0,
+        bb1[12] ? 1 : 0, bb1[13]  ? 1 : 0,bb1[14]  ? 1 : 0,bb1[15] ? 1 : 0);
+
+    std::cout << "before vv1: ";
+    for(int ii = 0; ii < vv1.size(); ++ii){
+        std::cout << vv1.extract(ii) << " ";
+    }
+    std::cout << "\n";
+
+    vv1 *= vb1;
+    std::cout << "after vv1: ";
+    for(int ii = 0; ii < vv1.size(); ++ii){
+        std::cout << vv1.extract(ii) << " ";
+    }
+    std::cout << "\n";
+    // std::cout << "res: " << resb << "\n";
+
+    // VCL_NAMESPACE::Const_int_t
+
+    // VCL_NAMESPACE::truncate_to_int32()
+
+    // auto r1 = Vec16us(bb1) * vv1;
+    // std::cout << vv1.extract(0) << " " << r1.extract(1) << " "<< r1.extract(2) << "\n";
+
+
+    std::vector<std::int8_t> bb;
+    bb.resize(dvalues.size());
+    std::fill(bb.begin(), bb.end(), 1);
+
+    auto t5 = Time::nanoseconds_since_epoch();
+    for(size_t id = 0; id < dvalues.size(); ++id){                
+        bb[id] &= (dvalues[id] < 157 ? 1 : 0) && (dvalues[id] > 15 ? 1 : 0);
+        // bb[id] &= dvalues[id] > 15 ? 1 : 0;
+    }
+
+    auto t6 = Time::nanoseconds_since_epoch();
+    std::cout << "time " << Time::difference_micro_s(t5,t6).count() << "\n";
+
+
+    return 0;
+    // DCVideoPlayer p;
+    // DCVideo v1;
+    // Log::message("load\n");
+    // v1.load_from_file("E:/_kvid/aaaa.kvid");
+    // p.set_video(v1);
+
+    // DCVideoPlayerSettings ps;
+    // ps.doLoop = false;
+    // p.update_settings(ps);
+    // p.start_video();
+
+    // int idF = -5;
+    // while(p.is_playing()){
+
+    //     p.update();
+
+    //     std::cout << p.current_frame_id(0) << " " << p.current_compressed_frame_cloud_size(0) << "\n";
+
+    //     if(auto frame = p.current_frame(0); frame != nullptr){
+
+    //         // std::cout << " --- > " << frame->volumesB.size() << " " << frame->imagesB.contains(DCImageBufferType::DepthSizedColorRGBA8) << " " <<  frame->image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8) << " " <<  frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) <<  "\n";
+    //         if(frame->volumesB.contains(DCVolumeBufferType::ColoredCloud)){
+    //             auto buffer = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
+    //             // std::cout << "[ -- " << buffer->vertices.size() <<  " " << frame->volume_buffer_size(DCVolumeBufferType::ColoredCloud) << "\n";
+    //         }
+    //         if(frame->imagesB.contains(DCImageBufferType::DepthSizedColorRGBA8)){
+    //             auto buffer = frame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8);
+    //             std::cout << "#### " << buffer->width << " " << buffer->height << " " << buffer->size() << "\n";// << frame->image_buffer_size(DCImageBufferType::DepthSizedColorRGBA8) << "\n";
+
+    //             // const auto &imageB = frame->imagesB[DCImageBufferType::DepthSizedColorRGBA8];
+    //             // std::visit(Visitor{
+    //             //        [](const ImageBuffer<ColorRGBA8> &sImg){
+    //             //         std::cout << "A: " << sImg.size() << "\n";
+    //             //            return sImg.size();
+    //             //        },
+    //             //        [](const ImageBuffer<ColorRGB8> &sImg){
+    //             //            return sImg.size();
+    //             //        },
+    //             //        [](const ImageBuffer<ColorGray8> &sImg){
+    //             //            return sImg.size();
+    //             //        },
+    //             //        [](const ImageBuffer<ColorGray16> &sImg){
+    //             //            return sImg.size();
+    //             //        }
+    //             //    }, imageB
+    //             //    );
+    //         }
+    //         // if(frame->volumesB.size() > 0){
+    //             // std::cout << " --- > " << frame->volume_buffer_size(DCVolumeBufferType::ColoredCloud) << "\n";
+    //         // }
+
+    //     }
+
+    //     if(p.current_time_ms() > p.end_time_ms()){
+    //         break;
+    //     }
+
+
+    //     // if(auto cloud = frame->volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+    // }
+
+    // return 0;
+
+    // std::string baseGrabberPath = "C:/Users/SDKim/Desktop/conversions/copy/dc-grabber/config/";
+    // std::string baseManagerPath = "C:/Users/SDKim/Desktop/conversions/copy/dc-manager/config/";
+    // //
+    // // settings/device_ALL_HERE_NUC2_G0.json
+    // // settings/device_ALL_HERE_NUC3_G0.json
+    // // settings/device_ALL_HERE_NUC4_G0.json
+
+    // // network/network_ALL_HERE_NUC1_G0.config
+    // // id_interface | reading_port | ipv4/ipv6
+    // // 0 8888 ipv4
+    // // 0 8890 ipv4
+    // // 0 8892 ipv4
+    // // 0 8894 ipv4
+
+    // DCServerSettings serverS;
+    // serverS.udpServerS.protocol = net::Protocol::ipv4;
+    // serverS.udpServerS.readingInterfaceId = 0;
+    // serverS.udpServerS.readingPort = 8888;
+    // serverS.udpServerS.anyReadingInterface = false;
+    // // serverS.deviceS.load_from_file(baseGrabberPath + "settings/device_ALL_HERE_NUC1_G0.json");
+    // auto &c = serverS.deviceS.configS;
+    // c.openDevice    = true;
+    // c.startReading  = true;
+    // c.typeDevice    = DCType::FemtoBolt;
+    // c.idDevice      = 0;
+    // c.mode          = DCMode::FB_C1280x720_DI640x576_NV12_F30;
+
+    // auto &d = serverS.deviceS.dataS;
+    // auto &cap = d.server.capture;
+    // cap.depth = true;
+    // cap.color = true;
+
+    // auto &send = d.server.sending;
+    // send.addDepth               = true;
+    // send.addDepthSizedColor     = true;
+    // send.addOriginalSizeColor   = false;
+    // send.addInfra               = false;
+    // send.addBodiesId            = false;
+    // send.addBodiesSkeleton      = false;
+    // send.depthCM                = DCCompressionMode::FastPFor;
+    // send.depthSizedColorCM      = DCCompressionMode::JPEG;
+    // d.server.generation.depthSizedColorImage = true;
+    // d.server.generation.cloud                = true;
+
+    // serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC1_0.json");
+    // serverS.udpServerS.readingPort = 8890;
+    // serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC2_0.json");
+    // serverS.udpServerS.readingPort = 8892;
+    // serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC3_0.json");
+    // serverS.udpServerS.readingPort = 8894;
+    // serverS.save_to_json_str_file("C:/Users/SDKim/Desktop/server_ALL_HERE_NUC4_0.json");
+
+    // // DCDeviceDataSettings server;
+    // // DCFrameGenerationSettings clientGeneration;
+
+    // // std::cout << serverS.deviceS.configS.
+
+
+    // DCClientSettings clientS;
+    // clientS.devicesS.resize(4);
+
+    // auto &co1 = clientS.devicesS[0].connectionS;
+    // co1.connectionType      = DCClientType::Remote;
+    // co1.protocol            = net::Protocol::ipv4;
+    // co1.readingPort         = 8889;
+    // co1.sendingPort         = 8888;
+    // co1.sendingAddress      = "ALL_HERE_NUC1";
+    // co1.idReadingInterface  = 0;
+    // co1.anyReadingInterface = false;
+
+    // auto &co2 = clientS.devicesS[1].connectionS;
+    // co2.connectionType      = DCClientType::Remote;
+    // co2.protocol            = net::Protocol::ipv4;
+    // co2.readingPort         = 8891;
+    // co2.sendingPort         = 8890;
+    // co2.sendingAddress      = "ALL_HERE_NUC2";
+    // co2.idReadingInterface  = 0;
+    // co2.anyReadingInterface = false;
+
+    // auto &co3 = clientS.devicesS[2].connectionS;
+    // co3.connectionType      = DCClientType::Remote;
+    // co3.protocol            = net::Protocol::ipv4;
+    // co3.readingPort         = 8893;
+    // co3.sendingPort         = 8892;
+    // co3.sendingAddress      = "ALL_HERE_NUC3";
+    // co3.idReadingInterface  = 0;
+    // co3.anyReadingInterface = false;
+
+    // auto &co4 = clientS.devicesS[3].connectionS;
+    // co4.connectionType      = DCClientType::Remote;
+    // co4.protocol            = net::Protocol::ipv4;
+    // co4.readingPort         = 8895;
+    // co4.sendingPort         = 8894;
+    // co4.sendingAddress      = "ALL_HERE_NUC4";
+    // co4.idReadingInterface  = 0;
+    // co4.anyReadingInterface = false;
+
+    // clientS.devicesS[0].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G0.json");
+    // clientS.devicesS[1].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G1.json");
+    // clientS.devicesS[2].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G2.json");
+    // clientS.devicesS[3].deviceS.load_from_file(baseManagerPath + "settings/device_ALL_HERE_VRPC_G3.json");
+
+    // clientS.devicesS[0].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G0.json");
+    // clientS.devicesS[1].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G1.json");
+    // clientS.devicesS[2].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G2.json");
+    // clientS.devicesS[3].filtersS.load_from_file(baseManagerPath + "settings/filters_ALL_HERE_VRPC_G3.json");
+
+    // clientS.devicesS[0].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G0.config");
+    // clientS.devicesS[1].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G1.config");
+    // clientS.devicesS[2].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G2.config");
+    // clientS.devicesS[3].calibrationFiltersS.load_from_file(baseManagerPath + "settings/calibration_filters_ALL_HERE_VRPC_G3.config");
+
+    // clientS.devicesS[0].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G0.json");
+    // clientS.devicesS[1].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G1.json");
+    // clientS.devicesS[2].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G2.json");
+    // clientS.devicesS[3].colorS.load_from_file(baseManagerPath + "settings/color_ALL_HERE_VRPC_G3.json");
+
+    // clientS.devicesS[0].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G0.json");
+    // clientS.devicesS[1].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G1.json");
+    // clientS.devicesS[2].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G2.json");
+    // clientS.devicesS[3].modelS.load_from_file(baseManagerPath + "calibration/model_ALL_HERE_VRPC_G3.json");
+
+    // clientS.save_to_json_str_file("C:/Users/SDKim/Desktop/client_ALL_HERE_VRPC_0.json");
+
+    // return 0;
+
+    // DCVideoPlayer player;
+
+
+    // DCVideo v;
+    // Log::message("load\n");
+    // v.load_from_file("E:/07-09-fam2.kvid");
+    // player.set_video(v);
+    // // auto dfp = v.get_data_frames_ptr(0);
+    // // auto df = dfp->get_data_frame(dfp->nb_frames()/2);
     
-    Log::message("ended\n");
-    // if(auto frame = df.lock()){
+    // Log::message("loaded\n");
+    // DCFrameGenerationSettings fgS;
+    // DCDeprecatedFrame frame;
+
+    // player.set_current_time(25000.0);
+    // player.update();
+
+    // ColorVoxelGrid cGrid(0.0025f, {-2.f,-2.f,-2.f}, {+2.f,+2.f,+2.f});
+
+    // auto t1 = Time::nanoseconds_since_epoch();
+    // for(size_t idD = 0; idD < v.nb_devices(); ++idD){
+    //     auto frame = player.current_frame(idD);
+    //     // cGrid.add_cloud(frame->cloud, v.get_transform(idD).conv<float>());
+    // }
+    // Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    // cGrid.compute_grid();
+    // Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+
+    // ColorCloud vCloud;
+    // Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    // cGrid.convert_to_cloud(vCloud);
+    // Log::message(std::format("elapsed: {}\n", Time::difference_ms(t1, Time::nanoseconds_since_epoch())));
+    // io::CloudIO::save_cloud("E:/agg_c1.obj", vCloud);
+    
+    // Log::message("ended\n");
+    // // if(auto frame = df.lock()){
     //     Log::message(std::format("size {}\n", frame->validVerticesCount));
 
     //

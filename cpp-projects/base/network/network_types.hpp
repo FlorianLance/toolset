@@ -81,7 +81,7 @@ struct Header{
     std::uint16_t totalNumberPackets = 0;
     std::uint16_t currentPacketId = 0;
     std::uint16_t currentPacketSizeBytes = 0;
-    std::uint64_t receptionTimestampNs = 0;
+    std::int64_t receptionTimestampNs = 0;
     MessageTypeId type = 0;
 
     constexpr auto total_headers_size_bytes() const noexcept -> size_t{

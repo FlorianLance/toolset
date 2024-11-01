@@ -234,7 +234,7 @@ auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packet
 
         if(static_cast<DCMessageType>(packet.header.type) == DCMessageType::synchro){
             // update synchro
-            i->synchro.update_average_difference(packet.header.receptionTimestampNs - packet.header.creationTimestampNs);
+            i->synchro.update_average_difference(nanoseconds(packet.header.receptionTimestampNs) - nanoseconds(packet.header.creationTimestampNs));
             triggerSynch = true;
         }
     }
@@ -260,17 +260,35 @@ auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packet
                 // update received TS with first packet received TS
                 dFrame->receivedTS = info->firstPacketReceptionTS.count();
 
+                // auto diff = dFrame->afterCaptureTS;
                 // add average diff to capture timestamp
-                dFrame->afterCaptureTS += i->synchro.averageDiffNS;
+                dFrame->afterCaptureTS = (nanoseconds(dFrame->afterCaptureTS) + i->synchro.averageDiffNS).count();
 
-                auto receptionDurationNs  =
-                    Time::nanoseconds_since_epoch().count() - info->firstPacketEmissionTS.count() + i->synchro.averageDiffNS;
+                // auto now = Time::nanoseconds_since_epoch();
+
+                // Log::message(std::format("[{}] [{}] [{}] [{}] [{}] [{}]\n",
+                //     i->synchro.averageDiffNS,
+                //     Time::difference_micro_s(nanoseconds(diff),                         now).count(),
+                //     Time::difference_micro_s(nanoseconds(dFrame->afterCaptureTS),       now).count(),
+                //     Time::difference_micro_s(nanoseconds(info->firstPacketEmissionTS),  now).count(),
+                //     Time::difference_micro_s(nanoseconds(info->firstPacketReceptionTS), now).count(),
+                //     duration_cast<microseconds>(nanoseconds(i->synchro.averageDiffNS))
+                // ));
+
+                // auto receptionDurationNs  =
+                //     Time::nanoseconds_since_epoch().count() - info->firstPacketEmissionTS.count() + i->synchro.averageDiffNS;
+                // auto receptionDurationNs  =
+                    // Time::nanoseconds_since_epoch().count() - info->firstPacketEmissionTS.count() - 15000;
+
+                auto firstPacketEmissionTS = info->firstPacketEmissionTS + i->synchro.averageDiffNS;
+                // auto firstPacketEmissionTS = info->firstPacketReceptionTS;// + nanoseconds(i->synchro.averageDiffNS);
+                auto receptionDurationNs = Time::nanoseconds_since_epoch() - firstPacketEmissionTS;
 
                 // send compressed frame
                 receive_data_frame(std::move(packet.header), std::move(dFrame));
 
                 // update duration reception
-                i->receptionDurationNS.add_value(receptionDurationNs);
+                i->receptionDurationNS.add_value(receptionDurationNs.count());
 
                 // update bandwitdh
                 i->bandwidth.add_size(info->totalBytesReceived);
@@ -296,7 +314,7 @@ auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packet
 
     // trigger
     if(triggerSynch){
-        remote_synchro_signal(i->synchro.averageDiffNS);
+        remote_synchro_signal(i->synchro.averageDiffNS.count());
     }
 
     if(nbTimeout != 0){

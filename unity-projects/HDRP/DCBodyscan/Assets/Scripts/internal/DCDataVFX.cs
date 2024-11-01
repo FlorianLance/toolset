@@ -32,77 +32,16 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.VFX;
 
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace BS {
 
+
+
 #if UNITY_EDITOR
-
-    public class VFXBaseProfile  : MonoBehaviour{
-
-        public GameObject dataVFXGO = null;
-        protected IEnumerator applyProfileCO = null;
-        protected DCDataVFX dataVFX = null;        
-        public void apply() {
-            if(dataVFXGO != null) {
-                dataVFX = dataVFXGO.GetComponent<DCDataVFX>();
-            }
-
-            if(dataVFX == null) {
-                return;
-            }
-
-            init_shader_values();
-
-            if(dataVFXGO != null ) {
-                applyProfileCO = profile_co();
-                StartCoroutine(applyProfileCO);
-            }
-        }
-
-        protected virtual void init_shader_values() {
-
-            if (dataVFX == null) {
-                return;
-            }
-
-            for(int idC = 0; idC <  dataVFX.clouds_count(); ++idC) {
-                dataVFX.set_tint(idC, Color.white);
-                dataVFX.set_display_state(idC, true);
-                dataVFX.set_update_state(idC, true);
-                dataVFX.set_color_factor(idC, 1f);
-                dataVFX.set_octogon_crop_factor(idC, 0.175f);
-                dataVFX.set_particle_size(idC, 0.0118f);
-                // ...
-            }
-        }
-
-        protected virtual IEnumerator profile_co() {
-            yield return new WaitForSeconds(0.1f);
-        }
-    }
-
-    public class VFXProfile1 : VFXBaseProfile {
-
-        protected override void init_shader_values() {
-            // ...
-        }
-
-        protected override IEnumerator profile_co() {    
-
-            // geneate aprticles from cloud
-            yield return new WaitForSeconds(0.1f);
-
-            // 
-
-            // change somes values
-            yield return new WaitForSeconds(0.1f);
-            // trigger particles
-            yield return new WaitForSeconds(0.1f);
-        }
-    }
 
     [CustomEditor(typeof(DCDataVFX))]
     public class DCDataVFXEditor : Editor {

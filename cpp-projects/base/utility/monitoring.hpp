@@ -75,12 +75,12 @@ private:
 struct AverageSynchBuffer{
     AverageSynchBuffer();
     // auto update_average_difference(std::int64_t timestampNS) -> void;
-    auto update_average_difference(std::int64_t diffNS) -> void;
-    std::int64_t averageDiffNS = 0;
+    auto update_average_difference(std::chrono::nanoseconds diffNS) -> void;
+    std::chrono::nanoseconds averageDiffNS = std::chrono::nanoseconds(0);
 private:
     static constexpr size_t nbMaxValues = 300;
     // SingleRingBuffer<std::chrono::nanoseconds> diffNs;
-    SingleRingBuffer<std::int64_t> diffNs;
+    SingleRingBuffer<std::chrono::nanoseconds> diffNs;
 };
 
 struct AverageLatencyBuffer{

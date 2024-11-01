@@ -47,7 +47,7 @@ TURBOPFOR_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/TurboPFor-I
 FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
-XSIMD_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/xsimd"
+VERSION2_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/version2-2.02.01"
 
 ########################################################## INCLUDES
 
@@ -55,8 +55,8 @@ MODERN_JSON_INCLUDES = \
     $$TOOLSET_CPP_THIRDPARTY_DIR\
     $$MODERN_JSON_DIR\
 
-XSIMD_INCLUDES = \
-    $$XSIMD_DIR"/include"\
+VERSION2_INCLUDES = \
+    $$VERSION2_DIR\
 
 TURBOPFOR_INCLUDES = \
     $$TURBOPFOR_DIR"/include" \

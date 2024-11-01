@@ -488,6 +488,7 @@ auto AzureBaseDevice::read_calibration() -> BinarySpan{
     };
 }
 
+
 auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     if(!is_opened()){
@@ -496,7 +497,10 @@ auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     bool success = false;
     try{
+        // auto tS = Time::nanoseconds_since_epoch();
         success = i->device->get_capture(i->capture.get(), std::chrono::milliseconds(timeoutMs));
+        // auto tE = Time::nanoseconds_since_epoch();
+        // Log::message(std::format("Capture [{}] [{}]\n", tS.count(), tE.count()));
     }catch(const std::runtime_error &e){
         Log::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
     }
@@ -511,6 +515,7 @@ auto AzureBaseDevice::read_color_image() -> BinarySpan{
         i->colorImage = i->capture->get_color_image();
 
         if (i->colorImage.is_valid()){
+            // Log::message(std::format("Color [{}] [{}]\n", (i->colorImage.get_device_timestamp()).count(), (i->colorImage.get_system_timestamp()).count()));
             return BinarySpan{
                 reinterpret_cast<std::byte*>(i->colorImage.get_buffer()),
                 i->colorImage.get_size()
@@ -527,6 +532,7 @@ auto AzureBaseDevice::read_depth_image() -> std::span<std::uint16_t>{
         i->depthImage = i->capture->get_depth_image();
 
         if (i->depthImage.is_valid()){
+            // Log::message(std::format("Depth [{}] [{}]\n", std::chrono::duration_cast<std::chrono::nanoseconds>(i->depthImage.get_device_timestamp()).count(), std::chrono::duration_cast<std::chrono::nanoseconds>(i->depthImage.get_system_timestamp()).count()));
             return std::span<std::uint16_t>{
                 reinterpret_cast<std::uint16_t*>(i->depthImage.get_buffer()),
                 static_cast<size_t>(i->depthImage.get_width_pixels()*i->depthImage.get_height_pixels())

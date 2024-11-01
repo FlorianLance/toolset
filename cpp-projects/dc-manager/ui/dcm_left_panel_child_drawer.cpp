@@ -503,13 +503,13 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
             }
             ImGui::Unindent();
 
-
-
             ImGui::Text("# Reception duration  (µs):");
             ImGui::Indent();
             for(const auto &deviceS : model->client.settings.devicesS){
                 if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Remote){
-                    ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, duration_cast<microseconds>(nanoseconds(static_cast<std::int64_t>(deviceS.receivedNetworkStatus.receptionDurationNs))).count()));
+                    ImGuiUiDrawer::text(std::format("Device {} : {}",
+                        deviceS.id,
+                        duration_cast<microseconds>(nanoseconds(static_cast<std::int64_t>(deviceS.receivedNetworkStatus.receptionDurationNs))).count()));
                 }
             }
             ImGui::Unindent();
@@ -579,7 +579,7 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
             ImGui::Unindent();
 
             ImGui::Text("Total latency (from capture to reception) (µs):");
-                ImGui::Indent();
+            ImGui::Indent();
             for(const auto &deviceS : model->client.settings.devicesS){
                 if(deviceS.connectionS.connectionType == tool::cam::DCClientType::Local){
                     ImGuiUiDrawer::text(std::format("Device {} : {}", deviceS.id, deviceS.receivedDataStatus.latency));

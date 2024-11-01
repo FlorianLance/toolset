@@ -60,10 +60,10 @@ auto FramerateBuffer::get_framerate() const -> float{
 
 AverageSynchBuffer::AverageSynchBuffer(){
     // diffNs.resize(nbMaxValues, std::chrono::nanoseconds(0));
-    diffNs.resize(nbMaxValues, 0);
+    diffNs.resize(nbMaxValues, std::chrono::nanoseconds(0));
 }
 
-auto AverageSynchBuffer::update_average_difference(std::int64_t diffNS) -> void{
+auto AverageSynchBuffer::update_average_difference(std::chrono::nanoseconds diffNS) -> void{
 
     // auto currentTimestampNS = Time::nanoseconds_since_epoch();
     diffNs.set_current(diffNS);//currentTimestampNS - nanoseconds(timestampNS));
@@ -73,7 +73,7 @@ auto AverageSynchBuffer::update_average_difference(std::int64_t diffNS) -> void{
     // averageDiffNs = static_cast<std::int64_t>(
     //     1.0 * std::accumulate(std::begin(span), std::end(span), nanoseconds(0)).count() / nbMaxValues
     // );
-    averageDiffNS = 1.0 * std::accumulate(std::begin(span), std::end(span), 0) / nbMaxValues;
+    averageDiffNS = std::chrono::nanoseconds(static_cast<std::int64_t>(1.0 * std::accumulate(std::begin(span), std::end(span), nanoseconds(0)).count() / nbMaxValues));
 }
 
 AverageLatencyBuffer::AverageLatencyBuffer(){

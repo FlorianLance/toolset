@@ -116,6 +116,7 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
         return;
     }
 
+    // auto t1 = Time::nanoseconds_since_epoch();
     auto dRange = mInfos.depth_range_mm();
     auto minW   = mInfos.depth_width()  * settings.filters.minWidthF;
     auto maxW   = mInfos.depth_width()  * settings.filters.maxWidthF;
@@ -151,6 +152,9 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
             return;
         }
     });
+
+    // auto t2 = Time::nanoseconds_since_epoch();
+    // Log::message(std::format("[{}]", Time::difference_micro_s(t1,t2).count()));
 }
 
 auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{

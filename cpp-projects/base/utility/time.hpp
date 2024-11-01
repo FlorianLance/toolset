@@ -34,12 +34,14 @@ struct Time{
 
     [[nodiscard]] [[maybe_unused]] static auto nanoseconds_since_epoch() noexcept -> std::chrono::nanoseconds{
         using namespace std::chrono;
-        return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
+        // return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
+        return time_point<system_clock, nanoseconds>(system_clock::now()).time_since_epoch();
     }
 
     [[nodiscard]] [[maybe_unused]] static auto milliseconds_since_epoch() noexcept -> std::chrono::milliseconds{
         using namespace std::chrono;
-        return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        // return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        return duration_cast<milliseconds>(nanoseconds_since_epoch());
     }
 
     [[nodiscard]] [[maybe_unused]] static auto to_ms(std::chrono::nanoseconds t) noexcept -> std::chrono::milliseconds{
