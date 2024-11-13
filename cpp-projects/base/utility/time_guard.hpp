@@ -1,8 +1,9 @@
 
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -27,67 +28,26 @@
 #pragma once
 
 // local
-#include "geometry/point.hpp"
+#include "time.hpp"
+#include "logger.hpp"
 
-namespace tool::geo {
+namespace tool{
 
-template<typename acc>
-struct Point3;
+struct TimeLogGuardMicroS{
 
-template<typename acc>
-using Pt3 = Point3<acc>;
-using Pt3f = Pt3<float>;
-using Pt3d = Pt3<double>;
+        template<typename... Args>
+        TimeLogGuardMicroS(std::string_view message, Args&&... args){
+            id     = std::vformat(message, std::make_format_args(args...));
+            tStart = Time::nanoseconds_since_epoch();
+        }
 
-template<typename acc>
-using Vec3  = Pt3<acc>;
-using Vec3f = Pt3<float>;
-using Vec3d = Pt3<double>;
+        ~TimeLogGuardMicroS(){
+            Log::fmessage("[{}] -> [{}]\n", id, Time::now_difference_micro_s(tStart));
+        }
 
-template<typename acc>
-using Normal3 = Vec3<acc>;
-
-template<typename acc>
-struct Point3 : Point<acc,3>{
-
-    Point3() = default;
-
-    constexpr Point3(const Point<acc,3> &p) noexcept{
-        this->array = p.array;
-    }
-    constexpr Point3(Point<acc,3> &&p) noexcept{
-        this->array = std::move(p.array);
-    }
-    constexpr Point3(acc x, acc y = acc{0}, acc z = acc{0}) noexcept{
-        this->array = {x,y,z};
-    }
-};
-
-template <typename acc>
-constexpr auto operator*(const RowVec<acc,3> &l, const RowVec<acc,3> &r) noexcept -> RowVec<acc,3>{
-    return {{l[0]*r[0],l[1]*r[1],l[2]*r[2]}};
+        std::string id;
+        std::chrono::nanoseconds tStart;
+    };
 }
-
-template <typename acc>
-constexpr auto operator*(const ColVec<acc,3> &l, const ColVec<acc,3> &r) noexcept -> ColVec<acc,3>{
-    return {{l[0]*r[0],l[1]*r[1],l[2]*r[2]}};
-}
-
-template <typename acc>
-constexpr auto dot(const Point3<acc> &l, const Point3<acc> &r) noexcept -> acc {
-    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2];
-}
-
-template <typename acc>
-constexpr auto cross(const RowVec<acc,3> &l, const RowVec<acc,3> &r) noexcept -> RowVec<acc,3>{
-    static_assert(std::numeric_limits<acc>::is_iec559, "'cross' accepts only floating-point inputs");
-    return {{
-        l.y() * r.z() - l.z() * r.y(),
-        l.z() * r.x() - l.x() * r.z(),
-        l.x() * r.y() - l.y() * r.x()
-    }};
-}
-
-};
 
 

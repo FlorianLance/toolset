@@ -56,10 +56,6 @@ struct Matrix{
     static_assert((_rows != 0) && (_cols != 0), "Mat must have a number of rows and columns > 0" );
 
     Matrix() = default;
-    Matrix(const Matrix& other) = default;
-    Matrix& operator=(const Matrix& other) = default;
-    Matrix(Matrix&& other) = default;
-    Matrix& operator=(Matrix&& other) = default;
 
     constexpr Matrix(const std::array<acc, _rows*_cols> &array) noexcept {
         this->array = array;
@@ -68,21 +64,37 @@ struct Matrix{
         this->array = std::move(array);
     }
 
-    constexpr auto rows() const noexcept -> int{return _rows;}
-    constexpr auto cols() const noexcept -> int{return _cols;}
-    constexpr auto size() const noexcept -> int{return rows()*cols();}
+    [[nodiscard]] constexpr auto rows() const noexcept -> int{return _rows;}
+    [[nodiscard]] constexpr auto cols() const noexcept -> int{return _cols;}
+    [[nodiscard]] constexpr auto size() const noexcept -> int{return rows()*cols();}
 
-    constexpr auto operator()(int id) const -> acc { return array[id];}
-    constexpr auto operator()(int id) -> acc& {return array[id];}
-    constexpr auto operator()(int row, int col) const -> acc{ return array[row*_cols + col];}
-    constexpr auto operator()(int row, int col) -> acc&{return array[row*_cols + col];}
+    [[nodiscard]] constexpr auto operator[](size_t pos)             noexcept  ->       acc& {return array[pos];}
+    [[nodiscard]] constexpr auto operator[](size_t pos)       const noexcept  -> const acc& {return array[pos];}
 
-    constexpr auto at(int id) const -> acc {return (*this)(id);}
-    constexpr auto at(int id) -> acc& {return (*this)(id);}
-    constexpr auto at(int row, int col) const -> acc {return (*this)(row,col);}
-    constexpr auto at(int row, int col) -> acc&{return (*this)(row,col);}
+    [[nodiscard]] constexpr auto operator()(size_t pos)             noexcept  ->       acc& {return array[pos];}
+    [[nodiscard]] constexpr auto operator()(size_t pos)       const noexcept  -> const acc& {return array[pos];}
+    [[nodiscard]] constexpr auto operator()(int row, int col)                 ->       acc& {return array[row*_cols + col];}
+    [[nodiscard]] constexpr auto operator()(int row, int col) const           -> const acc& {return array[row*_cols + col];}
 
-    constexpr auto row(int row) const noexcept -> RowVec<acc,_cols>{
+    [[nodiscard]] constexpr auto at(size_t pos)                               ->       acc& {return array.at(pos);}
+    [[nodiscard]] constexpr auto at(size_t pos)               const           -> const acc& {return array.at(pos);}
+    [[nodiscard]] constexpr auto at(int row, int col)                         ->       acc& {return (*this)(row,col);}
+    [[nodiscard]] constexpr auto at(int row, int col)         const           -> const acc& {return (*this)(row,col);}
+
+
+    [[nodiscard]] constexpr auto row0() const noexcept -> RowVec<acc,_cols>{
+        RowVec<acc,_cols> r;
+        std::copy(std::begin(array), std::begin(array) + _cols, std::begin(r.array));
+        return r;
+    }
+    [[nodiscard]] constexpr auto row1() const noexcept -> RowVec<acc,_cols>{
+        static_assert(_rows > 1, "row0 only available for matrices with a row size > 1");
+        RowVec<acc,_cols> r;
+        std::copy(std::begin(array) + _cols, std::begin(array) + 2*_cols, std::begin(r.array));
+        return r;
+    }
+
+    [[nodiscard]] constexpr auto row(int row) const noexcept -> RowVec<acc,_cols>{
         if(row >= _rows){
             return {};
         }
@@ -92,7 +104,7 @@ struct Matrix{
         return r;
     }
 
-    constexpr auto col(int col) const noexcept -> ColVec<acc,_rows>{
+    [[nodiscard]] constexpr auto col(int col) const noexcept -> ColVec<acc,_rows>{
         if(col >= _cols){
             return {};
         }
@@ -103,51 +115,57 @@ struct Matrix{
         return c;
     }
 
-    constexpr auto x() noexcept -> acc& {
+    [[nodiscard]] constexpr auto x()       noexcept ->       acc& {
         static_assert((_rows == 1 || _cols == 1), "X only available for row or column matrices.");
         return array[0];
     }
-    constexpr auto x() const noexcept -> acc {
+    [[nodiscard]] constexpr auto x() const noexcept -> const acc& {
         static_assert((_rows == 1 || _cols == 1), "X only available for row or column matrices.");
         return array[0];
     }
 
-    constexpr auto y() noexcept -> acc& {
+    [[nodiscard]] constexpr auto y()      noexcept  ->       acc& {
         static_assert((_rows == 1 || _cols == 1), "Y only available for row or column matrices.");
         static_assert(_rows*_cols > 1, "Y only available for row or column matrices of a dimension > 1.");
         return array[1];
     }
-    constexpr auto y() const noexcept -> acc {
+    [[nodiscard]] constexpr auto y() const noexcept -> const acc& {
         static_assert((_rows == 1 || _cols == 1), "Y only available for row or column matrices.");
         static_assert(_rows*_cols > 1, "Y only available for row or column matrices of a dimension > 1.");
         return array[1];
     }
 
-    constexpr auto z() noexcept -> acc& {
+    [[nodiscard]] constexpr auto z()       noexcept -> acc& {
         static_assert((_rows == 1 || _cols == 1), "Y only available for row or column matrices.");
         static_assert(_rows*_cols > 2, "Y only available for row or column matrices of a dimension > 2.");
         return array[2];
     }
-    constexpr auto z() const noexcept -> acc {
+    [[nodiscard]] constexpr auto z() const noexcept -> const acc& {
         static_assert((_rows == 1 || _cols == 1), "Z only available for row or column matrices.");
         static_assert(_rows*_cols > 2, "Z only available for row or column matrices of a dimension > 2.");
         return array[2];
     }
 
-    constexpr auto w() noexcept -> acc& {
+    [[nodiscard]] constexpr auto w()        noexcept -> acc& {
         static_assert((_rows == 1 || _cols == 1), "W only available for row or column matrices.");
         static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 3.");
         return array[3];
     }
-    constexpr auto w() const noexcept -> acc {
+    [[nodiscard]] constexpr auto w() const noexcept -> const acc& {
         static_assert((_rows == 1 || _cols == 1), "W only available for row or column matrices.");
         static_assert(_rows*_cols > 3, "W only available for row or column matrices of a dimension > 3.");
         return array[3];
     }
 
-    constexpr auto xyz() const noexcept -> RowVec<acc,3> {
+    [[nodiscard]] constexpr auto xy() const noexcept -> RowVec<acc,2> {
+        static_assert((_rows == 1 || _cols == 1), "XY only available for row or column matrices.");
+        static_assert(_rows*_cols > 1, "XY only available for row or column matrices of a dimension >= 2.");
+        return {array[0],array[1]};
+    }
+
+    [[nodiscard]] constexpr auto xyz() const noexcept -> RowVec<acc,3> {
         static_assert((_rows == 1 || _cols == 1), "XYZ only available for row or column matrices.");
-        static_assert(_rows*_cols > 2, "XYZ only available for row or column matrices of a dimension > 3.");
+        static_assert(_rows*_cols > 2, "XYZ only available for row or column matrices of a dimension >= 3.");
         return {{x(),y(),z()}};
     }
 
@@ -289,7 +307,7 @@ struct Matrix{
     [[nodiscard]] auto span()       noexcept -> std::span<acc>      {return array;}
     [[nodiscard]] auto cspan() const noexcept -> std::span<const acc>{return array;}
 
-    std::array<acc, _rows*_cols> array{};
+    std::array<acc, _rows*_cols> array = {};
 };
 
 // functions
@@ -468,6 +486,11 @@ template <typename acc, int dim>
 constexpr auto dot(const RowVec<acc, dim> &l, const RowVec<acc, dim> &r) noexcept -> acc {
     return std::inner_product(l.array.cbegin(), l.array.cend(), r.array.cbegin(), acc{0});
 }
+template <typename acc, int dim>
+constexpr auto dot(const ColVec<acc, dim> &l, const ColVec<acc, dim> &r) noexcept -> acc {
+    return std::inner_product(l.array.cbegin(), l.array.cend(), r.array.cbegin(), acc{0});
+}
+
 template <typename acc, int dim>
 constexpr auto dot(std::span<const acc, dim> l, std::span<const acc, dim> r) noexcept -> acc {
     return std::inner_product(l.cbegin(), l.cend(), r.cbegin(), acc{0});

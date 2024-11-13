@@ -48,10 +48,6 @@ template<typename acc>
 struct Point4 : Point<acc,4>{
 
     Point4() = default;
-    Point4(const Point4& other) = default;
-    Point4& operator=(const Point4& other) = default;
-    Point4(Point4&& other) = default;
-    Point4& operator=(Point4&& other) = default;
 
     constexpr Point4(const Point<acc,4> &p) noexcept{
         this->array = p.array;
@@ -67,18 +63,38 @@ struct Point4 : Point<acc,4>{
 
 template <typename acc>
 constexpr auto operator*(const RowVec<acc,4> &l, const RowVec<acc,4> &r) noexcept -> RowVec<acc,4>{
-    return {{l.x()*r.x(),l.y()*r.y(),l.z()*r.z(),l.w()*r.w()}};
+    return {{l[0]*r[0],l[1]*r[1],l[2]*r[2],l[3]*r[3]}};
 }
 
 template <typename acc>
 constexpr auto operator*(const ColVec<acc,4> &l, const ColVec<acc,4> &r) noexcept -> ColVec<acc,4>{
-    return {{l.x()*r.x(),l.y()*r.y(),l.z()*r.z(),l.w()*r.w()}};
+    return {{l[0]*r[0],l[1]*r[1],l[2]*r[2],l[3]*r[3]}};
+}
+
+
+template <typename acc>
+constexpr auto dot(const ColVec<acc,4> &l, const ColVec<acc,4> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2] + l[3]*r[3];
+}
+template <typename acc>
+constexpr auto dot(const RowVec<acc,4> &l, const RowVec<acc,4> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2] + l[3]*r[3];
+}
+template <typename acc>
+constexpr auto dot(const RowVec<acc,4> &l, const ColVec<acc,4> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2] + l[3]*r[3];
+}
+template <typename acc>
+constexpr auto dot(const ColVec<acc,4> &l, const RowVec<acc,4> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2] + l[3]*r[3];
+}
+template <typename acc>
+constexpr auto dot(const Point4<acc> &l, const Point4<acc> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1] + l[2]*r[2] + l[3]*r[3];
 }
 
 template <typename acc>
 constexpr auto to_pt4(const Point<acc,3> &pt, acc w) noexcept -> Pt4<acc>{
-    return {pt.x(),pt.y(),pt.z(),w};
+    return {pt[0],pt[1],pt[2],w};
 }
-
-
 }

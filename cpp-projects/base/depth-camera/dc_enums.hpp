@@ -583,7 +583,7 @@ enum class DCApplicationType : std::int8_t {
 };
 
 enum class DCInfoType : std::int8_t{
-    DCMode, NbValidVertices
+    DCMode, NbValidVertices,
     // NbAudioChannels = 30
 };
 
@@ -592,6 +592,8 @@ enum class DCDataBufferType : std::int8_t{
     IMU = 10,
     Audio = 20,
     BodiesSkeleton = 30,
+    Origin = 40,
+    SizeVoxels
     // CloudXYZ16RGB8 = 30,
     // VoxelCloudX13Y13Z13RGB8 = 31,
     // ColoredCloud = 40,
@@ -605,7 +607,8 @@ enum class DCImageBufferType : std::int8_t{
 enum class DCVolumeBufferType : std::int8_t{
     ColoredCloud   = 0,
     CloudXYZ16RGB8,
-    VoxelCloudX13Y13Z13RGB8 = 11,
+    VoxelCloudX14Y12Z14RGB8 = 11,
+    VoxelX32Y32Z32RGB32
 };
 
 

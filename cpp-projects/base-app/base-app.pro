@@ -40,18 +40,27 @@ include(../ts-projects.pri)
 include(../ts-thirdparty.pri)
 include(../ts-dependencies.pri)
 
+message("PCL")
+message($$PCL_INCLUDES)
+
 ####################################### PROJECT FILES
 HEADERS += \
-    test_ak_device.hpp \
-    test_frames_processing.hpp \
-    test_k2_device.hpp \
-    test_ob_device.hpp \
-    test_ob_utility.hpp \
-    test_udp_server.hpp \
-    test_volumetric_video_player.hpp
+    ob_utility.hpp \    
+    tests.hpp \
 
 SOURCES += \
     # main
     base_main.cpp \
+    test_dc_settings.cpp \
+    test_encoding.cpp \
+    test_mic.cpp \
+    test_ak_device.cpp \
+    test_dc_player.cpp \
+    test_pcl.cpp \
+    test_k2_device.cpp \
+    test_kvid.cpp \
+    test_simd.cpp \
+    test_time.cpp \
+    test_ob_device.cpp
 
 

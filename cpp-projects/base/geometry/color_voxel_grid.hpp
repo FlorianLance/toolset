@@ -48,6 +48,9 @@ struct ColorVoxelGrid{
     auto compute_grid() -> void;
 
     auto convert_to_cloud(ColorCloud &cloud) -> void;
+    auto copy_to_buffer(Buffer<CVoxel> &bBuffer) -> void;
+    auto copy_to_buffer(Buffer<std::uint32_t> &xyzrgb) -> void;
+    auto copy_to_buffer(Buffer<std::byte> &xyzrgb) -> void;
 
     static auto create_from_point_cloud_within_bounds(const ColorCloud &cloud, float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> ColorVoxelGrid;
 
@@ -62,4 +65,43 @@ private:
     Buffer<std::tuple<bool,Pt3<int>>> buffer;
     std::vector<size_t> ids;
 };
+
+struct ColorVoxelGrid2{
+
+    struct Pt3UintHashRepresentation {
+        using is_avalanching = void;
+        [[nodiscard]] auto operator()(const tool::geo::Pt3<std::uint32_t> &f) const noexcept -> uint64_t {
+            static_assert(std::has_unique_object_representations_v<tool::geo::Pt3<std::uint32_t>>);
+            return ankerl::unordered_dense::detail::wyhash::hash(&f, sizeof(f));
+        }
+    };
+
+    ColorVoxelGrid2(float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size);
+    auto add_cloud(const ColorCloud &cloud, const Mat4f &model) -> void;
+
+    auto mix() -> void;
+    auto copy_to_cloud(ColorCloud &cloud) -> void;
+    auto copy_to_cvoxels(Buffer<CVoxel> &voxels) -> void;
+    auto copy_to_cvoxels(std::span<CVoxel> voxels) -> void;
+    auto copy_to_cvoxels(std::span<std::byte> voxelsBytes) -> void;
+
+    auto compute_grid() -> void;
+    auto test() -> void;
+
+    float voxelSize = 0.1f;
+    Pt3f origin = {};
+    Pt3f size = {};
+    Buffer<std::tuple<bool, Pt3<std::uint32_t>, Pt3f>> vertices;
+    std::vector<size_t> ids;
+
+private:
+
+    // umap<Pt3<std::uint32_t>, UVoxel, Pt3UintHashRepresentation> grid;
+
+    umap<Pt3<std::uint32_t>, size_t, Pt3UintHashRepresentation> gridId;
+    // umap<std::uint32_t, size_t> xGridI;
+    // umap<std::uint32_t, size_t> yGridI;
+    // umap<std::uint32_t, size_t> ZGridI;
+};
+
 }

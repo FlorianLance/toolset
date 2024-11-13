@@ -46,10 +46,6 @@ template<typename acc>
 struct Matrix4 : Matrix<acc,4,4>{
 
     Matrix4() = default;
-    Matrix4(const Matrix4& other) = default;
-    Matrix4& operator=(const Matrix4& other) = default;
-    Matrix4(Matrix4&& other) = default;
-    Matrix4& operator=(Matrix4&& other) = default;
 
     constexpr Matrix4(const Matrix<acc,4,4> &m) noexcept{
         this->array = m.array;
@@ -101,6 +97,32 @@ struct Matrix4 : Matrix<acc,4,4>{
         }
     }
 
+    [[nodiscard]] constexpr auto row0() const noexcept -> RowVec<acc,4>{
+        return {{(*this)[0],(*this)[1],(*this)[2],(*this)[3]}};
+    }
+    [[nodiscard]] constexpr auto row1() const noexcept -> RowVec<acc,4>{
+        return {{(*this)[4],(*this)[5],(*this)[6],(*this)[7]}};
+    }
+    [[nodiscard]] constexpr auto row2() const noexcept -> RowVec<acc,4>{
+        return {{(*this)[8],(*this)[9],(*this)[10],(*this)[11]}};
+    }
+    [[nodiscard]] constexpr auto row3() const noexcept -> RowVec<acc,4>{
+        return {{(*this)[12],(*this)[13],(*this)[14],(*this)[15]}};
+    }
+
+    [[nodiscard]] constexpr auto col0() const noexcept -> ColVec<acc,4>{
+        return {{(*this)[0],(*this)[4],(*this)[8],(*this)[12]}};
+    }
+    [[nodiscard]] constexpr auto col1() const noexcept -> ColVec<acc,4>{
+        return {{(*this)[1],(*this)[5],(*this)[9],(*this)[13]}};
+    }
+    [[nodiscard]] constexpr auto col2() const noexcept -> ColVec<acc,4>{
+        return {{(*this)[2],(*this)[6],(*this)[10],(*this)[14]}};
+    }
+    [[nodiscard]] constexpr auto col3() const noexcept -> ColVec<acc,4>{
+        return {{(*this)[3],(*this)[7],(*this)[11],(*this)[15]}};
+    }
+
     constexpr auto t(int id) const noexcept -> acc{return this->at(id,3);}
     constexpr auto t(int id) noexcept -> acc&{return this->at(id,3);}
     constexpr auto s(int id) const noexcept -> acc{return this->at(id,id);}
@@ -146,22 +168,34 @@ constexpr auto operator*(const Matrix<acc,4,4> &m, const ColVec<acc,3> &v) noexc
 }
 
 template <typename acc>
-constexpr auto operator*(const Matrix<acc,4,4> &m, const ColVec<acc,4> &v) noexcept -> ColVec<acc,4>{
+constexpr auto operator*(const Matrix4<acc> &m, const ColVec<acc,4> &v) noexcept -> ColVec<acc,4>{
+    // return {{
+    //     m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z() + m(0,3) * v.w(),
+    //     m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z() + m(1,3) * v.w(),
+    //     m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z() + m(2,3) * v.w(),
+    //     m(3,0) * v.x() + m(3,1) * v.y() + m(3,2) * v.z() + m(3,3) * v.w(),
+    // }};
     return {{
-        m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z() + m(0,3) * v.w(),
-        m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z() + m(1,3) * v.w(),
-        m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z() + m(2,3) * v.w(),
-        m(3,0) * v.x() + m(3,1) * v.y() + m(3,2) * v.z() + m(3,3) * v.w(),
+        dot(v, m.row0()),
+        dot(v, m.row1()),
+        dot(v, m.row2()),
+        dot(v, m.row3())
     }};
 }
 
 template <typename acc>
-constexpr auto operator*(const RowVec<acc,4> &v, const Matrix<acc,4,4> &m) noexcept -> RowVec<acc,4>{
+constexpr auto operator*(const RowVec<acc,4> &v, const Matrix4<acc> &m) noexcept -> RowVec<acc,4>{
+    // return {{
+    //     m(0,0) * v.x() + m(1,0) * v.y() + m(2,0) * v.z() + m(3,0) * v.w(),
+    //     m(0,1) * v.x() + m(1,1) * v.y() + m(2,1) * v.z() + m(3,1) * v.w(),
+    //     m(0,2) * v.x() + m(1,2) * v.y() + m(2,2) * v.z() + m(3,2) * v.w(),
+    //     m(0,3) * v.x() + m(1,3) * v.y() + m(2,3) * v.z() + m(3,3) * v.w(),
+    // }};
     return {{
-        m(0,0) * v.x() + m(1,0) * v.y() + m(2,0) * v.z() + m(3,0) * v.w(),
-        m(0,1) * v.x() + m(1,1) * v.y() + m(2,1) * v.z() + m(3,1) * v.w(),
-        m(0,2) * v.x() + m(1,2) * v.y() + m(2,2) * v.z() + m(3,2) * v.w(),
-        m(0,3) * v.x() + m(1,3) * v.y() + m(2,3) * v.z() + m(3,3) * v.w(),
+        dot(v, m.col0()),
+        dot(v, m.col1()),
+        dot(v, m.col2()),
+        dot(v, m.col3())
     }};
 }
 

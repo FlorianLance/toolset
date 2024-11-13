@@ -41,6 +41,9 @@ struct FastPForEncoder{
     ~FastPForEncoder();
 
     auto encode(ConstBinarySpan buffer, BinaryBuffer &encodedBuffer) -> bool;
+    auto encode64(ConstBinarySpan buffer, BinaryBuffer &encodedBuffer) -> bool;
+    auto encode64(std::span<const std::uint64_t> buffer, Buffer<std::uint32_t> &encodedBuffer) -> bool;
+
     auto encode(size_t width, size_t height, std::span<std::uint16_t> image, BinaryImageBuffer &encodedImage) -> bool;   
     auto encode(const ImageBuffer<std::uint16_t> &image, BinaryImageBuffer &encodedImage) -> bool;
 
@@ -55,7 +58,8 @@ struct FastPForDecoder{
     FastPForDecoder();
     ~FastPForDecoder();
 
-    auto decode(ConstBinarySpan encodedBuffer, BinarySpan buffer) -> bool;
+    auto decode(ConstBinarySpan encodedBuffer, BinarySpan buffer) -> bool;    
+    auto decode64(ConstBinarySpan encodedBuffer, BinarySpan buffer) -> bool;
     auto decode(const BinaryImageBuffer &encodedImage, ImageBuffer<std::uint16_t> &image) -> bool;
 
 private:

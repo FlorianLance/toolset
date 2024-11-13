@@ -37,7 +37,7 @@ using namespace tool::geo;
 using namespace tool::graphics;
 
 auto Mesh::mean_position() const noexcept -> Pt3f{
-    return vertices.mean_position();
+    return vertices.mean();
 }
 
 auto Mesh::generate_normals() noexcept -> void{

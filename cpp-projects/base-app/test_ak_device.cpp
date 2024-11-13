@@ -1,5 +1,5 @@
 
-#pragma once
+#include "tests.hpp"
 
 // std
 #include <iostream>

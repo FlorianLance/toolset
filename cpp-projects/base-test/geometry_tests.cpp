@@ -915,7 +915,7 @@ TEST_CASE("geo::Cloud"){ Log::message("geo::Cloud\n");
         Log::message(std::format("sum: {}\n", geo::sum(pt2)));
         
         Log::message(std::format("sum: {}\n", to_string(cloud.vertices.sum())));
-        Log::message(std::format("mean: {}\n", to_string(cloud.vertices.mean_position())));
+        Log::message(std::format("mean: {}\n", to_string(cloud.vertices.mean())));
         Log::message(std::format("minx: {}\n", std::to_string(cloud.vertices.min_x())));
         Log::message(std::format("maxx: {}\n", std::to_string(cloud.vertices.max_x())));
         Log::message(std::format("miny: {}\n", std::to_string(cloud.vertices.min_y())));

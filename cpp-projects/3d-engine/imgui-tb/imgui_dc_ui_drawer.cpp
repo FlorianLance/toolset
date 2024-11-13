@@ -1075,9 +1075,9 @@ auto DCUIDrawer::draw_dc_player_tab_item(
     if(ImGui::Button("Remove after current frame")){
         pStates.removeAfter = true;
     }
-    // if(ImGui::Button("Merge")){
-    //     pStates.merge = true;
-    // }
+    if(ImGui::Button("Merge")){
+        pStates.merge = true;
+    }
     // if(ImGui::Button("Info")){
     //     pStates.info = true;
     // }

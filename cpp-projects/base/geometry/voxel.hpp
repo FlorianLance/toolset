@@ -39,15 +39,25 @@ public:
     geo::Pt3f color;
 };
 
+struct UVoxel {
+public:
+    geo::Pt3<std::uint32_t> index;
+    geo::Pt3f color;
+};
+
 struct CVoxel{
+
     std::uint64_t
-        xIndex  : 13, // 0 - 4048mm
-        yIndex  : 13, // 0 - 4048mm
-        zIndex  : 13, // 0 - 4048mm
+        xIndex  : 14,
+        yIndex  : 12,
+        zIndex  : 14,
         red     : 8,
-        blue    : 8,
         green   : 8,
-        discard : 1;
+        blue    : 8;
+
+    static constexpr std::uint16_t maxX = 16383; // mm
+    static constexpr std::uint16_t maxY = 4095;  // mm
+    static constexpr std::uint16_t maxZ = 16383; // mm
 };
 
 struct AvgColorVoxel {
@@ -94,14 +104,3 @@ struct AvgColorVoxel {
     Voxel voxel;
 };
 }
-
-//struct CV{
-//    b32
-//    y11 z11 x10 y10 z10 x9 y9 z9 x8 y8 z8 x7 y7 z7 x6 y6 z6 x5 y5 z5 x4 y4 z4 x3 y3 z3 x2 y2 z2 x1 y1 z1
-//    r compression
-//    g compression
-//    b compression
-//    extra discard x13 y13 z13 x12 y12 z12 x11
-
-//    sort by b32 value
-//};

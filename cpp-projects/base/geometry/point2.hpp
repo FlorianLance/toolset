@@ -48,10 +48,6 @@ template<typename acc>
 struct Point2 : Point<acc,2>{
 
     Point2() = default;
-    Point2(const Point2& other) = default;
-    Point2& operator=(const Point2& other) = default;
-    Point2(Point2&& other) = default;
-    Point2& operator=(Point2&& other) = default;
 
     constexpr Point2(const Point<acc,2> &p) noexcept{
         this->array = p.array;
@@ -66,12 +62,17 @@ struct Point2 : Point<acc,2>{
 
 template <typename acc>
 constexpr auto operator*(const RowVec<acc,2> &l, const RowVec<acc,2> &r) noexcept -> RowVec<acc,2>{
-    return {{l.x()*r.x(),l.y()*r.y()}};
+    return {{l[0]*r[0],l[1]*r[1]}};
 }
 
 template <typename acc>
 constexpr auto operator*(const ColVec<acc,2> &l, const ColVec<acc,2> &r) noexcept -> ColVec<acc,2>{
-    return {{l.x()*r.x(),l.y()*r.y()}};
+    return {{l[0]*r[0],l[1]*r[1]}};
+}
+
+template <typename acc>
+constexpr auto dot(const Point2<acc> &l, const Point2<acc> &r) noexcept -> acc {
+    return l[0]*r[0] + l[1]*r[1];
 }
 
 }

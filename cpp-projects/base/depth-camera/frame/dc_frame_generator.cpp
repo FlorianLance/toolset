@@ -50,7 +50,7 @@
 // #include "thirdparty/taskflow/core/taskflow.hpp"
 
 #include "dc_depth_indices.hpp"
-
+#include "geometry/voxel.hpp"
 
 using namespace tool;
 using namespace tool::geo;
@@ -80,6 +80,8 @@ struct DCFrameGenerator::Impl{
     Buffer<geo::Pt3<std::int16_t>> pointCloud;
     tf::Taskflow taskFlow;
     tf::Executor executor;
+
+    Buffer<size_t> ids;
 
 
     // local task data
@@ -227,6 +229,7 @@ struct DCFrameGenerator::Impl{
         auto tStart = Time::nanoseconds_since_epoch();
 
         // start computing
+        // Log::message("do work\n");
         init_data();
         reset_transformation();
         compute_color_image();
@@ -329,6 +332,9 @@ private:
 
         // # volume
         if(frame->datasB.contains(DCDataBufferType::Calibration) && frame->imagesB.contains(DCImageBufferType::Depth16) && gSettings.cloud){
+            auto cloud = frame->insert_volume_buffer(DCVolumeBufferType::ColoredCloud);
+            cloud->resize(dFrame->validVerticesCount, true);
+        }else if(dFrame->volumesB.contains(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8)){
             auto cloud = frame->insert_volume_buffer(DCVolumeBufferType::ColoredCloud);
             cloud->resize(dFrame->validVerticesCount, true);
         }
@@ -576,6 +582,53 @@ private:
     }
 
     auto create_colored_cloud() -> void{
+
+        // Log::message("do work\n");
+
+        if(dFrame->volumesB.contains(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8) && frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) && gSettings.cloud){
+
+            geo::Pt3f origin{0.f,0.f,0.f};
+            if(auto oData = dFrame->data_buffer(DCDataBufferType::Origin); oData != nullptr){
+                std::copy(oData->begin(),oData->end(), reinterpret_cast<std::byte*>(origin.array.data()));
+            }
+            float sizeVoxels = 0.0025f;
+            if(auto sData = dFrame->data_buffer(DCDataBufferType::SizeVoxels); sData != nullptr){
+                std::copy(sData->begin(),sData->end(), reinterpret_cast<std::byte*>(&sizeVoxels));
+            }
+
+            // Log::message(std::format("info data -> {} {} {} | {}\n", origin.x(), origin.y(), origin.z(), sizeVoxels));
+            auto tStart = Time::nanoseconds_since_epoch();
+
+            auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
+            auto vcloudB = dFrame->volume_buffer(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8);
+            auto voxels = std::span<CVoxel>(reinterpret_cast<CVoxel*>(vcloudB->get_data()), cloud->size());
+
+            if(ids.size() < cloud->size()){
+                ids.resize(cloud->size());
+                std::iota(ids.begin(), ids.end(),0);
+            }
+
+            std::for_each(std::execution::par_unseq, ids.begin(), ids.begin() + cloud->size(), [&](size_t idV){
+                const auto &vox = voxels[idV];
+                cloud->vertices[idV] = origin + geo::Pt3<std::uint64_t>(vox.xIndex,vox.yIndex,vox.zIndex).conv<float>() * sizeVoxels;
+                cloud->colors[idV]   = geo::Pt3<std::uint64_t>(vox.red,vox.green,vox.blue).conv<float>()/255.f;
+                cloud->normals[idV]  = {1.f,0.f,0.f};
+            });
+
+            // for(size_t idV = 0; idV < cloud->size(); ++idV){
+            //     const auto &vox = voxels[idV];
+            //     cloud->vertices[idV] = origin + geo::Pt3<std::uint64_t>(vox.xIndex,vox.yIndex,vox.zIndex).conv<float>() * sizeVoxels;
+            //     cloud->colors[idV]   = geo::Pt3<std::uint64_t>(vox.red,vox.green,vox.blue).conv<float>()/255.f;
+            //     cloud->normals[idV]  = {1.f,0.f,0.f};
+            //     // if(rand()%100 == 0){
+            //     //     Log::message(std::format("v [{}] [{}] [{}] [{}] [{}] [{}]\n", cloud->vertices[idV].x(),cloud->vertices[idV].y(),cloud->vertices[idV].z(),
+            //     //             cloud->colors[idV].x(), cloud->colors[idV].y(), cloud->colors[idV].z()));
+            //     // }
+            // }
+
+            tComputeColoredCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
+            return;
+        }
 
         if(!frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) || !frame->imagesB.contains(DCImageBufferType::Depth16) || !gSettings.cloud){
             return;

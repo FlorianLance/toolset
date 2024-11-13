@@ -30,6 +30,7 @@
 // std
 #include <fstream>
 #include <format>
+#include <execution>
 
 // local
 #include "utility/logger.hpp"
@@ -213,32 +214,17 @@ auto DCVideo::closest_frame_id_from_time(size_t idDevice, double timeMs) const n
     auto currentTimeTS     = ffTS + duration_cast<nanoseconds>(currentTimeMicroS);
 
     // init with first diff
-    // double prevDiff = std::abs(get_timestamp_diff_time_ms(ffTS.count(), device_first_frame_timestamp(idDevice))-timeMs);
-    std::int64_t prevDiffNS = std::numeric_limits<std::int64_t>::max();//std::abs(currentTimeTS.count()-ffTS.count());
-
-    // Log::message(std::format("INIT [{} {} {} {}]\n", currentTimeMicroS.count(), ffTS.count(), currentTimeTS.count(),duration_cast<microseconds>(nanoseconds(prevDiffNS)).count()));
+    std::int64_t prevDiffNS = std::numeric_limits<std::int64_t>::max();
 
     for(size_t idFrame = 0; idFrame < framesPtr->nb_frames(); ++idFrame){
 
         auto currentFrameTS = framesPtr->frames[idFrame]->afterCaptureTS;
         auto currentDiffNS  = std::abs(currentTimeTS.count()-currentFrameTS);
 
-        // auto prevDiffMicrosS = duration_cast<microseconds>(nanoseconds(prevDiffNS));
-        // auto currentDiffMicrosS = duration_cast<microseconds>(nanoseconds(currentDiffNS));
-        // Log::message(std::format("F[{} : {} : {}\n", idFrame, prevDiffMicrosS.count(), currentDiffMicrosS.count()));
-
         if(currentDiffNS > prevDiffNS){
             return idFrame-1;
         }
         prevDiffNS = currentDiffNS;
-
-        // auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->receivedTS);
-        // auto timeFrameMs = get_timestamp_diff_time_ms(ffTS.count(), framesPtr->frames[idFrame]->afterCaptureTS);
-        // auto diffMs      = std::abs(timeFrameMs-timeMs);
-        // if(diffMs > prevDiff){
-        //     return idFrame-1;
-        // }
-        // prevDiff = diffMs;
     }
     return framesPtr->nb_frames()-1;
 }
@@ -460,139 +446,164 @@ auto DCVideo::generator(size_t idDevice) noexcept -> DCFrameGenerator*{
     return nullptr;
 }
 
+#include "utility/time.hpp"
+#include "utility/logger.hpp"
 auto DCVideo::merge_all_devices(const DCFrameGenerationSettings &gSettings, float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> void{
     
-    // if(m_devicesDataFrames.empty()){
-    //     return;
-    // }
+    if(m_devicesDataFrames.empty()){
+        return;
+    }
     
-    // if(m_devicesDataFrames.front().frames.empty()){
-    //     return;
-    // }
-
-    // for(const auto &cData : m_devicesDataFrames){
-    //     if(!cData.check_same_mode_for_every_frame()){
-    //         Log::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
-    //         return;
-    //     }
-    // }
-    // auto mode = m_devicesDataFrames.front().first_frame_ptr()->mode;
-    // for(const auto &cData : m_devicesDataFrames){
-    //     if(cData.first_frame_ptr()->mode != mode){
-    //         Log::error("[DCVideo::merge_all_devices] Mode inconstancie accros devices frames\n");
-    //         return;
-    //     }
-    // }
-
-    // auto c0FirstFrameTS = m_devicesDataFrames.front().frames.front()->receivedTS;
-
-    // DCDataFrameGenerator dfGen;
-    // for(size_t idF = 0; idF < nb_frames(0); ++idF){
-        
-    //     auto c0Frame = m_devicesDataFrames.front().frames[idF].get();
-    //     auto c0Time  = c0Frame->receivedTS;
-    //     auto c0TimeMs= std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(c0Time - c0FirstFrameTS));
-
-    //     DCFrame final;
-    //     if(!generate_frame(gSettings, 0, idF, final)){
-    //         continue;
-    //     }
-
-    //     final.mode            = DCMode::Merged;
-    //     final.idCapture       = c0Frame->idCapture;
-    //     final.afterCaptureTS  = c0Frame->afterCaptureTS;
-    //     final.receivedTS      = c0Frame->receivedTS;
-
-    //     final.rgbaColor.reset();
-    //     final.rgbDepth.reset();
-    //     final.rgbInfra.reset();
-    //     final.depth.reset();
-    //     final.infra.reset();
-
-    //     geo::ColorVoxelGrid grid(voxelSize, origin, size);
-    //     grid.add_cloud(final.cloud, m_devicesTransforms.front().conv<float>());
-
-    //     for(size_t jj = 1; jj < nb_devices(); ++jj){
-
-    //         size_t idF = 0;
-    //         if(auto id = closest_frame_id_from_time(jj, static_cast<double>(c0TimeMs.count())); id != -1){
-    //             idF = id;
-    //         }else{
-    //             continue;
-    //         }
-
-    //         DCFrame current;
-    //         if(!generate_frame(gSettings, jj, idF, current)){
-    //             continue;
-    //         }
-
-    //         grid.add_cloud(current.cloud, m_devicesTransforms[jj].conv<float>());
-    //     }
-    //     grid.compute_grid();
-    //     grid.convert_to_cloud(final.cloud);
-
-    //     // compress frame
-    //     // m_devicesDataFrames.front().frames[idF] = dfGen.generate()
-    //     //m_camerasCompressedFrames.front().frames[idF] = compressor.compress(final, 90);
-    // }
-
-    // m_devicesTransforms.front() = geo::Mat4d::identity();
-    
-    // m_devicesDataFrames.resize(1);
-    // m_devicesFrameGenerators.resize(1);
-}
-
-auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColorCloud &cloud) -> void{
-
-    if(idFrame >= min_nb_frames()){
-        // ...
+    if(m_devicesDataFrames.front().frames.empty()){
         return;
     }
 
-    geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
+    auto startTS = device_first_frame_timestamp(0);
 
-    DCFrame frame;
-    for(size_t ii = 0; ii < nb_devices(); ++ii){
-        generate_frame(gSettings, ii, idFrame, frame);
-        if(auto fCloud = frame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
-            grid.add_cloud(*fCloud, get_transform(ii).conv<float>());
+    DCDataFrameBuffer dfb;
+    // std::vector<std::shared_ptr<DCDataFrame>> dFrames;
+    // dFrames.resize(nb_frames(0));
+
+    // std::vector<size_t> ids;
+    // ids.resize(nb_frames(0));
+    // std::iota(ids.begin(), ids.end(), 0);
+
+    // std::for_each(std::execution::par_unseq, std::begin(ids), std::end(ids), [&](size_t idF){
+    for(size_t idF = 0; idF < nb_frames(0); ++idF){
+
+        // auto t0 = Time::nanoseconds_since_epoch();
+        // Log::message(std::format("Merge frame [{}]\n", idF));
+        auto firstCameraCurrentFrameTS = get_data_frame(0, idF).lock().get()->afterCaptureTS;
+        auto diffNs = nanoseconds(firstCameraCurrentFrameTS - startTS);
+        auto currentTimeMS = duration_cast<milliseconds>(diffNs);
+
+
+        DCFrame d0Frame;
+        // DCFrameGenerator fg;
+
+        // fg.generate(gSettings, get_data_frame(0, idF).lock().get(), d0Frame);
+        generate_frame(gSettings, 0, idF, d0Frame);
+        // auto t1 = Time::nanoseconds_since_epoch();
+
+        geo::ColorVoxelGrid2 cGrid(voxelSize, origin, size);
+        auto cp = d0Frame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud);
+        // auto t2 = Time::nanoseconds_since_epoch();
+        cGrid.add_cloud(*cp, get_transform(0).conv<float>());
+        for(size_t idC = 1; idC < nb_devices(); ++idC){
+            auto cfid = closest_frame_id_from_time(idC, 1.0*currentTimeMS.count());
+            DCFrame dIFrame;
+
+            generate_frame(gSettings, idC, cfid, dIFrame);
+            // fg.generate(gSettings, get_data_frame(idC, cfid).lock().get(), dIFrame);
+
+            cp = dIFrame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud);
+            cGrid.add_cloud(*cp, get_transform(idC).conv<float>());
         }
+        // auto t3 = Time::nanoseconds_since_epoch();
+        cGrid.mix();
+        // auto t4 = Time::nanoseconds_since_epoch();
+
+        auto dataF = std::make_shared<DCDataFrame>();
+        auto vb = dataF->insert_volume_buffer(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8, DCCompressionMode::None);
+
+        size_t nbVoxels = cGrid.vertices.size();
+
+        dataF->afterCaptureTS     = d0Frame.afterCaptureTS;
+        dataF->validVerticesCount = nbVoxels;
+        dataF->idDevice           = d0Frame.idDevice;
+        dataF->idCapture          = d0Frame.idCapture;
+        dataF->receivedTS         = d0Frame.receivedTS;
+
+        vb->resize(nbVoxels*8);
+
+        // auto t5 = Time::nanoseconds_since_epoch();
+
+        cGrid.copy_to_cvoxels(vb->span());
+
+        // Buffer<geo::CVoxel> voxels;
+        // cGrid.copy_to_buffer(voxels);
+        // std::copy(voxels.begin(), voxels.end(), reinterpret_cast<geo::CVoxel*>(vb->get_data()));
+
+        // auto t6 = Time::nanoseconds_since_epoch();
+
+        dataF->insert_data_buffer(DCDataBufferType::Origin,     DCCompressionMode::None, origin.span());
+        dataF->insert_data_buffer(DCDataBufferType::SizeVoxels, DCCompressionMode::None, voxelSize);
+
+        dfb.add_data_frame(dataF);
+        // dFrames[idF] =  std::move(dataF);
+
+        // auto t7 = Time::nanoseconds_since_epoch();
+        // Log::message(std::format("Add frame containing [{}] voxels with size [{}]MB", voxels.size(), vb->size()/1024.0/1024.));
+        // Log::message(std::format("[{}] [{}] [{}] [{}] [{}] [{}]\n", idF,
+            // Time::difference_ms(t0,t1), Time::difference_ms(t2,t3), Time::difference_ms(t3,t4), Time::difference_ms(t5,t6),Time::difference_ms(t0,t7)));
     }
-    grid.compute_grid();
-    grid.convert_to_cloud(cloud);
+    // });
+
+    //
+    // for(auto &df : dFrames){
+    //     dfb.add_data_frame(std::move(df));
+    // }
+
+    m_devicesDataFrames.front() = std::move(dfb);
+    m_devicesDataFrames.resize(1);
+
+    m_devicesTransforms.front() = geo::Mat4d::identity();
+    m_devicesTransforms.resize(1);
+
+    m_devicesFrameGenerators.resize(1);
 }
 
-auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
+// auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, tool::geo::ColorCloud &cloud) -> void{
 
-    frame = DCFrame();
-    if(idFrame >= min_nb_frames()){
-        // ...
-        return;
-    }
+//     if(idFrame >= min_nb_frames()){
+//         // ...
+//         return;
+//     }
 
-    geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
-    for(size_t ii = 0; ii < nb_devices(); ++ii){
-        DCFrame uFrame;
-        generate_frame(gSettings, ii, idFrame, uFrame);
+//     geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
 
-        if(auto fCloud = uFrame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
-            grid.add_cloud(*fCloud, get_transform(ii).conv<float>());
-        }
+//     DCFrame frame;
+//     for(size_t ii = 0; ii < nb_devices(); ++ii){
+//         generate_frame(gSettings, ii, idFrame, frame);
+//         if(auto fCloud = frame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+//             grid.add_cloud(*fCloud, get_transform(ii).conv<float>());
+//         }
+//     }
+//     grid.compute_grid();
+//     grid.convert_to_cloud(cloud);
+// }
 
-        if(ii == 0){
-            frame.mode           = DCMode::Merged;
-            frame.idCapture      = uFrame.idCapture;
-            frame.afterCaptureTS = uFrame.afterCaptureTS;
-            frame.receivedTS     = uFrame.receivedTS;
+// auto DCVideo::merge_devices_frame_id(const DCFrameGenerationSettings &gSettings, size_t idFrame, float sizeVoxel, geo::Pt3f minBound, geo::Pt3f maxBound, DCFrame &frame) -> void{
 
-            // frame.imu           = uFrame.imu; // merge imu ?
-            // frame.audioFrames    = uFrame.audioFrames; // merge audio ?
-            // frame.bodyTracking         = uFrame.bodyTracking; // merge bodies ?
-        }
-    }
-    grid.compute_grid();
-    // merge_devices_frame_id(gSettings, idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
-}
+//     frame = DCFrame();
+//     if(idFrame >= min_nb_frames()){
+//         // ...
+//         return;
+//     }
+
+//     geo::ColorVoxelGrid grid(sizeVoxel, minBound, maxBound);
+//     for(size_t ii = 0; ii < nb_devices(); ++ii){
+//         DCFrame uFrame;
+//         generate_frame(gSettings, ii, idFrame, uFrame);
+
+//         if(auto fCloud = uFrame.volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+//             grid.add_cloud(*fCloud, get_transform(ii).conv<float>());
+//         }
+
+//         if(ii == 0){
+//             frame.mode           = DCMode::Merged;
+//             frame.idCapture      = uFrame.idCapture;
+//             frame.afterCaptureTS = uFrame.afterCaptureTS;
+//             frame.receivedTS     = uFrame.receivedTS;
+
+//             // frame.imu           = uFrame.imu; // merge imu ?
+//             // frame.audioFrames    = uFrame.audioFrames; // merge audio ?
+//             // frame.bodyTracking         = uFrame.bodyTracking; // merge bodies ?
+//         }
+//     }
+//     grid.compute_grid();
+//     // merge_devices_frame_id(gSettings, idFrame, sizeVoxel, minBound, maxBound, frame.cloud);
+// }
 
 
 // auto DCVideo::total_audio_frames_size(size_t idDevice) const -> size_t{
@@ -749,7 +760,6 @@ auto DCVideo::read_file(std::ifstream &file) -> bool{
         }
     }
     
-    Log::message("END LOADING VIDEO\n");
     return true;
 }
 

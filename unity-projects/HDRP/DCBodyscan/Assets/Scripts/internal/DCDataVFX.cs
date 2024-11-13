@@ -126,6 +126,7 @@ namespace BS {
                     File.WriteAllText(dataVFXSettingsJsonFilePath, JsonUtility.ToJson(dataVFX.settings));
                 } catch (System.Exception ex) {
                     UnityEngine.Debug.LogError(string.Format("[DCDataVFXEditor::OnInspectorGUI] Cannot save JSON settings, error: [{0}] ", ex.Message));
+                    UnityEngine.Debug.LogError(string.Format("[DCDataVFXEditor::OnInspectorGUI] Cannot save JSON settings, error: [{0}] ", ex.Message));
                 }
             }
 

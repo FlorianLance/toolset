@@ -421,10 +421,8 @@ auto DCVideoPlayer::remove_after_current_frame() -> void{
 }
 
 auto DCVideoPlayer::merge() -> void{
-    Log::error("[DCVideoPlayer::merge] Not implemented.\n");
-    // remove_empty_cameras();
-//    merge_cameras(0.005f, {-20.f,-20.f,-20.f}, {+20.f,+20.f,+20.f});
-    // update_states();
+    Log::error("[DCVideoPlayer::merge].\n");
+    merge_cameras(0.0025f, {-2.f,-2.f,-2.f}, {+4.f,+4.f,+4.f});
 }
 
 auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f origin, tool::geo::Pt3f size) -> void{
@@ -440,7 +438,7 @@ auto DCVideoPlayer::merge_cameras(float voxelSize, tool::geo::Pt3f origin, tool:
     update_states();
 
     std::vector<DCModelSettings> models(1);
-    models.front().transformation = i->video.get_transform(0).conv<float>();
+    models.front().transformation = geo::Mat4f::identity();// i->video.get_transform(0).conv<float>();
     initialize_signal(std::move(models));
 }
 
@@ -494,6 +492,20 @@ auto DCVideoPlayer::current_frames_total_cloud_size() -> size_t{
     return totalNbVertices;
 }
 
+auto DCVideoPlayer::frame_cloud_size(size_t idCamera, size_t idFrame) -> size_t{
+
+    // i->video->
+    // if(idCamera < i->camerasFrame.size()){
+    //     if(i->camerasFrame[idCamera] != nullptr){
+    //         if(i->camerasFrame[idCamera]->volumesB.contains(DCVolumeBufferType::ColoredCloud)){
+    //             return i->camerasFrame[idCamera]->volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)->size();
+    //         }
+    //     }
+    // }
+
+    return {};
+}
+
 auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t{
 
     if(auto frame = current_frame(idCamera); frame != nullptr){
@@ -525,6 +537,26 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<DCVertexMeshDa
                     };
                 });
             }
+            return verticesCountToCopy;
+        }
+    }
+    return 0;
+}
+
+auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors) -> size_t{
+
+    if(auto frame = current_frame(0); frame != nullptr){
+        if(auto cloud = frame->volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+            auto verticesCountToCopy = std::min(cloud->size(), positions.size());
+            std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
+                const auto &pt = cloud->vertices[id];;
+                positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
+                positions[id].x() *= -1.f;
+                const auto &col = cloud->colors[id];
+                colors[id] = {
+                    col.x(), col.y(), col.z()
+                };
+            });
             return verticesCountToCopy;
         }
     }

@@ -29,6 +29,7 @@
 
 // fastfor
 #include "fastpfor/fastpfor.h"
+// #include "fastpfor/simdfastpfor.h"
 #include "fastpfor/compositecodec.h"
 #include "fastpfor/variablebyte.h"
 
@@ -74,6 +75,59 @@ auto FastPForEncoder::encode(ConstBinarySpan buffer, BinaryBuffer &encodedBuffer
     return true;
 }
 
+#include <iostream>
+auto FastPForEncoder::encode64(ConstBinarySpan buffer, BinaryBuffer &encodedBuffer) -> bool{
+
+    size_t inputSizeBits    = buffer.size();
+    size_t inputSizeInt64   = inputSizeBits / 8;
+    size_t outputSizeInt64  = inputSizeInt64*2 + 1024;
+    encodedBuffer.resize(outputSizeInt64 * 8);
+    try{
+        i->codec.encodeArray(
+            reinterpret_cast<const std::uint64_t*>(buffer.data()),
+            inputSizeInt64,
+            reinterpret_cast<std::uint32_t*>(encodedBuffer.get_data()),
+            outputSizeInt64
+        );
+        encodedBuffer.resize(outputSizeInt64 * 8);
+
+    }catch(const std::logic_error &e){
+        Log::error(std::format("[FastPForEncoding::encode64] Logic error: {}\n", e.what()));
+        return false;
+    }catch(std::exception e){
+        Log::error(std::format("[FastPForEncoding::encode64] Error: {}\n", e.what()));
+        return false;
+    }
+
+    return true;
+}
+
+auto FastPForEncoder::encode64(std::span<const uint64_t> buffer, Buffer<uint32_t> &encodedBuffer) -> bool{
+
+    try{
+
+        size_t outputSizeInt = buffer.size() * 2 + 1024;
+        encodedBuffer.resize(outputSizeInt);
+
+        std::cout << "BEFORE " << buffer.size() << " " << buffer.size() * 2 << " " << outputSizeInt << "\n";
+        i->codec.encodeArray(
+            buffer.data(),
+            buffer.size(),
+            encodedBuffer.get_data(),
+            outputSizeInt
+        );
+        std::cout << "AFTER " << outputSizeInt << "\n";
+        encodedBuffer.resize(outputSizeInt * 2);
+
+    }catch(const std::logic_error &e){
+        Log::error(std::format("[FastPForEncoding::encode64] Logic error: {}\n", e.what()));
+        return false;
+    }catch(std::exception e){
+        Log::error(std::format("[FastPForEncoding::encode64] Error: {}\n", e.what()));
+        return false;
+    }
+}
+
 auto FastPForEncoder::encode(size_t width, size_t height, std::span<uint16_t> image, BinaryImageBuffer &encodedImage) -> bool{
 
     if(encode(BinarySpan{reinterpret_cast<std::byte*>(image.data()), image.size_bytes()}, encodedImage)){
@@ -114,11 +168,32 @@ auto FastPForDecoder::decode(ConstBinarySpan encodedBuffer, BinarySpan buffer) -
             reinterpret_cast<std::uint32_t*>(buffer.data()),
             decodedSize
         );
+        // std::cout << "RATIO " << 1.0*encodedBuffer.size()/(decodedSize*4) << "\n";
     }catch(const std::logic_error &e){
         Log::error(std::format("[FastPForEncoding::decode] Logic error: {}\n", e.what()));
         return false;
     }catch(std::exception e){
         Log::error(std::format("[FastPForEncoding::decode] Error: {}\n", e.what()));
+        return false;
+    }
+    return true;
+}
+
+auto FastPForDecoder::decode64(ConstBinarySpan encodedBuffer, BinarySpan buffer) -> bool{
+
+    try{
+        size_t decodedSize = buffer.size()/8;
+        i->codec.decodeArray(
+            reinterpret_cast<const std::uint32_t*>(encodedBuffer.data()),
+            encodedBuffer.size()/4,
+            reinterpret_cast<std::uint64_t*>(buffer.data()),
+            decodedSize
+        );
+    }catch(const std::logic_error &e){
+        Log::error(std::format("[FastPForEncoding::decode64] Logic error: {}\n", e.what()));
+        return false;
+    }catch(std::exception e){
+        Log::error(std::format("[FastPForEncoding::decode64] Error: {}\n", e.what()));
         return false;
     }
     return true;

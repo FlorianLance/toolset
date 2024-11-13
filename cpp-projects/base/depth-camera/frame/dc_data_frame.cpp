@@ -179,6 +179,18 @@ auto DCDataFrame::init_from_data(std::span<const std::byte> data, size_t &offset
         auto iInfo      = imagesB.insert({type, {encoding, BinaryImageBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), data, offset);
     }
+
+    // read volume buffers
+    size_t nbVolumeB = 0;
+    read(nbVolumeB, data, offset);
+    volumesB.reserve(nbVolumeB);
+    for(size_t idID = 0; idID < nbVolumeB; ++idID){
+        auto type       = read_and_return<DCVolumeBufferType>(data, offset);
+        auto encoding   = read_and_return<DCCompressionMode>(data, offset);
+        // Log::message(std::format("Read data volume [{}] [{}] [{}]", idID, (int)type, (int)encoding));
+        auto iInfo      = volumesB.insert({type, {encoding, BinaryImageBuffer()}});
+        read_buffer(std::get<1>(iInfo.first->second), data, offset);
+    }
 }
 
 auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
@@ -224,9 +236,10 @@ auto DCDataFrame::init_from_file_stream(std::ifstream &file) -> void{
     size_t nbVolumeB = 0;
     read(nbVolumeB, file);
     volumesB.reserve(nbVolumeB);
-    for(size_t idID = 0; idID < nbVolumeB; ++idID){
+    for(size_t idID = 0; idID < nbVolumeB; ++idID){        
         auto type       = read_and_return<DCVolumeBufferType>(file);
         auto encoding   = read_and_return<DCCompressionMode>(file);
+        // Log::message(std::format("Read file volume [{}] [{}] [{}]", idID, (int)type, (int)encoding));
         auto iInfo      = volumesB.insert({type, {encoding, BinaryImageBuffer()}});
         read_buffer(std::get<1>(iInfo.first->second), file);
     }

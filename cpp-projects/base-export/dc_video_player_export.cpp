@@ -110,6 +110,25 @@ void get_transform__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, float
 int cameras_count__dc_video_player(DCVideoPlayer *dcPlayer){
     return static_cast<int>(dcPlayer->video()->nb_devices());
 }
+int get_max_frame_cloud_size__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera){
+
+    size_t maxNbFrames = 0;
+    for(size_t idF = 0; idF < dcPlayer->video()->nb_frames(idCamera); ++idF){
+        if(auto df = dcPlayer->video()->get_data_frame(idCamera, idF).lock(); df){
+            if(auto size = df->volume_buffer_size(DCVolumeBufferType::ColoredCloud); size != 0){
+                if(size > maxNbFrames){
+                    maxNbFrames = size;
+                }
+            }else if(auto size = df->volume_buffer_size(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8); size != 0){
+                if(size > maxNbFrames){
+                    maxNbFrames = size;
+                }
+            }
+        }
+    }
+    return maxNbFrames;
+}
+
 int frames_count__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera){
     return static_cast<int>(dcPlayer->video()->nb_frames(idCamera));
 }
@@ -125,13 +144,20 @@ int get_current_frame_valid_vertices_count__dc_video_player(DCVideoPlayer *dcPla
 int get_current_frames_total_cloud_size__dc_video_player(DCVideoPlayer *dcPlayer){
     return static_cast<int>(dcPlayer->current_frames_total_cloud_size());
 }
+
 int copy_camera_cloud__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
     return static_cast<int>(dcPlayer->copy_current_cloud(idCamera, std::span<DCVertexMeshData>(vertices, verticesCount), applyModelTransform == 1));
 }
 int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform){
     return static_cast<int>(dcPlayer->copy_all_current_clouds(std::span<DCVertexMeshData>(vertices, verticesCount), applyModelTransform == 1));
 }
-
+int copy_voxels_cloud_vfx__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, int verticesCount){
+    return static_cast<int>(dcPlayer->copy_current_cloud(
+        0,
+        std::span<tool::geo::Pt3f>(positions, verticesCount),
+        std::span<tool::geo::Pt3f>(colors, verticesCount)
+    ));
+}
 int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform){
     return static_cast<int>(dcPlayer->copy_current_cloud(
         idCamera,

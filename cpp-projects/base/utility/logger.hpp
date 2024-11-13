@@ -103,19 +103,50 @@ public:
             instance->message(message);
         }
     }
+
+    template<typename... Args>
+    static auto fmessage(std::string_view message, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->message(std::vformat(message, std::make_format_args(args...)));
+        }
+    }
+
     static auto warning(std::string_view warning) -> void{
         if(auto instance = BaseLogger::get_instance()){
             instance->warning(warning);
         }
     }
+
+    template<typename... Args>
+    static auto fwarning(std::string_view warning, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->warning(std::vformat(warning, std::make_format_args(args...)));
+        }
+    }
+
     static auto error(std::string_view error) -> void{
         if(auto instance = BaseLogger::get_instance()){
             instance->error(error);
         }
     }
+
+    template<typename... Args>
+    static auto ferror(std::string_view error, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->error(std::vformat(error, std::make_format_args(args...)));
+        }
+    }
+
     static auto log(std::string_view log) -> void{
         if(auto instance = BaseLogger::get_instance()){
             instance->log(log);
+        }
+    }
+
+    template<typename... Args>
+    static auto flog(std::string_view log, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->log(std::vformat(log, std::make_format_args(args...)));
         }
     }
 };
@@ -124,11 +155,13 @@ struct MessageG{
 
     MessageG(std::string_view message) : m_message(message){
         using namespace std::string_view_literals;
-        Log::message(std::format("[Start: {}]\n", m_message));
+        Log::fmessage("[Start: {}]\n"sv, m_message);
     }
     ~MessageG(){
-        Log::message(std::format("[End: {}]\n", m_message));
+        using namespace std::string_view_literals;
+        Log::fmessage("[End: {}]\n"sv, m_message);
     }
+
 private:
     std::string_view m_message;
 };
@@ -137,11 +170,13 @@ struct LogG{
 
     LogG(std::string_view log) : m_log(log){
         using namespace std::string_view_literals;
-        Log::log(std::format("[Start: {}]\n", m_log));
+        Log::flog("[Start: {}]\n"sv, m_log);
     }
     ~LogG(){
-        Log::log(std::format("[End: {}]\n", m_log));
+        using namespace std::string_view_literals;
+        Log::flog("[End: {}]\n"sv, m_log);
     }
+
 private:
     std::string_view m_log;
 };

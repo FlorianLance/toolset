@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 120923586}
   - component: {fileID: 120923588}
-  - component: {fileID: 120923587}
+  - component: {fileID: 120923589}
   m_Layer: 0
   m_Name: DCVideoPlayer
   m_TagString: Untagged
@@ -156,27 +156,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &120923587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 120923585}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4cd3affbd125f4648b09242476e1d6b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sharedVisualEffectAsset: {fileID: 8926484042661614526, guid: caee5be3d010ffa4696e6a97048fad13, type: 3}
-  cloudsGO: []
-  settings:
-    applyParentTransform: 0
-    parentTransform:
-      position: {x: 0, y: 0, z: 0}
-      rotation: {x: 0, y: 0, z: 0, w: 1}
-      scale: {x: 1, y: 1, z: 1}
-    cloudsDisplayS: []
 --- !u!114 &120923588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,7 +165,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 120923585}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 77cfe0ce1da87a44491220da12189f03, type: 3}
+  m_Script: {fileID: 11500000, guid: fcde61dbe61d3b844af6c2ee6840b0da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   videoFilePath: E:/_kvid/vox3.kvid
@@ -194,7 +173,7 @@ MonoBehaviour:
   playWhenLoaded: 1
   loadDisplaySettingsFilesAfterVideoLoading: 1
   dataVFXSettingsFilePath: ./data_vfx_settings.json
-  visualEffectAsset: {fileID: 8926484042661614526, guid: caee5be3d010ffa4696e6a97048fad13, type: 3}
+  visualEffectAsset: {fileID: 8926484042661614526, guid: bbbbf136b16092347a89224d8759356b, type: 3}
   externalAudioSource: {fileID: 0}
   audioTimeOffsetS: 0
   startVideoAtSpecificTime: 0
@@ -203,7 +182,28 @@ MonoBehaviour:
   endTimeMS: 10000
   endAction: 0
   m_videoLoaded: 0
-  devicesStates: []
+  videoStates:
+    deviceId: 0
+    currentFrameId: 0
+    currentFrameSize: 0
+    verticesCountToCopy: 0
+    deviceTransform:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
   videoLoadedEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -225,6 +225,28 @@ MonoBehaviour:
   videoTimes:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &120923589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 120923585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfa196347f53dbb45887124fd222ce29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sharedVisualEffectAsset: {fileID: 0}
+  settings:
+    display: 1
+    update: 1
+    enableBackFaceCulling: 0
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    colorFactor: 3
+    particleSize: 0.005
+    octogonCropFactor: 0.125
+  voxelsGroupsGO: []
 --- !u!1 &606303185
 GameObject:
   m_ObjectHideFlags: 1

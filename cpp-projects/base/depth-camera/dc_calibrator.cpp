@@ -136,7 +136,7 @@ auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, con
     // process cloud frame
     auto processedCloud = cloud;
     if(settings.removeOutliers){
-        processedCloud.remove_outliers(processedCloud.vertices.mean_position(), settings.maxDistanceOutlier);
+        processedCloud.remove_outliers(processedCloud.vertices.mean(), settings.maxDistanceOutlier);
     }
 
     if(settings.downSample){
@@ -153,7 +153,7 @@ auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, con
     }
 
     if(settings.computeSphereCenter){
-        auto mean = processedCloud.vertices.mean_position();
+        auto mean = processedCloud.vertices.mean();
         mean.z() = processedCloud.vertices.min_z() + settings.ballRay;
         processedCloud = ColorCloud(mean, processedCloud.colors[0]);
     }
@@ -327,6 +327,11 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
         return;
     }
 
+    bool allSource = settings.sourceSelectionId == settings.models.size();
+    if(settings.modelSelectionId != idCloud && settings.sourceSelectionId != idCloud && !allSource){
+        return;
+    }
+
     // retrieve cloud
     ColorCloud *cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
     if(cloud == nullptr){
@@ -335,6 +340,7 @@ auto DCCalibrator::add_frame(size_t idCloud, std::shared_ptr<cam::DCFrame> frame
     if(cloud->size() == 0){
         return;
     }
+
 
     auto &clientData = i->clientsData[idCloud];
     if(clientData.frames.size() > 0){

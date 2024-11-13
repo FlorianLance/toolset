@@ -97,3 +97,39 @@ auto DCDeprecatedFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra
         };
     }
 }
+
+#include "utility/logger.hpp"
+
+auto tool::cam::DCFrame::infos() -> void{
+
+    Log::message(std::format("Infos; [{}]\n", infosB.size()));
+    for(const auto &info : infosB){
+        Log::message(std::format("\t[{}] : [{}]\n", static_cast<int>(info.first), info.second));
+    }
+
+    Log::message(std::format("Data; [{}]\n", datasB.size()));
+    for(const auto &data : datasB){
+        Log::message(std::format("\t[{}] : [{}]\n", static_cast<int>(data.first), data.second.size()));
+    }
+
+    Log::message(std::format("Image; [{}]\n", imagesB.size()));
+    for(const auto &image : imagesB){
+
+        if(auto img = std::get_if<ImageBuffer<ColorRGBA8>>(&image.second); img != nullptr){
+            Log::message(std::format("\t[{}] : RGBA8 [{}] [{}]\n", static_cast<int>(image.first), img->width, img->height));
+        }else if(auto img = std::get_if<ImageBuffer<ColorRGB8>>(&image.second); img != nullptr){
+            Log::message(std::format("\t[{}] : RGB8 [{}] [{}]\n", static_cast<int>(image.first), img->width, img->height));
+        }else if(auto img = std::get_if<ImageBuffer<ColorGray8>>(&image.second); img != nullptr){
+            Log::message(std::format("\t[{}] : Gray8 [{}] [{}]\n", static_cast<int>(image.first), img->width, img->height));
+        }else if(auto img = std::get_if<ImageBuffer<ColorGray16>>(&image.second); img != nullptr){
+            Log::message(std::format("\t[{}] : Gray16 [{}] [{}]\n", static_cast<int>(image.first), img->width, img->height));
+        }
+    }
+
+    Log::message(std::format("Volume; [{}]\n", volumesB.size()));
+    for(const auto &volume : volumesB){
+        if(auto vol = std::get_if<ColorCloud>(&volume.second); vol != nullptr){
+            Log::message(std::format("\t[{}] : Color cloud [{}]\n", static_cast<int>(volume.first), vol->size()));
+        }
+    }
+}

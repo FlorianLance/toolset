@@ -47,10 +47,6 @@ template<typename acc>
 struct Matrix3 : Matrix<acc,3,3>{
 
     Matrix3() = default;
-    Matrix3(const Matrix3& other) = default;
-    Matrix3& operator=(const Matrix3& other) = default;
-    Matrix3(Matrix3&& other) = default;
-    Matrix3& operator=(Matrix3&& other) = default;
 
     constexpr Matrix3(const Matrix<acc,3,3> &m) noexcept{
         this->array = m.array;
@@ -81,6 +77,26 @@ struct Matrix3 : Matrix<acc,3,3>{
             v10,v11,v12,
             v20,v21,v22
         };
+    }
+
+    [[nodiscard]] constexpr auto row0() const noexcept -> RowVec<acc,3>{
+        return {{(*this)[0],(*this)[1],(*this)[2]}};
+    }
+    [[nodiscard]] constexpr auto row1() const noexcept -> RowVec<acc,3>{
+        return {{(*this)[4],(*this)[5],(*this)[6]}};
+    }
+    [[nodiscard]] constexpr auto row2() const noexcept -> RowVec<acc,3>{
+        return {{(*this)[8],(*this)[9],(*this)[10]}};
+    }
+
+    [[nodiscard]] constexpr auto col0() const noexcept -> ColVec<acc,3>{
+        return {{(*this)[0],(*this)[3],(*this)[6]}};
+    }
+    [[nodiscard]] constexpr auto col1() const noexcept -> ColVec<acc,3>{
+        return {{(*this)[1],(*this)[4],(*this)[7]}};
+    }
+    [[nodiscard]] constexpr auto col2() const noexcept -> ColVec<acc,3>{
+        return {{(*this)[2],(*this)[5],(*this)[8]}};
     }
 };
 

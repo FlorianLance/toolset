@@ -1,3 +1,4 @@
+
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
@@ -34,19 +35,17 @@ struct Time{
 
     [[nodiscard]] [[maybe_unused]] static auto nanoseconds_since_epoch() noexcept -> std::chrono::nanoseconds{
         using namespace std::chrono;
-        // return duration_cast<nanoseconds>(system_clock::now().time_since_epoch());
         return time_point<system_clock, nanoseconds>(system_clock::now()).time_since_epoch();
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto microseconds_since_epoch() noexcept -> std::chrono::microseconds{
+        using namespace std::chrono;
+        return duration_cast<microseconds>(nanoseconds_since_epoch());
     }
 
     [[nodiscard]] [[maybe_unused]] static auto milliseconds_since_epoch() noexcept -> std::chrono::milliseconds{
         using namespace std::chrono;
-        // return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         return duration_cast<milliseconds>(nanoseconds_since_epoch());
-    }
-
-    [[nodiscard]] [[maybe_unused]] static auto to_ms(std::chrono::nanoseconds t) noexcept -> std::chrono::milliseconds{
-        using namespace std::chrono;
-        return duration_cast<milliseconds>(t);
     }
 
     [[nodiscard]] [[maybe_unused]] static auto to_micro_s(std::chrono::nanoseconds t) noexcept -> std::chrono::microseconds{
@@ -54,12 +53,33 @@ struct Time{
         return duration_cast<microseconds>(t);
     }
 
+    [[nodiscard]] [[maybe_unused]] static auto to_ms(std::chrono::nanoseconds t) noexcept -> std::chrono::milliseconds{
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(t);
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto difference_ns(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::nanoseconds{
+        return tEnd-tStart;
+    }
+
     [[nodiscard]] [[maybe_unused]] static auto difference_ms(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::milliseconds{
-        return to_ms(tEnd-tStart);
+        return to_ms(difference_ns(tStart,tEnd));
     }
 
     [[nodiscard]] [[maybe_unused]] static auto difference_micro_s(std::chrono::nanoseconds tStart, std::chrono::nanoseconds tEnd) noexcept -> std::chrono::microseconds{
-        return to_micro_s(tEnd-tStart);
+        return to_micro_s(difference_ns(tStart,tEnd));
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto now_difference_ns(std::chrono::nanoseconds tStart) noexcept -> std::chrono::nanoseconds{
+        return difference_ns(tStart, nanoseconds_since_epoch());
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto now_difference_ms(std::chrono::nanoseconds tStart) noexcept -> std::chrono::milliseconds{
+        return to_ms(now_difference_ns(tStart));
+    }
+
+    [[nodiscard]] [[maybe_unused]] static auto now_difference_micro_s(std::chrono::nanoseconds tStart) noexcept -> std::chrono::microseconds{
+        return to_micro_s(now_difference_ns(tStart));
     }
 };
 

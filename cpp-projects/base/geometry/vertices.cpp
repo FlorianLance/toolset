@@ -36,8 +36,8 @@ auto Vertices3D::sphere() const -> Sphere<float>{
     if(empty()){
         return {{},0.f};
     }
-
-    Pt3f mean = mean_position();
+    
+    Pt3f meanP = mean();
 
     // compute A/B
     Mat3f A;
@@ -45,7 +45,7 @@ auto Vertices3D::sphere() const -> Sphere<float>{
     auto n = static_cast<float>(size());
     for(const auto &v : values){
 
-        Vec3f diff = v-mean;
+        Vec3f diff = v-meanP;
 
         A.array[0] += (v.x() * diff.x());
         A.array[1] += (v.x() * diff.y());

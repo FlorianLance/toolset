@@ -42,6 +42,8 @@ struct DCFrame : Frame{
     umap<DCImageBufferType,  ImageBufferV> imagesB;
     umap<DCVolumeBufferType, VolumeBufferV> volumesB;
 
+    auto infos() -> void;
+
     // insert buffer
     auto insert_data_buffer(DCDataBufferType type, const std::span<const std::byte> iData) -> std::span<std::byte>{
 

@@ -48,8 +48,14 @@ FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
 VERSION2_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/version2-2.02.01"
+PCL_DIR                              = "E:/_librairies/PCL 1.14.1"
 
 ########################################################## INCLUDES
+
+PCL_INCLUDES = \
+    $$PCL_DIR"/include/pcl-1.14"\
+    # $$PCL_DIR"/3rdParty/VTK/include/vtk-9.3"\
+    # $$PCL_DIR"/3rdParty/Boost/include/boost-1_84"\
 
 MODERN_JSON_INCLUDES = \
     $$TOOLSET_CPP_THIRDPARTY_DIR\
@@ -142,6 +148,37 @@ equals(COMPILER, "vs"){
 
 
 ########################################################## LIBS
+
+    equals(CFG, "release"){
+        PCL_LIBS =\
+            -L$$PCL_DIR"/lib" \
+            -lpcl_common \
+            -lpcl_io\
+            # -L$$PCL_DIR"/3rdParty/lib" \
+            # -lpcl_octree\
+            # -lpcl_kdtree\
+            # -lpcl_keypoints\
+            # -lpcl_features\
+
+            # -lpcl_filters\
+
+            # -lpcl_io_ply\
+            #
+            #
+            # -lpcl_ml\
+
+            # -lpcl_outofcore\
+            # -lpcl_people\
+            # -lpcl_recognition\
+            # -lpcl_registration\
+            # -lpcl_sample_consensus\
+            # -lpcl_search\
+            # -lpcl_segmentation\
+            # -lpcl_stereo \
+            # -lpcl_surface \
+            # -lpcl_tracking \
+            # -lpcl_visualization \
+    }
 
     # BOOST
     equals(CFG, "debug"){

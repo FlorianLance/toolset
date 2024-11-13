@@ -83,6 +83,7 @@ namespace BS {
         public void update() { update__dc_video_player(_handle); }
 
         // data
+        public int get_max_frame_cloud_size(int idCamera) {return get_max_frame_cloud_size__dc_video_player(_handle, idCamera);}
         public int cameras_count() { return cameras_count__dc_video_player(_handle); }
         public int frames_count(int idCamera) { return frames_count__dc_video_player(_handle, idCamera); }
         public int current_frame_id(int idCamera) { return current_frame_id__dc_video_player(_handle, idCamera); }
@@ -90,6 +91,18 @@ namespace BS {
         public int get_current_compressed_frame_valid_vertices_count(int idCamera) { return get_current_compressed_frame_valid_vertices_count__dc_video_player(_handle, idCamera); }
         public int get_current_frames_total_cloud_size() { return get_current_frames_total_cloud_size__dc_video_player(_handle); }
         public void copy_transform(int idCamera, float[] transformData) { get_transform__dc_video_player(_handle, idCamera, transformData); }
+
+        public int copy_voxels_cloud_vfx(BS.NativeDLLVec3 positions, BS.NativeDLLVec3 colors, int verticesCount) {
+            int nbVerticesCopied = 0;
+            unsafe {
+                nbVerticesCopied = copy_voxels_cloud_vfx__dc_video_player(_handle,
+                    Unity.Collections.LowLevel.Unsafe.NativeArrayUnsafeUtility.GetUnsafePtr(positions.native),
+                    Unity.Collections.LowLevel.Unsafe.NativeArrayUnsafeUtility.GetUnsafePtr(colors.native),
+                    verticesCount
+                );
+            }
+            return nbVerticesCopied;
+        }
         public int copy_camera_cloud_vfx(int idCamera, BS.NativeDLLVec3 positions, BS.NativeDLLVec3 colors, BS.NativeDLLVec3 normals, int verticesCount, bool applyModelTransform) {
             int nbVerticesCopied = 0;
             unsafe {
@@ -157,7 +170,9 @@ namespace BS {
         [DllImport("base-export", EntryPoint = "update__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
         static public extern void update__dc_video_player(HandleRef dcPlayer);
 
-        // data
+        // data        
+        [DllImport("base-export", EntryPoint = "get_max_frame_cloud_size__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
+        static private extern int get_max_frame_cloud_size__dc_video_player(HandleRef dcPlayer, int idCamera);
         [DllImport("base-export", EntryPoint = "cameras_count__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
         static private extern int cameras_count__dc_video_player(HandleRef dcPlayer);
         [DllImport("base-export", EntryPoint = "frames_count__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
@@ -175,6 +190,9 @@ namespace BS {
 
         [DllImport("base-export", EntryPoint = "get_current_frames_total_cloud_size__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
         static public extern int get_current_frames_total_cloud_size__dc_video_player(HandleRef dcPlayer);
+
+        [DllImport("base-export", EntryPoint = "copy_voxels_cloud_vfx__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
+        unsafe static public extern int copy_voxels_cloud_vfx__dc_video_player(HandleRef dcPlayer, void* positions, void* colors, int verticesCount);
 
         [DllImport("base-export", EntryPoint = "copy_camera_cloud_vfx__dc_video_player", CallingConvention = CallingConvention.Cdecl)]
         unsafe static public extern int copy_camera_cloud_vfx__dc_video_player(HandleRef dcPlayer, int idCamera, void* positions, void* colors, void* normals, int verticesCount, int applyModelTransform);

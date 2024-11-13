@@ -1,13 +1,11 @@
 
-#pragma once
+#include "tests.hpp"
 
-
-
-auto test_raw_kinect2() -> void{
-
+auto raw_kinect2() -> void{
+    // ...
 }
 
-auto test_kinect2() -> void{
+auto kinect2() -> void{
 
     //    using namespace std::chrono_literals;
     //    cam::K2Device kinect;

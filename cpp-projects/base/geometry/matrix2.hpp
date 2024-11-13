@@ -42,12 +42,6 @@ using Mat2d = Mat2<double>;
 template<typename acc>
 struct Matrix2 : Matrix<acc,2,2>{
 
-    Matrix2() = default;
-    Matrix2(const Matrix2& other) = default;
-    Matrix2& operator=(const Matrix2& other) = default;
-    Matrix2(Matrix2&& other) = default;
-    Matrix2& operator=(Matrix2&& other) = default;
-
     constexpr Matrix2(const Matrix<acc,2,2> &m) noexcept{
         this->array = m.array;
     }

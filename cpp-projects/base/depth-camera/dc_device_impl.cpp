@@ -56,6 +56,57 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
     mInfos.initialize(settings.config.mode);
     dIndices.initialize(mInfos.has_depth(), mInfos.depth_width(), mInfos.depth_height());
     fData.reset(mInfos.has_depth(), mInfos.depth_size(), mInfos.has_color(), mInfos.color_width(), mInfos.color_height());
+
+
+    {
+        xIdsSIMD.resize(mInfos.depth_size()/16);
+        yIdsSIMD.resize(mInfos.depth_size()/16);
+        depthSIMD.resize(mInfos.depth_size()/16);
+        filterDepthSIMD.resize(mInfos.depth_size());
+        maskSIMD.resize(mInfos.depth_size()/16);
+
+        size_t idV = 0;
+        for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+            for(size_t jj = 0; jj < mInfos.depth_width()/16; ++jj){
+                yIdsSIMD[idV] = VCL_NAMESPACE::Vec16us(ii);
+                ++idV;
+            }
+        }
+
+        idV = 0;
+        for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+            for(size_t jj = 0; jj < mInfos.depth_width()/16; ++jj){
+                for(size_t kk = 0; kk < 16; ++kk){
+                    xIdsSIMD[idV].insert(kk, jj*16+kk);
+                }
+                ++idV;
+            }
+        }
+
+        // xIdsSIMD32.resize(mInfos.depth_size()/32);
+        // yIdsSIMD32.resize(mInfos.depth_size()/32);
+        // depthSIMD32.resize(mInfos.depth_size()/32);
+        // filterDepthSIMD.resize(mInfos.depth_size());
+
+        // size_t idV = 0;
+        // for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+        //     for(size_t jj = 0; jj < mInfos.depth_width()/32; ++jj){
+        //         yIdsSIMD32[idV] = VCL_NAMESPACE::Vec32us(ii);
+        //         ++idV;
+        //     }
+        // }
+        // idV = 0;
+        // for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+        //     for(size_t jj = 0; jj < mInfos.depth_width()/32; ++jj){
+        //         for(size_t kk = 0; kk < 32; ++kk){
+        //             xIdsSIMD32[idV].insert(kk, jj*32+kk);
+        //         }
+        //         ++idV;
+        //     }
+        // }
+    }
+
+    // VCL_NAMESPACE::Vec16us vnull(0);
 }
 
 auto DCDeviceImpl::convert_color_image() -> void{
@@ -65,6 +116,8 @@ auto DCDeviceImpl::convert_color_image() -> void{
     if(!mInfos.has_color() || fData.rawColor.empty()){
         return;
     }
+
+    auto t1 = Time::nanoseconds_since_epoch();
 
     if(mInfos.image_format() == DCImageFormat::NV12){
 
@@ -105,6 +158,8 @@ auto DCDeviceImpl::convert_color_image() -> void{
     }
 
     fData.originalSizeColor = fData.convertedColorData.span();
+
+    // Log::fmessage("[cc:{}]", Time::now_difference_micro_s(t1).count());
 }
 
 auto DCDeviceImpl::filter_depth_basic() -> void{
@@ -115,6 +170,7 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
     if(fData.depth.empty()){
         return;
     }
+    auto t1 = Time::nanoseconds_since_epoch();
 
     // auto t1 = Time::nanoseconds_since_epoch();
     auto dRange = mInfos.depth_range_mm();
@@ -153,8 +209,99 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
         }
     });
 
-    // auto t2 = Time::nanoseconds_since_epoch();
-    // Log::message(std::format("[{}]", Time::difference_micro_s(t1,t2).count()));
+    // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
+
+    // {
+    //     // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
+    //     for(size_t id = 0; id < mInfos.depth_size()/16; ++id){
+    //         depthSIMD[id].load(fData.depth.data() + id *16);
+    //     }
+
+    //     // VCL_NAMESPACE::Vec16us minDSIMD(minD);
+    //     // VCL_NAMESPACE::Vec16us maxDSIMD(maxD);
+
+    //     // VCL_NAMESPACE::Vec16us minWSIMD(minW);
+    //     // VCL_NAMESPACE::Vec16us maxWSIMD(maxW);
+
+    //     // VCL_NAMESPACE::Vec16us minHSIMD(minH);
+    //     // VCL_NAMESPACE::Vec16us maxHSIMD(maxH);
+
+    //     // Log::fmessage("[db2:{}]", Time::now_difference_micro_s(t1).count());
+    //     auto t2 = Time::nanoseconds_since_epoch();
+    //     VCL_NAMESPACE::Vec16us vnull(0);
+    //     for(int ii = 0; ii < depthSIMD.size(); ++ii){
+    //         depthSIMD[ii] = select(
+    //             depthSIMD[ii] >= minD &&
+    //             depthSIMD[ii] <= maxD &&
+    //             xIdsSIMD[ii] >= minW &&
+    //             xIdsSIMD[ii] <= maxW &&
+    //             yIdsSIMD[ii] >= minH &&
+    //             yIdsSIMD[ii] <= maxH,
+    //             depthSIMD[ii],
+    //             vnull
+    //         );
+    //         // depthSIMD[ii] = select(
+    //         //     depthSIMD[ii] >= minDSIMD &&
+    //         //     depthSIMD[ii] <= maxDSIMD &&
+    //         //     xIdsSIMD[ii] >= minWSIMD &&
+    //         //     xIdsSIMD[ii] <= maxWSIMD &&
+    //         //     yIdsSIMD[ii] >= minHSIMD &&
+    //         //     yIdsSIMD[ii] <= maxHSIMD,
+    //         //     depthSIMD[ii],
+    //         //     vnull
+    //         // );
+
+    //         // slower
+    //         // maskSIMD[ii] = depthSIMD[ii] >= minDSIMD &&
+    //         //                depthSIMD[ii] <= maxDSIMD &&
+    //         //                xIdsSIMD[ii] >= minWSIMD &&
+    //         //                xIdsSIMD[ii] <= maxWSIMD &&
+    //         //                yIdsSIMD[ii] >= minHSIMD &&
+    //         //                yIdsSIMD[ii] <= maxHSIMD;
+    //     }
+    //     // Log::fmessage("[db3:{}]", Time::now_difference_micro_s(t2).count());
+    //     for(size_t id = 0; id < mInfos.depth_size()/16; ++id){
+    //         depthSIMD[id].store(filterDepthSIMD.data() + id *16);
+    //     }
+    //     // Log::fmessage("[db4:{}]", Time::now_difference_micro_s(t1).count());
+    //     for(size_t idV = 0; idV < fData.depthMask.size(); ++idV){
+    //         fData.depthMask[idV] = filterDepthSIMD[idV] != 0;
+    //     }
+    //     // Log::fmessage("[db5:{}]", Time::now_difference_micro_s(t1).count());
+    // }
+
+    // {
+    //     // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
+    //     for(size_t id = 0; id < mInfos.depth_size()/32; ++id){
+    //         depthSIMD32[id].load(fData.depth.data() + id *32);
+    //     }
+
+    //     // Log::fmessage("[db2:{}]", Time::now_difference_micro_s(t1).count());
+    //     auto t2 = Time::nanoseconds_since_epoch();
+    //     VCL_NAMESPACE::Vec32us vnull(0);
+    //     for(int ii = 0; ii < depthSIMD32.size(); ++ii){
+    //         depthSIMD32[ii] = select(
+    //             depthSIMD32[ii] >= minD &&
+    //                 depthSIMD32[ii] <= maxD &&
+    //                 xIdsSIMD32[ii] >= minW &&
+    //                 xIdsSIMD32[ii] <= maxW &&
+    //                 yIdsSIMD32[ii] >= minH &&
+    //                 yIdsSIMD32[ii] <= maxH,
+    //                 depthSIMD32[ii],
+    //                 vnull
+    //             );
+    //     }
+    //     Log::fmessage("[db3:{}]", Time::now_difference_micro_s(t2).count());
+    //     for(size_t id = 0; id < mInfos.depth_size()/32; ++id){
+    //         depthSIMD32[id].store(filterDepthSIMD.data() + id *32);
+    //     }
+    //     // Log::fmessage("[db4:{}]", Time::now_difference_micro_s(t1).count());
+    //     for(size_t idV = 0; idV < fData.depthMask.size(); ++idV){
+    //         fData.depthMask[idV] = filterDepthSIMD[idV] != 0;
+    //     }
+    //     // Log::fmessage("[db5:{}]", Time::now_difference_micro_s(t1).count());
+    // }
+
 }
 
 auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{
@@ -221,6 +368,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
         return; // do nothing
     }
 
+    auto t1 = Time::nanoseconds_since_epoch();
 
     // plane filtering parameters
     auto p1             = settings.filters.p1A*1000.f;
@@ -281,18 +429,9 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
                 return;
             }
 
-            // if(!valid){
-            //     fData.depthMask[idD] = 0;
-            //     return;
-            // }
-            // return (pointLocalRotated.array().abs() <= halfDimensions.array()).all();
-
-            // if(!settings.filters.oob.is_point_inside(oobOrientation, fData.depthCloud[idD].template conv<float>()*0.001f)){
-            //     fData.depthMask[idD] = 0;
-            //     return;
-            // }
         }
     });
+    // Log::fmessage("[dc:{}]", Time::now_difference_micro_s(t1).count());
 }
 
 auto DCDeviceImpl::filter_depth_from_body_tracking() -> void{
@@ -316,6 +455,8 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
     if(fData.depth.empty()){
         return;
     }
+
+    auto t1 = Time::nanoseconds_since_epoch();
 
     // if(settings.filters.doErosion)
     // {
@@ -405,6 +546,8 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
             }
         });
     }
+
+    // Log::fmessage("[dco:{}]", Time::now_difference_micro_s(t1).count());
 }
 
 auto DCDeviceImpl::update_valid_depth_values() -> void{
@@ -412,6 +555,8 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
     if(fData.depth.empty()){
         return;
     }
+
+    auto t1 = Time::nanoseconds_since_epoch();
 
     // count valid depth values
     fData.validDepthValues = 0;
@@ -431,6 +576,8 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
             fData.validDepthValues++;
         }
     });
+
+    // Log::fmessage("[uv:{}]", Time::now_difference_micro_s(t1).count());
 }
 
 auto DCDeviceImpl::filter_depth_sized_color_from_depth() -> void{
@@ -1477,21 +1624,21 @@ auto DCDeviceImpl::process_data() -> void{
 
         {
             auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
-            preprocess_color_image();
-            preprocess_depth_sized_color_image();
-            preprocess_depth_image();
-            preprocess_infra_image();
-            preprocess_cloud_image();
-            preprocess_body_tracking_image();
+            // preprocess_color_image();
+            // preprocess_depth_sized_color_image();
+            // preprocess_depth_image();
+            // preprocess_infra_image();
+            // preprocess_cloud_image();
+            // preprocess_body_tracking_image();
         }
 
         {
             auto tFD = TimeDiffGuard(timeM, "FILTER"sv);
             filter_depth_basic();
             filter_depth_from_depth_sized_color();
-            filter_depth_from_infra();
+            // filter_depth_from_infra();
             filter_depth_from_cloud();
-            filter_depth_from_body_tracking();
+            // filter_depth_from_body_tracking();
             filter_depth_complex();
             update_valid_depth_values();
 
@@ -1540,15 +1687,31 @@ auto DCDeviceImpl::process_data() -> void{
 
         {
             auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
+
+            auto t1 = Time::nanoseconds_since_epoch();
             update_frame_original_size_color();
+            auto t2 = Time::nanoseconds_since_epoch();
             update_frame_depth_sized_color();
+            auto t3 = Time::nanoseconds_since_epoch();
             update_frame_depth();
+            auto t4 = Time::nanoseconds_since_epoch();
             update_frame_infra();
+            auto t5 = Time::nanoseconds_since_epoch();
             update_frame_cloud();
+            auto t6 = Time::nanoseconds_since_epoch();
             update_frame_audio();
+            auto t7 = Time::nanoseconds_since_epoch();
             update_frame_imu();
+            auto t8 = Time::nanoseconds_since_epoch();
             update_frame_body_tracking();
+            auto t9 = Time::nanoseconds_since_epoch();
             update_frame_calibration();
+            auto t10 = Time::nanoseconds_since_epoch();
+            // Log::fmessage("[{}][{}][{}][{}][{}][{}][{}][{}][{}][{}]\n",
+            //     Time::difference_micro_s(t1,t2),
+            //     Time::difference_micro_s(t2,t3),Time::difference_micro_s(t3,t4),Time::difference_micro_s(t4,t5),
+            //     Time::difference_micro_s(t5,t6),Time::difference_micro_s(t6,t7),Time::difference_micro_s(t7,t8),
+            //     Time::difference_micro_s(t8,t9),Time::difference_micro_s(t9,t10),Time::difference_micro_s(t1,t10));
         }
 
         {

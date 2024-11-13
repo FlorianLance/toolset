@@ -231,6 +231,7 @@ HEADERS += \
     utility/string_geo.hpp \
     utility/string_unordered_map.hpp \
     utility/thread.hpp \
+    utility/time_guard.hpp \
     utility/types.hpp \
     utility/unordered_map.hpp \
     utility/unordered_set.hpp \

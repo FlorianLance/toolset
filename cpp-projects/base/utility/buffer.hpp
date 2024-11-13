@@ -30,6 +30,8 @@
 #include <vector>
 #include <algorithm>
 #include <span>
+#include <assert.h>
+// #include <numeric>
 
 namespace tool {
 
@@ -84,13 +86,23 @@ struct Buffer{
     [[nodiscard]] constexpr auto rcbegin()              const   noexcept                        {return values.rcbegin();}
     [[nodiscard]] constexpr auto rend()                         noexcept                        {return values.rend();}
     [[nodiscard]] constexpr auto rend()                 const   noexcept                        {return values.rcend();}
-    [[nodiscard]] constexpr auto rcend()                const   noexcept                        {return values.rcend();}
+    [[nodiscard]] constexpr auto rcend()                const   noexcept                        {return values.rcend();}   
 
     // spans
     [[nodiscard]] auto byte_span()                              noexcept -> BinarySpan          {return BinarySpan{get_byte_data(),static_cast<size_t>(size()*sizeof(Elem))};}
     [[nodiscard]] auto byte_span()                      const   noexcept -> ConstBinarySpan     {return ConstBinarySpan{get_byte_data(),static_cast<size_t>(size()*sizeof(Elem))};}
     [[nodiscard]] auto span()                                   noexcept -> std::span<Elem>     {return std::span<Elem>{get_data(), size()};}
     [[nodiscard]] auto span()                           const   noexcept -> std::span<const Elem>{return std::span<const Elem>{get_data(), size()};}
+    template <typename TargetType>
+    [[nodiscard]] auto cspan()                                  noexcept -> std::span<TargetType>{
+        // static_assert(sizeof(Elem)%sizeof(TargetType) == 0, "Invalid size");
+        return std::span<TargetType>{reinterpret_cast<TargetType*>(get_data()),static_cast<size_t>(size()*sizeof(Elem)/sizeof(TargetType))};
+    }
+    template <typename TargetType>
+    [[nodiscard]] auto cspan()                          const   noexcept -> std::span<const TargetType>{
+        // static_assert(sizeof(Elem)%sizeof(TargetType) == 0, "Invalid size");
+        return std::span<const TargetType>{reinterpret_cast<const TargetType*>(get_data()), size()*sizeof(TargetType)};
+    }
 
     // add
     constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}
@@ -255,6 +267,10 @@ struct Buffer{
             remove_from_to(0, size() - newSize);
         }
     }
+
+    // [[nodiscard]] constexpr auto sum() const noexcept -> Elem{
+    //     return std::accumulate(values.begin(), values.end(), Elem{});
+    // }
 
     std::vector<Elem> values;
 };

@@ -59,6 +59,7 @@ extern "C"{
     DECL_EXPORT void update__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
 
     DECL_EXPORT int cameras_count__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer);
+    DECL_EXPORT int get_max_frame_cloud_size__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera);
     DECL_EXPORT int frames_count__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera);
     DECL_EXPORT int current_frame_id__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera);
     DECL_EXPORT void get_transform__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, float *transformData);
@@ -69,5 +70,6 @@ extern "C"{
 
     DECL_EXPORT int copy_camera_cloud__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
     DECL_EXPORT int copy_all_current_clouds__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
+    DECL_EXPORT int copy_voxels_cloud_vfx__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, int verticesCount);
     DECL_EXPORT int copy_camera_cloud_vfx__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform);
 }

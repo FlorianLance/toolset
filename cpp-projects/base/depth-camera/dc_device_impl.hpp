@@ -36,6 +36,9 @@
 #include "frame/dc_device_data.hpp"
 #include "dc_device.hpp"
 
+#define VCL_NAMESPACE
+#include "vectorclass.h"
+
 namespace tool::cam {
 
 struct DCSettings{
@@ -193,6 +196,17 @@ protected:
     data::FastPForEncoder fastPForCloudEncoder;
     // decoders
     data::JpegDecoder jpegColorDecoder;
+
+    std::vector<VCL_NAMESPACE::Vec16us> xIdsSIMD;
+    std::vector<VCL_NAMESPACE::Vec16us> yIdsSIMD;
+    std::vector<VCL_NAMESPACE::Vec16us> depthSIMD;
+    std::vector<VCL_NAMESPACE::Vec16sb> maskSIMD;
+    std::vector<std::uint16_t> filterDepthSIMD;
+
+
+    // std::vector<VCL_NAMESPACE::Vec32us> xIdsSIMD32;
+    // std::vector<VCL_NAMESPACE::Vec32us> yIdsSIMD32;
+    // std::vector<VCL_NAMESPACE::Vec32us> depthSIMD32;
 
 private:
 

@@ -44,6 +44,12 @@ struct DCDataFrame : Frame{
     umap<DCVolumeBufferType, std::tuple<DCCompressionMode, BinaryBuffer>> volumesB;
 
     // insert buffers
+    auto insert_data_buffer(DCDataBufferType type, DCCompressionMode cm, float data) -> BinaryBuffer*{
+        return insert_data_buffer(type, cm, std::span<const std::byte>(reinterpret_cast<const std::byte*>(&data), 4));
+    }
+    auto insert_data_buffer(DCDataBufferType type, DCCompressionMode cm, const std::span<const float> iData) -> BinaryBuffer*{
+        return insert_data_buffer(type, cm, std::span<const std::byte>(reinterpret_cast<const std::byte*>(iData.data()), iData.size_bytes()));
+    }
     auto insert_data_buffer(DCDataBufferType type, DCCompressionMode cm, const std::span<const std::byte> iData) -> BinaryBuffer*{
         auto iterator = datasB.insert({type, {cm, BinaryBuffer{}}});
         if(iterator.second){

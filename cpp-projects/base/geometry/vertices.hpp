@@ -36,6 +36,7 @@
 
 namespace tool::geo {
 
+
 struct Vertices3D : public Buffer<Pt3f>{
 
     // get
@@ -186,7 +187,7 @@ struct Vertices3D : public Buffer<Pt3f>{
         }
         return {};
     }
-    [[nodiscard]] constexpr auto mean_position() const noexcept -> geo::Pt3f{
+    [[nodiscard]] constexpr auto mean() const noexcept -> geo::Pt3f{
         if(!empty()){
             return sum()/static_cast<float>(size());
         }
