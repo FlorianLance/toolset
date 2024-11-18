@@ -622,11 +622,11 @@ auto DCUIDrawer::draw_dc_cloud_display_setings_tab_item(const std::string &tabIt
 
     {
         ImGuiDragS  squareSizeD = {100.f, true, true, true, true, false};
-        ImGuiFloatS squareSizeFS = {0.005f, 0.001f, 0.05f, 0.0001f, 0.001f};
-        float squareSizeV = display.squareSize;
-        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Square size","display_square_size", &squareSizeV, squareSizeFS, squareSizeD)){
+        ImGuiFloatS squareSizeFS = {0.3f, 0.1f, 5.f, 0.01f, 0.01f};
+        float squareSizeV = display.squareSize*100.f;
+        if(ImGuiUiDrawer::draw_drag_float_with_buttons("Square size (cm)","display_square_size", &squareSizeV, squareSizeFS, squareSizeD)){
             update = true;
-            display.squareSize = squareSizeV;
+            display.squareSize = squareSizeV/100.f;
         }
     }
 
@@ -1255,7 +1255,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
             cStates.recomputeRegisteringProcessing = true;
         }
         ImGui::SameLine();
-        ImGui::Text("with max distance");
+        ImGui::Text("with max distance from mean (m)");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50);
         if(ImGui::DragFloat("###Max distance of outliers", &cSettings.maxDistanceOutlier, 0.01f, 0.01f, 2.f)){
@@ -1265,20 +1265,20 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
 
         ImGui::Spacing();
 
-        if(ImGui::Checkbox("Downsample", &cSettings.downSample)){
-            update = true;
-            cStates.recomputeRegisteringProcessing = true;
-        }
-        ImGui::SameLine();
-        ImGui::Text("with voxel size");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
-        float dVS = static_cast<float>(cSettings.downSampleVoxelSize);
-        if(ImGui::DragFloat("###Downsample voxel size", &dVS, 0.01f, 0.01f, 1.f)){
-            cSettings.downSampleVoxelSize = dVS;
-            update = true;
-            cStates.recomputeRegisteringProcessing = true;
-        }
+        // if(ImGui::Checkbox("Downsample", &cSettings.downSample)){
+        //     update = true;
+        //     cStates.recomputeRegisteringProcessing = true;
+        // }
+        // ImGui::SameLine();
+        // ImGui::Text("with voxel size");
+        // ImGui::SameLine();
+        // ImGui::SetNextItemWidth(50);
+        // float dVS = static_cast<float>(cSettings.downSampleVoxelSize);
+        // if(ImGui::DragFloat("###Downsample voxel size", &dVS, 0.01f, 0.01f, 1.f)){
+        //     cSettings.downSampleVoxelSize = dVS;
+        //     update = true;
+        //     cStates.recomputeRegisteringProcessing = true;
+        // }
 
         if(ImGui::Checkbox("Compute sphere center", &cSettings.computeSphereCenter)){
             update = true;
@@ -1290,6 +1290,36 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
         ImGui::SetNextItemWidth(50);
         if(ImGui::DragFloat("###Sphere ray", &cSettings.ballRay, 0.01f, 0.01f, 2.f)){
             update = true;
+            cStates.recomputeRegisteringProcessing = true;
+        }
+
+        ImGui::Text("Method:");
+        if(ImGui::Checkbox("Use closests points", &cSettings.closestPoints)){
+            if(cSettings.closestPoints){
+                cSettings.meanWithFirstZ = false;
+                cSettings.estimateSphere = false;
+            }
+            cStates.recomputeRegisteringProcessing = true;
+        }
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(50);
+        if(ImGui::DragInt("with max nb points", &cSettings.maxNbPoints, 1, 1, 100)){
+            cStates.recomputeRegisteringProcessing = true;
+        }
+
+        if(ImGui::Checkbox("Use mean with first Z", &cSettings.meanWithFirstZ)){
+            if(cSettings.meanWithFirstZ){
+                cSettings.closestPoints = false;
+                cSettings.estimateSphere = false;
+            }
+            cStates.recomputeRegisteringProcessing = true;
+        }
+
+        if(ImGui::Checkbox("Estimate sphere", &cSettings.estimateSphere)){
+            if(cSettings.estimateSphere){
+                cSettings.closestPoints = false;
+                cSettings.meanWithFirstZ = false;
+            }
             cStates.recomputeRegisteringProcessing = true;
         }
     }

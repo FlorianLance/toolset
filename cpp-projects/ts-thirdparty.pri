@@ -132,7 +132,7 @@ ORBBEC_INCLUDES = \
     $$ORBBEC_DIR"/include" \
 
 
-message("ASSIMP_INCLUDES "$$ASSIMP_INCLUDES)
+
 
 equals(COMPILER, "vs"){
 
@@ -154,30 +154,6 @@ equals(COMPILER, "vs"){
             -L$$PCL_DIR"/lib" \
             -lpcl_common \
             -lpcl_io\
-            # -L$$PCL_DIR"/3rdParty/lib" \
-            # -lpcl_octree\
-            # -lpcl_kdtree\
-            # -lpcl_keypoints\
-            # -lpcl_features\
-
-            # -lpcl_filters\
-
-            # -lpcl_io_ply\
-            #
-            #
-            # -lpcl_ml\
-
-            # -lpcl_outofcore\
-            # -lpcl_people\
-            # -lpcl_recognition\
-            # -lpcl_registration\
-            # -lpcl_sample_consensus\
-            # -lpcl_search\
-            # -lpcl_segmentation\
-            # -lpcl_stereo \
-            # -lpcl_surface \
-            # -lpcl_tracking \
-            # -lpcl_visualization \
     }
 
     # BOOST

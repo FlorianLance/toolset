@@ -40,10 +40,6 @@ namespace tool{
 struct ColorHSV : geo::Point<float,3>{
 
     ColorHSV() = default;
-    ColorHSV(const ColorHSV& other) = default;
-    ColorHSV& operator=(const ColorHSV& other) = default;
-    ColorHSV(ColorHSV&& other) = default;
-    ColorHSV& operator=(ColorHSV&& other) = default;
 
     constexpr ColorHSV(const geo::Point<float,3> &c) noexcept{
         this->array = c.array;
@@ -55,14 +51,18 @@ struct ColorHSV : geo::Point<float,3>{
         this->array = {h,s,v};
     }
 
-    inline auto h() noexcept -> float& {return x();}
-    constexpr auto h() const noexcept -> float {return x();}
+    [[nodiscard]] constexpr auto h()          noexcept -> float&  {return array[0];}
+    [[nodiscard]] constexpr auto h() const    noexcept -> float   {return array[0];}
 
-    inline auto s() noexcept -> float& {return y();}
-    constexpr auto s() const noexcept -> float {return y();}
+    [[nodiscard]] constexpr auto s()          noexcept -> float&  {return array[1];}
+    [[nodiscard]] constexpr auto s() const    noexcept -> float   {return array[1];}
 
-    inline auto v() noexcept -> float& {return z();}
-    constexpr auto v() const noexcept -> float {return z();}
+    [[nodiscard]] constexpr auto v()          noexcept -> float&  {return array[2];}
+    [[nodiscard]] constexpr auto v() const    noexcept -> float   {return array[2];}
+
+    [[nodiscard]] auto abs() const noexcept -> ColorHSV{
+        return {std::abs(h()),std::abs(s()),std::abs(v())};
+    }
 };
 
 

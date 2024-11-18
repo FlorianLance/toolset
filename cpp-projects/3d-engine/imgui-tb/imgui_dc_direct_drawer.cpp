@@ -43,29 +43,54 @@ auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
     auto lg = LogG("DCDirectDrawer::initialize");
     DCCloudsSceneDrawer::initialize(nbGrabbers);
 
+    // if(m_lockers.empty()){
+    //     m_lockers.resize(20);
+    //     for(auto &locker : m_lockers){
+    //         locker = std::make_unique<std::mutex>();
+    //     }
+    // }
+
+    m_locker.lock();
+
     if(nbGrabbers > m_lastFrames.size()){
         while(m_lastFrames.size() != nbGrabbers){
             m_lastFrames.push_back(nullptr);
+            m_swapLastFrames.push_back(nullptr);
         }
     }else if(nbGrabbers < m_lastFrames.size()){
         m_lastFrames.resize(nbGrabbers);
+        m_swapLastFrames.resize(nbGrabbers);
     }
 
+    m_locker.unlock();
 }
 
+#include "utility/time.hpp"
 auto DCDirectDrawer::update() -> void{
+
+    auto t1 = Time::nanoseconds_since_epoch();
 
     m_locker.lock();
     for(size_t idG = 0; idG < m_lastFrames.size(); ++idG){
-        if(m_lastFrames[idG] != nullptr){
-            update_from_frame(idG, m_lastFrames[idG]);
-            m_redrawClouds = true;
-            m_lastFrames[idG] = nullptr;
-        }
+        m_swapLastFrames[idG] = m_lastFrames[idG];
+        // std::swap(m_swapLastFrames[idG], m_lastFrames[idG]);
     }
     m_locker.unlock();
 
-    if(m_redrawClouds || has_to_redraw_clouds()){
+    auto t2 = Time::nanoseconds_since_epoch();
+
+    for(size_t idG = 0; idG < m_swapLastFrames.size(); ++idG){
+        if(m_swapLastFrames[idG] != nullptr){
+            update_from_frame(idG, m_swapLastFrames[idG]);
+            m_redrawClouds = true;
+            // m_swapLastFrames[idG] = nullptr;
+        }
+    }
+
+    auto t3 = Time::nanoseconds_since_epoch();
+
+    bool redrwFBO = m_redrawClouds || has_to_redraw_clouds();
+    if(redrwFBO){
 
         // store visibility
         std::vector<int> cloudsVisibility;
@@ -94,6 +119,9 @@ auto DCDirectDrawer::update() -> void{
         }
     }
     m_redrawClouds = false;
+
+    auto t4 = Time::nanoseconds_since_epoch();
+    // Log::fmessage("direct {} {} {} {}\n", redrwFBO, Time::difference_micro_s(t1,t2),Time::difference_micro_s(t2,t3),Time::difference_micro_s(t3,t4));
 }
 
 auto DCDirectDrawer::update_frame(size_t idGrabber, std::shared_ptr<cam::DCFrame> frame) -> void{
@@ -147,7 +175,7 @@ auto DCDirectDrawer::save_current_cloud(size_t idC, const std::string &path) -> 
     Log::log("DCDirectDrawer::save_current_cloud\n");
 
     m_locker.lock();
-    auto frame = cloudsD[idC]->lastFrame;
+    auto frame = m_swapLastFrames[idC];// cloudsD[idC]->lastFrame;
     m_locker.unlock();
 
     if(frame != nullptr){

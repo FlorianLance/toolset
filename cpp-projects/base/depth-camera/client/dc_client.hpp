@@ -53,8 +53,8 @@ public:
     auto add_device(DCClientType connectionType) -> void;
     auto remove_last_device() -> void;
     // # common
-    auto read_data_from_external_thread(size_t idC) -> size_t;
-    auto process_frames_from_external_thread(size_t idD) -> void;
+    auto read_from_external_thread(size_t idC) -> size_t;
+    auto process_frames_from_external_thread(size_t idD) -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
     // # remote device
     auto reset_network() -> void;
     auto reset_remote_device(size_t idD) -> void;

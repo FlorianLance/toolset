@@ -55,6 +55,8 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
 
         if(frame){
 
+            // auto t1 = Time::nanoseconds_since_epoch();
+
             // update framerate
             framerate.add_frame();
 
@@ -66,6 +68,8 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
 
             // send status
             data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
+
+            // Log::fmessage("[{}]", Time::now_difference_micro_s(t1));
         }
     });
 
@@ -85,11 +89,11 @@ auto DCClientLocalDevice::clean() -> void {
     }
 }
 
-auto DCClientLocalDevice::read_data_from_external_thread() -> size_t{
+auto DCClientLocalDevice::read_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> {
     if(i->device){
-        i->device->process();
+        return i->device->process_frames_from_external_thread();
     }
-    return 0;
+    return {nullptr,nullptr};
 }
 
 auto DCClientLocalDevice::update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{

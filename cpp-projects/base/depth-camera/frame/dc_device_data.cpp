@@ -67,5 +67,9 @@ auto DCDeviceData::reset(bool hasDepth, size_t depthSize, bool hasColor, size_t 
     }else{
         convertedColorData.reset();
     }
+
+    if(hasColor && hasDepth){
+        hsvDiffMask.resize(depthSize);
+    }
 }
 

@@ -39,6 +39,7 @@
 #include "utility/logger.hpp"
 #include "utility/string_geo.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
+#include "utility/geometry_formatter.hpp"
 
 using namespace tool::cam;
 using namespace tool::geo;
@@ -139,23 +140,43 @@ auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, con
         processedCloud.remove_outliers(processedCloud.vertices.mean(), settings.maxDistanceOutlier);
     }
 
-    if(settings.downSample){
+    // if(settings.downSample){
 
-        auto pcdDown = convert_to_opend3d_pc(processedCloud)->VoxelDownSample(settings.downSampleVoxelSize);
-        processedCloud.resize(pcdDown->points_.size());
-        for(size_t ii = 0; ii < pcdDown->points_.size(); ++ii){
-            processedCloud.vertices[ii] = {
-                static_cast<float>(pcdDown->points_[ii].x()),
-                static_cast<float>(pcdDown->points_[ii].y()),
-                static_cast<float>(pcdDown->points_[ii].z())
-            };
-        }
-    }
+        // auto pcdDown = convert_to_opend3d_pc(processedCloud)->VoxelDownSample(settings.downSampleVoxelSize);
+        // processedCloud.resize(pcdDown->points_.size());
+        // for(size_t ii = 0; ii < pcdDown->points_.size(); ++ii){
+        //     processedCloud.vertices[ii] = {
+        //         static_cast<float>(pcdDown->points_[ii].x()),
+        //         static_cast<float>(pcdDown->points_[ii].y()),
+        //         static_cast<float>(pcdDown->points_[ii].z())
+        //     };
+        // }
+    // }
 
     if(settings.computeSphereCenter){
-        auto mean = processedCloud.vertices.mean();
-        mean.z() = processedCloud.vertices.min_z() + settings.ballRay;
-        processedCloud = ColorCloud(mean, processedCloud.colors[0]);
+
+        // closest point
+        if(settings.closestPoints){
+            processedCloud.vertices.sort_by_z_ascendant();
+            auto center = processedCloud.vertices.mean(0, settings.maxNbPoints);
+            center.z() = processedCloud.vertices.front().z() + settings.ballRay;
+            processedCloud = ColorCloud(center, processedCloud.colors[0]);
+        }else if(settings.meanWithFirstZ){
+            auto center = processedCloud.vertices.mean();
+            center.z() = processedCloud.vertices.min_z() + settings.ballRay;
+            processedCloud = ColorCloud(center, processedCloud.colors[0]);
+        }else if(settings.estimateSphere){
+            auto sphere = processedCloud.vertices.sphere();
+            processedCloud = ColorCloud(sphere.position, processedCloud.colors[0]);
+        }
+
+        // default
+        if(!settings.closestPoints && !settings.meanWithFirstZ && !settings.estimateSphere){
+            processedCloud.vertices.sort_by_z_ascendant();
+            auto center = processedCloud.vertices.mean(0, settings.maxNbPoints);
+            center.z() = processedCloud.vertices.front().z() + settings.ballRay;
+            processedCloud = ColorCloud(center, processedCloud.colors[0]);
+        }
     }
 
     return processedCloud;

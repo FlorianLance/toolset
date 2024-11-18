@@ -1175,6 +1175,8 @@ auto OrbbecBaseDevice::read_from_imu() -> tool::BinarySpan{
     return {};
 }
 
+// #include "utility/time.hpp"
+
 auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
 
     size_t colorWidth;
@@ -1216,11 +1218,13 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
     );
 
     try{
+        // auto t1 = Time::nanoseconds_since_epoch();
         i->k4aTransformation->color_image_to_depth_camera(
             k4aDepthImage,
             k4aColorImage,
             &k4aDepthSizedColorImage
         );
+        // Log::fmessage("[r{}]", Time::now_difference_micro_s(t1));
 
     }catch(const std::runtime_error &error){
         Log::error(std::format("[OrbbecBaseDevice::k4a_resize_color_image_to_depth_size] Runtime error: {}", error.what()));
@@ -1232,6 +1236,7 @@ auto OrbbecBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfo
         static_cast<size_t>(mInfos.depth_width() * mInfos.depth_height())
     };
 }
+
 
 auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint16_t> depthData) -> std::span<geo::Pt3<std::int16_t>> {
 
@@ -1257,11 +1262,13 @@ auto OrbbecBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint1
 
     try{
 
+        // auto t1 = Time::nanoseconds_since_epoch();
         i->k4aTransformation->depth_image_to_point_cloud(
             k4aDepthImage,
             K4A_CALIBRATION_TYPE_DEPTH,
             &k4aPointCloudImage
         );
+        // Log::fmessage("[r{}]", Time::now_difference_micro_s(t1));
 
     }catch(const std::runtime_error &error){
         Log::error(std::format("[OrbbecBaseDevice::k4a_generate_cloud] Runtime error: {}", error.what()));

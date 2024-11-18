@@ -488,7 +488,6 @@ auto AzureBaseDevice::read_calibration() -> BinarySpan{
     };
 }
 
-
 auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     if(!is_opened()){
@@ -497,10 +496,7 @@ auto AzureBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     bool success = false;
     try{
-        // auto tS = Time::nanoseconds_since_epoch();
-        success = i->device->get_capture(i->capture.get(), std::chrono::milliseconds(timeoutMs));
-        // auto tE = Time::nanoseconds_since_epoch();
-        // Log::message(std::format("Capture [{}] [{}]\n", tS.count(), tE.count()));
+        success = i->device->get_capture(i->capture.get(), std::chrono::milliseconds(timeoutMs));//std::chrono::milliseconds(timeoutMs));
     }catch(const std::runtime_error &e){
         Log::error(std::format("[AzureBaseDevice::read_frames] Get capture runtime error: {}\n", e.what()));
     }
@@ -658,7 +654,7 @@ auto AzureBaseDevice::read_body_tracking() -> std::tuple<std::span<ColorGray8>, 
     return {{},{}};
 }
 
-
+// #include "utility/time.hpp"
 auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData) -> std::span<tool::ColorRGBA8>{
     
     auto colorStride     = mInfos.color_width() * 4 * sizeof(std::uint8_t);
@@ -677,11 +673,13 @@ auto AzureBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos
 
     try{
 
+        // auto t1 = Time::nanoseconds_since_epoch();
         i->transformation.color_image_to_depth_camera(
             i->depthImage,
             k4aColorImage,
             &i->depthSizedColorImage
         );
+        // Log::fmessage("[r{}]", Time::now_difference_micro_s(t1));
 
     }catch(const std::runtime_error &error){
         Log::error(std::format("[AzureBaseDevice::resize_color_image_to_depth_size] Error: {}\n", error.what()));

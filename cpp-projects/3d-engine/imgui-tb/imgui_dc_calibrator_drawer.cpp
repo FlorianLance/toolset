@@ -96,10 +96,10 @@ auto DCCalibratorDrawer::update_client_cloud_display(size_t idClient, const DCDe
     cdC.showCameraFrustum   = false;
     cdC.showFilteringGizmos = false;
 
-    auto &cdP       = cloudsD[(cloudsD.size()/2)  + idClient]->display;
-    cdP.forceColor     = true;
+    auto &cdP               = cloudsD[(cloudsD.size()/2)  + idClient]->display;
+    cdP.forceColor          = true;
     cdP.backFaceCulling     = false;
-    cdP.unicolor          = cdC.unicolor * 0.5f;
+    cdP.unicolor            = cdC.unicolor * 0.3f;
     cdP.pointSize           = cdC.pointSize * 2.f;
     cdP.circles             = cdC.circles;
     cdP.squareSize          = cdC.squareSize * 1.2f;

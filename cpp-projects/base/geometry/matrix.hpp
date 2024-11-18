@@ -310,6 +310,24 @@ struct Matrix{
     std::array<acc, _rows*_cols> array = {};
 };
 
+template <typename acc, int _rows>
+constexpr auto to_row(const ColVec<acc,_rows> &colV) -> RowVec<acc,_rows>{
+    return {colV.array};
+}
+template <typename acc, int _cols>
+constexpr auto to_col(const RowVec<acc,_cols> &colV) -> ColVec<acc,_cols>{
+    return {colV.array};
+}
+
+template <typename acc, int _rows>
+constexpr auto to_row(ColVec<acc,_rows> &&colV) -> RowVec<acc,_rows>{
+    return {std::move(colV.array)};
+}
+template <typename acc, int _cols>
+constexpr auto to_col(RowVec<acc,_cols> &&colV) -> ColVec<acc,_cols>{
+    return {std::move(colV.array)};
+}
+
 // functions
 template <typename acc, int _rows, int _cols>
 constexpr auto compare(const Matrix<acc, _rows, _cols> &l, const Matrix<acc, _rows, _cols> &r, int ulp = 3) noexcept -> bool{

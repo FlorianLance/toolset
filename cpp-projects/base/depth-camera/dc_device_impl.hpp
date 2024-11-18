@@ -35,6 +35,7 @@
 #include "frame/dc_depth_indices.hpp"
 #include "frame/dc_device_data.hpp"
 #include "dc_device.hpp"
+#include "utility/logger.hpp"
 
 #define VCL_NAMESPACE
 #include "vectorclass.h"
@@ -61,6 +62,7 @@ struct DCFramesBuffer{
     std::vector<std::tuple<std::chrono::nanoseconds, std::shared_ptr<cam::DCDataFrame>>> dataFrames;
 };
 
+
 struct DCDeviceImpl{
 
     DCDeviceImpl();
@@ -70,18 +72,7 @@ struct DCDeviceImpl{
     virtual auto open(const DCConfigSettings &newConfigS) -> bool = 0;
     virtual auto close() -> void = 0;
 
-    auto process() -> void{
-        auto tf = TimeDiffGuard(timeM, "PROCESS"sv);
-
-        parametersM.lock();
-        {
-            times = timeM.times;
-        }
-        parametersM.unlock();
-
-        read_frame();
-        process_data();
-    }
+    auto process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
 
     // settings
     auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
@@ -109,7 +100,7 @@ protected:
     auto initialize(const DCConfigSettings &newConfig) -> void;
 
     // read data
-    auto read_frame() -> void;
+    auto read_frame() -> bool;
     virtual auto capture_frame(std::int32_t timeoutMs)  -> bool{static_cast<void>(timeoutMs);return false;}    
     virtual auto read_color_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
     virtual auto read_depth_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
@@ -120,7 +111,7 @@ protected:
     auto check_data_validity() -> bool;
 
     // process data
-    auto process_data() -> void;
+    auto process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
     virtual auto resize_color_image_to_depth_size() -> void{}
     auto convert_color_image() -> void;
     virtual auto generate_cloud(bool enable) -> void{static_cast<void>(enable);}
@@ -141,6 +132,7 @@ protected:
     auto filter_depth_from_body_tracking()      -> void;
     auto filter_depth_complex()                 -> void;
     auto update_valid_depth_values() -> void;
+    auto simd_filter() -> void; // test
     // # depth sized color processing
     auto filter_depth_sized_color_from_depth() -> void;
     auto mix_depth_sized_color_with_body_tracking() -> void{}
@@ -197,12 +189,20 @@ protected:
     // decoders
     data::JpegDecoder jpegColorDecoder;
 
-    std::vector<VCL_NAMESPACE::Vec16us> xIdsSIMD;
-    std::vector<VCL_NAMESPACE::Vec16us> yIdsSIMD;
-    std::vector<VCL_NAMESPACE::Vec16us> depthSIMD;
-    std::vector<VCL_NAMESPACE::Vec16sb> maskSIMD;
-    std::vector<std::uint16_t> filterDepthSIMD;
+    // std::vector<VCL_NAMESPACE::Vec16us> xIdsSIMD;
+    // std::vector<VCL_NAMESPACE::Vec16us> yIdsSIMD;
+    // std::vector<VCL_NAMESPACE::Vec16us> depthSIMD;
+    // std::vector<VCL_NAMESPACE::Vec16sb> maskSIMD;
+    // std::vector<std::uint16_t> filterDepthSIMD;
 
+    // std::vector<VCL_NAMESPACE::Vec32us> xIdsSIMD;
+    // std::vector<VCL_NAMESPACE::Vec32us> yIdsSIMD;
+    // std::vector<VCL_NAMESPACE::Vec32us> depthSIMD;
+    // std::vector<VCL_NAMESPACE::Vec32sb> maskSIMD;
+    // std::vector<VCL_NAMESPACE::Vec16f> rgbSIMD;
+    // std::vector<std::uint16_t> filterDepthSIMD;
+
+    AverageBuffer v;
 
     // std::vector<VCL_NAMESPACE::Vec32us> xIdsSIMD32;
     // std::vector<VCL_NAMESPACE::Vec32us> yIdsSIMD32;
@@ -210,11 +210,12 @@ protected:
 
 private:
 
-    // depth filtering
-    auto maximum_local_depth_difference(const DCDepthIndices &ids, std::span<std::uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void;
-    auto keep_only_biggest_cluster() -> void;
-    auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
+    // depth filtering    
+    auto maximum_local_depth_difference(DCConnectivity connectivity, float max) -> void;
     auto erode(std::uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void;
+    auto keep_only_biggest_cluster() -> void;
+    // auto mininum_neighbours(std::uint8_t nbLoops, std::uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void;
+
 };
 }
 

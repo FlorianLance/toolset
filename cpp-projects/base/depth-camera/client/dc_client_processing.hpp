@@ -55,9 +55,9 @@ public:
     auto new_frame(size_t idD, std::shared_ptr<cam::DCFrame> frame) -> void;
     auto invalid_last_frame(size_t idD) -> void;
     auto invalid_last_data_frame(size_t idD) -> void;
+
     // when no processing thread started
-    auto process(size_t idD) -> void;
-    auto generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>;
+    auto process_from_external_thread(size_t idD) -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
 
     // get
     auto nb_devices() const noexcept -> size_t;

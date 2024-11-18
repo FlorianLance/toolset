@@ -46,10 +46,27 @@ using namespace tool::cam;
 DCDeviceImpl::DCDeviceImpl(){
 }
 
-DCDeviceImpl::~DCDeviceImpl(){    
+DCDeviceImpl::~DCDeviceImpl(){
+}
+
+auto DCDeviceImpl::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
+
+    auto tf = TimeDiffGuard(timeM, "PROCESS_FRAMES"sv);
+    parametersM.lock();
+    {
+        times = timeM.times;
+    }
+    parametersM.unlock();
+
+    if(read_frame()){
+        return process_data();
+    }
+
+    return {nullptr,nullptr};
 }
 
 auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
+
     auto lg = LogG("DCDeviceImpl::initialize"sv);
     auto t = TimeDiffGuard(timeM, "INITIALIZE"sv);
     settings.config = newConfigS;
@@ -59,29 +76,34 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
 
 
     {
-        xIdsSIMD.resize(mInfos.depth_size()/16);
-        yIdsSIMD.resize(mInfos.depth_size()/16);
-        depthSIMD.resize(mInfos.depth_size()/16);
-        filterDepthSIMD.resize(mInfos.depth_size());
-        maskSIMD.resize(mInfos.depth_size()/16);
+        // size_t offset = 32;
+        // xIdsSIMD.resize(mInfos.depth_size()/offset);
+        // yIdsSIMD.resize(mInfos.depth_size()/offset);
+        // depthSIMD.resize(mInfos.depth_size()/offset);
+        // filterDepthSIMD.resize(mInfos.depth_size());
+        // maskSIMD.resize(mInfos.depth_size()/offset);
 
-        size_t idV = 0;
-        for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
-            for(size_t jj = 0; jj < mInfos.depth_width()/16; ++jj){
-                yIdsSIMD[idV] = VCL_NAMESPACE::Vec16us(ii);
-                ++idV;
-            }
-        }
+        // size_t idV = 0;
+        // for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+        //     for(size_t jj = 0; jj < mInfos.depth_width()/offset; ++jj){
+        //         // yIdsSIMD[idV] = VCL_NAMESPACE::Vec16us(ii);
+        //         yIdsSIMD[idV] = VCL_NAMESPACE::Vec32us(ii);
+        //         ++idV;
+        //     }
+        // }
 
-        idV = 0;
-        for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
-            for(size_t jj = 0; jj < mInfos.depth_width()/16; ++jj){
-                for(size_t kk = 0; kk < 16; ++kk){
-                    xIdsSIMD[idV].insert(kk, jj*16+kk);
-                }
-                ++idV;
-            }
-        }
+        // idV = 0;
+        // for(size_t ii = 0; ii < mInfos.depth_height(); ++ii){
+        //     for(size_t jj = 0; jj < mInfos.depth_width()/offset; ++jj){
+        //         for(size_t kk = 0; kk < offset; ++kk){
+        //             xIdsSIMD[idV].insert(kk, jj*offset+kk);
+        //         }
+        //         ++idV;
+        //     }
+        // }
+
+        // offset = 16;
+        // rgbSIMD.resize(mInfos.depth_size()/offset);
 
         // xIdsSIMD32.resize(mInfos.depth_size()/32);
         // yIdsSIMD32.resize(mInfos.depth_size()/32);
@@ -117,7 +139,7 @@ auto DCDeviceImpl::convert_color_image() -> void{
         return;
     }
 
-    auto t1 = Time::nanoseconds_since_epoch();
+    // auto t1 = Time::nanoseconds_since_epoch();
 
     if(mInfos.image_format() == DCImageFormat::NV12){
 
@@ -162,6 +184,167 @@ auto DCDeviceImpl::convert_color_image() -> void{
     // Log::fmessage("[cc:{}]", Time::now_difference_micro_s(t1).count());
 }
 
+auto DCDeviceImpl::simd_filter() -> void{
+
+    auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_BASIC"sv);
+
+    // depth / width / height
+    if(fData.depth.empty()){
+        return;
+    }
+
+
+    auto minW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.minWidthF);
+    auto maxW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.maxWidthF);
+    auto minH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.minHeightF);
+    auto maxH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.maxHeightF);
+
+    auto dRange     = mInfos.depth_range_mm();
+    auto diffRange  = dRange.y()-dRange.x();
+    auto minD = static_cast<std::uint16_t>(dRange.x() + settings.filters.minDepthF * diffRange);
+    auto maxD = static_cast<std::uint16_t>(dRange.x() + settings.filters.maxDepthF * diffRange);
+
+    // reset depth mask
+    std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
+
+    // size_t offset = 32;
+
+    // load depth data
+    // for(size_t id = 0; id < mInfos.depth_size()/offset; ++id){
+    //     depthSIMD[id].load(fData.depth.data() + id * offset);
+    // }
+
+    // auto filterSimple = false;
+    // auto filterColor = settings.filters.filterDepthWithColor;
+
+    // depth depth with width/height/depth
+    // VCL_NAMESPACE::Vec16us vnull(0);
+    // VCL_NAMESPACE::Vec32us vnull(0);
+
+    // auto t1 = Time::nanoseconds_since_epoch();
+    // for(int ii = 0; ii < depthSIMD.size(); ++ii){
+
+        // depthSIMD[ii] = select(
+        //     depthSIMD[ii] >= minD &&
+        //     depthSIMD[ii] <= maxD &&
+        //     xIdsSIMD[ii] >= minW &&
+        //     xIdsSIMD[ii] <= maxW &&
+        //     yIdsSIMD[ii] >= minH &&
+        //     yIdsSIMD[ii] <= maxH,
+        //     depthSIMD[ii],
+        //     vnull
+        // );
+
+    //     // depthSIMD[ii] = select(
+    //     //     filterSimple ?
+    //     //     (depthSIMD[ii] >= minD &&
+    //     //     depthSIMD[ii] <= maxD &&
+    //     //     xIdsSIMD[ii] >= minW &&
+    //     //     xIdsSIMD[ii] <= maxW &&
+    //     //     yIdsSIMD[ii] >= minH &&
+    //     //     yIdsSIMD[ii] <= maxH) : true,
+    //     //     depthSIMD[ii],
+    //     //     vnull
+    //     // );
+    // }
+
+
+    // // filter colors
+    // if(settings.filters.filterDepthWithColor && (fData.depthSizedColor.size() == fData.depth.size())){
+
+    //     // VCL_NAMESPACE::Vec4f rgbColors;
+    //     // VCL_NAMESPACE::Vec4f hsvColors;
+
+    //     // float fCMax = VCL_NAMESPACE::horizontal_max(rgbColors);
+    //     // float fCMin = VCL_NAMESPACE::horizontal_min(rgbColors);
+    //     // float fDelta = fCMax - fCMin;
+
+    //     auto hsv = Convert::to_hsv(fData.depthSizedColor[0]);
+    // }
+
+    // rgbSIMD
+    // auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
+
+    // // invalidate depth from depth-sized color
+    // if(!settings.filters.filterDepthWithColor){
+    //     return;
+    // }
+    // if(fData.depth.empty()){
+    //     return;
+    // }
+    // if(!fData.depthSizedColor.empty() && (fData.depthSizedColor.size() != fData.depth.size())){
+    //     return;
+    // }
+
+    // auto hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
+    // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
+    //     size_t id = dIndex.x();
+    //     auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
+    //     if((std::abs(hsv.h()- hsvDiffColor.h()) > settings.filters.maxDiffColor.x()) ||
+    //         (std::abs(hsv.s()- hsvDiffColor.s()) > settings.filters.maxDiffColor.y()) ||
+    //         (std::abs(hsv.v()- hsvDiffColor.v()) > settings.filters.maxDiffColor.z())){
+    //         fData.depthMask[id] = 0;
+    //         return;
+    //     }
+    // });
+
+
+
+    // Log::fmessage("[db5:{}]", Time::now_difference_micro_s(t1).count());
+
+    // for(size_t id = 0; id < mInfos.depth_size()/offset; ++id){
+    //     depthSIMD[id].store(filterDepthSIMD.data() + id *offset);
+    // }
+    // for(size_t idV = 0; idV < fData.depthMask.size(); ++idV){
+    //     fData.depthMask[idV] = filterDepthSIMD[idV] != 0;
+    // }
+
+    // 1 1 1
+    // 1 0 1
+    // 1 1 1
+    // std::vector<VCL_NAMESPACE::Vec8us> v8;
+
+    // for(size_t ii = 0; ii < mInfos.depth_width(); ++ii){
+    //     for(size_t jj = 0; jj < mInfos.depth_height(); ++jj){
+
+    //         if(ii > 0 && ii < mInfos.depth_width()-1 && jj > 0 && jj < mInfos.depth_height()-1){
+
+    //             VCL_NAMESPACE::Vec8us u;
+
+    //         }else if(ii == 0){
+    //             // if(jj > 0 && jj < mInfos.depth_height()-1){
+
+    //             // }
+    //         }
+    //         // ...
+
+    //     }
+    // }
+
+    // std::vector<std::uint8_t> vvv;
+    // vvv.resize(mInfos.depth_size());
+
+
+    // std::vector<VCL_NAMESPACE::Vec64uc> v64;
+    // v64.resize(mInfos.depth_size()/64);
+    // size_t id = 0;
+    // const auto data = v64.data();
+    // for(size_t ii = 0; ii < mInfos.depth_width()/8; ++ii){
+    //     for(size_t jj = 0; jj < mInfos.depth_height()/8; ++jj){
+
+
+    //         // VCL_NAMESPACE::Vec8uc v1;
+    //         v64[id].load_partial(8, data[(ii+0)*mInfos.depth_width()+jj*8]);
+    //     }
+    // }
+
+    // 80 x 72 = 5760
+    // [8x8] [8x8] ... [8x8]
+    // ...
+    // [8x8]
+
+}
+
 auto DCDeviceImpl::filter_depth_basic() -> void{
 
     auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_BASIC"sv);
@@ -170,166 +353,84 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
     if(fData.depth.empty()){
         return;
     }
-    auto t1 = Time::nanoseconds_since_epoch();
 
-    // auto t1 = Time::nanoseconds_since_epoch();
-    auto dRange = mInfos.depth_range_mm();
-    auto minW   = mInfos.depth_width()  * settings.filters.minWidthF;
-    auto maxW   = mInfos.depth_width()  * settings.filters.maxWidthF;
-    auto minH   = mInfos.depth_height() * settings.filters.minHeightF;
-    auto maxH   = mInfos.depth_height() * settings.filters.maxHeightF;
-    auto diffRange = dRange.y()-dRange.x();
-    auto minD = dRange.x() + settings.filters.minDepthF * diffRange;
-    auto maxD = dRange.x() + settings.filters.maxDepthF * diffRange;
 
-    // reset depth mask
-    std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
+    auto minW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.minWidthF);
+    auto maxW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.maxWidthF);
+    auto minH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.minHeightF);
+    auto maxH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.maxHeightF);
+
+    auto dRange     = mInfos.depth_range_mm();
+    auto diffRange  = dRange.y()-dRange.x();
+    auto minD = static_cast<std::uint16_t>(dRange.x() + settings.filters.minDepthF * diffRange);
+    auto maxD = static_cast<std::uint16_t>(dRange.x() + settings.filters.maxDepthF * diffRange);
+
+
+    auto fdc = settings.filters.filterDepthWithColor && (fData.depthSizedColor.size() == fData.depth.size());
+    if(fdc){
+        auto tS = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
+        ColorHSV hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
+        ColorHSV maxDiffColor = settings.filters.maxDiffColor;
+        // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
+        //     fData.hsvDiffMask[id] = ColorHSV(Convert::to_hsv(fData.depthSizedColor[id]) - hsvDiffColor).abs() < maxDiffColor ? 0 : 1;
+        // });
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
+            auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
+            fData.hsvDiffMask[id] =
+                (
+                    (std::abs(hsv.h()- hsvDiffColor.h()) <= maxDiffColor.h()) &&
+                    (std::abs(hsv.s()- hsvDiffColor.s()) <= maxDiffColor.s()) &&
+                    (std::abs(hsv.v()- hsvDiffColor.v()) <= maxDiffColor.v())
+                ) ? 1 : 0;
+        });
+    }
 
     // depth/width/height/mask/color/infra filtering
     std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
 
-        size_t id = dIndex.x();
-        size_t ii = dIndex.y();
-        size_t jj = dIndex.z();
-
-        const auto &currentDepth = fData.depth[id];
-
-        // check validity
-        if(currentDepth == dc_invalid_depth_value){
-            fData.depthMask[id] = 0;
-            return;
-        }
-
-        // depth filtering
-        if( (ii <= minW)  || (ii >= maxW)  ||                 // width
-            (jj <= minH)  || (jj >= maxH)  ||                 // height
-            (currentDepth < minD) || (currentDepth > maxD) ){ // depth
-            fData.depthMask[id] = 0;
-            return;
-        }
+        const auto &currentDepth = fData.depth[dIndex.x()];
+        fData.depthMask[dIndex.x()] =
+            (
+                (currentDepth == dc_invalid_depth_value) ||     // invalid
+                (dIndex.y()   < minW) ||                        // width
+                (dIndex.y()   > maxW) ||                        //   -
+                (dIndex.z()   < minH) ||                        // height
+                (dIndex.z()   > maxH) ||                        //   -
+                (currentDepth < minD) ||                        // depth
+                (currentDepth > maxD) ||                        //   -
+                (fdc ? fData.hsvDiffMask[dIndex.x()] == 0 : 0)
+            ) ? 0 : 1;
     });
-
-    // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
-
-    // {
-    //     // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
-    //     for(size_t id = 0; id < mInfos.depth_size()/16; ++id){
-    //         depthSIMD[id].load(fData.depth.data() + id *16);
-    //     }
-
-    //     // VCL_NAMESPACE::Vec16us minDSIMD(minD);
-    //     // VCL_NAMESPACE::Vec16us maxDSIMD(maxD);
-
-    //     // VCL_NAMESPACE::Vec16us minWSIMD(minW);
-    //     // VCL_NAMESPACE::Vec16us maxWSIMD(maxW);
-
-    //     // VCL_NAMESPACE::Vec16us minHSIMD(minH);
-    //     // VCL_NAMESPACE::Vec16us maxHSIMD(maxH);
-
-    //     // Log::fmessage("[db2:{}]", Time::now_difference_micro_s(t1).count());
-    //     auto t2 = Time::nanoseconds_since_epoch();
-    //     VCL_NAMESPACE::Vec16us vnull(0);
-    //     for(int ii = 0; ii < depthSIMD.size(); ++ii){
-    //         depthSIMD[ii] = select(
-    //             depthSIMD[ii] >= minD &&
-    //             depthSIMD[ii] <= maxD &&
-    //             xIdsSIMD[ii] >= minW &&
-    //             xIdsSIMD[ii] <= maxW &&
-    //             yIdsSIMD[ii] >= minH &&
-    //             yIdsSIMD[ii] <= maxH,
-    //             depthSIMD[ii],
-    //             vnull
-    //         );
-    //         // depthSIMD[ii] = select(
-    //         //     depthSIMD[ii] >= minDSIMD &&
-    //         //     depthSIMD[ii] <= maxDSIMD &&
-    //         //     xIdsSIMD[ii] >= minWSIMD &&
-    //         //     xIdsSIMD[ii] <= maxWSIMD &&
-    //         //     yIdsSIMD[ii] >= minHSIMD &&
-    //         //     yIdsSIMD[ii] <= maxHSIMD,
-    //         //     depthSIMD[ii],
-    //         //     vnull
-    //         // );
-
-    //         // slower
-    //         // maskSIMD[ii] = depthSIMD[ii] >= minDSIMD &&
-    //         //                depthSIMD[ii] <= maxDSIMD &&
-    //         //                xIdsSIMD[ii] >= minWSIMD &&
-    //         //                xIdsSIMD[ii] <= maxWSIMD &&
-    //         //                yIdsSIMD[ii] >= minHSIMD &&
-    //         //                yIdsSIMD[ii] <= maxHSIMD;
-    //     }
-    //     // Log::fmessage("[db3:{}]", Time::now_difference_micro_s(t2).count());
-    //     for(size_t id = 0; id < mInfos.depth_size()/16; ++id){
-    //         depthSIMD[id].store(filterDepthSIMD.data() + id *16);
-    //     }
-    //     // Log::fmessage("[db4:{}]", Time::now_difference_micro_s(t1).count());
-    //     for(size_t idV = 0; idV < fData.depthMask.size(); ++idV){
-    //         fData.depthMask[idV] = filterDepthSIMD[idV] != 0;
-    //     }
-    //     // Log::fmessage("[db5:{}]", Time::now_difference_micro_s(t1).count());
-    // }
-
-    // {
-    //     // Log::fmessage("[db1:{}]", Time::now_difference_micro_s(t1).count());
-    //     for(size_t id = 0; id < mInfos.depth_size()/32; ++id){
-    //         depthSIMD32[id].load(fData.depth.data() + id *32);
-    //     }
-
-    //     // Log::fmessage("[db2:{}]", Time::now_difference_micro_s(t1).count());
-    //     auto t2 = Time::nanoseconds_since_epoch();
-    //     VCL_NAMESPACE::Vec32us vnull(0);
-    //     for(int ii = 0; ii < depthSIMD32.size(); ++ii){
-    //         depthSIMD32[ii] = select(
-    //             depthSIMD32[ii] >= minD &&
-    //                 depthSIMD32[ii] <= maxD &&
-    //                 xIdsSIMD32[ii] >= minW &&
-    //                 xIdsSIMD32[ii] <= maxW &&
-    //                 yIdsSIMD32[ii] >= minH &&
-    //                 yIdsSIMD32[ii] <= maxH,
-    //                 depthSIMD32[ii],
-    //                 vnull
-    //             );
-    //     }
-    //     Log::fmessage("[db3:{}]", Time::now_difference_micro_s(t2).count());
-    //     for(size_t id = 0; id < mInfos.depth_size()/32; ++id){
-    //         depthSIMD32[id].store(filterDepthSIMD.data() + id *32);
-    //     }
-    //     // Log::fmessage("[db4:{}]", Time::now_difference_micro_s(t1).count());
-    //     for(size_t idV = 0; idV < fData.depthMask.size(); ++idV){
-    //         fData.depthMask[idV] = filterDepthSIMD[idV] != 0;
-    //     }
-    //     // Log::fmessage("[db5:{}]", Time::now_difference_micro_s(t1).count());
-    // }
 
 }
 
 auto DCDeviceImpl::filter_depth_from_depth_sized_color() -> void{
 
-    auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
+    // // auto t = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
 
-    // invalidate depth from depth-sized color
-    if(!settings.filters.filterDepthWithColor){
-        return;
-    }
-    if(fData.depth.empty()){
-        return;
-    }
-    if(!fData.depthSizedColor.empty() && (fData.depthSizedColor.size() != fData.depth.size())){
-        return;
-    }
-
-    auto hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
-    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
-        size_t id = dIndex.x();
-        auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
-        if((std::abs(hsv.h()- hsvDiffColor.h()) > settings.filters.maxDiffColor.x()) ||
-            (std::abs(hsv.s()- hsvDiffColor.s()) > settings.filters.maxDiffColor.y()) ||
-            (std::abs(hsv.v()- hsvDiffColor.v()) > settings.filters.maxDiffColor.z())){
-            fData.depthMask[id] = 0;
-            return;
-        }
-    });
+    // // invalidate depth from depth-sized color
+    // if(!settings.filters.filterDepthWithColor){
+    //     return;
+    // }
+    // if(fData.depth.empty()){
+    //     return;
+    // }
+    // if(!fData.depthSizedColor.empty() && (fData.depthSizedColor.size() != fData.depth.size())){
+    //     return;
+    // }
+    // auto t1 = Time::nanoseconds_since_epoch();
+    // auto hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
+    // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths3D), std::end(dIndices.depths3D), [&](const Pt3<size_t> &dIndex){
+    //     size_t id = dIndex.x();
+    //     auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
+    //     if((std::abs(hsv.h()- hsvDiffColor.h()) > settings.filters.maxDiffColor.x()) ||
+    //         (std::abs(hsv.s()- hsvDiffColor.s()) > settings.filters.maxDiffColor.y()) ||
+    //         (std::abs(hsv.v()- hsvDiffColor.v()) > settings.filters.maxDiffColor.z())){
+    //         fData.depthMask[id] = 0;
+    //         return;
+    //     }
+    // });
+    // Log::fmessage("[d:{}]", Time::now_difference_micro_s(t1).count());
 }
 
 auto DCDeviceImpl::filter_depth_from_infra() -> void{
@@ -432,6 +533,8 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
         }
     });
     // Log::fmessage("[dc:{}]", Time::now_difference_micro_s(t1).count());
+    // v.add_value(Time::now_difference_micro_s(t1).count());
+    // Log::fmessage("cloud  time {}\n", v.get());
 }
 
 auto DCDeviceImpl::filter_depth_from_body_tracking() -> void{
@@ -456,7 +559,8 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
         return;
     }
 
-    auto t1 = Time::nanoseconds_since_epoch();
+    // auto t1 = Time::nanoseconds_since_epoch();
+
 
     // if(settings.filters.doErosion)
     // {
@@ -502,19 +606,25 @@ auto DCDeviceImpl::filter_depth_complex() -> void{
     //     }
     // }
 
-    if(settings.filters.doLocalDiffFiltering){
-        maximum_local_depth_difference(dIndices, fData.depth, settings.filters.maxLocalDiff, DCConnectivity::Connectivity_4);
-    }
+
+
 
     // minimum neighbours filtering
     if(settings.filters.doMinNeighboursFiltering){
-        mininum_neighbours(settings.filters.minNeighboursLoops, settings.filters.nbMinNeighbours, DCConnectivity::Connectivity_8);
+        erode(settings.filters.minNeighboursLoops, DCConnectivity::Connectivity_8, settings.filters.nbMinNeighbours);
     }
 
     // erosion
     if(settings.filters.doErosion){
-        erode(settings.filters.erosionLoops, DCConnectivity::Connectivity_8, 8);
+        erode(settings.filters.erosionLoops, DCConnectivity::Connectivity_4, 4);
+        // erode(settings.filters.erosionLoops, DCConnectivity::Connectivity_8, 8);
     }
+
+    if(settings.filters.doLocalDiffFiltering){
+        maximum_local_depth_difference(DCConnectivity::Connectivity_4, settings.filters.maxLocalDiff);
+    }
+
+
 
     // keep only biggest cluster
     if(settings.filters.keepOnlyBiggestCluster){
@@ -1222,8 +1332,6 @@ auto DCDeviceImpl::update_data_frame_imu() -> void{
     }
 }
 
-
-
 auto DCDeviceImpl::check_data_validity() -> bool {
 
     if(mInfos.has_color() && settings.data.capture.color){
@@ -1250,56 +1358,84 @@ auto DCDeviceImpl::check_data_validity() -> bool {
     return true;
 }
 
-auto DCDeviceImpl::maximum_local_depth_difference(const DCDepthIndices &ids, std::span<uint16_t> depthBuffer, float max, DCConnectivity connectivity) -> void{
+auto DCDeviceImpl::maximum_local_depth_difference(DCConnectivity connectivity, float max) -> void{
 
-    std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
+    // auto t1 = Time::nanoseconds_since_epoch();
 
-    std::for_each(std::execution::par_unseq, std::begin(ids.depths1DNoBorders), std::end(ids.depths1DNoBorders), [&](size_t id){
+    if(connectivity == DCConnectivity::Connectivity_4){
 
-        if(fData.depthMask[id] == 0){
-            return;
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+
+            float currDepth = fData.depth[id];
+            float meanDiff = 0.f;
+            std::uint8_t count = 0;
+            for(const auto &cId : dIndices.neighbours4Depth1D[id]){
+                if(fData.depthMask[cId] == 1){
+                    meanDiff += abs(fData.depth[cId]-currDepth);
+                    ++count;
+                }
+            }
+            fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
+        });
+
+    }else if(connectivity == DCConnectivity::Connectivity_8){
+
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+
+            float currDepth = fData.depth[id];
+            float meanDiff = 0.f;
+            std::uint8_t count = 0;
+            for(const auto &cId : dIndices.neighbours8Depth1D[id]){
+                if(fData.depthMask[cId] == 1){
+                    meanDiff += abs(fData.depth[cId]-currDepth);
+                    ++count;
+                }
+            }
+            fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
+        });
+
+    }else if(connectivity == DCConnectivity::Connectivity_2H){
+
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+
+            float currDepth = fData.depth[id];
+            float meanDiff = 0.f;
+            std::uint8_t count = 0;
+            for(const auto &cId : dIndices.neighbours2HDepth1D[id]){
+                if(fData.depthMask[cId] == 1){
+                    meanDiff += abs(fData.depth[cId]-currDepth);
+                    ++count;
+                }
+            }
+            fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
+        });
+
+
+    }else if(connectivity == DCConnectivity::Connectivity_2V){
+
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+
+            float currDepth = fData.depth[id];
+            float meanDiff = 0.f;
+            std::uint8_t count = 0;
+            for(const auto &cId : dIndices.neighbours2VDepth1D[id]){
+                if(fData.depthMask[cId] == 1){
+                    meanDiff += abs(fData.depth[cId]-currDepth);
+                    ++count;
+                }
+            }
+            fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
+        });
+    }
+
+    std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
+        if(fData.filteringMask[id] == 0){
+            fData.depthMask[id] = 0;
         }
-
-        float meanDiff = 0;
-        float currDepth = depthBuffer[id];
-        size_t count = 0;
-        if(connectivity == DCConnectivity::Connectivity_2H){
-            for(auto cId : ids.neighbours2HDepth1D[id]){
-                if(fData.depthMask[cId] == 1){
-                    meanDiff += abs(depthBuffer[cId]-currDepth);
-                    ++count;
-                }
-            }
-        }else if(connectivity == DCConnectivity::Connectivity_2V){
-            for(auto cId : ids.neighbours2VDepth1D[id]){
-                if(fData.depthMask[cId] == 1){
-                    meanDiff += abs(depthBuffer[cId]-currDepth);
-                    ++count;
-                }
-            }
-        }else if(connectivity == DCConnectivity::Connectivity_4){
-            for(auto cId : ids.neighbours4Depth1D[id]){
-                if(fData.depthMask[cId] == 1){
-                    meanDiff += abs(depthBuffer[cId]-currDepth);
-                    ++count;
-                }
-            }
-        }else if(connectivity == DCConnectivity::Connectivity_8){
-            for(auto cId : ids.neighbours8Depth1D[id]){
-                if(fData.depthMask[cId] == 1){
-                    meanDiff += abs(depthBuffer[cId]-currDepth);
-                    ++count;
-                }
-            }
-        }
-        fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < max) ? 1 : 0);
     });
 
-    for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
-        if(fData.filteringMask[ii] == 0){
-            fData.depthMask[ii] = 0;
-        }
-    }
+    // v.add_value(Time::now_difference_micro_s(t1).count());
+    // Log::fmessage("maximum_local_depth_difference time {}\n", v.get());
 }
 
 auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
@@ -1412,88 +1548,104 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
 
 }
 
-auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void{
+// auto DCDeviceImpl::mininum_neighbours(uint8_t nbLoops, uint8_t nbMinNeighbours, DCConnectivity connectivity) -> void{
 
-    for(std::uint8_t numLoop = 0; numLoop < nbLoops; ++numLoop){
+//     auto t1 = Time::nanoseconds_since_epoch();
 
-        // reset filtering mask
-        std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
+//     for(size_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
-        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
+//         if(connectivity == DCConnectivity::Connectivity_4){
 
-            if(fData.depthMask[id] == 0){
-                return;
-            }
+//             // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+//             //     fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours4Depth1D[id].begin(), dIndices.neighbours4Depth1D[id].end(), 0, [&](int total, size_t cId){
+//             //                                                                 return total + fData.depthMask[cId];
+//             //                                                             }) >= nbMinValid ? 1 : 0) : 0;
+//             // });
+//         }else{
+//             // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+//             //     fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours8Depth1D[id].begin(), dIndices.neighbours8Depth1D[id].end(), 0, [&](int total, size_t cId){
+//             //                                                                 return total + fData.depthMask[cId];
+//             //                                                             }) >= nbMinValid ? 1 : 0) : 0;
+//             // });
+//         }
 
-            std::uint8_t count = 0;
-            if(connectivity == DCConnectivity::Connectivity_4){
-                for(auto cId : dIndices.neighbours4Depth1D[id]){
+//         std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
+//             if(fData.filteringMask[id] == 0){
+//                 fData.depthMask[id] = 0;
+//             }
+//         });
+//     }
 
-                    if(fData.depthMask[cId] == 1){
-                        ++count;
-                    }
-                }
-                fData.filteringMask[id] = count == 4 ? 1 : 0;
-            }else{
-                for(auto cId : dIndices.neighbours8Depth1D[id]){
+//     for(std::uint8_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
-                    if(fData.depthMask[cId] == 1){
-                        ++count;
-                    }
-                }
-                fData.filteringMask[id] = count == 8 ? 1 : 0;
-            }
+//         // reset filtering mask
+//         std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
 
-            fData.filteringMask[id] = (count < nbMinNeighbours) ? 1 : 0;
-        });
+//         std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
 
-        for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
-            if(fData.filteringMask[ii] == 1){
-                fData.depthMask[ii] = 0;
-            }
-        }
-    }
-}
+//             if(fData.depthMask[id] == 0){
+//                 return;
+//             }
+
+//             std::uint8_t count = 0;
+//             if(connectivity == DCConnectivity::Connectivity_4){
+//                 for(auto cId : dIndices.neighbours4Depth1D[id]){
+
+//                     if(fData.depthMask[cId] == 1){
+//                         ++count;
+//                     }
+//                 }
+//                 // fData.filteringMask[id] = count == 4 ? 1 : 0;
+//             }else{
+//                 for(auto cId : dIndices.neighbours8Depth1D[id]){
+
+//                     if(fData.depthMask[cId] == 1){
+//                         ++count;
+//                     }
+//                 }
+//                 // fData.filteringMask[id] = count == 8 ? 1 : 0;
+//             }
+
+//             fData.filteringMask[id] = (count < nbMinNeighbours) ? 1 : 0;
+//         });
+
+//         for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
+//             if(fData.filteringMask[ii] == 1){
+//                 fData.depthMask[ii] = 0;
+//             }
+//         }
+//     }
+
+//     v.add_value(Time::now_difference_micro_s(t1).count());
+//     // Log::fmessage("Erode time {}\n", Time::now_difference_micro_s(t1));
+//     Log::fmessage("Erode time {}\n", v.get());
+
+// }
 
 auto DCDeviceImpl::erode(uint8_t nbLoops, DCConnectivity connectivity, std::uint8_t nbMinValid) -> void{
 
     for(size_t numLoop = 0; numLoop < nbLoops; ++numLoop){
 
-        std::fill(fData.filteringMask.begin(), fData.filteringMask.end(), 0);
+        if(connectivity == DCConnectivity::Connectivity_4){
+
+            std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+                fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours4Depth1D[id].begin(), dIndices.neighbours4Depth1D[id].end(), 0, [&](int total, size_t cId){
+                    return total + fData.depthMask[cId];
+                }) >= nbMinValid ? 1 : 0) : 0;
+            });
+        }else{
+            std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](const auto &id){
+                fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours8Depth1D[id].begin(), dIndices.neighbours8Depth1D[id].end(), 0, [&](int total, size_t cId){
+                    return total + fData.depthMask[cId];
+                }) >= nbMinValid ? 1 : 0) : 0;
+            });
+        }
 
         std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1DNoBorders), std::end(dIndices.depths1DNoBorders), [&](size_t id){
-
-            if(fData.depthMask[id] == 0){
-                return;
-            }
-
-            std::uint8_t count = 0;
-            if(connectivity == DCConnectivity::Connectivity_4){
-                for(auto cId : dIndices.neighbours4Depth1D[id]){
-
-                    if(fData.depthMask[cId] == 1){
-                        ++count;
-                    }
-                }
-                // fData.filteringMask[id] = count == 4 ? 1 : 0;
-                fData.filteringMask[id] = (count >= nbMinValid) ? 1 : 0;
-            }else{
-                for(auto cId : dIndices.neighbours8Depth1D[id]){
-
-                    if(fData.depthMask[cId] == 1){
-                        ++count;
-                    }
-                }
-                // fData.filteringMask[id] = count == 8 ? 1 : 0;
-                fData.filteringMask[id] = (count >= nbMinValid) ? 1 : 0;
+            if(fData.filteringMask[id] == 0){
+                fData.depthMask[id] = 0;
             }
         });
-
-        for(size_t ii = 0; ii < fData.filteringMask.size(); ++ii){
-            if(fData.filteringMask[ii] == 0){
-                fData.depthMask[ii] = 0;
-            }
-        }
     }
 }
 
@@ -1547,17 +1699,18 @@ auto DCDeviceImpl::get_average_framerate() -> float{
     return framerateB.get_framerate();
 }
 
-auto DCDeviceImpl::read_frame() -> void{
+auto DCDeviceImpl::read_frame() -> bool{
 
     auto tRF = TimeDiffGuard(timeM, "READ_FRAME"sv);
 
     fData.reset_spans();
     {
         auto tCF = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
+
         captureSuccess = capture_frame(mInfos.timeout_ms());
         if(!captureSuccess){
             dataIsValid = false;
-            return;
+            return false;
         }
     }
 
@@ -1588,11 +1741,14 @@ auto DCDeviceImpl::read_frame() -> void{
     }
 
     dataIsValid = check_data_validity();
+    return dataIsValid;
 }
 
-auto DCDeviceImpl::process_data() -> void{
+auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> {
 
     auto tPD = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
+    frame   = nullptr;
+    dFrame  = nullptr;
 
     if(captureSuccess && dataIsValid){
 
@@ -1600,13 +1756,10 @@ auto DCDeviceImpl::process_data() -> void{
 
         if(settings.data.generation.has_data()){
             frame = std::make_shared<DCFrame>();
-        }else{
-            frame = nullptr;
         }
+
         if(settings.data.sending.has_data()){
             dFrame = std::make_shared<DCDataFrame>();
-        }else{
-            dFrame = nullptr;
         }
 
         {
@@ -1621,9 +1774,8 @@ auto DCDeviceImpl::process_data() -> void{
             auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
             generate_cloud(settings.data.capture_cloud() || settings.filters.filterDepthWithCloud);
         }
-
         {
-            auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
+            // auto tPP = TimeDiffGuard(timeM, "PREPROCESS"sv);
             // preprocess_color_image();
             // preprocess_depth_sized_color_image();
             // preprocess_depth_image();
@@ -1634,6 +1786,7 @@ auto DCDeviceImpl::process_data() -> void{
 
         {
             auto tFD = TimeDiffGuard(timeM, "FILTER"sv);
+            // simd_filter();
             filter_depth_basic();
             filter_depth_from_depth_sized_color();
             // filter_depth_from_infra();
@@ -1643,9 +1796,9 @@ auto DCDeviceImpl::process_data() -> void{
             update_valid_depth_values();
 
             filter_depth_sized_color_from_depth();
-            mix_depth_sized_color_with_body_tracking();
+            // mix_depth_sized_color_with_body_tracking();
             filter_infra_from_depth();
-            mix_infra_with_body_tracking();
+            // mix_infra_with_body_tracking();
         }
 
 
@@ -1675,12 +1828,12 @@ auto DCDeviceImpl::process_data() -> void{
 
                 // add frame
                 frames.add_data_frame(std::move(dFrame));
-                dFrame = nullptr;
             }
         }
         {
             auto tSCF = TimeDiffGuard(timeM, "SEND_DATA_FRAME"sv);
             if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                dFrame =dataFrameToSend;
                 new_data_frame_signal(std::move(dataFrameToSend));
             }
         }
@@ -1688,25 +1841,25 @@ auto DCDeviceImpl::process_data() -> void{
         {
             auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
 
-            auto t1 = Time::nanoseconds_since_epoch();
+            // auto t1 = Time::nanoseconds_since_epoch();
             update_frame_original_size_color();
-            auto t2 = Time::nanoseconds_since_epoch();
+            // auto t2 = Time::nanoseconds_since_epoch();
             update_frame_depth_sized_color();
-            auto t3 = Time::nanoseconds_since_epoch();
+            // auto t3 = Time::nanoseconds_since_epoch();
             update_frame_depth();
-            auto t4 = Time::nanoseconds_since_epoch();
+            // auto t4 = Time::nanoseconds_since_epoch();
             update_frame_infra();
-            auto t5 = Time::nanoseconds_since_epoch();
+            // auto t5 = Time::nanoseconds_since_epoch();
             update_frame_cloud();
-            auto t6 = Time::nanoseconds_since_epoch();
+            // auto t6 = Time::nanoseconds_since_epoch();
             update_frame_audio();
-            auto t7 = Time::nanoseconds_since_epoch();
+            // auto t7 = Time::nanoseconds_since_epoch();
             update_frame_imu();
-            auto t8 = Time::nanoseconds_since_epoch();
+            // auto t8 = Time::nanoseconds_since_epoch();
             update_frame_body_tracking();
-            auto t9 = Time::nanoseconds_since_epoch();
+            // auto t9 = Time::nanoseconds_since_epoch();
             update_frame_calibration();
-            auto t10 = Time::nanoseconds_since_epoch();
+            // auto t10 = Time::nanoseconds_since_epoch();
             // Log::fmessage("[{}][{}][{}][{}][{}][{}][{}][{}][{}][{}]\n",
             //     Time::difference_micro_s(t1,t2),
             //     Time::difference_micro_s(t2,t3),Time::difference_micro_s(t3,t4),Time::difference_micro_s(t4,t5),
@@ -1727,13 +1880,13 @@ auto DCDeviceImpl::process_data() -> void{
                 frame->mode            = settings.config.mode;
 
                 frames.add_frame(std::move(frame));
-                frame = nullptr;
             }
         }
 
         {
             auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
             if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                frame = frameToSend;
                 new_frame_signal(std::move(frameToSend));
             }
         }
@@ -1742,6 +1895,8 @@ auto DCDeviceImpl::process_data() -> void{
     if(captureSuccess){
         mInfos.increment_capture_id();
     }
+
+    return {std::move(frame),std::move(dFrame)};
 }
 
 auto DCFramesBuffer::add_frame(std::shared_ptr<DCFrame> frame) -> void{

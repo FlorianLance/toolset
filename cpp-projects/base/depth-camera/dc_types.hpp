@@ -194,7 +194,7 @@ private:
 
     size_t m_idCapture       = 0;
     DCFramerate m_fps        = DCFramerate::F30;
-    std::int32_t m_timeoutMs = 0;
+    std::int32_t m_timeoutMs = 500;
     bool m_hasColor          = false;
     bool m_hasDepth          = false;
     bool m_hasInfra          = false;

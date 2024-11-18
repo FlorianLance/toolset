@@ -87,6 +87,11 @@ struct DCCalibratorSettings{
     bool removeOutliers = true;
     bool computeSphereCenter = true;
     bool downSample = false;
+    bool closestPoints = true;
+    int maxNbPoints = 20;
+    bool meanWithFirstZ = false;
+    bool estimateSphere = false;
+
     float maxDistanceOutlier = 0.15f;
     double downSampleVoxelSize = 0.05;
     float ballRay = 0.025f;

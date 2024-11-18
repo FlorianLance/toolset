@@ -1,8 +1,7 @@
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,46 +25,33 @@
 
 #pragma once
 
+// std
+#include <format>
+
 // local
-#include "dc_data_frame.hpp"
-#include "dc_frame.hpp"
-#include "depth-camera/settings/dc_frame_generation_settings.hpp"
+#include "geometry/point3.hpp"
+#include "geometry/point4.hpp"
 
-namespace tool::cam{
+template <typename acc>
+struct std::formatter<tool::geo::Pt3<acc>> {
 
-struct DCFrameProcessor{
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
 
-    DCFrameProcessor();
-    ~DCFrameProcessor();
-
-    // set
-    auto new_data_frame(std::shared_ptr<DCDataFrame> frame) -> void;
-    auto new_frame(std::shared_ptr<DCFrame> frame) -> void;
-    auto invalid_frame() -> void;
-    auto invalid_data_frame() -> void;
-    auto update_generation_settings(const DCFrameGenerationSettings &generationS) -> void;
-
-    // get
-    auto get_frame() -> std::shared_ptr<DCFrame>;
-    auto get_data_frame() -> std::shared_ptr<DCDataFrame>;
-
-    // processing thread
-    auto start_processing_thread() -> void;
-    auto stop_processing_thread() -> void;
-    auto clean_processing_thread() -> void;
-
-    // processing
-    auto process() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
-    auto generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>;
-
-    std::atomic<double> ucUsage = 0.0;
-    std::atomic<double> avegageProcessMs = 0.0;
-
-private:
-
-    auto process_thread() -> void;
-
-    struct Impl;
-    std::unique_ptr<Impl> i;
+    auto format(const tool::geo::Pt3<acc> &pt, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "({}, {}, {})", pt.x(), pt.y(), pt.z());
+    }
 };
-}
+
+template <typename acc>
+struct std::formatter<tool::geo::Pt4<acc>> {
+
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const tool::geo::Pt4<acc> &pt, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "({}, {}, {}, {})", pt.x(), pt.y(), pt.z(), pt.w());
+    }
+};

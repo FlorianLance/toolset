@@ -219,11 +219,16 @@ auto DCMController::start() -> void{
     view->start();
 }
 
+// #include "utility/time.hpp"
 auto DCMController::update() -> void{
+    // auto t1 = Time::nanoseconds_since_epoch();
     model->update();
     view->update();
+    // Log::fmessage("update {}\n", Time::now_difference_micro_s(t1));
 }
 
 auto DCMController::draw_ui(geo::Pt2f size) -> void{
+    // auto t1 = Time::nanoseconds_since_epoch();
     view->draw(size, model.get());
+    // Log::fmessage("draw_ui {}\n", Time::now_difference_micro_s(t1));
 }

@@ -61,6 +61,17 @@ struct Point3 : Point<acc,3>{
     constexpr Point3(acc x, acc y = acc{0}, acc z = acc{0}) noexcept{
         this->array = {x,y,z};
     }
+
+    [[nodiscard]] auto abs() const noexcept -> Point3{
+        return {std::abs(Point<acc,3>::x()),std::abs(Point<acc,3>::y()),std::abs(Point<acc,3>::z())};
+    }
+
+    constexpr auto clamp(acc min, acc max) -> void{
+        (*this)[0] = std::clamp(Point<acc,3>::x(), min, max);
+        (*this)[1] = std::clamp(Point<acc,3>::y(), min, max);
+        (*this)[2] = std::clamp(Point<acc,3>::z(), min, max);
+    }
+
 };
 
 template <typename acc>
@@ -74,8 +85,23 @@ constexpr auto operator*(const ColVec<acc,3> &l, const ColVec<acc,3> &r) noexcep
 }
 
 template <typename acc>
+constexpr auto operator*(const Point3<acc> &l, const Point3<acc> &r) noexcept -> acc {
+    return {{l[0]*r[0],l[1]*r[1],l[2]*r[2]}};
+}
+
+template <typename acc>
 constexpr auto dot(const Point3<acc> &l, const Point3<acc> &r) noexcept -> acc {
     return l[0]*r[0] + l[1]*r[1] + l[2]*r[2];
+}
+
+template <typename acc>
+constexpr auto square_norm(const Point3<acc> &p) noexcept -> acc {
+    return dot(p,p);
+}
+
+template <typename acc>
+constexpr auto norm(const Point3<acc> &p) noexcept -> acc {
+    return sqrt(dot(p,p));
 }
 
 template <typename acc>

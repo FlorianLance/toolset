@@ -25,7 +25,6 @@
 #pragma once
 
 // std
-#include <array>
 #include <tuple>
 #include <string_view>
 

@@ -46,6 +46,8 @@ private:
     std::mutex m_locker;
     bool m_redrawClouds = false;
     std::vector<std::shared_ptr<cam::DCFrame>> m_lastFrames;
+    std::vector<std::shared_ptr<cam::DCFrame>> m_swapLastFrames;
+    // std::vector<std::unique_ptr<std::mutex>> m_lockers;
 
     bool m_allTabOpened = false;    
     size_t m_currentTabOpened = 0;

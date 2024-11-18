@@ -39,7 +39,9 @@ auto DCModeInfos::initialize(DCMode mode) -> void{
 
     // reset formats/fps/resolution
     m_fps = dc_framerate(mode);
-    m_timeoutMs = 1;
+    // m_timeoutMs = 1;
+
+    // m_timeoutMs = 10;
     // switch (m_fps) {
     // case DCFramerate::F30:
     //     m_timeoutMs = 100;//40;

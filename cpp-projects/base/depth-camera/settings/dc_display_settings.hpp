@@ -52,13 +52,13 @@ struct DCDeviceDisplaySettings{
     float factorUnicolor = 0.65f;
     geo::Pt4f unicolor = {1.f,0.f,0.f, 1.f};
 
-    // geometry    
-    bool backFaceCulling = true;
+    // geometry
+    bool backFaceCulling = false;
     bool circles = true; // if no points will be used
     // # points
     float pointSize = 5.f;
     // # circles
-    float squareSize   = 0.003f;
+    float squareSize   = 0.0025f;
     float circleRadius = 0.25f;
 };
 

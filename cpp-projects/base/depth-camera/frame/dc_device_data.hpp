@@ -64,5 +64,7 @@ struct DCDeviceData{
     std::vector<int> depthMask;
     std::vector<int> zonesId;
     std::vector<std::int16_t> depthFiltering;
+
+    std::vector<int> hsvDiffMask;
 };
 }

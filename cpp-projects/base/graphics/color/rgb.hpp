@@ -43,29 +43,25 @@ using ColorGray16 = std::uint16_t;
 struct ColorRGB8 : geo::Point<std::uint8_t,3>{
 
     ColorRGB8() = default;
-    ColorRGB8(const ColorRGB8& other) = default;
-    ColorRGB8& operator=(const ColorRGB8& other) = default;
-    ColorRGB8(ColorRGB8&& other) = default;
-    ColorRGB8& operator=(ColorRGB8&& other) = default;
 
-    constexpr ColorRGB8(const geo::Point<std::uint8_t,3> &p) noexcept{
-        this->array = p.array;
+    constexpr ColorRGB8(const geo::Point<std::uint8_t, 3> &p) noexcept{
+        array = p.array;
     }
-    constexpr ColorRGB8(geo::Point<std::uint8_t,3> &&p) noexcept{
-        this->array = std::move(p.array);
+    constexpr ColorRGB8(geo::Point<std::uint8_t, 3> &&p) noexcept{
+        array = std::move(p.array);
     }
     constexpr ColorRGB8(std::uint8_t r, std::uint8_t g = 0, std::uint8_t b = 0) noexcept{
-        this->array = {r,g,b};
+        array = {r,g,b};
     }
 
-    inline auto r() noexcept -> std::uint8_t& {return x();}
-    constexpr auto r() const noexcept -> std::uint8_t {return x();}
+    [[nodiscard]] constexpr auto r()          noexcept -> std::uint8_t&   {return array[0];}
+    [[nodiscard]] constexpr auto r() const    noexcept -> std::uint8_t    {return array[0];}
 
-    inline auto g() noexcept -> std::uint8_t& {return y();}
-    constexpr auto g() const noexcept -> std::uint8_t {return y();}
+    [[nodiscard]] constexpr auto g()          noexcept -> std::uint8_t&   {return array[1];}
+    [[nodiscard]] constexpr auto g() const    noexcept -> std::uint8_t    {return array[1];}
 
-    inline auto b() noexcept -> std::uint8_t& {return z();}
-    constexpr auto b() const noexcept -> std::uint8_t {return z();}
+    [[nodiscard]] constexpr auto b()          noexcept -> std::uint8_t&   {return array[2];}
+    [[nodiscard]] constexpr auto b() const    noexcept -> std::uint8_t    {return array[2];}
 };
 
 /**
@@ -77,10 +73,6 @@ struct ColorRGB8 : geo::Point<std::uint8_t,3>{
 struct ColorRGBA8 : geo::Point<std::uint8_t,4>{
 
     ColorRGBA8() = default;
-    ColorRGBA8(const ColorRGBA8& other) = default;
-    ColorRGBA8& operator=(const ColorRGBA8& other) = default;
-    ColorRGBA8(ColorRGBA8&& other) = default;
-    ColorRGBA8& operator=(ColorRGBA8&& other) = default;
 
     constexpr ColorRGBA8(const geo::Point<std::uint8_t,4> &c) noexcept{
         this->array = c.array;
@@ -92,19 +84,19 @@ struct ColorRGBA8 : geo::Point<std::uint8_t,4>{
         this->array = {r,g,b,a};
     }
 
-    inline auto r() noexcept -> std::uint8_t& {return x();}
-    constexpr auto r() const noexcept -> std::uint8_t {return x();}
+    [[nodiscard]] constexpr auto r()          noexcept -> std::uint8_t&   {return array[0];}
+    [[nodiscard]] constexpr auto r() const    noexcept -> std::uint8_t    {return array[0];}
 
-    inline auto g() noexcept -> std::uint8_t& {return y();}
-    constexpr auto g() const noexcept -> std::uint8_t {return y();}
+    [[nodiscard]] constexpr auto g()          noexcept -> std::uint8_t&   {return array[1];}
+    [[nodiscard]] constexpr auto g() const    noexcept -> std::uint8_t    {return array[1];}
 
-    inline auto b() noexcept -> std::uint8_t& {return z();}
-    constexpr auto b() const noexcept -> std::uint8_t {return z();}
+    [[nodiscard]] constexpr auto b()          noexcept -> std::uint8_t&   {return array[2];}
+    [[nodiscard]] constexpr auto b() const    noexcept -> std::uint8_t    {return array[2];}
 
-    inline auto a() noexcept -> std::uint8_t& {return w();}
-    constexpr auto a() const noexcept -> std::uint8_t {return w();}
+    [[nodiscard]] constexpr auto a()          noexcept -> std::uint8_t&   {return array[3];}
+    [[nodiscard]] constexpr auto a() const    noexcept -> std::uint8_t    {return array[3];}
 
-    constexpr auto rgb() const noexcept -> ColorRGB8 {return xyz();}
+    [[nodiscard]] constexpr auto rgb() const noexcept -> ColorRGB8 {return geo::Point<std::uint8_t,4>::xyz();}
 };
 
 /**
@@ -116,34 +108,34 @@ struct ColorRGBA8 : geo::Point<std::uint8_t,4>{
 struct ColorRGB32 : geo::Point<float,3>{
 
     ColorRGB32() = default;
-    ColorRGB32(const ColorRGB32& other) = default;
-    ColorRGB32& operator=(const ColorRGB32& other) = default;
-    ColorRGB32(ColorRGB32&& other) = default;
-    ColorRGB32& operator=(ColorRGB32&& other) = default;
 
     constexpr ColorRGB32(const geo::Point<float,3> &c) noexcept{
-        this->array = c.array;
+        array = c.array;
     }
     constexpr ColorRGB32(geo::Point<float,3> &&c) noexcept{
-        this->array = std::move(c.array);
+        array = std::move(c.array);
     }
     constexpr ColorRGB32(float r, float g = 0.f, float b = 0.f) noexcept{
-        this->array = {r,g,b};
+        array = {r,g,b};
     }
 
-    inline auto r() noexcept -> float& {return x();}
-    constexpr auto r() const noexcept -> float {return x();}
+    [[nodiscard]] constexpr auto r()          noexcept -> float&  {return array[0];}
+    [[nodiscard]] constexpr auto r() const    noexcept -> float   {return array[0];}
 
-    inline auto g() noexcept -> float& {return y();}
-    constexpr auto g() const noexcept -> float {return y();}
+    [[nodiscard]] constexpr auto g()          noexcept -> float&  {return array[1];}
+    [[nodiscard]] constexpr auto g() const    noexcept -> float   {return array[1];}
 
-    inline auto b() noexcept -> float& {return z();}
-    constexpr auto b() const noexcept -> float {return z();}
+    [[nodiscard]] constexpr auto b()          noexcept -> float&  {return array[2];}
+    [[nodiscard]] constexpr auto b() const    noexcept -> float   {return array[2];}
 
-    inline auto clamp(float min, float max) -> void{
-        for(auto &v : array){
-            v = std::clamp(v, min, max);
-        }
+    constexpr auto clamp(float min, float max) -> void{
+        array[0] = std::clamp(r(), min, max);
+        array[1] = std::clamp(g(), min, max);
+        array[2] = std::clamp(b(), min, max);
+    }
+
+    [[nodiscard]] auto abs() const noexcept -> ColorRGB32{
+        return {std::abs(r()),std::abs(g()),std::abs(b())};
     }
 };
 
@@ -157,34 +149,30 @@ struct ColorRGB32 : geo::Point<float,3>{
 struct ColorRGBA32 : geo::Point<float,4>{
 
     ColorRGBA32() = default;
-    ColorRGBA32(const ColorRGBA32& other) = default;
-    ColorRGBA32& operator=(const ColorRGBA32& other) = default;
-    ColorRGBA32(ColorRGBA32&& other) = default;
-    ColorRGBA32& operator=(ColorRGBA32&& other) = default;
 
     constexpr ColorRGBA32(const geo::Point<float,4> &c) noexcept{
-        this->array = c.array;
+        array = c.array;
     }
     constexpr ColorRGBA32(geo::Point<float,4> &&c) noexcept{
-        this->array = std::move(c.array);
+        array = std::move(c.array);
     }
     constexpr ColorRGBA32(float r, float g = 0.f, float b = 0.f, float a = 0.f) noexcept{
-        this->array = {r,g,b,a};
+        array = {r,g,b,a};
     }
 
-    inline auto r() noexcept -> float& {return x();}
-    constexpr auto r() const noexcept -> float {return x();}
+    [[nodiscard]] constexpr auto r()          noexcept -> float&  {return array[0];}
+    [[nodiscard]] constexpr auto r() const    noexcept -> float   {return array[0];}
 
-    inline auto g() noexcept -> float& {return y();}
-    constexpr auto g() const noexcept -> float {return y();}
+    [[nodiscard]] constexpr auto g()          noexcept -> float&  {return array[1];}
+    [[nodiscard]] constexpr auto g() const    noexcept -> float   {return array[1];}
 
-    inline auto b() noexcept -> float& {return z();}
-    constexpr auto b() const noexcept -> float {return z();}
+    [[nodiscard]] constexpr auto b()          noexcept -> float&  {return array[2];}
+    [[nodiscard]] constexpr auto b() const    noexcept -> float   {return array[2];}
 
-    inline auto a() noexcept -> float& {return w();}
-    constexpr auto a() const noexcept -> float {return w();}
+    [[nodiscard]] constexpr auto a()          noexcept -> float&  {return array[3];}
+    [[nodiscard]] constexpr auto a() const    noexcept -> float   {return array[3];}
 
-    constexpr auto rgb() const noexcept -> ColorRGB32 {return xyz();}
+    [[nodiscard]] constexpr auto rgb() const noexcept -> ColorRGB32 {return geo::Point<float,4>::xyz();}
 };
 
 

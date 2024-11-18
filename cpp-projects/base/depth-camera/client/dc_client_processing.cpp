@@ -184,23 +184,23 @@ auto DCClientProcessing::update_device_settings(size_t idD, const DCDeviceSettin
     i->frameProcessors[idD]->update_generation_settings(deviceS.dataS.clientGeneration);
 }
 
-auto DCClientProcessing::process(size_t idD) -> void{
+auto DCClientProcessing::process_from_external_thread(size_t idD) -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
     if(idD >= i->frameProcessors.size()){
         Log::error(std::format("[DCClientProcessing::process] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
-        return;
+        return {nullptr,nullptr};
     }
-    i->frameProcessors[idD]->process();
+    return i->frameProcessors[idD]->process();
 }
 
-auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>{
+// auto DCClientProcessing::generate_frame(size_t idD, std::shared_ptr<DCDataFrame> frame) -> std::shared_ptr<DCFrame>{
 
-    if(idD >= i->frameProcessors.size()){
-        Log::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
-        return nullptr;
-    }
-    return i->frameProcessors[idD]->generate(frame);
-}
+//     if(idD >= i->frameProcessors.size()){
+//         Log::error(std::format("[DCClientProcessing::uncompress_frame] Invalid camera id [{}], only [{}] devices.\n", idD, i->frameProcessors.size()));
+//         return nullptr;
+//     }
+//     return i->frameProcessors[idD]->generate(frame);
+// }
 
 auto DCClientProcessing::save_current_cloud(size_t idD, const std::string &path) -> bool{
 

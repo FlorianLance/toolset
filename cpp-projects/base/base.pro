@@ -218,6 +218,7 @@ HEADERS += \
     utility/decimal.hpp \
     utility/export.hpp \
     utility/format.hpp \
+    utility/geometry_formatter.hpp \
     utility/id_alias_map.hpp \
     utility/image_buffer.hpp \
     utility/io_data.hpp \
@@ -312,6 +313,8 @@ HEADERS += \
     thirdparty/catch/catch.hpp \
     ## sigslot
     thirdparty/sigslot/signal.hpp \
+    ## taskflow
+    thirdparty/taskflow/taskflow.hpp \
 
 
 SOURCES += \
@@ -499,3 +502,4 @@ SOURCES += \
     thirdparty/libyuv/scale_uv.cc \
     thirdparty/libyuv/scale_win.cc \
     thirdparty/libyuv/video_common.cc \
+

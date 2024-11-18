@@ -52,7 +52,9 @@ public:
 
     auto start_thread() -> void;
     auto stop_thread() -> void;
-    auto process() -> void;
+
+    // it not using threads
+    auto process_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
 
     // settings
     auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
@@ -79,8 +81,30 @@ public:
 
 private:
 
+    auto process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
+
     struct Impl;
     std::unique_ptr<Impl> i;
+};
+
+class DCDeviceArray{
+public:
+
+    // std::vector<Device>;
+
+    DCDeviceArray(){
+        // open all
+
+
+    }
+
+    auto run() -> void{
+
+        // for
+        // rc1 rc2 ... rcn
+        // pc1 ..;     pcn
+        // wait
+    }
 };
 
 

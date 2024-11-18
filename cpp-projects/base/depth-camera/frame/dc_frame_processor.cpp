@@ -125,7 +125,7 @@ auto DCFrameProcessor::update_generation_settings(const DCFrameGenerationSetting
     i->generationS = generationS;
 }
 
-auto DCFrameProcessor::process() -> bool{
+auto DCFrameProcessor::process() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
     std::shared_ptr<DCDataFrame> dataFrameToBeProccessed = nullptr;
     {
@@ -144,7 +144,7 @@ auto DCFrameProcessor::process() -> bool{
             // invalid it
             i->lastF  = nullptr;
         }else{
-            return false;
+            return {nullptr, nullptr};
         }
     }
 
@@ -155,13 +155,12 @@ auto DCFrameProcessor::process() -> bool{
             auto frame = std::make_shared<DCFrame>();
             if(i->frameGenerator->generate(i->generationS, dataFrameToBeProccessed.get(), *frame)){
                 std::lock_guard<std::mutex> guard(*i->locker);
-                i->frame = frame;
-                return true;
+                i->frame = std::move(frame);
             }
         }
     }
 
-    return false;
+    return {i->frame,i->dFrame};
 }
 
 auto DCFrameProcessor::generate(std::shared_ptr<DCDataFrame> dFrame) -> std::shared_ptr<DCFrame>{
@@ -178,7 +177,6 @@ auto DCFrameProcessor::generate(std::shared_ptr<DCDataFrame> dFrame) -> std::sha
     return nullptr;
 }
 
-
 auto DCFrameProcessor::process_thread() -> void {
 
     i->processingThreadStarted = true;
@@ -186,28 +184,38 @@ auto DCFrameProcessor::process_thread() -> void {
     size_t idP = 0;
     while(i->processingThreadStarted){
 
-        auto t1 = Time::nanoseconds_since_epoch();
-        bool newFrame = process();
-        auto t2 = Time::nanoseconds_since_epoch();        
-
-        // sleep        
-        using namespace std::chrono_literals;
+        // auto t1 = Time::nanoseconds_since_epoch();
+        auto lastFrames = process();
         std::this_thread::sleep_for(1ms);
-        auto t3 = Time::nanoseconds_since_epoch();
+        // auto t2 = Time::nanoseconds_since_epoch();
 
-        i->processB.add_value(Time::difference_ms(t1,t2).count());
-        i->sleepB.add_value(Time::difference_ms(t2,t3).count());
+        // if(newFrame){
+        //     std::this_thread::sleep_for(10ms);
+        // }else{
+        //     std::this_thread::sleep_for(1ms);
+        // }
+        // auto t3 = Time::nanoseconds_since_epoch();
 
-        if(newFrame){
-            i->averageProcessB.add_value(1.0*duration_cast<microseconds>(t2-t1).count());
-            avegageProcessMs = i->averageProcessB.get();
-        }
+        // Log::fmessage("[{} - {}]", idP, Time::difference_micro_s(t1,t2));
+        // sleep        
+        // using namespace std::chrono_literals;
+        // std::this_thread::sleep_for(1ms);
 
-        ++idP;
-        if(idP % 100 == 0){
-            idP = 0;
-            auto aP = i->processB.get();
-            ucUsage = aP / (aP + i->sleepB.get());            
-        }
+
+
+        // i->processB.add_value(Time::difference_ms(t1,t2).count());
+        // i->sleepB.add_value(Time::difference_ms(t2,t3).count());
+
+        // if(newFrame){
+        //     i->averageProcessB.add_value(1.0*duration_cast<microseconds>(t2-t1).count());
+        //     avegageProcessMs = i->averageProcessB.get();
+
+        //     ++idP;
+        //     if(idP % 100 == 0){
+        //         idP = 0;
+        //         auto aP = i->processB.get();
+        //         ucUsage = aP / (aP + i->sleepB.get());
+        //     }
+        // }
     }
 }

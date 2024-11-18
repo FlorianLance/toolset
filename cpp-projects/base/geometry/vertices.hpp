@@ -181,12 +181,32 @@ struct Vertices3D : public Buffer<Pt3f>{
         return {};
     }
 
+    [[nodiscard]] constexpr auto sum(size_t start, size_t lenght) const noexcept -> geo::Pt3f{
+
+        if(start >= size()){
+            return {};
+        }
+        if(start + lenght >= size()){
+            lenght = size() - start;
+        }
+        return std::accumulate(values.cbegin() + start, values.cbegin() + start + lenght, geo::Pt3f{0,0,0});
+
+    }
+
     [[nodiscard]] constexpr auto sum() const noexcept -> geo::Pt3f{
         if(!empty()){
             return std::accumulate(values.cbegin(), values.cend(), geo::Pt3f{0,0,0});
         }
         return {};
     }
+
+    [[nodiscard]] constexpr auto mean(size_t start, size_t lenght) const noexcept -> geo::Pt3f{
+        if(!empty()){
+            return sum(start, lenght)/static_cast<float>(lenght);
+        }
+        return {};
+    }
+
     [[nodiscard]] constexpr auto mean() const noexcept -> geo::Pt3f{
         if(!empty()){
             return sum()/static_cast<float>(size());
@@ -213,6 +233,7 @@ struct Vertices3D : public Buffer<Pt3f>{
         return {};
     }
     [[nodiscard]] auto sphere() const -> Sphere<float>;
+    [[nodiscard]] auto sphere(float ray) const -> Sphere<float>;
 
     // id
     [[nodiscard]] auto get_outliers_id(const Pt3f &target, float maxDistance) noexcept -> std::vector<size_t>;
@@ -258,6 +279,17 @@ struct Vertices3D : public Buffer<Pt3f>{
     }
     constexpr auto sort_descendant() noexcept -> void{
         std::sort(values.begin(), values.end(), std::greater<geo::Pt3f>());
+    }
+
+    constexpr auto sort_by_z_ascendant() noexcept -> void{
+        std::sort(values.begin(), values.end(), [](const auto& lhs, const auto& rhs){
+            return lhs.z() < rhs.z();
+        });
+    }
+    constexpr auto sort_by_z_descendant() noexcept -> void{
+        std::sort(values.begin(), values.end(), [](const auto& lhs, const auto& rhs){
+            return lhs.z() > rhs.z();
+        });
     }
 };
 }

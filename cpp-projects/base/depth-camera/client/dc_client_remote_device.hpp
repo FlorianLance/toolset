@@ -45,7 +45,9 @@ public:
     auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto init_remote_connection(size_t idClient) -> void;
     auto clean() -> void override;
-    auto read_data_from_external_thread() -> size_t override;
+
+    // when device thread not started
+    auto read_data_from_external_thread() -> size_t;
 
     auto apply_command(net::Command command) -> void override;
     auto ping() -> void;

@@ -30,7 +30,7 @@
 #include <vector>
 #include <algorithm>
 #include <span>
-#include <assert.h>
+// #include <assert.h>
 // #include <numeric>
 
 namespace tool {
@@ -48,6 +48,8 @@ struct Buffer{
     Buffer& operator=(const Buffer& other) = default;
     Buffer(Buffer&& other) = default;
     Buffer& operator=(Buffer&& other) = default;
+
+    constexpr Buffer(std::initializer_list<ElementType> elements) : values(elements){}
 
     // memory
     [[nodiscard]] constexpr auto empty()                const noexcept  -> size_t               {return values.empty();}

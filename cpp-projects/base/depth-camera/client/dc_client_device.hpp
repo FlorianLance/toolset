@@ -43,7 +43,6 @@ public:
     virtual ~DCClientDevice(){}
     virtual auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool{static_cast<void>(connectionS);return false;}
     virtual auto clean() -> void{}
-    virtual auto read_data_from_external_thread() -> size_t{return 0;}
 
     virtual auto apply_command(net::Command command) -> void{static_cast<void>(command);}
     virtual auto update_device_settings(const cam::DCDeviceSettings &deviceS) -> void{static_cast<void>(deviceS);}

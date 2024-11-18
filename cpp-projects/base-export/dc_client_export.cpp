@@ -213,7 +213,7 @@ auto DCClientExport::update_delay(size_t idD, cam::DCMiscSettings miscS) -> void
 }
 
 auto DCClientExport::read_data_from_external_thread(size_t idD) -> size_t{
-    return client.read_data_from_external_thread(idD);
+    return client.read_from_external_thread(idD);
 }
 
 auto DCClientExport::trigger_packets_from_external_tread(size_t idD) -> void{

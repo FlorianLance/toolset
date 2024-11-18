@@ -79,6 +79,9 @@ struct DCDevice::Impl{
     bool doLoopA = false;
     std::mutex locker;
     std::vector<DeviceAction> actions;
+
+    // last frames
+    std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> lastFrames = {nullptr,nullptr};
 };
 
 DCDevice::DCDevice(): i(std::make_unique<Impl>()){
@@ -98,18 +101,34 @@ auto DCDevice::start_thread() -> void{
     i->loopT = std::make_unique<std::thread>([&](){
         Log::message("[DCDevice::start_thread]\n"sv);
         i->doLoopA = true;
-        size_t loopCounter = 0;
+        // size_t loopCounter = 0;
         while(i->doLoopA){
 
-            process();
+            auto tBefore = Time::nanoseconds_since_epoch();
+            auto lastFrames = process_frames();
+            auto tAfter = Time::nanoseconds_since_epoch();
 
-            if(loopCounter%20 == 0){
-                auto v1 = i->procB.get();
-                auto v2 = i->sleepB.get();
-                i->procUsage = v1 / (v1 + v2);
-                loopCounter = 0;
+            auto diffMs = Time::difference_ms(tBefore, tAfter);
+            if(diffMs.count() < 5){
+                // std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
-            ++loopCounter;
+
+
+            // Log::fmessage("Duration {}\n", diffMs);
+
+            i->lastFrames = std::move(lastFrames);
+
+            // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            // sleep
+
+            // if(loopCounter%20 == 0){
+            //     auto v1 = i->procB.get();
+            //     auto v2 = i->sleepB.get();
+            //     i->procUsage = v1 / (v1 + v2);
+            //     loopCounter = 0;
+            // }
+            // ++loopCounter;
+            // Log::fmessage("[{}]", Time::now_difference_micro_s(t1));
         }
     });
 }
@@ -125,9 +144,20 @@ auto DCDevice::stop_thread() -> void{
     }
 }
 
-auto DCDevice::process() -> void{
+auto DCDevice::process_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
-    auto tStart = Time::nanoseconds_since_epoch();
+    if(i->loopT != nullptr){
+        return {nullptr,nullptr};
+    }
+
+    i->lastFrames = process_frames();
+
+    return i->lastFrames;
+}
+
+auto DCDevice::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
+
+    // auto tStart = Time::nanoseconds_since_epoch();
 
     i->locker.lock();
     auto dActions = i->actions;
@@ -171,7 +201,7 @@ auto DCDevice::process() -> void{
                 auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
                 i->device = std::make_unique<RecordingDeviceImpl>();
             }else{
-                return;
+                return {nullptr,nullptr};
             }
 
             // set connections
@@ -243,24 +273,45 @@ auto DCDevice::process() -> void{
     }
 
     // process frame
+    bool processed = false;
     if(i->device != nullptr){
         if(i->device->is_opened()){
             if(readFrames ){
-                i->device->process();
+
+                return i->device->process_frames();
+
+                // Log::fmessage("[{}]", processed);
+                // if(!i->device->process()){
+
+
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                // }
+                // return true;
             }
         }
     }
 
-    auto tEnd = Time::nanoseconds_since_epoch();
-    auto diff = Time::difference_ms(tStart,tEnd);
-    int targetFPS = 30;
-    int timeToWait = 0;
-    if(diff.count() < targetFPS){
-        timeToWait = static_cast<int>((targetFPS - diff.count())*0.75);
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeToWait));
-    }
-    i->procB.add_value(diff.count());
-    i->sleepB.add_value(Time::difference_ms(tEnd,Time::nanoseconds_since_epoch()).count());
+    return {nullptr,nullptr};
+
+    // auto tEnd = Time::nanoseconds_since_epoch();
+    // auto diff = Time::difference_ms(tStart,tEnd);
+    // int targetFPS = 30;
+    // int timeToWait = 0;
+    // if(diff.count() < targetFPS){
+    //     timeToWait = static_cast<int>((targetFPS - diff.count())*0.85);
+    //     // if(timeToWait > 5){
+    //     //     timeToWait = 5;
+    //     // }
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(timeToWait));
+    // }
+    // // Log::fmessage("[{}-{}]", timeToWait, Time::now_difference_micro_s(tEnd));
+
+    // i->procB.add_value(diff.count());
+    // i->sleepB.add_value(Time::difference_ms(tEnd,Time::nanoseconds_since_epoch()).count());
+
+
+    // return processed;
+
 
 }
 

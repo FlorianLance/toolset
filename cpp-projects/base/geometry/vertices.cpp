@@ -27,57 +27,59 @@
 
 #include "vertices.hpp"
 
+// eigen
+#include <Eigen/Dense>
+
 using namespace tool::geo;
 
 auto Vertices3D::sphere() const -> Sphere<float>{
 
-     // TODO: add test
-
     if(empty()){
         return {{},0.f};
     }
-    
-    Pt3f meanP = mean();
 
-    // compute A/B
-    Mat3f A;
-    Vec3f B;
-    auto n = static_cast<float>(size());
+    Buffer<float> A;
+    A.reserve(4*size());
     for(const auto &v : values){
-
-        Vec3f diff = v-meanP;
-
-        A.array[0] += (v.x() * diff.x());
-        A.array[1] += (v.x() * diff.y());
-        A.array[2] += (v.x() * diff.z());
-
-        A.array[3] += (v.y() * diff.x());
-        A.array[4] += (v.y() * diff.y());
-        A.array[5] += (v.y() * diff.z());
-
-        A.array[6] += (v.z() * diff.x());
-        A.array[7] += (v.z() * diff.y());
-        A.array[8] += (v.z() * diff.z());
-        A /= n;
-
-        auto d = dot(v, v);
-        B += (diff*d)/n;
+        A.push_back(v.x()*2);
     }
-    A *= 2.;
-
-    Mat3f trA = transpose(A);
-    Mat3f bb  = inverse((trA*A)) * trA;
-
-    Pt3f center =  transpose(bb * transpose(B));
-    float r = 0.f;
     for(const auto &v : values){
-        r += square_norm(v - center);
+        A.push_back(v.y()*2);
     }
-    r = sqrt(r/n);
+    for(const auto &v : values){
+        A.push_back(v.z()*2);
+    }
+    for(size_t id = 0; id < values.size(); ++id){
+        A.push_back(1.f);
+    }
 
-    return {center,r};
+    Buffer<float> F;
+    F.reserve(size());
+    for(const auto &v : values){
+        F.push_back(geo::square_norm(v));
+    }
+
+    Eigen::MatrixXf aEigen = Eigen::MatrixXf::Map(reinterpret_cast<float*>(A.get_data()), size(), 4);
+    Eigen::MatrixXf fEigen = Eigen::MatrixXf::Map(F.get_data(), F.size(), 1);
+    Eigen::BDCSVD<Eigen::MatrixXf> svd(aEigen, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+    auto C = svd.solve(fEigen);
+    auto t = (C(0)*C(0)) + (C(1)*C(1)) + (C(2)*C(2)) + C(3);
+    auto radius = std::sqrt(t);
+
+    return {{C(0),C(1),C(2)},radius};
 }
 
+auto Vertices3D::sphere(float ray) const -> Sphere<float>{
+
+    Pt3f center = mean();
+    for (const auto& v : values) {
+        Pt3f diff = v - center;
+        auto f = ray/norm(diff);
+        center += diff * f;
+    }
+    return {center,ray};
+}
 
 auto Vertices3D::get_outliers_id(const Pt3f &target, float maxDistance) noexcept -> std::vector<size_t>{
 
