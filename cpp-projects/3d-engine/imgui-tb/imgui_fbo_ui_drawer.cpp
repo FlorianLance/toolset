@@ -27,6 +27,9 @@
 
 #include "imgui_fbo_ui_drawer.hpp"
 
+// base
+#include "utility/logger.hpp"
+
 // imgui
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
@@ -61,6 +64,7 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
     m_screen.resize(size.x(), size.y());
     m_camera.update_projection();
 
+    // color texture
     m_texture.clean();
     m_texture.init_image_8u(size.x(),size.y(), 3);
 
@@ -69,13 +73,20 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
     options.magFilter = TextureMagFilter::linear;
     m_texture.set_texture_options(options);
 
+    // picking texture
+    // m_pickingTexture.clean();
+    // m_pickingTexture.init_image_32u(size.x(),size.y(), 3);
+
+    // options.minFilter = TextureMinFilter::nearest;
+    // options.magFilter = TextureMagFilter::nearest;
+    // m_pickingTexture.set_texture_options(options);
     m_depthTexture.clean();
     m_depthTexture.initialize();
     m_depthTexture.bind();
     m_depthTexture.set_data_storage(size.x(), size.y());
 
     m_fbo.attach_color_textures({
-        &m_texture
+        &m_texture//, &m_pickingTexture
     });
 
     m_fbo.attach_depth_buffer(m_depthTexture);
@@ -96,11 +107,13 @@ auto ImguiFboUiDrawer::update_viewport() -> void{
     glViewport(0,0, m_texture.width(), m_texture.height());
 }
 
+
 auto ImguiFboUiDrawer::set_gl_states(geo::Pt4f color) -> void{
     glClearColor(color.x(),color.y(),color.z(),color.w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     GL::enable(GL_DEPTH_TEST);
 }
+
 
 auto ImguiFboUiDrawer::draw() -> void{
 
@@ -116,6 +129,29 @@ auto ImguiFboUiDrawer::draw() -> void{
         }else{
             ImGui::Image(reinterpret_cast<ImTextureID*>(m_texture.id()), sizeI,  ImVec2(0,0), ImVec2(1,1));
         }
+
+        auto io       = ImGui::GetIO();
+        auto min      = ImGui::GetItemRectMin();
+        auto size     = ImGui::GetItemRectSize();
+        auto mousePos = io.MousePos;
+        auto diff     = geo::Pt2f{mousePos.x-min.x, mousePos.y-min.y};
+
+        if(diff.x() > 0 && diff.x() < size.x && diff.y() > 0 && diff.y() < size.y){
+
+            hoveringPixel = (diff).conv<int>();
+            for(int ii = 0; ii < 5; ++ii){
+                mouseButtonsPressed[ii]  = io.MouseDown[ii];
+                mouseButtonsReleased[ii] = io.MouseReleased[ii];
+            }
+
+        }else{
+            hoveringPixel = {-1,-1};
+            for(int ii = 0; ii < 5; ++ii){
+                mouseButtonsPressed[ii]     = false;
+                mouseButtonsReleased[ii]    = false;
+            }
+        }
+
     }
 
     check_inputs();

@@ -30,8 +30,12 @@
 #include <execution>
 // #include <iostream>
 
+#include <thirdparty/taskflow/algorithm/transform.hpp>
+#include <thirdparty/taskflow/algorithm/for_each.hpp>
+
 // opencv
 #include <opencv2/imgproc.hpp>
+
 
 // local
 #include "utility/logger.hpp"
@@ -44,6 +48,635 @@ using namespace tool::cam;
 
 
 DCDeviceImpl::DCDeviceImpl(){
+
+    // taskflow
+    {
+
+        auto copyTimeT = m_processFramesT.emplace([&](){
+            Log::message("###################### COPY TIMES\n");
+            timesLocker.lock();
+            times = timeM.times;
+            timesLocker.unlock();
+        }).name("copyTime");
+
+        auto readFrameT = m_processFramesT.emplace([&](tf::Subflow& readFrameSubflow){
+
+            auto captureFrameT = readFrameSubflow.emplace([&](){
+
+                Log::message("###################### CAPTURE\n");
+
+                fData.reset_spans();
+
+                auto tCF = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
+
+                auto t1 = Time::nanoseconds_since_epoch();
+                captureSuccess = capture_frame(mInfos.timeout_ms());
+
+                Log::fmessage("C[{}] [{}] \n", captureSuccess, Time::now_difference_micro_s(t1));
+                if(!captureSuccess){
+                    dataIsValid = false;
+                    return 1;
+                }
+                return 0;
+            }).name("captureFrame");
+
+            // auto readImagesT = readFrameSubflow.emplace([&](tf::Subflow& readImagesSubflow){
+            auto readImagesT = readFrameSubflow.emplace([&](){
+
+               auto tRI = TimeDiffGuard(timeM, "READ_IMAGES"sv);
+               {
+                   auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
+                   read_color_image(mInfos.has_color() && settings.data.capture.color);
+               }
+               {
+                   auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
+                   read_depth_image(mInfos.has_depth() && settings.data.capture.depth);
+               }
+               {
+                   auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
+                   read_infra_image(mInfos.has_infra() && settings.data.capture.infra);
+               }
+               {
+                   auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
+                   read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
+               }
+               {
+                   auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
+                   read_audio(settings.data.capture.audio && mInfos.has_audio());
+               }
+               {
+                   auto tRI = TimeDiffGuard(timeM, "READ_IMU"sv);
+                   read_IMU(settings.data.capture.imu);
+               }
+
+                // auto readColorImageT = readImagesSubflow.emplace([&](){
+                //     auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
+                //     read_color_image(mInfos.has_color() && settings.data.capture.color);
+                // }).name("readColorImage");
+
+                // auto readDepthImageT = readImagesSubflow.emplace([&](){
+                //     auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
+                //     read_depth_image(mInfos.has_depth() && settings.data.capture.depth);
+                // }).name("readDepthImage");
+
+                // auto readInfraImageT = readImagesSubflow.emplace([&](){
+                //     auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
+                //     read_infra_image(mInfos.has_infra() && settings.data.capture.infra);
+                // }).name("readInfraImage");
+
+                // auto readBodyTrackingT = readImagesSubflow.emplace([&](){
+                //     auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
+                //     read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
+                // }).name("readBodyTracking");
+
+                // auto readAudioT = readImagesSubflow.emplace([&](){
+                //     auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
+                //     read_audio(settings.data.capture.audio && mInfos.has_audio());
+                // }).name("readAudio");
+
+                // auto readIMUT = readImagesSubflow.emplace([&](){
+                //     auto tRI = TimeDiffGuard(timeM, "READ_IMU"sv);
+                //     read_IMU(settings.data.capture.imu);
+                // }).name("readIMU");
+
+                // readColorImageT.precede(readDepthImageT);
+                // readDepthImageT.precede(readInfraImageT);
+                // readInfraImageT.precede(readBodyTrackingT);
+
+            }).name("readImages");
+
+            auto resetFramesT = readFrameSubflow.emplace([&](){                
+                frame   = nullptr;
+                dFrame  = nullptr;
+            }).name("resetFrames");
+
+
+            auto checkDataValidityT = readFrameSubflow.emplace([&](){
+                dataIsValid = check_data_validity();
+                return (captureSuccess && dataIsValid) ? 0 : 1;
+            }).name("checkDataValidity");
+
+
+
+            auto processDataT = readFrameSubflow.emplace([&](tf::Subflow& processDataSubflow){
+
+                auto initFramesT = processDataSubflow.emplace([&](){
+
+                    timeM.start("PROCESSING_DATA"sv);
+
+                    // Log::message("initFramesT\n");
+                    framerateB.add_frame();
+
+                    if(settings.data.generation.has_data()){
+                        frame = std::make_shared<DCFrame>();
+                    }
+
+                    if(settings.data.sending.has_data()){
+                        dFrame = std::make_shared<DCDataFrame>();
+                    }
+
+                    // update parameters
+
+                    minW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.minWidthF);
+                    maxW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.maxWidthF);
+                    minH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.minHeightF);
+                    maxH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.maxHeightF);
+
+                    dRange                              = mInfos.depth_range_mm();
+                    diffRange                           = dRange.y()-dRange.x();
+                    minD                                = static_cast<std::uint16_t>(dRange.x() + settings.filters.minDepthF * diffRange);
+                    maxD                                = static_cast<std::uint16_t>(dRange.x() + settings.filters.maxDepthF * diffRange);
+                    hsvDiffColor                        = Convert::to_hsv(settings.filters.filterColor);
+                    maxDiffColor                        = settings.filters.maxDiffColor;
+                    fdc                                 = settings.filters.filterDepthWithColor && (fData.depthSizedColor.size() == fData.depth.size());
+                    // Log::fmessage("FDC {} {} {}\n", fdc, fData.depthSizedColor.size(), fData.depth.size());
+
+                    // # plane filtering
+                    p1                                  = settings.filters.p1A*1000.f;
+                    p2                                  = settings.filters.p1B*1000.f;
+                    p3                                  = settings.filters.p1C*1000.f;
+                    meanPt                              = (p1+p2+p3)/3.f;
+                    AB                                  = vec(p2,p1);
+                    AC                                  = vec(p3,p1);
+                    normalV                             = normalize(cross(AB,AC));
+                    // # sphere filtering
+                    pSphere                             = settings.filters.pSphere*1000.f;
+                    squareMaxDistanceFromPoint          = settings.filters.maxSphereDistance*settings.filters.maxSphereDistance;
+                    // # oob filtering
+                    oobRot                              = settings.filters.oob.rotation;
+                    oobOrientation                      = geo::rotation_m3x3(geo::Vec3f{deg_2_rad(oobRot.x()), deg_2_rad(oobRot.y()), deg_2_rad(oobRot.z())});
+                    invO                                = inverse(oobOrientation);
+                    halfDimensions                      = settings.filters.oob.size * 500.f;
+                    oobPos                              = settings.filters.oob.position * 1000.f;
+
+
+                    minNeighBoursFilteringIterations    = settings.filters.minNeighboursLoops;
+                    erosionsIterations                  = settings.filters.erosionLoops;
+
+                    currentZoneId                       = 1;
+                    biggestZone                         = -1;
+                    sizeBiggestZone                     = 0;
+
+                    fData.meanBiggestZoneId             = 0;
+
+                    std::fill(fData.depthMask.begin(), fData.depthMask.end(), 1);
+
+                }).name("initFrames");
+
+                tf::Task convertColorImageT = processDataSubflow.emplace([&](){
+                    auto tG = TimeDiffGuard(timeM, "CONVERT_COLOR_IMAGE"sv);
+                    convert_color_image();
+                }).name("convertColorImage");
+
+                tf::Task resizeColorImageT  = processDataSubflow.emplace([&](){
+                    auto tG = TimeDiffGuard(timeM, "RESIZE_COLOR_IMAGE"sv);
+                    resize_color_image_to_depth_size();
+                }).name("resizeColorImage");
+
+                tf::Task generateCloudT = processDataSubflow.emplace([&](){
+                    auto tGC = TimeDiffGuard(timeM, "GENERATE_CLOUD"sv);
+                    generate_cloud(settings.data.capture_cloud() || settings.filters.filterDepthWithCloud);
+                }).name("generateCloud");
+
+                tf::Task checkFilterDepthT = processDataSubflow.emplace([&](){
+                    return !fData.depth.empty() ? 0 : 1;
+                }).name("checkFilterDepth");
+
+                tf::Task checkFilterDepthFromDepthSizedColorT = processDataSubflow.emplace([&](){
+                    timeM.start("FILTER"sv);
+                    return fdc ? 0 : 1;
+                }).name("checkFilterDepthFromDepthSizedColor");
+
+                auto fillHSVDiffMaskT = processDataSubflow.for_each(std::ref(dIndices.depths1DStart), std::ref(dIndices.depths1DEnd), [&](size_t id){
+                    auto hsv = Convert::to_hsv(fData.depthSizedColor[id]);
+                    fData.hsvDiffMask[id] =
+                    (
+                        (std::abs(hsv.h()- hsvDiffColor.h()) <= maxDiffColor.h()) &&
+                        (std::abs(hsv.s()- hsvDiffColor.s()) <= maxDiffColor.s()) &&
+                        (std::abs(hsv.v()- hsvDiffColor.v()) <= maxDiffColor.v())
+                    ) ? 1 : 0;
+                }, tf::DynamicPartitioner(64)).name("fillHSVDiffMask");
+
+                auto endColorProcessingT = processDataSubflow.emplace([&](){
+
+                }).name("endColorProcessing");
+
+                tf::Task generateFramesT = processDataSubflow.emplace([&](){
+
+                }).name("generateFrames");
+
+                auto filterDepthBasicT = processDataSubflow.for_each(std::ref(dIndices.depths3DStart), std::ref(dIndices.depths3DEnd), [&](const Pt3<size_t> &dIndex){
+
+                    const auto &currentDepth = fData.depth[dIndex.x()];
+                    fData.depthMask[dIndex.x()] =
+                    (
+                        (currentDepth == dc_invalid_depth_value) ||     // invalid
+                        (dIndex.y()   < minW) ||                        // width
+                        (dIndex.y()   > maxW) ||                        //   -
+                        (dIndex.z()   < minH) ||                        // height
+                        (dIndex.z()   > maxH) ||                        //   -
+                        (currentDepth < minD) ||                        // depth
+                        (currentDepth > maxD) ||
+                        (fdc ? (fData.hsvDiffMask[dIndex.x()] == 0) : 0)
+                    ) ? 0 : 1;
+
+                }, tf::DynamicPartitioner(64)).name("filterDepthBasic");
+
+                auto checkFilterDepthFromCloudT = processDataSubflow.emplace([&](){
+                    return
+                        ((settings.filters.filterDepthWithCloud && !fData.depth.empty() && !fData.depthCloud.empty()) &&
+                        ((settings.filters.p1FMode != PlaneFilteringMode::None) || settings.filters.removeFromPointDistance || settings.filters.keepOnlyPointsInsideOOB)) ? 0 : 1;
+                }).name("checkFilterDepthFromCloud");
+
+                auto filterDepthFromCloudT = processDataSubflow.for_each(std::ref(dIndices.depthVertexCorrrespondanceStart), std::ref(dIndices.depthVertexCorrrespondanceEnd), [&](const auto &idC){
+
+                    auto idD = std::get<0>(idC);
+
+                    if(fData.depth[idD] == dc_invalid_depth_value){
+                        return;
+                    }
+
+                    if(settings.filters.p1FMode != PlaneFilteringMode::None){
+                        if(dot(normalV,vec(meanPt, fData.depthCloud[idD].template conv<float>())) < 0){
+                            if(settings.filters.p1FMode == PlaneFilteringMode::Above){
+                                fData.depthMask[idD] = 0;
+                                return;
+                            }
+                        }else{
+                            if(settings.filters.p1FMode == PlaneFilteringMode::Below){
+                                fData.depthMask[idD] = 0;
+                                return;
+                            }
+                        }
+                    }
+
+                    if(settings.filters.removeFromPointDistance){
+                        if(square_norm(vec(pSphere,fData.depthCloud[idD].template conv<float>())) > squareMaxDistanceFromPoint){
+                            fData.depthMask[idD] = 0;
+                            return;
+                        }
+                    }
+
+                    if(settings.filters.keepOnlyPointsInsideOOB){
+
+                        auto pointLocal = (fData.depthCloud[idD].template conv<float>()) - oobPos;// settings.filters.oob.position;
+                        auto pointLocalRotated = pointLocal * invO;
+                        if(std::abs(pointLocalRotated.x())  > halfDimensions.x() ||
+                            std::abs(pointLocalRotated.y()) > halfDimensions.y() ||
+                            std::abs(pointLocalRotated.z()) > halfDimensions.z()){
+                            fData.depthMask[idD] = 0;
+                            return;
+                        }
+                    }
+
+                }, tf::DynamicPartitioner(64)).name("filterDepthFromCloud");
+
+                auto filterDepthComplexT = processDataSubflow.emplace([&](tf::Subflow& filterDepthComplexSubflow){
+
+                    auto initDoMinNeighboursFilteringT =  filterDepthComplexSubflow.emplace([&](){
+                        minNeighBoursFilteringIterations = settings.filters.minNeighboursLoops;
+                    }).name("initDoMinNeighboursFiltering");
+
+                    auto checkDoMinNeighboursFilteringT = filterDepthComplexSubflow.emplace([&](){
+                        return (settings.filters.doMinNeighboursFiltering && minNeighBoursFilteringIterations > 0) ? 0 : 1;
+                    }).name("checkDoMinNeighboursFiltering");
+
+                    auto doMinNeighboursFilteringT = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+                        fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours8Depth1D[id].begin(), dIndices.neighbours8Depth1D[id].end(), 0, [&](int total, size_t cId){
+                            return total + fData.depthMask[cId];
+                        }) >= settings.filters.nbMinNeighbours ? 1 : 0) : 0;
+                    }, tf::DynamicPartitioner(64)).name("doMinNeighboursFiltering");
+
+                    auto doUpdateDepthMask1T = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+                        if(fData.filteringMask[id] == 0){
+                            fData.depthMask[id] = 0;
+                        }
+                    },tf::DynamicPartitioner(64)).name("doUpdateDepthMask1");
+
+                    auto backToDoMinNeighboursFilteringT =  filterDepthComplexSubflow.emplace([&](){
+                        --minNeighBoursFilteringIterations;
+                        return 0;
+                    }).name("backToDoMinNeighboursFiltering");
+
+                    auto initDoErosionT =  filterDepthComplexSubflow.emplace([&](){
+                        erosionsIterations = settings.filters.erosionLoops;
+                    }).name("initDoErosion");
+
+                    auto checkDoErosionT = filterDepthComplexSubflow.emplace([&](){
+                        return (settings.filters.doErosion && erosionsIterations > 0) ? 0 : 1;
+                    }).name("checkDoErosion");
+
+                    auto doErosionT = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+                        fData.filteringMask[id] = (fData.depthMask[id] != 0) ? (std::accumulate(dIndices.neighbours4Depth1D[id].begin(), dIndices.neighbours4Depth1D[id].end(), 0, [&](int total, size_t cId){
+                            return total + fData.depthMask[cId];
+                        }) >= 4 ? 1 : 0) : 0;
+                    }, tf::DynamicPartitioner(64)).name("doErosion");
+
+                    auto doUpdateDepthMask2T = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+                        if(fData.filteringMask[id] == 0){
+                            fData.depthMask[id] = 0;
+                        }
+                    },tf::DynamicPartitioner(64)).name("doUpdateDepthMask2");
+
+                    auto backToDoErosionT =  filterDepthComplexSubflow.emplace([&](){
+                        --erosionsIterations;
+                        return 0;
+                    }).name("backToDoErosion");
+
+                    auto checkDoLocalDiffFilteringT = filterDepthComplexSubflow.emplace([&](){
+                        return settings.filters.doLocalDiffFiltering ? 0 : 1;
+                    }).name("checkDoLocalDiffFiltering");
+
+                    auto doLocalDiffFilteringT = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+
+                        float currDepth = fData.depth[id];
+                        float meanDiff = 0.f;
+                        std::uint8_t count = 0;
+                        for(const auto &cId : dIndices.neighbours4Depth1D[id]){
+                            if(fData.depthMask[cId] == 1){
+                                meanDiff += abs(fData.depth[cId]-currDepth);
+                                ++count;
+                            }
+                        }
+                        fData.filteringMask[id] = (count == 0) ? 0 : ((1.*meanDiff/count < settings.filters.maxLocalDiff) ? 1 : 0);
+
+                    }, tf::DynamicPartitioner(64)).name("doLocalDiffFiltering");
+
+                    auto doUpdateDepthMask3T = filterDepthComplexSubflow.for_each(std::ref(dIndices.depths1DNoBordersStart), std::ref(dIndices.depths1DNoBordersEnd), [&](const auto &id){
+                        if(fData.filteringMask[id] == 0){
+                            fData.depthMask[id] = 0;
+                        }
+                    },tf::DynamicPartitioner(64)).name("doUpdateDepthMask3");
+
+                    auto checkKeepOnlyBiggestClusterT = filterDepthComplexSubflow.emplace([&](){
+                        return settings.filters.keepOnlyBiggestCluster ? 0 : 1;
+                    }).name("checkKeepOnlyBiggestCluster");
+
+                    auto keepOnlyBiggestClusterT = filterDepthComplexSubflow.emplace([&](){
+                        keep_only_biggest_cluster();
+                    }).name("keepOnlyBiggestCluster");
+
+                    auto checkRemoveAfterClosestPointT = filterDepthComplexSubflow.emplace([&](){
+                        return settings.filters.removeAfterClosestPoint ? 0 : 1;
+                    }).name("checkRemoveAfterClosestPoint");
+
+                    auto removeAfterClosestPointT = filterDepthComplexSubflow.emplace([&](tf::Subflow& removeAfterClosestPointSubflow){
+
+                        auto removeAfterClosestPointSub1T = removeAfterClosestPointSubflow.emplace([&](){
+
+                            minDist = std::numeric_limits<std::uint16_t>::max();
+                            std::for_each(std::execution::unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
+                                if(fData.depthMask[id] != 0){
+                                    if(minDist > fData.depth[id]){
+                                        minDist = fData.depth[id];
+                                    }
+                                }
+                            });
+                            maxDist = minDist + static_cast<std::uint16_t>(1000.f * settings.filters.maxDistanceAfterClosestPoint);
+
+                        }).name("removeAfterClosestPointSub1");
+
+                        auto removeAfterClosestPointSub2T = removeAfterClosestPointSubflow.for_each(std::ref(dIndices.depths1DStart), std::ref(dIndices.depths1DEnd), [&](const auto &id){
+                            if(fData.depth[id] > maxDist){
+                                fData.depthMask[id] = 0;
+                            }
+
+                        }, tf::DynamicPartitioner(64)).name("removeAfterClosestPointSub2");
+
+                        removeAfterClosestPointSub1T.precede(removeAfterClosestPointSub2T);
+
+                    }).name("removeAfterClosestPoint");
+
+                    initDoMinNeighboursFilteringT.precede(checkDoMinNeighboursFilteringT);
+                    checkDoMinNeighboursFilteringT.precede(doMinNeighboursFilteringT, initDoErosionT);
+                    doMinNeighboursFilteringT.precede(doUpdateDepthMask1T);
+                    doUpdateDepthMask1T.precede(backToDoMinNeighboursFilteringT);
+                    backToDoMinNeighboursFilteringT.precede(checkDoMinNeighboursFilteringT);
+
+                    initDoErosionT.precede(checkDoErosionT);
+                    checkDoErosionT.precede(doErosionT, checkDoLocalDiffFilteringT);
+                    doErosionT.precede(doUpdateDepthMask2T);
+                    doUpdateDepthMask2T.precede(backToDoErosionT);
+                    backToDoErosionT.precede(checkDoErosionT);
+
+                    checkDoLocalDiffFilteringT.precede(doLocalDiffFilteringT, checkKeepOnlyBiggestClusterT);
+                    doLocalDiffFilteringT.precede(doUpdateDepthMask3T);
+                    doUpdateDepthMask3T.precede(checkKeepOnlyBiggestClusterT);
+
+                    checkKeepOnlyBiggestClusterT.precede(keepOnlyBiggestClusterT, checkRemoveAfterClosestPointT);
+                    keepOnlyBiggestClusterT.precede(checkRemoveAfterClosestPointT);
+                    checkRemoveAfterClosestPointT.precede(removeAfterClosestPointT);
+
+                }).name("filterDepthComplex");
+
+                auto updateValidDepthValuesT = processDataSubflow.emplace([&](){
+                    update_valid_depth_values();
+                    timeM.end("FILTER"sv);
+                }).name("updateValidDepthValues");
+
+                auto checkFilterDepthSizedColorFromDepthT = processDataSubflow.emplace([&](){
+                    return settings.filters.invalidateColorFromDepth && (!fData.depthSizedColor.empty() && (fData.depth.size() == fData.depthSizedColor.size())) ? 0 : 1;
+                }).name("checkFilterDepthSizedColorFromDepth");
+
+                auto filterDepthSizedColorFromDepthT = processDataSubflow.for_each(std::ref(dIndices.depths1DStart), std::ref(dIndices.depths1DEnd), [&](const auto &id){
+                    if(fData.depth[id] == dc_invalid_depth_value){
+                        fData.depthSizedColor[id] = ColorRGBA8{dc_invalid_color_value};
+                    }
+                }, tf::DynamicPartitioner(64)).name("filterDepthSizedColorFromDepthT");
+
+
+                auto checkFilterInfraFromDepthT = processDataSubflow.emplace([&](){
+                    return settings.filters.invalidateInfraFromDepth && (!fData.infra.empty() && (fData.depth.size() == fData.infra.size())) ? 0 : 1;
+                }).name("checkFilterInfraFromDepth");
+
+                auto filterInfraFromDepthT = processDataSubflow.for_each(std::ref(dIndices.depths1DStart), std::ref(dIndices.depths1DEnd), [&](const auto &id){
+                    if(fData.depth[id] == dc_invalid_depth_value){
+                        fData.infra[id] = dc_invalid_infra_value;
+                    }
+                }, tf::DynamicPartitioner(64)).name("filterInfraFromDepth");
+
+                // auto endInfraFilteringT = processDataSubflow.emplace([&](){
+
+                // }).name("endInfraFiltering");
+
+
+                auto updateDataFrameT = processDataSubflow.emplace([&](){
+                    auto tUCF = TimeDiffGuard(timeM, "UPDATE_DATA_FRAME"sv);
+                    // Log::message("updateDataFrameT\n");
+                    update_data_frame_color();
+                    update_data_frame_depth_sized_color();
+                    update_data_frame_depth();
+                    update_data_frame_infra();
+                    update_data_frame_cloud();
+                    update_data_frame_audio();
+                    update_data_frame_imu();
+                    update_data_frame_body_tracking();
+                    update_data_frame_calibration();
+                    // Log::message("end updateDataFrameT\n");
+                }).name("updateDataFrame");
+
+                auto updateFrameT = processDataSubflow.emplace([&](){
+                    auto tUF = TimeDiffGuard(timeM, "UPDATE_FRAME"sv);
+                    // Log::message("updateFrameT2\n");
+                    update_frame_original_size_color();
+                    update_frame_depth_sized_color();
+                    update_frame_depth();
+                    update_frame_infra();
+                    update_frame_cloud();
+                    update_frame_audio();
+                    update_frame_imu();
+                    update_frame_body_tracking();
+                    update_frame_calibration();
+                    // Log::message("end updateFrameT\n");
+                }).name("updateFrame");
+
+                // auto updateDataFrameColorT = processDataSubflow.emplace([&](){
+                //     update_data_frame_color();
+                // }).name("updateDataFrameColor");
+
+                // auto updateDataFrameDepthSizedColorT = processDataSubflow.emplace([&](){
+                //     update_data_frame_depth_sized_color();
+                // }).name("updateDataFrameDepthSizedColor");
+
+                // auto updateDataFrameDepthT = processDataSubflow.emplace([&](){
+                //     update_data_frame_depth();
+                // }).name("updateDataFrameDepth");
+
+                // auto updateDataFrameInfraT = processDataSubflow.emplace([&](){
+                //     update_data_frame_infra();
+                // }).name("updateDataFrameInfra");
+
+                // auto updateDataFrameCloudT = processDataSubflow.emplace([&](){
+                //     update_data_frame_cloud();
+                //     // decompose ...
+                // }).name("updateDataFrameCloud");
+
+                // auto updateDataFrameAudioT = processDataSubflow.emplace([&](){
+                //     Log::message("update_data_frame_audio\n");
+                //     update_data_frame_audio();
+                // }).name("updateDataFrameAudio");
+
+                // auto updateDataFrameIMUT = processDataSubflow.emplace([&](){
+                //     Log::message("update_data_frame_imu\n");
+                //     update_data_frame_imu();
+                // }).name("updateDataFrameIMU");
+
+                // auto updateDataFrameBodyTrackingT = processDataSubflow.emplace([&](){
+                //     Log::message("update_data_frame_body_tracking\n");
+                //     update_data_frame_body_tracking();
+                // }).name("updateDataFrameBodyTracking");
+
+                // auto updateDataFrameCalibrationT = processDataSubflow.emplace([&](){
+                //     Log::message("update_data_frame_calibration\n");
+                //     update_data_frame_calibration();
+                // }).name("updateDataFrameCalibration");
+
+                auto finalizeDataFrameT = processDataSubflow.emplace([&](){
+
+                    auto tFCF = TimeDiffGuard(timeM, "FINALIZE_DATA_FRAME"sv);
+                    if(dFrame != nullptr){
+                        // set infos
+                        dFrame->idDevice           = static_cast<std::uint8_t>(settings.config.idDevice);
+                        dFrame->idCapture          = static_cast<std::int32_t>(mInfos.id_capture());
+                        dFrame->afterCaptureTS     = timeM.get_end("CAPTURE_FRAME"sv).count();
+                        dFrame->receivedTS         = dFrame->afterCaptureTS; // default init received TS with after capture TS
+                        dFrame->mode               = settings.config.mode;
+                        dFrame->validVerticesCount = fData.validDepthValues;
+
+                        // add frame
+                        frames.add_data_frame(std::move(dFrame));
+                    }
+                }).name("finalizeDataFrame");
+
+                auto sendDataFrameT = processDataSubflow.emplace([&](){
+                    auto tSCF = TimeDiffGuard(timeM, "SEND_DATA_FRAME"sv);
+                    if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                        dFrame =dataFrameToSend;
+                        new_data_frame_signal(std::move(dataFrameToSend));
+                    }
+                }).name("sendDataFrame");
+
+                auto finalizeFrameT = processDataSubflow.emplace([&](){
+
+                    auto tFF = TimeDiffGuard(timeM, "FINALIZE_FRAME"sv);
+                    if(frame != nullptr){
+                        // set infos
+                        frame->idCapture       = static_cast<std::int32_t>(mInfos.id_capture());
+                        frame->afterCaptureTS  = timeM.get_end("CAPTURE_FRAME"sv).count();
+                        frame->receivedTS      = frame->afterCaptureTS;  // default init received TS with after capture TS
+
+                        frame->infosB[DCInfoType::DCMode] = static_cast<std::int64_t>(settings.config.mode);
+                        frame->mode            = settings.config.mode;
+
+                        frames.add_frame(std::move(frame));
+                    }
+                }).name("finalizeFrame");
+
+                auto sendFrameT = processDataSubflow.emplace([&](){
+                    auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
+                    if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                        frame = frameToSend;
+                        new_frame_signal(std::move(frameToSend));
+                    }
+                }).name("sendFrame");
+
+
+                auto endProcessingT = processDataSubflow.emplace([&](){
+                    if(captureSuccess){
+                        mInfos.increment_capture_id();
+                    }
+                    timeM.end("PROCESSING_DATA"sv);
+                }).name("endProcessing");
+
+
+                // initFramesT.precede(convertColorImageT, generateCloudT);
+                convertColorImageT.precede(resizeColorImageT);
+                resizeColorImageT.precede(checkFilterDepthFromDepthSizedColorT);
+
+                checkFilterDepthFromDepthSizedColorT.precede(fillHSVDiffMaskT, endColorProcessingT);
+                fillHSVDiffMaskT.precede(endColorProcessingT);
+
+                generateCloudT.precede(initFramesT);
+                endColorProcessingT.precede(initFramesT);
+
+                initFramesT.precede(checkFilterDepthT);
+                checkFilterDepthT.precede(filterDepthBasicT, updateValidDepthValuesT);
+
+                filterDepthBasicT.precede(checkFilterDepthFromCloudT);
+
+                checkFilterDepthFromCloudT.precede(filterDepthFromCloudT, filterDepthComplexT);
+                filterDepthFromCloudT.precede(filterDepthComplexT);
+                filterDepthComplexT.precede(updateValidDepthValuesT);
+
+                updateValidDepthValuesT.precede(checkFilterDepthSizedColorFromDepthT);
+                checkFilterDepthSizedColorFromDepthT.precede(filterDepthSizedColorFromDepthT, checkFilterInfraFromDepthT);
+                filterDepthSizedColorFromDepthT.precede(checkFilterInfraFromDepthT);
+
+                checkFilterInfraFromDepthT.precede(filterInfraFromDepthT, generateFramesT);
+                filterInfraFromDepthT.precede(generateFramesT);
+                generateFramesT.precede(updateDataFrameT, updateFrameT);
+
+
+                updateDataFrameT.precede(finalizeDataFrameT);
+                finalizeDataFrameT.precede(sendDataFrameT);
+
+                updateFrameT.precede(finalizeFrameT);
+                finalizeFrameT.precede(sendFrameT);
+
+                endProcessingT.succeed(sendDataFrameT, sendFrameT);
+
+            }).name("processData");
+
+            captureFrameT.precede(readImagesT, resetFramesT);
+            readImagesT.precede(resetFramesT);
+            resetFramesT.precede(checkDataValidityT);
+
+            checkDataValidityT.precede(processDataT);
+
+        }).name("ReadFrame");
+
+        readFrameT.succeed(copyTimeT);
+    }
 }
 
 DCDeviceImpl::~DCDeviceImpl(){
@@ -52,11 +685,12 @@ DCDeviceImpl::~DCDeviceImpl(){
 auto DCDeviceImpl::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
     auto tf = TimeDiffGuard(timeM, "PROCESS_FRAMES"sv);
-    parametersM.lock();
+
+    timesLocker.lock();
     {
         times = timeM.times;
     }
-    parametersM.unlock();
+    timesLocker.unlock();
 
     if(read_frame()){
         return process_data();
@@ -73,7 +707,7 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
     mInfos.initialize(settings.config.mode);
     dIndices.initialize(mInfos.has_depth(), mInfos.depth_width(), mInfos.depth_height());
     fData.reset(mInfos.has_depth(), mInfos.depth_size(), mInfos.has_color(), mInfos.color_width(), mInfos.color_height());
-
+// VCL_NAMESPACE::Vec16us vnull(0);
 
     {
         // size_t offset = 32;
@@ -127,8 +761,6 @@ auto DCDeviceImpl::initialize(const DCConfigSettings &newConfigS) -> void{
         //     }
         // }
     }
-
-    // VCL_NAMESPACE::Vec16us vnull(0);
 }
 
 auto DCDeviceImpl::convert_color_image() -> void{
@@ -354,23 +986,23 @@ auto DCDeviceImpl::filter_depth_basic() -> void{
         return;
     }
 
+    minW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.minWidthF);
+    maxW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.maxWidthF);
+    minH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.minHeightF);
+    maxH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.maxHeightF);
 
-    auto minW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.minWidthF);
-    auto maxW   = static_cast<std::uint16_t>(mInfos.depth_width()  * settings.filters.maxWidthF);
-    auto minH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.minHeightF);
-    auto maxH   = static_cast<std::uint16_t>(mInfos.depth_height() * settings.filters.maxHeightF);
+    dRange     = mInfos.depth_range_mm();
+    diffRange  = dRange.y()-dRange.x();
+    minD = static_cast<std::uint16_t>(dRange.x() + settings.filters.minDepthF * diffRange);
+    maxD = static_cast<std::uint16_t>(dRange.x() + settings.filters.maxDepthF * diffRange);
 
-    auto dRange     = mInfos.depth_range_mm();
-    auto diffRange  = dRange.y()-dRange.x();
-    auto minD = static_cast<std::uint16_t>(dRange.x() + settings.filters.minDepthF * diffRange);
-    auto maxD = static_cast<std::uint16_t>(dRange.x() + settings.filters.maxDepthF * diffRange);
+    hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
+    maxDiffColor = settings.filters.maxDiffColor;
 
-
-    auto fdc = settings.filters.filterDepthWithColor && (fData.depthSizedColor.size() == fData.depth.size());
+    fdc = settings.filters.filterDepthWithColor && (fData.depthSizedColor.size() == fData.depth.size());
     if(fdc){
         auto tS = TimeDiffGuard(timeM, "FILTER_DEPTH_FROM_DEPTH_SIZED_COLOR"sv);
-        ColorHSV hsvDiffColor = Convert::to_hsv(settings.filters.filterColor);
-        ColorHSV maxDiffColor = settings.filters.maxDiffColor;
+
         // std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         //     fData.hsvDiffMask[id] = ColorHSV(Convert::to_hsv(fData.depthSizedColor[id]) - hsvDiffColor).abs() < maxDiffColor ? 0 : 1;
         // });
@@ -472,23 +1104,23 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     auto t1 = Time::nanoseconds_since_epoch();
 
     // plane filtering parameters
-    auto p1             = settings.filters.p1A*1000.f;
-    auto p2             = settings.filters.p1B*1000.f;
-    auto p3             = settings.filters.p1C*1000.f;
-    geo::Pt3f meanPt    = (p1+p2+p3)/3.f;
-    auto AB             = vec(p2,p1);
-    auto AC             = vec(p3,p1);
-    auto normalV        = cross(AB,AC);
+    p1             = settings.filters.p1A*1000.f;
+    p2             = settings.filters.p1B*1000.f;
+    p3             = settings.filters.p1C*1000.f;
+    meanPt    = (p1+p2+p3)/3.f;
+    AB             = vec(p2,p1);
+    AC             = vec(p3,p1);
+    normalV        = cross(AB,AC);
     normalV             = normalize(normalV);
 
-    geo::Pt3f pSphere   = settings.filters.pSphere*1000.f;
-    auto squareMaxDistanceFromPoint = settings.filters.maxSphereDistance*settings.filters.maxSphereDistance;
+    pSphere   = settings.filters.pSphere*1000.f;
+    squareMaxDistanceFromPoint = settings.filters.maxSphereDistance*settings.filters.maxSphereDistance;
 
-    const auto &oobRot = settings.filters.oob.rotation;
-    geo::Mat3f oobOrientation = geo::rotation_m3x3(geo::Vec3f{deg_2_rad(oobRot.x()), deg_2_rad(oobRot.y()), deg_2_rad(oobRot.z())});
-    auto invO = inverse(oobOrientation);
-    auto halfDimensions = settings.filters.oob.size * 500.f;
-    auto oobPos = settings.filters.oob.position * 1000.f;
+    oobRot = settings.filters.oob.rotation;
+    oobOrientation = geo::rotation_m3x3(geo::Vec3f{deg_2_rad(oobRot.x()), deg_2_rad(oobRot.y()), deg_2_rad(oobRot.z())});
+    invO = inverse(oobOrientation);
+    halfDimensions = settings.filters.oob.size * 500.f;
+    oobPos = settings.filters.oob.position * 1000.f;
 
     std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
@@ -670,12 +1302,6 @@ auto DCDeviceImpl::update_valid_depth_values() -> void{
 
     // count valid depth values
     fData.validDepthValues = 0;
-    // int count = 0;
-    // for(const auto &d : fData.depthMask){
-    //     if(d == 0){
-    //         count++;
-    //     }
-    // }
 
     std::for_each(std::execution::unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         if(fData.depthMask[id] == 0){
@@ -1443,9 +2069,9 @@ auto DCDeviceImpl::keep_only_biggest_cluster() -> void{
     // empty zones
     std::fill(fData.zonesId.begin(), fData.zonesId.end(), 0);
 
-    size_t currentZoneId = 1;
-    int biggestZone = -1;
-    size_t sizeBiggestZone = 0;
+    currentZoneId = 1;
+    biggestZone = -1;
+    sizeBiggestZone = 0;
 
     auto depthWidth  = mInfos.depth_width();
     // auto depthHeight = mInfos.depth_height();
@@ -1670,7 +2296,7 @@ auto DCDeviceImpl::set_delay_settings(const DCMiscSettings &delayS) -> void{
 }
 
 auto DCDeviceImpl::get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>{
-    std::unique_lock<std::mutex> lock(parametersM, std::try_to_lock);
+    std::unique_lock<std::mutex> lock(timesLocker, std::try_to_lock);
     if(!lock.owns_lock()){
         return std::nullopt;
     }
@@ -1681,7 +2307,7 @@ auto DCDeviceImpl::get_duration_ms(std::string_view id) -> std::optional<std::ch
 }
 
 auto DCDeviceImpl::get_duration_micro_s(std::string_view id) -> std::optional<std::chrono::microseconds>{
-    std::unique_lock<std::mutex> lock(parametersM, std::try_to_lock);
+    std::unique_lock<std::mutex> lock(timesLocker, std::try_to_lock);
     if(!lock.owns_lock()){
         return std::nullopt;
     }
@@ -1692,7 +2318,7 @@ auto DCDeviceImpl::get_duration_micro_s(std::string_view id) -> std::optional<st
 }
 
 auto DCDeviceImpl::get_average_framerate() -> float{
-    std::unique_lock<std::mutex> lock(parametersM, std::try_to_lock);
+    std::unique_lock<std::mutex> lock(timesLocker, std::try_to_lock);
     if(!lock.owns_lock()){
         return 0.f;
     }
@@ -1707,7 +2333,9 @@ auto DCDeviceImpl::read_frame() -> bool{
     {
         auto tCF = TimeDiffGuard(timeM, "CAPTURE_FRAME"sv);
 
+        auto t1 = Time::nanoseconds_since_epoch();
         captureSuccess = capture_frame(mInfos.timeout_ms());
+        // Log::fmessage("C[{}] [{}] \n", captureSuccess, Time::now_difference_micro_s(t1));
         if(!captureSuccess){
             dataIsValid = false;
             return false;
@@ -1743,6 +2371,7 @@ auto DCDeviceImpl::read_frame() -> bool{
     dataIsValid = check_data_validity();
     return dataIsValid;
 }
+
 
 auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> {
 
@@ -1788,7 +2417,7 @@ auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::s
             auto tFD = TimeDiffGuard(timeM, "FILTER"sv);
             // simd_filter();
             filter_depth_basic();
-            filter_depth_from_depth_sized_color();
+            // filter_depth_from_depth_sized_color();
             // filter_depth_from_infra();
             filter_depth_from_cloud();
             // filter_depth_from_body_tracking();

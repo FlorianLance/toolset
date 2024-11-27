@@ -168,7 +168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcde61dbe61d3b844af6c2ee6840b0da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  videoFilePath: E:/_kvid/vox3.kvid
+  videoFilePath: E:/_kvid/20-11-24-2-vox.kvid
   loadAtStart: 1
   playWhenLoaded: 1
   loadDisplaySettingsFilesAfterVideoLoading: 1

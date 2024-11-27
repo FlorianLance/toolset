@@ -133,4 +133,29 @@ auto DCDepthIndices::initialize(bool hasDepth, size_t depthWidth, size_t depthHe
         depthVertexCorrrespondance.clear();
         // depthsSortedCorrespondanceNoBorders.clear();
     }
+
+    // init iterators
+    depths1DStart                   = depths1D.begin();
+    depths1DEnd                     = depths1D.end();
+
+    depths1DNoBordersStart          = depths1DNoBorders.begin();
+    depths1DNoBordersEnd            = depths1DNoBorders.end();
+
+    neighbours2HDepth1DStart        = neighbours2HDepth1D.begin();
+    neighbours2HDepth1DEnd          = neighbours2HDepth1D.end();
+
+    neighbours2VDepth1DStart        = neighbours2VDepth1D.begin();
+    neighbours2VDepth1DEnd          = neighbours2VDepth1D.end();
+
+    neighbours4Depth1DStart         = neighbours4Depth1D.begin();
+    neighbours4Depth1DEnd           = neighbours4Depth1D.end();
+
+    neighbours8Depth1DStart         = neighbours8Depth1D.begin();
+    neighbours8Depth1DEnd           = neighbours8Depth1D.end();
+
+    depths3DStart                   = depths3D.begin();
+    depths3DEnd                     = depths3D.end();
+
+    depthVertexCorrrespondanceStart = depthVertexCorrrespondance.begin();
+    depthVertexCorrrespondanceEnd   = depthVertexCorrrespondance.end();
 }

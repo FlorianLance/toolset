@@ -1,9 +1,8 @@
 
-
 /*******************************************************************************
 ** Toolset-base                                                               **
 ** MIT License                                                                **
-** Copyright (c) [2018] [Florian Lance]                                       **
+** Copyright (c) [2024] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -25,74 +24,35 @@
 **                                                                            **
 ********************************************************************************/
 
-
 #pragma once
 
-// std
-#include <cstdint>
-#include <string>
-
-#include <thirdparty/taskflow/taskflow.hpp>
-
-
 // local
-#include "thirdparty/sigslot/signal.hpp"
-#include "settings/dc_color_settings.hpp"
-#include "settings/dc_misc_settings.hpp"
-#include "settings/dc_filters_settings.hpp"
-#include "depth-camera/frame/dc_data_frame.hpp"
-#include "depth-camera/frame/dc_frame.hpp"
-
 #include "settings/dc_device_settings.hpp"
 
 namespace tool::cam {
 
-class DCDevice{
+class DCDeviceArray{
 public:
 
-    DCDevice();
-    ~DCDevice();
+    DCDeviceArray();
+    ~DCDeviceArray();
 
-    auto start_thread() -> void;
-    auto stop_thread() -> void;
 
-    // it not using threads
-    auto read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
-    auto read_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
-    auto read_frames_task() -> tf::Taskflow*;
+    auto initialize(std::span<const DCDeviceSettings> devicesS) -> void;
 
-    // settings
-    auto update_device_settings(const DCDeviceSettings &deviceS) -> void;
-    auto update_color_settings(const DCColorSettings &colorS) -> void;
-    auto update_filters_settings(const DCFiltersSettings &filtersS) -> void;
-    auto update_misc_settings(const DCMiscSettings &delayS) -> void;
+    auto open() -> void;
 
-    // getters
-    // # states
-    auto is_opened() const noexcept -> bool;
-    // # timing
-    auto get_capture_duration_ms() noexcept -> double;
-    auto get_processing_duration_ms() noexcept -> double;
-    auto get_duration_ms(std::string_view id) noexcept -> double;
-    auto get_duration_micro_s(std::string_view id) noexcept -> std::int64_t;
-    auto get_average_framerate() -> float;
-    auto get_proc_usage() const -> double;
+    auto run() -> void{
 
-    // signals
-    sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
-    sigslot::signal<std::shared_ptr<DCDataFrame>> new_data_frame_signal;
-    sigslot::signal<DCColorSettings> color_settings_reset_signal;
-    sigslot::signal<int, std::string> update_device_name_signal;
-
+        // for
+        // rc1 rc2 ... rcn
+        // pc1 ..;     pcn
+        // wait
+    }
 
 private:
-
 
     struct Impl;
     std::unique_ptr<Impl> i;
 };
-
-
-
-
 }

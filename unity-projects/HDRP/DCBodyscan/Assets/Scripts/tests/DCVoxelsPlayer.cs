@@ -455,7 +455,7 @@ namespace BS {
 
             Profiler.BeginSample("[DCVideoPlayer::update] Update VFX data");
             if (videoStates.verticesCountToCopy != -1) {
-                Debug.Log("videoStates.verticesCountToCopy  " + videoStates.verticesCountToCopy);
+                //Debug.Log("videoStates.verticesCountToCopy  " + videoStates.verticesCountToCopy);
                 dataVFX.update_data(videoStates.verticesCountToCopy);
             }
             Profiler.EndSample();
@@ -536,7 +536,7 @@ namespace BS {
             m_dcVideoPlayerDLL.dispose();
             m_dcVideoPlayerDLL = null;
         }
-    }
 
-    #endregion
+        #endregion
+    }
 }

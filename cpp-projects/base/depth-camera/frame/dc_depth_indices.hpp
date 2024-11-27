@@ -38,6 +38,7 @@ struct DCDepthIndices{
 
     auto initialize(bool hasDepth, size_t depthWidth, size_t depthHeight) -> void;
 
+    // indices
     std::vector<size_t> depths1D;
     std::vector<size_t> depths1DNoBorders;
     std::vector<std::array<std::int32_t,2>> neighbours2HDepth1D;    // 0 0 0
@@ -60,5 +61,24 @@ struct DCDepthIndices{
     // # Correspondance
     std::vector<std::tuple<size_t, std::int32_t>> depthVertexCorrrespondance;
     // std::vector<std::tuple<size_t, std::int16_t>> depthsSortedCorrespondanceNoBorders;
+
+    // iterators
+    std::vector<size_t>::iterator depths1DStart;
+    std::vector<size_t>::iterator depths1DEnd;
+    std::vector<size_t>::iterator depths1DNoBordersStart;
+    std::vector<size_t>::iterator depths1DNoBordersEnd;
+    std::vector<std::array<std::int32_t,2>>::iterator neighbours2HDepth1DStart;
+    std::vector<std::array<std::int32_t,2>>::iterator neighbours2HDepth1DEnd;
+    std::vector<std::array<std::int32_t,2>>::iterator neighbours2VDepth1DStart;
+    std::vector<std::array<std::int32_t,2>>::iterator neighbours2VDepth1DEnd;
+    std::vector<std::array<std::int32_t,4>>::iterator neighbours4Depth1DStart;
+    std::vector<std::array<std::int32_t,4>>::iterator neighbours4Depth1DEnd;
+    std::vector<std::array<std::int32_t,8>>::iterator neighbours8Depth1DStart;
+    std::vector<std::array<std::int32_t,8>>::iterator neighbours8Depth1DEnd;
+    std::vector<geo::Pt3<size_t>>::iterator depths3DStart;
+    std::vector<geo::Pt3<size_t>>::iterator depths3DEnd;
+    std::vector<std::tuple<size_t, std::int32_t>>::iterator depthVertexCorrrespondanceStart;
+    std::vector<std::tuple<size_t, std::int32_t>>::iterator depthVertexCorrrespondanceEnd;
+
 };
 }

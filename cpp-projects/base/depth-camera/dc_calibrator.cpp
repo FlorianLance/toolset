@@ -167,7 +167,13 @@ auto DCCalibrator::Impl::process_cloud(const DCCalibratorSettings &settings, con
             processedCloud = ColorCloud(center, processedCloud.colors[0]);
         }else if(settings.estimateSphere){
             auto sphere = processedCloud.vertices.sphere();
-            processedCloud = ColorCloud(sphere.position, processedCloud.colors[0]);
+            auto ratio = sphere.radius / settings.ballRay;
+            // Log::fmessage("radius wished {}, computed {}, error max {}, error\n", settings.ballRay, sphere.radius, settings.rayError, ratio);
+            if((ratio > 1-settings.rayError) && (ratio < 1 + settings.rayError)){
+                processedCloud = ColorCloud(sphere.position, processedCloud.colors[0]);
+            }else{
+                processedCloud = ColorCloud();
+            }
         }
 
         // default
@@ -311,10 +317,11 @@ auto DCCalibrator::initialize(size_t nbGrabbers) -> void{
     settings.initialize(nbGrabbers);
 
     i->clientsData.resize(nbGrabbers);
+    states.nbFramesRegistered.resize(nbGrabbers);
     for(size_t ii = 0; ii < i->clientsData.size(); ++ii){
         i->clientsData[ii].id = ii;
         i->calibrations.push_back(std::nullopt);
-        states.nbFramesRegistered.push_back(0);
+        states.nbFramesRegistered[ii] = 0;
     }
 
 }
@@ -399,7 +406,7 @@ auto DCCalibrator::calibrate(const std::vector<DCModelSettings> &models) -> bool
 
     size_t idModel = settings.modelSelectionId;
     if(states.nbFramesRegistered[idModel] == 0){
-        Log::error(std::format("[DCCalibrator] No frames registered for model with id [{}], calibration aborted.\n",idModel));
+        Log::error(std::format("[DCCalibrator] No frames registered for model with id [{}], calibration aborted.\n", idModel));
         return false;
     }
 

@@ -37,21 +37,33 @@
 using namespace tool::geo;
 using namespace tool::cam;
 
+enum class ActionType : std::int8_t{
+    Device,
+    Colors,
+    Filters,
+    Delay,
+    None
+};
+
 struct DeviceAction{
+
+    ActionType type = ActionType::None;
 
     bool cleanDevice   = false;
     bool createDevice  = false;
     bool closeDevice   = false;
     bool openDevice    = false;
-
-    bool updateColors  = false;
-    bool updateFilters  = false;
-    bool updateDelay   = false;
-
     bool resetColorSettings = false;
+
+    // bool updateColors  = false;
+    // bool updateFilters  = false;
+    // bool updateDelay   = false;
+
 };
 
 struct DCDevice::Impl{
+
+    tf::Taskflow readFramesT;
 
     // settings
     DCDeviceSettings deviceS;
@@ -82,9 +94,179 @@ struct DCDevice::Impl{
 
     // last frames
     std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> lastFrames = {nullptr,nullptr};
+
+    // test
+    std::vector<DeviceAction> localActions;
+    bool localReadFrames = false;
+
 };
 
 DCDevice::DCDevice(): i(std::make_unique<Impl>()){
+
+    // auto hasLock
+
+    // si pas de lock
+    //  read frame
+    //  sleep
+
+    // auto copyActionsT = i->readFramesT.emplace([&](){
+    //     Log::fmessage("#################################################### copyActionsT\n");
+    //     i->locker.lock();
+    //     i->localActions = i->actions;
+    //     i->actions.clear();
+    //     i->localReadFrames = i->readFrames;
+    //     i->locker.unlock();
+    // }).name("copyActions");
+
+    // auto processActionsT = i->readFramesT.emplace([&](){
+
+    //     // Log::fmessage("#################################################### processActionsT {}\n", i->localActions.size());
+    //     for(const auto &dAction : i->localActions){
+
+    //         if(dAction.type == ActionType::Device){
+    //             Log::fmessage("#################################################### DEVICE\n");
+    //             // close device
+    //             if((i->device != nullptr) && dAction.closeDevice){
+    //                 if(i->device->is_opened()){
+    //                     i->device->close();
+    //                     i->deviceOpened = false;
+    //                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //                 }
+    //             }
+
+    //             // clean device
+    //             if((i->device != nullptr) && dAction.cleanDevice){
+    //                 i->device = nullptr;
+    //                 i->deviceInitialized = false;
+    //                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //             }
+
+    //             // create device
+    //             if((i->device == nullptr) && dAction.createDevice){
+
+    //                 Log::fmessage("#################################################### CREATE\n");
+    //                 auto type = i->deviceS.configS.typeDevice;
+    //                 if(type == DCType::AzureKinect){
+    //                     auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
+    //                     i->device = std::make_unique<AzureKinectDeviceImpl>();
+    //                 }else if(type == DCType::FemtoBolt){
+    //                     auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
+    //                     i->device = std::make_unique<FemtoBoltDeviceImpl>();
+    //                 }else if(type == DCType::FemtoMegaEthernet){
+    //                     auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
+    //                     i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
+    //                 }else if(type == DCType::FemtoMegaUSB){
+    //                     auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
+    //                     i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
+    //                 }else if(type == DCType::Recording){
+    //                     auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
+    //                     i->device = std::make_unique<RecordingDeviceImpl>();
+    //                 }
+
+    //                 if(i->device != nullptr){
+
+    //                     // set connections
+    //                     i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+    //                         new_frame_signal(std::move(frame));
+    //                     });
+    //                     i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
+    //                         new_data_frame_signal(std::move(frame));
+    //                     });
+
+    //                     i->deviceInitialized = true;
+    //                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //                 }
+    //             }
+
+    //             // open device
+    //             if((i->device != nullptr) && dAction.openDevice){
+
+    //                 if(!i->device->is_opened()){
+
+    //                     if(i->device->open(i->deviceS.configS)){
+
+    //                         Log::fmessage("#################################################### OPEN\n");
+    //                         i->deviceOpened = true;
+
+    //                         // update settings
+    //                         {
+    //                             std::unique_lock<std::mutex> lock(i->locker);
+    //                             i->device->set_data_settings(i->deviceS.dataS.server);
+    //                             i->device->set_filters_settings(i->filtersS);
+    //                             i->device->set_delay_settings(i->delayS);
+
+    //                             if(dAction.resetColorSettings){
+    //                                 i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+    //                                 color_settings_reset_signal(i->colorsS);
+    //                             }
+
+    //                             i->device->set_color_settings(i->colorsS);
+    //                             i->device->update_from_colors_settings();
+    //                         }
+
+    //                         // update device name
+    //                         update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
+    //                     }
+
+    //                 }
+    //             }
+    //         }
+
+    //         // update settings
+    //         if(i->device != nullptr){
+
+    //             if(i->device->is_opened()){
+
+    //                 std::unique_lock<std::mutex> lock(i->locker);
+    //                 i->device->set_data_settings(i->deviceS.dataS.server);
+
+    //                 if(dAction.type == ActionType::Colors){
+    //                     Log::message("################################ COLOR\n ");
+    //                     i->device->set_color_settings(i->colorsS);
+    //                     i->device->update_from_colors_settings();
+    //                 }
+    //                 if(dAction.type == ActionType::Filters){
+    //                     Log::message("################################ FILTERS\n ");
+    //                     i->device->set_filters_settings(i->filtersS);
+    //                 }
+    //                 if(dAction.type == ActionType::Delay){
+    //                     Log::message("################################ DELAY\n ");
+    //                     i->device->set_delay_settings(i->delayS);
+    //                 }
+
+    //             }
+    //         }
+    //     }
+
+    // }).name("processActions");
+
+    // // readFrames
+    // auto checkReadFrameT = i->readFramesT.emplace([&](){
+    //     Log::message("################################ CHECK\n ");
+    //     if(i->device != nullptr){
+    //         if(i->device->is_opened()){
+    //             if(i->localReadFrames ){
+    //                 Log::message("################################ READ\n ");
+    //                 return 0;
+    //             }
+    //         }
+    //     }
+    //     // Log::message("################################ WAIT\n ");
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //     return 1;
+    // }).name("checkReadFrame");
+
+    // auto readFrameModuleT = i->readFramesT.composed_of(*i->device->process_frames_task()).name("readFrameModule");
+
+    // auto end = i->readFramesT.emplace([&](){
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //                              // Log::fmessage("#################################################### end\n");
+    // }).name("end");
+
+    // copyActionsT.precede(processActionsT);
+    // processActionsT.precede(checkReadFrameT);
+    // checkReadFrameT.precede(readFrameModuleT, end);
+
 }
 
 DCDevice::~DCDevice(){
@@ -99,36 +281,52 @@ auto DCDevice::start_thread() -> void{
     }
 
     i->loopT = std::make_unique<std::thread>([&](){
+        // tf::Executor executor;
+        // Log::fmessage("CREATE EXECUTOR\n");
+
         Log::message("[DCDevice::start_thread]\n"sv);
         i->doLoopA = true;
         // size_t loopCounter = 0;
         while(i->doLoopA){
 
+            // ################## NEW
+            // Log::fmessage("WAIT\n");
+            // executor.run(*mainTF).wait();
+            // i->lastFrames = {i->device->frame, i->device->dFrame};
+            // if(std::get<0>(i->lastFrames)){
+            //     Log::fmessage("frame {}\n", std::get<0>(i->lastFrames)->idCapture);
+            // }
+
+            // ################## CURRENT
+            // auto lastFrames = read_frames();
+            // i->lastFrames = std::move(lastFrames);
+
+            // ################## OLD
             auto tBefore = Time::nanoseconds_since_epoch();
-            auto lastFrames = process_frames();
+            i->lastFrames = read_frames();
             auto tAfter = Time::nanoseconds_since_epoch();
 
             auto diffMs = Time::difference_ms(tBefore, tAfter);
             if(diffMs.count() < 5){
-                // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
 
 
-            // Log::fmessage("Duration {}\n", diffMs);
+            // // Log::fmessage("Duration {}\n", diffMs);
 
-            i->lastFrames = std::move(lastFrames);
+            // i->lastFrames = std::move(lastFrames);
 
-            // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-            // sleep
+            // // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            // // sleep
 
-            // if(loopCounter%20 == 0){
-            //     auto v1 = i->procB.get();
-            //     auto v2 = i->sleepB.get();
-            //     i->procUsage = v1 / (v1 + v2);
-            //     loopCounter = 0;
-            // }
-            // ++loopCounter;
-            // Log::fmessage("[{}]", Time::now_difference_micro_s(t1));
+            // // if(loopCounter%20 == 0){
+            // //     auto v1 = i->procB.get();
+            // //     auto v2 = i->sleepB.get();
+            // //     i->procUsage = v1 / (v1 + v2);
+            // //     loopCounter = 0;
+            // // }
+            // // ++loopCounter;
+            // // Log::fmessage("[{}]", Time::now_difference_micro_s(t1));
         }
     });
 }
@@ -144,18 +342,22 @@ auto DCDevice::stop_thread() -> void{
     }
 }
 
-auto DCDevice::process_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
+auto DCDevice::read_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
     if(i->loopT != nullptr){
         return {nullptr,nullptr};
     }
 
-    i->lastFrames = process_frames();
+    i->lastFrames = read_frames();
 
     return i->lastFrames;
 }
 
-auto DCDevice::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
+auto DCDevice::read_frames_task() -> tf::Taskflow*{
+    return &i->readFramesT;
+}
+
+auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>{
 
     // auto tStart = Time::nanoseconds_since_epoch();
 
@@ -167,83 +369,85 @@ auto DCDevice::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::sha
 
     for(const auto &dAction : dActions){
 
-        // close device
-        if((i->device != nullptr) && dAction.closeDevice){
-            if(i->device->is_opened()){
-                i->device->close();
-                i->deviceOpened = false;
-            }
-        }
-
-        // clean device
-        if((i->device != nullptr) && dAction.cleanDevice){
-            i->device = nullptr;
-            i->deviceInitialized = false;
-        }
-
-        // create device
-        if((i->device == nullptr) && dAction.createDevice){
-
-            auto type = i->deviceS.configS.typeDevice;
-            if(type == DCType::AzureKinect){
-                auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
-                i->device = std::make_unique<AzureKinectDeviceImpl>();
-            }else if(type == DCType::FemtoBolt){
-                auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
-                i->device = std::make_unique<FemtoBoltDeviceImpl>();
-            }else if(type == DCType::FemtoMegaEthernet){
-                auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
-                i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
-            }else if(type == DCType::FemtoMegaUSB){
-                auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
-                i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
-            }else if(type == DCType::Recording){
-                auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
-                i->device = std::make_unique<RecordingDeviceImpl>();
-            }else{
-                return {nullptr,nullptr};
+        if(dAction.type == ActionType::Device){
+            // close device
+            if((i->device != nullptr) && dAction.closeDevice){
+                if(i->device->is_opened()){
+                    i->device->close();
+                    i->deviceOpened = false;
+                }
             }
 
-            // set connections
-            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
-                new_frame_signal(std::move(frame));
-            });
-            i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
-                new_data_frame_signal(std::move(frame));
-            });
+            // clean device
+            if((i->device != nullptr) && dAction.cleanDevice){
+                i->device = nullptr;
+                i->deviceInitialized = false;
+            }
 
-            i->deviceInitialized = true;
-        }
+            // create device
+            if((i->device == nullptr) && dAction.createDevice){
 
-        // open device
-        if((i->device != nullptr) && dAction.openDevice){
-
-            if(!i->device->is_opened()){
-
-                if(i->device->open(i->deviceS.configS)){
-
-                    i->deviceOpened = true;
-
-                    // update settings
-                    {
-                        std::unique_lock<std::mutex> lock(i->locker);
-                        i->device->set_data_settings(i->deviceS.dataS.server);
-                        i->device->set_filters_settings(i->filtersS);
-                        i->device->set_delay_settings(i->delayS);
-
-                        if(dAction.resetColorSettings){
-                            i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
-                            color_settings_reset_signal(i->colorsS);
-                        }
-
-                        i->device->set_color_settings(i->colorsS);
-                        i->device->update_from_colors_settings();
-                    }
-
-                    // update device name
-                    update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
+                auto type = i->deviceS.configS.typeDevice;
+                if(type == DCType::AzureKinect){
+                    auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
+                    i->device = std::make_unique<AzureKinectDeviceImpl>();
+                }else if(type == DCType::FemtoBolt){
+                    auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
+                    i->device = std::make_unique<FemtoBoltDeviceImpl>();
+                }else if(type == DCType::FemtoMegaEthernet){
+                    auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
+                    i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
+                }else if(type == DCType::FemtoMegaUSB){
+                    auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
+                    i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
+                }else if(type == DCType::Recording){
+                    auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
+                    i->device = std::make_unique<RecordingDeviceImpl>();
+                }else{
+                    return {nullptr,nullptr};
                 }
 
+                // set connections
+                i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+                    new_frame_signal(std::move(frame));
+                });
+                i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
+                    new_data_frame_signal(std::move(frame));
+                });
+
+                i->deviceInitialized = true;
+            }
+
+            // open device
+            if((i->device != nullptr) && dAction.openDevice){
+
+                if(!i->device->is_opened()){
+
+                    if(i->device->open(i->deviceS.configS)){
+
+                        i->deviceOpened = true;
+
+                        // update settings
+                        {
+                            std::unique_lock<std::mutex> lock(i->locker);
+                            i->device->set_data_settings(i->deviceS.dataS.server);
+                            i->device->set_filters_settings(i->filtersS);
+                            i->device->set_delay_settings(i->delayS);
+
+                            if(dAction.resetColorSettings){
+                                i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                                color_settings_reset_signal(i->colorsS);
+                            }
+
+                            i->device->set_color_settings(i->colorsS);
+                            i->device->update_from_colors_settings();
+                        }
+
+                        // update device name
+                        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
+                    }
+
+                }
             }
         }
 
@@ -255,25 +459,22 @@ auto DCDevice::process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::sha
                 std::unique_lock<std::mutex> lock(i->locker);
                 i->device->set_data_settings(i->deviceS.dataS.server);
 
-                bool updateSettings = dAction.updateColors || dAction.updateFilters || dAction.updateDelay;
-                if(updateSettings){
-                    if(dAction.updateColors){
-                        i->device->set_color_settings(i->colorsS);
-                        i->device->update_from_colors_settings();
-                    }
-                    if(dAction.updateFilters){
-                        i->device->set_filters_settings(i->filtersS);
-                    }
-                    if(dAction.updateDelay){
-                        i->device->set_delay_settings(i->delayS);
-                    }
+                if(dAction.type == ActionType::Colors){
+                    i->device->set_color_settings(i->colorsS);
+                    i->device->update_from_colors_settings();
                 }
+                if(dAction.type == ActionType::Filters){
+                    i->device->set_filters_settings(i->filtersS);
+                }
+                if(dAction.type == ActionType::Delay){
+                    i->device->set_delay_settings(i->delayS);
+                }
+
             }
         }
     }
 
     // process frame
-    bool processed = false;
     if(i->device != nullptr){
         if(i->device->is_opened()){
             if(readFrames ){
@@ -354,7 +555,8 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
 
 
     // device must be deleted
-    DeviceAction dAction;    
+    DeviceAction dAction;
+    dAction.type = ActionType::Device;
     dAction.cleanDevice     = i->deviceInitialized && deviceTypeChanged;
     // device must be created
     dAction.createDevice    = (!i->deviceInitialized && (newConfigS.typeDevice != DCType::Undefined)) || deviceTypeChanged;
@@ -383,7 +585,7 @@ auto DCDevice::update_color_settings(const DCColorSettings &colorS) -> void{
     i->colorsS = colorS;
 
     DeviceAction dAction;
-    dAction.updateColors = true;
+    dAction.type = ActionType::Colors;
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
@@ -395,7 +597,7 @@ auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> voi
     i->filtersS = filtersS;
 
     DeviceAction dAction;
-    dAction.updateFilters = true;
+    dAction.type = ActionType::Filters;
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
@@ -407,38 +609,20 @@ auto DCDevice::update_misc_settings(const DCMiscSettings &miscS) -> void{
     i->delayS = miscS;
 
     DeviceAction dAction;
-    dAction.updateDelay = true;
+    dAction.type = ActionType::Delay;
 
     // update actions
     std::unique_lock<std::mutex> lock(i->locker);
     i->actions.push_back(dAction);
 }
 
-auto DCDevice::get_capture_duration_ms() noexcept -> int64_t{
+auto DCDevice::get_duration_ms(std::string_view id) noexcept -> double{
     if(i->deviceOpened){
-        if(auto duration = i->device->get_duration_ms("CAPTURE_FRAME"sv); duration.has_value()){
-            return duration.value().count();
+        if(auto duration = i->device->get_duration_micro_s(id); duration.has_value()){
+            return duration.value().count()*0.001;
         }
     }
-    return 0;
-}
-
-auto DCDevice::get_processing_duration_ms() noexcept -> int64_t{
-    if(i->deviceOpened){
-        if(auto duration = i->device->get_duration_ms("PROCESSING_DATA"sv); duration.has_value()){
-            return duration.value().count();
-        }
-    }
-    return 0;
-}
-
-auto DCDevice::get_duration_ms(std::string_view id) noexcept -> int64_t{
-    if(i->deviceOpened){
-        if(auto duration = i->device->get_duration_ms(id); duration.has_value()){
-            return duration.value().count();
-        }
-    }
-    return 0;
+    return 0.0;
 }
 
 auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
@@ -448,6 +632,15 @@ auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
         }
     }
     return 0;
+}
+
+
+auto DCDevice::get_capture_duration_ms() noexcept -> double{
+    return get_duration_ms("CAPTURE_FRAME"sv);
+}
+
+auto DCDevice::get_processing_duration_ms() noexcept -> double{
+    return get_duration_ms("PROCESSING_DATA"sv);
 }
 
 auto DCDevice::get_average_framerate() -> float{
@@ -460,3 +653,12 @@ auto DCDevice::get_average_framerate() -> float{
 auto DCDevice::get_proc_usage() const -> double{
     return i->procUsage;
 }
+
+// auto DCDevice::tf() -> tf::Taskflow*{
+//     i->device = std::make_unique<AzureKinectDeviceImpl>();
+//     DCConfigSettings cs;
+//     cs.mode = DCMode::AK_C1280x720_DI640x576_NV12_F30;
+
+//     i->device->open(cs);
+//     return i->device->tf();
+// }

@@ -79,6 +79,11 @@ struct DCGModel{
 
     cam::DCServer server;
     std::unique_ptr<cam::DCDevice> device = nullptr;
-    cam::DCVideoRecorder recorder;    
+    cam::DCVideoRecorder recorder;
+
+    tf::Executor executor;
+    tf::Taskflow mainTF;
+    std::atomic_bool doTask = true;
+    tf::Future<void> resTask;
 };
 }

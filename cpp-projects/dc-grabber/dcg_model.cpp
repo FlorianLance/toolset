@@ -38,8 +38,10 @@ using namespace cam;
 using namespace std::string_view_literals;
 
 DCGModel::DCGModel(){
+
     auto lg = LogG("DCGModel::DCGModel"sv);
     device = std::make_unique<cam::DCDevice>();
+    Log::message("start thread\n");
     device->start_thread();
 
     server.device_settings_received_signal.connect([&](){
@@ -54,12 +56,26 @@ DCGModel::DCGModel(){
     server.delay_settings_received_signal.connect([&](){
         DCGSignals::get()->update_misc_settings_signal(server.settings.miscS);
     });
+
+    Log::message("end model\n");
 }
 
 DCGModel::~DCGModel(){
+
     auto lg = LogG("~DCGModel::DCGModel"sv);
+
+    // task
+    // doTask = false;
+    // mainTF.dump(std::cout);
+    // resTask.wait();
+
+
+    // thread
     device->stop_thread();
-    device = nullptr;
+
+    // all
+    device = nullptr;    
+
 }
 
 auto DCGModel::initialize() -> bool{
@@ -104,9 +120,11 @@ auto DCGModel::initialize() -> bool{
         }
     }
 
+
+    recorder.initialize(1);
+
     // device
     device->update_device_settings(server.settings.deviceS);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     // color
     device->update_color_settings(server.settings.colorS);
@@ -117,7 +135,35 @@ auto DCGModel::initialize() -> bool{
     // delay
     device->update_misc_settings(server.settings.miscS);
 
-    recorder.initialize(1);
+    // {
+    //     tf::Task startLoopT = mainTF.emplace([&](){
+    //         Log::message("start loop\n");
+    //     }).name("startLoop");
+
+    //     tf::Task checkLoopT = mainTF.emplace([&](){
+    //         return doTask ? 0 : 1;
+    //     }).name("checkLoop");
+
+    //     auto deviceReadFramesT = mainTF.composed_of(*device->read_frames_task()).name("deviceReadFramesModule");
+
+
+    //     tf::Task backToCheckT = mainTF.emplace([&](){
+
+    //     }).name("backToCheck");
+
+    //     tf::Task endLoopT = mainTF.emplace([&](){
+
+    //     }).name("endLoop");
+    //     resTask = executor.run(mainTF);
+
+    //     startLoopT.precede(checkLoopT);
+    //     checkLoopT.precede(deviceReadFramesT, endLoopT);
+    //     deviceReadFramesT.precede(backToCheckT);
+    //     backToCheckT.precede(checkLoopT);
+    // }
+
+
+
 
     return true;
 }

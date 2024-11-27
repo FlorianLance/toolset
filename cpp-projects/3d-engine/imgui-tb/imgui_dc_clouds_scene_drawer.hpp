@@ -88,11 +88,11 @@ struct DCCloudsSceneDrawer{
     auto update_filters_settings(size_t idCloud, const cam::DCFiltersSettings &filtersS) -> void;
 
     // signals
-    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_pressed_color_signal;
-    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_pressed_depth_sized_color_signal;
-    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_depth_signal;
-    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_infra_signal;
-    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_pressed_bodies_id_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_released_color_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGBA8> mouse_released_depth_sized_color_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_released_depth_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_released_infra_signal;
+    sigslot::signal<size_t, size_t, geo::Pt2<int>, ColorRGB8> mouse_released_bodies_id_signal;
 
     // drawers
     // # common

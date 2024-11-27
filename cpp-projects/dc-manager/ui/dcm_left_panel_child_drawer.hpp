@@ -50,6 +50,8 @@ public:
 
     double uiFramerateMS = 0.0;
 
+    auto update_selected_color(const geo::Pt4f& color) -> void;
+
 private:
 
     auto draw_clients_ui(DCMModel *model) -> void;
@@ -85,6 +87,7 @@ private:
     std::vector<std::string> fromColor;
     std::vector<std::string> targetsColor;
 
-
+    geo::Pt4f firstLastClickedPixelColor;
+    geo::Pt4f secondLastClickedPixelColor;
 };
 }

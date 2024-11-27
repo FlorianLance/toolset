@@ -72,3 +72,7 @@ auto DCMView::draw(geo::Pt2f size, DCMModel *model) -> void{
 auto DCMView::exit() -> void{
     m_glW->quit();
 }
+
+auto DCMView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2<int> coords, ColorRGBA8 color) -> void{
+    mainW.m_leftPanelD.update_selected_color(color.conv<float>()/255.f);
+}

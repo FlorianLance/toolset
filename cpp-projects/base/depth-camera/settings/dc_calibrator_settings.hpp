@@ -95,6 +95,7 @@ struct DCCalibratorSettings{
     float maxDistanceOutlier = 0.15f;
     double downSampleVoxelSize = 0.05;
     float ballRay = 0.025f;
+    float rayError = 0.1f;
 
     // # calibration
     bool gridSearch = false; // ignore calibration parameters and use a grid search for fitting them

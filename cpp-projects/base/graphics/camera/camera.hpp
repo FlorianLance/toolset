@@ -86,7 +86,53 @@ public:
     //     };
     // }
 
+    // auto test() -> geo::Pt3d {
+    //     geo::Pt4<int> pixel;
+
+    //     auto cPix = pixel.conv<double>();
+    //     cPix.x() /= m_screen->width();
+    //     cPix.x() -= 0.5;
+    //     cPix.x() *= 2.0;
+
+    //     cPix.y() /= m_screen->height();
+    //     cPix.y() -= 0.5;
+    //     cPix.y() *= 2.0;
+
+    //     cPix.z() = m_zRange.x();
+    //     cPix.w() = 1.0;
+
+    //     auto invP = inverse(m_projection);
+    //     auto invV = inverse(m_view);
+
+    //     cPix = invP.multiply_point(cPix);
+    //     cPix = invV.multiply_point(cPix);
+    //         // geo::Pt3d(m_screen->width(), m_screen->height());
+    //     return cPix.
+    // }
+
+
+    // float imageAspectRatio = imageWidth / (float)imageHeight; // assuming width > height
+    // float Px = (2 * ((x + 0.5) / imageWidth) - 1) * tan(fov / 2 * M_PI / 180) * imageAspectRatio;
+    // float Py = (1 - 2 * ((y + 0.5) / imageHeight) * tan(fov / 2 * M_PI / 180);
+    // Vec3f rayOrigin(0);
+    // Vec3f rayDirection = Vec3f(Px, Py, -1) - rayOrigin; // note that this just equal to Vec3f(Px, Py, -1);
+    // rayDirection = normalize(rayDirection); // it's a direction so don't forget to normalize
+
+    // auto
     // auto generate_camera_matrices() const -> CameraMatrices;
+
+    // rotation * (pixel.x - imageCentreX, pixel.y - imageCentreY, focalLength)
+
+    // 0
+    //
+    // 0   0
+    // inverse projection * inverse view
+
+    // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays.html
+    // auto dir_vector_from_pixel(double x, double y) -> geo::Pt3d{
+
+    // }
+
 
 private :
 

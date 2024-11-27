@@ -154,6 +154,8 @@ auto DCMController::set_connections() -> void{
     s->save_recorder_signal.connect(                        &DCVideoRecorder::save_to_file,                     recorder);
     // ## direct drawer
     s->save_current_cloud_signal.connect(                   &DCDirectDrawer::save_current_cloud,                directD);
+    directD->mouse_released_color_signal.connect(            &DCMView::update_selected_color,                    view.get());
+    directD->mouse_released_depth_sized_color_signal.connect(&DCMView::update_selected_color,                    view.get());
 
     // # settings
     // ## client

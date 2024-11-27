@@ -29,6 +29,7 @@ ASSIMP_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/assimp"
 BIOPAC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/biopac"
 BOOST_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/boost_1_68_0"
 EIGEN_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/eigen-3.4-rc1"
+EIGEN_MASTER_DIR                     = $$TOOLSET_CPP_THIRDPARTY_DIR"/eigen-master"
 FASTPFOR_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/FastPFor"
 GLEW_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/glew-2.1.0"
 GLFW_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/glfw-3.3.2"
@@ -69,6 +70,9 @@ TURBOPFOR_INCLUDES = \
 
 EIGEN_INCLUDES = \
     $$EIGEN_DIR \
+
+EIGEN_MASTER_INCLUDES = \
+    $$EIGEN_MASTER_DIR \
 
 OPEN3D_INCLUDES =\
     $$OPEN3D_DIR"/src" \

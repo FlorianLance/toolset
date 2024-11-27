@@ -23,6 +23,8 @@
 **                                                                            **
 ********************************************************************************/
 
+// #define TF_ENABLE_PROFILER = simple.json ./simple
+
 // base
 #include "utility/logger.hpp"
 
@@ -37,12 +39,16 @@
 #include "utility/geometry_formatter.hpp"
 
 #include "thirdparty/taskflow/taskflow.hpp"
+#include "thirdparty/taskflow/algorithm/for_each.hpp"
 
 #include "utility/constants.hpp"
 
 #include <Eigen/Dense>
 
+
+
 using namespace tool;
+using namespace std::chrono;
 
 int main(int argc, char *argv[]){
 
@@ -58,18 +64,203 @@ int main(int argc, char *argv[]){
     auto &cfg = logger->config(Logger::MessageType::normal);
     cfg.saveToFile = true;
 
-    // logger->message_signal.connect([&](std::string message){
-    //     std::puts(message.c_str());
-    // });
-    // logger->warning_signal.connect([&](std::string warning){
-    //     std::puts(warning.c_str());
-    // });
-    // logger->error_signal.connect([&](std::string error){
-    //     std::puts(error.c_str());
-    // });
+    logger->message_signal.connect([&](std::string message){
+        // std::puts(message.c_str());
+        std::flush(std::cout);
+    });
+    logger->warning_signal.connect([&](std::string warning){
+        // std::puts(warning.c_str());
+        std::flush(std::cout);
+    });
+    logger->error_signal.connect([&](std::string error){
+        // std::puts(error.c_str());
+        std::flush(std::cout);
+    });
     Logger::set_logger_instance(std::move(logger));
 
+    cam::DCDevice dev;
+    // auto tf = dev.tf();
 
+    tf::Executor executor2(8);
+    
+    
+    executor2.run(*dev.read_frames_task()).wait();
+
+    cam::DCDeviceSettings ds;
+    ds.configS.typeDevice = cam::DCType::AzureKinect;
+    ds.configS.openDevice = true;
+    ds.configS.startReading = true;
+    dev.update_device_settings(ds);
+    
+    executor2.run(*dev.read_frames_task()).wait();
+    
+    dev.read_frames_task()->dump(std::cout);
+    return 0;
+    // cam::DCClient client;
+    // client.initialize("D:/DEV/Perso/toolset/cpp-projects/_build/bin/dc-manager/config/client_FLORIAN-PC_0.json", false);
+    // // client.initialize(,false);
+
+    // size_t countFrames = 0;
+    // client.new_data_frame_signal.connect([&](size_t idG, std::shared_ptr<cam::DCDataFrame> dframe){
+    //     Log::fmessage("grabber {} dframe {}\n", idG, dframe->volume_buffer(cam::DCVolumeBufferType::ColoredCloud)->size());
+    //     ++countFrames;
+    // });
+
+    // client.new_frame_signal.connect([&](size_t idG, std::shared_ptr<cam::DCFrame> frame){
+    //     Log::fmessage("grabber {} frame {}\n", idG, frame->volume_buffer<geo::ColorCloud>(cam::DCVolumeBufferType::ColoredCloud)->vertices.size());
+    //     ++countFrames;
+    // });
+
+    // for(size_t id = 0; id < client.devices_nb(); ++id){
+    //     auto t = Time::nanoseconds_since_epoch();
+    //     client.apply_device_settings(id);
+    //     Log::fmessage("device id [{}] time [{}]\n", id, Time::now_difference_micro_s(t));
+    // }
+    // for(size_t id = 0; id < client.devices_nb(); ++id){
+    //     auto t = Time::nanoseconds_since_epoch();
+    //     client.apply_filters_settings(id);
+    //     Log::fmessage("filters id [{}] time [{}]\n", id, Time::now_difference_micro_s(t));
+    // }
+    // for(size_t id = 0; id < client.devices_nb(); ++id){
+    //     auto t = Time::nanoseconds_since_epoch();
+    //     client.apply_color_settings(id);
+    //     Log::fmessage("color id [{}] time [{}]\n", id, Time::now_difference_micro_s(t));
+    // }
+
+    // for(size_t id = 0; id < client.devices_nb(); ++id){
+    //     client.read_from_external_thread(id);
+    // }
+
+    // std::this_thread::sleep_for(1000ms);
+
+
+
+
+    // Log::fmessage("START {} devices \n", client.devices_nb());
+    // std::vector<std::unique_ptr<std::thread>> threads;
+    // std::vector<size_t> count;
+    // for(size_t id = 0; id < client.devices_nb(); ++id){ //
+    //     count.push_back(0);
+
+    //     Log::fmessage("Start thread {}\n", id);
+    //     threads.push_back(std::make_unique<std::thread>([&,id](){
+    //         Log::fmessage("THREAD {}\n", id);
+    //         for(int ii = 0; ii < 10000; ++ii){
+    //             auto t1 = Time::nanoseconds_since_epoch();
+    //             client.read_from_external_thread(id);
+    //             auto frames = client.process_frames_from_external_thread(id);
+
+    //             // if(std::get<0>(frames) != nullptr){
+    //             //     Log::fmessage("grabber {} new frame {}\n", id, std::get<0>(frames)->idCapture);
+    //             // }
+    //             // Log::fmessage("{} frame {} new frame {}\n", ii, id, std::get<0>(frames) != nullptr);
+    //             std::this_thread::sleep_for(10ms);
+    //         }
+    //     }));
+    // }
+
+    // for(auto &t : threads){
+    //     if(t->joinable()){
+    //         t->join();
+    //     }
+    // }
+
+
+    // for(int ii = 0; ii < 500; ++ii){
+    //     client.update();
+    //     std::this_thread::sleep_for(5ms);
+    // }
+    // Log::fmessage("nb framees {}\n", countFrames);
+
+    // Log::fmessage("clean");
+    // client.clean();
+    // threads.clear();
+
+    // Log::fmessage("end");
+
+    // return 0;
+
+
+    int N = 8;
+    tf::Executor executor(N);
+
+    auto mainTF = std::make_unique<tf::Taskflow>();
+
+    std::vector<int> a;
+
+    std::vector<int>::iterator aB;
+    std::vector<int>::iterator aE;
+
+    tf::DynamicPartitioner  static_partitioner(100);
+    std::atomic<int> ai = 0;
+    auto foreachT = mainTF->for_each(std::ref(aB), std::ref(aE), [&](int v){
+        std::cout << v << " ";
+        ++ai;
+    }, static_partitioner).name("foreach");
+
+
+    a.resize(1000);
+    std::iota(a.begin(), a.end(), 0);
+
+    aB = a.begin();
+    aE = a.end();
+
+    auto startT = mainTF->emplace([&](){
+
+    }).name("Start");;
+    auto task2 = mainTF->emplace([&](tf::Subflow& subflow){
+        tf::Task B1 = subflow.emplace([] () {}).name("sub_task2_1");  // subflow task B1
+        tf::Task B2 = subflow.emplace([] () {}).name("sub_task2_2");  // subflow task B2
+    }).name("Task2");;
+
+    int i;
+    auto [init, cond, body, back, done] = mainTF->emplace(
+        [&](){
+            std::cout << "i=0\n"; i=0;
+        },
+        [&](){
+            std::cout << "while i<5\n"; return i < 5 ? 0 : 1;
+        },
+        [&](tf::Subflow& subflow){
+            std::cout << "i++=" << i++ << '\n';
+            tf::Task B1 = subflow.emplace([] () {}).name("sub_body_1");  // subflow task B1
+            tf::Task B2 = subflow.emplace([] () {}).name("sub_body_2");  // subflow task B1
+        },
+        [&](){
+            std::cout << "back\n";
+            return 0; },
+        [&](){
+            std::cout << "done\n";
+        }
+    );
+
+
+    init.name("init");
+    cond.name("cond");
+    body.name("body");
+    back.name("back");
+    done.name("done");
+
+    startT.precede(init);
+    foreachT.succeed(startT);
+
+    init.precede(cond);
+    cond.precede(body, done);
+    body.precede(back);
+    back.precede(cond);
+
+    executor.run(*mainTF).get();
+    mainTF->dump(std::cout);
+    // auto readingDataModuleT = processFrameTF->composed_of(readDataTF).name("reading_data_module");
+
+    // mainTF->emplace(mainTF);
+
+
+    std::cout << "END: " << ai << "\n";
+
+
+
+    return 0;
     // geo::Pt3f v;
     // std::cout << "pt3 " << v.rows() << " " << v.cols() << "\n";
     // auto col = geo::to_col(v);
@@ -415,40 +606,7 @@ int main(int argc, char *argv[]){
     }
     return 0;
 
-    int N = 8;
-    tf::Executor executor(N);
 
-    auto mainTF = std::make_unique<tf::Taskflow>();
-
-    auto task1 = mainTF->emplace([&](){
-
-    }).name("Task1");;
-    auto task2 = mainTF->emplace([&](tf::Subflow& subflow){
-        tf::Task B1 = subflow.emplace([] () {}).name("sub_task2_1");  // subflow task B1
-        tf::Task B2 = subflow.emplace([] () {}).name("sub_task2_2");  // subflow task B2
-
-    }).name("Task2");;
-
-    int i;
-    auto [init, cond, body, back, done] = mainTF->emplace(
-        [&](){ std::cout << "i=0\n"; i=0; },
-        [&](){ std::cout << "while i<5\n"; return i < 5 ? 0 : 1; },
-        [&](){ std::cout << "i++=" << i++ << '\n'; },
-        [&](){ std::cout << "back\n"; return 0; },
-        [&](){ std::cout << "done\n"; }
-    );
-
-    init.precede(cond);
-    cond.precede(body, done);
-    body.precede(back);
-    back.precede(cond);
-
-
-    executor.run(*mainTF).get();
-    mainTF->dump(std::cout);
-    // auto readingDataModuleT = processFrameTF->composed_of(readDataTF).name("reading_data_module");
-
-    // mainTF->emplace(mainTF);
 
     return 0;
     // simd();

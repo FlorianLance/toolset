@@ -91,7 +91,7 @@ auto DCClientLocalDevice::clean() -> void {
 
 auto DCClientLocalDevice::read_frames_from_external_thread() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> {
     if(i->device){
-        return i->device->process_frames_from_external_thread();
+        return i->device->read_frames_from_external_thread();
     }
     return {nullptr,nullptr};
 }

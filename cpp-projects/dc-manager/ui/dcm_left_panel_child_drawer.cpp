@@ -83,42 +83,45 @@ auto DCMLeftPanelChildDrawer::initialize(size_t nbGrabbers) -> void{
     for(const auto &color : fromColor){
         targetsColor.push_back(color);
     }
-
-
 }
 
 auto DCMLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCMModel *model) -> void {
 
-    if(ImGui::BeginChild("###settings_child", ImVec2(size.x(), size.y()), true, windowFlags)){
+    if(ImGui::BeginChild("###left_panel_child", ImVec2(size.x(), size.y()), true, windowFlags)){
 
-        auto region = ImGui::GetContentRegionAvail();
-        auto region1 = region;
-        auto region2 = region;
-        // region1.y *= 0.75f;
-        if(ImGui::BeginChild("###settings_clients_child1", region1, true, windowFlags)){
+        if(ImGui::BeginChild("###settings_child", ImVec2(size.x(), size.y()-100), true, windowFlags)){
 
             draw_clients_ui(model);
 
-            if(ImGui::BeginTabBar("###settings_tabbar1")){                
+            if(ImGui::BeginTabBar("###settings_tabbar1")){
                 draw_clients_tab_item(model);
                 draw_calibrator_tab_item(model->client, model->calibrator.states, model->uiSettings.calibratorDisplayS, model->calibrator.settings);
                 draw_recorder_tab_item(model->recorder);
-                draw_player_tab_item(model->player);                
+                draw_player_tab_item(model->player);
                 ImGui::EndTabBar();
             }
+
         }
         ImGui::EndChild();
 
-        // region2.y *= 0.25f;
-        // if(ImGui::BeginChild("###settings_clients_child2", region2, true, windowFlags)){
-        //     if (ImGui::BeginTabBar("###settings_tabbar2")){
-        //         draw_infos_tab_item(model->client);
-        //         ImGui::EndTabBar();
-        //     }
-        // }
-        // ImGui::EndChild();
+        if(ImGui::BeginChild("###tools_child", ImVec2(size.x(), 80), true, windowFlags)){
+            ImGui::Text("Tools:");
+            ImGui::Indent();
+            // ImGui::ColorPicker4()
+            ImGuiColorEditFlags flags = ImGuiColorEditFlags_DisplayHex;// | ImGuiColorEditFlags_NoAlpha;
+            ImGui::ColorEdit4("First last pixel color", firstLastClickedPixelColor.array.data(),flags);
+            ImGui::ColorEdit4("Second last pixel color", secondLastClickedPixelColor.array.data(),flags);
+            ImGui::Unindent();
+        }
+        ImGui::EndChild();
     }
     ImGui::EndChild();
+
+}
+
+auto DCMLeftPanelChildDrawer::update_selected_color(const geo::Pt4f &color) -> void{
+    secondLastClickedPixelColor = firstLastClickedPixelColor;
+    firstLastClickedPixelColor = color;
 }
 
 

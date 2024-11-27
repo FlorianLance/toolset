@@ -32,6 +32,7 @@
 // base
 #include "thirdparty/BinPack2D/binpack2d.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 
 // local
 #include "imgui-tb/imgui_helper.hpp"
@@ -88,7 +89,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo() -> void{
     m_redrawClouds = false;
 }
 
-#include "utility/time.hpp"
+
 auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
     if(fboD.texture_id() == 0){
@@ -267,12 +268,12 @@ auto DCCloudsSceneDrawer::draw_color_texture_imgui_child(size_t idCloud, const s
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
             const auto &hp = cD->colorD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->colorD.mouseButtonsPressed.size(); ++idB){
-                if(cD->colorD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->colorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->colorD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -291,12 +292,12 @@ auto DCCloudsSceneDrawer::draw_depth_sized_color_texture_imgui_child(size_t idCl
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8)){
             const auto &hp = cD->depthSizedColorD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->depthSizedColorD.mouseButtonsPressed.size(); ++idB){
-                if(cD->depthSizedColorD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->depthSizedColorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->depthSizedColorD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_depth_sized_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_depth_sized_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -315,12 +316,12 @@ auto DCCloudsSceneDrawer::draw_depth_texture_imgui_child(size_t idCloud, const s
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGB8>(DCImageBufferType::DepthRGB8)){
             const auto &hp = cD->depthD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->depthD.mouseButtonsPressed.size(); ++idB){
-                if(cD->depthD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->depthD.mouseButtonsReleased.size(); ++idB){
+                if(cD->depthD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_depth_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_depth_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -339,12 +340,12 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_child(size_t idCloud, const s
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGB8>(DCImageBufferType::InfraredRGB8)){
             const auto &hp = cD->infraD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->infraD.mouseButtonsPressed.size(); ++idB){
-                if(cD->infraD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->infraD.mouseButtonsReleased.size(); ++idB){
+                if(cD->infraD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_infra_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_infra_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -368,12 +369,12 @@ auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, c
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
             const auto &hp = cD->colorD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->colorD.mouseButtonsPressed.size(); ++idB){
-                if(cD->colorD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->colorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->colorD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -392,12 +393,12 @@ auto DCCloudsSceneDrawer::draw_depth_sized_color_texture_imgui_at_position(size_
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8)){
             const auto &hp = cD->depthSizedColorD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->depthSizedColorD.mouseButtonsPressed.size(); ++idB){
-                if(cD->depthSizedColorD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->depthSizedColorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->depthSizedColorD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_depth_sized_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_depth_sized_color_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -416,12 +417,12 @@ auto DCCloudsSceneDrawer::draw_depth_texture_imgui_at_position(size_t idCloud, c
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGB8>(DCImageBufferType::DepthRGB8)){
             const auto &hp = cD->depthD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->depthD.mouseButtonsPressed.size(); ++idB){
-                if(cD->depthD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->depthD.mouseButtonsReleased.size(); ++idB){
+                if(cD->depthD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_depth_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_depth_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -440,12 +441,12 @@ auto DCCloudsSceneDrawer::draw_infra_texture_imgui_at_position(size_t idCloud, c
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorRGB8>(DCImageBufferType::InfraredRGB8)){
             const auto &hp = cD->infraD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->infraD.mouseButtonsPressed.size(); ++idB){
-                if(cD->infraD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->infraD.mouseButtonsReleased.size(); ++idB){
+                if(cD->infraD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_infra_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_infra_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -464,12 +465,12 @@ auto DCCloudsSceneDrawer::draw_bodies_id_map_texture_imgui_at_position(size_t id
     if(cD->lastFrame != nullptr){
         if(auto image = cD->lastFrame->image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8)){
             const auto &hp = cD->bodiesIdMapD.hoveringPixel;
-            for(size_t idB = 0; idB < cD->bodiesIdMapD.mouseButtonsPressed.size(); ++idB){
-                if(cD->bodiesIdMapD.mouseButtonsPressed[idB]){
+            for(size_t idB = 0; idB < cD->bodiesIdMapD.mouseButtonsReleased.size(); ++idB){
+                if(cD->bodiesIdMapD.mouseButtonsReleased[idB]){
                     if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
                         hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
                         !image->empty()){
-                        mouse_pressed_bodies_id_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                        mouse_released_bodies_id_signal(idCloud, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
                     }
                 }
             }
@@ -519,7 +520,7 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawImages, bo
                         std::get<0>(textPos[ii]) + cp,
                         std::get<1>(textPos[ii]),
                         std::format("Cam{}"sv,ii)
-                        );
+                    );
                 }
 
                 ImGui::EndTabItem();
@@ -598,10 +599,12 @@ auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawImages, bo
 
 auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindow, std::string_view name) -> void{
 
+    auto cD = cloudsD[idDrawer].get();
+
+
     if(focusWindow){        
         if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, std::format("Frames###{}_frames_tab_bar"sv, name).data())){
 
-            auto cD = cloudsD[idDrawer].get();
 
             // draw
             cD->depthSizedColorD.draw_tab_item(std::format("Depth sized color###{}_focus_depth_sized__color_tabitem"sv, name).data());
@@ -609,6 +612,8 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
             cD->depthD.draw_tab_item(std::format("Depth###{}_focus_depth_tabitem"sv, name).data());
             cD->infraD.draw_tab_item(std::format("Infra###{}_focus_infra_tabitem"sv, name).data());
             cD->bodiesIdMapD.draw_tab_item(std::format("Bodies ID map###{}_focus_bodies_id_map_tabitem"sv, name).data());
+
+
             if(ImGuiUiDrawer::begin_tab_item(std::format("Cloud###{}_focus_cloud_tabitem"sv, name).data())){
                 draw_fbo(content_region_size_available().conv<int>());
                 ImGui::EndTabItem();
@@ -634,7 +639,6 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
 
         if(ImGui::BeginChild("###infra_bodies_id_map_child", to_iv2(sizeW),false,ImGuiWindowFlags_NoScrollWithMouse)){
             if(ImGui::BeginTabBar("###infra_bodies_id_map_tabbar", ImGuiTabBarFlags_None)){
-                auto cD = cloudsD[idDrawer].get();
                 cD->infraD.draw_tab_item(std::format("Infra###{}_nofocus_infra_tabitem"sv, name).data());
                 cD->bodiesIdMapD.draw_tab_item(std::format("Bodies ID map###{}_nofocus_bodies_id_map_tabitem"sv, name).data());
                 ImGui::EndTabBar();
@@ -655,6 +659,38 @@ auto DCCloudsSceneDrawer::draw_cloud_drawer_tab(size_t idDrawer, bool focusWindo
         }
         ImGui::EndChild();
     }
+
+
+    // check mouse inputs
+    if(cD->lastFrame != nullptr){
+        if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::DepthSizedColorRGBA8)){
+            const auto &hp = cD->depthSizedColorD.hoveringPixel;
+            for(size_t idB = 0; idB < cD->depthSizedColorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->depthSizedColorD.mouseButtonsReleased[idB]){
+                    if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
+                        hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
+                        !image->empty()){
+                        mouse_released_depth_sized_color_signal(idDrawer, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                    }
+                }
+            }
+        }
+    }
+    if(cD->lastFrame != nullptr){
+        if(auto image = cD->lastFrame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
+            const auto &hp = cD->colorD.hoveringPixel;
+            for(size_t idB = 0; idB < cD->colorD.mouseButtonsReleased.size(); ++idB){
+                if(cD->colorD.mouseButtonsReleased[idB]){
+                    if(hp.x() >= 0 && hp.x() < static_cast<int>(image->width)  &&
+                        hp.y() >= 0 && hp.y() < static_cast<int>(image->height) &&
+                        !image->empty()){
+                        mouse_released_color_signal(idDrawer, idB, hp, (*image)[hp.y() * image->width + hp.x()]);
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 auto DCCloudsSceneDrawer::update_device_display_settings(size_t idCloud, const DCDeviceDisplaySettings &cloudDisplay) -> void{
@@ -802,7 +838,6 @@ auto DCCloudsSceneDrawer::compute_textures_rectangles(Pt2f parentSize, const std
 }
 
 auto DCCloudsSceneDrawer::draw_fbo(Pt2<int> size) -> void{
-
 
     fboD.bind();
     fboD.draw();

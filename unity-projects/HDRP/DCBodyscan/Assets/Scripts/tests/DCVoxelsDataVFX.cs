@@ -254,28 +254,29 @@ namespace BS {
 
             if ((nbPoints >= 0) && settings.update) {
 
-                //UnityEngine.Debug.Log("update_data : " + nbPoints);
                 int nbClouds = nbPoints / sizeMaxVoxelGroup;
-                int rest = nbPoints % sizeMaxVoxelGroup;
-                if (rest != 0) {
-                    nbClouds++;
+                int idBuffer = 0;
+                for (int idC = 0; idC < nbClouds; ++idC) {
+                    positionsGBuffers[idBuffer].SetData(positionsNativeBuffer.native,   idBuffer * sizeMaxVoxelGroup, 0, sizeMaxVoxelGroup);
+                    colorsGBuffers[idBuffer].SetData(colorsNativeBuffer.native,         idBuffer * sizeMaxVoxelGroup, 0, sizeMaxVoxelGroup);
+                    voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints",  sizeMaxVoxelGroup);
+                    //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + sizeMaxVoxelGroup);
+                    ++idBuffer;
                 }
 
-                int totalNbPoints = nbPoints + rest;
-                //UnityEngine.Debug.Log("nbClouds : " + nbClouds + " nbPoints " + nbPoints + " totalNbPoints " + totalNbPoints);
-                for (int idC = 0; idC < nbClouds; ++idC) {
+                int rest = nbPoints % sizeMaxVoxelGroup;
+                if(rest != 0) {
+                    positionsGBuffers[idBuffer].SetData(positionsNativeBuffer.native, idBuffer * sizeMaxVoxelGroup, 0, rest);
+                    colorsGBuffers[idBuffer].SetData(colorsNativeBuffer.native, idBuffer * sizeMaxVoxelGroup, 0, rest);
+                    voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints", rest);
+                    //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + rest);
+                    ++idBuffer;
+                }
 
-                    int currentNbPoints = (totalNbPoints >= sizeMaxVoxelGroup) ? sizeMaxVoxelGroup : totalNbPoints;
-                    totalNbPoints -= currentNbPoints;
-
-                    //UnityEngine.Debug.Log("currentNbPoints: " + currentNbPoints + " totalNbPoints " + totalNbPoints + " idc " + idC + " idC * sizeMaxVoxelGroup " + idC * sizeMaxVoxelGroup);
-                    positionsGBuffers[idC].SetData(positionsNativeBuffer.native, idC * sizeMaxVoxelGroup, 0, currentNbPoints);
-                    colorsGBuffers[idC].SetData(colorsNativeBuffer.native, idC * sizeMaxVoxelGroup, 0, currentNbPoints);
-                    voxelsGroupsGO[idC].GetComponent<VisualEffect>().SetInt("NbPoints", currentNbPoints);
-
-                    if (nbPoints <= 0) {
-                        break;
-                    }
+                for(int idC = idBuffer; idC < positionsGBuffers.Count; ++idC) {
+                    voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints", 0);
+                    //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + 0);
+                    ++idBuffer;
                 }
             }
         }

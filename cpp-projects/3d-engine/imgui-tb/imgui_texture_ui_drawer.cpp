@@ -157,17 +157,15 @@ auto ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const ge
 
             hoveringPixel = (diff).conv<int>();
             for(int ii = 0; ii < 5; ++ii){
-                if(io.MouseDown[ii]){
-                    mouseButtonsPressed[ii] = true;
-                }else if(io.MouseReleased[ii]){
-                    mouseButtonsPressed[ii] = false;
-                }
+                mouseButtonsPressed[ii]  = io.MouseDown[ii];
+                mouseButtonsReleased[ii] = io.MouseReleased[ii];
             }
 
         }else{
             hoveringPixel = {-1,-1};
             for(int ii = 0; ii < 5; ++ii){
-                mouseButtonsPressed[ii] = false;
+                mouseButtonsPressed[ii]     = false;
+                mouseButtonsReleased[ii]    = false;
             }
         }
 

@@ -70,7 +70,10 @@ template <typename acc>
 constexpr auto operator*(const ColVec<acc,4> &l, const ColVec<acc,4> &r) noexcept -> ColVec<acc,4>{
     return {{l[0]*r[0],l[1]*r[1],l[2]*r[2],l[3]*r[3]}};
 }
-
+template <typename acc>
+constexpr auto operator*(const Point4<acc> &l, const Point4<acc> &r) noexcept -> Point4<acc> {
+    return {l[0]*r[0],l[1]*r[1],l[2]*r[2],l[3]*r[3]};
+}
 
 template <typename acc>
 constexpr auto dot(const ColVec<acc,4> &l, const ColVec<acc,4> &r) noexcept -> acc {

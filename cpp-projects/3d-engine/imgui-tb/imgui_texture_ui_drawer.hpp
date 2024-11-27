@@ -45,6 +45,7 @@ public:
 
     geo::Pt2<int> hoveringPixel = {-1,-1};
     std::array<bool, 5> mouseButtonsPressed;
+    std::array<bool, 5> mouseButtonsReleased;
 
 private:
     bool m_invert = false;

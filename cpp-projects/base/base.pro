@@ -44,6 +44,7 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io            
+    depth-camera/dc_device_array.hpp \
     depth-camera/frame/dc_data_frame.hpp \
     depth-camera/frame/dc_data_frame_buffer.hpp \
     depth-camera/frame/dc_data_frame_generator.hpp \
@@ -320,6 +321,7 @@ HEADERS += \
 SOURCES += \
     # io    
     depth-camera/client/dc_client.cpp \
+    depth-camera/dc_device_array.cpp \
     depth-camera/frame/dc_data_frame.cpp \
     depth-camera/frame/dc_data_frame_buffer.cpp \
     depth-camera/frame/dc_data_frame_generator.cpp \

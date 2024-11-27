@@ -825,7 +825,7 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
     ImGuiIntS iSettings;
     iSettings.min = 0;
     iSettings.max = static_cast<int>(rStates.duration);
-    iSettings.speedInc = 30;
+    iSettings.speedInc = 1000;
     iSettings.speedDrag = 10;
 
     ImGuiDragS dSettings;
@@ -1050,7 +1050,7 @@ auto DCUIDrawer::draw_dc_player_tab_item(
     ImGuiIntS iSettings;
     iSettings.min = 0;
     iSettings.max = static_cast<int>(pStates.duration);
-    iSettings.speedInc = 30;
+    iSettings.speedInc = 1000;
     iSettings.speedDrag = 10;
 
     ImGuiDragS dSettings;
@@ -1284,6 +1284,8 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
             update = true;
             cStates.recomputeRegisteringProcessing = true;
         }
+        ImGui::BeginDisabled(!cSettings.computeSphereCenter);
+
         ImGui::SameLine();
         ImGui::Text("with ray");
         ImGui::SameLine();
@@ -1294,7 +1296,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
         }
 
         ImGui::Text("Method:");
-        if(ImGui::Checkbox("Use closests points", &cSettings.closestPoints)){
+        if(ImGui::Checkbox("Use closests points with max nb points", &cSettings.closestPoints)){
             if(cSettings.closestPoints){
                 cSettings.meanWithFirstZ = false;
                 cSettings.estimateSphere = false;
@@ -1303,7 +1305,7 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
         }
         ImGui::SameLine();
         ImGui::SetNextItemWidth(50);
-        if(ImGui::DragInt("with max nb points", &cSettings.maxNbPoints, 1, 1, 100)){
+        if(ImGui::DragInt("###max_nb_points", &cSettings.maxNbPoints, 1, 1, 100)){
             cStates.recomputeRegisteringProcessing = true;
         }
 
@@ -1315,13 +1317,23 @@ auto DCUIDrawer::draw_dc_calibrator_tab_item(
             cStates.recomputeRegisteringProcessing = true;
         }
 
-        if(ImGui::Checkbox("Estimate sphere", &cSettings.estimateSphere)){
+        if(ImGui::Checkbox("Estimate sphere with ray error below", &cSettings.estimateSphere)){
             if(cSettings.estimateSphere){
                 cSettings.closestPoints = false;
                 cSettings.meanWithFirstZ = false;
             }
             cStates.recomputeRegisteringProcessing = true;
         }
+        ImGui::BeginDisabled(!cSettings.computeSphereCenter || !cSettings.estimateSphere);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(50);
+        if(ImGui::DragFloat("###ray_error", &cSettings.rayError, 0.01f, 0.01f, 1.f)){
+            update = true;
+            cStates.recomputeRegisteringProcessing = true;
+        }
+        ImGui::EndDisabled();
+
+        ImGui::EndDisabled();
     }
 
     ImGuiUiDrawer::title("DISPLAY");

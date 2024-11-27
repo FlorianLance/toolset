@@ -29,6 +29,7 @@
 // local
 #include "utility/constants.hpp"
 #include "geometry/point3.hpp"
+#include "geometry/point4.hpp"
 #include "geometry/matrix3.hpp"
 
 namespace tool::geo {
@@ -283,32 +284,60 @@ constexpr auto inverse(const Matrix<acc,4,4> &m) noexcept -> Matrix<acc,4,4>{
     acc c22 = m(0,1) * m(1,3) - m(0,3) * m(1,1);
     acc c23 = m(0,1) * m(1,2) - m(0,2) * m(1,1);
 
-    RowVec<acc,4> f0{{c00, c00, c02, c03}};
-    RowVec<acc,4> f1{{c04, c04, c06, c07}};
-    RowVec<acc,4> f2{{c08, c08, c10, c11}};
-    RowVec<acc,4> f3{{c12, c12, c14, c15}};
-    RowVec<acc,4> f4{{c16, c16, c18, c19}};
-    RowVec<acc,4> f5{{c20, c20, c22, c23}};
+    Pt4<acc> f0{c00, c00, c02, c03};
+    Pt4<acc> f1{c04, c04, c06, c07};
+    Pt4<acc> f2{c08, c08, c10, c11};
+    Pt4<acc> f3{c12, c12, c14, c15};
+    Pt4<acc> f4{c16, c16, c18, c19};
+    Pt4<acc> f5{c20, c20, c22, c23};
 
-    RowVec<acc,4> v0{{m(0,1), m(0,0), m(0,0), m(0,0)}};
-    RowVec<acc,4> v1{{m(1,1), m(1,0), m(1,0), m(1,0)}};
-    RowVec<acc,4> v2{{m(2,1), m(2,0), m(2,0), m(2,0)}};
-    RowVec<acc,4> v3{{m(3,1), m(3,0), m(3,0), m(3,0)}};
+    Pt4<acc> v0{m(0,1), m(0,0), m(0,0), m(0,0)};
+    Pt4<acc> v1{m(1,1), m(1,0), m(1,0), m(1,0)};
+    Pt4<acc> v2{m(2,1), m(2,0), m(2,0), m(2,0)};
+    Pt4<acc> v3{m(3,1), m(3,0), m(3,0), m(3,0)};
 
-    RowVec<acc,4> i0 = v1 * f0 - v2 * f1 + v3 * f2;
-    RowVec<acc,4> i1 = v0 * f0 - v2 * f3 + v3 * f4;
-    RowVec<acc,4> i2 = v0 * f1 - v1 * f3 + v3 * f5;
-    RowVec<acc,4> i3 = v0 * f2 - v1 * f4 + v2 * f5;
+    Pt4<acc> i0 = v1 * f0 - v2 * f1 + v3 * f2;
+    Pt4<acc> i1 = v0 * f0 - v2 * f3 + v3 * f4;
+    Pt4<acc> i2 = v0 * f1 - v1 * f3 + v3 * f5;
+    Pt4<acc> i3 = v0 * f2 - v1 * f4 + v2 * f5;
 
-    RowVec<acc,4> sA{{+1, -1, +1, -1}};
-    RowVec<acc,4> sB{{-1, +1, -1, +1}};
+    Pt4<acc> sA{+1, -1, +1, -1};
+    Pt4<acc> sB{-1, +1, -1, +1};
+
 
     return Mat4<acc>(
-        transpose(i0 * sA),
-        transpose(i1 * sB),
-        transpose(i2 * sA),
-        transpose(i3 * sB)
+        transpose(Pt4<acc>(i0 * sA)),
+        transpose(Pt4<acc>(i1 * sB)),
+        transpose(Pt4<acc>(i2 * sA)),
+        transpose(Pt4<acc>(i3 * sB))
     ) * acc{1}/ det;
+
+    // RowVec<acc,4> f0{{c00, c00, c02, c03}};
+    // RowVec<acc,4> f1{{c04, c04, c06, c07}};
+    // RowVec<acc,4> f2{{c08, c08, c10, c11}};
+    // RowVec<acc,4> f3{{c12, c12, c14, c15}};
+    // RowVec<acc,4> f4{{c16, c16, c18, c19}};
+    // RowVec<acc,4> f5{{c20, c20, c22, c23}};
+
+    // RowVec<acc,4> v0{{m(0,1), m(0,0), m(0,0), m(0,0)}};
+    // RowVec<acc,4> v1{{m(1,1), m(1,0), m(1,0), m(1,0)}};
+    // RowVec<acc,4> v2{{m(2,1), m(2,0), m(2,0), m(2,0)}};
+    // RowVec<acc,4> v3{{m(3,1), m(3,0), m(3,0), m(3,0)}};
+
+    // RowVec<acc,4> i0 = v1 * f0 - v2 * f1 + v3 * f2;
+    // RowVec<acc,4> i1 = v0 * f0 - v2 * f3 + v3 * f4;
+    // RowVec<acc,4> i2 = v0 * f1 - v1 * f3 + v3 * f5;
+    // RowVec<acc,4> i3 = v0 * f2 - v1 * f4 + v2 * f5;
+
+    // RowVec<acc,4> sA{{+1, -1, +1, -1}};
+    // RowVec<acc,4> sB{{-1, +1, -1, +1}};
+
+    // return Mat4<acc>(
+    //     transpose(i0 * sA),
+    //     transpose(i1 * sB),
+    //     transpose(i2 * sA),
+    //     transpose(i3 * sB)
+    // ) * acc{1}/ det;
 }
 
 template<typename acc>

@@ -27,6 +27,9 @@
 #pragma once
 
 
+// taskflow
+#include <thirdparty/taskflow/taskflow.hpp>
+
 // local
 #include "utility/time_diff.hpp"
 #include "utility/monitoring.hpp"
@@ -36,9 +39,11 @@
 #include "frame/dc_device_data.hpp"
 #include "dc_device.hpp"
 #include "utility/logger.hpp"
+#include "graphics/color/hsv.hpp"
 
 #define VCL_NAMESPACE
 #include "vectorclass.h"
+
 
 namespace tool::cam {
 
@@ -72,7 +77,9 @@ struct DCDeviceImpl{
     virtual auto open(const DCConfigSettings &newConfigS) -> bool = 0;
     virtual auto close() -> void = 0;
 
+    // process
     auto process_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
+    auto process_frames_task() -> tf::Taskflow*{return &m_processFramesT;}
 
     // settings
     auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
@@ -94,6 +101,10 @@ struct DCDeviceImpl{
     // signals
     sigslot::signal<std::shared_ptr<DCFrame>> new_frame_signal;
     sigslot::signal<std::shared_ptr<DCDataFrame>> new_data_frame_signal;
+
+    // current frames
+    std::shared_ptr<DCFrame> frame = nullptr;
+    std::shared_ptr<DCDataFrame> dFrame = nullptr;
 
 protected:
 
@@ -162,6 +173,9 @@ protected:
     auto update_data_frame_body_tracking() -> void;
     auto update_data_frame_calibration() -> void;
 
+    // flow
+    tf::Taskflow m_processFramesT;
+
     // states
     DCSettings settings;
     DCModeInfos mInfos;
@@ -171,9 +185,8 @@ protected:
     tool::s_umap<std::string_view, TimeElem> times;
     bool captureSuccess = false;
     bool dataIsValid = false;
-    std::shared_ptr<DCFrame> frame = nullptr;
-    std::shared_ptr<DCDataFrame> dFrame = nullptr;
-    std::mutex parametersM;
+
+    std::mutex timesLocker;
     FramerateBuffer framerateB;
 
     // profiling
@@ -189,6 +202,58 @@ protected:
     // decoders
     data::JpegDecoder jpegColorDecoder;
 
+    AverageBuffer v;
+
+
+    // working values
+    std::uint16_t minW;
+    std::uint16_t maxW;
+    std::uint16_t minH;
+    std::uint16_t maxH;
+    geo::Pt2f dRange;
+    float diffRange;
+    std::uint16_t minD;
+    std::uint16_t maxD;
+    ColorHSV hsvDiffColor;
+    ColorHSV maxDiffColor;
+    bool fdc;
+
+    // plane filtering parameters
+    geo::Pt3f p1;
+    geo::Pt3f p2;
+    geo::Pt3f p3;
+    geo::Pt3f meanPt;
+    geo::Vec3f AB;
+    geo::Vec3f AC;
+    geo::Vec3f normalV;
+    geo::Pt3f pSphere;
+    float squareMaxDistanceFromPoint;
+    geo::Vec3f oobRot;
+    geo::Mat3f oobOrientation;
+    geo::Mat3f invO;
+    geo::Vec3f halfDimensions;
+    geo::Pt3f oobPos;
+
+    int minNeighBoursFilteringIterations = 0;
+    int erosionsIterations = 0;
+
+    size_t currentZoneId = 1;
+    int biggestZone = -1;
+    size_t sizeBiggestZone = 0;
+    std::uint16_t minDist;
+    std::uint16_t maxDist;
+
+
+    // BinaryImageBuffer *colorImage = nullptr;
+    // BinaryImageBuffer *depthSizedColorImage = nullptr;
+    // BinaryImageBuffer *depthData = nullptr;
+    // BinaryImageBuffer *infraData = nullptr;
+
+
+
+    // tf::Executor executor;
+
+    // SIMD
     // std::vector<VCL_NAMESPACE::Vec16us> xIdsSIMD;
     // std::vector<VCL_NAMESPACE::Vec16us> yIdsSIMD;
     // std::vector<VCL_NAMESPACE::Vec16us> depthSIMD;
@@ -201,9 +266,6 @@ protected:
     // std::vector<VCL_NAMESPACE::Vec32sb> maskSIMD;
     // std::vector<VCL_NAMESPACE::Vec16f> rgbSIMD;
     // std::vector<std::uint16_t> filterDepthSIMD;
-
-    AverageBuffer v;
-
     // std::vector<VCL_NAMESPACE::Vec32us> xIdsSIMD32;
     // std::vector<VCL_NAMESPACE::Vec32us> yIdsSIMD32;
     // std::vector<VCL_NAMESPACE::Vec32us> depthSIMD32;

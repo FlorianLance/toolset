@@ -32,6 +32,7 @@
 // base
 #include "io/cloud_io.hpp"
 #include "utility/logger.hpp"
+#include "utility/time.hpp"
 
 // local
 #include "imgui_ui_drawer.hpp"
@@ -65,7 +66,6 @@ auto DCDirectDrawer::initialize(size_t nbGrabbers) -> void{
     m_locker.unlock();
 }
 
-#include "utility/time.hpp"
 auto DCDirectDrawer::update() -> void{
 
     auto t1 = Time::nanoseconds_since_epoch();

@@ -36,6 +36,12 @@
 namespace tool::graphics {
 
 
+struct PixelInfo{
+    std::uint32_t objectID = 0;
+    std::uint32_t frawID = 0;
+    std::uint32_t primID = 0;
+};
+
 class ImguiFboUiDrawer{
 
 public:
@@ -58,6 +64,7 @@ public:
     auto is_camera_updated() const noexcept -> bool{return m_cameraUpdated;}
     auto is_screen_updated() const noexcept -> bool{return m_screenUpdated;}
 
+
     double rotationSpeed = 0.05;
     float scrollSpeed = 0.1f;
     float movingSpeed = 0.05f;
@@ -66,11 +73,14 @@ public:
 
     bool initialized = false;
 
+    geo::Pt2<int> hoveringPixel = {-1,-1};
+    std::array<bool, 5> mouseButtonsPressed;
+    std::array<bool, 5> mouseButtonsReleased;
+
 private:
 
     auto restore_viewport() -> void;
     auto check_inputs() -> void;
-
     GLint m_viewport[4];
     gl::FBO m_fbo;
     gl::Texture2D m_texture;
@@ -80,5 +90,6 @@ private:
 
     bool m_cameraUpdated = false;
     bool m_screenUpdated = false;
+
 };
 }
