@@ -163,6 +163,9 @@ auto DCMLeftPanelChildDrawer::draw_recorder_tab_item(cam::DCVideoRecorder &recor
     if(recorder.states.moveTime){
         DCMSignals::get()->set_recorder_time_signal(recorder.states.currentTime);
     }
+    if(recorder.states.sendToPlayer){
+        DCMSignals::get()->send_video_to_player_signal(recorder.video());
+    }
 
     if (ImGuiFileDialog::Instance()->Display("Save recording")) {
         if (ImGuiFileDialog::Instance()->IsOk()){
@@ -756,6 +759,10 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             ImGui::SameLine();
             if(ImGui::Button("Disconnect###settings_disconnect_button")){
                 DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::disconnect);
+            }
+            ImGui::SameLine();
+            if(ImGui::Checkbox("Auto-connecct###settings_auto_connect", &clientDeviceS.connectionS.autoConnect)){
+
             }
             ImGui::Unindent();
 

@@ -39,109 +39,109 @@ using UnityEngine.Events;
 namespace BS {
 
 
-//#if UNITY_EDITOR
+#if UNITY_EDITOR
 
-//    [CustomEditor(typeof(DCVideoPlayer))]
-//    public class DCVideoPlayerEditor : Editor {
+    [CustomEditor(typeof(DCVoxelsPlayer))]
+    public class DCVoxelsPlayerEditor : Editor {
 
-//        private DCVideoPlayer dcVideoPlayer { get { return target as DCVideoPlayer; } }
+        private DCVoxelsPlayer dcVideoPlayer { get { return target as DCVoxelsPlayer; } }
 
-//        public override bool RequiresConstantRepaint() {
-//            return true;
-//        }
+        public override bool RequiresConstantRepaint() {
+            return true;
+        }
 
-//        public override void OnInspectorGUI() {
+        public override void OnInspectorGUI() {
 
-//            var origFontStyle = EditorStyles.label.fontStyle;
-//            EditorStyles.label.fontStyle = FontStyle.Bold;
-//            EditorGUILayout.LabelField("#### ACTIONS ####");
-//            EditorStyles.label.fontStyle = origFontStyle;
+            var origFontStyle = EditorStyles.label.fontStyle;
+            EditorStyles.label.fontStyle = FontStyle.Bold;
+            EditorGUILayout.LabelField("#### ACTIONS ####");
+            EditorStyles.label.fontStyle = origFontStyle;
 
-//            if (dcVideoPlayer.is_loaded()) {
-//                if (dcVideoPlayer.is_started()) {
-//                    if (dcVideoPlayer.is_playing()) {
-//                        EditorGUILayout.LabelField("Video is started and playing.");
-//                    } else {
-//                        EditorGUILayout.LabelField("Video is started and pausing.");
-//                    }
-//                } else {
-//                    EditorGUILayout.LabelField("Video is loaded and not started.");
-//                }
-//            } else {
-//                EditorGUILayout.LabelField("Video not loaded.");
-//            }
+            if (dcVideoPlayer.is_loaded()) {
+                if (dcVideoPlayer.is_started()) {
+                    if (dcVideoPlayer.is_playing()) {
+                        EditorGUILayout.LabelField("Video is started and playing.");
+                    } else {
+                        EditorGUILayout.LabelField("Video is started and pausing.");
+                    }
+                } else {
+                    EditorGUILayout.LabelField("Video is loaded and not started.");
+                }
+            } else {
+                EditorGUILayout.LabelField("Video not loaded.");
+            }
 
-//            EditorGUI.BeginDisabledGroup(!Application.isPlaying);
+            EditorGUI.BeginDisabledGroup(!Application.isPlaying);
 
-//            EditorGUILayout.BeginHorizontal();
-//            //EditorGUILayout.LabelField("Video file path: ");
-//            //dcVideoPlayer.videoFilePath = EditorGUILayout.TextField(dcVideoPlayer.videoFilePath);
-//            if (GUILayout.Button("Load video")) {
-//                dcVideoPlayer.load_video_from_file(dcVideoPlayer.videoFilePath);
-//            }
-//            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            //EditorGUILayout.LabelField("Video file path: ");
+            //dcVideoPlayer.videoFilePath = EditorGUILayout.TextField(dcVideoPlayer.videoFilePath);
+            if (GUILayout.Button("Load video")) {
+                dcVideoPlayer.load_video_from_file(dcVideoPlayer.videoFilePath);
+            }
+            EditorGUILayout.EndHorizontal();
 
-//            EditorGUILayout.BeginHorizontal();
-//            if (!dcVideoPlayer.is_started()) {
-//                if (GUILayout.Button("Start video")) {
-//                    dcVideoPlayer.start_video();
-//                }
-//            } else {
-//                if (GUILayout.Button("Stop video")) {
-//                    dcVideoPlayer.stop_video();
-//                }
-//                if (dcVideoPlayer.is_playing()) {
-//                    if (GUILayout.Button("Pause")) {
-//                        dcVideoPlayer.pause_video();
-//                    }
-//                } else {
-//                    if (GUILayout.Button("Unpause")) {
-//                        dcVideoPlayer.unpause_video();
-//                    }
-//                }
-//            }
-//            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            if (!dcVideoPlayer.is_started()) {
+                if (GUILayout.Button("Start video")) {
+                    dcVideoPlayer.start_video();
+                }
+            } else {
+                if (GUILayout.Button("Stop video")) {
+                    dcVideoPlayer.stop_video();
+                }
+                if (dcVideoPlayer.is_playing()) {
+                    if (GUILayout.Button("Pause")) {
+                        dcVideoPlayer.pause_video();
+                    }
+                } else {
+                    if (GUILayout.Button("Unpause")) {
+                        dcVideoPlayer.unpause_video();
+                    }
+                }
+            }
+            EditorGUILayout.EndHorizontal();
 
-//            EditorGUILayout.BeginHorizontal();
-//            if (GUILayout.Button("Go to start time")) {
-//                dcVideoPlayer.go_to_start_time();
-//                dcVideoPlayer.update();
-//            }
-//            if (GUILayout.Button("Go to end time")) {
-//                dcVideoPlayer.go_to_end_time();
-//                dcVideoPlayer.update();
-//            }
-//            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Go to start time")) {
+                dcVideoPlayer.go_to_start_time();
+                dcVideoPlayer.update();
+            }
+            if (GUILayout.Button("Go to end time")) {
+                dcVideoPlayer.go_to_end_time();
+                dcVideoPlayer.update();
+            }
+            EditorGUILayout.EndHorizontal();
 
-//            bool videoLoaded = dcVideoPlayer.is_loaded();
+            bool videoLoaded = dcVideoPlayer.is_loaded();
 
-//            float durationMs = videoLoaded ? dcVideoPlayer.duration_ms() : 0f;
-//            float currentTimeMs = videoLoaded ? dcVideoPlayer.current_time_ms() : 0f;
-//            EditorGUILayout.LabelField("Video duration: " + durationMs + "ms");
+            float durationMs = videoLoaded ? dcVideoPlayer.duration_ms() : 0f;
+            float currentTimeMs = videoLoaded ? dcVideoPlayer.current_time_ms() : 0f;
+            EditorGUILayout.LabelField("Video duration: " + durationMs + "ms");
 
-//            if (!EditorApplication.isPaused) {
+            if (!EditorApplication.isPaused) {
 
-//                EditorGUILayout.BeginHorizontal();
-//                EditorGUILayout.LabelField("Current time: " + currentTimeMs + "ms");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Current time: " + currentTimeMs + "ms");
 
-//                float currentFactor = currentTimeMs / durationMs;
-//                float newFactor = EditorGUILayout.Slider(currentFactor, 0f, 1f);
-//                if (newFactor != currentFactor) {
-//                    dcVideoPlayer.set_current_time(newFactor * durationMs);
-//                    dcVideoPlayer.update();
-//                }
-//                EditorGUILayout.EndHorizontal();
-//            }
+                float currentFactor = currentTimeMs / durationMs;
+                float newFactor = EditorGUILayout.Slider(currentFactor, 0f, 1f);
+                if (newFactor != currentFactor) {
+                    dcVideoPlayer.set_current_time(newFactor * durationMs);
+                    dcVideoPlayer.update();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
 
 
 
-//            EditorGUI.EndDisabledGroup();
+            EditorGUI.EndDisabledGroup();
 
-//            EditorGUILayout.Separator();
-//            base.OnInspectorGUI();
-//        }
-//    }
-//#endif
+            EditorGUILayout.Separator();
+            base.OnInspectorGUI();
+        }
+    }
+#endif
 
     public class DCVoxelsPlayer : MonoBehaviour {
 

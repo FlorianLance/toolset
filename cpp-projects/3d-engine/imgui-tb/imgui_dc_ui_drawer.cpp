@@ -846,6 +846,10 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
         ImGuiFileDialog::Instance()->OpenDialog("Save recording", "Choose file to save", ".kvid", ".");
     }
 
+    if(ImGui::Button("Send to player")){
+        rStates.sendToPlayer = true;
+    }
+
     ImGuiUiDrawer::title("SETTINGS");
     bool update = false;
     ImGui::Text("Max number of frames per camera:");
@@ -1078,9 +1082,18 @@ auto DCUIDrawer::draw_dc_player_tab_item(
     if(ImGui::Button("Merge")){
         pStates.merge = true;
     }
-    // if(ImGui::Button("Info")){
-    //     pStates.info = true;
-    // }
+
+    ImGuiFloatS fSettings;
+    fSettings.min = 1.f;
+    fSettings.max = 1000.f;
+    fSettings.speedDrag = 1.f;
+    fSettings.speedInc = 1.f;
+
+    float mergeVoxelsSizeMM = pSettings.mergeVoxelSize*1000.f;
+    if(ImGuiUiDrawer::draw_drag_float_with_buttons("Voxels size (mm)", "voxel_size"sv, &mergeVoxelsSizeMM, fSettings, dSettings)){
+        pSettings.mergeVoxelSize = mergeVoxelsSizeMM * 0.001f;
+    }
+
     ImGui::Unindent();
 
     ImGui::Text("I/O");

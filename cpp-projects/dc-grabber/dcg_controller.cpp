@@ -179,6 +179,9 @@ auto DCGController::set_connections() -> void{
     device->new_frame_signal.connect(                           &DCDeviceDrawer::update_frame,                             deviceD);
     // ## recorder drawer
     recorder->new_frame_signal.connect(                         &DCRecorderDrawer::set_frame,                              recorderD);
+
+    deviceD->mouse_released_color_signal.connect(            &DCGView::update_selected_color,                    view.get());
+    deviceD->mouse_released_depth_sized_color_signal.connect(&DCGView::update_selected_color,                    view.get());
 }
 
 auto DCGController::start() -> void{

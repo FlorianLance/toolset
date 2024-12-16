@@ -41,8 +41,8 @@
 #include "utility/logger.hpp"
 #include "graphics/color/hsv.hpp"
 
-#define VCL_NAMESPACE
-#include "vectorclass.h"
+// #define VCL_NAMESPACE
+// #include "vectorclass.h"
 
 
 namespace tool::cam {

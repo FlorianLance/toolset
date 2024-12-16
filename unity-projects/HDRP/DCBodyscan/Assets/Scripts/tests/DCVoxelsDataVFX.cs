@@ -260,6 +260,7 @@ namespace BS {
                     positionsGBuffers[idBuffer].SetData(positionsNativeBuffer.native,   idBuffer * sizeMaxVoxelGroup, 0, sizeMaxVoxelGroup);
                     colorsGBuffers[idBuffer].SetData(colorsNativeBuffer.native,         idBuffer * sizeMaxVoxelGroup, 0, sizeMaxVoxelGroup);
                     voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints",  sizeMaxVoxelGroup);
+                    voxelsGroupsGO[idBuffer].gameObject.SetActive(true);
                     //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + sizeMaxVoxelGroup);
                     ++idBuffer;
                 }
@@ -269,12 +270,14 @@ namespace BS {
                     positionsGBuffers[idBuffer].SetData(positionsNativeBuffer.native, idBuffer * sizeMaxVoxelGroup, 0, rest);
                     colorsGBuffers[idBuffer].SetData(colorsNativeBuffer.native, idBuffer * sizeMaxVoxelGroup, 0, rest);
                     voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints", rest);
+                    voxelsGroupsGO[idBuffer].gameObject.SetActive(true);
                     //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + rest);
                     ++idBuffer;
                 }
 
                 for(int idC = idBuffer; idC < positionsGBuffers.Count; ++idC) {
                     voxelsGroupsGO[idBuffer].GetComponent<VisualEffect>().SetInt("NbPoints", 0);
+                    voxelsGroupsGO[idBuffer].gameObject.SetActive(false);
                     //UnityEngine.Debug.Log("idBuffer : " + idBuffer + " -> " + 0);
                     ++idBuffer;
                 }

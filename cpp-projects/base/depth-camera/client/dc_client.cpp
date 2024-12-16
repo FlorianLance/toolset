@@ -36,16 +36,19 @@
 #include "dc_client_device.hpp"
 #include "dc_client_processing.hpp"
 
+using namespace tool;
 using namespace tool::cam;
 
 struct DCClient::Impl{
 
     Buffer<std::unique_ptr<DCClientDevice>> cDevices;
+    Buffer<std::chrono::nanoseconds> lastConnectionTry;
     DCClientProcessing processing;
 
     std::mutex readMessagesL;
     std::deque<std::pair<size_t, net::Feedback>> messages;
     std::vector<std::pair<size_t, net::Feedback>> messagesR;
+
 
     auto generate_client(DCClientSettings &settings, size_t idDevice) -> std::unique_ptr<DCClientDevice>{
 
@@ -131,11 +134,14 @@ auto DCClient::clean() -> void{
     Log::log("[DCClient::clean] Clean processing.\n"sv);
     i->processing.clean();
     i->cDevices.clear();
+    i->lastConnectionTry.clear();
     
     Log::log("[DCClient::clean] Clear settings.\n"sv);
     settings.devicesS.clear();
 
 }
+
+#include "utility/time.hpp"
 
 auto DCClient::update() -> void{
 
@@ -205,6 +211,22 @@ auto DCClient::update() -> void{
     for(size_t idD = 0; idD < devices_nb(); ++idD){
         settings.devicesS[idD].processindUCUsage          = static_cast<int>(100.0*i->processing.get_uc_usage(idD));
         settings.devicesS[idD].averageProcesingDurationMicroS = i->processing.get_average_process_duration_micro_s(idD);
+    }
+
+
+    // auto connect
+    for(size_t idD = 0; idD < devices_nb(); ++idD){
+        if(i->cDevices[idD]->type() == DCClientType::Remote){
+            auto rd = dynamic_cast<DCClientRemoteDevice*>(i->cDevices[idD].get());
+            if(settings.devicesS[idD].connectionS.autoConnect && !rd->device_connected()){
+                auto now = Time::nanoseconds_since_epoch();
+                if(Time::difference_ms(settings.devicesS[idD].connectionS.lastConnectTry, now).count() > 5000){
+                    settings.devicesS[idD].connectionS.lastConnectTry = now;
+                    Log::fmessage("Auto connect with remote device #{}\n", settings.devicesS[idD].id);
+                    init_connection_with_remote_device(settings.devicesS[idD].id);
+                }
+            }
+        }
     }
 }
 
@@ -341,6 +363,7 @@ auto DCClient::add_device(DCClientType connectionType) -> void{
     settings.add_device(connectionType);
     i->processing.add_device_processor(true);
     i->cDevices.push_back(i->generate_client(settings, settings.devicesS.size()-1));
+    i->lastConnectionTry.push_back(std::chrono::nanoseconds{0});
 }
 
 auto DCClient::remove_last_device() -> void{
@@ -350,6 +373,7 @@ auto DCClient::remove_last_device() -> void{
         i->processing.remove_last_processor();
         i->cDevices.back()->clean();
         i->cDevices.remove_last();
+        i->lastConnectionTry.remove_last();
     }
 }
 

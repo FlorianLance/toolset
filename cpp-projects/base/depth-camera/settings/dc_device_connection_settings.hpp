@@ -55,12 +55,14 @@ struct DCDeviceConnectionSettings : io::Settings{
     std::string sendingAddress = "localhost";
     int sendingPort = 8888;
     net::Protocol protocol = net::Protocol::ipv4;
+    bool autoConnect = false;
 
     // # runtime
     std::string readingAddress;
     std::string processedSendingAddress;
     bool startReadingThread = true;
-    // bool isLocalhost = false;
+    // bool isLocalhost = false;    
+    std::chrono::nanoseconds lastConnectTry;
 };
 
 

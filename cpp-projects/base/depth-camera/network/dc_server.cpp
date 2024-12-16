@@ -84,6 +84,13 @@ struct DCServer::Impl{
     auto start_sending_thread() -> void;
     auto stop_sending_thread() -> void;
 
+    auto disconnect_sender(const std::string &id) -> void{
+        Log::message(std::format("[DCServer] Client disconnected [{}].\n", id));
+        udpSenders[id]->clean_socket();
+        udpSenders.erase(id);
+        client_disconnected_signal(id);
+    }
+
     // reading
     // # reader
     UdpReader udpReader;
@@ -381,10 +388,7 @@ auto DCServer::Impl::send_messages_loop() -> void{
 
                             // disconnect command received
                             if(feedback.type == FeedbackType::disconnect){
-                                Log::message(std::format("[DCServer] Client disconnected [{}].\n", endPoint.id));
-                                udpSenders[endPoint.id]->clean_socket();
-                                udpSenders.erase(endPoint.id);
-                                client_disconnected_signal(endPoint.id);
+                                disconnect_sender(endPoint.id);
                             }
                         }
                     }
@@ -594,6 +598,7 @@ auto DCServer::update() -> void{
                         if(m.second.type == FeedbackType::ping){
                             if(settings.cInfos.clientsConnected.contains(m.first.id)){
                                 settings.cInfos.clientsConnected[m.first.id] = Time::nanoseconds_since_epoch();
+                                // Log::message("ping\n");
                             }
                         }
                     },
@@ -614,6 +619,13 @@ auto DCServer::update() -> void{
                     }},
                 message
             );
+        }
+    }
+
+    // check for disconnected clients
+    for(auto &client : settings.cInfos.clientsConnected){
+        if(Time::now_difference_ms(client.second).count() > 10000){
+            i->disconnect_sender(client.first);
         }
     }
 }

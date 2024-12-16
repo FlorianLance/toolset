@@ -44,12 +44,14 @@ struct DCVideoRecorderStates{
     bool stopRecording  = false;
     bool resetRecording = false;
     bool moveTime       = false;
+    bool sendToPlayer   = false;
 
     auto reset_actions() -> void{
         startRecording = false;
         stopRecording  = false;
         resetRecording = false;
         moveTime       = false;
+        sendToPlayer   = false;
     }
 };
 

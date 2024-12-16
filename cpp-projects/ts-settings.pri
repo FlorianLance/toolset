@@ -66,7 +66,7 @@ equals(COMPILER, "vs"){ # Visual studio
     QMAKE_CXXFLAGS *= -w14640
     QMAKE_CXXFLAGS *= -w14242 # 'identfier': conversion from 'type1' to 'type1', possible loss of data
 
-    QMAKE_CXXFLAGS *= -arch:AVX512
+    # QMAKE_CXXFLAGS *= -arch:AVX512
 
 
     # /w14242 'identfier': conversion from 'type1' to 'type1', possible loss of data

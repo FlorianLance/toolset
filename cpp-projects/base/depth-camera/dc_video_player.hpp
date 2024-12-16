@@ -44,8 +44,9 @@ public:
 
     // video
     auto set_video(const DCVideo &video) -> void;
+    auto set_video_ptr(DCVideo *video) -> void;
     auto video() -> DCVideo*;
-    auto display_infos() -> void;;
+    auto display_infos() -> void;
 
     // navigation
     auto start_video() noexcept -> void;

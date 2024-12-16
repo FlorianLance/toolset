@@ -43,7 +43,8 @@ public:
     auto draw_child(const std::string &windowName, geo::Pt2f sizeWindow) -> void;//, std::string_view topTitle = {}, std::string_view infos = {}) -> void;
     auto draw_at_position(const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text = std::nullopt) -> void;
 
-    geo::Pt2<int> hoveringPixel = {-1,-1};
+    geo::Pt2<float> hoveringPixel = {-1.f,-1.f};
+    // geo::Pt2<int> hoveringPixel = {-1,-1};
     std::array<bool, 5> mouseButtonsPressed;
     std::array<bool, 5> mouseButtonsReleased;
 

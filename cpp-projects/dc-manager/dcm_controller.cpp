@@ -126,7 +126,7 @@ auto DCMController::set_connections() -> void{
     s->reset_remote_device_signal.connect(                  &DCClient::reset_remote_device,                     client);
     s->init_connection_signal.connect(                      &DCClient::init_connection_with_remote_device,      client);
     s->command_signal.connect(                              &DCClient::apply_command,                           client);
-    s->reset_network_signal.connect(                        &DCClient::reset_network,                           client);
+    s->reset_network_signal.connect(                        &DCClient::reset_network,                           client);            
     // ## calibration
     s->start_calibration_registering_signal.connect(        &DCCalibrator::start_registering,                   calibrator);
     s->stop_calibration_registering_signal.connect(         &DCCalibrator::stop_registering,                    calibrator);
@@ -146,12 +146,14 @@ auto DCMController::set_connections() -> void{
     s->save_cloud_player_signal.connect(                    &DCVideoPlayer::save_cloud_to_file,                 player);
     s->merge_player_signal.connect(                         &DCVideoPlayer::merge,                              player);
     s->info_player_signal.connect(                          &DCVideoPlayer::display_infos,                      player);
+    s->send_video_to_player_signal.connect(                 &DCVideoPlayer::set_video_ptr,                          player);
     // ## recorder
     s->start_recorder_signal.connect(                       &DCVideoRecorder::start_recording,                  recorder);
     s->stop_recorder_signal.connect(                        &DCVideoRecorder::stop_recording,                   recorder);
     s->reset_recorder_signal.connect(                       &DCVideoRecorder::reset_recording,                  recorder);
     s->set_recorder_time_signal.connect(                    &DCVideoRecorder::set_time,                         recorder);
-    s->save_recorder_signal.connect(                        &DCVideoRecorder::save_to_file,                     recorder);
+    s->save_recorder_signal.connect(                        &DCVideoRecorder::save_to_file,                     recorder);    
+
     // ## direct drawer
     s->save_current_cloud_signal.connect(                   &DCDirectDrawer::save_current_cloud,                directD);
     directD->mouse_released_color_signal.connect(            &DCMView::update_selected_color,                    view.get());

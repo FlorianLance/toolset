@@ -612,7 +612,7 @@ enum class DCVolumeBufferType : std::int8_t{
 };
 
 enum class DCVersion : std::uint32_t{
-    V3_0 = 0,
+    V3_0 = 0, V3_1,
     SizeEnum
 };
 
@@ -620,10 +620,11 @@ using TVersion = std::tuple<DCVersion, std::string_view>;
 static constexpr TupleArray<DCVersion::SizeEnum, TVersion> dcVersions ={{
     TVersion
     {DCVersion::V3_0,   "3.0"sv},
+    {DCVersion::V3_1,   "3.1"sv},
 }};
 
 [[maybe_unused]][[nodiscard]] static constexpr auto current_dc_version() -> DCVersion{
-    return DCVersion::V3_0;
+    return DCVersion::V3_1;
 }
 
 [[maybe_unused]][[nodiscard]]  static constexpr auto dc_version_name(DCVersion v) -> std::string_view {

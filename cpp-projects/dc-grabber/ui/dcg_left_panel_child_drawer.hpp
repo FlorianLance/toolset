@@ -48,6 +48,9 @@ public:
     bool settingsPaneDisplayed = false;
     bool filtersPanelDisplayed = false;
 
+
+    auto update_selected_color(const geo::Pt4f& color) -> void;
+
 private:
 
     auto draw_network_tab_item(DCGModel *model) -> void;
@@ -64,15 +67,8 @@ private:
     auto draw_model_tab_item(cam::DCModelSettings &modelS)-> void;
     auto draw_misc_tab_item(cam::DCMiscSettings &miscS) -> void;
 
-
-    bool m_autoUpdate = true;
-
-    static const inline std::vector<std::string> windows = {
-        "Color###focus_windows_color",
-        "Depth###focus_windows_depth",
-        "Infrared###focus_windows_infrared",
-        "Cloud###focus_windows_cloud"
-    };
+    geo::Pt4f firstLastClickedPixelColor;
+    geo::Pt4f secondLastClickedPixelColor;
 
 
 };

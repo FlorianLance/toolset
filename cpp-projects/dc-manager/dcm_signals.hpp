@@ -46,6 +46,7 @@
 #include "depth-camera/settings/dc_video_player_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
 #include "depth-camera/dc_types.hpp"
+#include "depth-camera/dc_video.hpp"
 
 namespace tool {
 
@@ -75,6 +76,7 @@ public:
     SSS<> reset_recorder_signal;
     SSS<int> set_recorder_time_signal;
     SSS<std::string> save_recorder_signal;
+    SSS<cam::DCVideo*> send_video_to_player_signal;
     // player
     SSS<> start_player_signal;
     SSS<> pause_player_signal;

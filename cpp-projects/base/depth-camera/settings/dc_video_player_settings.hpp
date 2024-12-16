@@ -27,9 +27,11 @@
 #pragma once
 
 
+
 // local
 //#include "files/binary_settings.hpp"
 #include "dc_data_settings.hpp"
+#include "geometry/point3.hpp"
 
 namespace tool::cam {
 
@@ -38,5 +40,10 @@ struct DCVideoPlayerSettings{
     double startTimeMs  = -1.0;
     double endTimeMs    = -1.0;
     DCFrameGenerationSettings generation;
+
+    float mergeVoxelSize = 0.0025f;
+    geo::Pt3f mergeOrigin = {-2.f,-2.f,-2.f};
+    geo::Pt3f mergeSize = {+4.f,+4.f,+4.f};
+
 };
 }

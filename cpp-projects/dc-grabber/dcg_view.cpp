@@ -73,3 +73,7 @@ auto DCGView::exit() -> void{
     auto lg = LogG("DCGView::exit"sv);
     m_glW->quit();
 }
+
+auto DCGView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2<int> coords, ColorRGBA8 color) -> void{
+    mainW.leftPanelD.update_selected_color(color.conv<float>()/255.f);
+}

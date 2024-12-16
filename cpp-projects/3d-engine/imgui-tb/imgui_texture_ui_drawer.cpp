@@ -50,7 +50,7 @@ auto ImGuiTextureUiDrawer::draw_tab_item(const std::string &itemName) -> void{
         float scale  = std::min(1.f*size.y() / m_texture->height(),  1.f*size.x() / m_texture->width());
         auto sizeI   = ImVec2(m_texture->width() * scale, m_texture->height() * scale);
 
-        auto cursorScreenPos = ImGui::GetCursorScreenPos();
+        // auto cursorScreenPos = ImGui::GetCursorScreenPos();
 
         if(m_texture->id() == 0){
             ImGui::Text("Texture not initialized.");
@@ -70,28 +70,20 @@ auto ImGuiTextureUiDrawer::draw_tab_item(const std::string &itemName) -> void{
 
             if(diff.x() > 0 && diff.x() < size.x && diff.y() > 0 && diff.y() < size.y){
 
-                hoveringPixel = (diff / scale).conv<int>();
+                hoveringPixel = {diff.x()/size.x, diff.y()/size.y};
+
                 for(int ii = 0; ii < 5; ++ii){
-                    if(io.MouseDown[ii]){
-                        mouseButtonsPressed[ii] = true;
-                    }else if(io.MouseReleased[ii]){
-                        mouseButtonsPressed[ii] = false;
-                    }
+                    mouseButtonsPressed[ii]  = io.MouseDown[ii];
+                    mouseButtonsReleased[ii] = io.MouseReleased[ii];
                 }
 
             }else{
                 hoveringPixel = {-1,-1};
                 for(int ii = 0; ii < 5; ++ii){
-                    mouseButtonsPressed[ii] = false;
+                    mouseButtonsPressed[ii]     = false;
+                    mouseButtonsReleased[ii]    = false;
                 }
             }
-
-            // if(!topTitle.empty()){
-            //     auto newCursorPos = ImGui::GetCursorScreenPos();
-            //     ImGui::SetCursorScreenPos(cursorScreenPos);
-            //     ImGuiUiDrawer::text_colored(ImVec4(1,0,0,1), topTitle);
-            //     ImGui::SetCursorScreenPos(newCursorPos);
-            // }
         }
         ImGui::EndTabItem();
     }
@@ -126,6 +118,7 @@ auto ImGuiTextureUiDrawer::draw_child(const std::string &windowName, geo::Pt2f s
     ImGui::EndChild();
 }
 
+
 auto ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void{
 
     if(!m_texture){
@@ -151,11 +144,12 @@ auto ImGuiTextureUiDrawer::draw_at_position(const geo::Pt2f &screenPos, const ge
         auto min      = ImGui::GetItemRectMin();
         auto size     = ImGui::GetItemRectSize();
         auto mousePos = io.MousePos;
-        auto diff     = geo::Pt2f{mousePos.x-min.x, mousePos.y-min.y};
+        auto diff     = geo::Pt2f{mousePos.x-cursorScreenPos.x, mousePos.y-cursorScreenPos.y};
 
         if(diff.x() > 0 && diff.x() < size.x && diff.y() > 0 && diff.y() < size.y){
 
-            hoveringPixel = (diff).conv<int>();
+            hoveringPixel = {diff.x()/sizeTexture.x(), diff.y()/sizeTexture.y()};
+
             for(int ii = 0; ii < 5; ++ii){
                 mouseButtonsPressed[ii]  = io.MouseDown[ii];
                 mouseButtonsReleased[ii] = io.MouseReleased[ii];

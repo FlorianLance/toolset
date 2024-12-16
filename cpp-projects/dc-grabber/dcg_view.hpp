@@ -48,6 +48,8 @@ public:
 
     graphics::DCGMainW mainW;
 
+    auto update_selected_color(size_t idCloud, size_t idButton, geo::Pt2<int> coords, ColorRGBA8 color) -> void;
+
 private:
 
     std::unique_ptr<graphics::DCGGlWindow> m_glW = nullptr;

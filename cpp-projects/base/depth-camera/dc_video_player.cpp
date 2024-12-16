@@ -33,7 +33,12 @@ struct DCVideoPlayer::Impl{
 
         std::fill(std::begin(camerasFrameId),   std::end(camerasFrameId), 0);
         std::fill(std::begin(camerasDataFrame), std::end(camerasDataFrame), nullptr);
-        std::fill(std::begin(camerasFrame),     std::end(camerasFrame), nullptr);
+        // std::fill(std::begin(camerasFrame),     std::end(camerasFrame), nullptr);
+
+        for(auto &cameraFrame : camerasFrame){
+            cameraFrame = std::make_shared<DCFrame>();
+        }
+
 
         ids.resize(1024*1024);
         std::iota(ids.begin(), ids.end(), 0);
@@ -244,6 +249,29 @@ auto DCVideoPlayer::set_video(const DCVideo &video) -> void{
     initialize_signal(std::move(models));
 }
 
+auto DCVideoPlayer::set_video_ptr(DCVideo *video) -> void{
+
+    // stop playing current video
+    stop_video();
+
+    // init data with new video
+    i->initialize(*video);
+
+    states.fileName = "";
+
+    go_to_start_time();
+
+    // retrieve models and send them
+    std::vector<DCModelSettings> models;
+    for(size_t ii = 0; ii < i->video.nb_devices(); ++ii){
+        DCModelSettings model;
+        model.transformation = i->video.get_transform(ii).conv<float>();
+        models.push_back(model);
+    }
+
+    // send models
+    initialize_signal(std::move(models));
+}
 
 auto DCVideoPlayer::is_started() const noexcept -> bool{
     return states.isStarted;

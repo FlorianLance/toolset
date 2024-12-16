@@ -45,51 +45,73 @@ using namespace tool::cam;
 
 auto DCGLeftPanelChildDrawer::draw(geo::Pt2f size, int windowFlags, DCGModel *model) -> void {
 
-    if(ImGui::BeginChild("###main_child", ImVec2(size.x(), size.y()), true, windowFlags)){
 
-        if (ImGui::BeginTabBar("###main_tabbar")){
+    if(ImGui::BeginChild("###left_panel_child", ImVec2(size.x(), size.y()), true, windowFlags)){
 
-            ImGui::BeginDisabled(true);
+        if(ImGui::BeginChild("###settings_child", ImVec2(size.x(), size.y()-100), true, windowFlags)){
 
-            ImGui::PushStyleColor(ImGuiCol_Tab,  ImVec4(0.0f, 0, 0.0f, 1));
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1, 1.0f, 1));
-            if (ImGui::BeginTabItem("[SETTINGS]###settings_tabitem")){
-                ImGui::EndTabItem();
-            }
-            ImGui::PopStyleColor();
-            ImGui::PopStyleColor();
-            ImGui::EndDisabled();
 
-            static bool forceSelectedOnce = true;
-            ImGuiTabItemFlags flags = 0;
-            if(forceSelectedOnce){
-                flags = ImGuiTabItemFlags_::ImGuiTabItemFlags_SetSelected;
-                forceSelectedOnce = false;
-            }
+            if (ImGui::BeginTabBar("###main_tabbar")){
 
-            if (ImGui::BeginTabItem("Server device###server_device_tabitem", nullptr, flags)){
+                ImGui::BeginDisabled(true);
 
-                if(ImGui::BeginTabBar("###sub_server_device_tabbar")){
-                    draw_network_tab_item(model);
-                    draw_device_tab_item(model->server.settings.deviceS);
-                    draw_filters_tab_item(model->server.settings.deviceS.configS, model->server.settings.filtersS);
-                    draw_model_tab_item(model->server.settings.modelS);
-                    draw_colors_settings_tab_item(model->server.settings.deviceS.configS.typeDevice, model->server.settings.colorS);
-                    draw_display_tab_item(model->uiSettings, model->server.settings.sceneDisplayS,  model->server.settings.displayS);
-                    draw_misc_tab_item(model->server.settings.miscS);
-                    ImGui::EndTabBar();
+                ImGui::PushStyleColor(ImGuiCol_Tab,  ImVec4(0.0f, 0, 0.0f, 1));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1, 1.0f, 1));
+                if (ImGui::BeginTabItem("[SETTINGS]###settings_tabitem")){
+                    ImGui::EndTabItem();
+                }
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
+                ImGui::EndDisabled();
+
+                static bool forceSelectedOnce = true;
+                ImGuiTabItemFlags flags = 0;
+                if(forceSelectedOnce){
+                    flags = ImGuiTabItemFlags_::ImGuiTabItemFlags_SetSelected;
+                    forceSelectedOnce = false;
+                }
+
+                if (ImGui::BeginTabItem("Server device###server_device_tabitem", nullptr, flags)){
+
+                    if(ImGui::BeginTabBar("###sub_server_device_tabbar")){
+                        draw_network_tab_item(model);
+                        draw_device_tab_item(model->server.settings.deviceS);
+                        draw_filters_tab_item(model->server.settings.deviceS.configS, model->server.settings.filtersS);
+                        draw_model_tab_item(model->server.settings.modelS);
+                        draw_colors_settings_tab_item(model->server.settings.deviceS.configS.typeDevice, model->server.settings.colorS);
+                        draw_display_tab_item(model->uiSettings, model->server.settings.sceneDisplayS,  model->server.settings.displayS);
+                        draw_misc_tab_item(model->server.settings.miscS);
+                        ImGui::EndTabBar();
+                    }
+
+
+                    ImGui::EndTabItem();
                 }
 
 
-                ImGui::EndTabItem();
+                draw_recorder_tab_item(model->recorder.states, model->recorder.settings);
+                ImGui::EndTabBar();
             }
-
-
-            draw_recorder_tab_item(model->recorder.states, model->recorder.settings);
-            ImGui::EndTabBar();
         }
+        ImGui::EndChild();
+
+        if(ImGui::BeginChild("###tools_child", ImVec2(size.x(), 80), true, windowFlags)){
+            ImGui::Text("Tools:");
+            ImGui::Indent();
+            // ImGui::ColorPicker4()
+            ImGuiColorEditFlags flags = ImGuiColorEditFlags_DisplayHex;// | ImGuiColorEditFlags_NoAlpha;
+            ImGui::ColorEdit4("First last pixel color", firstLastClickedPixelColor.array.data(),flags);
+            ImGui::ColorEdit4("Second last pixel color", secondLastClickedPixelColor.array.data(),flags);
+            ImGui::Unindent();
+        }
+        ImGui::EndChild();
     }
     ImGui::EndChild();
+}
+
+auto DCGLeftPanelChildDrawer::update_selected_color(const geo::Pt4f &color) -> void{
+    secondLastClickedPixelColor = firstLastClickedPixelColor;
+    firstLastClickedPixelColor = color;
 }
 
 auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
