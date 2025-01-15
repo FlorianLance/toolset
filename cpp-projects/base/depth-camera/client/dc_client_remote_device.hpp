@@ -64,8 +64,8 @@ public:
 
     // signals
     SSS<std::int64_t> remote_synchro_signal;
-    SSS<net::Feedback> remote_feedback_signal;
-    SSS<std::shared_ptr<cam::DCDataFrame>> remote_data_frame_signal;
+    SSS<size_t, net::Feedback> remote_feedback_signal;
+    SSS<size_t, std::shared_ptr<cam::DCDataFrame>> remote_data_frame_signal;
     SSS<net::UdpNetworkStatus> remote_network_status_signal;
     // # other
     SSS<size_t> timeout_messages_signal;

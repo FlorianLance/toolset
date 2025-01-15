@@ -54,6 +54,26 @@ enum class DCType : std::int8_t{
     UNDEF = Undefined
 };
 
+using Dev   = DCType;
+using Name  = std::string_view;
+
+using TType = std::tuple<
+    Dev,                         Name>;
+static constexpr TupleArray<4,TType> dcTypes ={{
+    TType
+    {Dev::AzureKinect,           "Azure Kinect"sv},
+    {Dev::FemtoBolt,             "Femto Bolt"sv},
+    {Dev::FemtoMegaEthernet,     "Femto Mega (Ethernet)"sv},
+    {Dev::FemtoMegaUSB,          "Femto Mega (USB)"sv}
+}};
+
+[[maybe_unused]] static constexpr auto get_name(DCType t) -> std::string_view{
+    return dcTypes.at<0,1>(t);
+}
+[[maybe_unused]] static constexpr auto get_dc_type(Name n) -> std::optional<DCType>{
+    return dcTypes.optional_at<1,0>(n);
+}
+
 // Camera parameters
 // # powerline frequency
 enum class DCPowerlineFrequency : std::int8_t{
@@ -61,7 +81,6 @@ enum class DCPowerlineFrequency : std::int8_t{
     F50,
     F60
 };
-
 
 // ## all
 enum class DCImageFormat : std::int8_t {
@@ -297,18 +316,15 @@ enum class DCMode : std::int8_t {
     SizeEnum,
 };
 
-
-
 using M     = DCMode;
 using IF    = DCImageFormat;
 using CR    = DCColorResolution;
 using DR    = DCDepthResolution;
-using Dev   = DCType;
-using Name  = std::string_view;
+
 
 using TDCMode = std::tuple<
     DCMode,                                 IF,       CR,         DR,                  FPS,      Dev,       Name>;
-static constexpr TupleArray<28, TDCMode> dcModes = {{
+static constexpr TupleArray<22, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
     // azure kinect
@@ -358,16 +374,15 @@ static constexpr TupleArray<28, TDCMode> dcModes = {{
     // femto mega orbbec usb        
     // # narrow
     // ## 16:9 color
-    {M::FMU_C1280x720_DI640x576_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FME,  "C-720p  D-576p  I-MJPG F-30"sv},
+    {M::FMU_C1280x720_DI640x576_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FMU,  "C-720p  D-576p  I-MJPG F-30"sv},
     // # wide
     // ## 16:9 color
-    {M::FMU_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FME,  "C-720p  D-512p  I-MJPG F-30"sv},
+    {M::FMU_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FMU,  "C-720p  D-512p  I-MJPG F-30"sv},
 
     // others
     {M::Invalid,                            IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::UNDEF,"Merged"sv},
     {M::Merged,                             IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::UNDEF,"Invalid"sv},
 }};
-
 
 [[maybe_unused]] static constexpr auto dc_image_format(DCMode m) -> DCImageFormat{
     return dcModes.at<0,1>(m);

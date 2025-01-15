@@ -50,8 +50,10 @@ public:
     auto device_connected(size_t idC) const noexcept -> bool;
     auto device_type(size_t idC) const noexcept -> DCClientType;    
     auto apply_command(size_t idC, net::Command command) -> void;
-    auto add_device(DCClientType connectionType) -> void;
+    auto add_device(DCClientDeviceSettings clientDeviceS) -> void;
+    auto insert_device(size_t id, DCClientDeviceSettings clientDeviceS) -> void;
     auto remove_last_device() -> void;
+    auto remove_device(size_t id) -> void;
     // # common
     auto read_from_external_thread(size_t idC) -> size_t;
     auto process_frames_from_external_thread(size_t idD) -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>>;
@@ -95,7 +97,6 @@ public:
 
 private:
 
-    auto generate_clients() -> void;
     auto read_feedbacks() -> void;
 
     struct Impl;

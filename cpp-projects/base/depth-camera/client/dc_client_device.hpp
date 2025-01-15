@@ -53,10 +53,15 @@ public:
     virtual constexpr auto type() const noexcept -> DCClientType {return DCClientType::Undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}
 
+    auto set_id_client(size_t idClient) noexcept -> void{
+        this->idClient = idClient;
+    }
+
     sigslot::signal<net::UdpDataStatus> data_status_signal;
 
     FramerateBuffer framerate;
     AverageLatencyBuffer latency;
+    size_t idClient = 0;
 };
 
 

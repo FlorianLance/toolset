@@ -1417,12 +1417,26 @@ auto DCDeviceImpl::update_frame_depth() -> void{
 
         const auto dRange = mInfos.depth_range_mm();
         const auto diff   = dRange.y() - dRange.x();
-        static constexpr std::array<Pt3f,5> depthGradient ={
-            Pt3f{0.f,0.f,1.f},
-            {0.f,1.f,1.f},
+        // static constexpr std::array<Pt3f,5> depthGradient ={
+        //     Pt3f{0.f,0.f,1.f},
+        //     {0.f,1.f,1.f},
+        //     {0.f,1.f,0.f},
+        //     {1.f,1.f,0.f},
+        //     {1.f,0.f,0.f},
+        // };
+        static constexpr std::array<Pt3f,11> depthGradient ={
+            Pt3f
+            {0.f,0.f,1.f},
+            {0.f,0.f,0.5f},
+            {0.f,0.5f,0.f},
             {0.f,1.f,0.f},
-            {1.f,1.f,0.f},
+            {0.5f,0.5f,0.f},
             {1.f,0.f,0.f},
+            {1.f,0.5f,0.f},
+            {1.f,1.f,0.f},
+            {0.5f,1.f,0.f},
+            {0.0f,1.f,0.5f},
+            {0.0f,1.f,1.f},
         };
 
         auto rgbIBSpan = frame->insert_image_buffer<ColorRGB8>(DCImageBufferType::DepthRGB8, mInfos.depth_width(), mInfos.depth_height(), ColorRGB8(0,0,0));

@@ -47,7 +47,7 @@ public:
     // modify
     // # device
     auto add_device_processor(bool startProcessingThread) -> void;
-    auto remove_last_processor() -> void;
+    auto remove_last_device_processor() -> void;
     // auto remove_device_processor(size_t idD) -> void;
     auto update_device_settings(size_t idD, const cam::DCDeviceSettings &deviceS) -> void;
     // # frames

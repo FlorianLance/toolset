@@ -35,6 +35,7 @@
 #include "dc_client_remote_device.hpp"
 #include "dc_client_device.hpp"
 #include "dc_client_processing.hpp"
+#include "utility/time.hpp"
 
 using namespace tool;
 using namespace tool::cam;
@@ -49,46 +50,44 @@ struct DCClient::Impl{
     std::deque<std::pair<size_t, net::Feedback>> messages;
     std::vector<std::pair<size_t, net::Feedback>> messagesR;
 
-
-    auto generate_client(DCClientSettings &settings, size_t idDevice) -> std::unique_ptr<DCClientDevice>{
+    auto generate_client(DCClientDeviceSettings &clientDeviceS) -> std::unique_ptr<DCClientDevice>{
 
         std::unique_ptr<DCClientDevice> device = nullptr;
-        if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Local){
-            
+        if(clientDeviceS.connectionS.connectionType == DCClientType::Local){
             Log::message("[DCClient::initialize] Create local device.\n"sv);
             auto lDevice = std::make_unique<DCClientLocalDevice>();
-            lDevice->local_frame_signal.connect([this,idDevice](std::shared_ptr<cam::DCFrame> frame){
+            lDevice->local_frame_signal.connect([this](size_t idDevice, std::shared_ptr<cam::DCFrame> frame){
                 processing.new_frame(idDevice, std::move(frame));
             });
             device = std::move(lDevice);
 
-        }else if(settings.devicesS[idDevice].connectionS.connectionType == DCClientType::Remote){
-            
+        }else if(clientDeviceS.connectionS.connectionType == DCClientType::Remote){
+
             Log::message("[DCClient::initialize] Create remote device.\n"sv);
             auto rDevice = std::make_unique<DCClientRemoteDevice>();
-            rDevice->remote_feedback_signal.connect([this,idDevice](net::Feedback feedback){
+            rDevice->remote_feedback_signal.connect([this](size_t idDevice, net::Feedback feedback){
                 readMessagesL.lock();
                 messages.emplace_back(idDevice, feedback);
                 readMessagesL.unlock();
             });
-            rDevice->remote_synchro_signal.connect([&,idDevice](std::int64_t averageTimestampDiffNs){
-                settings.devicesS[idDevice].synchroAverageDiff = averageTimestampDiffNs;
+            rDevice->remote_synchro_signal.connect([&](std::int64_t averageTimestampDiffNs){
+                clientDeviceS.synchroAverageDiff = averageTimestampDiffNs;
             });
-            rDevice->remote_network_status_signal.connect([&,idDevice](net::UdpNetworkStatus status){
-                settings.devicesS[idDevice].receivedNetworkStatus = status;
+            rDevice->remote_network_status_signal.connect([&](net::UdpNetworkStatus status){
+                clientDeviceS.receivedNetworkStatus = status;
             });
-            rDevice->remote_data_frame_signal.connect([&,idDevice](std::shared_ptr<cam::DCDataFrame> cFrame){
+            rDevice->remote_data_frame_signal.connect([&](size_t idDevice, std::shared_ptr<cam::DCDataFrame> cFrame){
                 processing.new_data_frame(idDevice, std::move(cFrame));
             });
             device = std::move(rDevice);
         }
 
-        device->data_status_signal.connect([&,idDevice](net::UdpDataStatus status){
-            settings.devicesS[idDevice].receivedDataStatus = status;
+        device->data_status_signal.connect([&](net::UdpDataStatus status){
+            clientDeviceS.receivedDataStatus = status;
         });
-        
+
         Log::message("[DCClient::initialize] Initialize device.\n"sv);
-        if(!device->initialize(settings.devicesS[idDevice].connectionS)){
+        if(!device->initialize(clientDeviceS.connectionS)){
             Log::error("[DCClient::initialize] Cannot initialize device.\n"sv);
         }
 
@@ -109,6 +108,7 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
         clean();
     }
     
+    // read settings file
     if(!settings.load_from_file(clientSettingsPath)){
         return false;
     }
@@ -120,7 +120,17 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
     // init other settings
     i->processing.initialize(settings.devicesS.size(), startThreads);
 
-    generate_clients();
+    // generate clients
+    for(auto &clientDeviceS : settings.devicesS){
+        i->cDevices.push_back(i->generate_client(clientDeviceS));
+        i->lastConnectionTry.push_back(std::chrono::nanoseconds{0});
+    }
+
+    // update clients id
+    for(size_t idD = 0; idD < i->cDevices.size(); ++idD){
+        i->cDevices[idD]->set_id_client(idD);
+        settings.devicesS[idD].id = idD;
+    }
 
     return true;
 }
@@ -141,7 +151,7 @@ auto DCClient::clean() -> void{
 
 }
 
-#include "utility/time.hpp"
+
 
 auto DCClient::update() -> void{
 
@@ -344,7 +354,16 @@ auto DCClient::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
     // init other settings
     i->processing.initialize(settings.devicesS.size(), true);
 
-    generate_clients();
+    for(auto &clientDeviceS : settings.devicesS){
+        i->cDevices.push_back(i->generate_client(clientDeviceS));
+        i->lastConnectionTry.push_back(std::chrono::nanoseconds{0});
+    }
+
+    // update clients id
+    for(size_t idD = 0; idD < i->cDevices.size(); ++idD){
+        i->cDevices[idD]->set_id_client(idD);
+        settings.devicesS[idD].id = idD;
+    }
 
     return true;
 }
@@ -357,24 +376,47 @@ auto DCClient::apply_command(size_t idC, net::Command command) -> void{
     Log::ferror("[DCClient::apply_command] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb());
 }
 
+auto DCClient::add_device(DCClientDeviceSettings clientDeviceS) -> void{
+    insert_device(i->cDevices.size(), std::move(clientDeviceS));
+}
 
-auto DCClient::add_device(DCClientType connectionType) -> void{
+auto DCClient::insert_device(size_t id, DCClientDeviceSettings clientDeviceS) -> void{
+
     auto lg = LogG("DCClient::add_device"sv);
-    settings.add_device(connectionType);
+
+    settings.insert_device(id, std::move(clientDeviceS));
     i->processing.add_device_processor(true);
-    i->cDevices.push_back(i->generate_client(settings, settings.devicesS.size()-1));
-    i->lastConnectionTry.push_back(std::chrono::nanoseconds{0});
+    i->cDevices.insert_at(id, i->generate_client(settings.devicesS[id]));
+    i->lastConnectionTry.insert_at(id, std::chrono::nanoseconds{0});
+
+    // update clients id
+    for(size_t idD = 0; idD < i->cDevices.size(); ++idD){
+        i->cDevices[idD]->set_id_client(idD);
+        settings.devicesS[idD].id = idD;
+    }
 }
 
 auto DCClient::remove_last_device() -> void{
-    if(devices_nb() > 0){
-        auto lg = LogG("DCClient::remove_last_device"sv);
-        settings.devicesS.remove_last();
-        i->processing.remove_last_processor();
-        i->cDevices.back()->clean();
-        i->cDevices.remove_last();
-        i->lastConnectionTry.remove_last();
+    remove_device(settings.devicesS.size()-1);
+}
+
+auto DCClient::remove_device(size_t id) -> void{
+
+    if(id >= settings.devicesS.size()){
+        return;
     }
+    settings.devicesS.remove_at(id);
+    i->processing.remove_last_device_processor();
+    i->cDevices[id]->clean();
+    i->cDevices.remove_at(id);
+    i->lastConnectionTry.remove_at(id);
+
+    // update clients id
+    for(size_t idD = 0; idD < i->cDevices.size(); ++idD){
+        i->cDevices[idD]->set_id_client(idD);
+        settings.devicesS[idD].id = idD;
+    }
+
 }
 
 auto DCClient::reset_remote_device(size_t idD) -> void{
@@ -531,11 +573,6 @@ auto DCClient::process_frames_from_external_thread(size_t idD) -> std::tuple<std
     return {nullptr,nullptr};
 }
 
-auto DCClient::generate_clients() -> void{    
-    for(size_t idDevice = 0; idDevice < settings.devicesS.size(); ++idDevice){
-        i->cDevices.push_back(i->generate_client(settings, idDevice));
-    }
-}
 
 auto DCClient::messages_count() -> size_t{
 

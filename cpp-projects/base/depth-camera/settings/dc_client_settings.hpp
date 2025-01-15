@@ -39,7 +39,8 @@ struct DCClientSettings : public io::Settings{
     auto init_from_json(const nlohmann::json &json) -> void override;
     auto convert_to_json() const -> nlohmann::json override;
 
-    auto add_device(DCClientType connectionType) -> void;
+    auto add_device(DCClientDeviceSettings clientDeviceS) -> void;
+    auto insert_device(size_t id, DCClientDeviceSettings clientDeviceS) -> void;
     auto remove_last_device() -> void;
     auto update_connection_settings(DCDeviceConnectionSettings &connectionS) -> void;
 

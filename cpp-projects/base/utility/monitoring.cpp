@@ -50,12 +50,12 @@ auto FramerateBuffer::get_framerate() const -> float{
 
     auto currentTimestampNS = Time::nanoseconds_since_epoch();
     for(const auto time : rTimes.span()){
-        if(Time::difference_ms(time, currentTimestampNS).count() < 5000){
+        if(Time::difference_ms(time, currentTimestampNS).count() < 1000){
             ++count;
         }
     }
 
-    return count / 5.f;
+    return count;
 }
 
 AverageSynchBuffer::AverageSynchBuffer(){

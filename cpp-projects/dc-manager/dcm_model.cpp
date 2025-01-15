@@ -177,7 +177,12 @@ auto DCMModel::update() -> void{
     if(addDeviceEvent.has_value()){
         
         auto lg = LogG("DCMModel::update::addDeviceEvent"sv);
-        client.add_device(addDeviceEvent.value());
+
+        DCClientDeviceSettings ds;
+        ds.connectionS.connectionType = addDeviceEvent.value();
+        ds.connectionS.startReadingThread = true;
+
+        client.add_device(ds);
         client.apply_device_settings(client.devices_nb()-1);
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         client.apply_color_settings(client.devices_nb()-1);

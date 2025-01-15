@@ -97,21 +97,22 @@ auto DCClientSettings::convert_to_json() const -> nlohmann::json{
     return json;
 }
 
-auto DCClientSettings::add_device(DCClientType connectionType) -> void{
-    DCClientDeviceSettings clientDeviceS;
-    clientDeviceS.connectionS.connectionType = connectionType;
-    clientDeviceS.connectionS.startReadingThread = true;        
-    // ...
-    clientDeviceS.set_id(devicesS.size());
+auto DCClientSettings::add_device(DCClientDeviceSettings clientDeviceS) -> void{
 
-    if(connectionType == DCClientType::Local){
+    insert_device(devicesS.size(), std::move(clientDeviceS));
+}
+
+auto DCClientSettings::insert_device(size_t id, DCClientDeviceSettings clientDeviceS) -> void{
+
+    devicesS.insert_at(id, std::move(clientDeviceS));
+
+    if(devicesS[id].connectionS.connectionType == DCClientType::Local){
         clientDeviceS.deviceS.dataS.apply_local_profile();
-    }else if(connectionType == DCClientType::Remote){
+    }else if(devicesS[id].connectionS.connectionType == DCClientType::Remote){
         clientDeviceS.deviceS.dataS.apply_remote_profile();
     }
 
-    update_connection_settings(clientDeviceS.connectionS);
-    devicesS.push_back(std::move(clientDeviceS));
+    update_connection_settings(devicesS[id].connectionS);
 }
 
 auto DCClientSettings::remove_last_device() -> void{

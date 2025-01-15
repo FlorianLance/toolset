@@ -64,7 +64,7 @@ auto DCClientLocalDevice::initialize(const DCDeviceConnectionSettings &connectio
             latency.update_average_latency(Time::difference_micro_s(std::chrono::nanoseconds(frame->afterCaptureTS), Time::nanoseconds_since_epoch()).count());
 
             // send frame
-            local_frame_signal(std::move(frame));
+            local_frame_signal(idClient, std::move(frame));
 
             // send status
             data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});

@@ -49,12 +49,12 @@ struct DCDeviceConnectionSettings : io::Settings{
     DCClientType connectionType = DCClientType::Remote;
 
     // remote
+    net::Protocol protocol = net::Protocol::ipv4;
     size_t idReadingInterface = 0;
     bool anyReadingInterface = false;
     int readingPort = 8889;
     std::string sendingAddress = "localhost";
-    int sendingPort = 8888;
-    net::Protocol protocol = net::Protocol::ipv4;
+    int sendingPort = 8888;    
     bool autoConnect = false;
 
     // # runtime

@@ -50,7 +50,6 @@ public:
     auto stop_threads() -> void;
     [[nodiscard]] auto are_threads_started() const noexcept -> bool;
 
-
     auto receive_data_from_external_thread() -> size_t;
     auto trigger_received_packets_from_external_thread() -> void;
 

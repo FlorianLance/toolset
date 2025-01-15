@@ -422,7 +422,7 @@ auto DCClientRemoteDevice::receive_feedback(Header h, Feedback message) -> void{
         break;
     }
 
-    remote_feedback_signal(std::move(message));
+    remote_feedback_signal(idClient, std::move(message));
 }
 
 auto DCClientRemoteDevice::receive_data_frame(Header h, std::shared_ptr<cam::DCDataFrame> dFrame) -> void{
@@ -439,7 +439,7 @@ auto DCClientRemoteDevice::receive_data_frame(Header h, std::shared_ptr<cam::DCD
         // Log::message(std::format("[{}] ", Time::difference_micro_s(std::chrono::nanoseconds(dFrame->afterCaptureTS), Time::nanoseconds_since_epoch()).count()));
 
         // send frame
-        remote_data_frame_signal(std::move(dFrame));
+        remote_data_frame_signal(idClient, std::move(dFrame));
 
         // send status
         data_status_signal(UdpDataStatus{framerate.get_framerate(), latency.averageLatency});
