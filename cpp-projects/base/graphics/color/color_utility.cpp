@@ -67,6 +67,10 @@ auto Convert::to_hsv(const ColorRGB32 &rgbf) noexcept -> ColorHSV{
     return hsv;
 }
 
+auto Convert::to_hsv(const ColorRGB8 &rgb) noexcept -> ColorHSV{
+    return Convert::to_hsv(ColorRGB32(Convert::to_rgba32(rgb).rgb()));
+}
+
 auto Convert::to_rgb32(const ColorHSV &hsv) noexcept -> ColorRGB32{
 
     float fC = hsv.v() * hsv.s(); // Chroma

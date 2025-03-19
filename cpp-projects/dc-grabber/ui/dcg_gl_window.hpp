@@ -26,7 +26,7 @@
 **                                                                            **
 ********************************************************************************/
 
-// 3d-engine
+// imgui-opengl-engine
 #include "windows/base_sfml_gl_window.hpp"
 
 namespace tool::graphics {

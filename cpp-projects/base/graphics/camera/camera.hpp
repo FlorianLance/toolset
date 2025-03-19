@@ -150,9 +150,12 @@ private :
     geo::Pt3d m_initPosition   = {0.,0.,0.};
     geo::Vec3d m_initUp        = {0.,1.,0.};
     geo::Vec3d m_initDirection = {1.,0.,0.};
+    // geo::Mat4d m_initLookAt = geo::Mat4d::identity();
 
     geo::Mat4d m_view;
     geo::Mat4d m_projection;
+
+
 
     double m_fov = 60.0;
     geo::Pt2d m_zRange = {0.1, 10000.};

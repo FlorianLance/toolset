@@ -52,8 +52,11 @@ HEADERS += \
     depth-camera/frame/dc_device_data.hpp \
     depth-camera/frame/dc_frame_generator.hpp \
     depth-camera/frame/dc_frame_processor.hpp \
+    depth-camera/impl/femto_base_device.hpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.hpp \
     depth-camera/impl/femto_mega_usb_device_impl.hpp \
+    depth-camera/impl/gemini_215_device_impl.hpp \
+    depth-camera/impl/gemini_base_device.hpp \
     depth-camera/network/dc_server.hpp \
     depth-camera/settings/dc_capture_settings.hpp \
     depth-camera/settings/dc_client_device_settings.hpp \
@@ -64,7 +67,6 @@ HEADERS += \
     depth-camera/settings/dc_frame_generation_settings.hpp \
     depth-camera/settings/dc_misc_settings.hpp \
     depth-camera/settings/dc_server_settings.hpp \
-    exvr/ex_logger.hpp \
     geometry/_aabb2.hpp \
     geometry/_geometry.hpp \
     geometry/_geometry2.hpp \
@@ -158,6 +160,10 @@ HEADERS += \
     depth-camera/dc_player_settings.hpp \
     depth-camera/dc_calibrator.hpp \
     depth-camera/dc_device_impl.hpp \
+    thirdparty/ColorSpace/ColorSpace.h \
+    thirdparty/ColorSpace/Comparison.h \
+    thirdparty/ColorSpace/Conversion.h \
+    thirdparty/ColorSpace/Utils.h \
     utility/base_logger.hpp \
     depth-camera/dc_video.hpp \
     depth-camera/dc_video_player.hpp \
@@ -202,12 +208,12 @@ HEADERS += \
     depth-camera/impl/azure_base_device.hpp \
     depth-camera/impl/azure_utility.hpp \
     depth-camera/impl/femto_bolt_device_impl.hpp \
-    depth-camera/impl/orbbec_base_device.hpp \
-    # exvr
-    exvr/ex_element.hpp \
-    exvr/ex_experiment.hpp \
-    exvr/ex_resource.hpp \
-    exvr/ex_component.hpp \
+    # # exvr
+    # exvr/ex_element.hpp \
+    # exvr/ex_experiment.hpp \
+    # exvr/ex_resource.hpp \
+    # exvr/ex_component.hpp \
+    # exvr/ex_logger.hpp \
     # utility        
     utility/algorithm.hpp \
     utility/array.hpp \
@@ -329,8 +335,11 @@ SOURCES += \
     depth-camera/frame/dc_device_data.cpp \
     depth-camera/frame/dc_frame_generator.cpp \
     depth-camera/frame/dc_frame_processor.cpp \
+    depth-camera/impl/femto_base_device.cpp \
     depth-camera/impl/femto_mega_ethernet_device_impl.cpp \
     depth-camera/impl/femto_mega_usb_device_impl.cpp \
+    depth-camera/impl/gemini_215_device_impl.cpp \
+    depth-camera/impl/gemini_base_device.cpp \
     depth-camera/network/dc_server.cpp \
     depth-camera/settings/dc_capture_settings.cpp \
     depth-camera/settings/dc_client_device_settings.cpp \
@@ -340,7 +349,6 @@ SOURCES += \
     depth-camera/settings/dc_frame_generation_settings.cpp \
     depth-camera/settings/dc_misc_settings.cpp \
     depth-camera/settings/dc_server_settings.cpp \
-    exvr/ex_logger.cpp \
     geometry/color_cloud.cpp \
     geometry/color_voxel_grid.cpp \
     io/assimp_loader.cpp \
@@ -372,6 +380,9 @@ SOURCES += \
     network/settings/udp_connection_settings.cpp \
     network/settings/udp_server_settings.cpp \
     # utility    
+    thirdparty/ColorSpace/ColorSpace.cpp \
+    thirdparty/ColorSpace/Comparison.cpp \
+    thirdparty/ColorSpace/Conversion.cpp \
     utility/base_logger.cpp \
     utility/benchmark.cpp \
     utility/cmd_args.cpp \
@@ -424,13 +435,13 @@ SOURCES += \
     depth-camera/impl/azure_kinect_device_impl.cpp \
     depth-camera/impl/azure_base_device.cpp \
     depth-camera/impl/femto_bolt_device_impl.cpp \
-    depth-camera/impl/orbbec_base_device.cpp \
     depth-camera/impl/recording_device_impl.cpp \
     # exvr
-    exvr/ex_component.cpp \
-    exvr/ex_element.cpp \
-    exvr/ex_experiment.cpp \
-    exvr/ex_resource.cpp \
+    # exvr/ex_logger.cpp \
+    # exvr/ex_component.cpp \
+    # exvr/ex_element.cpp \
+    # exvr/ex_experiment.cpp \
+    # exvr/ex_resource.cpp \
     # data
     data/fastpfor_encoding.cpp \
     data/jpeg_encoding.cpp \

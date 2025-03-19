@@ -73,7 +73,7 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
     read_and_update_value(json, unreadCount, "disable_LED"sv, disableLED);
     // color - depth calibration
     data::read_and_update_array<float>(json, unreadCount, "color_alignment_tr"sv, colorAlignmentTr.array);
-    data::read_and_update_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRot.array);
+    data::read_and_update_array<float>(json, unreadCount, "color_alignment_rot"sv, colorAlignmentRotEuler.array);
 
     if(unreadCount != 0){
         tool::Log::warning(std::format("[{}] values have not been initialized from json data.\n", unreadCount));
@@ -112,7 +112,7 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
     add_value(json, "disable_LED"sv,                            disableLED);
     // color - depth calibration
     add_array<float>(json, "color_alignment_tr"sv,              colorAlignmentTr.array);
-    add_array<float>(json, "color_alignment_rot"sv,             colorAlignmentRot.array);
+    add_array<float>(json, "color_alignment_rot"sv,             colorAlignmentRotEuler.array);
 
     return json;
 }
@@ -158,7 +158,7 @@ auto DCConfigSettings::init_from_data(std::byte const * const data, size_t &offs
     if(version > io::SettingsVersion::v1_0){
         // color - depth calibration
         read(colorAlignmentTr, data, offset, sizeData);
-        read(colorAlignmentRot, data, offset, sizeData);
+        read(colorAlignmentRotEuler, data, offset, sizeData);
     }
     
     version = io::SettingsVersion::LastVersion;

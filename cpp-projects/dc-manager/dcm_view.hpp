@@ -51,7 +51,7 @@ public:
 
     graphics::DCMMainWindowDrawer mainW;
 
-    auto update_selected_color(size_t idCloud, size_t idButton, geo::Pt2<int> coords, ColorRGBA8 color) -> void;
+    auto update_selected_color(size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coords, ColorRGBA8 color) -> void;
 
 private:
     std::unique_ptr<graphics::DCMGlWindow> m_glW = nullptr;

@@ -26,7 +26,7 @@
 
 #include "dcm_middle_panel_child_drawer.hpp"
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui-tb/imgui_helper.hpp"
 #include "imgui-tb/imgui_ui_drawer.hpp"
 

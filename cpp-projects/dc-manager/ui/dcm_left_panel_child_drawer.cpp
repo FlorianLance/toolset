@@ -34,7 +34,7 @@
 #include "utility/string.hpp"
 #include "utility/time.hpp"
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "imgui/extra/ImGuiFileDialog.h"

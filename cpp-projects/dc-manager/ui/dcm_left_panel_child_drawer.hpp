@@ -29,7 +29,7 @@
 // base
 #include "geometry/point2.hpp"
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui-tb/imgui_logs.hpp"
 
 // local

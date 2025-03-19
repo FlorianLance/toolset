@@ -30,7 +30,7 @@
 #include "utility/logger.hpp"
 #include "utility/string.hpp"
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui-tb/imgui_convert.hpp"
 #include "imgui-tb/imgui_ui_drawer.hpp"
 
@@ -135,7 +135,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
                         readB.add_value(model->device->get_duration_ms("READ_IMAGES"sv));
                         procB.add_value(model->device->get_processing_duration_ms());
                         convImageB.add_value(model->device->get_duration_ms("CONVERT_COLOR_IMAGE"sv));
-                        resizeImageB.add_value(model->device->get_duration_ms("RESIZE_COLOR_IMAGE"sv));
+                        resizeImageB.add_value(model->device->get_duration_ms("RESIZE_IMAGES"sv));
                         filterB.add_value(model->device->get_duration_ms("FILTER"sv));
                         updateDataFrameB.add_value(model->device->get_duration_ms("UPDATE_DATA_FRAME"sv));
                         finalizeDataFrameB.add_value(model->device->get_duration_ms("FINALIZE_DATA_FRAME"sv));

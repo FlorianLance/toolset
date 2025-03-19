@@ -31,6 +31,7 @@
 #include "depth-camera/impl/femto_bolt_device_impl.hpp"
 #include "depth-camera/impl/femto_mega_ethernet_device_impl.hpp"
 #include "depth-camera/impl/femto_mega_usb_device_impl.hpp"
+#include "depth-camera/impl/gemini_215_device_impl.hpp"
 #include "depth-camera/impl/recording_device_impl.hpp"
 #include "utility/logger.hpp"
 
@@ -400,9 +401,12 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
                 }else if(type == DCType::FemtoMegaUSB){
                     auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
                     i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
+                }else if(type == DCType::Gemini215){
+                    auto lg = LogG("DCDevice::DCDevice Gemini215DeviceImpl"sv);
+                    i->device = std::make_unique<Geimini215DeviceImpl>();
                 }else if(type == DCType::Recording){
                     auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
-                    i->device = std::make_unique<RecordingDeviceImpl>();
+                    i->device = std::make_unique<RecordingDeviceImpl>();             
                 }else{
                     return {nullptr,nullptr};
                 }
@@ -551,7 +555,7 @@ auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
         (newConfigS.disableLED                      != currConfigS.disableLED) ||
         // color - depth calibration
         (newConfigS.colorAlignmentTr                != currConfigS.colorAlignmentTr) ||
-        (newConfigS.colorAlignmentRot               != currConfigS.colorAlignmentRot);
+        (newConfigS.colorAlignmentRotEuler          != currConfigS.colorAlignmentRotEuler);
 
 
     // device must be deleted

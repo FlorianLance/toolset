@@ -31,9 +31,13 @@
 
 // base
 #include "utility/logger.hpp"
+#include "thirdparty/ColorSpace/Comparison.h"
 
-// 3d-engine
+
+// imgui-opengl-engine
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
+
+
 
 // local
 #include "dcg_signals.hpp"
@@ -162,6 +166,7 @@ auto DCGController::set_connections() -> void{
     // ## device drawer
     s->update_filters_signal.connect(                           &DCDeviceDrawer::update_filters_settings,                  deviceD);
     s->update_filters_ui_only_signal.connect(                   &DCDeviceDrawer::update_filters_settings,                  deviceD);
+    s->update_color_settings_signal.connect(                    &DCDeviceDrawer::update_color_settings,                    deviceD);
     s->update_model_settings_signal.connect(                    &graphics::DCCloudsSceneDrawer::update_model_settings,     deviceD);
     s->update_scene_display_settings_signal.connect(            &DCDeviceDrawer::update_scene_display_settings,            deviceD);
     s->update_cloud_display_settings_signal.connect(            &DCDeviceDrawer::update_device_display_settings,           deviceD);
@@ -177,11 +182,63 @@ auto DCGController::set_connections() -> void{
     device->new_frame_signal.connect(                           &DCVideoRecorder::add_frame_to_default_device,             recorder);
     // ## device drawer
     device->new_frame_signal.connect(                           &DCDeviceDrawer::update_frame,                             deviceD);
+
+    // pixels inspection
+    device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+        auto &colorS = model->server.settings.colorS;
+        if(frame == nullptr){
+            return;
+        }
+        if(auto image = frame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
+
+            double totalDiff = 0.0;
+
+            for(size_t idCP = 0; idCP < colorS.checkerPositions.size(); ++idCP){
+                const auto &rPos = std::get<0>(colorS.checkerPositions[idCP]);
+                if(rPos.x() < 0 || rPos.y() < 0){
+                    continue;
+                }
+                ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
+                cCol = image->get(rPos.x()*image->width, rPos.y()*image->height);
+                const ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
+
+                ColorSpace::Rgb a(cCol.r(), cCol.g(), cCol.b());
+                ColorSpace::Rgb b(colorCheckerC.r(), colorCheckerC.g(), colorCheckerC.b());
+                // ColorSpace::Cie2000Comparison::Compare(&a, &b);
+                // auto hsv1 = Convert::to_hsv(colorCheckerC);
+                // auto hsv2 = Convert::to_hsv(cCol);
+                // std::get<2>(colorS.checkerPositions[idCP]) = geo::Pt3f{
+                //     std::abs(hsv1.h() - hsv2.h())/360.f,
+                //     std::abs(hsv1.s() - hsv2.s()),
+                //     std::abs(hsv1.v() - hsv2.v())
+                // };
+                // auto cv = std::get<2>(colorS.checkerPositions[idCP]);
+                // // totalDiff += (cv.x()+cv.y()+cv.z())/3.0;
+                std::get<2>(colorS.checkerPositions[idCP]) = ColorSpace::Cie2000Comparison::Compare(&a, &b);
+                totalDiff += std::get<2>(colorS.checkerPositions[idCP]);
+            }
+
+            // store current computation
+            colorS.store_score(totalDiff);
+        }
+
+    });
+
     // ## recorder drawer
     recorder->new_frame_signal.connect(                         &DCRecorderDrawer::set_frame,                              recorderD);
 
-    deviceD->mouse_released_color_signal.connect(            &DCGView::update_selected_color,                    view.get());
-    deviceD->mouse_released_depth_sized_color_signal.connect(&DCGView::update_selected_color,                    view.get());
+    deviceD->mouse_released_color_signal.connect(               &DCGView::update_selected_color,                    view.get());
+    deviceD->mouse_released_depth_sized_color_signal.connect(   &DCGView::update_selected_color,                    view.get());
+
+
+    // idCloud, idB, coords, image->get(coords.x(),coords.y()
+    deviceD->mouse_released_color_signal.connect( [&](size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, ColorRGBA8 colors){
+        if(model->server.settings.colorS.currentColorCheckedId != -1){
+            std::get<0>(model->server.settings.colorS.checkerPositions[model->server.settings.colorS.currentColorCheckedId]) = coordsR;
+            model->server.settings.colorS.currentColorCheckedId = -1;
+            DCGSignals::get()->update_color_settings_signal(model->server.settings.colorS);
+        }
+    });
 }
 
 auto DCGController::start() -> void{

@@ -169,8 +169,13 @@ auto DCGModel::initialize() -> bool{
 }
 
 auto DCGModel::update() -> void{
+
     server.update();    
     recorder.update();
+
+    if(server.settings.colorS.update_auto_calibration(server.settings.deviceS.configS.typeDevice)){
+        DCGSignals::get()->update_color_settings_signal(server.settings.colorS);
+    }
 }
 
 auto DCGModel::clean() -> void{

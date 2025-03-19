@@ -41,6 +41,7 @@ enum class DCType : std::int8_t{
     FemtoBolt,
     FemtoMegaEthernet,
     FemtoMegaUSB,
+    Gemini215,
     Kinect2,
     Recording,
     Undefined,
@@ -50,6 +51,7 @@ enum class DCType : std::int8_t{
     FB  = FemtoBolt,
     FME  = FemtoMegaEthernet,
     FMU  = FemtoMegaUSB,
+    G215 = Gemini215,
     REC = Recording,
     UNDEF = Undefined
 };
@@ -59,12 +61,13 @@ using Name  = std::string_view;
 
 using TType = std::tuple<
     Dev,                         Name>;
-static constexpr TupleArray<4,TType> dcTypes ={{
+static constexpr TupleArray<5,TType> dcTypes ={{
     TType
     {Dev::AzureKinect,           "Azure Kinect"sv},
     {Dev::FemtoBolt,             "Femto Bolt"sv},
     {Dev::FemtoMegaEthernet,     "Femto Mega (Ethernet)"sv},
-    {Dev::FemtoMegaUSB,          "Femto Mega (USB)"sv}
+    {Dev::FemtoMegaUSB,          "Femto Mega (USB)"sv},
+    {Dev::Gemini215,             "Gemini 215"sv}
 }};
 
 [[maybe_unused]] static constexpr auto get_name(DCType t) -> std::string_view{
@@ -177,6 +180,7 @@ enum class DCDepthResolution : std::int8_t {
     K4A_640x576,
     K4A_512x512,
     K4A_1024x1024,
+    OB_1280x800,
     SizeEnum,
 };
 
@@ -241,6 +245,7 @@ enum class DCMode : std::int8_t {
     AK_C1280x720_DI640x576_NV12_F30,
     AK_C1280x720_DI640x576_YUY2_F30,
     AK_C1280x720_DI640x576_MJPG_F30,
+    AK_C1920x1080_DI640x576_NV12_F30,
     // # wide
     // ## 4:3 color
     AK_C2048x1536_DI512x512_MJPG_F30,
@@ -308,7 +313,8 @@ enum class DCMode : std::int8_t {
     // ## 16:9 color
     FMU_C1280x720_DI512x512_MJPG_F30,
 
-    // ### 320x288
+    // gemini 215
+    G215_C1280x720_DI1280x800_YUY2_F30,
 
     // other
     Invalid,
@@ -324,7 +330,7 @@ using DR    = DCDepthResolution;
 
 using TDCMode = std::tuple<
     DCMode,                                 IF,       CR,         DR,                  FPS,      Dev,       Name>;
-static constexpr TupleArray<22, TDCMode> dcModes = {{
+static constexpr TupleArray<24, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
     // azure kinect
@@ -334,6 +340,8 @@ static constexpr TupleArray<22, TDCMode> dcModes = {{
     {M::AK_C1280x720_DI640x576_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-NV12 F-30"sv},
     {M::AK_C1280x720_DI640x576_YUY2_F30,    IF::YUY2, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-YUY2 F-30"sv},
     {M::AK_C1280x720_DI640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-720p  D-576p  I-MJPG F-30"sv},
+    {M::AK_C1920x1080_DI640x576_NV12_F30,   IF::NV12, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::AK,   "C-1080p D-576p  I-NV12 F-30"sv},
+
     // ### 320x288
     {M::AK_C1280x720_DI320x288_NV12_F30,    IF::NV12, CR::R720P,  DR::K4A_320x288,     FPS::F30, Dev::AK,   "C-720p  D-288p  I-NV12 F-30"sv},
     // # wide
@@ -378,6 +386,9 @@ static constexpr TupleArray<22, TDCMode> dcModes = {{
     // # wide
     // ## 16:9 color
     {M::FMU_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FMU,  "C-720p  D-512p  I-MJPG F-30"sv},
+
+    // gemini 215
+    {M::G215_C1280x720_DI1280x800_YUY2_F30, IF::YUY2, CR::R720P,  DR::OB_1280x800,     FPS::F30, Dev::G215, "C-720p  D-800p  I-YUY2 F-30"sv},
 
     // others
     {M::Invalid,                            IF::BGRA, CR::OFF,    DR::OFF,             FPS::F30, Dev::UNDEF,"Merged"sv},
@@ -429,6 +440,7 @@ static constexpr TupleArray<DCType::SizeEnum, TDCDevices> dcDevices = {{
     {DCType::FemtoBolt,         false,      true,       false,              false,          true,    DCMode::FB_C1280x720_DI640x576_NV12_F30},
     {DCType::FemtoMegaEthernet, false,      true,       false,              false,          true,    DCMode::FME_C1280x720_DI640x576_MJPG_F30},
     {DCType::FemtoMegaUSB,      false,      true,       false,              false,          true,    DCMode::FMU_C1280x720_DI640x576_MJPG_F30},
+    {DCType::Gemini215,         false,      true,       false,              false,          false,   DCMode::G215_C1280x720_DI1280x800_YUY2_F30},
     {DCType::Kinect2,           true,       true,       false,              false,          false,   DCMode::Invalid},
     {DCType::Recording,         true,       true,       false,              false,          true,    DCMode::Invalid},
     {DCType::Undefined,         false,      false,      false,              false,          false,   DCMode::Invalid},
@@ -594,7 +606,7 @@ enum class DCClientType{
 };
 
 enum class DCApplicationType : std::int8_t {
-    DCManager, DCGrabber
+    DCManager, DCGrabber, DCPlayer
 };
 
 enum class DCInfoType : std::int8_t{

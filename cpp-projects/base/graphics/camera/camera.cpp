@@ -32,6 +32,7 @@ using namespace tool::geo;
 
 Camera::Camera(Screen *screen, geo::Pt3d position, geo::Vec3d direction, geo::Vec3d up) :
     m_screen(screen),m_position(position),m_up(up),m_direction(direction), m_initPosition(position), m_initUp(up), m_initDirection(direction) {
+
     update_right();
     update_view();
     update_projection();
@@ -171,5 +172,5 @@ auto Camera::update_up() -> void{
 }
 
 auto Camera::update_view() -> void{
-    m_view = geo::look_at(m_position, m_position+m_direction, m_up);
+    m_view = geo::look_at(m_position, m_position + m_direction, m_up);
 }

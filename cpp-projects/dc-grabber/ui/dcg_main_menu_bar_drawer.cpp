@@ -35,7 +35,7 @@
 // opengl-utility
 #include "opengl/shader/shaders_manager.hpp"
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui/extra/ImGuiFileDialog.h"
 
 // local

@@ -1,6 +1,5 @@
 {
     "base": {
-        "type": 6,
         "type_string": "DC server",
         "version": 1
     },
@@ -21,7 +20,6 @@
             1.0
         ],
         "base": {
-            "type": 7,
             "type_string": "filters",
             "version": 1
         },
@@ -86,12 +84,11 @@
         ]
     },
     "color": {
-        "auto_exposure_time": false,
+        "auto_exposure_time": true,
         "auto_white_balance": false,
         "backlight_compensation": false,
         "base": {
-            "type": 3,
-            "type_string": "remote server",
+            "type_string": "color",
             "version": 1
         },
         "brightness": 128,
@@ -106,14 +103,12 @@
     },
     "device": {
         "base": {
-            "type": 6,
-            "type_string": "DC server",
+            "type_string": "undefined",
             "version": 1
         },
         "config": {
             "base": {
-                "type": 7,
-                "type_string": "filters",
+                "type_string": "device config",
                 "version": 1
             },
             "bt_GPU_id": 0,
@@ -138,79 +133,73 @@
             ],
             "delay_between_color_and_depth_usec": 0,
             "disable_LED": false,
-            "id_device": 0,
+            "id_device": 5,
+            "ipv4_address_1": 192,
+            "ipv4_address_2": 168,
+            "ipv4_address_3": 1,
+            "ipv4_address_4": 10,
             "mode": 3,
             "open_device": true,
+            "serial_number_device": "",
             "start_reading": true,
-            "subordinate_delay_usec": 0,
-            "synch_mode": 0,
+            "subordinate_delay_usec": 140,
+            "synch_mode": 2,
             "synchronize_color_and_depth": true,
-            "type_device": 0
+            "type_device": 0,
+            "use_serial_number": false
         },
         "data": {
             "base": {
-                "type": 8,
-                "type_string": "color",
+                "type_string": "device data",
                 "version": 1
             },
             "c_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
+                "bodies_id_image": false,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
                 "color_image": false,
-                "depth": true,
                 "depth_image": false,
                 "depth_sized_color_image": true,
-                "imu": false,
-                "infra": false,
                 "infra_image": false
             },
             "s_capture": {
                 "audio": false,
                 "body_tracking": false,
-                "bt_temporal_smoothing": 0.0,
                 "color": true,
                 "depth": true,
                 "imu": false,
-                "infra": true
-            },
-            "s_compression": {
-                "audio": false,
-                "body_id_map": false,
-                "body_tracking": false,
-                "calibration": true,
-                "cloud": false,
-                "cloud_color_mode": 1,
-                "color": false,
-                "color_compression_mode": 0,
-                "dept_sized_color": true,
-                "depth": true,
-                "depth_compression_mode": 0,
-                "depth_sized_color_compression_mode": 0,
-                "imu": false,
-                "infra": false,
-                "infra_compression_mode": 0,
-                "jpeg_compression_rate": 80
+                "infra": false
             },
             "s_generation": {
-                "audio": false,
-                "body_id_map_image": false,
-                "body_tracking": false,
-                "calibration": true,
+                "bodies_id_image": false,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
-                "cloud_gen_mode": 0,
                 "color_image": false,
-                "depth": true,
-                "depth_image": true,
+                "depth_image": false,
                 "depth_sized_color_image": true,
+                "infra_image": false
+            },
+            "s_sending": {
+                "audio": false,
+                "bodies_id": false,
+                "bodies_id_compression_mode": 0,
+                "bodies_skeleton": false,
+                "cloud": false,
+                "cloud_color_mode": 1,
+                "cloud_compression_mode": 2,
+                "color": false,
+                "color_compression_mode": 1,
+                "dept_sized_color": true,
+                "depth": true,
+                "depth_compression_mode": 2,
+                "depth_sized_color_compression_mode": 1,
                 "imu": false,
                 "infra": false,
-                "infra_image": false
+                "infra_compression_mode": 2,
+                "jpeg_compression_rate": 95,
+                "original_size_color_jpeg_quality": 95
             }
         }
     },
@@ -231,8 +220,7 @@
             1.0
         ],
         "base": {
-            "type": 2,
-            "type_string": "UDP connection",
+            "type_string": "filters",
             "version": 1
         },
         "do_erosion": false,
@@ -295,9 +283,15 @@
             1.0
         ]
     },
+    "misc": {
+        "base": {
+            "type_string": "misc",
+            "version": 1
+        },
+        "delay": 0
+    },
     "model": {
         "base": {
-            "type": 9,
             "type_string": "model",
             "version": 1
         },
@@ -321,8 +315,8 @@
         ]
     },
     "udp_server": {
+        "any_reading_interface": true,
         "base": {
-            "type": 0,
             "type_string": "UDP server",
             "version": 1
         },

@@ -1,5 +1,5 @@
 /*******************************************************************************
-** Toolset-3d-engine                                                          **
+** Toolset-imgui-opengl-engine                                                **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **

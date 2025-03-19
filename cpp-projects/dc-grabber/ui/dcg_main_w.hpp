@@ -28,7 +28,7 @@
 
 
 
-// 3d-engine
+// imgui-opengl-engine
 #include "imgui-tb/imgui_dc_device_drawer.hpp"
 #include "imgui-tb/imgui_dc_recorder_drawer.hpp"
 

@@ -32,11 +32,10 @@ TEMPLATE = subdirs
 SUBDIRS =\
     base base-app base-test base-export base-export-app\
     opengl-utility opengl-utility-app \
-    3d-engine \
-    qt-utility qt-utility-app \
+    imgui-opengl-engine \
+    qt-utility qt-utility-app qt-utility-qml-app\
     nodes demos \
-    #scaner-component scaner-grabber  scaner-manager \
-    guardian dc-grabber dc-manager dc-monitoring \
+    dc-grabber dc-manager dc-player guardian dc-monitoring\
 
 # where to find the sub projects
 ## toolset
@@ -49,23 +48,22 @@ base-export-app.subdir          = cpp-projects/base-export-app
 ### opengl-utility
 opengl-utility.subdir           = cpp-projects/opengl-utility
 opengl-utility-app.subdir       = cpp-projects/opengl-utility-app
-### 3d-engine
-3d-engine.subdir                = cpp-projects/3d-engine
+### imgui-opengl-engine
+imgui-opengl-engine.subdir      = cpp-projects/imgui-opengl-engine
 ### qt-utility
 qt-utility.subdir               = cpp-projects/qt-utility
 qt-utility-app.subdir           = cpp-projects/qt-utility-app
+qt-utility-qml-app.subdir       = cpp-projects/qt-utility-qml-app
 ### nodes
 nodes.subdir                    = cpp-projects/nodes
 ### demos
 demos.subdir                    = cpp-projects/demos
 ### depth-camera
-# scaner-component.subdir         = cpp-projects/scaner-component
-# scaner-grabber.subdir           = cpp-projects/scaner-grabber
-# scaner-manager.subdir           = cpp-projects/scaner-manager
 guardian.subdir                 = cpp-projects/guardian
 dc-grabber.subdir               = cpp-projects/dc-grabber
 dc-manager.subdir               = cpp-projects/dc-manager
 dc-monitoring.subdir            = cpp-projects/dc-monitoring
+dc-player.subdir                = cpp-projects/dc-player
 
 # dependencies
 ## toolset
@@ -77,22 +75,21 @@ base-export-app.depends         = base-export
 ### opengl-utility
 opengl-utility.depends          = base
 opengl-utility-app.depends      = opengl-utility
-### 3d-engine
-3d-engine.depends               = opengl-utility
+### imgui-opengl-engine
+imgui-opengl-engine.depends     = opengl-utility
 ### qt-utility
 qt-utility.depends              = opengl-utility
 qt-utility-app.depends          = qt-utility
+qt-utility-qml-app.depends      = qt-utility
 ### nodes
 nodes.depends                   = base
-demos.depends                   = 3d-engine
+demos.depends                   = imgui-opengl-engine
 ### depth-camera
-# scaner-component.depends        = base
-# scaner-grabber.depends          = qt-utility
-# scaner-manager.depends          = qt-utility
-guardian.depends                = qt-utility
-dc-grabber.depends              = 3d-engine
-dc-manager.depends              = 3d-engine
+dc-grabber.depends              = imgui-opengl-engine
+dc-manager.depends              = imgui-opengl-engine
+dc-player.depends               = imgui-opengl-engine
 dc-monitoring.depends           = qt-utility
+guardian.depends                = qt-utility
 
 
 

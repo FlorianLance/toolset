@@ -84,6 +84,7 @@ public:
     SSS<const cam::DCFiltersSettings&> update_filters_signal;
     SSS<const cam::DCFiltersSettings&> update_filters_ui_only_signal;
     SSS<const cam::DCColorSettings&> update_color_settings_signal;
+
     SSS<size_t, const cam::DCModelSettings&> update_model_settings_signal;
     SSS<cam::DCMiscSettings> update_misc_settings_signal;
     SSS<const cam::DCSceneDisplaySettings&> update_scene_display_settings_signal;

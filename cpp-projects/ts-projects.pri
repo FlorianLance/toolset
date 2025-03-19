@@ -35,13 +35,15 @@ TOOLSET_CPP_PROJECTS +=\
     base-export-app \
     opengl-utility \
     opengl-utility-app \
-    3d-engine \
+    imgui-opengl-engine \
     demos \
     dc-grabber \
     dc-manager \
     dc-monitoring \
+    dc-player \
     qt-utility \
     qt-utility-app \
+    qt-utility-qml-app \
     nodes \
     scaner-component \
     scaner-grabber \
@@ -100,7 +102,6 @@ defineTest(generate_variables) {
 TOOLSET_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
 TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
 TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
-
 
 ########################################################### generate projects variables
 for(project, TOOLSET_CPP_PROJECTS):{

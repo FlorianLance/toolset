@@ -74,6 +74,8 @@ struct AzureBaseDevice::Impl{
     static auto generate_config(bool synchInConnected, bool synchOutConnected, const DCConfigSettings &config) -> k4a_device_configuration_t;
     static auto generate_bt_config(const DCConfigSettings &config) -> k4abt_tracker_configuration_t;
     static auto set_property_value(k4a::device *dev, k4a_color_control_command_t pId, std::int32_t value, bool manual) -> void;
+    static auto get_property_value(k4a::device *dev, k4a_color_control_command_t pId) -> std::int32_t;
+
     static auto update_k4_body(DCBody &body, const k4abt_body_t &k4aBody) -> void;
 };
 
@@ -123,6 +125,13 @@ auto AzureBaseDevice::Impl::generate_bt_config(const DCConfigSettings &config) -
     return ka4BtConfig;
 }
 
+auto AzureBaseDevice::Impl::get_property_value(k4a::device *dev, k4a_color_control_command_t pId) -> std::int32_t{
+    std::int32_t currV;
+    k4a_color_control_mode_t cMode;
+    dev->get_color_control(pId, &cMode, &currV);
+    return currV;
+}
+
 auto AzureBaseDevice::Impl::set_property_value(k4a::device *dev, k4a_color_control_command_t pId, int32_t value, bool manual) -> void{
 
     bool supportAuto;
@@ -143,6 +152,7 @@ auto AzureBaseDevice::Impl::set_property_value(k4a::device *dev, k4a_color_contr
     );
 
     dev->get_color_control(pId, &cMode, &currV);
+    // Log::fmessage("id {} Min {} max {} value {}\n", (int)pId, minV, maxV, currV);
 
     if(value < minV){
         value = minV;
@@ -403,6 +413,27 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
         i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1] += configS.colorAlignmentTr.y();
         i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2] += configS.colorAlignmentTr.z();
 
+        auto &r = i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].rotation;
+        auto mR = geo::Mat3f(r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]);
+        auto rotM = geo::rotation_m3x3(configS.colorAlignmentRotEuler);
+        mR *= rotM;
+        r[0] = mR[0];
+        r[1] = mR[1];
+        r[2] = mR[2];
+        r[3] = mR[3];
+        r[4] = mR[4];
+        r[5] = mR[5];
+        r[6] = mR[6];
+        r[7] = mR[7];
+        r[8] = mR[8];
+
+        // Log::fmessage("euler {} {} {}\nt {} {} {} | {} {} {}\nr {} {} {} {} {} {} {} {} {}\n",
+        //     configS.colorAlignmentRotEuler.x(), configS.colorAlignmentRotEuler.y(), configS.colorAlignmentRotEuler.z(),
+        //     configS.colorAlignmentTr.x(),configS.colorAlignmentTr.y(),configS.colorAlignmentTr.z(),
+        //     i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[0],
+        //     i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[1],
+        //     i->calibration.extrinsics[K4A_CALIBRATION_TYPE_DEPTH][K4A_CALIBRATION_TYPE_COLOR].translation[2],
+        //     r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]);
 
         i->transformation  = k4a::transformation(i->calibration);
 
@@ -453,9 +484,10 @@ auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS)
     k4a_color_control_command_t type;
     try{
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,   colorS.exposureTime,                                                 !colorS.autoExposureTime);
-        if(!colorS.autoExposureTime){
-            i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_GAIN,                 colorS.gain,                                                     true);
-        }
+        // if(!colorS.autoExposureTime){
+            // i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_GAIN,                 colorS.gain,                                                     true);
+        // }
+        i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_GAIN,                     colorS.gain,                                                         true);
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_WHITEBALANCE,             colorS.whiteBalance,                                                 !colorS.autoWhiteBalance);
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BRIGHTNESS,               colorS.brightness,                                                   true);
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_CONTRAST,                 colorS.contrast,                                                     true);
@@ -463,6 +495,10 @@ auto AzureBaseDevice::update_from_colors_settings(const DCColorSettings &colorS)
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_SATURATION,               colorS.saturation,                                                   true);
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_BACKLIGHT_COMPENSATION,   colorS.backlightCompensation ? 1 : 0,                                true);
         i->set_property_value(i->device.get(), type = K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,      convert_to_k4a_powerline_frequency_value(colorS.powerlineFrequency), true);
+
+        // if(colorS.autoWhiteBalance){
+        //     Log::fmessage("Automatic white balance value: {}\n", i->get_property_value(i->device.get(), K4A_COLOR_CONTROL_WHITEBALANCE));
+        // }
 
     }  catch (std::runtime_error error) {
         Log::error(std::format("[AzureBaseDevice::update_from_colors_settings) Set color settings error: {} T:{}\n", error.what(), static_cast<int>(type)));

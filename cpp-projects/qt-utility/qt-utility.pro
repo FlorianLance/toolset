@@ -46,6 +46,7 @@ include(../ts-dependencies.pri)
 HEADERS += \
     # global    
     base_app_controller.hpp \
+    gui/widgets/base_qt_gl_quick_item.hpp \
     gui/widgets/base_qt_sfml_gl_widget.hpp \
     gui/widgets/logger_w.hpp \
     qstring_unordered_map.hpp \
@@ -105,6 +106,7 @@ HEADERS += \
 
 SOURCES += \
     # global    
+    gui/widgets/base_qt_gl_quick_item.cpp \
     gui/widgets/base_qt_sfml_gl_widget.cpp \
     gui/widgets/logger_w.cpp \
     qt_highlighting.cpp \

@@ -30,6 +30,7 @@
 #include "depth-camera/network/dc_server.hpp"
 #include "depth-camera/dc_device.hpp"
 #include "depth-camera/dc_video_recorder.hpp"
+#include "utility/stop_watch.hpp"
 
 namespace tool {
 

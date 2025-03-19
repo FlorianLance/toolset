@@ -38,8 +38,12 @@ struct Convert{
     static constexpr auto to_rgba32(const ColorRGBA8 &rgba8) noexcept -> ColorRGBA32{
         return ColorRGBA32{rgba8.conv<float>()/255.f};
     }
+    static constexpr auto to_rgba32(const ColorRGB8 &rgb8) noexcept -> ColorRGBA32{
+        return ColorRGBA32{rgb8.r()/255.f,rgb8.g()/255.f,rgb8.b()/255.f};
+    }
 
     static auto to_hsv(const ColorRGB32 &rgbf) noexcept -> ColorHSV;
+    static auto to_hsv(const ColorRGB8 &rgb) noexcept -> ColorHSV;
     static auto to_hsv(const ColorRGBA8 &rgba) noexcept -> ColorHSV;
     static auto to_rgb32(const ColorHSV &hsv) noexcept -> ColorRGB32;
 };

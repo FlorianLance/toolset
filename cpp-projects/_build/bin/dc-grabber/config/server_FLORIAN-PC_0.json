@@ -85,7 +85,7 @@
     },
     "color": {
         "auto_exposure_time": false,
-        "auto_white_balance": true,
+        "auto_white_balance": false,
         "backlight_compensation": false,
         "base": {
             "type_string": "color",
@@ -95,11 +95,11 @@
         "contrast": 5,
         "exposure_time": 33330,
         "gain": 128,
-        "hdr": true,
+        "hdr": false,
         "powerline_frequency": 1,
         "saturation": 32,
         "sharpness": 2,
-        "white_balance": 6500
+        "white_balance": 5120
     },
     "device": {
         "base": {
@@ -249,15 +249,15 @@
             0.5
         ],
         "max_distance_after_closest_point": 0.20000000298023224,
-        "max_height_f": 0.8259999752044678,
+        "max_height_f": 0.9070000052452087,
         "max_local_diff": 15.0,
         "max_sphere_distance": 1029.0,
         "max_widht_f": 1.0,
         "min_depth_f": 0.0,
-        "min_height_f": 0.04500000178813934,
+        "min_height_f": 0.0,
         "min_neighbours_connectivity": 2,
         "min_neighbours_loops": 2,
-        "min_widht_f": 0.1979999989271164,
+        "min_widht_f": 0.0,
         "nb_min_neighbours": 6,
         "plane1_A": [
             0.8759999871253967,

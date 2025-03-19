@@ -1,0 +1,19 @@
+# ninja log v6
+5	987	7635749615353121	CMakeFiles/base.dir/main.cpp.obj	d2dc1d90b59fdf86
+242	315	7635738363743530	base.exe	eee0336bcd47e4b8
+12	121	7635749615427199	CMakeFiles/base.dir/utility/cmd_args.cpp.obj	54fea0b934bbd15
+19	2371	7635749615489404	CMakeFiles/base.dir/utility/logger.cpp.obj	d354d26cd44c0854
+8	468	7635749615374320	CMakeFiles/base.dir/utility/base_logger.cpp.obj	1e6f709dac2079b3
+81	422	7635749616110738	CMakeFiles/base.dir/thirdparty/stb/stb_image_resize.cpp.obj	e69a5962c2d3b4b9
+15	545	7635749615442402	CMakeFiles/base.dir/utility/decimal.cpp.obj	55403c289f883e
+84	417	7635749616140355	CMakeFiles/base.dir/thirdparty/stb/stb_image_write.cpp.obj	ea8dff46998fbdde
+91	619	7635749616209045	CMakeFiles/base.dir/thirdparty/stb/stb_image.cpp.obj	89fbe392fca5eccc
+96	2245	7635749616263433	CMakeFiles/base.dir/thirdparty/nanobench/nanobench.cpp.obj	28c2aa67bd5aa814
+29	1378	7635749615590577	CMakeFiles/base.dir/utility/stop_watch.cpp.obj	8b7ca9e5b2956426
+32	1229	7635749615624894	CMakeFiles/base.dir/utility/string.cpp.obj	72a7baf41a0d9f3
+38	1331	7635749615684638	CMakeFiles/base.dir/geometry/color_cloud.cpp.obj	294976e6e8017aaa
+22	1629	7635749615519511	CMakeFiles/base.dir/utility/monitoring.cpp.obj	86dfffd67fa25d3a
+35	1691	7635749615653221	CMakeFiles/base.dir/utility/time_diff.cpp.obj	6a7a926c048a224a
+10	2441	7635749615403711	CMakeFiles/base.dir/utility/benchmark.cpp.obj	55a7f39777a57946
+27	2633	7635749615567828	CMakeFiles/base.dir/utility/paths.cpp.obj	ff9244744a111453
+41	2996	7635749615714027	CMakeFiles/base.dir/geometry/color_voxel_grid.cpp.obj	73ebe761d38e2cda
