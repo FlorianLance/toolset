@@ -88,6 +88,10 @@ auto tree_widget() -> void{
     //    item->setTextAlignment(1, Qt::AlignHCenter);
 }
 
+#include <qwt_thermo.h>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+
 
 auto main(int argc, char *argv[]) -> int{
 
@@ -103,9 +107,44 @@ auto main(int argc, char *argv[]) -> int{
 
     QtLog::message(QSL("Qt-utility"));
 
-    BaseQtSfmlGlWidget *sampleQtGlW = new BaseQtSfmlGlWidget();
-    sampleQtGlW->resize(1920,1080);
-    sampleQtGlW->show();
+    // QWidget *w = new QWidget();
+    // w->resize(1920,1080);
+    // w->show();
+
+    QTabWidget *tw = new QTabWidget();
+
+
+    auto thermo = new QwtThermo;
+    thermo->setFillBrush( QBrush(Qt::red) );
+    thermo->setScale(0, 10);
+    tw->addTab(thermo, "Thermo");
+
+    constexpr int plotDataSize = 100;
+    double xData[plotDataSize];
+    double yData[plotDataSize];
+    // set up the initial plot data
+    int v = 0;
+    for( int index=0; index<plotDataSize; ++index )
+    {
+        xData[index] = index;
+        yData[index] = v;
+        v += rand()%6-3;
+    }
+
+    auto curve = new QwtPlotCurve;
+    auto plot = new QwtPlot;
+    // make a plot curve from the data and attach it to the plot
+    curve->setSamples(xData, yData, plotDataSize);
+    curve->attach(plot);
+
+    plot->setAxisScale(QwtPlot::yLeft,-10,10);
+    plot->replot();
+    tw->addTab(plot, "Plot");
+
+    tw->show();
+    // BaseQtSfmlGlWidget *sampleQtGlW = new BaseQtSfmlGlWidget();
+    // sampleQtGlW->resize(1920,1080);
+    // sampleQtGlW->show();
 
 
     return a.exec();

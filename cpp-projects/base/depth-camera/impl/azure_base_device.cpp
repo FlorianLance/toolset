@@ -457,7 +457,7 @@ auto AzureBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
         if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
             Log::message("[AzureBaseDevice::start_device] Start body tracker\n");
             i->bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(i->calibration, i->k4aBtConfig));
-            // i->bodyTracker->set_temporal_smoothing();
+            // i->bodyTracker->set_temporal_smoothing(1.f);
         }
 
     }  catch (k4a::error error) {
@@ -737,6 +737,14 @@ auto AzureBaseDevice::generate_cloud() -> std::span<geo::Pt3<std::int16_t>>{
             K4A_CALIBRATION_TYPE_DEPTH,
             &i->pointCloudImage
         );
+
+        // invert cloud
+        auto b = reinterpret_cast<geo::Pt3<std::int16_t>*>(i->pointCloudImage.get_buffer());
+        for(int ii = 0; ii < i->pointCloudImage.get_width_pixels() * i->pointCloudImage.get_height_pixels(); ++ii){
+            b[ii].x() *= -1;
+            b[ii].y() *= -1;
+        }
+
 
     }catch(const std::runtime_error &error){
         Log::error(std::format("[AzureBaseDevice::generate_cloud] Error: {}\n", error.what()));

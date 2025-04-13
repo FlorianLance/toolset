@@ -124,6 +124,10 @@ auto FemtoBoltDeviceImpl::read_body_tracking(bool enable) -> void{
     }
 }
 
+auto FemtoBoltDeviceImpl::release_frame() -> void{
+    orbbecD->release_frame();
+}
+
 auto FemtoBoltDeviceImpl::resize_images() -> void{
     
     if(!fData.originalSizeColor.empty() && !fData.depth.empty()){

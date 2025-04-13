@@ -75,4 +75,12 @@ constexpr auto dot(const Point2<acc> &l, const Point2<acc> &r) noexcept -> acc {
     return l[0]*r[0] + l[1]*r[1];
 }
 
+template <typename acc>
+constexpr auto invert_axis(const Point2<acc> &p, bool x, bool y) noexcept -> Point2<acc>{
+    return{
+        x ? (-p.x()) : (p.x()),
+        y ? (-p.y()) : (p.y())
+    };
+}
+
 }

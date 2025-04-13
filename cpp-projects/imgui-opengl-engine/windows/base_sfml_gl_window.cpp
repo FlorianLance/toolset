@@ -139,6 +139,7 @@ auto BaseSfmlGlWindow::start() -> void{
             }else if(const auto* sE = event->getIf<sf::Event::KeyReleased>()){ // A key was released
                 keyboard_keyrelease_event(*sE);
             }else if(const auto* sE = event->getIf<sf::Event::MouseButtonPressed>()){ // A mouse button was pressed
+                Log::message("click M\n");
                 mouse_button_pressed_event(*sE);
             }else if(const auto* sE = event->getIf<sf::Event::MouseButtonReleased>()){ // A mouse button was released
                 mouse_button_released_event(*sE);
@@ -356,8 +357,14 @@ auto BaseSfmlGlWindow::update_camera_with_mouse_button_pressed_event(sf::Event::
 }
 
 auto BaseSfmlGlWindow::update_camera_with_mouse_button_released_event(sf::Event::MouseButtonReleased event) -> void{
+
+    bool mouseLeftClickReleasedEvent = false;
+
     switch (event.button) {
     case sf::Mouse::Button::Left:
+        if(mouseLeftClickPressed){
+            mouseLeftClickReleasedEvent = true;
+        }
         mouseLeftClickPressed = false;
         break;
     case sf::Mouse::Button::Right:
@@ -372,6 +379,10 @@ auto BaseSfmlGlWindow::update_camera_with_mouse_button_released_event(sf::Event:
 
     lastX = -1;
     lastY = -1;
+
+    if(mouseLeftClickReleasedEvent){
+        m_camera.screen_raycast({lastX, lastY});
+    }
 }
 
 auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyPressed event)  -> void{
@@ -435,4 +446,6 @@ auto BaseSfmlGlWindow::update_camera_with_mouse_moved_event(sf::Event::MouseMove
     }else if(mouseRightClickPressed){
         m_camera.set_direction(0.,0.,xoffset);
     }
+
+
 }

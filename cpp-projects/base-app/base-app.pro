@@ -56,6 +56,7 @@ SOURCES += \
     test_mic.cpp \
     test_ak_device.cpp \
     test_dc_player.cpp \
+    test_multi_devices.cpp \
     test_pcl.cpp \
     test_k2_device.cpp \
     test_kvid.cpp \

@@ -28,6 +28,7 @@
 
 // base
 #include "graphics/camera/camera.hpp"
+#include "thirdparty/sigslot/signal.hpp"
 
 // opengl-utility
 #include "opengl/buffer/framebuffer_object.hpp"
@@ -77,6 +78,9 @@ public:
     std::array<bool, 5> mouseButtonsPressed;
     std::array<bool, 5> mouseButtonsReleased;
 
+
+    sigslot::signal<geo::Vec3d, geo::Vec3d> raycast_signal;
+
 private:
 
     auto restore_viewport() -> void;
@@ -87,6 +91,8 @@ private:
     gl::RBO m_depthTexture;
     graphics::Camera m_camera;       
     graphics::Screen m_screen;
+    geo::Pt2<int> m_sizeI;
+
 
     bool m_cameraUpdated = false;
     bool m_screenUpdated = false;

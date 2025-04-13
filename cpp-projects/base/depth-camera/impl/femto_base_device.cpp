@@ -89,7 +89,7 @@ struct OrbbecDeviceManager{
     OrbbecDeviceManager(){
         tool::LogG lg("[OrbbecDeviceManager::OrbbecDeviceManager]");
         try{
-            context.setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+            context.setLoggerSeverity(OB_LOG_SEVERITY_ERROR);
             context.enableNetDeviceEnumeration(false);
             devicesList = context.queryDeviceList();
             validity.resize(devicesList->deviceCount());
@@ -184,13 +184,17 @@ struct FemtoBaseDevice::Impl{
     k4abt_tracker_configuration_t k4aBtConfig = K4ABT_TRACKER_CONFIG_DEFAULT;
     std::unique_ptr<k4abt::tracker> bodyTracker = nullptr;
     std::vector<DCBody> bodies;
+    Buffer<std::uint8_t> bodiesIndex;
+
+
+    k4a::capture bodyCapture = nullptr;
 
     // frames data
     std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
     std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
     std::shared_ptr<ob::DepthFrame> depthImage = nullptr;
     std::shared_ptr<ob::IRFrame> infraredImage = nullptr;
-    k4a::image bodiesIndexImage   = nullptr;
+
 
     // processing data
     std::vector<std::int8_t> depthSizedColorData;
@@ -788,8 +792,6 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
     // theses colors settings must be set before starting the pipeline
     i->set_property_value(OB_PROP_COLOR_HDR_BOOL, colorS.hdr);
 
-
-
     //i->deviceType = mInfos.device();
     
     Log::message("### Start pipeline ###.\n");
@@ -825,7 +827,7 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
                         static_cast<int>(mInfos.color_height()),
                         convert_to_ob_image_format(mInfos.image_format()),
                         mInfos.framerate_value()
-                        );
+                    );
                     Log::message("Color profile found.\n");
                 }catch(...) {
                     colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
@@ -982,20 +984,24 @@ auto FemtoBaseDevice::close() -> void{
     
     auto lg = LogG("OrbbecBaseDevice::close"sv);
 
-    if(i->bodyTracker != nullptr){
-        Log::message("Stop body tracker\n");
-        i->bodyTracker->shutdown();
-        i->bodyTracker = nullptr;
-    }
-
     if(i->pipe != nullptr){
+
         Log::message("Stop pipeline\n");
         i->pipe->stop();
         
-        Log::message("Clean pipeline\n");
-        i->pipe = nullptr;
+        // Log::message("Clean pipeline\n");
+        // i->pipe = nullptr;
     }
+
+    // if(i->bodyTracker != nullptr){
+    //     Log::message("Stop body tracker\n");
+    //     i->bodyTracker->shutdown();
+    //     i->bodyTracker = nullptr;
+    // }
     
+    // Log::message("Clean sensor list\n");
+    // i->sensorList = nullptr;
+
     Log::message("Close device\n");
     i->device = nullptr;
     // i->deviceList.clear();
@@ -1006,7 +1012,7 @@ auto FemtoBaseDevice::close() -> void{
 
 
 auto FemtoBaseDevice::update_from_colors_settings(const DCColorSettings &colorS) -> void{
-    
+
     auto lg = LogG("OrbbecBaseDevice::update_from_colors_settings"sv);
     if(!is_opened()){
         return;
@@ -1060,6 +1066,12 @@ auto FemtoBaseDevice::capture_frame(int32_t timeoutMs) -> bool{
 
     if(i->pipe != nullptr){
         try{
+
+            i->colorImage    = nullptr;
+            i->depthImage    = nullptr;
+            i->infraredImage = nullptr;
+            i->frameSet      = nullptr;
+
             i->frameSet = i->pipe->waitForFrames(timeoutMs);
         }catch(ob::Error &e) {
             Log::error(std::format("[OrbbecDevice] Get capture error: {}\n", e.getMessage()));
@@ -1137,15 +1149,11 @@ auto FemtoBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
 
 auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
 
-    if(i->bodyTracker == nullptr){
+    if(i->bodyTracker == nullptr || i->depthImage == nullptr || i->infraredImage == nullptr){
         return {};
     }
 
     try{
-
-        k4a_capture_t captureH = nullptr;
-        k4a_capture_create(&captureH);
-        k4a::capture capture(captureH);
 
         k4a::image k4DepthImage = k4a::image::create_from_buffer(
             K4A_IMAGE_FORMAT_DEPTH16,
@@ -1169,31 +1177,42 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
             nullptr
         );
 
-        capture.set_depth_image(k4DepthImage);
-        capture.set_ir_image(k4IRImage);
+        if(i->bodyCapture == nullptr){
+            k4a_capture_t bodyCaptureH = nullptr;
+            k4a_capture_create(&bodyCaptureH);
+            i->bodyCapture = k4a::capture(bodyCaptureH);
+        }
 
-        if(!i->bodyTracker->enqueue_capture(capture, std::chrono::milliseconds(1))){
+        i->bodyCapture.set_depth_image(k4DepthImage);
+        i->bodyCapture.set_ir_image(k4IRImage);
+
+        if(!i->bodyTracker->enqueue_capture(i->bodyCapture, std::chrono::milliseconds(1))){
             return {};
         }
 
         if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
 
             auto bodiesCount = bodyFrame.get_num_bodies();
+            i->bodies.resize(bodiesCount);
             if(i->bodies.size() < bodiesCount){
                 i->bodies.resize(bodiesCount);
             }
             for(size_t ii = 0; ii < bodiesCount; ++ii){
                 i->update_k4_body(i->bodies[ii], bodyFrame.get_body(static_cast<int>(ii)));
             }
-            i->bodiesIndexImage = bodyFrame.get_body_index_map();
+
+            k4a::image bodiesIndexImage = bodyFrame.get_body_index_map();
 
             std::span<ColorGray8> biISpan = {};
-            if(i->bodiesIndexImage.is_valid()){
-                biISpan = std::span<ColorGray8>{
-                    reinterpret_cast<ColorGray8*>(i->bodiesIndexImage.get_buffer()),
-                    static_cast<size_t>(i->bodiesIndexImage.get_width_pixels() * i->bodiesIndexImage.get_height_pixels())
-                };
+            if(bodiesIndexImage.is_valid()){
+
+                // copy data
+                i->bodiesIndex.resize(bodiesIndexImage.get_width_pixels()*bodiesIndexImage.get_height_pixels());
+                std::copy(bodiesIndexImage.get_buffer(), bodiesIndexImage.get_buffer() + i->bodiesIndex.size(), i->bodiesIndex.begin());
+            }else{
+                i->bodiesIndex.clear();
             }
+            biISpan = i->bodiesIndex.span();
 
             return std::make_tuple(biISpan, std::span<DCBody>{i->bodies});
         }
@@ -1207,11 +1226,14 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
     return {{},{}};
 }
 
+auto FemtoBaseDevice::release_frame() -> void{
+    i->frameSet = nullptr;
+}
+
 auto FemtoBaseDevice::read_from_imu() -> tool::BinarySpan{
     return {};
 }
 
-// #include "utility/time.hpp"
 
 auto FemtoBaseDevice::resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<uint16_t> depthData) -> std::span<ColorRGBA8>{
 
@@ -1304,7 +1326,13 @@ auto FemtoBaseDevice::generate_cloud(const DCModeInfos &mInfos, std::span<uint16
             K4A_CALIBRATION_TYPE_DEPTH,
             &k4aPointCloudImage
         );
-        // Log::fmessage("[r{}]", Time::now_difference_micro_s(t1));
+
+        // invert cloud
+        auto b = reinterpret_cast<geo::Pt3<std::int16_t>*>(i->cloudData.data());
+        for(int ii = 0; ii < mInfos.depth_width() * mInfos.depth_height(); ++ii){
+            b[ii].x() *= -1;
+            b[ii].y() *= -1;
+        }
 
     }catch(const std::runtime_error &error){
         Log::error(std::format("[OrbbecBaseDevice::k4a_generate_cloud] Runtime error: {}", error.what()));

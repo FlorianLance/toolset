@@ -83,6 +83,7 @@ HEADERS += \
     geometry/color_voxel_grid.hpp \
     io/cloud_io.hpp \
     io/assimp_loader.hpp \
+    io/image_io.hpp \
     io/io_enum.hpp \
     io/settings.hpp \
     io/text_settings.hpp \

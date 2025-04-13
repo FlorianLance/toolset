@@ -42,8 +42,7 @@ int main(int argc, char *argv[]){
             );
 
         // load module
-        engine.addImportPath("qrc:/qml");
-        engine.load(QUrl(QStringLiteral("qrc:/qml/QtUtilityMain.qml")));
+        engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
         if (engine.rootObjects().isEmpty()){
             return -1;

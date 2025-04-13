@@ -79,6 +79,7 @@ struct DCClientExport{
     auto current_frame_id(size_t idD) -> size_t;
     auto current_frame(size_t idD) -> std::shared_ptr<DCFrame>;
     auto current_frame_cloud_size(size_t idD) -> size_t;
+    auto current_frame_bodies_size(size_t idD) -> size_t;
     auto device_model(size_t idD) -> geo::Mat4f;
 
     // settings
@@ -88,9 +89,13 @@ struct DCClientExport{
     auto update_delay(size_t idD, cam::DCMiscSettings miscS) -> void;
 
     // data
-    auto copy_current_frame_vertices(size_t idD, std::span<tool::cam::DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
-    auto copy_current_frame_vertices(size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform) -> size_t;
+    auto copy_current_frame_vertices(size_t idD, std::span<tool::cam::DCVertexMeshData> vertices, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> size_t;
+    auto copy_current_frame_vertices(size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> size_t;
 
+
+    auto copy_body_tracking(int idD, int idBody, DCJointType jointType, float* data, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> int;
+
+    auto get_closest_cloud_point(const geo::Pt3f &origin, const geo::Vec3f &direction, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> std::tuple<geo::Pt3f, float>;
 };
 }
 
@@ -123,6 +128,7 @@ DECL_EXPORT int devices_nb__dc_client_export(tool::cam::DCClientExport *dcClient
 DECL_EXPORT int is_device_connected__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 DECL_EXPORT int current_frame_id__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 DECL_EXPORT int current_frame_cloud_size__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
+DECL_EXPORT int current_frame_bodies_size__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 
 // settings
 DECL_EXPORT void apply_device_settings__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
@@ -134,10 +140,26 @@ DECL_EXPORT int is_frame_available__dc_client_export(tool::cam::DCClientExport *
 DECL_EXPORT void invalidate_frame__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD);
 
 // data
+DECL_EXPORT int has_body__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, int idBody);
+DECL_EXPORT int copy_body_tracking__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, int idBody, int jointType, float* data,
+    int applyModelTransform, int invertX, int invertY, int invertZ
+);
+
 DECL_EXPORT void copy_transform__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, float *transformData);
-DECL_EXPORT int copy_current_frame_vertices__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, tool::cam::DCVertexMeshData *vertices, int verticesCount, int applyModelTransform);
+DECL_EXPORT int copy_current_frame_vertices__dc_client_export(
+    tool::cam::DCClientExport *dcCE, int idD, tool::cam::DCVertexMeshData *vertices,
+    int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ);
 // vfx
-DECL_EXPORT int copy_current_frame_vertices_vfx__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform);
+DECL_EXPORT int copy_current_frame_vertices_vfx__dc_client_export(
+    tool::cam::DCClientExport *dcCE,
+    int idD, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals,
+    int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ);
+
+DECL_EXPORT float get_closest_cloud_point__dc_client_export(
+    tool::cam::DCClientExport *dcCE,
+    float *origin, float *direction, int applyModelTransform, int invertX, int invertY, int invertZ,
+    float *closestPoint
+    );
 
 }
 

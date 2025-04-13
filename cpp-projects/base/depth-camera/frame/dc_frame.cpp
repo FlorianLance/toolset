@@ -26,6 +26,8 @@
 
 #include "dc_frame.hpp"
 
+#include "utility/logger.hpp"
+
 using namespace tool::geo;
 using namespace tool::cam;
 
@@ -98,7 +100,6 @@ auto DCDeprecatedFrame::compute_rgb_infra_image(ImageBuffer<ColorRGB8> &rgbInfra
     }
 }
 
-#include "utility/logger.hpp"
 
 auto tool::cam::DCFrame::infos() -> void{
 

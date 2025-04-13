@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <RCC>
-    <qresource prefix="/">
-        <file alias="qml/QtUtilityMain.qml">qml/QtUtilityMain.qml</file>
+    <qresource prefix="/qml">
+        <file alias="main.qml">qml/QtUtilityMain.qml</file>
     </qresource>
 </RCC>

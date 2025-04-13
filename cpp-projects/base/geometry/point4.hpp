@@ -100,4 +100,15 @@ template <typename acc>
 constexpr auto to_pt4(const Point<acc,3> &pt, acc w) noexcept -> Pt4<acc>{
     return {pt[0],pt[1],pt[2],w};
 }
+
+template <typename acc>
+constexpr auto invert_axis(const Point4<acc> &p, bool x, bool y, bool z, bool w) noexcept -> Point4<acc>{
+    return{
+        x ? (-p.x()) : (p.x()),
+        y ? (-p.y()) : (p.y()),
+        z ? (-p.z()) : (p.z()),
+        w ? (-p.w()) : (p.w()),
+    };
+}
+
 }

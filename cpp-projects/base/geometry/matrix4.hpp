@@ -124,36 +124,36 @@ struct Matrix4 : Matrix<acc,4,4>{
         return {{(*this)[3],(*this)[7],(*this)[11],(*this)[15]}};
     }
 
-    constexpr auto t(int id) const noexcept -> acc{return this->at(id,3);}
-    constexpr auto t(int id) noexcept -> acc&{return this->at(id,3);}
-    constexpr auto s(int id) const noexcept -> acc{return this->at(id,id);}
-    constexpr auto s(int id) noexcept -> acc&{return this->at(id,id);}
-    constexpr auto r(int id) const noexcept -> acc{
+    constexpr auto t(int id) const noexcept     -> acc{ return (*this)(id,3);}
+    constexpr auto t(int id) noexcept           -> acc&{return (*this)(id,3);}
+    constexpr auto s(int id) const noexcept     -> acc{ return (*this)(id,id);}
+    constexpr auto s(int id) noexcept           -> acc&{return (*this)(id,id);}
+    constexpr auto r(int id) const noexcept     -> acc{
         switch (id) {
-            case 0:  return this->at(0);
-            case 1:  return this->at(1);
-            case 2:  return this->at(2);
-            case 3:  return this->at(4);
-            case 4:  return this->at(5);
-            case 5:  return this->at(6);
-            case 6:  return this->at(8);
-            case 7:  return this->at(9);
-            case 8:  return this->at(10);
-            default: return this->at(0);
+            case 0:  return (*this)(0);
+            case 1:  return (*this)(1);
+            case 2:  return (*this)(2);
+            case 3:  return (*this)(4);
+            case 4:  return (*this)(5);
+            case 5:  return (*this)(6);
+            case 6:  return (*this)(8);
+            case 7:  return (*this)(9);
+            case 8:  return (*this)(10);
+            default: return (*this)(0);
         }
     }
     constexpr auto r(int id) noexcept -> acc&{
         switch (id) {
-            case 0:  return this->at(0);
-            case 1:  return this->at(1);
-            case 2:  return this->at(2);
-            case 3:  return this->at(4);
-            case 4:  return this->at(5);
-            case 5:  return this->at(6);
-            case 6:  return this->at(8);
-            case 7:  return this->at(9);
-            case 8:  return this->at(10);
-            default: return this->at(0);
+            case 0:  return (*this)(0);
+            case 1:  return (*this)(1);
+            case 2:  return (*this)(2);
+            case 3:  return (*this)(4);
+            case 4:  return (*this)(5);
+            case 5:  return (*this)(6);
+            case 6:  return (*this)(8);
+            case 7:  return (*this)(9);
+            case 8:  return (*this)(10);
+            default: return (*this)(0);
         }
     }
 };

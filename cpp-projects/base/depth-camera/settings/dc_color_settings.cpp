@@ -147,7 +147,11 @@ auto DCColorSettings::update_auto_calibration(DCType type) -> bool{
             case AutoCalibrationMode::WhiteBalance:
                 cvS.whiteBalanceStart   = min_value(ColorSettingsType::White_balance, type);
                 cvS.whiteBalanceEnd     = max_value(ColorSettingsType::White_balance, type);
-                cvS.whiteBalanceInc     = step_value(ColorSettingsType::White_balance, type);
+                if(type == DCType::AzureKinect){
+                    cvS.whiteBalanceInc = 5*step_value(ColorSettingsType::White_balance, type);
+                }else{
+                    cvS.whiteBalanceInc = step_value(ColorSettingsType::White_balance, type);
+                }
                 add_calib_values(cvS);
                 break;
             case AutoCalibrationMode::Saturation:
@@ -294,6 +298,9 @@ auto DCColorSettings::apply_current_calibration_settings(DCType type, size_t idC
     contrast        = std::get<2>(calibrationValues[idCalibration]);
     saturation      = std::get<3>(calibrationValues[idCalibration]);
     whiteBalance    = std::get<4>(calibrationValues[idCalibration]);
+
+    // if set value
+    // modify default values
 }
 
 auto DCColorSettings::store_score(double score) -> void{

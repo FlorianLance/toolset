@@ -52,7 +52,7 @@ struct DCCloudDrawer{
 
     // joints sub models
     size_t nbBodies = 0;
-    std::vector<std::array<std::tuple<bool,geo::Mat4f>, cam::dcJointsCount>> jointsModels;
+    std::vector<std::array<std::tuple<cam::DCJointConfidenceLevel,geo::Mat4f>, cam::dcJointsCount>> jointsModels;
 
     // textures
     gl::Texture2D colorT;    
@@ -70,7 +70,9 @@ struct DCCloudDrawer{
     ImGuiTextureUiDrawer bodiesIdMapD;
     // # shapes
     gl::CloudPointsDrawer cpD;
-    gl::SphereTrianglesDrawer btJointD;
+    gl::SphereTrianglesDrawer btJointCenterD;
+    gl::AxesLinesDrawer btJointDirD;
+
     gl::FrustumDrawerLinesDrawer frustumD;
     gl::TriangleLinesDrawer planeFilteringLinesD;
     gl::OrientedBoundingBoxLinesDrawer oobLinesD;

@@ -33,11 +33,8 @@
 #include "utility/logger.hpp"
 #include "thirdparty/ColorSpace/Comparison.h"
 
-
 // imgui-opengl-engine
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
-
-
 
 // local
 #include "dcg_signals.hpp"
@@ -48,6 +45,7 @@ using namespace graphics;
 using namespace std::string_view_literals;
 
 DCGController::~DCGController(){
+    auto lg = LogG("~DCGController::start"sv);
     model->clean();
 }
 
@@ -204,16 +202,7 @@ auto DCGController::set_connections() -> void{
 
                 ColorSpace::Rgb a(cCol.r(), cCol.g(), cCol.b());
                 ColorSpace::Rgb b(colorCheckerC.r(), colorCheckerC.g(), colorCheckerC.b());
-                // ColorSpace::Cie2000Comparison::Compare(&a, &b);
-                // auto hsv1 = Convert::to_hsv(colorCheckerC);
-                // auto hsv2 = Convert::to_hsv(cCol);
-                // std::get<2>(colorS.checkerPositions[idCP]) = geo::Pt3f{
-                //     std::abs(hsv1.h() - hsv2.h())/360.f,
-                //     std::abs(hsv1.s() - hsv2.s()),
-                //     std::abs(hsv1.v() - hsv2.v())
-                // };
-                // auto cv = std::get<2>(colorS.checkerPositions[idCP]);
-                // // totalDiff += (cv.x()+cv.y()+cv.z())/3.0;
+
                 std::get<2>(colorS.checkerPositions[idCP]) = ColorSpace::Cie2000Comparison::Compare(&a, &b);
                 totalDiff += std::get<2>(colorS.checkerPositions[idCP]);
             }
@@ -230,8 +219,6 @@ auto DCGController::set_connections() -> void{
     deviceD->mouse_released_color_signal.connect(               &DCGView::update_selected_color,                    view.get());
     deviceD->mouse_released_depth_sized_color_signal.connect(   &DCGView::update_selected_color,                    view.get());
 
-
-    // idCloud, idB, coords, image->get(coords.x(),coords.y()
     deviceD->mouse_released_color_signal.connect( [&](size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, ColorRGBA8 colors){
         if(model->server.settings.colorS.currentColorCheckedId != -1){
             std::get<0>(model->server.settings.colorS.checkerPositions[model->server.settings.colorS.currentColorCheckedId]) = coordsR;

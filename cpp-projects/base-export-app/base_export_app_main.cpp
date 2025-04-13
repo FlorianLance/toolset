@@ -156,7 +156,8 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
                     data[idC].colors.data(),
                     data[idC].normals.data(),
                     sizeVertices,
-                    true
+                    true,
+                    false, false, false
                 );
                 
                 Log::message(std::format("\t{} -> {} -> {} -> {}\n",

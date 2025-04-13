@@ -52,7 +52,7 @@ struct DCSettings{
     DCDeviceDataSettings data;
     DCFiltersSettings filters;
     DCColorSettings color;
-    DCMiscSettings delay;
+    DCMiscSettings misc;
 };
 
 struct DCFramesBuffer{
@@ -85,7 +85,7 @@ struct DCDeviceImpl{
     auto set_data_settings(const DCDeviceDataSettings &dataS) -> void;
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_color_settings(const DCColorSettings &colorS) -> void;
-    auto set_delay_settings(const DCMiscSettings &delayS) -> void;
+    auto set_misc_settings(const DCMiscSettings &miscS) -> void;
     virtual auto update_from_colors_settings() -> void{}
 
     // getters
@@ -119,6 +119,7 @@ protected:
     virtual auto read_audio(bool enable)                -> void{static_cast<void>(enable);}
     virtual auto read_IMU(bool enable)                  -> void{static_cast<void>(enable);}
     virtual auto read_body_tracking(bool enable)        -> void{static_cast<void>(enable);}
+    virtual auto release_frame()                        -> void{}
     auto check_data_validity() -> bool;
 
     // process data

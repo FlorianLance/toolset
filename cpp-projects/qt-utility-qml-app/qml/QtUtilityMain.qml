@@ -2,8 +2,8 @@
 
 // Qt
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Material
+// import QtQuick.Controls
+// import QtQuick.Controls.Material
 
 ApplicationWindow {
 
@@ -13,7 +13,7 @@ ApplicationWindow {
     width: 1920
     height: 1080
     visible: true
-    Material.theme: Material.Dark
+    // Material.theme: Material.Dark
 
     // Material.variant: Material.Normal
     // Material.theme: Material.Light

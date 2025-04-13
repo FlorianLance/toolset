@@ -223,6 +223,7 @@ enum class SFile : int {
     Irrelevant, Default, Normal, Specific
 };
 
+
 struct SettingsAction{
     SAction action;
     STarget target;
@@ -241,6 +242,7 @@ struct SettingsAction{
         this->id = id;
         path = "";
         valid = true;
+        hasPath = false;
     }
 };
 

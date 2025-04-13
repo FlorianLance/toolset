@@ -48,7 +48,8 @@ auto DCCloudDrawer::initialize() -> void {
     infraD.init(&infraT);
     bodiesIdMapD.init(&bodiesIdMapT);
     
-    btJointD.initialize(0.05f, 20, 20);
+    btJointCenterD.initialize(0.05f, 20, 20);
+    btJointDirD.initialize(0.3f);
 
     std::vector<Pt3f> initData(1024*1024);
     cpD.initialize(true, initData, initData, initData);
@@ -79,7 +80,6 @@ auto DCCloudDrawer::reset() -> void{
 
     cpD.set_indice_count(0);
 }
-
 
 auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool {
 
@@ -138,8 +138,8 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
 
     if(auto bodiesSkeleton = frame->data_buffer(cam::DCDataBufferType::BodiesSkeleton)){
 
-        nbBodies = bodiesSkeleton->size();
-        if(jointsModels.size() < nbBodies){
+        nbBodies = bodiesSkeleton->size()/sizeof(cam::DCBody);
+        if(jointsModels.size() != nbBodies){
             jointsModels.resize(nbBodies);
         }
 
@@ -148,10 +148,15 @@ auto DCCloudDrawer::init_from_frame(std::shared_ptr<cam::DCFrame> frame) -> bool
         for(size_t ii = 0; ii < nbBodies; ++ii){
             for(size_t jj = 0; jj < btData[ii].skeleton.joints.size(); ++jj){
                 const auto &j = btData[ii].skeleton.joints[jj];
-                jointsModels[ii][jj] = std::make_tuple(j.good_confidence(),
+
+                auto e =euler_angles(j.orientation)*d180_PI<float>;
+                jointsModels[ii][jj] = std::make_tuple(j.confidence,
                     geo::transform(
                         {{1.f,1.f,1.f}},
-                        euler_angles(j.orientation)*d180_PI<float>,
+                        // {{-e.x(),-e.y(),e.z()}},
+                        // {{e.x(),e.z(),e.y()}},
+                        // {{e.z(),e.x(),e.y()}},
+                        {{-e.z(),-e.y(),e.x()}},
                         j.position*0.001f
                     )
                 );

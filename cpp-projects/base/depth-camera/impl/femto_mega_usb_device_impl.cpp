@@ -120,7 +120,7 @@ auto FemtoMegaUSBDeviceImpl::read_body_tracking(bool enable) -> void{
         fData.bodies        = std::get<1>(bodiesD);
     }else{
         fData.bodiesId = {};
-        fData.bodies        = {};
+        fData.bodies   = {};
     }
 }
 

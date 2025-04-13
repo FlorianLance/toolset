@@ -78,8 +78,8 @@ struct Matrix{
 
     [[nodiscard]] constexpr auto at(size_t pos)                               ->       acc& {return array.at(pos);}
     [[nodiscard]] constexpr auto at(size_t pos)               const           -> const acc& {return array.at(pos);}
-    [[nodiscard]] constexpr auto at(int row, int col)                         ->       acc& {return (*this)(row,col);}
-    [[nodiscard]] constexpr auto at(int row, int col)         const           -> const acc& {return (*this)(row,col);}
+    [[nodiscard]] constexpr auto at(int row, int col)                         ->       acc& {return at(row*_cols + col);}
+    [[nodiscard]] constexpr auto at(int row, int col)         const           -> const acc& {return at(row*_cols + col);}
 
 
     [[nodiscard]] constexpr auto row0() const noexcept -> RowVec<acc,_cols>{
@@ -110,7 +110,8 @@ struct Matrix{
         }
         ColVec<acc,_rows> c;
         for(int ii = 0; ii < _rows; ++ii){
-            c(ii) = at(ii, col);
+            // c(ii) = at(ii, col);
+            c(ii) = array[ii*_cols + col];
         }
         return c;
     }
@@ -199,11 +200,17 @@ struct Matrix{
         for(int ii = 0; ii < _rows; ++ii){
             for(int jj = 0; jj < _cols; ++jj){
                 if(ii == jj){
-                    if(!almost_equal(at(ii,jj), acc{1})){
+                    // if(!almost_equal(at(ii,jj), acc{1})){
+                    //     return false;
+                    // }
+                    if(!almost_equal((*this)(ii,jj), acc{1})){
                         return false;
                     }
                 }else{
-                    if(!almost_equal(at(ii,jj), acc{0})){
+                    // if(!almost_equal(at(ii,jj), acc{0})){
+                    //     return false;
+                    // }
+                    if(!almost_equal((*this)(ii,jj), acc{0})){
                         return false;
                     }
                 }
@@ -216,7 +223,7 @@ struct Matrix{
     constexpr auto conv() const noexcept -> Matrix<acc2, _rows, _cols>{
         Matrix<acc2, _rows, _cols> mc;
         for(int ii = 0; ii < _rows*_cols; ++ii){
-            mc(ii) = static_cast<acc2>(at(ii));
+            mc(ii) = static_cast<acc2>(array[ii]);
         }
         return mc;
     }
@@ -224,22 +231,37 @@ struct Matrix{
     constexpr auto multiply_point(const RowVec<acc,_cols> &pt) const noexcept -> RowVec<acc,_cols>{
 
         if constexpr(_cols == 2){
+            // return {{
+            //     pt.x() * at(0,0) + pt.y() * at(1,0),
+            //     pt.x() * at(0,1) + pt.y() * at(1,1)
+            // }};
             return {{
-                pt.x() * at(0,0) + pt.y() * at(1,0),
-                pt.x() * at(0,1) + pt.y() * at(1,1)
+                pt.x() * array[0] + pt.y() * array[2],
+                pt.x() * array[1] + pt.y() * array[3]
             }};
         } else if constexpr(_cols == 3){
+            // return {{
+            //     pt.x() * at(0,0) + pt.y() * at(1,0) + pt.z() * at(2,0) + at(3,0),
+            //     pt.x() * at(0,1) + pt.y() * at(1,1) + pt.z() * at(2,1) + at(3,1),
+            //     pt.x() * at(0,2) + pt.y() * at(1,2) + pt.z() * at(2,2) + at(3,2)
+            // }};
             return {{
-                pt.x() * at(0,0) + pt.y() * at(1,0) + pt.z() * at(2,0) + at(3,0),
-                pt.x() * at(0,1) + pt.y() * at(1,1) + pt.z() * at(2,1) + at(3,1),
-                pt.x() * at(0,2) + pt.y() * at(1,2) + pt.z() * at(2,2) + at(3,2)
+                pt.x() * array[0] + pt.y() * array[3] + pt.z() * array[6] + array[9],
+                pt.x() * array[1] + pt.y() * array[4] + pt.z() * array[7] + array[10],
+                pt.x() * array[2] + pt.y() * array[5] + pt.z() * array[8] + array[11]
             }};
         }else if constexpr(_cols == 4){
+            // return{{
+            //     pt.x() * at(0,0) + pt.y() * at(1,0) + pt.z() * at(2,0) + pt.w() * at(3,0),
+            //     pt.x() * at(0,1) + pt.y() * at(1,1) + pt.z() * at(2,1) + pt.w() * at(3,1),
+            //     pt.x() * at(0,2) + pt.y() * at(1,2) + pt.z() * at(2,2) + pt.w() * at(3,2),
+            //     pt.x() * at(0,3) + pt.y() * at(1,3) + pt.z() * at(2,3) + pt.w() * at(3,3)
+            // }};
             return{{
-                pt.x() * at(0,0) + pt.y() * at(1,0) + pt.z() * at(2,0) + pt.w() * at(3,0),
-                pt.x() * at(0,1) + pt.y() * at(1,1) + pt.z() * at(2,1) + pt.w() * at(3,1),
-                pt.x() * at(0,2) + pt.y() * at(1,2) + pt.z() * at(2,2) + pt.w() * at(3,2),
-                pt.x() * at(0,3) + pt.y() * at(1,3) + pt.z() * at(2,3) + pt.w() * at(3,3)
+                pt.x() * array[0] + pt.y() * array[4] + pt.z() * array[8]   + pt.w() * array[12],
+                pt.x() * array[1] + pt.y() * array[5] + pt.z() * array[9]   + pt.w() * array[13],
+                pt.x() * array[2] + pt.y() * array[6] + pt.z() * array[10]  + pt.w() * array[14],
+                pt.x() * array[3] + pt.y() * array[7] + pt.z() * array[11]  + pt.w() * array[15]
             }};
         }else{
             static_assert("Not implemented.");
@@ -248,22 +270,38 @@ struct Matrix{
 
     constexpr auto multiply_vector(const RowVec<acc,_cols> &vec) const noexcept -> RowVec<acc,_cols>{
         if constexpr(_cols == 2){
+            // return {{
+            //     dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1)}})
+            // }};
             return {{
-                dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1)}})
+                dot(vec, RowVec<acc,_cols>{{array[0], array[2]}}),
+                dot(vec, RowVec<acc,_cols>{{array[1], array[3]}})
             }};
+
         } else if constexpr(_cols == 3){
+            // return {{
+            //     dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0), at(2,0)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1), at(2,1)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,2), at(1,2), at(2,2)}})
+            // }};
             return {{
-                dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0), at(2,0)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1), at(2,1)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,2), at(1,2), at(2,2)}})
+                dot(vec, RowVec<acc,_cols>{{array[0], array[3], array[6]}}),
+                dot(vec, RowVec<acc,_cols>{{array[1], array[4], array[7]}}),
+                dot(vec, RowVec<acc,_cols>{{array[2], array[5], array[8]}})
             }};
         }else if constexpr(_cols == 4){
+            // return {{
+            //     dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0), at(2,0), at(3,0)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1), at(2,1), at(3,1)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,2), at(1,2), at(2,2), at(3,2)}}),
+            //     dot(vec, RowVec<acc,_cols>{{at(0,3), at(1,3), at(2,3), at(3,3)}})
+            // }};
             return {{
-                dot(vec, RowVec<acc,_cols>{{at(0,0), at(1,0), at(2,0), at(3,0)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,1), at(1,1), at(2,1), at(3,1)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,2), at(1,2), at(2,2), at(3,2)}}),
-                dot(vec, RowVec<acc,_cols>{{at(0,3), at(1,3), at(2,3), at(3,3)}})
+                dot(vec, RowVec<acc,_cols>{{array[0], array[4], array[8],  array[12]}}),
+                dot(vec, RowVec<acc,_cols>{{array[1], array[5], array[9],  array[13]}}),
+                dot(vec, RowVec<acc,_cols>{{array[2], array[6], array[10], array[14]}}),
+                dot(vec, RowVec<acc,_cols>{{array[3], array[7], array[11], array[15]}})
             }};
         }else{
             static_assert("Not implemented.");
@@ -304,7 +342,7 @@ struct Matrix{
         return (*this) = (*this)/v;
     }
 
-    [[nodiscard]] auto span()       noexcept -> std::span<acc>      {return array;}
+    [[nodiscard]] auto span()       noexcept -> std::span<acc>       {return array;}
     [[nodiscard]] auto cspan() const noexcept -> std::span<const acc>{return array;}
 
     std::array<acc, _rows*_cols> array = {};
@@ -406,7 +444,7 @@ template <typename acc, int _rows, int _cols>
 constexpr auto transpose(const Matrix<acc,_rows,_cols> &m) noexcept -> Matrix<acc,_cols,_rows> {
     Matrix<acc,_cols,_rows> dest;
     for(int ii = 0; ii < _rows*_cols; ++ii){
-        dest.array[ii] = m.array[_rows*(ii % _rows) + (ii / _rows)];
+        dest(ii) = m(_rows*(ii % _rows) + (ii / _rows));
     }
     return dest;
 }

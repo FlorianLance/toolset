@@ -90,28 +90,37 @@ constexpr auto operator*(const Point3<acc> &l, const Point3<acc> &r) noexcept ->
 }
 
 template <typename acc>
-constexpr auto dot(const Point3<acc> &l, const Point3<acc> &r) noexcept -> acc {
+[[nodiscard]] constexpr auto dot(const Point3<acc> &l, const Point3<acc> &r) noexcept -> acc {
     return l[0]*r[0] + l[1]*r[1] + l[2]*r[2];
 }
 
 template <typename acc>
-constexpr auto square_norm(const Point3<acc> &p) noexcept -> acc {
+[[nodiscard]] constexpr auto square_norm(const Point3<acc> &p) noexcept -> acc {
     return dot(p,p);
 }
 
 template <typename acc>
-constexpr auto norm(const Point3<acc> &p) noexcept -> acc {
+[[nodiscard]] constexpr auto norm(const Point3<acc> &p) noexcept -> acc {
     return sqrt(dot(p,p));
 }
 
 template <typename acc>
-constexpr auto cross(const RowVec<acc,3> &l, const RowVec<acc,3> &r) noexcept -> RowVec<acc,3>{
+[[nodiscard]] constexpr auto cross(const RowVec<acc,3> &l, const RowVec<acc,3> &r) noexcept -> RowVec<acc,3>{
     static_assert(std::numeric_limits<acc>::is_iec559, "'cross' accepts only floating-point inputs");
     return {{
         l.y() * r.z() - l.z() * r.y(),
         l.z() * r.x() - l.x() * r.z(),
         l.x() * r.y() - l.y() * r.x()
     }};
+}
+
+template <typename acc>
+[[nodiscard]] constexpr auto invert_axis(const Point3<acc> &p, bool x, bool y, bool z) noexcept -> Point3<acc>{
+    return{
+        x ? (-p.x()) : (p.x()),
+        y ? (-p.y()) : (p.y()),
+        z ? (-p.z()) : (p.z())
+    };
 }
 
 };

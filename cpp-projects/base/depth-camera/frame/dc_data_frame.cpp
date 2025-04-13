@@ -30,7 +30,7 @@
 #include <k4a/k4atypes.h>
 
 // orbbec
-#include <libobsensor/hpp/Types.hpp>
+// #include <libobsensor/hpp/Types.hpp>
 
 // local
 #include "utility/io_data.hpp"

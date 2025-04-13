@@ -952,7 +952,12 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
         if(ImGui::Checkbox("bodies id###stor_bodies_id", &rSettings.dataFrameGenS.addBodiesId)){
             update = true;
         }
-        // ImGui::SameLine();
+        ImGui::SameLine();
+
+        if(ImGui::Checkbox("bodies skeleton###stor_bodies_skeleton", &rSettings.dataFrameGenS.addBodiesSkeleton)){
+            update = true;
+        }
+
         // ImGui::BeginDisabled(!rSettings.dataFrameGenS.addBodiesId);
         // compress = rSettings.dataFrameGenS.bodiesIdCM == cam::DCCompressionMode::JPEG;
         // if(ImGui::Checkbox("compress###stor_bodies_id_comp", &compress)){
@@ -1000,6 +1005,10 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("bodies id###gen_recorder_body_id_map_image", &rSettings.frameGenS.bodiesIdImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies skeleton###gen_recorder_body_skeleton", &rSettings.frameGenS.bodiesSkeleton)){
             update = true;
         }
 
@@ -1154,6 +1163,11 @@ auto DCUIDrawer::draw_dc_player_tab_item(
         if(ImGui::Checkbox("bodies id###gen_player_body_id_map_image", &pSettings.generation.bodiesIdImage)){
             update = true;
         }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies skeleton###gen_player_body_skeleton", &pSettings.generation.bodiesSkeleton)){
+            update = true;
+        }
+
 
         ImGui::Unindent();
     }
@@ -1945,7 +1959,7 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
             if(ImGui::Checkbox("bodies id###send_com_bodies_id", &data.server.sending.addBodiesId)){
                 update = true;
             }
-            // ImGui::SameLine();
+            ImGui::SameLine();
             // ImGui::BeginDisabled(!data.server.sending.addBodiesId);
             // compress = data.server.sending.bodiesIdCM == cam::DCCompressionMode::JPEG;
             // if(ImGui::Checkbox("compress###send_comp_bodies_id_map", &compress)){
@@ -2001,6 +2015,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         if(ImGui::Checkbox("bodies id###gen_server_body_id_map_image", &data.server.generation.bodiesIdImage)){
             update = true;
         }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies skeleton###gen_server_body_skeleton", &data.server.generation.bodiesSkeleton)){
+            update = true;
+        }
 
         ImGui::Unindent();
     }
@@ -2046,6 +2064,10 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
         }
         ImGui::SameLine();
         if(ImGui::Checkbox("bodies id###gen_client_body_id_map_image", &data. clientGeneration.bodiesIdImage)){
+            update = true;
+        }
+        ImGui::SameLine();
+        if(ImGui::Checkbox("bodies skeleton###gen_client_body_skeleton", &data. clientGeneration.bodiesSkeleton)){
             update = true;
         }
 

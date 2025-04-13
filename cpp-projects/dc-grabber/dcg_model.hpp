@@ -36,7 +36,7 @@ namespace tool {
 
 struct DCGUiSettings{
     // runtime
-    bool focusWindow = false;
+    bool focusWindow = true;
     int currentWindow = 3;
 };
 

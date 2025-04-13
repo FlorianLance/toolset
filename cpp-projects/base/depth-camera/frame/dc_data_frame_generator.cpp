@@ -163,6 +163,12 @@ auto DCDataFrameGenerator::generate(const DCDataFrameGenerationSettings &dfgS, D
             dFrame->insert_image_buffer(DCImageBufferType::BodiesIdMap8, DCCompressionMode::None, iBuffer->width, iBuffer->height, 1, iBuffer->byte_span());
         }
     }
+
+    if(dfgS.addBodiesSkeleton){
+        if(auto iBuffer = frame.data_buffer(DCDataBufferType::BodiesSkeleton)){
+            dFrame->insert_data_buffer(DCDataBufferType::BodiesSkeleton, DCCompressionMode::None, iBuffer->byte_span());
+        }
+    }
 }
 
 

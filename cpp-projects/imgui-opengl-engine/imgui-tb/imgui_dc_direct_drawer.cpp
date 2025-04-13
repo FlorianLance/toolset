@@ -138,14 +138,17 @@ auto DCDirectDrawer::draw(bool focus) -> void{
 
         // all
         if ((m_allTabOpened = ImGuiUiDrawer::begin_tab_item("All###display_direct_all_tabitem"))){
+            display.drawOnlyCloudId  = -1;
             draw_all_clouds_drawers_in_one_tab();
             ImGui::EndTabItem();
         }
 
         // per client
+        int previousCloudIdDisplayed = display.drawOnlyCloudId;
         for(size_t ii = 0; ii < cloudsD.size(); ++ii){
             if (ImGuiUiDrawer::begin_tab_item(std::format("[{}]###display_direct_per_client_tabitem_{}", ii, ii).c_str())){
                 m_currentTabOpened = ii;
+                display.drawOnlyCloudId  = ii;
                 draw_cloud_drawer_tab(ii, focus, "display_direct"sv);
                 ImGui::EndTabItem();
             }

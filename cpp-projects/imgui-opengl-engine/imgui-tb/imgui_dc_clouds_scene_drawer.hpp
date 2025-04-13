@@ -108,6 +108,9 @@ struct DCCloudsSceneDrawer{
     // settings
     cam::DCSceneDisplaySettings display;
 
+
+    gl::LineDrawer2 raycastD;
+
 private:
 
     bool m_redrawClouds = false;

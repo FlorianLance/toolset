@@ -62,6 +62,7 @@ struct FemtoBaseDevice{
     auto read_infra_image() -> std::span<std::uint16_t>;
     auto read_body_tracking()      -> std::tuple<std::span<uint8_t>, std::span<DCBody>>;
     auto read_from_imu()    -> BinarySpan;
+    auto release_frame() -> void;
 
     // process data
     auto resize_color_image_to_depth_size(const DCModeInfos &mInfos, std::span<ColorRGBA8> colorData, std::span<std::uint16_t> depthData) -> std::span<ColorRGBA8>;

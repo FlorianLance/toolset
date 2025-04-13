@@ -127,6 +127,7 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
 
             if (ImGui::BeginMenu("Save")){
                 if(ImGui::MenuItem("PC Host client JSON file###save_host_file")){
+                    Log::fmessage("SAVE PC Host client JSON file\n");
                     m_currentAction.update(SAction::Save, STarget::Irrelevant, SType::Global, SFile::Normal);
                 }
                 if(ImGui::MenuItem("Specific client JSON file###save_specific_global_file")){
@@ -436,14 +437,17 @@ auto DCMMainWindowDrawer::draw_menu() -> void{
 
     if(m_currentAction.hasPath && m_currentAction.valid){
         if (ImGuiFileDialog::Instance()->Display("GetJSONPath", flags,  ImVec2(500,200))) {
+            Log::fmessage("CURRENT ACTION GetJSONPath\n");
             if (ImGuiFileDialog::Instance()->IsOk()){
                 m_currentAction.path = ImGuiFileDialog::Instance()->GetFilePathName();
                 DCMSignals::get()->process_settings_action_signal(m_currentAction);
                 m_currentAction.valid = false;
+                Log::fmessage("ACTION PATH {}\n", m_currentAction.path);
             }
             ImGuiFileDialog::Instance()->Close();
         }
     }else if(m_currentAction.valid){
+        Log::fmessage("VALID ACTION\n");
         DCMSignals::get()->process_settings_action_signal(m_currentAction);
         m_currentAction.valid = false;
     }

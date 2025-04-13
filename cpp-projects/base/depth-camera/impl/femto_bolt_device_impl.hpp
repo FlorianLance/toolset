@@ -59,6 +59,7 @@ private:
     // auto read_audio(bool enable) -> void override final {/** NO AUDIO SENSOR */}
     auto read_IMU(bool enable) -> void override final;
     auto read_body_tracking(bool enable) -> void override final;
+    auto release_frame()-> void override final;
 
     // process data
     auto resize_images() -> void override final;

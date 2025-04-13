@@ -590,7 +590,7 @@ DCDeviceImpl::DCDeviceImpl(){
 
                 auto sendDataFrameT = processDataSubflow.emplace([&](){
                     auto tSCF = TimeDiffGuard(timeM, "SEND_DATA_FRAME"sv);
-                    if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                    if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.misc.delayMs)){
                         dFrame =dataFrameToSend;
                         new_data_frame_signal(std::move(dataFrameToSend));
                     }
@@ -614,7 +614,7 @@ DCDeviceImpl::DCDeviceImpl(){
 
                 auto sendFrameT = processDataSubflow.emplace([&](){
                     auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
-                    if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+                    if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.misc.delayMs)){
                         frame = frameToSend;
                         new_frame_signal(std::move(frameToSend));
                     }
@@ -1109,7 +1109,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     p1             = settings.filters.p1A*1000.f;
     p2             = settings.filters.p1B*1000.f;
     p3             = settings.filters.p1C*1000.f;
-    meanPt    = (p1+p2+p3)/3.f;
+    meanPt         = (p1+p2+p3)/3.f;
     AB             = vec(p2,p1);
     AC             = vec(p3,p1);
     normalV        = cross(AB,AC);
@@ -1133,7 +1133,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
         }
 
         if(settings.filters.p1FMode != PlaneFilteringMode::None){
-            if(dot(normalV,vec(meanPt, fData.depthCloud[idD].template conv<float>())) < 0){
+            if(dot(normalV,vec(meanPt, fData.depthCloud[idD].template conv<float>())) > 0){
                 if(settings.filters.p1FMode == PlaneFilteringMode::Above){
                     fData.depthMask[idD] = 0;
                     return;
@@ -1510,7 +1510,7 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
         auto volumeB = frame->insert_volume_buffer(DCVolumeBufferType::ColoredCloud, geo::ColorCloud{});
         volumeB->vertices.resize(fData.validDepthValues);
         volumeB->colors.resize(fData.validDepthValues);
-        volumeB->normals.resize(fData.validDepthValues);
+        // volumeB->normals.resize(fData.validDepthValues);
 
         bool addColors = !fData.depthSizedColor.empty() && settings.data.generation.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
         const auto dRange = mInfos.depth_range_mm();
@@ -1533,7 +1533,9 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
             auto idV = std::get<1>(idC);
 
             Pt3f currentP = fData.depthCloud[idD].template conv<float>();
-            volumeB->vertices[idV] = currentP * 0.001f;
+            volumeB->vertices[idV]     = currentP * 0.001f;
+            volumeB->vertices[idV].x() = volumeB->vertices[idV].x();
+            volumeB->vertices[idV].y() = volumeB->vertices[idV].y();
 
             if(addColors){
                 volumeB->colors[idV] = (fData.depthSizedColor[idD].template conv<float>()/255.f).xyz();
@@ -1553,16 +1555,16 @@ auto DCDeviceImpl::update_frame_cloud() -> void{
             // 0 1 2
             // 3 X 4
             // 5 6 7
-            const auto &idN  = dIndices.neighbours8Depth1D[idD];
-            float cD = fData.depth[idD];
-            float dB = (idN[1] != -1) ? ((fData.depth[idN[1]] != dc_invalid_depth_value) ? fData.depth[idN[1]] : cD) : cD;
-            float dD = (idN[3] != -1) ? ((fData.depth[idN[3]] != dc_invalid_depth_value) ? fData.depth[idN[3]] : cD) : cD;
-            float dE = (idN[4] != -1) ? ((fData.depth[idN[4]] != dc_invalid_depth_value) ? fData.depth[idN[4]] : cD) : cD;
-            float dG = (idN[6] != -1) ? ((fData.depth[idN[6]] != dc_invalid_depth_value) ? fData.depth[idN[6]] : cD) : cD;
+            // const auto &idN  = dIndices.neighbours8Depth1D[idD];
+            // float cD = fData.depth[idD];
+            // float dB = (idN[1] != -1) ? ((fData.depth[idN[1]] != dc_invalid_depth_value) ? fData.depth[idN[1]] : cD) : cD;
+            // float dD = (idN[3] != -1) ? ((fData.depth[idN[3]] != dc_invalid_depth_value) ? fData.depth[idN[3]] : cD) : cD;
+            // float dE = (idN[4] != -1) ? ((fData.depth[idN[4]] != dc_invalid_depth_value) ? fData.depth[idN[4]] : cD) : cD;
+            // float dG = (idN[6] != -1) ? ((fData.depth[idN[6]] != dc_invalid_depth_value) ? fData.depth[idN[6]] : cD) : cD;
 
-            auto hV = normalize(Vec3f(dE-dD,0,-2));
-            auto vV = normalize(Vec3f(0,dG-dB,-2));
-            volumeB->normals[idV] = normalize(hV+vV);
+            // auto hV = normalize(Vec3f(dE-dD,0,-2));
+            // auto vV = normalize(Vec3f(0,dG-dB,-2));
+            // volumeB->normals[idV] = normalize(hV+vV);
         });
     }
 }
@@ -1592,35 +1594,36 @@ auto DCDeviceImpl::update_frame_body_tracking() -> void{
     }
 
     // bodies id map
-    if(fData.bodiesId.empty() || (fData.bodiesId.size() != fData.depth.size())){
-        return;
+    if(!fData.bodiesId.empty()){// && (fData.bodiesId.size() == fData.depth.size())){
+
+        if(settings.data.generation.bodiesIdImage){
+
+            static constexpr std::array<ColorRGB8,10> bodiesColor ={
+                ColorRGB8
+                {255,0,0},
+                {0,255,0},
+                {0,0,255},
+                {255,255,0},
+                {255,0,255},
+                {0,255,255},
+                {122,122,0},
+                {122,0,122},
+                {0,122,122},
+                {255,255,255}
+            };
+
+            frame->insert_image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8, mInfos.depth_width(), mInfos.depth_height(), fData.bodiesId);
+
+            auto rgbIBSpan = frame->insert_image_buffer<ColorRGB8>(DCImageBufferType::BodiesIdMapRGB8, mInfos.depth_width(), mInfos.depth_height(), ColorRGB8(0,0,0));
+            std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
+                if(fData.bodiesId[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
+                    rgbIBSpan[id] = bodiesColor[fData.bodiesId[id]%10];
+                }
+            });
+        }
     }
 
-    frame->insert_image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8, mInfos.depth_width(), mInfos.depth_height(), fData.bodiesId);
 
-    if(settings.data.generation.bodiesIdImage){
-
-        static constexpr std::array<ColorRGB8,10> bodiesColor ={
-            ColorRGB8
-            {255,0,0},
-            {0,255,0},
-            {0,0,255},
-            {255,255,0},
-            {255,0,255},
-            {0,255,255},
-            {122,122,0},
-            {122,0,122},
-            {0,122,122},
-            {255,255,255}
-        };
-
-        auto rgbIBSpan = frame->insert_image_buffer<ColorRGB8>(DCImageBufferType::BodiesIdMapRGB8, mInfos.depth_width(), mInfos.depth_height(), ColorRGB8(0,0,0));
-        std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
-            if(fData.bodiesId[id] != 255){ // K4ABT_BODY_INDEX_MAP_BACKGROUND
-                rgbIBSpan[id] = bodiesColor[fData.bodiesId[id]%10];
-            }
-        });
-    }
 }
 
 auto DCDeviceImpl::update_frame_calibration() -> void{
@@ -1792,33 +1795,10 @@ auto DCDeviceImpl::update_data_frame_body_tracking() -> void{
     // bodies id map
     if(!fData.bodiesId.empty() && settings.data.sending.addBodiesId){
 
-        // if(settings.data.sending.bodiesIdCM == DCCompressionMode::JPEG){
-
-        //     if(auto imageB = dFrame->insert_image_buffer(DCImageBufferType::BodiesIdMap8, DCCompressionMode::JPEG)){
-        //         if(!jpegBodiesIdEncoder.encode(
-        //                 mInfos.depth_width(),
-        //                 mInfos.depth_height(),
-        //                 fData.bodiesIdMap,
-        //                 *imageB,
-        //                 settings.data.sending.depthSizedColorJPEGCQ
-        //             )){
-        //             dFrame->imagesB.erase(DCImageBufferType::BodiesIdMap8);
-        //         }
-        //     }
-
-        // }else if(settings.data.sending.depthSizedColorCM == DCCompressionMode::None){
-
-
-
-            dFrame->insert_image_buffer(DCImageBufferType::BodiesIdMap8, DCCompressionMode::None,
-                mInfos.depth_width(), mInfos.depth_height(), 1,
-                std::span<std::byte>(reinterpret_cast<std::byte*>(fData.bodiesId.data()), fData.bodiesId.size_bytes()));
-
-        // Log::message(std::format("body data size {}\n", dFrame->image_buffer(DCImageBufferType::BodiesIdMap8)->size()));
-        // }
+        dFrame->insert_image_buffer(DCImageBufferType::BodiesIdMap8, DCCompressionMode::None,
+            mInfos.depth_width(), mInfos.depth_height(), 1,
+            std::span<std::byte>(reinterpret_cast<std::byte*>(fData.bodiesId.data()), fData.bodiesId.size_bytes()));
     }
-
-
 }
 
 
@@ -2306,9 +2286,9 @@ auto DCDeviceImpl::set_color_settings(const DCColorSettings &colorS) -> void{
     settings.color = colorS;
 }
 
-auto DCDeviceImpl::set_delay_settings(const DCMiscSettings &delayS) -> void{
+auto DCDeviceImpl::set_misc_settings(const DCMiscSettings &miscS) -> void{
     auto lg = LogG("DCDeviceImpl::set_delay_settings"sv);
-    settings.delay = delayS;
+    settings.misc = miscS;
 }
 
 auto DCDeviceImpl::get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>{
@@ -2387,6 +2367,7 @@ auto DCDeviceImpl::read_frame() -> bool{
         read_IMU(settings.data.capture.imu);
     }
 
+    release_frame();
 
     dataIsValid = check_data_validity();
     return dataIsValid;
@@ -2482,7 +2463,7 @@ auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::s
 
         {
             auto tSCF = TimeDiffGuard(timeM, "SEND_DATA_FRAME"sv);
-            if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+            if(auto dataFrameToSend = frames.get_data_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.misc.delayMs)){
                 dFrame =dataFrameToSend;
                 new_data_frame_signal(std::move(dataFrameToSend));
             }
@@ -2535,7 +2516,7 @@ auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::s
 
         {
             auto tSF = TimeDiffGuard(timeM, "SEND_FRAME"sv);
-            if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.delay.delayMs)){
+            if(auto frameToSend = frames.take_frame_with_delay(timeM.get_end("CAPTURE_FRAME"sv), settings.misc.delayMs)){
                 frame = frameToSend;
                 new_frame_signal(std::move(frameToSend));
             }

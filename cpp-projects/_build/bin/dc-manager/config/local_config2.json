@@ -92,8 +92,8 @@
                     ]
                 },
                 "color": {
-                    "auto_exposure_time": true,
-                    "auto_white_balance": true,
+                    "auto_exposure_time": false,
+                    "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
                         "type_string": "color",
@@ -102,12 +102,12 @@
                     "brightness": 128,
                     "contrast": 5,
                     "exposure_time": 33330,
-                    "gain": 65,
+                    "gain": 107,
                     "hdr": true,
                     "powerline_frequency": 1,
-                    "saturation": 32,
+                    "saturation": 20,
                     "sharpness": 4,
-                    "white_balance": 4200
+                    "white_balance": 4630
                 },
                 "connection": {
                     "base": {
@@ -185,7 +185,7 @@
                             "bodies_skeleton": false,
                             "cloud": true,
                             "cloud_color_mode": 1,
-                            "color_image": false,
+                            "color_image": true,
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "infra_image": false
@@ -249,7 +249,7 @@
                     "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
                     "max_depth_f": 1.0,
                     "max_diff_color": [
@@ -258,12 +258,12 @@
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 1.0,
+                    "max_height_f": 0.8949999809265137,
                     "max_local_diff": 15.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.0,
+                    "min_height_f": 0.04600000008940697,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
@@ -412,22 +412,22 @@
                     ]
                 },
                 "color": {
-                    "auto_exposure_time": true,
-                    "auto_white_balance": true,
+                    "auto_exposure_time": false,
+                    "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
                         "type_string": "color",
                         "version": 1
                     },
-                    "brightness": 128,
+                    "brightness": 137,
                     "contrast": 5,
                     "exposure_time": 33330,
-                    "gain": 109,
+                    "gain": 115,
                     "hdr": true,
                     "powerline_frequency": 1,
-                    "saturation": 32,
-                    "sharpness": 4,
-                    "white_balance": 4200
+                    "saturation": 20,
+                    "sharpness": 2,
+                    "white_balance": 4670
                 },
                 "connection": {
                     "base": {
@@ -457,7 +457,7 @@
                         ],
                         "color_alignment_tr": [
                             -6.0,
-                            0.0,
+                            3.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
@@ -505,7 +505,7 @@
                             "bodies_skeleton": false,
                             "cloud": true,
                             "cloud_color_mode": 1,
-                            "color_image": false,
+                            "color_image": true,
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "infra_image": false
@@ -571,19 +571,19 @@
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": true,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.44200000166893005,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 1.0,
+                    "max_height_f": 0.9649999737739563,
                     "max_local_diff": 15.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.0,
+                    "min_height_f": 0.07000000029802322,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
@@ -776,8 +776,8 @@
                             0.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
-                            0.0,
+                            -4.0,
+                            2.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
@@ -825,7 +825,7 @@
                             "bodies_skeleton": false,
                             "cloud": true,
                             "cloud_color_mode": 1,
-                            "color_image": false,
+                            "color_image": true,
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "infra_image": false
@@ -872,8 +872,8 @@
                         "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
+                    "do_erosion": false,
+                    "do_local_diff_filtering": false,
                     "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
                     "erosion_loops": 3,
@@ -883,27 +883,27 @@
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
+                    "filter_depth_with_cloud": false,
                     "filter_depth_with_color": false,
                     "filter_depth_with_infra": false,
                     "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
+                    "max_depth_f": 0.8600000143051147,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 1.0,
+                    "max_height_f": 0.8949999809265137,
                     "max_local_diff": 15.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.0,
+                    "min_height_f": 0.07000000029802322,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
@@ -945,21 +945,21 @@
                         "version": 1
                     },
                     "transformation": [
-                        0.9988309144973755,
-                        -0.01559970062226057,
-                        -0.04575406759977341,
+                        1.0,
                         0.0,
-                        -0.020445963367819786,
-                        -0.994001030921936,
-                        -0.10744278132915497,
                         0.0,
-                        -0.043803513050079346,
-                        0.10825265198945999,
-                        -0.9931578636169434,
                         0.0,
-                        0.13475017249584198,
-                        -0.5959631204605103,
-                        2.4000494480133057,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }
@@ -1052,7 +1052,7 @@
                     ]
                 },
                 "color": {
-                    "auto_exposure_time": false,
+                    "auto_exposure_time": true,
                     "auto_white_balance": false,
                     "backlight_compensation": false,
                     "base": {
@@ -1062,12 +1062,12 @@
                     "brightness": 128,
                     "contrast": 5,
                     "exposure_time": 33330,
-                    "gain": 120,
+                    "gain": 128,
                     "hdr": true,
                     "powerline_frequency": 1,
                     "saturation": 32,
-                    "sharpness": 4,
-                    "white_balance": 4200
+                    "sharpness": 2,
+                    "white_balance": 4500
                 },
                 "connection": {
                     "base": {
@@ -1096,8 +1096,8 @@
                             0.0
                         ],
                         "color_alignment_tr": [
-                            0.0,
-                            0.0,
+                            -1.0,
+                            -4.0,
                             0.0
                         ],
                         "delay_between_color_and_depth_usec": 0,
@@ -1145,7 +1145,7 @@
                             "bodies_skeleton": false,
                             "cloud": true,
                             "cloud_color_mode": 1,
-                            "color_image": false,
+                            "color_image": true,
                             "depth_image": false,
                             "depth_sized_color_image": true,
                             "infra_image": false
@@ -1192,8 +1192,8 @@
                         "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
+                    "do_erosion": false,
+                    "do_local_diff_filtering": false,
                     "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
                     "erosion_loops": 3,
@@ -1203,27 +1203,27 @@
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
+                    "filter_depth_with_cloud": false,
                     "filter_depth_with_color": false,
                     "filter_depth_with_infra": false,
                     "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
+                    "max_depth_f": 0.8840000033378601,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 1.0,
+                    "max_height_f": 0.9070000052452087,
                     "max_local_diff": 15.0,
                     "max_sphere_distance": 1000.0,
                     "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.0,
+                    "min_height_f": 0.07000000029802322,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
                     "min_widht_f": 0.0,
@@ -1265,21 +1265,21 @@
                         "version": 1
                     },
                     "transformation": [
-                        0.9945172071456909,
-                        -0.07785018533468246,
-                        -0.06982079148292542,
+                        1.0,
                         0.0,
-                        0.053867779672145844,
-                        -0.19089388847351074,
-                        0.9801315069198608,
                         0.0,
-                        -0.08963178098201752,
-                        -0.9785186648368835,
-                        -0.18565364181995392,
                         0.0,
-                        0.07357996702194214,
-                        0.9287254810333252,
-                        1.5127580165863037,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }

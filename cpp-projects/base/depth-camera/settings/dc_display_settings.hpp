@@ -45,7 +45,7 @@ struct DCDeviceDisplaySettings{
     bool showCapture = true;
     bool showCameraFrustum = true;
     bool showFilteringGizmos = true;
-    bool showBodyTracking = false;
+    bool showBodyTracking = true;
 
     // colors
     bool forceColor = false;

@@ -217,16 +217,24 @@ auto DCMModel::update() -> void{
     calibrator.update();
     player.update();
     recorder.update();
+
+    for(size_t idC = 0; idC < client.settings.devicesS.size(); ++idC){
+        if(client.settings.devicesS[idC].colorS.update_auto_calibration(client.settings.devicesS[idC].deviceS.configS.typeDevice)){
+            DCMSignals::get()->update_color_settings_signal(idC, client.settings.devicesS[idC].colorS);
+        }
+    }
+
 }
 
 auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
 
+    Log::fmessage("process_settings_action {} {}\n", (int)sAction.action, (int)sAction.file);
     std::string path;
 
     if(sAction.action == SAction::Save){
 
         if(sAction.type == SType::Global){
-            if(sAction.file == SFile::Normal){
+            if(sAction.file == SFile::Normal){                
                 path = DCSettingsPaths::get()->client.string();
             }else if(sAction.file == SFile::Default){
                 path = DCSettingsPaths::get()->defaultClient.string();
@@ -234,6 +242,8 @@ auto DCMModel::process_settings_action(SettingsAction sAction) -> void{
                 path = sAction.path;
             }
         }
+
+        Log::fmessage("PROCESS PATH {}\n", path);
 
         if(!path.empty()){
             client.settings.save_to_json_str_file(path);

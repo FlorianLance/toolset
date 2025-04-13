@@ -31,11 +31,11 @@ using namespace tool::cam;
 
 auto DCDeviceData::reset_spans() -> void{
     rawColor            = {};
-    originalSizeColor               = {};
+    originalSizeColor   = {};
     depthSizedColor     = {};
     depth               = {};
     infra               = {};
-    bodiesId         = {};
+    bodiesId            = {};
     depthCloud          = {};    
     binaryIMU           = {};
     audioChannels       = {0,{}};

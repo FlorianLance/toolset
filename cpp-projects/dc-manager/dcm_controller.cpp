@@ -31,6 +31,8 @@
 
 // base
 #include "utility/logger.hpp"
+#include "thirdparty/ColorSpace/Comparison.h"
+
 
 // local
 #include "dcm_signals.hpp"
@@ -158,6 +160,15 @@ auto DCMController::set_connections() -> void{
     s->save_current_cloud_signal.connect(                   &DCDirectDrawer::save_current_cloud,                directD);
     directD->mouse_released_color_signal.connect(            &DCMView::update_selected_color,                    view.get());
     directD->mouse_released_depth_sized_color_signal.connect(&DCMView::update_selected_color,                    view.get());
+    directD->mouse_released_color_signal.connect( [&](size_t idD, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, ColorRGBA8 colors){
+        auto &colorS = model->client.settings.devicesS[idD].colorS;
+        if(colorS.currentColorCheckedId != -1){
+            std::get<0>(colorS.checkerPositions[colorS.currentColorCheckedId]) = coordsR;
+            Log::fmessage("click {} {} {}\n", idD, coordsR.x(), coordsR.y());
+            colorS.currentColorCheckedId = -1;
+            DCMSignals::get()->update_color_settings_signal(idD, colorS);
+        }
+    });
 
     // # settings
     // ## client
@@ -185,6 +196,7 @@ auto DCMController::set_connections() -> void{
     s->update_filters_settings_ui_only_signal.connect(      &DCDirectDrawer::update_filters_settings,           directD);
     s->update_scene_display_settings_signal.connect(        &DCDirectDrawer::update_scene_display_settings,     directD);
     s->update_cloud_display_settings_signal.connect(        &DCDirectDrawer::update_device_display_settings,    directD);
+    s->update_color_settings_signal.connect(                &DCDirectDrawer::update_color_settings,             directD);
     // ## calibration drawer
     s->update_model_settings_signal.connect(                &DCCalibratorDrawer::update_client_model,           calibratorD);
     s->update_model_settings_ui_only_signal.connect(        &DCCalibratorDrawer::update_client_model,           calibratorD);
@@ -216,6 +228,39 @@ auto DCMController::set_connections() -> void{
     client->new_frame_signal.connect(                       &DCDirectDrawer::update_frame,                      directD);
     // ## recorder drawer
     recorder->new_frame_signal.connect(                     &DCRecorderDrawer::set_frame,                       recorderD);
+
+    // pixels inspection
+    client->new_frame_signal.connect([&](size_t idD, std::shared_ptr<DCFrame> frame){
+
+        auto &colorS = model->client.settings.devicesS[idD].colorS;
+        if(frame == nullptr){
+            return;
+        }
+
+        if(auto image = frame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
+
+            double totalDiff = 0.0;
+
+            for(size_t idCP = 0; idCP < colorS.checkerPositions.size(); ++idCP){
+                const auto &rPos = std::get<0>(colorS.checkerPositions[idCP]);
+                if(rPos.x() < 0 || rPos.y() < 0){
+                    continue;
+                }
+                ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
+                cCol = image->get(rPos.x()*image->width, rPos.y()*image->height);
+                const ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
+
+                ColorSpace::Rgb a(cCol.r(), cCol.g(), cCol.b());
+                ColorSpace::Rgb b(colorCheckerC.r(), colorCheckerC.g(), colorCheckerC.b());
+
+                std::get<2>(colorS.checkerPositions[idCP]) = ColorSpace::Cie2000Comparison::Compare(&a, &b);
+                totalDiff += std::get<2>(colorS.checkerPositions[idCP]);
+            }
+
+            // store current computation
+            colorS.store_score(totalDiff);
+        }
+    });
 }
 
 auto DCMController::start() -> void{

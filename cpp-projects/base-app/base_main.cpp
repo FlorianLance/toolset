@@ -78,23 +78,25 @@ int main(int argc, char *argv[]){
     });
     Logger::set_logger_instance(std::move(logger));
 
-    cam::DCDevice dev;
-    // auto tf = dev.tf();
+    multi_devices_benchmark();
 
-    tf::Executor executor2(8);
-    
-    
-    executor2.run(*dev.read_frames_task()).wait();
+    // cam::DCDevice dev;
+    // // auto tf = dev.tf();
 
-    cam::DCDeviceSettings ds;
-    ds.configS.typeDevice = cam::DCType::AzureKinect;
-    ds.configS.openDevice = true;
-    ds.configS.startReading = true;
-    dev.update_device_settings(ds);
+    // tf::Executor executor2(8);
     
-    executor2.run(*dev.read_frames_task()).wait();
     
-    dev.read_frames_task()->dump(std::cout);
+    // executor2.run(*dev.read_frames_task()).wait();
+
+    // cam::DCDeviceSettings ds;
+    // ds.configS.typeDevice = cam::DCType::AzureKinect;
+    // ds.configS.openDevice = true;
+    // ds.configS.startReading = true;
+    // dev.update_device_settings(ds);
+    
+    // executor2.run(*dev.read_frames_task()).wait();
+    
+    // dev.read_frames_task()->dump(std::cout);
     return 0;
     // cam::DCClient client;
     // client.initialize("D:/DEV/Perso/toolset/cpp-projects/_build/bin/dc-manager/config/client_FLORIAN-PC_0.json", false);

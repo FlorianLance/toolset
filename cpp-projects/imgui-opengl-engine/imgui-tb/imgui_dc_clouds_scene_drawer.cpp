@@ -61,6 +61,19 @@ auto DCCloudsSceneDrawer::initialize(size_t nbDrawers) -> void {
     }else{
         cloudsD.resize(nbDrawers);
     }
+
+    raycastD.initialize(true);
+
+
+    fboD.raycast_signal.disconnect_all();
+    fboD.raycast_signal.connect([&](auto pt1, auto pt2){
+        std::array<geo::Pt3f,2> data;
+        data[0] = pt1.template conv<float>();
+        data[1] = pt2.template conv<float>();
+        // data[1] = camPos.template conv<float>() + raycast.template conv<float>()*10.f;
+        // data[1] = raycast.template conv<float>()*10.f;
+        raycastD.update(data);
+    });
 }
 
 auto DCCloudsSceneDrawer::reset() -> void{
@@ -88,7 +101,6 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo() -> void{
     fboD.reset_states();
     m_redrawClouds = false;
 }
-
 
 auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
@@ -118,6 +130,27 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             gridD.draw();
         }
     }
+
+    bool displayRaycast = true;
+    if(displayRaycast){
+        if(auto shader = solidShader){
+
+            shader->use();
+            // transforms
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
+            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
+            shader->set_uniform_matrix("model"sv, Mat4f::identity());
+            // colors
+            shader->set_uniform("enable_unicolor"sv, true);
+            shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f,1.f});
+            glLineWidth(3.f);
+            raycastD.draw();
+            glLineWidth(1.f);
+        }
+    }
+
+    // shader->set_uniform_matrix("model"sv,  cloudD->model);
+
 
     size_t idC = 0;
     for(auto &cloudD : cloudsD){
@@ -175,20 +208,35 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             // color
             shader->set_uniform("enable_unicolor"sv, true);
             shader->set_uniform("unicolor"sv, cloudD->display.unicolor);
-            if(cloudD->display.showCameraFrustum && cloudD->display.showCapture && m_displayFrustum){
+            if(cloudD->display.showCameraFrustum && m_displayFrustum){ // cloudD->display.showCapture &&
                 cloudD->frustumD.draw();
             }
 
             // body tracking
-            if(cloudD->display.showBodyTracking && cloudD->display.showCapture){
+            if(cloudD->display.showBodyTracking ){ // && cloudD->display.showCapture
                 for(size_t ii = 0; ii < cloudD->nbBodies; ++ii){
-                    shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
+
+                    if(ii >= cloudD->jointsModels.size()){
+                        break;
+                    }
+
                     for(size_t jj = 0; jj < cloudD->jointsModels[ii].size(); ++jj){
+
                         const auto &jm = cloudD->jointsModels[ii][jj];
-                        if(std::get<0>(jm)){
-                            shader->set_uniform_matrix("model"sv, std::get<1>(jm) * cloudD->model);
-                            cloudD->btJointD.draw();
+                        if(std::get<0>(jm) == DCJointConfidenceLevel::Hight){
+                            shader->set_uniform("unicolor"sv, Pt4f{0.f,1.f,0.f, 1.f});
+                        }else if(std::get<0>(jm) == DCJointConfidenceLevel::Medium){
+                            shader->set_uniform("unicolor"sv, Pt4f{0.5f,0.5f,0.f, 1.f});
+                        }else{
+                            continue;
                         }
+                        shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(0.3f,0.3f,0.3f), Pt3f{0.f,0.f,0.f}, Pt3f{0.f,0.f,0.f}) * std::get<1>(jm) * cloudD->model);
+                        shader->set_uniform("enable_unicolor"sv, false);
+                        cloudD->btJointDirD.draw();
+                        glLineWidth(3.f);
+                        shader->set_uniform("enable_unicolor"sv, true);
+                        cloudD->btJointCenterD.draw();
+                        glLineWidth(1.f);
                     }
                 }
             }
@@ -253,6 +301,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
             break;
         }
     }
+
 
     fboD.unbind();
 }
@@ -356,19 +405,45 @@ auto DCCloudsSceneDrawer::draw_bodies_id_map_texture_imgui_child(size_t idCloud,
 
 auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, const Pt2f &screenPos, const Pt2f &sizeTexture, std::optional<std::string> text) -> void {
 
+
     auto cD = cloudsD[idCloud].get();
 
     // draw
+    // auto cursorScreenPos = ImGui::GetCursorScreenPos();
+
     cD->colorD.draw_at_position(screenPos, sizeTexture, std::move(text));
+
+    // if(cD->colorS.displayColors){
+    //     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    //     Log::fmessage("di {} {}\n", idCloud, cD->colorS.checkerPositions.size());
+    //     for(size_t idChecker = 0; idChecker < cD->colorS.checkerPositions.size(); ++idChecker){
+    //         if(std::get<0>(cD->colorS.checkerPositions[idChecker]).x() >= 0 && std::get<0>(cD->colorS.checkerPositions[idChecker]).y() >= 0){
+    //             const auto &currC = std::get<0>(DCColorSettings::spyderChecker24Colors[idChecker]);
+
+    //             Log::fmessage("circle {} {}\n",
+    //                           cursorScreenPos.x + cD->colorD.scaledTextureSize.x()* std::get<0>(cD->colorS.checkerPositions[idChecker]).x(),
+    //                           cursorScreenPos.x + cD->colorD.scaledTextureSize.x()* std::get<0>(cD->colorS.checkerPositions[idChecker]).y());
+    //             draw_list->AddCircleFilled(
+    //                 ImVec2(
+    //                     cursorScreenPos.x + cD->colorD.scaledTextureSize.x()* std::get<0>(cD->colorS.checkerPositions[idChecker]).x(),
+    //                     cursorScreenPos.y + cD->colorD.scaledTextureSize.y()* std::get<0>(cD->colorS.checkerPositions[idChecker]).y()
+    //                     ),
+    //                 10.f, IM_COL32(currC.x(),currC.y(),currC.z(),255)
+    //                 );
+
+    //             draw_list->AddCircle(
+    //                 ImVec2(
+    //                     cursorScreenPos.x + cD->colorD.scaledTextureSize.x()* std::get<0>(cD->colorS.checkerPositions[idChecker]).x(),
+    //                     cursorScreenPos.y + cD->colorD.scaledTextureSize.y()* std::get<0>(cD->colorS.checkerPositions[idChecker]).y()
+    //                     ),
+    //                 10.f, IM_COL32(0,0,0,255), 0.f, 5.f
+    //             );
+    //         }
+    //     }
+    // }
 
     ImGui::SetCursorScreenPos(to_iv2(screenPos));
 
-    // ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    // for(size_t idChecker = 0; idChecker < cD->colorS.checkerPositions.size(); ++idChecker){
-    //     if(cD->colorS.checkerPositions[idChecker].x() >= 0 && cD->colorS.checkerPositions[idChecker].y() >= 0){
-    //         draw_list->AddCircle(ImVec2(screenPos.x() + cD->colorS.checkerPositions[idChecker].x(), screenPos.y() + cD->colorS.checkerPositions[idChecker].y()), 10.f, IM_COL32(255,0,0,255));
-    //     }
-    // }
 
     // check mouse inputs
     if(cD->lastFrame != nullptr){
@@ -384,7 +459,7 @@ auto DCCloudsSceneDrawer::draw_color_texture_imgui_at_position(size_t idCloud, c
                 }
             }
         }
-    }
+    }    
 }
 
 auto DCCloudsSceneDrawer::draw_depth_sized_color_texture_imgui_at_position(size_t idCloud, const geo::Pt2f &screenPos, const geo::Pt2f &sizeTexture, std::optional<std::string> text) -> void{
@@ -480,7 +555,6 @@ auto DCCloudsSceneDrawer::draw_bodies_id_map_texture_imgui_at_position(size_t id
 }
 
 auto DCCloudsSceneDrawer::draw_all_clouds_drawers_in_one_tab(bool drawImages, bool drawCloud, std::string_view cloudTabName) -> void{
-
 
     if(ImGuiUiDrawer::begin_tab_bar(&m_tabId, "Frames_all###direct_all_frames_tab_bar")){
 

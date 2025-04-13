@@ -155,6 +155,35 @@ auto Camera::update_projection() -> void{
     }
 }
 
+#include "utility/logger.hpp"
+
+auto Camera::screen_raycast(geo::Pt2<int> screenPos) -> geo::Vec3d{
+    Log::fmessage(" -> screen_raycast {} {} {} {}\n", screenPos.x(), screenPos.y(), m_screen->width(), m_screen->height());
+
+    // float x = 2.0f*(screenPos.x()/m_screen->width()) - 1.0f;
+    // float y = 1.0f - 2.0f*(screenPos.y()/m_screen->height());
+
+    float x = (2.0f * screenPos.x()) / m_screen->width() - 1.0f;
+    float y = 1.0f - (2.0f * screenPos.y()) / m_screen->height(); // Flip Y since pixel coords are inverted
+
+    // float x = (2.0f * screenPos.x()) / m_screen->width()- 1.0f;
+    // float y = 1.0f - (2.0f * screenPos.y()) / m_screen->height();
+    float z = 1.0f;
+    geo::Vec3f ray_nds = geo::Vec3f(x, y, z);
+    Log::fmessage(" -> ray_nds {} {} {}\n", ray_nds.x(), ray_nds.y(), ray_nds.z());
+
+    geo::Vec4f ray_clip = geo::Vec4f(ray_nds.x(),ray_nds.y(), -1.0, 1.0);
+    geo::Vec4d ray_eye = inverse(m_projection).multiply_vector(ray_clip.conv<double>());
+    ray_eye /= ray_eye.w();
+
+    geo::Vec3d ray_wor = (inverse(m_view).multiply_vector(ray_eye)).xyz();
+    // don't forget to normalise the vector at some point
+    ray_wor = normalize(ray_wor);
+    // ray_wor.y() *= -1.f;
+    Log::fmessage(" -> ray_wor {} {} {}\n", ray_wor.x(), ray_wor.y(), ray_wor.z());
+    return ray_wor;
+}
+
 auto Camera::reset_init_values() -> void{
     m_position    = m_initPosition;
     m_direction   = m_initDirection;

@@ -77,6 +77,8 @@ public:
     // # update
     auto update_projection() -> void;
 
+
+    auto screen_raycast(geo::Pt2<int> screenPos) -> geo::Vec3d;
     // static auto normal(const geo::Mat4d &modelView) -> geo::Mat3d{
     //     const auto &mv = modelView;
     //     return {

@@ -91,6 +91,8 @@ auto QtLoggerM::clean() -> void{
 
 auto QtLoggerM::init(QStringView logDirectoryPath, QStringView logFileName, bool copyPreviousLog) -> void{
 
+    std::unique_lock<std::mutex> lock(i->locker);
+
     // connect base log to qt log
     if(logDirectoryPath.length() == 0 || logFileName.length() == 0){
         i->logDirPath = QApplication::applicationDirPath() % u"/logs"_s;
@@ -310,6 +312,7 @@ auto QtLoggerM::to_html_paragraph(QStringView colorCode, QStringView text, bool 
 }
 
 auto QtLoggerM::insert_to_log_file(QStringView message, bool flush) -> void{
+
     std::unique_lock<std::mutex> lock(i->locker);
     if(i->out){
         if(flush){

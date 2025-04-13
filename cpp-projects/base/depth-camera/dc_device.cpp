@@ -26,6 +26,9 @@
 
 #include "dc_device.hpp"
 
+// std
+#include <unordered_map>
+
 // local
 #include "depth-camera/impl/azure_kinect_device_impl.hpp"
 #include "depth-camera/impl/femto_bolt_device_impl.hpp"
@@ -38,67 +41,74 @@
 using namespace tool::geo;
 using namespace tool::cam;
 
-enum class ActionType : std::int8_t{
-    Device,
-    Colors,
-    Filters,
-    Delay,
-    None
-};
+// enum class ActionType : std::int8_t{
+//     Device,
+//     Colors,
+//     Filters,
+//     Delay,
+//     None
+// };
 
-struct DeviceAction{
+// struct DeviceAction{
 
-    ActionType type = ActionType::None;
+    // ActionType type = ActionType::None;
 
-    bool cleanDevice   = false;
-    bool createDevice  = false;
-    bool closeDevice   = false;
-    bool openDevice    = false;
-    bool resetColorSettings = false;
+    // bool cleanDevice   = false;
+    // bool createDevice  = false;
+    // bool closeDevice   = false;
+    // bool openDevice    = false;
+    // bool resetColorSettings = false;
 
     // bool updateColors  = false;
     // bool updateFilters  = false;
     // bool updateDelay   = false;
 
-};
+// };
 
 struct DCDevice::Impl{
 
-    tf::Taskflow readFramesT;
 
     // settings
+    std::mutex locker;
+    std::optional<DCDeviceSettings> nDeviceS = std::nullopt;
+    std::optional<DCFiltersSettings> nFiltersS = std::nullopt;
+    std::optional<DCColorSettings> nColorsS = std::nullopt;
+    std::optional<DCMiscSettings> nMiscS = std::nullopt;
     DCDeviceSettings deviceS;
     DCFiltersSettings filtersS;
     DCColorSettings colorsS;
-    DCMiscSettings delayS;
+    DCMiscSettings miscS;
 
     // device
     std::unique_ptr<DCDeviceImpl> device = nullptr;
 
     // threads/tasks
     std::unique_ptr<std::thread> loopT = nullptr;
+    tf::Taskflow readFramesT; // inused
 
     // states
-    std::atomic<size_t> devicesNb = 0;
+    // std::atomic<size_t> devicesNb = 0;
     std::atomic_bool deviceInitialized = false;
     std::atomic_bool deviceOpened = false;
-    std::atomic_bool readFrames = false;
+    // std::atomic_bool readFrames = false;
 
-    AverageBuffer procB;
-    AverageBuffer sleepB;
-    std::atomic<double> procUsage = 0;
+    // AverageBuffer procB;
+    // AverageBuffer sleepB;
+    std::atomic<double> procUsage = 0; // inused
 
     // actions
-    bool doLoopA = false;
-    std::mutex locker;
-    std::vector<DeviceAction> actions;
+    std::atomic_bool doLoopA = false;
+    // bool localReadFrames = false;
+
+    // std::vector<DeviceAction> actions;
+    // std::unordered_map<ActionType, DeviceAction> actions;
 
     // last frames
     std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> lastFrames = {nullptr,nullptr};
 
     // test
-    std::vector<DeviceAction> localActions;
-    bool localReadFrames = false;
+    // std::vector<DeviceAction> localActions;
+
 
 };
 
@@ -363,132 +373,193 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
     // auto tStart = Time::nanoseconds_since_epoch();
 
     i->locker.lock();
-    auto dActions = i->actions;
-    i->actions.clear();
-    bool readFrames = i->readFrames;
+    std::optional<DCDeviceSettings> nDeviceS   = i->nDeviceS;
+    std::optional<DCColorSettings> nColorS     = i->nColorsS;
+    std::optional<DCFiltersSettings> nFiltersS = i->nFiltersS;
+    std::optional<DCMiscSettings> nMisc        = i->nMiscS;
+    i->nDeviceS  = std::nullopt;
+    i->nColorsS  = std::nullopt;
+    i->nFiltersS = std::nullopt;
+    i->nMiscS   = std::nullopt;
     i->locker.unlock();
 
-    for(const auto &dAction : dActions){
+    if(nDeviceS.has_value()){
 
-        if(dAction.type == ActionType::Device){
-            // close device
-            if((i->device != nullptr) && dAction.closeDevice){
-                if(i->device->is_opened()){
-                    i->device->close();
-                    i->deviceOpened = false;
-                }
+        // check changes
+        const auto &newConfigS  = nDeviceS->configS;
+        const auto &currConfigS = i->deviceS.configS;
+
+        bool deviceTypeChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
+        if(deviceTypeChanged && i->deviceInitialized){
+            update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [...]"sv, i->deviceS.configS.idDevice));
+        }
+
+        bool deviceChanged =
+            (newConfigS.useSerialNumber != currConfigS.useSerialNumber) ||
+            (newConfigS.idDevice        != currConfigS.idDevice)        ||
+            (newConfigS.serialNumber    != currConfigS.serialNumber)    ||
+            (newConfigS.ipv4Address     != currConfigS.ipv4Address);
+
+        bool syncChanged  =
+            (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
+            (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
+            (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
+            (newConfigS.synchMode                       != currConfigS.synchMode);
+
+        bool cameraSettingsChanged =
+            syncChanged ||
+            // device
+            (newConfigS.mode                            != currConfigS.mode) ||
+            // body tracking
+            (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
+            (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
+            (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
+            (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
+            // others
+            (newConfigS.disableLED                      != currConfigS.disableLED) ||
+            // color - depth calibration
+            (newConfigS.colorAlignmentTr                != currConfigS.colorAlignmentTr) ||
+            (newConfigS.colorAlignmentRotEuler          != currConfigS.colorAlignmentRotEuler);
+
+
+        // # device must be deleted
+        bool cleanDevice     = i->deviceInitialized && deviceTypeChanged;
+        // # device must be created
+        bool createDevice    = (!i->deviceInitialized && (newConfigS.typeDevice != DCType::Undefined)) || deviceTypeChanged;
+        // # device must be closed
+        bool closeDevice     = !newConfigS.openDevice || deviceChanged || syncChanged || cameraSettingsChanged ||cleanDevice;
+        // # device must be opened
+        bool openDevice      = newConfigS.openDevice;
+        // # colors resetings must be resetted
+        bool resetColorSettings = deviceTypeChanged;
+
+        // update settings
+        i->deviceS = *nDeviceS;
+        // i->readFrames = newConfigS.startReading;
+
+        // close device
+        if((i->device != nullptr) && closeDevice){
+            if(i->device->is_opened()){
+                i->device->close();
+                i->deviceOpened = false;
+            }
+        }
+
+        // clean device
+        if((i->device != nullptr) && cleanDevice){
+            i->device = nullptr;
+            i->deviceInitialized = false;
+        }
+
+        // create device
+        if((i->device == nullptr) && createDevice){
+
+            auto type = i->deviceS.configS.typeDevice;
+            if(type == DCType::AzureKinect){
+                auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
+                i->device = std::make_unique<AzureKinectDeviceImpl>();
+            }else if(type == DCType::FemtoBolt){
+                auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
+                i->device = std::make_unique<FemtoBoltDeviceImpl>();
+            }else if(type == DCType::FemtoMegaEthernet){
+                auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
+                i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
+            }else if(type == DCType::FemtoMegaUSB){
+                auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
+                i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
+            }else if(type == DCType::Gemini215){
+                auto lg = LogG("DCDevice::DCDevice Gemini215DeviceImpl"sv);
+                i->device = std::make_unique<Geimini215DeviceImpl>();
+            }else if(type == DCType::Recording){
+                auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
+                i->device = std::make_unique<RecordingDeviceImpl>();
+            }else{
+                return {nullptr,nullptr};
             }
 
-            // clean device
-            if((i->device != nullptr) && dAction.cleanDevice){
-                i->device = nullptr;
-                i->deviceInitialized = false;
-            }
+            // set connections
+            i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
+                new_frame_signal(std::move(frame));
+            });
+            i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
+                new_data_frame_signal(std::move(frame));
+            });
 
-            // create device
-            if((i->device == nullptr) && dAction.createDevice){
+            i->deviceInitialized = true;
+        }
 
-                auto type = i->deviceS.configS.typeDevice;
-                if(type == DCType::AzureKinect){
-                    auto lg = LogG("DCDevice::DCDevice AzureKinectDeviceImpl"sv);
-                    i->device = std::make_unique<AzureKinectDeviceImpl>();
-                }else if(type == DCType::FemtoBolt){
-                    auto lg = LogG("DCDevice::DCDevice FemtoBoltDeviceImpl"sv);
-                    i->device = std::make_unique<FemtoBoltDeviceImpl>();
-                }else if(type == DCType::FemtoMegaEthernet){
-                    auto lg = LogG("DCDevice::DCDevice FemtoMegaEthernetDeviceImpl"sv);
-                    i->device = std::make_unique<FemtoMegaEthernetDeviceImpl>();
-                }else if(type == DCType::FemtoMegaUSB){
-                    auto lg = LogG("DCDevice::DCDevice FemtoMegaUSBDeviceImpl"sv);
-                    i->device = std::make_unique<FemtoMegaUSBDeviceImpl>();
-                }else if(type == DCType::Gemini215){
-                    auto lg = LogG("DCDevice::DCDevice Gemini215DeviceImpl"sv);
-                    i->device = std::make_unique<Geimini215DeviceImpl>();
-                }else if(type == DCType::Recording){
-                    auto lg = LogG("DCDevice::DCDevice RecordingDeviceImpl"sv);
-                    i->device = std::make_unique<RecordingDeviceImpl>();             
-                }else{
-                    return {nullptr,nullptr};
-                }
+        // open device
+        if((i->device != nullptr) && openDevice){
 
-                // set connections
-                i->device->new_frame_signal.connect([&](std::shared_ptr<DCFrame> frame){
-                    new_frame_signal(std::move(frame));
-                });
-                i->device->new_data_frame_signal.connect([&](std::shared_ptr<DCDataFrame> frame){
-                    new_data_frame_signal(std::move(frame));
-                });
+            if(!i->device->is_opened()){
 
-                i->deviceInitialized = true;
-            }
+                if(i->device->open(i->deviceS.configS)){
 
-            // open device
-            if((i->device != nullptr) && dAction.openDevice){
+                    i->deviceOpened = true;
 
-                if(!i->device->is_opened()){
-
-                    if(i->device->open(i->deviceS.configS)){
-
-                        i->deviceOpened = true;
-
-                        // update settings
-                        {
-                            std::unique_lock<std::mutex> lock(i->locker);
-                            i->device->set_data_settings(i->deviceS.dataS.server);
-                            i->device->set_filters_settings(i->filtersS);
-                            i->device->set_delay_settings(i->delayS);
-
-                            if(dAction.resetColorSettings){
-                                i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
-                                color_settings_reset_signal(i->colorsS);
-                            }
-
-                            i->device->set_color_settings(i->colorsS);
-                            i->device->update_from_colors_settings();
-                        }
-
-                        // update device name
-                        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
+                    // set others settings
+                    // # data
+                    // i->device->set_data_settings(i->deviceS.dataS.server);
+                    // # filters
+                    i->device->set_filters_settings(i->filtersS);
+                    // # misc
+                    i->device->set_misc_settings(i->miscS);
+                    // # color
+                    if(resetColorSettings){
+                        i->colorsS.set_default_values(i->deviceS.configS.typeDevice);
+                        color_settings_reset_signal(i->colorsS);
                     }
+                    i->device->set_color_settings(i->colorsS);
+                    i->device->update_from_colors_settings();
 
+                    // update device name
+                    update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [{}]", i->deviceS.configS.idDevice, i->device->device_name()));
                 }
             }
         }
 
-        // update settings
+        // update data
+        if((i->device != nullptr)){
+            i->device->set_data_settings(i->deviceS.dataS.server);
+        }
+    }
+
+    if(nColorS.has_value()){
+        i->colorsS = *nColorS;
         if(i->device != nullptr){
-
             if(i->device->is_opened()){
-
-                std::unique_lock<std::mutex> lock(i->locker);
-                i->device->set_data_settings(i->deviceS.dataS.server);
-
-                if(dAction.type == ActionType::Colors){
-                    i->device->set_color_settings(i->colorsS);
-                    i->device->update_from_colors_settings();
-                }
-                if(dAction.type == ActionType::Filters){
-                    i->device->set_filters_settings(i->filtersS);
-                }
-                if(dAction.type == ActionType::Delay){
-                    i->device->set_delay_settings(i->delayS);
-                }
-
+                i->device->set_color_settings(i->colorsS);
+                i->device->update_from_colors_settings();
             }
         }
     }
 
+    if(nFiltersS.has_value()){
+        i->filtersS = *nFiltersS;
+        if(i->device != nullptr){
+            if(i->device->is_opened()){
+                i->device->set_filters_settings(i->filtersS);
+            }
+        }
+    }
+
+    if(nMisc.has_value()){
+        i->miscS = *nMisc;
+        if(i->device != nullptr){
+            if(i->device->is_opened()){
+                i->device->set_misc_settings(i->miscS);
+            }
+        }
+    }
+
+
     // process frame
     if(i->device != nullptr){
         if(i->device->is_opened()){
-            if(readFrames ){
-
+            if(i->deviceS.configS.startReading ){
                 return i->device->process_frames();
-
                 // Log::fmessage("[{}]", processed);
                 // if(!i->device->process()){
-
-
                     // std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 // }
                 // return true;
@@ -516,108 +587,30 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
 
 
     // return processed;
-
-
-}
-
-auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
-
-    const auto &newConfigS  = deviceS.configS;
-    const auto &currConfigS = i->deviceS.configS;
-
-    bool deviceTypeChanged   = currConfigS.typeDevice != newConfigS.typeDevice;
-    if(deviceTypeChanged && i->deviceInitialized){
-        update_device_name_signal(i->deviceS.configS.idDevice, std::format("[{}] [...]"sv, i->deviceS.configS.idDevice));
-    }
-
-    bool deviceChanged =
-        (newConfigS.useSerialNumber != currConfigS.useSerialNumber) ||
-        (newConfigS.idDevice        != currConfigS.idDevice)        ||
-        (newConfigS.serialNumber    != currConfigS.serialNumber)    ||
-        (newConfigS.ipv4Address     != currConfigS.ipv4Address);
-
-    bool syncChanged  =
-        (newConfigS.synchronizeColorAndDepth        != currConfigS.synchronizeColorAndDepth) ||
-        (newConfigS.delayBetweenColorAndDepthUsec   != currConfigS.delayBetweenColorAndDepthUsec) ||
-        (newConfigS.subordinateDelayUsec            != currConfigS.subordinateDelayUsec) ||
-        (newConfigS.synchMode                       != currConfigS.synchMode);
-
-    bool cameraSettingsChanged =
-        syncChanged ||
-        // device
-        (newConfigS.mode                            != currConfigS.mode) ||
-        // body tracking
-        (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
-        (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
-        (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
-        (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
-        // others
-        (newConfigS.disableLED                      != currConfigS.disableLED) ||
-        // color - depth calibration
-        (newConfigS.colorAlignmentTr                != currConfigS.colorAlignmentTr) ||
-        (newConfigS.colorAlignmentRotEuler          != currConfigS.colorAlignmentRotEuler);
-
-
-    // device must be deleted
-    DeviceAction dAction;
-    dAction.type = ActionType::Device;
-    dAction.cleanDevice     = i->deviceInitialized && deviceTypeChanged;
-    // device must be created
-    dAction.createDevice    = (!i->deviceInitialized && (newConfigS.typeDevice != DCType::Undefined)) || deviceTypeChanged;
-    // device must be closed
-    dAction.closeDevice     = !newConfigS.openDevice || deviceChanged || syncChanged || cameraSettingsChanged || dAction.cleanDevice;
-    // device must be opened
-    dAction.openDevice      = newConfigS.openDevice;
-    // colors resetings must be resetted
-    dAction.resetColorSettings = deviceTypeChanged;
-
-    // update actions
-    std::unique_lock<std::mutex> lock(i->locker);
-    i->deviceS = deviceS;
-    i->actions.push_back(dAction);
-    i->readFrames = newConfigS.startReading;
-
-    // TODO: add timing to action?
 }
 
 auto DCDevice::is_opened() const noexcept -> bool{
     return i->deviceOpened;
 }
 
-auto DCDevice::update_color_settings(const DCColorSettings &colorS) -> void{
-
-    i->colorsS = colorS;
-
-    DeviceAction dAction;
-    dAction.type = ActionType::Colors;
-
-    // update actions
+auto DCDevice::update_device_settings(const DCDeviceSettings &deviceS) -> void{
     std::unique_lock<std::mutex> lock(i->locker);
-    i->actions.push_back(dAction);
+    i->nDeviceS = deviceS;
+}
+
+auto DCDevice::update_color_settings(const DCColorSettings &colorS) -> void{
+    std::unique_lock<std::mutex> lock(i->locker);
+    i->nColorsS = colorS;
 }
 
 auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> void{
-
-    i->filtersS = filtersS;
-
-    DeviceAction dAction;
-    dAction.type = ActionType::Filters;
-
-    // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    i->actions.push_back(dAction);
+    i->nFiltersS = filtersS;
 }
 
 auto DCDevice::update_misc_settings(const DCMiscSettings &miscS) -> void{
-
-    i->delayS = miscS;
-
-    DeviceAction dAction;
-    dAction.type = ActionType::Delay;
-
-    // update actions
     std::unique_lock<std::mutex> lock(i->locker);
-    i->actions.push_back(dAction);
+    i->nMiscS = miscS;
 }
 
 auto DCDevice::get_duration_ms(std::string_view id) noexcept -> double{
@@ -637,7 +630,6 @@ auto DCDevice::get_duration_micro_s(std::string_view id) noexcept -> int64_t{
     }
     return 0;
 }
-
 
 auto DCDevice::get_capture_duration_ms() noexcept -> double{
     return get_duration_ms("CAPTURE_FRAME"sv);

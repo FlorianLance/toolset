@@ -43,4 +43,6 @@ auto dc_settings() -> void;
 auto encode1() -> void;
 auto encode2() -> void;
 
+auto multi_devices_benchmark() -> void;
+
 

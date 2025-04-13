@@ -144,7 +144,7 @@ auto compare(const geo::ColVec<float,4> &v1, const glm::vec4 &v2) -> bool{
 auto compare(const glm::mat2 &m1, const geo::Mat2f &m2) -> bool{
     for(int r = 0; r < 2; ++r){
         for(int c = 0; c < 2; ++c){
-            if(!compare(m1[c][r], m2.at(r,c))){
+            if(!compare(m1[c][r], m2(r,c))){
                 return false;
             }
         }
@@ -159,7 +159,7 @@ auto compare(const geo::Mat2f &m1, const glm::mat2 &m2) -> bool{
 auto compare(const glm::mat3 &m1, const geo::Mat3f &m2) -> bool{
     for(int r = 0; r < 3; ++r){
         for(int c = 0; c < 3; ++c){
-            if(!compare(m1[c][r], m2.at(r,c))){
+            if(!compare(m1[c][r], m2(r,c))){
                 return false;
             }
         }
@@ -174,7 +174,7 @@ auto compare(const geo::Mat3f &m1, const glm::mat3 &m2) -> bool{
 auto compare(const glm::mat4 &m1, const geo::Mat4f &m2) -> bool{
     for(int r = 0; r < 4; ++r){
         for(int c = 0; c < 4; ++c){
-            if(!compare(m1[c][r], m2.at(r,c))){
+            if(!compare(m1[c][r], m2(r,c))){
                 return false;
             }
         }

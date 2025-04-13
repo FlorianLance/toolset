@@ -32,7 +32,7 @@ TARGET = qt-utility-qml-app
 TEMPLATE = app
 CONFIG += console
 CONFIG += qt
-QT += core gui opengl widgets printsupport network quick quickcontrols2
+QT += qml quick quickcontrols2 core gui opengl widgets printsupport network
 
 ####################################### PRI
 include(../ts-settings.pri)

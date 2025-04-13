@@ -33,12 +33,8 @@
 // kinect
 #include "k4a/k4a.hpp"
 
-// orbbec
-// #include "libobsensor/ObSensor.hpp"
-
 // local
 // # utility
-// #include "utility/types.hpp"
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
 // # data
@@ -46,8 +42,6 @@
 #include "data/fastpfor_encoding.hpp"
 
 #include "thirdparty/taskflow/taskflow.hpp"
-// #include "thirdparty/taskflow/core/executor.hpp"
-// #include "thirdparty/taskflow/core/taskflow.hpp"
 
 #include "dc_depth_indices.hpp"
 #include "geometry/voxel.hpp"
@@ -59,10 +53,10 @@ using namespace tool::cam;
 struct DCFrameGenerator::Impl{
     
     // parameters
-    bool generateColorRGB = false;
-    bool generateDepthRGB = false;
-    bool generateInfraRGB = false;
-    bool generateBodiesGray = false;
+    // bool generateColorRGB = false;
+    // bool generateDepthRGB = false;
+    // bool generateInfraRGB = false;
+    // bool generateBodiesGray = false;
 
     // decoders
     data::JpegDecoder colorDecoder;
@@ -311,9 +305,6 @@ private:
         if(dFrame->imagesB.contains(DCImageBufferType::Infrared16)){
             frame->insert_image_buffer<std::uint16_t>(DCImageBufferType::Infrared16, infraredWidth, infraredHeight);
         }
-        if(dFrame->imagesB.contains(DCImageBufferType::BodiesIdMap8)){
-            frame->insert_image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8, depthWidth, depthHeight);
-        }
         if(dFrame->imagesB.contains(DCImageBufferType::OriginalColorRGBA8) && gSettings.originalSizeColorImage){
             frame->insert_image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8, originalColorWidth, originalColorHeight);
         }
@@ -326,8 +317,12 @@ private:
         if(frame->imagesB.contains(DCImageBufferType::Infrared16) && gSettings.infraImage){
             frame->insert_image_buffer<ColorRGB8>(DCImageBufferType::InfraredRGB8, infraredWidth, infraredHeight, ColorRGB8{0,0,0});
         }
-        if(frame->imagesB.contains(DCImageBufferType::BodiesIdMap8) && gSettings.bodiesIdImage){
+        if(dFrame->imagesB.contains(DCImageBufferType::BodiesIdMap8) && gSettings.bodiesIdImage){
+            frame->insert_image_buffer<ColorGray8>(DCImageBufferType::BodiesIdMap8, depthWidth, depthHeight);
             frame->insert_image_buffer<ColorRGB8>(DCImageBufferType::BodiesIdMapRGB8, depthWidth, depthHeight, ColorRGB8{0,0,0});
+        }
+        if(dFrame->datasB.contains(DCDataBufferType::BodiesSkeleton) && gSettings.bodiesSkeleton){
+            frame->insert_data_buffer(DCDataBufferType::BodiesSkeleton, dFrame->data_buffer(DCDataBufferType::BodiesSkeleton)->byte_span());
         }
 
         // # volume
@@ -661,7 +656,9 @@ private:
             auto idV = std::get<1>(idC);
 
             Pt3f currentP = pointCloud[idD].template conv<float>();
-            cloud->vertices[idV] = currentP * 0.001f;
+            cloud->vertices[idV]     = currentP * 0.001f;
+            cloud->vertices[idV].x() = -cloud->vertices[idV].x();
+            cloud->vertices[idV].y() = -cloud->vertices[idV].y();
 
             if(useColors){
                 cloud->colors[idV] = geo::Pt3f{
@@ -685,16 +682,17 @@ private:
             // 3 X 4
             // 5 6 7
 
-            const auto &idN  = dIndices.neighbours8Depth1D[idD];
-            float cD = (*depth)[idD];
-            float dB = (idN[1] != -1) ? (((*depth)[idN[1]] != dc_invalid_depth_value) ? (*depth)[idN[1]] : cD) : cD;
-            float dD = (idN[3] != -1) ? (((*depth)[idN[3]] != dc_invalid_depth_value) ? (*depth)[idN[3]] : cD) : cD;
-            float dE = (idN[4] != -1) ? (((*depth)[idN[4]] != dc_invalid_depth_value) ? (*depth)[idN[4]] : cD) : cD;
-            float dG = (idN[6] != -1) ? (((*depth)[idN[6]] != dc_invalid_depth_value) ? (*depth)[idN[6]] : cD) : cD;
+            // const auto &idN  = dIndices.neighbours8Depth1D[idD];
+            // float cD = (*depth)[idD];
+            // float dB = (idN[1] != -1) ? (((*depth)[idN[1]] != dc_invalid_depth_value) ? (*depth)[idN[1]] : cD) : cD;
+            // float dD = (idN[3] != -1) ? (((*depth)[idN[3]] != dc_invalid_depth_value) ? (*depth)[idN[3]] : cD) : cD;
+            // float dE = (idN[4] != -1) ? (((*depth)[idN[4]] != dc_invalid_depth_value) ? (*depth)[idN[4]] : cD) : cD;
+            // float dG = (idN[6] != -1) ? (((*depth)[idN[6]] != dc_invalid_depth_value) ? (*depth)[idN[6]] : cD) : cD;
 
-            auto hV = normalize(Vec3f(dE-dD,0,-2));
-            auto vV = normalize(Vec3f(0,dG-dB,-2));
-            cloud->normals[idV] = normalize(hV+vV);
+            // auto hV = normalize(Vec3f(dE-dD,0,-2));
+            // auto vV = normalize(Vec3f(0,dG-dB,-2));
+            // cloud->normals[idV] = normalize(hV+vV);
+            cloud->normals[idV]  = {1.f,0.f,0.f};
         });
 
         tComputeColoredCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
