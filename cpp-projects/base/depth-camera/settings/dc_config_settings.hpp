@@ -45,6 +45,8 @@ struct DCConfigSettings : io::Settings{
     std::string serialNumber = "";
     geo::Pt4<std::uint8_t> ipv4Address = {192,168,1,10};
     DCMode mode = dc_default_mode(typeDevice);
+    // streams
+    bool enableIRStream = false;
     // synch
     bool synchronizeColorAndDepth = true;
     int delayBetweenColorAndDepthUsec = 0;

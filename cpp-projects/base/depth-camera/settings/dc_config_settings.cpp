@@ -59,6 +59,9 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
     };
     mode                = static_cast<DCMode>(read_and_return_value(json, unreadCount, "mode"sv, static_cast<int>(mode)));
 
+    // stream
+    read_and_update_value(json, unreadCount, "enable_ir_stream"sv, enableIRStream);
+
     // synch
     read_and_update_value(json, unreadCount, "synchronize_color_and_depth"sv,           synchronizeColorAndDepth);
     read_and_update_value(json, unreadCount, "delay_between_color_and_depth_usec"sv,    delayBetweenColorAndDepthUsec);
@@ -98,6 +101,8 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
     add_value(json, "ipv4_address_3"sv,                         ipv4Address.z());
     add_value(json, "ipv4_address_4"sv,                         ipv4Address.w());
     add_value(json, "mode"sv,                                   static_cast<int>(mode));
+    // stream
+    add_value(json, "enable_ir_stream"sv,                       enableIRStream);
     // synch
     add_value(json, "synchronize_color_and_depth"sv,            synchronizeColorAndDepth);
     add_value(json, "delay_between_color_and_depth_usec"sv,     delayBetweenColorAndDepthUsec);
@@ -142,6 +147,8 @@ auto DCConfigSettings::init_from_data(std::byte const * const data, size_t &offs
     read(typeDevice, data, offset, sizeData);
     read(idDevice, data, offset, sizeData);
     read(mode, data, offset, sizeData);
+    // stream
+    read(enableIRStream, data, offset, sizeData);
     // synch
     read(synchronizeColorAndDepth, data, offset, sizeData);
     read(delayBetweenColorAndDepthUsec, data, offset, sizeData);

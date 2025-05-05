@@ -13,1286 +13,6 @@
                 },
                 "calibration_filters": {
                     "OOB_position": [
-                        0.16300000250339508,
-                        -0.34700000286102295,
-                        0.5600000023841858
-                    ],
-                    "OOB_rotation": [
-                        34.630001068115234,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        2.049999952316284,
-                        2.440000057220459,
-                        2.059999942779541
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": false,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 1,
-                    "filter_color": [
-                        0.5176470875740051,
-                        0.7686274647712708,
-                        0.5490196347236633
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": true,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": true,
-                    "keep_only_points_inside_OOB": false,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.8949999809265137,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.04600000008940697,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "color": {
-                    "auto_exposure_time": false,
-                    "auto_white_balance": true,
-                    "backlight_compensation": false,
-                    "base": {
-                        "type_string": "color",
-                        "version": 1
-                    },
-                    "brightness": 141,
-                    "contrast": 5,
-                    "exposure_time": 33330,
-                    "gain": 110,
-                    "hdr": true,
-                    "powerline_frequency": 1,
-                    "saturation": 32,
-                    "sharpness": 2,
-                    "white_balance": 4210
-                },
-                "connection": {
-                    "base": {
-                        "type_string": "DC client connection",
-                        "version": 1
-                    },
-                    "connection_type": "Local"
-                },
-                "device": {
-                    "base": {
-                        "type_string": "device",
-                        "version": 1
-                    },
-                    "config": {
-                        "base": {
-                            "type_string": "device config",
-                            "version": 1
-                        },
-                        "bt_GPU_id": 0,
-                        "bt_enabled": false,
-                        "bt_orientation": 0,
-                        "bt_processing_mode": 4,
-                        "color_alignment_rot": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "color_alignment_tr": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "delay_between_color_and_depth_usec": 0,
-                        "disable_LED": false,
-                        "id_device": 6,
-                        "ipv4_address_1": 192,
-                        "ipv4_address_2": 168,
-                        "ipv4_address_3": 1,
-                        "ipv4_address_4": 10,
-                        "mode": 6,
-                        "open_device": true,
-                        "serial_number_device": "",
-                        "start_reading": true,
-                        "subordinate_delay_usec": 0,
-                        "synch_mode": 1,
-                        "synchronize_color_and_depth": true,
-                        "type_device": 0,
-                        "use_serial_number": false
-                    },
-                    "data": {
-                        "base": {
-                            "type_string": "device data",
-                            "version": 1
-                        },
-                        "c_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": false,
-                            "depth_image": false,
-                            "depth_sized_color_image": true,
-                            "infra_image": false
-                        },
-                        "s_capture": {
-                            "audio": false,
-                            "body_tracking": false,
-                            "color": true,
-                            "depth": true,
-                            "imu": false,
-                            "infra": true
-                        },
-                        "s_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": true,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
-                            "infra_image": true
-                        },
-                        "s_sending": {
-                            "audio": false,
-                            "bodies_id": false,
-                            "bodies_id_compression_mode": 0,
-                            "bodies_skeleton": false,
-                            "cloud": false,
-                            "cloud_color_mode": 1,
-                            "cloud_compression_mode": 2,
-                            "color": false,
-                            "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
-                            "depth_compression_mode": 2,
-                            "depth_sized_color_compression_mode": 1,
-                            "imu": false,
-                            "infra": false,
-                            "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 95,
-                            "original_size_color_jpeg_quality": 95
-                        }
-                    }
-                },
-                "filters": {
-                    "OOB_position": [
-                        0.16200000047683716,
-                        -0.34700000286102295,
-                        0.5600000023841858
-                    ],
-                    "OOB_rotation": [
-                        34.630001068115234,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        2.25,
-                        2.450000047683716,
-                        2.059999942779541
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 3,
-                    "filter_color": [
-                        1.0,
-                        0.239215686917305,
-                        0.34117648005485535
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.8949999809265137,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.04600000008940697,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "misc": {
-                    "base": {
-                        "type_string": "misc",
-                        "version": 1
-                    },
-                    "delay": 0
-                },
-                "model": {
-                    "base": {
-                        "type_string": "model",
-                        "version": 1
-                    },
-                    "transformation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                }
-            }
-        },
-        {
-            "client_device": {
-                "base": {
-                    "type_string": "DC client device",
-                    "version": 1
-                },
-                "calibration_filters": {
-                    "OOB_position": [
-                        0.052000001072883606,
-                        0.12700000405311584,
-                        1.1410000324249268
-                    ],
-                    "OOB_rotation": [
-                        41.130001068115234,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        2.1700000762939453,
-                        2.299999952316284,
-                        1.7899999618530273
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": false,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 2,
-                    "filter_color": [
-                        0.37254902720451355,
-                        0.6196078658103943,
-                        0.4117647111415863
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": true,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": true,
-                    "keep_only_points_inside_OOB": true,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9649999737739563,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "color": {
-                    "auto_exposure_time": false,
-                    "auto_white_balance": true,
-                    "backlight_compensation": false,
-                    "base": {
-                        "type_string": "color",
-                        "version": 1
-                    },
-                    "brightness": 135,
-                    "contrast": 5,
-                    "exposure_time": 33330,
-                    "gain": 100,
-                    "hdr": true,
-                    "powerline_frequency": 1,
-                    "saturation": 28,
-                    "sharpness": 2,
-                    "white_balance": 4670
-                },
-                "connection": {
-                    "base": {
-                        "type_string": "DC client connection",
-                        "version": 1
-                    },
-                    "connection_type": "Local"
-                },
-                "device": {
-                    "base": {
-                        "type_string": "device",
-                        "version": 1
-                    },
-                    "config": {
-                        "base": {
-                            "type_string": "device config",
-                            "version": 1
-                        },
-                        "bt_GPU_id": 0,
-                        "bt_enabled": false,
-                        "bt_orientation": 0,
-                        "bt_processing_mode": 4,
-                        "color_alignment_rot": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "color_alignment_tr": [
-                            -6.0,
-                            3.0,
-                            0.0
-                        ],
-                        "delay_between_color_and_depth_usec": 0,
-                        "disable_LED": false,
-                        "id_device": 5,
-                        "ipv4_address_1": 192,
-                        "ipv4_address_2": 168,
-                        "ipv4_address_3": 1,
-                        "ipv4_address_4": 10,
-                        "mode": 6,
-                        "open_device": true,
-                        "serial_number_device": "",
-                        "start_reading": true,
-                        "subordinate_delay_usec": 140,
-                        "synch_mode": 2,
-                        "synchronize_color_and_depth": true,
-                        "type_device": 0,
-                        "use_serial_number": false
-                    },
-                    "data": {
-                        "base": {
-                            "type_string": "device data",
-                            "version": 1
-                        },
-                        "c_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": false,
-                            "depth_image": false,
-                            "depth_sized_color_image": true,
-                            "infra_image": false
-                        },
-                        "s_capture": {
-                            "audio": false,
-                            "body_tracking": false,
-                            "color": true,
-                            "depth": true,
-                            "imu": false,
-                            "infra": true
-                        },
-                        "s_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": true,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
-                            "infra_image": true
-                        },
-                        "s_sending": {
-                            "audio": false,
-                            "bodies_id": false,
-                            "bodies_id_compression_mode": 0,
-                            "bodies_skeleton": false,
-                            "cloud": false,
-                            "cloud_color_mode": 1,
-                            "cloud_compression_mode": 2,
-                            "color": false,
-                            "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
-                            "depth_compression_mode": 2,
-                            "depth_sized_color_compression_mode": 1,
-                            "imu": false,
-                            "infra": false,
-                            "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 95,
-                            "original_size_color_jpeg_quality": 95
-                        }
-                    }
-                },
-                "filters": {
-                    "OOB_position": [
-                        -0.15700000524520874,
-                        0.12700000405311584,
-                        1.1410000324249268
-                    ],
-                    "OOB_rotation": [
-                        41.130001068115234,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        1.7100000381469727,
-                        2.4700000286102295,
-                        1.7899999618530273
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 3,
-                    "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 1.0,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9649999737739563,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "misc": {
-                    "base": {
-                        "type_string": "misc",
-                        "version": 1
-                    },
-                    "delay": 0
-                },
-                "model": {
-                    "base": {
-                        "type_string": "model",
-                        "version": 1
-                    },
-                    "transformation": [
-                        0.9970072507858276,
-                        0.02977343276143074,
-                        -0.07134446501731873,
-                        0.0,
-                        -0.07514622062444687,
-                        0.1565367579460144,
-                        -0.9848092198371887,
-                        0.0,
-                        -0.018153121694922447,
-                        0.987223207950592,
-                        0.15830564498901367,
-                        0.0,
-                        0.09105926752090454,
-                        -1.5162328481674194,
-                        0.8477764129638672,
-                        1.0
-                    ]
-                }
-            }
-        },
-        {
-            "client_device": {
-                "base": {
-                    "type_string": "DC client device",
-                    "version": 1
-                },
-                "calibration_filters": {
-                    "OOB_position": [
-                        -0.14900000393390656,
-                        -0.27000001072883606,
-                        1.0750000476837158
-                    ],
-                    "OOB_rotation": [
-                        38.439998626708984,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        1.75,
-                        2.299999952316284,
-                        1.9700000286102295
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": false,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 1,
-                    "filter_color": [
-                        0.37254902720451355,
-                        0.6196078658103943,
-                        0.4117647111415863
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": true,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": true,
-                    "keep_only_points_inside_OOB": false,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8600000143051147,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.8949999809265137,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "color": {
-                    "auto_exposure_time": false,
-                    "auto_white_balance": true,
-                    "backlight_compensation": false,
-                    "base": {
-                        "type_string": "color",
-                        "version": 1
-                    },
-                    "brightness": 135,
-                    "contrast": 5,
-                    "exposure_time": 33330,
-                    "gain": 124,
-                    "hdr": true,
-                    "powerline_frequency": 1,
-                    "saturation": 28,
-                    "sharpness": 2,
-                    "white_balance": 3920
-                },
-                "connection": {
-                    "base": {
-                        "type_string": "DC client connection",
-                        "version": 1
-                    },
-                    "connection_type": "Local"
-                },
-                "device": {
-                    "base": {
-                        "type_string": "device",
-                        "version": 1
-                    },
-                    "config": {
-                        "base": {
-                            "type_string": "device config",
-                            "version": 1
-                        },
-                        "bt_GPU_id": 0,
-                        "bt_enabled": false,
-                        "bt_orientation": 0,
-                        "bt_processing_mode": 4,
-                        "color_alignment_rot": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "color_alignment_tr": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "delay_between_color_and_depth_usec": 0,
-                        "disable_LED": false,
-                        "id_device": 7,
-                        "ipv4_address_1": 192,
-                        "ipv4_address_2": 168,
-                        "ipv4_address_3": 1,
-                        "ipv4_address_4": 10,
-                        "mode": 6,
-                        "open_device": true,
-                        "serial_number_device": "",
-                        "start_reading": true,
-                        "subordinate_delay_usec": 280,
-                        "synch_mode": 2,
-                        "synchronize_color_and_depth": true,
-                        "type_device": 0,
-                        "use_serial_number": false
-                    },
-                    "data": {
-                        "base": {
-                            "type_string": "device data",
-                            "version": 1
-                        },
-                        "c_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": false,
-                            "depth_image": false,
-                            "depth_sized_color_image": true,
-                            "infra_image": false
-                        },
-                        "s_capture": {
-                            "audio": false,
-                            "body_tracking": false,
-                            "color": true,
-                            "depth": true,
-                            "imu": false,
-                            "infra": true
-                        },
-                        "s_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": true,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
-                            "infra_image": true
-                        },
-                        "s_sending": {
-                            "audio": false,
-                            "bodies_id": false,
-                            "bodies_id_compression_mode": 0,
-                            "bodies_skeleton": false,
-                            "cloud": false,
-                            "cloud_color_mode": 1,
-                            "cloud_compression_mode": 2,
-                            "color": false,
-                            "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
-                            "depth_compression_mode": 2,
-                            "depth_sized_color_compression_mode": 1,
-                            "imu": false,
-                            "infra": false,
-                            "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 95,
-                            "original_size_color_jpeg_quality": 95
-                        }
-                    }
-                },
-                "filters": {
-                    "OOB_position": [
-                        -0.14900000393390656,
-                        -0.27000001072883606,
-                        1.0750000476837158
-                    ],
-                    "OOB_rotation": [
-                        38.439998626708984,
-                        0.0,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        1.75,
-                        2.299999952316284,
-                        1.9700000286102295
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 3,
-                    "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8600000143051147,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.8949999809265137,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.0
-                    ]
-                },
-                "misc": {
-                    "base": {
-                        "type_string": "misc",
-                        "version": 1
-                    },
-                    "delay": 0
-                },
-                "model": {
-                    "base": {
-                        "type_string": "model",
-                        "version": 1
-                    },
-                    "transformation": [
-                        0.998865008354187,
-                        -0.026506969705224037,
-                        -0.03957350552082062,
-                        0.0,
-                        -0.030652910470962524,
-                        -0.9936640858650208,
-                        -0.10813044756650925,
-                        0.0,
-                        -0.036456555128097534,
-                        0.10922075808048248,
-                        -0.9933487772941589,
-                        0.0,
-                        0.12815314531326294,
-                        -0.5949569940567017,
-                        2.388221263885498,
-                        1.0
-                    ]
-                }
-            }
-        },
-        {
-            "client_device": {
-                "base": {
-                    "type_string": "DC client device",
-                    "version": 1
-                },
-                "calibration_filters": {
-                    "OOB_position": [
-                        0.18400000035762787,
-                        0.050999999046325684,
-                        0.6359999775886536
-                    ],
-                    "OOB_rotation": [
-                        0.0,
-                        -6.389999866485596,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        2.2799999713897705,
-                        2.740000009536743,
-                        2.1500000953674316
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": false,
-                    "do_local_diff_filtering": false,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 2,
-                    "filter_color": [
-                        0.37254902720451355,
-                        0.6196078658103943,
-                        0.4117647111415863
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": true,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": true,
-                    "keep_only_points_inside_OOB": false,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8840000033378601,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.121999979019165
-                    ]
-                },
-                "color": {
-                    "auto_exposure_time": false,
-                    "auto_white_balance": true,
-                    "backlight_compensation": false,
-                    "base": {
-                        "type_string": "color",
-                        "version": 1
-                    },
-                    "brightness": 135,
-                    "contrast": 5,
-                    "exposure_time": 33330,
-                    "gain": 137,
-                    "hdr": true,
-                    "powerline_frequency": 1,
-                    "saturation": 28,
-                    "sharpness": 2,
-                    "white_balance": 4510
-                },
-                "connection": {
-                    "base": {
-                        "type_string": "DC client connection",
-                        "version": 1
-                    },
-                    "connection_type": "Local"
-                },
-                "device": {
-                    "base": {
-                        "type_string": "device",
-                        "version": 1
-                    },
-                    "config": {
-                        "base": {
-                            "type_string": "device config",
-                            "version": 1
-                        },
-                        "bt_GPU_id": 0,
-                        "bt_enabled": false,
-                        "bt_orientation": 0,
-                        "bt_processing_mode": 4,
-                        "color_alignment_rot": [
-                            0.0,
-                            0.0,
-                            0.0
-                        ],
-                        "color_alignment_tr": [
-                            -2.0,
-                            2.0,
-                            0.0
-                        ],
-                        "delay_between_color_and_depth_usec": 0,
-                        "disable_LED": false,
-                        "id_device": 2,
-                        "ipv4_address_1": 192,
-                        "ipv4_address_2": 168,
-                        "ipv4_address_3": 1,
-                        "ipv4_address_4": 10,
-                        "mode": 6,
-                        "open_device": true,
-                        "serial_number_device": "",
-                        "start_reading": true,
-                        "subordinate_delay_usec": 420,
-                        "synch_mode": 2,
-                        "synchronize_color_and_depth": true,
-                        "type_device": 0,
-                        "use_serial_number": false
-                    },
-                    "data": {
-                        "base": {
-                            "type_string": "device data",
-                            "version": 1
-                        },
-                        "c_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": false,
-                            "depth_image": false,
-                            "depth_sized_color_image": true,
-                            "infra_image": false
-                        },
-                        "s_capture": {
-                            "audio": false,
-                            "body_tracking": false,
-                            "color": true,
-                            "depth": true,
-                            "imu": false,
-                            "infra": true
-                        },
-                        "s_generation": {
-                            "bodies_id_image": false,
-                            "bodies_skeleton": false,
-                            "cloud": true,
-                            "cloud_color_mode": 1,
-                            "color_image": true,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
-                            "infra_image": true
-                        },
-                        "s_sending": {
-                            "audio": false,
-                            "bodies_id": false,
-                            "bodies_id_compression_mode": 0,
-                            "bodies_skeleton": false,
-                            "cloud": false,
-                            "cloud_color_mode": 1,
-                            "cloud_compression_mode": 2,
-                            "color": false,
-                            "color_compression_mode": 1,
-                            "dept_sized_color": true,
-                            "depth": true,
-                            "depth_compression_mode": 2,
-                            "depth_sized_color_compression_mode": 1,
-                            "imu": false,
-                            "infra": false,
-                            "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 95,
-                            "original_size_color_jpeg_quality": 95
-                        }
-                    }
-                },
-                "filters": {
-                    "OOB_position": [
-                        0.02199999988079071,
-                        0.050999999046325684,
-                        0.6359999775886536
-                    ],
-                    "OOB_rotation": [
-                        0.0,
-                        -6.389999866485596,
-                        0.0
-                    ],
-                    "OOB_size": [
-                        2.2200000286102295,
-                        3.130000114440918,
-                        2.5299999713897705
-                    ],
-                    "base": {
-                        "type_string": "filters",
-                        "version": 1
-                    },
-                    "do_erosion": true,
-                    "do_local_diff_filtering": true,
-                    "do_min_neighbours_filtering": false,
-                    "erosion_connectivity": 3,
-                    "erosion_loops": 3,
-                    "filter_color": [
-                        0.0,
-                        0.5,
-                        0.07999999821186066
-                    ],
-                    "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
-                    "filter_depth_with_color": false,
-                    "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
-                    "invalidate_infra_from_depth": false,
-                    "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
-                    "local_diff_connectivity": 0,
-                    "max_depth_f": 0.8840000033378601,
-                    "max_diff_color": [
-                        20.0,
-                        0.5,
-                        0.5
-                    ],
-                    "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9070000052452087,
-                    "max_local_diff": 15.0,
-                    "max_sphere_distance": 1000.0,
-                    "max_widht_f": 1.0,
-                    "min_depth_f": 0.0,
-                    "min_height_f": 0.07000000029802322,
-                    "min_neighbours_connectivity": 2,
-                    "min_neighbours_loops": 1,
-                    "min_widht_f": 0.0,
-                    "nb_min_neighbours": 1,
-                    "plane1_A": [
-                        1.0,
-                        1.0,
-                        0.0
-                    ],
-                    "plane1_B": [
-                        1.0,
-                        0.0,
-                        1.0
-                    ],
-                    "plane1_C": [
-                        1.0,
-                        0.0,
-                        0.0
-                    ],
-                    "plane_filtering_mode": 0,
-                    "remove_after_closest_point": false,
-                    "remove_from_point_distance": false,
-                    "sphere": [
-                        0.0,
-                        0.0,
-                        1.121999979019165
-                    ]
-                },
-                "misc": {
-                    "base": {
-                        "type_string": "misc",
-                        "version": 1
-                    },
-                    "delay": 0
-                },
-                "model": {
-                    "base": {
-                        "type_string": "model",
-                        "version": 1
-                    },
-                    "transformation": [
-                        0.9993155002593994,
-                        -0.0004384343046694994,
-                        -0.0369904525578022,
-                        0.0,
-                        0.036236539483070374,
-                        -0.18958579003810883,
-                        0.981195330619812,
-                        0.0,
-                        -0.0074430531822144985,
-                        -0.9818640351295471,
-                        -0.18944016098976135,
-                        0.0,
-                        0.07517316937446594,
-                        0.9226150512695313,
-                        1.5082252025604248,
-                        1.0
-                    ]
-                }
-            }
-        },
-        {
-            "client_device": {
-                "base": {
-                    "type_string": "DC client device",
-                    "version": 1
-                },
-                "calibration_filters": {
-                    "OOB_position": [
                         0.0,
                         0.0,
                         0.0
@@ -1317,15 +37,15 @@
                     "erosion_connectivity": 3,
                     "erosion_loops": 1,
                     "filter_color": [
-                        0.16470588743686676,
-                        0.7843137383460999,
-                        0.4313725531101227
+                        0.0,
+                        0.5,
+                        0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
                     "filter_depth_with_cloud": false,
-                    "filter_depth_with_color": true,
+                    "filter_depth_with_color": false,
                     "filter_depth_with_infra": false,
-                    "invalidate_color_from_depth": true,
+                    "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
                     "keep_only_points_inside_OOB": false,
@@ -1372,29 +92,36 @@
                     ]
                 },
                 "color": {
-                    "auto_exposure_time": false,
+                    "auto_exposure_time": true,
                     "auto_white_balance": true,
                     "backlight_compensation": false,
                     "base": {
                         "type_string": "color",
                         "version": 1
                     },
-                    "brightness": 133,
-                    "contrast": 5,
-                    "exposure_time": 33330,
-                    "gain": 92,
+                    "brightness": 0,
+                    "contrast": 32,
+                    "exposure_time": 200,
+                    "gain": 60,
                     "hdr": true,
                     "powerline_frequency": 1,
-                    "saturation": 32,
-                    "sharpness": 2,
-                    "white_balance": 2770
+                    "saturation": 54,
+                    "sharpness": 6,
+                    "white_balance": 6500
                 },
                 "connection": {
+                    "any_reading_interface": false,
+                    "auto_connect": false,
                     "base": {
                         "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote",
+                    "id_reading_interface": 0,
+                    "protocol": "ipv4",
+                    "reading_port": 8889,
+                    "sending_address": "localhost",
+                    "sending_port": 8888
                 },
                 "device": {
                     "base": {
@@ -1422,19 +149,20 @@
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "id_device": 3,
+                        "enable_ir_stream": false,
+                        "id_device": 0,
                         "ipv4_address_1": 192,
                         "ipv4_address_2": 168,
                         "ipv4_address_3": 1,
                         "ipv4_address_4": 10,
-                        "mode": 3,
+                        "mode": 24,
                         "open_device": true,
                         "serial_number_device": "",
                         "start_reading": true,
                         "subordinate_delay_usec": 0,
                         "synch_mode": 0,
                         "synchronize_color_and_depth": true,
-                        "type_device": 0,
+                        "type_device": 1,
                         "use_serial_number": false
                     },
                     "data": {
@@ -1463,11 +191,11 @@
                         "s_generation": {
                             "bodies_id_image": false,
                             "bodies_skeleton": false,
-                            "cloud": true,
+                            "cloud": false,
                             "cloud_color_mode": 1,
-                            "color_image": true,
+                            "color_image": false,
                             "depth_image": false,
-                            "depth_sized_color_image": true,
+                            "depth_sized_color_image": false,
                             "infra_image": false
                         },
                         "s_sending": {
@@ -1494,59 +222,59 @@
                 },
                 "filters": {
                     "OOB_position": [
-                        0.5170000195503235,
-                        0.3400000035762787,
-                        0.7559999823570251
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "OOB_rotation": [
                         0.0,
-                        57.18000030517578,
+                        0.0,
                         0.0
                     ],
                     "OOB_size": [
-                        2.109999895095825,
-                        2.509999990463257,
-                        3.2200000286102295
+                        1.0,
+                        1.0,
+                        1.0
                     ],
                     "base": {
                         "type_string": "filters",
                         "version": 1
                     },
-                    "do_erosion": true,
+                    "do_erosion": false,
                     "do_local_diff_filtering": true,
                     "do_min_neighbours_filtering": false,
                     "erosion_connectivity": 3,
-                    "erosion_loops": 3,
+                    "erosion_loops": 1,
                     "filter_color": [
                         0.0,
                         0.5,
                         0.07999999821186066
                     ],
                     "filter_depth_with_body_tracking": false,
-                    "filter_depth_with_cloud": true,
+                    "filter_depth_with_cloud": false,
                     "filter_depth_with_color": false,
                     "filter_depth_with_infra": false,
                     "invalidate_color_from_depth": false,
                     "invalidate_infra_from_depth": false,
                     "keep_only_bigger_cluster": false,
-                    "keep_only_points_inside_OOB": true,
+                    "keep_only_points_inside_OOB": false,
                     "local_diff_connectivity": 0,
-                    "max_depth_f": 0.9070000052452087,
+                    "max_depth_f": 1.0,
                     "max_diff_color": [
                         20.0,
                         0.5,
                         0.5
                     ],
                     "max_distance_after_closest_point": 0.20000000298023224,
-                    "max_height_f": 0.9190000295639038,
-                    "max_local_diff": 15.0,
+                    "max_height_f": 1.0,
+                    "max_local_diff": 10.0,
                     "max_sphere_distance": 1000.0,
-                    "max_widht_f": 0.9419999718666077,
+                    "max_widht_f": 1.0,
                     "min_depth_f": 0.0,
-                    "min_height_f": 0.057999998331069946,
+                    "min_height_f": 0.0,
                     "min_neighbours_connectivity": 2,
                     "min_neighbours_loops": 1,
-                    "min_widht_f": 0.20900000631809235,
+                    "min_widht_f": 0.0,
                     "nb_min_neighbours": 1,
                     "plane1_A": [
                         1.0,
@@ -1585,21 +313,21 @@
                         "version": 1
                     },
                     "transformation": [
-                        0.8159830570220947,
-                        0.4461027979850769,
-                        -0.36764657497406006,
+                        1.0,
                         0.0,
-                        0.006405225023627281,
-                        -0.6429214477539063,
-                        -0.7659053802490234,
                         0.0,
-                        -0.578040361404419,
-                        0.6226109266281128,
-                        -0.5274703502655029,
                         0.0,
-                        0.8226625919342041,
-                        -1.1476013660430908,
-                        1.7519220113754272,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                         1.0
                     ]
                 }

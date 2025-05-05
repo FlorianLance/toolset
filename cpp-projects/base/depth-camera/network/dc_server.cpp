@@ -79,16 +79,29 @@ struct DCServer::Impl{
 
     Impl();
 
-    auto start_reading_thread(const std::string &readingAdress, int readingPort, Protocol protocol) -> bool;
+    auto start_reading_thread(const std::string &readingAdress, int readingPort, Protocol protocol, size_t maxUdpPacketSize) -> bool;
     auto stop_reading_thread() -> void;
     auto start_sending_thread() -> void;
     auto stop_sending_thread() -> void;
 
     auto disconnect_sender(const std::string &id) -> void{
         Log::message(std::format("[DCServer] Client disconnected [{}].\n", id));
-        udpSenders[id]->clean_socket();
-        udpSenders.erase(id);
-        client_disconnected_signal(id);
+        Log::log(std::format("[DCServer] Client disconnected [{}].\n", id));
+        Log::log_unf(std::format("[Disco1] {} {} {} | ", id, udpSenders.size(), udpSenders.contains(id)));
+        if(udpSenders.contains(id)){
+            udpSenders[id]->clean_socket();
+            Log::log_unf("[Disco2]");
+            udpSenders.erase(id);
+            Log::log_unf("[Disco3]");
+            client_disconnected_signal(id);
+            Log::log_unf("[Disco4]");
+        }
+    }
+
+    auto simulate_sending_failure(bool enabled, int percentage) -> void{
+        for(auto &udpSender : udpSenders){
+            udpSender.second->simulate_failure(enabled, percentage);
+        }
     }
 
     // reading
@@ -115,6 +128,7 @@ struct DCServer::Impl{
     sigslot::signal<std::string> client_connected_signal;
     sigslot::signal<std::string> client_disconnected_signal;
     sigslot::signal<size_t, std::chrono::nanoseconds, std::int64_t> last_frame_sent_signal;
+
 
 
 private:
@@ -150,7 +164,12 @@ DCServer::Impl::Impl(){
 
     udpReader.packets_received_signal.connect([&](std::span<PData> packets){
 
+        // Log::log_unf("[P1]");
         for(const auto &packet : packets){
+
+            if(packet.header.type != 8){
+                Log::fmessage("[PACKKET HEADER TYPE-{}]", packet.header.type);
+            }
 
             switch (static_cast<DCMessageType>(packet.header.type)) {
             case DCMessageType::init_server_client_connection:{
@@ -184,6 +203,8 @@ DCServer::Impl::Impl(){
             }break;
             case DCMessageType::feedback:{
 
+                // Log::log_unf("[PF]");
+
                 Feedback feedback;
                 std::copy(packet.data.data(), packet.data.data() + sizeof(Feedback), reinterpret_cast<std::byte*>(&feedback));
 
@@ -193,12 +214,14 @@ DCServer::Impl::Impl(){
             }break;
             case DCMessageType::update_device_settings:{
 
+                Log::fmessage("[DCServer] Device settings packet {} received.\n", packet.header.currentPacketId);
+
                 auto &reception = receptions[static_cast<std::int8_t>(DCMessageType::update_device_settings)];
                 reception.update(packet.header, packet.data, messagesBuffer);
 
                 if(auto info = reception.message_fully_received(packet.header); info.has_value()){
 
-                    Log::message("[DCServer] update_device_settings message received.\n");
+                    Log::message("[DCServer] update_device_settings message fully received.\n");
 
                     std::lock_guard l(messagesL);
                     rMessages->push_back(EndPtr<DCDeviceSettings>{std::move(packet.endPoint),  std::make_shared<DCDeviceSettings>(
@@ -265,13 +288,15 @@ DCServer::Impl::Impl(){
                 break;
             }
         }
+
+        // Log::log_unf("[/P1]");
     });
 }
 
-auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int readingPort, Protocol protocol) -> bool{
+auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int readingPort, Protocol protocol, size_t maxUdpPacketSize) -> bool{
 
     this->protocol = protocol;
-    if(!udpReader.init_socket(readingAdress, readingPort, protocol)){
+    if(!udpReader.init_socket(readingAdress, readingPort, protocol, maxUdpPacketSize)){
         return false;
     }
     udpReader.start_threads();
@@ -325,6 +350,7 @@ auto DCServer::Impl::send_messages_loop() -> void{
             continue;
         }
 
+        // Log::log_unf("[S]");
         bool frameSent = false;
 
         std::visit(
@@ -332,13 +358,16 @@ auto DCServer::Impl::send_messages_loop() -> void{
                 [&](EndVal<UdpConnectionSettings> m){
 
                     const auto &endPoint = m.first;
+
+                    Log::message(std::format("[DCServer] UdpConnectionSettings {}.\n", endPoint.id));
+
                     if(!udpSenders.contains(endPoint.id)){
 
                         // add new sender
                         udpSenders[endPoint.id] = std::make_unique<UdpSender>();
 
-                        // init socket
-                        if(udpSenders[endPoint.id]->init_socket(m.second.address, std::to_string(m.second.port), protocol)){
+                        // init socket                        
+                        if(udpSenders[endPoint.id]->init_socket(m.second.address, std::to_string(m.second.port), protocol, m.second.maxPacketSize)){
 
                             Feedback feedback;
                             feedback.type = FeedbackType::message_received;
@@ -358,6 +387,8 @@ auto DCServer::Impl::send_messages_loop() -> void{
                 },
                 [&](EndVal<Feedback> m){
 
+                    // Log::log_unf("[SF]");
+
                     Feedback feedback = m.second;
                     Log::message(std::format("[DCServer] Send feedback of type [{}].\n", static_cast<int>(feedback.receivedMessageType)));
                     const auto &endPoint = m.first;
@@ -371,10 +402,8 @@ auto DCServer::Impl::send_messages_loop() -> void{
                                 // disconnect all
                                 for(auto &udpSender : udpSenders){
                                     udpSender.second->send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
-                                    udpSender.second->clean_socket();
-                                    client_disconnected_signal(udpSender.first);
+                                    disconnect_sender(udpSender.first);
                                 }
-                                udpSenders.clear();
                             }
                         }
 
@@ -392,12 +421,16 @@ auto DCServer::Impl::send_messages_loop() -> void{
                             }
                         }
                     }
+
+                    // Log::log_unf("[/SF]");
                 },
                 [&](EndPtr<DCDataFrame> m){
 
+                    // Log::log_unf("[SFr]");
+
                     if(!udpSenders.empty()){
 
-                        // auto t1 = Time::nanoseconds_since_epoch();
+
                         auto beforeSendingFrameTS = Time::nanoseconds_since_epoch();
 
                         std::shared_ptr<cam::DCDataFrame> f = std::move(m.second);
@@ -407,19 +440,15 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         if(senderBuffer.size() < totalDataSizeBytes){
                             senderBuffer.resize(totalDataSizeBytes);
                         }
-                        // auto t2 = Time::nanoseconds_since_epoch();
 
                         // write data to buffer
                         size_t offset = 0;
                         auto bData = std::span(senderBuffer.data(), totalDataSizeBytes);
                         f->write_to_data(bData, offset);
 
-                        // auto t3 = Time::nanoseconds_since_epoch();
-
                         // generate all packets
                         (*udpSenders.begin()).second->generate_data_packets(static_cast<MessageTypeId>(DCMessageType::data_frame), bData, frameDataPackets);
 
-                        // auto t4 = Time::nanoseconds_since_epoch();
 
                         // send all packets
                         std::atomic<size_t> count = 0;
@@ -434,8 +463,6 @@ auto DCServer::Impl::send_messages_loop() -> void{
                             }
                         });
 
-                        // auto t5 = Time::nanoseconds_since_epoch();
-
                         // update last frame id sent if at least on frame sent
                         if(count != 0){
                             frameSent = true;
@@ -448,6 +475,8 @@ auto DCServer::Impl::send_messages_loop() -> void{
                         //     Time::difference_micro_s(t1,t2).count(),
                         //     Time::difference_micro_s(t2,t3).count(),Time::difference_micro_s(t3,t4).count(),Time::difference_micro_s(t4,t5).count()));
                     }
+
+                    // Log::log_unf("[/SFr]");
                 }
             },
             message.value()
@@ -463,26 +492,16 @@ auto DCServer::Impl::send_messages_loop() -> void{
         if(!frameSent){
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
+
+        // Log::log_unf("[/S]");
     }
 }
 
 DCServer::DCServer(): i(std::make_unique<Impl>()){
-
-    i->timeout_messages_signal.connect(&DCServer::timeout_messages_signal, this);
-    i->client_connected_signal.connect([&](std::string id){
-        std::unique_lock lg(settings.cInfos.lock);
-        settings.cInfos.clientsConnected[id] = Time::nanoseconds_since_epoch();
-    });
-    i->client_disconnected_signal.connect([&](std::string id){
-        std::unique_lock lg(settings.cInfos.lock);
-        settings.cInfos.clientsConnected.erase(id);
-    });
-    i->last_frame_sent_signal.connect([&](size_t idFrame, std::chrono::nanoseconds ts, std::int64_t sendingDurationMicroS){
-        std::unique_lock lg(settings.cInfos.lock);
-        settings.cInfos.lastFrameIdSent = idFrame;
-        settings.cInfos.lastFrameSentTS = ts;
-        settings.cInfos.lastFrameSentDurationMicroS = sendingDurationMicroS;
-    });
+    i->client_connected_signal.connect(     &DCServer::add_new_connected_client,    this);
+    i->client_disconnected_signal.connect(  &DCServer::remove_disconnected_client,  this);
+    i->last_frame_sent_signal.connect(      &DCServer::update_client_infos,         this);
+    i->timeout_messages_signal.connect(     &DCServer::timeout_messages_signal,     this);
 }
 
 DCServer::~DCServer(){
@@ -503,7 +522,12 @@ auto DCServer::reset_network() -> void{
 
     settings.update_reading_interface();
 
-    if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
+    Log::fmessage("Reset server {}\n", settings.udpServerS.maxUdpPacketSize);
+    if(!i->start_reading_thread(
+        settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress,
+        settings.udpServerS.readingPort,
+        settings.udpReadingInterface.protocol,
+        settings.udpServerS.maxUdpPacketSize)){
         Log::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return;
     }
@@ -521,7 +545,11 @@ auto DCServer::initialize(const std::string &serverSettingsPath) -> bool{
     }
     settings.globalFilePath = serverSettingsPath;
 
-    if(!i->start_reading_thread(settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
+    if(!i->start_reading_thread(
+        settings.udpServerS.anyReadingInterface ? "" : settings.udpReadingInterface.ipAddress,
+        settings.udpServerS.readingPort,
+        settings.udpReadingInterface.protocol,
+        settings.udpServerS.maxUdpPacketSize)){
         Log::error(std::format("[DCServer::initialize] Error cann start reading thread with address [{}].\n", settings.udpReadingInterface.ipAddress));
         return false;
     }
@@ -538,7 +566,7 @@ auto DCServer::legacy_initialize(const std::string &legacyNetworkSettingsFilePat
     }
     settings.update_reading_interface();
 
-    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol)){
+    if(!i->start_reading_thread(settings.udpReadingInterface.ipAddress, settings.udpServerS.readingPort, settings.udpReadingInterface.protocol, settings.udpServerS.maxUdpPacketSize)){
         // ...
         return false;
     }
@@ -596,9 +624,9 @@ auto DCServer::update() -> void{
                     },
                     [&](EndVal<Feedback> m){
                         if(m.second.type == FeedbackType::ping){
+                            std::unique_lock lg(settings.cInfos.lock);
                             if(settings.cInfos.clientsConnected.contains(m.first.id)){
                                 settings.cInfos.clientsConnected[m.first.id] = Time::nanoseconds_since_epoch();
-                                // Log::message("ping\n");
                             }
                         }
                     },
@@ -623,10 +651,8 @@ auto DCServer::update() -> void{
     }
 
     // check for disconnected clients
-    for(auto &client : settings.cInfos.clientsConnected){
-        if(Time::now_difference_ms(client.second).count() > 10000){
-            i->disconnect_sender(client.first);
-        }
+    if(auto idClient = check_if_disconnected_client(); idClient.has_value()){
+        i->disconnect_sender(idClient.value());
     }
 }
 
@@ -636,9 +662,41 @@ auto DCServer::send_frame(std::shared_ptr<cam::DCDataFrame> frame) -> void{
     i->sMessages.push_back(std::make_pair(EndPointId{}, std::move(frame)));
 }
 
+auto DCServer::add_new_connected_client(std::string id) -> void{
+    std::unique_lock lg(settings.cInfos.lock);
+    settings.cInfos.clientsConnected[id] = Time::nanoseconds_since_epoch();
+}
 
-auto DCServer::simulate_sending_failure(bool enabled, int percentage) -> void{    
-    //m_udpServerSender.simulate_failure(enabled, percentage);
+auto DCServer::remove_disconnected_client(std::string id) -> void{
+    std::unique_lock lg(settings.cInfos.lock);
+    if(settings.cInfos.clientsConnected.contains(id)){
+        settings.cInfos.clientsConnected.erase(id);
+    }
+}
+
+auto DCServer::update_client_infos(size_t idFrame, std::chrono::nanoseconds ts, int64_t sendingDurationMicroS) -> void{
+    std::unique_lock lg(settings.cInfos.lock);
+    settings.cInfos.lastFrameIdSent = idFrame;
+    settings.cInfos.lastFrameSentTS = ts;
+    settings.cInfos.lastFrameSentDurationMicroS = sendingDurationMicroS;
+}
+
+auto DCServer::check_if_disconnected_client() -> std::optional<std::string>{
+    std::optional<std::string> clientToDisconnect = std::nullopt;
+    std::unique_lock lg(settings.cInfos.lock);
+    for(auto &client : settings.cInfos.clientsConnected){
+        if(Time::now_difference_ms(client.second).count() > 10000){
+            Log::log("Time out disconnection\n");
+            clientToDisconnect = client.first;
+            break;
+        }
+    }
+    return clientToDisconnect;
+}
+
+
+auto DCServer::simulate_sending_failure(bool enabled, int percentage) -> void{
+    i->simulate_sending_failure(enabled, percentage);
 }
 
 

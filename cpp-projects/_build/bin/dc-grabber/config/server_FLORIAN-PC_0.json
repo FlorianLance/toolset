@@ -88,7 +88,7 @@
         "auto_white_balance": true,
         "backlight_compensation": false,
         "base": {
-            "type_string": "undefined",
+            "type_string": "color",
             "version": 1
         },
         "brightness": 0,
@@ -103,7 +103,7 @@
     },
     "device": {
         "base": {
-            "type_string": "undefined",
+            "type_string": "device",
             "version": 1
         },
         "config": {
@@ -112,7 +112,7 @@
                 "version": 1
             },
             "bt_GPU_id": 0,
-            "bt_enabled": true,
+            "bt_enabled": false,
             "bt_orientation": 0,
             "bt_processing_mode": 4,
             "color_alignment_rot": [
@@ -159,15 +159,15 @@
             },
             "s_capture": {
                 "audio": false,
-                "body_tracking": true,
+                "body_tracking": false,
                 "color": true,
                 "depth": true,
                 "imu": false,
-                "infra": true
+                "infra": false
             },
             "s_generation": {
                 "bodies_id_image": false,
-                "bodies_skeleton": true,
+                "bodies_skeleton": false,
                 "cloud": true,
                 "cloud_color_mode": 1,
                 "color_image": false,
@@ -179,7 +179,7 @@
                 "audio": false,
                 "bodies_id": false,
                 "bodies_id_compression_mode": 0,
-                "bodies_skeleton": true,
+                "bodies_skeleton": false,
                 "cloud": false,
                 "cloud_color_mode": 1,
                 "cloud_compression_mode": 2,
@@ -214,7 +214,7 @@
             1.0
         ],
         "base": {
-            "type_string": "undefined",
+            "type_string": "filters",
             "version": 1
         },
         "do_erosion": false,

@@ -55,6 +55,8 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
         read_and_update_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
         read_and_update_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
         read_and_update_value<bool>(json, unreadCount, "auto_connect"sv, autoConnect);
+        read_and_update_value<size_t>(json, unreadCount, "max_udp_packet_size"sv, maxUdpPacketSize);
+
         protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
     }
 
@@ -74,11 +76,11 @@ auto DCDeviceConnectionSettings::convert_to_json() const -> nlohmann::json{
         add_value(json, "id_reading_interface"sv,     idReadingInterface);
         add_value(json, "any_reading_interface"sv,    anyReadingInterface);
         add_value(json, "reading_port"sv,             readingPort);
-        // add_value(json, "sending_address"sv,          isLocalhost ? "localhost"sv : sendingAddress);
         add_value(json, "sending_address"sv,          sendingAddress);
         add_value(json, "sending_port"sv,             sendingPort);
         add_value(json, "auto_connect"sv,             autoConnect);
         add_value(json, "protocol"sv,                 (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
+        add_value(json, "max_udp_packet_size"sv,      maxUdpPacketSize);
     }
 
     return json;

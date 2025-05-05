@@ -194,6 +194,13 @@ auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
         DCGSignals::get()->reset_reading_network_signal();
     }
 
+    static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
+    static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
+    int mtu = settings.udpServerS.maxUdpPacketSize;
+    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading MTU", "mtu", &mtu, idMTU, dsMTU)){
+        settings.udpServerS.maxUdpPacketSize = mtu;
+        DCGSignals::get()->reset_reading_network_signal();
+    }
 
     ImGui::Spacing();
     ImGui::Separator();

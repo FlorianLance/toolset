@@ -69,6 +69,10 @@ public:
 
 private:
 
+    auto add_new_connected_client(std::string id) -> void;
+    auto remove_disconnected_client(std::string id) -> void;
+    auto update_client_infos(size_t idFrame, std::chrono::nanoseconds ts, std::int64_t sendingDurationMicroS) -> void;
+    auto check_if_disconnected_client() -> std::optional<std::string>;
 
     struct Impl;
     std::unique_ptr<Impl> i;

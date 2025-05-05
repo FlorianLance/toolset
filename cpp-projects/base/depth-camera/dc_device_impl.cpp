@@ -2324,6 +2324,7 @@ auto DCDeviceImpl::get_average_framerate() -> float{
 auto DCDeviceImpl::read_frame() -> bool{
 
     auto tRF = TimeDiffGuard(timeM, "READ_FRAME"sv);
+    // Log::log_unf("[RF]");
 
     fData.reset_spans();
     {
@@ -2340,21 +2341,25 @@ auto DCDeviceImpl::read_frame() -> bool{
 
     auto tRI = TimeDiffGuard(timeM, "READ_IMAGES"sv);
     {
+        // Log::log_unf("[RC]");
         auto tRCI = TimeDiffGuard(timeM, "READ_COLOR_IMAGE"sv);
         read_color_image(mInfos.has_color() && settings.data.capture.color);
         // std::cout << "COLOR SIZE: " << fData.rawColor.size() << " " << mInfos.has_color()<< " " << settings.data.capture.color << "\n";
     }
     {
+        // Log::log_unf("[RD]");
         auto tRDI = TimeDiffGuard(timeM, "READ_DEPTH_IMAGE"sv);
         read_depth_image(mInfos.has_depth() && settings.data.capture.depth);
         // std::cout << "DEPTH SIZE: " << fData.depth.size() <<  " " << mInfos.has_depth()<< " " << settings.data.capture.depth << "\n";
     }
     {
+        // Log::log_unf("[RI]");
         auto tRII = TimeDiffGuard(timeM, "READ_INFRA_IMAGE"sv);
         read_infra_image(mInfos.has_infra() && settings.data.capture.infra);
         // std::cout << "INFRA SIZE: " << fData.infra.size() << " " << mInfos.has_infra()<< " " << settings.data.capture.infra << "\n";
     }
     {
+        // Log::log_unf("[RBT]");
         auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
         read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());        
     }
@@ -2367,15 +2372,18 @@ auto DCDeviceImpl::read_frame() -> bool{
         read_IMU(settings.data.capture.imu);
     }
 
+    // Log::log_unf("[Re]");
     release_frame();
 
     dataIsValid = check_data_validity();
+    // Log::log_unf("[/RF]\n");
     return dataIsValid;
 }
 
 
 auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::shared_ptr<DCDataFrame>> {
 
+    // Log::log_unf("[PD]");
     auto tPD = TimeDiffGuard(timeM, "PROCESSING_DATA"sv);
     frame   = nullptr;
     dFrame  = nullptr;
@@ -2527,6 +2535,7 @@ auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::s
         mInfos.increment_capture_id();
     }
 
+    // Log::log_unf("[/PD]");
     return {std::move(frame),std::move(dFrame)};
 }
 

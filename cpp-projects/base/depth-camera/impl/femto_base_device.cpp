@@ -189,6 +189,11 @@ struct FemtoBaseDevice::Impl{
 
     k4a::capture bodyCapture = nullptr;
 
+    // profiles
+    std::shared_ptr<ob::StreamProfile> colorProfile = nullptr;
+    std::shared_ptr<ob::StreamProfile> depthProfile = nullptr;
+    std::shared_ptr<ob::StreamProfile> infraProfile = nullptr;
+
     // frames data
     std::shared_ptr<ob::FrameSet> frameSet     = nullptr;
     std::shared_ptr<ob::ColorFrame> colorImage = nullptr;
@@ -818,11 +823,12 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
         Log::message(std::format("   Infra sensor found [{}].\n", hasInfraSensor));
 
         // retrieve color profile
+        i->colorProfile = nullptr;
         if(hasColorSensor && mInfos.has_color()){
+            Log::message("Retrieve color profile.\n");
             if(auto colorStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_COLOR); colorStreamProfileList != nullptr){
-                std::shared_ptr<ob::StreamProfile> colorProfile = nullptr;
                 try {
-                    colorProfile = colorStreamProfileList->getVideoStreamProfile(
+                    i->colorProfile = colorStreamProfileList->getVideoStreamProfile(
                         static_cast<int>(mInfos.color_width()),
                         static_cast<int>(mInfos.color_height()),
                         convert_to_ob_image_format(mInfos.image_format()),
@@ -830,20 +836,22 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
                     );
                     Log::message("Color profile found.\n");
                 }catch(...) {
-                    colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
+                    i->colorProfile = colorStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
-                if(colorProfile != nullptr){
-                    config->enableStream(colorProfile);
+                if(i->colorProfile != nullptr){
+                    Log::message("Enable color stream.\n");
+                    config->enableStream(i->colorProfile);
                 }
             }
         }
 
         // retrieve depth profile
+        i->depthProfile = nullptr;
         if(hasDepthSensor && mInfos.has_depth()){
+            Log::message("Retrieve depth profile.\n");
             if(auto depthStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_DEPTH); depthStreamProfileList != nullptr){
-                std::shared_ptr<ob::StreamProfile> depthProfile = nullptr;
                 try {
-                    depthProfile = depthStreamProfileList->getVideoStreamProfile(
+                    i->depthProfile = depthStreamProfileList->getVideoStreamProfile(
                         static_cast<int>(mInfos.depth_width()),
                         static_cast<int>(mInfos.depth_height()),
                         OB_FORMAT_Y16,
@@ -851,21 +859,24 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
                         );
                     Log::message("Depth profile found.\n");
                 }catch(...) {
-                    depthProfile = depthStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
+                    i->depthProfile = depthStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
 
-                if(depthProfile != nullptr){
-                    config->enableStream(depthProfile);
+                if(i->depthProfile != nullptr){
+                    Log::message("Enable depth stream.\n");
+                    config->enableStream(i->depthProfile);
                 }
             }
         }
 
         // retrieve infrared profile
-        if(hasInfraSensor && mInfos.has_infra()){
+        i->infraProfile = nullptr;
+
+        if(configS.enableIRStream && hasInfraSensor && mInfos.has_infra()){
+            Log::message("Retrieve infra profile.\n");
             if(auto infraStreamProfileList = i->pipe->getStreamProfileList(OB_SENSOR_IR); infraStreamProfileList != nullptr){
-                std::shared_ptr<ob::StreamProfile> infraProfile = nullptr;
                 try {
-                    infraProfile = infraStreamProfileList->getVideoStreamProfile(
+                    i->infraProfile = infraStreamProfileList->getVideoStreamProfile(
                         static_cast<int>(mInfos.infra_width()),
                         static_cast<int>(mInfos.infra_height()),
                         OB_FORMAT_Y16,
@@ -873,14 +884,17 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
                         );
                     Log::message("Infra profile found.\n");
                 }catch(...) {
-                    infraProfile = infraStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
+                    i->infraProfile = infraStreamProfileList->getProfile(OB_PROFILE_DEFAULT);
                 }
 
-                if(infraProfile != nullptr){
-                    config->enableStream(infraProfile);
+                if(i->infraProfile != nullptr){
+                    Log::message("Enable infra stream.\n");
+                    config->enableStream(i->infraProfile);
                 }
             }
         }
+
+
 
         // // accel
         // if(i->sensorList->getSensor(OBSensorType::OB_SENSOR_ACCEL)){
@@ -975,6 +989,7 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
     
     Log::message("### Update colors settings ###.\n");
     update_from_colors_settings(colorS);
+
 
     return true;
 }

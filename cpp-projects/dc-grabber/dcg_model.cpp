@@ -45,6 +45,7 @@ DCGModel::DCGModel(){
     device->start_thread();
 
     server.device_settings_received_signal.connect([&](){
+        Log::message("Device settings received\n");
         DCGSignals::get()->update_device_settings_signal(server.settings.deviceS);
     });
     server.color_settings_received_signal.connect([&](){

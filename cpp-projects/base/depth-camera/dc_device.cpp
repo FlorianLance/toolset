@@ -410,6 +410,8 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
             syncChanged ||
             // device
             (newConfigS.mode                            != currConfigS.mode) ||
+            // stream
+            (newConfigS.enableIRStream                  != currConfigS.enableIRStream) ||
             // body tracking
             (newConfigS.btEnabled                       != currConfigS.btEnabled) ||
             (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
@@ -524,8 +526,7 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
         }
     }
 
-    if(nColorS.has_value()){
-        i->colorsS = *nColorS;
+    if(nColorS.has_value()){ i->colorsS = *nColorS;
         if(i->device != nullptr){
             if(i->device->is_opened()){
                 i->device->set_color_settings(i->colorsS);

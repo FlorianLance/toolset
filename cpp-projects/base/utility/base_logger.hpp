@@ -56,9 +56,11 @@ public:
     static auto set_logger_instance(std::unique_ptr<BaseLogger> logger) noexcept -> void;
     static auto get_instance() noexcept -> BaseLogger*;
 
-    virtual auto message(std::string_view message)  -> void{static_cast<void>(message);}
-    virtual auto warning(std::string_view warning)  -> void{static_cast<void>(warning);}
-    virtual auto error(std::string_view error)      -> void{static_cast<void>(error);}
-    virtual auto log(std::string_view error)        -> void{static_cast<void>(error);}
+    virtual auto message(std::string_view message)      -> void{static_cast<void>(message);}
+    virtual auto message_unf(std::string_view message)  -> void{static_cast<void>(message);}
+    virtual auto warning(std::string_view warning)      -> void{static_cast<void>(warning);}
+    virtual auto error(std::string_view error)          -> void{static_cast<void>(error);}
+    virtual auto log(std::string_view log)              -> void{static_cast<void>(log);}
+    virtual auto log_unf(std::string_view log)          -> void{static_cast<void>(log);}
 };
 }

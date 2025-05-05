@@ -39,7 +39,7 @@ public:
     UdpSender();
     ~UdpSender();
 
-    auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol) -> bool;
+    auto init_socket(std::string tagetName, std::string writingPort, Protocol protocol, size_t maxPacketSize) -> bool;
     auto set_sender_id(size_t idClient) -> void;
     auto clean_socket() -> void;
 

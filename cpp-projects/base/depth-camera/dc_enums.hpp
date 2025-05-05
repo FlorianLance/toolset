@@ -309,6 +309,7 @@ enum class DCMode : std::int8_t {
     // # narrow
     // ## 16:9 color
     FMU_C1280x720_DI640x576_MJPG_F30,
+    // FMU_C1280x720_D640x576_MJPG_F30,
     // # wide
     // ## 16:9 color
     FMU_C1280x720_DI512x512_MJPG_F30,
@@ -330,7 +331,7 @@ using DR    = DCDepthResolution;
 
 using TDCMode = std::tuple<
     DCMode,                                 IF,       CR,         DR,                  FPS,      Dev,       Name>;
-static constexpr TupleArray<24, TDCMode> dcModes = {{
+static constexpr TupleArray<25, TDCMode> dcModes = {{
     // azure kinect
     TDCMode
     // azure kinect
@@ -383,6 +384,8 @@ static constexpr TupleArray<24, TDCMode> dcModes = {{
     // # narrow
     // ## 16:9 color
     {M::FMU_C1280x720_DI640x576_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FMU,  "C-720p  D-576p  I-MJPG F-30"sv},
+    // {M::FMU_C1280x720_D640x576_MJPG_F30,    IF::MJPG, CR::R720P,  DR::K4A_640x576,     FPS::F30, Dev::FMU,  "C-720p  D-576p  I-MJPG F-30"sv},
+
     // # wide
     // ## 16:9 color
     {M::FMU_C1280x720_DI512x512_MJPG_F30,   IF::MJPG, CR::R720P,  DR::K4A_512x512,     FPS::F30, Dev::FMU,  "C-720p  D-512p  I-MJPG F-30"sv},
@@ -439,7 +442,7 @@ static constexpr TupleArray<DCType::SizeEnum, TDCDevices> dcDevices = {{
     {DCType::AzureKinect,       true,       true,       true,               true,           true,    DCMode::AK_C1280x720_DI640x576_NV12_F30},
     {DCType::FemtoBolt,         false,      true,       false,              false,          true,    DCMode::FB_C1280x720_DI640x576_NV12_F30},
     {DCType::FemtoMegaEthernet, false,      true,       false,              false,          true,    DCMode::FME_C1280x720_DI640x576_MJPG_F30},
-    {DCType::FemtoMegaUSB,      false,      true,       false,              false,          true,    DCMode::FMU_C1280x720_DI640x576_MJPG_F30},
+    {DCType::FemtoMegaUSB,      false,      true,       false,              false,          true,    DCMode::FMU_C1280x720_DI640x576_MJPG_F30},        
     {DCType::Gemini215,         false,      true,       false,              false,          false,   DCMode::G215_C1280x720_DI1280x800_YUY2_F30},
     {DCType::Kinect2,           true,       true,       false,              false,          false,   DCMode::Invalid},
     {DCType::Recording,         true,       true,       false,              false,          true,    DCMode::Invalid},

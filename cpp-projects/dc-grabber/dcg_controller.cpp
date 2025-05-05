@@ -45,7 +45,7 @@ using namespace graphics;
 using namespace std::string_view_literals;
 
 DCGController::~DCGController(){
-    auto lg = LogG("~DCGController::start"sv);
+    auto lg = LogG("~DCGController"sv);
     model->clean();
 }
 

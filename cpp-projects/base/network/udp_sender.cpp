@@ -68,10 +68,12 @@ struct UdpSender::Impl{
 
     // id
     size_t senderId = 0;
+
+    std::vector<std::vector<std::byte>> frameDataPackets;
 };
 
 UdpSender::UdpSender(): i(std::make_unique<Impl>()){
-    update_size_packets(i->sizeUdpPacket);
+
 }
 
 UdpSender::~UdpSender(){
@@ -85,7 +87,9 @@ auto UdpSender::is_connected() const noexcept -> bool{
     return i->connected;
 }
 
-auto UdpSender::init_socket(std::string targetName, std::string port, Protocol protocol) -> bool{
+auto UdpSender::init_socket(std::string targetName, std::string port, Protocol protocol, size_t maxPacketSize) -> bool{
+
+    update_size_packets(i->sizeUdpPacket = maxPacketSize);
 
     // reset socket if necessary
     if(is_connected()){
@@ -165,10 +169,13 @@ auto UdpSender::send_packet_data(std::span<const std::byte> packetData) -> size_
             }
         }
     } catch (const boost::system::system_error& error) {
-        Log::error(std::format("[UdpSender::send_packet_data] Cannot sent data to endpoint {}, error message: {}.\n",
+        Log::error(std::format("[UdpSender::send_packet_data] Cannot sent data to endpoint {}, error code: [{}] message: [{}].\n",
             i->endpoint->endpoint().address().to_string(),
+            error.code().value(),
             error.what())
         );
+
+
     }
     return bytesNbSent;   
 }
@@ -218,7 +225,9 @@ auto UdpSender::generate_data_packets(MessageTypeId messageType, std::span<const
 
         // copy header
         header.creationTimestampNs = Time::nanoseconds_since_epoch().count();
-        // header.checkSum = data::Checksum::gen_crc16(dataS);
+        header.checkSum = 0;
+        // header.checkSum = data::Checksum::gen_crc16(std::span(reinterpret_cast<std::byte*>(&header), sizeof(header)));
+
         std::copy(
             reinterpret_cast<std::byte*>(&header),
             reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
@@ -232,13 +241,19 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
     static constexpr size_t sizePacketHeader = sizeof (Header);
     size_t sizePacketData  = i->sizeUdpPacket - sizePacketHeader;
     size_t nbPacketsNeeded = dataToSend.size() / sizePacketData;
-    size_t rest            = dataToSend.size() % sizePacketData;
+
+
+    size_t rest= dataToSend.size() % sizePacketData;
     if(rest > 0){
         ++nbPacketsNeeded;
     }
 
     header.totalSizeBytes     = static_cast<std::uint32_t>(nbPacketsNeeded * sizePacketHeader + dataToSend.size());
     header.totalNumberPackets = static_cast<std::uint32_t>(nbPacketsNeeded);
+
+    if(header.messageId == 2){
+        Log::fmessage("SEND DATA SIZE: {} {}\n", header.totalSizeBytes, header.totalNumberPackets);
+    }
 
     size_t nbBytesSent = 0;
     for(size_t idP = 0; idP < header.totalNumberPackets; ++idP){
@@ -260,7 +275,9 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
 
         // copy header
         header.creationTimestampNs = Time::nanoseconds_since_epoch().count();
-        // header.checkSum = data::Checksum::gen_crc16(dataS);
+        header.checkSum = 0;
+        header.checkSum = data::Checksum::gen_crc16(std::span(reinterpret_cast<std::byte*>(&header), sizeof(header)));
+
         std::copy(
             reinterpret_cast<std::byte*>(&header),
             reinterpret_cast<std::byte*>(&header) + sizePacketHeader,
@@ -273,6 +290,14 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
         // update offset
         header.dataOffset += header.currentPacketSizeBytes - sizePacketHeader;
     }
+
+    if(header.type != 10 && header.type != 9 && header.type != 6 && header.type != 8){
+        Log::fmessage("Send data {} {} {} {} {} {} {}\n",
+            header.type, header.totalSizeBytes, sizePacketHeader, sizePacketData, nbPacketsNeeded, rest, nbBytesSent
+        );
+    }
+
+
     return nbBytesSent;
 }
 
@@ -287,6 +312,7 @@ auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
 }
 
 auto UdpSender::set_sender_id(size_t idClient) -> void{
+    Log::fmessage("########### UdpSender {}\n", idClient);
     i->senderId = idClient;
 }
 
@@ -298,7 +324,7 @@ auto UdpSender::send_message(MessageTypeId messageType, std::span<const std::byt
     }
 
     // init header
-    if(!data.empty()){
+    if(!data.empty()){        
 
         Header header = generate_header(messageType);
 
@@ -306,7 +332,7 @@ auto UdpSender::send_message(MessageTypeId messageType, std::span<const std::byt
         size_t nbBytesSent = send_data(header, data);
         if(nbBytesSent != header.totalSizeBytes){
             Log::error(std::format("[UdpSender::send_message] Invalid nb of bytes send, {} instead of {}.\n"sv, nbBytesSent, header.totalSizeBytes));
-        }
+        }        
 
         return nbBytesSent;
 

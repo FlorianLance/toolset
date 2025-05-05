@@ -139,7 +139,6 @@ auto BaseSfmlGlWindow::start() -> void{
             }else if(const auto* sE = event->getIf<sf::Event::KeyReleased>()){ // A key was released
                 keyboard_keyrelease_event(*sE);
             }else if(const auto* sE = event->getIf<sf::Event::MouseButtonPressed>()){ // A mouse button was pressed
-                Log::message("click M\n");
                 mouse_button_pressed_event(*sE);
             }else if(const auto* sE = event->getIf<sf::Event::MouseButtonReleased>()){ // A mouse button was released
                 mouse_button_released_event(*sE);

@@ -49,7 +49,6 @@ struct DCClientRemoteDevice::Impl{
 
     // send
     UdpSender udpSender;
-    std::uint16_t maxSizeUpdMessage = 9000;
 
     // read
     UdpReader udpReader;
@@ -96,7 +95,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     );
 
     // init reader
-    if(!i->udpReader.init_socket(i->remoteServerS.anyReadingInterface ? "" : i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol)){
+    if(!i->udpReader.init_socket(i->remoteServerS.anyReadingInterface ? "" : i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol, i->remoteServerS.maxUdpPacketSize)){
         Log::error("[DCClientRemoteDevice]: Cannot init udp reader.\n");
         return false;
     }
@@ -106,8 +105,14 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     // init sender
-    Log::message(std::format("DCClientRemoteDevice init sender: {} {} {}\n", i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), static_cast<int>(i->remoteServerS.protocol)));
-    if(!i->udpSender.init_socket(i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol)){
+    Log::fmessage("DCClientRemoteDevice init sender: {} {} {} {}\n",
+        i->remoteServerS.processedSendingAddress,
+        std::to_string(i->remoteServerS.sendingPort),
+        static_cast<int>(i->remoteServerS.protocol),
+        i->remoteServerS.maxUdpPacketSize
+    );
+
+    if(!i->udpSender.init_socket(i->remoteServerS.processedSendingAddress, std::to_string(i->remoteServerS.sendingPort), i->remoteServerS.protocol, i->remoteServerS.maxUdpPacketSize)){
         Log::error("[DCClientRemoteDevice::initialize] Cannot init udp sender.\n");
         return false;
     }
@@ -123,7 +128,7 @@ auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
     UdpConnectionSettings connectionSettings;
     connectionSettings.address          = i->remoteServerS.readingAddress;
     connectionSettings.port             = i->remoteServerS.readingPort;
-    connectionSettings.maxPacketSize    = i->maxSizeUpdMessage;
+    connectionSettings.maxPacketSize    = i->remoteServerS.maxUdpPacketSize;
 
     auto bData = connectionSettings.convert_to_json_binary();
     i->udpSender.set_sender_id(idClient);
@@ -205,7 +210,7 @@ auto DCClientRemoteDevice::update_color_settings(const cam::DCColorSettings &col
 }
 
 auto DCClientRemoteDevice::update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{
-    auto bData = filtersS.convert_to_json_binary();
+    auto bData = filtersS.convert_to_json_binary();    
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_filters_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
 }
 

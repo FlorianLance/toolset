@@ -63,12 +63,12 @@ struct QtLoggerM::Impl{
         QString color;
     };
     std::unordered_map<MessageType, Config> mTypeConfig = {
-        {MessageType::normal,   Config{true,  true, true, false, false, u"DarkBlue"_s}},
+        {MessageType::normal,   Config{true,  true, true, true,  false, u"DarkBlue"_s}},
         {MessageType::error,    Config{true,  true, true, true,  true,  u"Orange"_s}},
         {MessageType::warning,  Config{true,  true, true, true,  true,  u"DarkRed"_s}},
         {MessageType::log,      Config{false, false,true, true,  true,  u"LightGrey"_s}},
         {MessageType::unknow,   Config{false, false,false,false, false, u"Black"_s}},
-        };
+    };
 
     Impl(){}
 };

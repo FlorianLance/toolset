@@ -23,20 +23,20 @@ using namespace tool;
 
 
 
-auto multi_devices_benchmark() -> void{
+auto create_device(int deviceId ) -> void{
 
     std::unique_ptr<k4a::device> device = nullptr;
 
-
-
     // create device
-    device = std::make_unique<k4a::device>(k4a::device::open(static_cast<uint32_t>(6)));
+    Log::fmessage("open device {}\n", deviceId);
+    device = std::make_unique<k4a::device>(k4a::device::open(static_cast<uint32_t>(deviceId)));
 
     if(!device->is_valid()){
         Log::error("Invalid device.\n");
         return;
     }
 
+    Log::fmessage("create config {}\n", deviceId);
     // set config
     k4a_device_configuration_t k4aConfig        = K4A_DEVICE_CONFIG_INIT_DISABLE_ALL;
     k4aConfig.color_format                      = K4A_IMAGE_FORMAT_COLOR_NV12;
@@ -50,6 +50,7 @@ auto multi_devices_benchmark() -> void{
     k4aConfig.subordinate_delay_off_master_usec = 0;
 
     // start camera
+    Log::fmessage("start camera {}\n", deviceId);
     device->start_cameras(&k4aConfig);
 
     // retrieve calibration
@@ -67,7 +68,7 @@ auto multi_devices_benchmark() -> void{
     ImageBuffer<ColorRGBA8> convertedColorData;
 
     Log::message("Start reading frames.\n");
-    for(int ii = 0; ii < 10; ++ii){
+    for(int ii = 0; ii < 500; ++ii){
 
         bool success = false;
         std::int32_t timeoutMs = 500;
@@ -95,11 +96,11 @@ auto multi_devices_benchmark() -> void{
         }
 
         Log::fmessage("temp {:6} color {:6} depth {:6} infra {:6}\n",
-            capture.get_temperature_c(),
-            color.is_valid() ? color.get_width_pixels() : 0,
-            depth.is_valid() ? depth.get_width_pixels() : 0,
-            infra.is_valid() ? infra.get_width_pixels() : 0
-        );
+                      capture.get_temperature_c(),
+                      color.is_valid() ? color.get_width_pixels() : 0,
+                      depth.is_valid() ? depth.get_width_pixels() : 0,
+                      infra.is_valid() ? infra.get_width_pixels() : 0
+                      );
 
 
         if(color.is_valid()){
@@ -131,7 +132,7 @@ auto multi_devices_benchmark() -> void{
                     colorDataBuffer,
                     colorSizeBytes,
                     nullptr, nullptr
-                );
+                    );
 
                 if(!depthSizedColorImage.is_valid()){
                     depthSizedColorImage = k4a::image::create(
@@ -139,7 +140,7 @@ auto multi_devices_benchmark() -> void{
                         static_cast<int>(depth.get_width_pixels()),
                         static_cast<int>(depth.get_height_pixels()),
                         static_cast<int>(depth.get_width_pixels() * 4)
-                    );
+                        );
                 }
 
                 if(!colorSizedDepthImage){
@@ -148,7 +149,7 @@ auto multi_devices_benchmark() -> void{
                         static_cast<int>(color.get_width_pixels()),
                         static_cast<int>(color.get_height_pixels()),
                         static_cast<int>(color.get_width_pixels() * 2)
-                    );
+                        );
                 }
 
                 try{
@@ -156,12 +157,12 @@ auto multi_devices_benchmark() -> void{
                         depth,
                         k4aColorImage,
                         &depthSizedColorImage
-                    );
+                        );
 
                     transformation.depth_image_to_color_camera(
                         depth,
                         &colorSizedDepthImage
-                    );
+                        );
 
                     Log::fmessage("colorSizedDepthImage {} {}\n", colorSizedDepthImage.get_width_pixels(), colorSizedDepthImage.get_height_pixels());
                     cv::Mat dMat(static_cast<int>(colorSizedDepthImage.get_height_pixels()), static_cast<int>(colorSizedDepthImage.get_width_pixels()), CV_16UC1, colorSizedDepthImage.get_buffer());
@@ -181,10 +182,10 @@ auto multi_devices_benchmark() -> void{
 
             if(!pointCloudImage.is_valid()){
                 // pointCloudImage = k4a::image::create(
-                    // K4A_IMAGE_FORMAT_CUSTOM,
-                    // static_cast<int>(depth.get_width_pixels()),
-                    // static_cast<int>(depth.get_height_pixels()),
-                    // static_cast<int>(depth.get_width_pixels() * 3 * sizeof(std::int16_t))
+                // K4A_IMAGE_FORMAT_CUSTOM,
+                // static_cast<int>(depth.get_width_pixels()),
+                // static_cast<int>(depth.get_height_pixels()),
+                // static_cast<int>(depth.get_width_pixels() * 3 * sizeof(std::int16_t))
                 // );
                 pointCloudImage = k4a::image::create(
                     K4A_IMAGE_FORMAT_CUSTOM,
@@ -208,7 +209,7 @@ auto multi_devices_benchmark() -> void{
                     colorSizedDepthImage,
                     K4A_CALIBRATION_TYPE_COLOR,
                     &pointCloudImage
-                );
+                    );
 
                 auto buffer = reinterpret_cast<geo::Pt3<std::int16_t>*>(pointCloudImage.get_buffer());
                 // Log::fmessage("buffer {} {} {}\n", buffer[100].x(), buffer[100].y(), buffer[100].z());
@@ -244,5 +245,27 @@ auto multi_devices_benchmark() -> void{
 
         // cv::Mat convMat(static_cast<int>(mInfos.color_height()), static_cast<int>(mInfos.color_width()), CV_8UC4, fData.convertedColorData.get_byte_data());
         // cv::cvtColor(yuvImage, convMat, cv::COLOR_YUV2RGBA_NV12);
+    }
+}
+
+auto multi_devices_benchmark() -> void{
+
+
+    int nbDevices = 8;
+    std::vector<std::unique_ptr<std::thread>> threads;
+    threads.resize(nbDevices);
+
+    for(int idD = 0; idD < nbDevices; ++idD){
+        Log::fmessage("start thread {}\n", idD);
+        threads[idD] =
+            std::make_unique<std::thread>([=](){
+                Log::fmessage("create device {}\n", idD);
+                create_device(idD);
+            }
+        );
+    }
+
+    for(int idD = 0; idD < nbDevices; ++idD){
+        threads[idD]->join();
     }
 }

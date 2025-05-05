@@ -1689,6 +1689,11 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
             ImGui::EndCombo();
         }
     }
+
+    if(ImGui::Checkbox("Enable IR stream", &config.enableIRStream)){
+        update = true;
+    }
+
     ImGui::Unindent();
 
     ImGui::Spacing();

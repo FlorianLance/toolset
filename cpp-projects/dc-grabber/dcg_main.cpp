@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
     logger->init(Paths::get()->logsDir.string(), DCSettingsPaths::get()->logName);
     BaseLogger::set_logger_instance(std::move(logger));
 
-    Log::message("Start DC grabber.\n"sv);
+    Log::fmessage("Start DC grabber {} {}.\n"sv, sizeof(DCDeviceSettings), sizeof(DCFiltersSettings));
     Log::message(std::format("Args {}.\n"sv, argc));
     if(!id.has_value()){
         Log::warning("No id argument found, use 0 instead.\n"sv);

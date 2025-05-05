@@ -56,6 +56,7 @@ struct DCDeviceConnectionSettings : io::Settings{
     std::string sendingAddress = "localhost";
     int sendingPort = 8888;    
     bool autoConnect = false;
+    size_t maxUdpPacketSize = 9000;
 
     // # runtime
     std::string readingAddress;

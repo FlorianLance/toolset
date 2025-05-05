@@ -41,7 +41,7 @@ public:
     ~UdpReader();
 
     // socket
-    auto init_socket(std::string readingAdress, int readingPort, Protocol protocol) -> bool;
+    auto init_socket(std::string readingAdress, int readingPort, Protocol protocol, size_t maxPacketSize) -> bool;
     auto clean_socket() -> void;
     [[nodiscard]] auto is_connected() const noexcept -> bool;
 
@@ -68,10 +68,6 @@ private :
     auto receive_data() -> size_t;
     auto trigger_received_packets() -> void;
 
-
-    static constexpr size_t maxPacketSize = 9000;
-    static constexpr size_t receiveBufferSize = maxPacketSize * 300;
-    static constexpr size_t timeoutMs = 100;
 
     struct Impl;
     std::unique_ptr<Impl> i;

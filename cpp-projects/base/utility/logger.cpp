@@ -170,6 +170,21 @@ auto Logger::message(std::string_view message) -> void{
     }
 }
 
+auto Logger::message_unf(std::string_view message) -> void{
+    const auto &conf = i->mTypeConfig[MessageType::normal];
+    if(conf.displayToConsole){
+        std::cout << message;
+    }
+
+    if(conf.saveToFile){
+        insert_to_log_file(message, false);
+    }
+
+    if(conf.triggerSignals){
+        message_signal(std::string(message));
+    }
+}
+
 auto Logger::warning(std::string_view warning) -> void{
 
     const auto &conf = i->mTypeConfig[MessageType::warning];
@@ -244,6 +259,21 @@ auto Logger::log(std::string_view log) -> void{
     }
 
     if(conf.triggerSignals && !conf.formatHTMLForSignals){
+        log_signal(std::string(log));
+    }
+}
+
+auto Logger::log_unf(std::string_view log) -> void{
+
+    const auto &conf = i->mTypeConfig[MessageType::log];
+    if(conf.displayToConsole){
+        std::cout << log;
+    }
+    if(conf.saveToFile){
+        insert_to_log_file(log, true);
+    }
+
+    if(conf.triggerSignals){
         log_signal(std::string(log));
     }
 }

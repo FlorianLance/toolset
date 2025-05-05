@@ -36,7 +36,7 @@
 // local
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
-// #include "data/checksum.hpp"
+#include "data/checksum.hpp"
 
 using namespace boost::asio;
 using namespace boost::asio::detail;
@@ -64,10 +64,13 @@ struct UdpReader::Impl{
     std::mutex locker;
     Buffer<PData> packetsReceived;
     Buffer<PData> swapPackets;
+
+    size_t maxPacketSize = 9000;
+    size_t timeoutMs = 100;
 };
 
 UdpReader::UdpReader() : i(std::make_unique<Impl>()){
-    i->packetsRingBuffer.resize(10000, maxPacketSize);
+
 }
 
 UdpReader::~UdpReader(){
@@ -80,7 +83,10 @@ UdpReader::~UdpReader(){
     }
 }
 
-auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol) -> bool{
+auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protocol, size_t maxPacketSize) -> bool{
+
+    i->maxPacketSize    = maxPacketSize;
+    i->packetsRingBuffer.resize(10000, i->maxPacketSize);
 
     if(are_threads_started()){
         Log::error(std::format("[UdpReader::init_socket] Cannot init socket while reading thread is still active.\n"sv));
@@ -96,8 +102,10 @@ auto UdpReader::init_socket(std::string readingAdress, int port, Protocol protoc
         // open socket
         i->socket   = std::make_unique<udp::socket>(i->ioService);
         i->socket->open(protocol == Protocol::ipv6 ? ip::udp::v6() : ip::udp::v4());
-        i->socket->set_option(socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{timeoutMs});
+        i->socket->set_option(socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{static_cast<int>(i->timeoutMs)});
         i->socket->set_option(udp::socket::reuse_address(true));
+
+        size_t receiveBufferSize = i->maxPacketSize * 300;
         i->socket->set_option(udp::socket::receive_buffer_size(receiveBufferSize));
 
         // bind socket
@@ -154,14 +162,14 @@ auto UdpReader::start_threads() -> void{
     if((i->readPacketsT == nullptr) && (i->processPacketsT == nullptr)){
         
         auto lg = LogG("[UdpReader::start_threads] Start threads"sv);
-        i->threadsStarted  = true;
-        i->readPacketsT    = std::make_unique<std::thread>([&](){
+        i->threadsStarted = true;
+        i->readPacketsT  = std::make_unique<std::thread>([&](){
             auto lgS = LogG("[UdpReader::start_threads] Receiving thread"sv);
             while(i->threadsStarted){
                 receive_data();
             }
         });
-        i->processPacketsT    = std::make_unique<std::thread>([&](){
+        i->processPacketsT = std::make_unique<std::thread>([&](){
             auto lgS = LogG("[UdpReader::start_threads] Triggering thread"sv);
             while(i->threadsStarted){
                 trigger_received_packets();
@@ -217,9 +225,10 @@ auto UdpReader::receive_data() -> size_t{
     size_t nbBytesReceived = 0;
     udp::endpoint senderEndpoint;
 
-    auto packetData = i->packetsRingBuffer.current_span(maxPacketSize);
+    auto packetData = i->packetsRingBuffer.current_span(i->maxPacketSize);
 
     std::chrono::nanoseconds receptionTimestampNs;
+
     // receive data
     try {
         nbBytesReceived = i->socket->receive_from(
@@ -230,10 +239,10 @@ auto UdpReader::receive_data() -> size_t{
 
     } catch (const boost::system::system_error &error) {
         if(error.code() != boost::asio::error::timed_out){
-            Log::error(std::format("[UdpReader::receive_data] Cannot read from socket, error message: [{}]\n"sv, error.what()));
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            return 0;
+            Log::ferror("[UdpReader::receive_data] Cannot read from socket, error message: [{}]\n"sv, error.what());
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));            
         }
+        return 0;
     }
 
     if(nbBytesReceived != 0){
@@ -243,24 +252,34 @@ auto UdpReader::receive_data() -> size_t{
         auto dataToProcess  = pkd.subspan(sizeof(Header));
         Header header(headerData);
 
+        if(header.type != 10 && header.type != 9 && header.type != 6 && header.type != 8){
+            Log::fmessage("Receive data {} {} {} \n",
+                header.type, header.totalSizeBytes, nbBytesReceived
+            );
+        }
+
+
+        // check packet checksum
+        // if(header.checkSum != 0){
+        //     auto currentCS = header.checkSum;
+        //     header.checkSum = 0;
+        //     auto checksum = data::Checksum::gen_crc16(std::span(reinterpret_cast<std::byte*>(&header), sizeof(header)));
+        //     if(checksum != currentCS){
+        //         invalid_checksum_signal();
+        //         Log::error(std::format("[UdpReader::receive_data] Invalid checksum size: [{}], expected: [{}]\n"sv, checksum, currentCS));
+        //         return nbBytesReceived;
+        //     }
+        // }
+
         header.receptionTimestampNs = receptionTimestampNs.count();
 
         // check packet size
         if(header.currentPacketSizeBytes != pkd.size_bytes()){
             invalid_packet_size_signal();
-            Log::error(std::format("[UdpReader::receive_data] Invalid packet size: [{}], expected: [{}]\n"sv, header.currentPacketSizeBytes, pkd.size_bytes()));
+            Log::ferror("[UdpReader::receive_data] Invalid packet size: [{}], expected: [{}]\n"sv, header.currentPacketSizeBytes, pkd.size_bytes());
             return nbBytesReceived;
         }
 
-        // check packet checksum
-        // if(header.checkSum != 0){
-        //     auto checksum = data::Checksum::gen_crc16(dataToProcess);
-        //     if(checksum != header.checkSum){
-        //         invalid_checksum_signal();
-        //         Log::error(std::format("[UdpReader::receive_data] Invalid checksum size: [{}], expected: [{}]\n"sv, checksum, header.checkSum));
-        //         return nbBytesReceived;
-        //     }
-        // }
 
         // increment ring buffer for next data reading
         i->packetsRingBuffer.increment();
@@ -276,6 +295,10 @@ auto UdpReader::receive_data() -> size_t{
             Log::error("[UdpReader::receive_data] To many packets received, oldest packet dropped.\n"sv);
         }
         i->locker.unlock();
+
+        // Log::log_unf("[/R0]");
+    }else{
+        Log::fmessage("Received empty\n");
     }
 
     return nbBytesReceived;
@@ -290,7 +313,9 @@ auto UdpReader::trigger_received_packets() -> void{
     }
 
     if(!i->swapPackets.empty()){
+        // Log::log_unf("[PRS]");
         packets_received_signal(i->swapPackets.span());
+        // Log::log_unf("[/PRS]\n");
     }else{
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

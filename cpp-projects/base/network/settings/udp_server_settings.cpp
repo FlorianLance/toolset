@@ -45,6 +45,8 @@ auto UdpServerSettings::init_from_json(const nlohmann::json &json) -> void{
     read_and_update_value(json, unreadCount, "any_reading_interface"sv,   anyReadingInterface);
     read_and_update_value(json, unreadCount, "id_interface"sv,            readingInterfaceId);
     read_and_update_value(json, unreadCount, "reading_port"sv,            readingPort);
+    read_and_update_value(json, unreadCount, "max_udp_packet_size"sv,     maxUdpPacketSize);
+
     protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6") ? Protocol::ipv6 : Protocol::ipv4;
 
     if(unreadCount != 0){
@@ -62,6 +64,7 @@ auto UdpServerSettings::convert_to_json() const -> nlohmann::json{
     add_value(json, "id_interface"sv,           readingInterfaceId);
     add_value(json, "reading_port"sv,           readingPort);
     add_value(json, "protocol"sv,               (protocol == Protocol::ipv6) ? "ipv6" : "ipv4");
+    add_value(json, "max_udp_packet_size"sv,    maxUdpPacketSize);
 
     return json;
 }

@@ -71,9 +71,11 @@ public:
     auto clean() -> void override;
 
     auto message(std::string_view message) -> void override;
+    auto message_unf(std::string_view message) -> void override;
     auto warning(std::string_view warning) -> void override;
     auto error(std::string_view error) -> void override;
     auto log(std::string_view log) -> void override;
+    auto log_unf(std::string_view log) -> void override;
     auto log_title(std::string_view log, int level) -> void;
 
     // signals
@@ -104,10 +106,23 @@ public:
         }
     }
 
+    static auto message_unf(std::string_view message) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->message_unf(message);
+        }
+    }
+
     template<typename... Args>
     static auto fmessage(std::string_view message, Args&&... args) -> void{
         if(auto instance = BaseLogger::get_instance()){
             instance->message(std::vformat(message, std::make_format_args(args...)));
+        }
+    }
+
+    template<typename... Args>
+    static auto fmessage_unf(std::string_view message, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->message_unf(std::vformat(message, std::make_format_args(args...)));
         }
     }
 
@@ -143,10 +158,24 @@ public:
         }
     }
 
+    static auto log_unf(std::string_view log) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->log_unf(log);
+        }
+    }
+
+
     template<typename... Args>
     static auto flog(std::string_view log, Args&&... args) -> void{
         if(auto instance = BaseLogger::get_instance()){
             instance->log(std::vformat(log, std::make_format_args(args...)));
+        }
+    }
+
+    template<typename... Args>
+    static auto flog_unf(std::string_view log, Args&&... args) -> void{
+        if(auto instance = BaseLogger::get_instance()){
+            instance->log_unf(std::vformat(log, std::make_format_args(args...)));
         }
     }
 };

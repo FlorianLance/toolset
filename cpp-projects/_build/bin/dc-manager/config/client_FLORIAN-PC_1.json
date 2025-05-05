@@ -99,22 +99,29 @@
                         "type_string": "color",
                         "version": 1
                     },
-                    "brightness": 10,
-                    "contrast": 50,
+                    "brightness": 0,
+                    "contrast": 32,
                     "exposure_time": 200,
-                    "gain": 40,
+                    "gain": 60,
                     "hdr": true,
-                    "powerline_frequency": 2,
-                    "saturation": 64,
-                    "sharpness": 24,
+                    "powerline_frequency": 1,
+                    "saturation": 54,
+                    "sharpness": 6,
                     "white_balance": 6500
                 },
                 "connection": {
+                    "any_reading_interface": false,
+                    "auto_connect": false,
                     "base": {
                         "type_string": "DC client connection",
                         "version": 1
                     },
-                    "connection_type": "Local"
+                    "connection_type": "Remote",
+                    "id_reading_interface": 0,
+                    "protocol": "ipv4",
+                    "reading_port": 8890,
+                    "sending_address": "localhost",
+                    "sending_port": 8888
                 },
                 "device": {
                     "base": {
@@ -131,15 +138,9 @@
                         "bt_orientation": 0,
                         "bt_processing_mode": 4,
                         "color_alignment_rot": [
-                            1.0,
                             0.0,
                             0.0,
-                            0.0,
-                            1.0,
-                            0.0,
-                            0.0,
-                            0.0,
-                            1.0
+                            0.0
                         ],
                         "color_alignment_tr": [
                             0.0,
@@ -148,12 +149,13 @@
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
+                        "enable_ir_stream": false,
                         "id_device": 0,
                         "ipv4_address_1": 192,
                         "ipv4_address_2": 168,
                         "ipv4_address_3": 1,
                         "ipv4_address_4": 10,
-                        "mode": 23,
+                        "mode": 24,
                         "open_device": true,
                         "serial_number_device": "",
                         "start_reading": true,
@@ -171,11 +173,11 @@
                         "c_generation": {
                             "bodies_id_image": false,
                             "bodies_skeleton": false,
-                            "cloud": false,
+                            "cloud": true,
                             "cloud_color_mode": 1,
                             "color_image": false,
                             "depth_image": false,
-                            "depth_sized_color_image": false,
+                            "depth_sized_color_image": true,
                             "infra_image": false
                         },
                         "s_capture": {
@@ -189,11 +191,11 @@
                         "s_generation": {
                             "bodies_id_image": false,
                             "bodies_skeleton": false,
-                            "cloud": true,
+                            "cloud": false,
                             "cloud_color_mode": 1,
                             "color_image": false,
-                            "depth_image": true,
-                            "depth_sized_color_image": true,
+                            "depth_image": false,
+                            "depth_sized_color_image": false,
                             "infra_image": false
                         },
                         "s_sending": {
@@ -206,15 +208,15 @@
                             "cloud_compression_mode": 2,
                             "color": false,
                             "color_compression_mode": 1,
-                            "dept_sized_color": false,
-                            "depth": false,
+                            "dept_sized_color": true,
+                            "depth": true,
                             "depth_compression_mode": 2,
                             "depth_sized_color_compression_mode": 1,
                             "imu": false,
                             "infra": false,
                             "infra_compression_mode": 2,
-                            "jpeg_compression_rate": 90,
-                            "original_size_color_jpeg_quality": 80
+                            "jpeg_compression_rate": 95,
+                            "original_size_color_jpeg_quality": 95
                         }
                     }
                 },

@@ -40,6 +40,7 @@ struct UdpServerSettings : io::Settings{
     size_t readingInterfaceId = 0;
     int readingPort = 8888;
     Protocol protocol = Protocol::ipv4;
+    size_t maxUdpPacketSize = 9000;
 
     UdpServerSettings(){
         sType   = io::SettingsType::Udp_server;

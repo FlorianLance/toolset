@@ -1,9 +1,0 @@
-{
-    "base": {
-        "type": 0,
-        "version": 1
-    },
-    "id_interface": 0,
-    "protocol": "ipv6",
-    "reading_port": 8888
-}

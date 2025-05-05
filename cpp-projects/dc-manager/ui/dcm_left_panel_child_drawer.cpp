@@ -719,6 +719,13 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
                 // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
 
+            static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
+            static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
+            int mtu = clientDeviceS.connectionS.maxUdpPacketSize;
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("MTU", "mtu", &mtu, idMTU, dsMTU)){
+                clientDeviceS.connectionS.maxUdpPacketSize = mtu;
+            }
+
             if(ImGui::Button("Reset Network")){
                 DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
             }
