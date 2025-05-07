@@ -33,9 +33,12 @@ SUBDIRS =\
     base base-app base-test base-export base-export-app\
     opengl-utility opengl-utility-app \
     imgui-opengl-engine \
-    qt-utility qt-utility-app qt-utility-qml-app\
-    nodes demos \
-    dc-grabber dc-manager dc-player guardian dc-monitoring\
+    dc-grabber dc-manager\
+
+    # qt-utility qt-utility-app qt-utility-qml-app\
+    # nodes demos \
+    #dc-player \
+    # guardian dc-monitoring\
 
 # where to find the sub projects
 ## toolset

@@ -62,6 +62,10 @@ public:
     // when no reading thread started    
     auto trigger_received_packets() -> void;
 
+
+
+    auto check_if_timeout_synchro() -> bool;
+
     // signals
     SSS<std::int64_t> remote_synchro_signal;
     SSS<size_t, net::Feedback> remote_feedback_signal;

@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 262.33694, g: 325.04984, b: 430.2193, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -171,12 +170,12 @@ MonoBehaviour:
   initAtAwake: 1
   connectAtStart: 1
   readProcessAtStart: 1
-  applyDeviceSettingsAfterConnection: 1
-  applyFiltersSettingsAfterConnection: 1
-  applyColorSettingsAfterConnection: 1
+  applyDeviceSettingsAfterConnection: 0
+  applyFiltersSettingsAfterConnection: 0
+  applyColorSettingsAfterConnection: 0
   loadDisplaySettingsFilesAfterInitializing: 0
   dataVFXSettingsFilePath: ./data_vfx_settings.json
-  clientSettingsFilePath: E:/_json/client_remote1_test.json
+  clientSettingsFilePath: ./client.json
   m_allDevicesConnected: 0
   m_threadsStarted: 0
   devicesStates: []

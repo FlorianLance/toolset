@@ -55,7 +55,7 @@ using EndPtr = std::pair<EndPointId, std::shared_ptr<T>>;
 using RMessageV =
     std::variant<
         EndVal<UdpConnectionSettings>,
-    EndVal<DCMiscSettings>,
+        EndVal<DCMiscSettings>,
         EndVal<Command>,
         EndVal<Feedback>,
         EndPtr<DCDeviceSettings>,
@@ -652,7 +652,15 @@ auto DCServer::update() -> void{
 
     // check for disconnected clients
     if(auto idClient = check_if_disconnected_client(); idClient.has_value()){
-        i->disconnect_sender(idClient.value());
+
+        EndPointId d;
+        d.id = idClient.value();
+        i->sMessages.push_back(
+            std::make_pair(
+                d,
+                Feedback{static_cast<MessageTypeId>(DCMessageType::command), FeedbackType::disconnect}
+            )
+        );
     }
 }
 

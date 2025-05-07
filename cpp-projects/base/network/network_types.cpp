@@ -124,7 +124,7 @@ auto UdpMessageReception::check_message_timeout() -> size_t{
     auto ts = Time::nanoseconds_since_epoch();
     timeoutIdPacketsToRemove.clear();
     for(const auto &info : infos){
-        if(Time::difference_ms(info.second.firstPacketReceptionTS, ts).count() > 1000){
+        if(Time::difference_ms(info.second.firstPacketReceptionTS, ts).count() > 2000){
             timeoutIdPacketsToRemove.push_back(info.first);
         }
     }

@@ -59,6 +59,8 @@ struct DCClientRemoteDevice::Impl{
 
     UdpMessageReception dFramesReception;
     std::atomic<size_t> totalReceivedBytes = 0;
+
+    std::chrono::nanoseconds lastSynchReceived = std::chrono::nanoseconds(0);
 };
 
 DCClientRemoteDevice::DCClientRemoteDevice() : i(std::make_unique<DCClientRemoteDevice::Impl>()){
@@ -124,6 +126,8 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
 }
 
 auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
+
+    i->lastSynchReceived = Time::nanoseconds_since_epoch();
 
     UdpConnectionSettings connectionSettings;
     connectionSettings.address          = i->remoteServerS.readingAddress;
@@ -194,6 +198,7 @@ auto DCClientRemoteDevice::apply_command(Command command) -> void{
 }
 
 auto DCClientRemoteDevice::ping() -> void{
+
     Feedback feedback;
     feedback.type = FeedbackType::ping;
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::feedback), std::span(reinterpret_cast<const std::byte*>(&feedback), sizeof(Feedback)));
@@ -231,6 +236,13 @@ auto DCClientRemoteDevice::trigger_received_packets() -> void{
     i->udpReader.trigger_received_packets_from_external_thread();
 }
 
+auto DCClientRemoteDevice::check_if_timeout_synchro() -> bool{
+    if(Time::now_difference_ms(i->lastSynchReceived).count() > 5000 && i->lastSynchReceived.count() !=0){
+        return true;
+    }
+    return false;
+}
+
 auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packetsToProcess) -> void{
 
     // read synchro packets
@@ -241,6 +253,8 @@ auto DCClientRemoteDevice::process_received_packets(std::span<net::PData> packet
             // update synchro
             i->synchro.update_average_difference(nanoseconds(packet.header.receptionTimestampNs) - nanoseconds(packet.header.creationTimestampNs));
             triggerSynch = true;
+
+            i->lastSynchReceived = Time::nanoseconds_since_epoch();
         }
     }
 

@@ -96,6 +96,7 @@ struct DCClient::Impl{
 };
 
 DCClient::DCClient(): i(std::make_unique<Impl>()){
+
 }
 
 DCClient::~DCClient(){
@@ -214,6 +215,9 @@ auto DCClient::update() -> void{
         if(auto rD = dynamic_cast<DCClientRemoteDevice*>(device.get())){
             if(rD->device_connected()){
                 rD->ping();
+                if(rD->check_if_timeout_synchro()){
+                    reset_network();
+                }
             }
         }
     }
@@ -229,8 +233,10 @@ auto DCClient::update() -> void{
         if(i->cDevices[idD]->type() == DCClientType::Remote){
             auto rd = dynamic_cast<DCClientRemoteDevice*>(i->cDevices[idD].get());
             if(settings.devicesS[idD].connectionS.autoConnect && !rd->device_connected()){
+                // Log::message("Auto connect\n");
                 auto now = Time::nanoseconds_since_epoch();
-                if(Time::difference_ms(settings.devicesS[idD].connectionS.lastConnectTry, now).count() > 5000){
+                if((Time::difference_ms(settings.devicesS[idD].connectionS.lastConnectTry, now).count() > 5000) ||
+                    (settings.devicesS[idD].connectionS.lastConnectTry == std::chrono::nanoseconds(0))){
                     settings.devicesS[idD].connectionS.lastConnectTry = now;
                     Log::fmessage("Auto connect with remote device #{}\n", settings.devicesS[idD].id);
                     init_connection_with_remote_device(settings.devicesS[idD].id);
@@ -298,10 +304,12 @@ auto DCClient::trigger_packets_from_remote_device(size_t idC) -> void{
 }
 
 auto DCClient::reset_network() -> void{
+    Log::message("####################### RESET NETWORK\n");
 
     for(size_t idD = 0; idD < devices_nb(); ++idD){
         if(auto rD = dynamic_cast<DCClientRemoteDevice*>( i->cDevices[idD].get())){
             rD->clean();
+            settings.devicesS[idD].connected = false;
         }
     }
 

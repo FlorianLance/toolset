@@ -768,7 +768,7 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
                 DCMSignals::get()->command_signal(clientDeviceS.id, net::Command::disconnect);
             }
             ImGui::SameLine();
-            if(ImGui::Checkbox("Auto-connecct###settings_auto_connect", &clientDeviceS.connectionS.autoConnect)){
+            if(ImGui::Checkbox("Auto-connect###settings_auto_connect", &clientDeviceS.connectionS.autoConnect)){
 
             }
             ImGui::Unindent();

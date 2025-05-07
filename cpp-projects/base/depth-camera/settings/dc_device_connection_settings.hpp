@@ -62,8 +62,8 @@ struct DCDeviceConnectionSettings : io::Settings{
     std::string readingAddress;
     std::string processedSendingAddress;
     bool startReadingThread = true;
-    // bool isLocalhost = false;    
-    std::chrono::nanoseconds lastConnectTry;
+    // bool isLocalhost = false;
+    std::chrono::nanoseconds lastConnectTry = std::chrono::nanoseconds{0};
 };
 
 
