@@ -27,13 +27,13 @@
 #include "ex_code_editor_w.hpp"
 
 // qt-utility
-#include "gui/widgets/text_widget_highlighter.hpp"
+#include "gui/widgets/qt_text_widget_highlighter.hpp"
 
 
 using namespace tool::ui;
 using namespace tool::ex;
 
-ExCodeEditorW::ExCodeEditorW(QString name) : ExItemW<CodeEditor>(UiType::Code_editor, name) {}
+ExCodeEditorW::ExCodeEditorW(QString name) : ExItemW<QtCodeEditorW>(UiType::Code_editor, name) {}
 
 ExCodeEditorW *ExCodeEditorW::init_widget(QString txt, bool enabled){
     w->setPlainText(txt);
@@ -64,7 +64,7 @@ ExCodeEditorW *ExCodeEditorW::init_widget_as_csharp_editor(const QColor &bc, QSt
     w->setEnabled(enabled);
 
 
-    connect(w.get(), &CodeEditor::textChanged,this, [&]{trigger_ui_change();});
+    connect(w.get(), &QtCodeEditorW::textChanged,this, [&]{trigger_ui_change();});
 
     return this;
 }

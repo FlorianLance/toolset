@@ -30,7 +30,7 @@
 #include <QMouseEvent>
 
 // local
-#include "gui/widgets/curve_widget.hpp"
+#include "gui/widgets/qt_multi_curves_plot_w.hpp"
 #include "ex_spin_box_w.hpp"
 #include "ex_double_spin_box_w.hpp"
 #include "ex_checkbox_w.hpp"
@@ -53,7 +53,7 @@ public :
     void set_points(const std::pair<std::vector<double>, std::vector<double>> &points);
 
     // curve
-    tool::ui::CurveW *curveW = nullptr;
+    tool::ui::QtMultiCurvesPlotW *curveW = nullptr;
     // id curve
     ExSpinBoxW currentCurveId = {"current_curve_id"};
     // actions

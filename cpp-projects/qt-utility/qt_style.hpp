@@ -35,20 +35,22 @@
 
 namespace tool::ui {
 
+using namespace Qt::Literals::StringLiterals;
+
 struct Colors{
 
-    static inline const QString whiteH     = "#FFFFFF";
-    static inline const QString lightGrayH = "#BDBDBD";
-    static inline const QString darkGrayH  = "#2D2D2D";
-    static inline const QString blackH     = "#000000";
+    static inline QString whiteH     = u"#FFFFFF"_s;
+    static inline QString lightGrayH = u"#BDBDBD"_s;
+    static inline QString darkGrayH  = u"#2D2D2D"_s;
+    static inline QString blackH     = u"#000000"_s;
 
-    static inline const QString redH       = "#FF0000";
-    static inline const QString greenH     = "#279340";
-    static inline const QString orangeH    = "#FF8C00";
+    static inline QString redH       = u"#FF0000"_s;
+    static inline QString greenH     = u"#279340"_s;
+    static inline QString orangeH    = u"#FF8C00"_s;
 
-    static inline const QString lightBlueH = "#8FBBBC";
-    static inline const QString blueH      = "#5C8EBC";
-    static inline const QString navyBlueH  = "#427B89";
+    static inline QString lightBlueH = u"#8FBBBC"_s;
+    static inline QString blueH      = u"#5C8EBC"_s;
+    static inline QString navyBlueH  = u"#427B89"_s;
 };
 
 struct OName{QString value;};

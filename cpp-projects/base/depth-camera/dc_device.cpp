@@ -112,7 +112,7 @@ struct DCDevice::Impl{
 
 };
 
-DCDevice::DCDevice(): i(std::make_unique<Impl>()){
+DCDevice::DCDevice() : i(std::make_unique<Impl>()){
 
     // auto hasLock
 

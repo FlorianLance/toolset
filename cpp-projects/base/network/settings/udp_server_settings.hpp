@@ -30,16 +30,20 @@
 // local
 #include "network/network_enums.hpp"
 #include "io/settings.hpp"
+#include "geometry/point4.hpp"
 
 namespace tool::net {
 
 struct UdpServerSettings : io::Settings{
 
     // data
+    Protocol protocol = Protocol::ipv4;
     bool anyReadingInterface = false;
     size_t readingInterfaceId = 0;
-    int readingPort = 8888;
-    Protocol protocol = Protocol::ipv4;
+    bool useSpecificReadingIpAddress = false;
+    geo::Pt4<int> specificReadingIpv4Address = {192,168,0,1};
+    std::array<std::string,8> specificReadingIpv6Address;
+    int readingPort = 8888;    
     size_t maxUdpPacketSize = 9000;
 
     UdpServerSettings(){

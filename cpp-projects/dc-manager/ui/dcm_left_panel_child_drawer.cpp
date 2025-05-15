@@ -647,84 +647,209 @@ auto DCMLeftPanelChildDrawer::draw_type_tab_item(cam::DCClient &client) -> void{
             ImGuiUiDrawer::title("REMOTE DEVICE"sv);
             ImGui::Spacing();
 
+            static ImGuiIntS idRIS = {0,0,10,0.1f,1};
+
+            ImGui::Text("Available IPV4 interfaces:");
+            ImGui::Indent();
+            for(auto &interface : client.settings.ipv4Interfaces){
+                ImGuiUiDrawer::text(interface.ipAddress);
+            }
+            if(!client.settings.ipv4Interfaces.empty()){
+                idRIS.max = client.settings.ipv4Interfaces.size()-1;
+            }else{
+                idRIS.max = 0;
+            }
+            ImGui::Unindent();
+
+
+            ImGui::Separator();
+
+            ImGui::Text("Available IPV6 interfaces:");
+            ImGui::Indent();
+            for(auto &interface : client.settings.ipv6Interfaces){
+                ImGuiUiDrawer::text(interface.ipAddress);
+            }
+            if(!client.settings.ipv6Interfaces.empty()){
+                idRIS.max = client.settings.ipv6Interfaces.size()-1;
+            }else{
+                idRIS.max = 0;
+            }
+            ImGui::Unindent();
+
+            ImGui::Separator();
+
+            ImGui::Spacing();
+
+
+            int mode;
+            if(clientDeviceS.connectionS.anyReadingInterface){
+                mode = 0;
+            }else if(clientDeviceS.connectionS.useSpecificReadingIpAddress){
+                mode = 2;
+            }else{
+                mode = 1;
+            }
+
+            ImGui::Text("Use for reading:");
+            ImGui::Indent();
+
             ImGui::Text("Protocol:");
             ImGui::SameLine();
             ImGui::SetNextItemWidth(75.f);
             int guiCurrentProtocolSelection = static_cast<int>(clientDeviceS.connectionS.protocol);
             if(ImGui::Combo("###settings_protocole_combo", &guiCurrentProtocolSelection, protocolItems, 2)){
                 clientDeviceS.connectionS.protocol = static_cast<net::Protocol>(guiCurrentProtocolSelection);
-                // DCGSignals::get()->reset_reading_network_signal();
             }
 
-            static ImGuiIntS idRIS = {0,0,10,0.1f,1};
-
-            if(clientDeviceS.connectionS.protocol == net::Protocol::ipv4){
-                ImGui::Text("Available IPV4 interfaces:");
-                ImGui::Indent();
-                for(auto &interface : client.settings.ipv4Interfaces){
-                    ImGuiUiDrawer::text(interface.ipAddress);
+            {
+                if(ImGui::RadioButton("any interface",          &mode,0)){
+                    clientDeviceS.connectionS.anyReadingInterface     = true;
+                    clientDeviceS.connectionS.useSpecificReadingIpAddress  = false;
                 }
-                if(!client.settings.ipv4Interfaces.empty()){
-                    idRIS.max = client.settings.ipv4Interfaces.size()-1;
+            }
+
+            {
+                if(ImGui::RadioButton("specific interface id:",  &mode,1)){
+                    clientDeviceS.connectionS.anyReadingInterface     = false;
+                    clientDeviceS.connectionS.useSpecificReadingIpAddress  = false;
+                }
+
+                ImGui::SameLine();
+
+                ImGui::BeginDisabled(clientDeviceS.connectionS.anyReadingInterface || clientDeviceS.connectionS.useSpecificReadingIpAddress);
+
+                static ImGuiDragS dsRIS = {30.f, true, true, false, false, false};
+                int idRI = static_cast<int>(clientDeviceS.connectionS.idReadingInterface);
+                if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "id_reading_interface", &idRI, idRIS, dsRIS)){
+                    clientDeviceS.connectionS.idReadingInterface = idRI;
+                }
+                ImGui::EndDisabled();
+            }
+
+            {
+                if(ImGui::RadioButton("specific address:",  &mode,2)){
+                    clientDeviceS.connectionS.anyReadingInterface     = false;
+                    clientDeviceS.connectionS.useSpecificReadingIpAddress  = true;
+                }
+
+                ImGui::BeginDisabled(!clientDeviceS.connectionS.useSpecificReadingIpAddress);
+
+                static ImGuiIntS idIP = {192,0,255,1,1};
+                static ImGuiDragS dsIP = {30.f, false, false, false, false, false};
+
+
+                if(clientDeviceS.connectionS.protocol == net::Protocol::ipv4){
+
+                    ImGui::Indent();
+
+                    ImGui::SetNextItemWidth(30);
+                    if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_1", &clientDeviceS.connectionS.specificReadingIpv4Address.x(), idIP, dsIP)){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(30);
+                    if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_2", &clientDeviceS.connectionS.specificReadingIpv4Address.y(), idIP, dsIP)){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(30);
+                    if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_3", &clientDeviceS.connectionS.specificReadingIpv4Address.z(), idIP, dsIP)){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(30);
+                    if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_4", &clientDeviceS.connectionS.specificReadingIpv4Address.w(), idIP, dsIP)){
+                    }
+
+                    ImGui::Unindent();
+
                 }else{
-                    idRIS.max = 0;
+
+                    ImGui::Indent();
+
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_1", &clientDeviceS.connectionS.specificReadingIpv6Address[0])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_2", &clientDeviceS.connectionS.specificReadingIpv6Address[1])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_3", &clientDeviceS.connectionS.specificReadingIpv6Address[2])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_4", &clientDeviceS.connectionS.specificReadingIpv6Address[3])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_5", &clientDeviceS.connectionS.specificReadingIpv6Address[4])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_6", &clientDeviceS.connectionS.specificReadingIpv6Address[5])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_7", &clientDeviceS.connectionS.specificReadingIpv6Address[6])){
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetNextItemWidth(35);
+                    if(ImGui::InputText("###specific_ipv6_address_8", &clientDeviceS.connectionS.specificReadingIpv6Address[7])){
+                    }
+
+                    ImGui::Unindent();
                 }
-                ImGui::Unindent();
-            }else if(clientDeviceS.connectionS.protocol == net::Protocol::ipv6){
-                ImGui::Text("Available IPV6 interfaces:");
-                ImGui::Indent();
-                for(auto &interface : client.settings.ipv6Interfaces){
-                    ImGuiUiDrawer::text(interface.ipAddress);
+
+                ImGui::EndDisabled();
+            }
+
+            {
+                static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
+                static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
+                if(ImGuiUiDrawer::draw_drag_int_with_buttons("Port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
+                    Log::message(std::format("ID READING PORT {}\n", clientDeviceS.connectionS.readingPort));
                 }
-                if(!client.settings.ipv6Interfaces.empty()){
-                    idRIS.max = client.settings.ipv6Interfaces.size()-1;
-                }else{
-                    idRIS.max = 0;
+            }
+
+            ImGui::Unindent();
+
+
+            ImGui::Text("Use for sending:");
+            ImGui::Indent();
+
+            {
+                ImGui::Text("Address:");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(130);
+                if(ImGui::InputText("###sending_address", &clientDeviceS.connectionS.sendingAddress)){
                 }
-                ImGui::Unindent();
             }
 
-            if(ImGui::Checkbox("Use any interface", &clientDeviceS.connectionS.anyReadingInterface)){
-                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            {
+                static ImGuiIntS idSP = {8889,8888,9999,0.1f,1};
+                static ImGuiDragS dsSP = {75.f, true, true, true, true, true};
+                if(ImGuiUiDrawer::draw_drag_int_with_buttons("Port", "sending_port", &clientDeviceS.connectionS.sendingPort, idSP, dsSP)){
+                }
             }
 
-            ImGui::BeginDisabled(clientDeviceS.connectionS.anyReadingInterface);
+            ImGui::Unindent();
 
-            static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
-            int idRI = static_cast<int>(clientDeviceS.connectionS.idReadingInterface);
-            if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
-                clientDeviceS.connectionS.idReadingInterface = idRI;
-                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
+            ImGui::Text("Misc:");
+            ImGui::Indent();
+
+            {
+                static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
+                static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
+                int mtu = clientDeviceS.connectionS.maxUdpPacketSize;
+                if(ImGuiUiDrawer::draw_drag_int_with_buttons("MTU", "mtu", &mtu, idMTU, dsMTU)){
+                    clientDeviceS.connectionS.maxUdpPacketSize = mtu;
+                }
             }
 
-            ImGui::EndDisabled();
+            ImGui::Unindent();
 
-            static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
-            static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
-            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &clientDeviceS.connectionS.readingPort, idRP, dsRP)){
-                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
-                Log::message(std::format("ID READING PORT {}\n", clientDeviceS.connectionS.readingPort));
-            }
+            ImGui::Spacing();
 
-            ImGui::Text("Sending address:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(130);
-            if(ImGui::InputText("###sending_address", &clientDeviceS.connectionS.sendingAddress)){
-                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
-            }
 
-            static ImGuiIntS idSP = {8889,8888,9999,0.1f,1};
-            static ImGuiDragS dsSP = {75.f, true, true, true, true, true};
-            if(ImGuiUiDrawer::draw_drag_int_with_buttons("Sending port", "sending_port", &clientDeviceS.connectionS.sendingPort, idSP, dsSP)){
-                // DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);
-            }
-
-            static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
-            static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
-            int mtu = clientDeviceS.connectionS.maxUdpPacketSize;
-            if(ImGuiUiDrawer::draw_drag_int_with_buttons("MTU", "mtu", &mtu, idMTU, dsMTU)){
-                clientDeviceS.connectionS.maxUdpPacketSize = mtu;
-            }
 
             if(ImGui::Button("Reset Network")){
                 DCMSignals::get()->reset_remote_device_signal(clientDeviceS.id);

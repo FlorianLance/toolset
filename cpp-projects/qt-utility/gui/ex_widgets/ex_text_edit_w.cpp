@@ -29,7 +29,7 @@
 
 
 // qt-utility
-#include "gui/widgets/text_widget_highlighter.hpp"
+#include "gui/widgets/qt_text_widget_highlighter.hpp"
 
 using namespace tool::ex;
 

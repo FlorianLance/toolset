@@ -297,7 +297,7 @@ auto DCServer::Impl::start_reading_thread(const std::string &readingAdress, int 
 
     this->protocol = protocol;
     if(!udpReader.init_socket(readingAdress, readingPort, protocol, maxUdpPacketSize)){
-        return false;
+        // return false;
     }
     udpReader.start_threads();
 
@@ -624,7 +624,7 @@ auto DCServer::update() -> void{
                     },
                     [&](EndVal<Feedback> m){
                         if(m.second.type == FeedbackType::ping){
-                            std::unique_lock lg(settings.cInfos.lock);
+                            std::unique_lock lg(settings.cInfos.lock);                            
                             if(settings.cInfos.clientsConnected.contains(m.first.id)){
                                 settings.cInfos.clientsConnected[m.first.id] = Time::nanoseconds_since_epoch();
                             }

@@ -50,19 +50,24 @@ struct DCDeviceConnectionSettings : io::Settings{
 
     // remote
     net::Protocol protocol = net::Protocol::ipv4;
+    // # reading
     size_t idReadingInterface = 0;
     bool anyReadingInterface = false;
+    bool useSpecificReadingIpAddress = false;
+    geo::Pt4<int> specificReadingIpv4Address = {192,168,0,1};
+    std::array<std::string,8> specificReadingIpv6Address;
     int readingPort = 8889;
+    // # sending
     std::string sendingAddress = "localhost";
-    int sendingPort = 8888;    
-    bool autoConnect = false;
+    int sendingPort = 8888;
+    // # misc
     size_t maxUdpPacketSize = 9000;
+    bool autoConnect = false;
 
     // # runtime
     std::string readingAddress;
     std::string processedSendingAddress;
     bool startReadingThread = true;
-    // bool isLocalhost = false;
     std::chrono::nanoseconds lastConnectTry = std::chrono::nanoseconds{0};
 };
 

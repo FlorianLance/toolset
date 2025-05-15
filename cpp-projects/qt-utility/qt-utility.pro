@@ -46,9 +46,23 @@ include(../ts-dependencies.pri)
 HEADERS += \
     # global    
     base_app_controller.hpp \
-    gui/widgets/base_qt_gl_quick_item.hpp \
-    gui/widgets/base_qt_sfml_gl_widget.hpp \
-    gui/widgets/logger_w.hpp \
+    gui/items/qt_plot_graphic_item.hpp \
+    gui/widgets/__grabber_parameters_widget.hpp \
+    gui/widgets/__image_viewer.hpp \
+    gui/widgets/__qt_custom_combobox_w.hpp \
+    gui/widgets/__qt_plot_multi_curves_2d_w.h \
+    gui/widgets/__qt_rich_text_edit_w.hpp \
+    gui/widgets/__qt_sfml_gl_w.hpp \
+    gui/widgets/__qt_tree_view_w.hpp \
+    gui/widgets/qt_bar_plot_w.hpp \
+    gui/widgets/qt_base_sfml_gl_w.hpp \
+    gui/widgets/qt_code_editor_w.hpp \
+    gui/widgets/qt_fast_multi_curves_plot_w.hpp \
+    gui/widgets/qt_list_w.hpp \
+    gui/widgets/qt_logger_w.hpp \
+    gui/widgets/qt_multi_curves_plot_w.hpp \
+    gui/widgets/qt_speedometer_w.hpp \
+    gui/widgets/qt_text_widget_highlighter.hpp \
     qstring_unordered_map.hpp \
     qt_highlighting.hpp \
     qt_io.hpp \
@@ -66,16 +80,7 @@ HEADERS += \
     data/id_key.hpp \
     data/unity_types.hpp \
     # widgets
-    gui/widgets/code_editor_w.hpp \
-    gui/widgets/custom_combobox_w.hpp \
-    gui/widgets/curve_widget.hpp \
-    gui/widgets/grabber_parameters_widget.hpp \
     gui/widgets/list_widget.hpp \
-    gui/widgets/image_viewer.hpp \
-    gui/widgets/rich_text_edit.hpp \
-    gui/widgets/sfmlqt_gl_widget.hpp \
-    gui/widgets/text_widget_highlighter.hpp \
-    gui/widgets/tree_view_w.hpp \
     # ex_widgets
     gui/ex_widgets/ex_notepad_w.hpp \
     gui/ex_widgets/ex_base_w.hpp \
@@ -106,9 +111,22 @@ HEADERS += \
 
 SOURCES += \
     # global    
-    gui/widgets/base_qt_gl_quick_item.cpp \
-    gui/widgets/base_qt_sfml_gl_widget.cpp \
-    gui/widgets/logger_w.cpp \
+    gui/items/qt_plot_graphic_item.cpp \
+    gui/widgets/__grabber_parameters_widget.cpp \
+    gui/widgets/__image_viewer.cpp \
+    gui/widgets/__qt_plot_multi_curves_2d_w.cpp \
+    gui/widgets/__qt_rich_text_edit_w.cpp \
+    gui/widgets/__qt_sfml_gl_w.cpp \
+    gui/widgets/__qt_tree_view_w.cpp \
+    gui/widgets/qt_bar_plot_w.cpp \
+    gui/widgets/qt_base_sfml_gl_w.cpp \
+    gui/widgets/qt_code_editor_w.cpp \
+    gui/widgets/qt_fast_multi_curves_plot_w.cpp \
+    gui/widgets/qt_list_w.cpp \
+    gui/widgets/qt_logger_w.cpp \
+    gui/widgets/qt_multi_curves_plot_w.cpp \
+    gui/widgets/qt_speedometer_w.cpp \
+    gui/widgets/qt_text_widget_highlighter.cpp \
     qt_highlighting.cpp \
     qt_logger.cpp \
     qt_paths.cpp \
@@ -119,15 +137,7 @@ SOURCES += \
     data/argument.cpp \
     data/id_key.cpp \
     # widgets
-    gui/widgets/code_editor_w.cpp \
-    gui/widgets/grabber_parameters_widget.cpp \
-    gui/widgets/image_viewer.cpp \
     gui/widgets/list_widget.cpp \
-    gui/widgets/rich_text_edit.cpp \
-    gui/widgets/sfmlqt_gl_widget.cpp \
-    gui/widgets/curve_widget.cpp  \
-    gui/widgets/text_widget_highlighter.cpp \
-    gui/widgets/tree_view_w.cpp \
     # ex_widgets
     gui/ex_widgets/ex_notepad_w.cpp \
     gui/ex_widgets/ex_base_w.cpp \

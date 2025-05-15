@@ -92,12 +92,35 @@ auto DCServerSettings::convert_to_json() const -> nlohmann::json{
 auto DCServerSettings::update_reading_interface() -> void{
     const auto &interfaces = (udpServerS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
     if(udpServerS.readingInterfaceId < interfaces.size()){
-        if(!udpServerS.anyReadingInterface){
-            udpReadingInterface = interfaces[udpServerS.readingInterfaceId];
-        }else{
+
+        // specificIpAddress
+        if(udpServerS.anyReadingInterface){
             udpReadingInterface = Interface(udpServerS.protocol, "any");
+        }else if(udpServerS.useSpecificReadingIpAddress){
+
+            if(udpReadingInterface.protocol == Protocol::ipv4){
+                udpReadingInterface.ipAddress = std::format("{}.{}.{}.{}",
+                    udpServerS.specificReadingIpv4Address.x(), udpServerS.specificReadingIpv4Address.y(), udpServerS.specificReadingIpv4Address.z(), udpServerS.specificReadingIpv4Address.w()
+                );
+            }else {
+                udpReadingInterface.ipAddress = std::format("{}:{}:{}:{}:{}:{}:{}:{}",
+                    udpServerS.specificReadingIpv6Address[0],
+                    udpServerS.specificReadingIpv6Address[1],
+                    udpServerS.specificReadingIpv6Address[2],
+                    udpServerS.specificReadingIpv6Address[3],
+                    udpServerS.specificReadingIpv6Address[4],
+                    udpServerS.specificReadingIpv6Address[5],
+                    udpServerS.specificReadingIpv6Address[6],
+                    udpServerS.specificReadingIpv6Address[7]
+                );
+            }
+
+        }else{
+            udpReadingInterface = interfaces[udpServerS.readingInterfaceId];
         }
+
     }else{
         Log::error("[DCServerSettings::update_reading_interface] Invalid reading interface id, not enough interfaces.\n");
     }
 }
+

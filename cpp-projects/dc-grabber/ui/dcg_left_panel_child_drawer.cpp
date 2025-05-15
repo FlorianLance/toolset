@@ -34,6 +34,7 @@
 // imgui-opengl-engine
 #include "imgui-tb/imgui_ui_drawer.hpp"
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 #include "imgui/extra/ImGuiFileDialog.h"
 
 // local
@@ -136,18 +137,10 @@ auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
     ImGui::Spacing();
 
 
-    ImGui::Text("Protocol:");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(75.f);
-    int guiCurrentProtocolSelection = static_cast<int>(settings.udpServerS.protocol);
-    if(ImGui::Combo("###settings_protocole_combo", &guiCurrentProtocolSelection, protocolItems, 2)){
-        settings.udpServerS.protocol = static_cast<net::Protocol>(guiCurrentProtocolSelection);
-        DCGSignals::get()->reset_reading_network_signal();
-    }
 
     static ImGuiIntS idRIS = {0,0,10,0.1f,1};
 
-    if(settings.udpServerS.protocol == net::Protocol::ipv4){
+    // if(settings.udpServerS.protocol == net::Protocol::ipv4){
         ImGui::Text("Available IPV4 interfaces:");
         ImGui::Indent();
         for(auto &interface : settings.ipv4Interfaces){
@@ -159,7 +152,10 @@ auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
             idRIS.max = 0;
         }
         ImGui::Unindent();
-    }else if(settings.udpServerS.protocol == net::Protocol::ipv6){
+    // }else if(settings.udpServerS.protocol == net::Protocol::ipv6){
+
+        ImGui::Separator();
+
         ImGui::Text("Available IPV6 interfaces:");
         ImGui::Indent();
         for(auto &interface : settings.ipv6Interfaces){
@@ -171,40 +167,177 @@ auto DCGLeftPanelChildDrawer::draw_network_tab_item(DCGModel *model) -> void {
             idRIS.max = 0;
         }
         ImGui::Unindent();
+    // }
+
+        ImGui::Separator();
+
+        ImGui::Spacing();
+
+    int mode;
+    if(settings.udpServerS.anyReadingInterface){
+        mode = 0;
+    }else if(settings.udpServerS.useSpecificReadingIpAddress){
+        mode = 2;
+    }else{
+        mode = 1;
     }
 
-    if(ImGui::Checkbox("Use any interface", &settings.udpServerS.anyReadingInterface)){
+
+    ImGui::Text("Use for reading:");
+    ImGui::Indent();
+
+    ImGui::Text("Protocol:");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(75.f);
+    int guiCurrentProtocolSelection = static_cast<int>(settings.udpServerS.protocol);
+    if(ImGui::Combo("###settings_protocole_combo", &guiCurrentProtocolSelection, protocolItems, 2)){
+        settings.udpServerS.protocol = static_cast<net::Protocol>(guiCurrentProtocolSelection);
         DCGSignals::get()->reset_reading_network_signal();
     }
 
-    ImGui::BeginDisabled(settings.udpServerS.anyReadingInterface);
-
-    static ImGuiDragS dsRIS = {50.f, true, true, true, true, true};
-    int idRI = static_cast<int>(settings.udpServerS.readingInterfaceId);
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("ID reading interface", "id_reading_interface", &idRI, idRIS, dsRIS)){
-        settings.udpServerS.readingInterfaceId = idRI;
-        DCGSignals::get()->reset_reading_network_signal();
+    {
+        if(ImGui::RadioButton("any interface",          &mode,0)){
+            settings.udpServerS.anyReadingInterface     = true;
+            settings.udpServerS.useSpecificReadingIpAddress  = false;
+            DCGSignals::get()->reset_reading_network_signal();
+        }
     }
 
-    ImGui::EndDisabled();
+    {
+        if(ImGui::RadioButton("specific interface id:",  &mode,1)){
+            settings.udpServerS.anyReadingInterface     = false;
+            settings.udpServerS.useSpecificReadingIpAddress  = false;
+            DCGSignals::get()->reset_reading_network_signal();
+        }
 
-    static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
-    static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading port", "reading_port", &settings.udpServerS.readingPort, idRP, dsRP)){
-        DCGSignals::get()->reset_reading_network_signal();
+        ImGui::SameLine();
+
+        ImGui::BeginDisabled(settings.udpServerS.anyReadingInterface || settings.udpServerS.useSpecificReadingIpAddress);
+
+
+        static ImGuiDragS dsRIS = {30.f, true, true, false, false, false};
+        int idRI = static_cast<int>(settings.udpServerS.readingInterfaceId);
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "id_reading_interface", &idRI, idRIS, dsRIS)){
+            settings.udpServerS.readingInterfaceId = idRI;
+            DCGSignals::get()->reset_reading_network_signal();
+        }
+        ImGui::EndDisabled();
     }
 
-    static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
-    static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
-    int mtu = settings.udpServerS.maxUdpPacketSize;
-    if(ImGuiUiDrawer::draw_drag_int_with_buttons("Reading MTU", "mtu", &mtu, idMTU, dsMTU)){
-        settings.udpServerS.maxUdpPacketSize = mtu;
-        DCGSignals::get()->reset_reading_network_signal();
+    {
+        if(ImGui::RadioButton("specific address:",  &mode,2)){
+            settings.udpServerS.anyReadingInterface     = false;
+            settings.udpServerS.useSpecificReadingIpAddress  = true;
+            DCGSignals::get()->reset_reading_network_signal();
+        }
+
+
+
+        ImGui::BeginDisabled(!settings.udpServerS.useSpecificReadingIpAddress);
+
+        static ImGuiIntS idIP = {192,0,255,1,1};
+        static ImGuiDragS dsIP = {30.f, false, false, false, false, false};
+
+
+        if(settings.udpServerS.protocol == net::Protocol::ipv4){
+
+            ImGui::Indent();
+
+            ImGui::SetNextItemWidth(30);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_1", &settings.udpServerS.specificReadingIpv4Address.x(), idIP, dsIP)){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(30);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_2", &settings.udpServerS.specificReadingIpv4Address.y(), idIP, dsIP)){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(30);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_3", &settings.udpServerS.specificReadingIpv4Address.z(), idIP, dsIP)){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(30);
+            if(ImGuiUiDrawer::draw_drag_int_with_buttons("", "specific_ipv4_address_4", &settings.udpServerS.specificReadingIpv4Address.w(), idIP, dsIP)){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+
+            ImGui::Unindent();
+
+        }else{
+
+            ImGui::Indent();
+
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_1", &settings.udpServerS.specificReadingIpv6Address[0])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_2", &settings.udpServerS.specificReadingIpv6Address[1])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_3", &settings.udpServerS.specificReadingIpv6Address[2])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_4", &settings.udpServerS.specificReadingIpv6Address[3])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_5", &settings.udpServerS.specificReadingIpv6Address[4])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_6", &settings.udpServerS.specificReadingIpv6Address[5])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_7", &settings.udpServerS.specificReadingIpv6Address[6])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(35);
+            if(ImGui::InputText("###specific_ipv6_address_8", &settings.udpServerS.specificReadingIpv6Address[7])){
+                DCGSignals::get()->reset_reading_network_signal();
+            }
+
+            ImGui::Unindent();
+        }
+
+        ImGui::EndDisabled();
     }
+
+    {
+        static ImGuiIntS idRP = {8888,8888,9999,0.1f,1};
+        static ImGuiDragS dsRP = {75.f, true, true, true, true, true};
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("Port", "reading_port", &settings.udpServerS.readingPort, idRP, dsRP)){
+            DCGSignals::get()->reset_reading_network_signal();
+        }
+    }
+
+    {
+        static ImGuiIntS idMTU = {9000,1500,16000,1.f,1};
+        static ImGuiDragS dsMTU = {75.f, true, true, true, true, true};
+        int mtu = settings.udpServerS.maxUdpPacketSize;
+        if(ImGuiUiDrawer::draw_drag_int_with_buttons("MTU", "mtu", &mtu, idMTU, dsMTU)){
+            settings.udpServerS.maxUdpPacketSize = mtu;
+            DCGSignals::get()->reset_reading_network_signal();
+        }
+    }
+
+
+    ImGui::Unindent();
 
     ImGui::Spacing();
     ImGui::Separator();
-
     ImGui::Spacing();
 
     ImGuiUiDrawer::title("CURRENT STATE");

@@ -127,6 +127,7 @@
             ],
             "delay_between_color_and_depth_usec": 0,
             "disable_LED": false,
+            "enable_ir_stream": false,
             "id_device": 0,
             "ipv4_address_1": 192,
             "ipv4_address_2": 168,
@@ -315,7 +316,13 @@
             "version": 1
         },
         "id_interface": 0,
+        "ipv4_0": 192,
+        "ipv4_1": 168,
+        "ipv4_2": 0,
+        "ipv4_3": 2,
+        "max_udp_packet_size": 9000,
         "protocol": "ipv4",
-        "reading_port": 8888
+        "reading_port": 8888,
+        "use_specific_ipv4_address": true
     }
 }

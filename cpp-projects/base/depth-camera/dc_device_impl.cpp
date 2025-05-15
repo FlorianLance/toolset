@@ -1113,7 +1113,7 @@ auto DCDeviceImpl::filter_depth_from_cloud() -> void{
     AB             = vec(p2,p1);
     AC             = vec(p3,p1);
     normalV        = cross(AB,AC);
-    normalV             = normalize(normalV);
+    normalV        = normalize(normalV);
 
     pSphere   = settings.filters.pSphere*1000.f;
     squareMaxDistanceFromPoint = settings.filters.maxSphereDistance*settings.filters.maxSphereDistance;

@@ -44,6 +44,7 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io            
+    data/bdf_writer.hpp \
     depth-camera/dc_device_array.hpp \
     depth-camera/frame/dc_data_frame.hpp \
     depth-camera/frame/dc_data_frame_buffer.hpp \
@@ -165,6 +166,7 @@ HEADERS += \
     thirdparty/ColorSpace/Comparison.h \
     thirdparty/ColorSpace/Conversion.h \
     thirdparty/ColorSpace/Utils.h \
+    utility/__algorithm.hpp \
     utility/base_logger.hpp \
     depth-camera/dc_video.hpp \
     depth-camera/dc_video_player.hpp \
@@ -216,7 +218,6 @@ HEADERS += \
     # exvr/ex_component.hpp \
     # exvr/ex_logger.hpp \
     # utility        
-    utility/algorithm.hpp \
     utility/array.hpp \
     utility/benchmark.hpp \
     utility/bit_mask.hpp \
@@ -229,6 +230,7 @@ HEADERS += \
     utility/geometry_formatter.hpp \
     utility/id_alias_map.hpp \
     utility/image_buffer.hpp \
+    utility/int_24.hpp \
     utility/io_data.hpp \
     utility/io_fstream.hpp \
     utility/math.hpp \

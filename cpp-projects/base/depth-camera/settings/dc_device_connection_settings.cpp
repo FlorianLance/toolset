@@ -49,15 +49,34 @@ auto DCDeviceConnectionSettings::init_from_json(const nlohmann::json &json) -> v
     // local
     connectionType = (read_and_return_value<std::string>(json, unreadCount, "connection_type"sv) == "Remote"sv) ? DCClientType::Remote : DCClientType::Local;
     if(connectionType == DCClientType::Remote){
-        read_and_update_value<size_t>(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
-        read_and_update_value<bool>(json, unreadCount, "any_reading_interface"sv, anyReadingInterface);
-        read_and_update_value<int>(json, unreadCount, "reading_port"sv, readingPort);
-        read_and_update_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
-        read_and_update_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
-        read_and_update_value<bool>(json, unreadCount, "auto_connect"sv, autoConnect);
-        read_and_update_value<size_t>(json, unreadCount, "max_udp_packet_size"sv, maxUdpPacketSize);
 
         protocol = (read_and_return_value<std::string>(json, unreadCount, "protocol"sv) == "ipv6"sv) ? Protocol::ipv6 : Protocol::ipv4;
+
+        // reading
+        read_and_update_value<bool>(json, unreadCount, "any_reading_interface"sv, anyReadingInterface);
+        read_and_update_value<size_t>(json, unreadCount, "id_reading_interface"sv, idReadingInterface);
+        read_and_update_value(json, unreadCount, "use_specific_reading_ip_address"sv, useSpecificReadingIpAddress);
+        read_and_update_value(json, unreadCount, "reading_ipv4_0"sv, specificReadingIpv4Address.x());
+        read_and_update_value(json, unreadCount, "reading_ipv4_1"sv, specificReadingIpv4Address.y());
+        read_and_update_value(json, unreadCount, "reading_ipv4_2"sv, specificReadingIpv4Address.z());
+        read_and_update_value(json, unreadCount, "reading_ipv4_3"sv, specificReadingIpv4Address.w());
+        read_and_update_value(json, unreadCount, "reading_ipv6_0"sv, specificReadingIpv6Address[0]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_1"sv, specificReadingIpv6Address[1]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_2"sv, specificReadingIpv6Address[2]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_3"sv, specificReadingIpv6Address[3]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_4"sv, specificReadingIpv6Address[4]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_5"sv, specificReadingIpv6Address[5]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_6"sv, specificReadingIpv6Address[6]);
+        read_and_update_value(json, unreadCount, "reading_ipv6_7"sv, specificReadingIpv6Address[7]);
+        read_and_update_value<int>(json, unreadCount, "reading_port"sv, readingPort);
+
+        // sending
+        read_and_update_value<std::string>(json, unreadCount, "sending_address"sv, sendingAddress);
+        read_and_update_value<int>(json, unreadCount, "sending_port"sv, sendingPort);
+
+        // misc
+        read_and_update_value<bool>(json, unreadCount, "auto_connect"sv, autoConnect);
+        read_and_update_value<size_t>(json, unreadCount, "max_udp_packet_size"sv, maxUdpPacketSize);
     }
 
     if(unreadCount != 0){
@@ -73,14 +92,31 @@ auto DCDeviceConnectionSettings::convert_to_json() const -> nlohmann::json{
     // local
     add_value(json, "connection_type"sv, (connectionType == DCClientType::Remote) ? "Remote"sv : "Local"sv);
     if(connectionType == DCClientType::Remote){
-        add_value(json, "id_reading_interface"sv,     idReadingInterface);
-        add_value(json, "any_reading_interface"sv,    anyReadingInterface);
-        add_value(json, "reading_port"sv,             readingPort);
-        add_value(json, "sending_address"sv,          sendingAddress);
-        add_value(json, "sending_port"sv,             sendingPort);
-        add_value(json, "auto_connect"sv,             autoConnect);
-        add_value(json, "protocol"sv,                 (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
-        add_value(json, "max_udp_packet_size"sv,      maxUdpPacketSize);
+
+        add_value(json, "protocol"sv,                           (protocol == Protocol::ipv6) ? "ipv6"sv : "ipv4"sv);
+        // # reading
+        add_value(json, "any_reading_interface"sv,              anyReadingInterface);
+        add_value(json, "id_reading_interface"sv,               idReadingInterface);
+        add_value(json, "use_specific_reading_ip_address"sv,    useSpecificReadingIpAddress);
+        add_value(json, "reading_ipv4_0"sv,                     specificReadingIpv4Address.x());
+        add_value(json, "reading_ipv4_1"sv,                     specificReadingIpv4Address.y());
+        add_value(json, "reading_ipv4_2"sv,                     specificReadingIpv4Address.z());
+        add_value(json, "reading_ipv4_3"sv,                     specificReadingIpv4Address.w());
+        add_value(json, "reading_ipv6_0"sv,                     specificReadingIpv6Address[0]);
+        add_value(json, "reading_ipv6_1"sv,                     specificReadingIpv6Address[1]);
+        add_value(json, "reading_ipv6_2"sv,                     specificReadingIpv6Address[2]);
+        add_value(json, "reading_ipv6_3"sv,                     specificReadingIpv6Address[3]);
+        add_value(json, "reading_ipv6_4"sv,                     specificReadingIpv6Address[4]);
+        add_value(json, "reading_ipv6_5"sv,                     specificReadingIpv6Address[5]);
+        add_value(json, "reading_ipv6_6"sv,                     specificReadingIpv6Address[6]);
+        add_value(json, "reading_ipv6_7"sv,                     specificReadingIpv6Address[7]);
+        add_value(json, "reading_port"sv,                       readingPort);
+        // # sending
+        add_value(json, "sending_address"sv,                    sendingAddress);
+        add_value(json, "sending_port"sv,                       sendingPort);
+        // # misc
+        add_value(json, "auto_connect"sv,                       autoConnect);
+        add_value(json, "max_udp_packet_size"sv,                maxUdpPacketSize);
     }
 
     return json;

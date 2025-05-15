@@ -49,9 +49,13 @@ FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
 VERSION2_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/version2-2.02.01"
+JKQTPLOTTER_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/jkqtplotter"
 PCL_DIR                              = "E:/_librairies/PCL 1.14.1"
 
 ########################################################## INCLUDES
+
+JKQTPLOTTER_INCLUDES = \
+    $$JKQTPLOTTER_DIR"/include"\
 
 PCL_INCLUDES = \
     $$PCL_DIR"/include/pcl-1.14"\
@@ -335,5 +339,18 @@ equals(COMPILER, "vs"){
     ORBBEC_LIBS =\
         -L$$ORBBEC_DIR"/lib" \
         -lOrbbecSDK \
+
+    # JQTPLOTTER
+    equals(CFG, "debug"){
+        # ..
+    }
+    equals(CFG, "release"){
+        JKQTPLOTTER_LIBS =\
+            -L$$JKQTPLOTTER_DIR"/shared_lib/release" \
+            -ljkqtplotterlib \
+            -ljkqtpcommonlib \
+            -ljkqtmathtextlib \
+
+    }
 }
 

@@ -29,11 +29,11 @@
 #include "ex_item_w.hpp"
 
 // qt-utility
-#include "gui/widgets/code_editor_w.hpp"
+#include "gui/widgets/qt_code_editor_w.hpp"
 
 namespace tool::ex{
 
-class ExCodeEditorW : public ExItemW<ui::CodeEditor>{
+class ExCodeEditorW : public ExItemW<ui::QtCodeEditorW>{
 
 public:
 

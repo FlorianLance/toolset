@@ -32,8 +32,13 @@ TARGET = qt-utility-app
 TEMPLATE = app
 CONFIG += console
 CONFIG += qt
+
 QT += core gui opengl widgets printsupport network
 DEFINES += QWT_DLL
+
+win32-msvc*: DEFINES += _USE_MATH_DEFINES
+win32-msvc*: DEFINES += NOMINMAX
+DEFINES += JKQTCOMMON_LIB_IN_DLL JKQTFASTPLOTTER_LIB_IN_DLL JKQTMATHTEXT_LIB_IN_DLL JKQTPLOTTER_LIB_IN_DLL
 
 ####################################### PRI
 include(../ts-settings.pri)
@@ -43,9 +48,11 @@ include(../ts-dependencies.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
+    JKQtPlotterTest.hpp \
     lines_counter.hpp
 
 SOURCES += \
+    JKQtPlotterTest.cpp \
     qt_utility_main.cpp \
 
 

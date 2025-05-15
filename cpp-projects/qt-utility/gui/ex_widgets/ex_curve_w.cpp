@@ -26,6 +26,8 @@
 
 #include "ex_curve_w.hpp"
 
+// Qwt
+#include <qwt_text.h>
 
 using namespace tool;
 using namespace tool::ui;
@@ -34,7 +36,7 @@ using namespace tool::ex;
 ExCurveW::ExCurveW(QString name) : ExItemW<QFrame>(UiType::Curve, name){
     resetB    = new QPushButton("Reset points");
     addPointB = new QPushButton("Add point");
-    curveW = new ui::CurveW();
+    curveW = new ui::QtMultiCurvesPlotW();
 
     // right layout
     // # all curves
@@ -125,10 +127,10 @@ ExCurveW *ExCurveW::init_widget(QString title, QString xTitle, QString yTitle, g
 
     w->setEnabled(enabled);
 
-    connect(curveW, &CurveW::data_updated_signal, this, [=]{
+    connect(curveW, &QtMultiCurvesPlotW::data_updated_signal, this, [=]{
         trigger_ui_change();
     });
-    connect(curveW, &CurveW::settings_updated_signal, this, [=]{
+    connect(curveW, &QtMultiCurvesPlotW::settings_updated_signal, this, [=]{
         trigger_ui_change();
     });
     connect(&fitted, &ExCheckBoxW::ui_change_signal, this, [&]{
@@ -249,7 +251,7 @@ ExCurveW *ExCurveW::init_widget(QString title, QString xTitle, QString yTitle, g
 
     connect(&type, &ExComboBoxTextW::ui_change_signal, this, [&]{
         auto id = type.w->currentIndex();
-        curveW->set_type(static_cast<Curve::Type>(id), currentCurveId.w->value());
+        curveW->set_type(static_cast<QtCurve::Type>(id), currentCurveId.w->value());
     });
 
     return this;

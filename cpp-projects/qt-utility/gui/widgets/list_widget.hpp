@@ -33,18 +33,6 @@
 
 namespace tool::ui {
 
-//class ListWidget2 : public QScrollArea{
-
-
-//public:
-
-//    ListWidget2();
-
-//private:
-
-//    QGridLayout *m_layout = nullptr;
-//    QWidget *m_content = nullptr;
-//};
 
 class ListWidget : public QScrollArea{
 
