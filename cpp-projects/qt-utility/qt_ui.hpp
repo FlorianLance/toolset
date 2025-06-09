@@ -129,6 +129,7 @@ struct W{
     static auto init(QSpinBox *sb, MinV<int> min, V<int> value, MaxV<int> max, StepV<int> singleStep, bool enabled = true) -> QSpinBox*;
     static auto init(QDoubleSpinBox *dsb, MinV<qreal> min, V<qreal> value, MaxV<qreal> max, StepV<qreal> singleStep, int decimals, bool enabled = true) -> QDoubleSpinBox*;
     // set
+    static auto set(QLabel *la, const QString &txt) -> void;
     static auto set(QSpinBox *sb, int value) -> void;
     static auto set(QDoubleSpinBox *dsb, double value) -> void;
     static auto set(QComboBox *cb, int index) -> void;

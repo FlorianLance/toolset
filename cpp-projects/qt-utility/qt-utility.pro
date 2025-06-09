@@ -49,7 +49,7 @@ HEADERS += \
     gui/items/qt_plot_graphic_item.hpp \
     gui/widgets/__grabber_parameters_widget.hpp \
     gui/widgets/__image_viewer.hpp \
-    gui/widgets/__qt_custom_combobox_w.hpp \
+    # gui/widgets/__qt_custom_combobox_w.hpp \
     gui/widgets/__qt_plot_multi_curves_2d_w.h \
     gui/widgets/__qt_rich_text_edit_w.hpp \
     gui/widgets/__qt_sfml_gl_w.hpp \

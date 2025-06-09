@@ -142,6 +142,10 @@ auto W::init(QDoubleSpinBox *dsb, MinV<qreal> min, V<qreal> value, MaxV<qreal> m
     return dsb;
 }
 
+auto W::set(QLabel *la, const QString &txt) -> void{
+    const QSignalBlocker blocker(la);
+    la->setText(txt);
+}
 
 auto W::set(QSpinBox *sb, int value) -> void{
     const QSignalBlocker blocker(sb);
