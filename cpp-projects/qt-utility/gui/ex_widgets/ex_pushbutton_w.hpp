@@ -41,5 +41,8 @@ public:
 
     ExPushButtonW(QString name ="");
     ExPushButtonW *init_widget(QString txt, bool enabled = true);
+
+    void update_from_arg(const Arg &arg) override;
+    Arg convert_to_arg() const override;
 };
 }

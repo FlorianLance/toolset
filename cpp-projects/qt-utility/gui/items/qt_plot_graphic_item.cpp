@@ -13,6 +13,7 @@ PlotGraphicsItem::PlotGraphicsItem(QGraphicsItem *parent) : QGraphicsItem(parent
     labelPen.setColor(QColor(0,0,0,255));
 }
 
+
 auto PlotGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) -> void{
 
     static_cast<void>(option);
@@ -42,6 +43,11 @@ auto PlotGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     //        painter->fillRect(0,  2*height/3.0, width/4, 1*height/3.0, Qt::blue);
     //0,0,10,2*height/3.0);
 }
+
+auto PlotGraphicsItem::reset_data() -> void{
+    rawPlot.clear();
+}
+
 
 auto PlotGraphicsItem::set_raw_data(const tool::Buffer<double> &times, const tool::Buffer<double> &values) -> void{
 

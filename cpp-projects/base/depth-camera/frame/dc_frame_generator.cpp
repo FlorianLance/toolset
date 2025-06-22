@@ -332,6 +332,9 @@ private:
         }else if(dFrame->volumesB.contains(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8)){
             auto cloud = frame->insert_volume_buffer(DCVolumeBufferType::ColoredCloud);
             cloud->resize(dFrame->validVerticesCount, true);
+        }else if(dFrame->volumesB.contains(DCVolumeBufferType::CloudXYZ16RGB8)){
+            auto cloud = frame->insert_volume_buffer(DCVolumeBufferType::ColoredCloud);
+            cloud->resize(dFrame->validVerticesCount, true);
         }
     }
 
@@ -578,7 +581,67 @@ private:
 
     auto create_colored_cloud() -> void{
 
-        // Log::message("do work\n");
+
+        if(dFrame->volumesB.contains(DCVolumeBufferType::CloudXYZ16RGB8) && frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) && gSettings.cloud){
+
+            // if(dFrame->imagesB.contains(DCImageBufferType::Depth16)){
+            //     auto &[cMode, buffer] = dFrame->imagesB[DCImageBufferType::Depth16];
+            //     if(cMode == DCCompressionMode::FastPFor){
+            //         depthDecoder.decode(buffer, *frame->image_buffer<std::uint16_t>(DCImageBufferType::Depth16));
+            //     }else if(cMode == DCCompressionMode::None){
+            //         std::copy(buffer.begin(), buffer.end(), frame->image_buffer<std::uint16_t>(DCImageBufferType::Depth16)->get_byte_data());
+            //     }
+            // }
+
+
+
+
+            size_t cloudVerticesBufferSize              = dFrame->validVerticesCount*5;
+            size_t rest                                 = cloudVerticesBufferSize % 128;
+            size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
+
+            // Buffer<std::uint16_t> decodedD;
+            // decodedD.resize(paddeCloudVerticesBufferPaddedSize);
+
+            auto &[cMode, cloudXYZ] = dFrame->volumesB[DCVolumeBufferType::CloudXYZ16RGB8];
+            // if(cMode == DCCompressionMode::FastPFor){
+            //     cloudDecoder.decode(cloudXYZ.byte_span(), decodedD.byte_span());
+            // }else{
+
+            // }
+
+            if(cMode == DCCompressionMode::None){
+
+                auto tStart = Time::nanoseconds_since_epoch();
+
+                auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud);
+                auto processedCloudData16 = reinterpret_cast<std::uint16_t*>(cloudXYZ.get_data());
+                auto processedCloudData8  = reinterpret_cast<std::uint8_t*> (cloudXYZ.get_data());
+
+                if(ids.size() < cloud->size()){
+                    ids.resize(cloud->size());
+                    std::iota(ids.begin(), ids.end(),0);
+                }
+
+                std::for_each(std::execution::par_unseq, ids.begin(), ids.begin() + cloud->size(), [&](size_t idV){
+
+                    cloud->vertices[idV].x() = (static_cast<std::int32_t>(processedCloudData16[                                 idV]) -4096) * 0.001f;;
+                    cloud->vertices[idV].y() = (static_cast<std::int32_t>(processedCloudData16[dFrame->validVerticesCount     + idV]) -4096) * 0.001f;;
+                    cloud->vertices[idV].z() = (static_cast<std::int32_t>(processedCloudData16[dFrame->validVerticesCount * 2 + idV])      ) * 0.001f;;
+                    cloud->normals[idV]      = {1.f,0.f,0.f};
+
+                    cloud->colors[idV].x()   = processedCloudData8[ dFrame->validVerticesCount * 6 + idV]/255.f;
+                    cloud->colors[idV].y()   = processedCloudData8[ dFrame->validVerticesCount * 7 + idV]/255.f;
+                    cloud->colors[idV].z()   = processedCloudData8[ dFrame->validVerticesCount * 8 + idV]/255.f;
+                });
+
+                tComputeColoredCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
+                return;
+            }
+
+
+
+        }
 
         if(dFrame->volumesB.contains(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8) && frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) && gSettings.cloud){
 

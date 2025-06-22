@@ -1823,92 +1823,69 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
 
     if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.sending.addCloud){
 
-        if(settings.data.sending.cloudCM == DCCompressionMode::FastPFor){
 
+        // resize cloud data
+        // data mapping: XXYYZZRGB0
+        size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
+        size_t rest                                 = cloudVerticesBufferSize % 128;
+        size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
 
-            // auto [minX, maxX] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
-            //     return a.x() < b.x();
-            // });
-            // auto [minY, maxY] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
-            //     return a.y() < b.y();
-            // });
-            // auto [minZ, maxZ] = std::minmax_element(dIndices.depthVertexCorrrespondance.cbegin(), dIndices.depthVertexCorrrespondance.cend(), [](const Pt3f &a, const Pt3f &b){
-            //     return a.z() < b.z();
-            // });
+        processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
+        std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
 
-            // // x y z r g b
-            // // retrieve origin
-            // std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
+        auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
 
-            //     auto idD = std::get<0>(idC);
-            //     if(fData.depth[idD] == dc_invalid_depth_value){
-            //         return;
-            //     }
+        bool addColors = !fData.depthSizedColor.empty() && settings.data.sending.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
 
-            //     Pt3f currentP = fData.depthCloud[idD].template conv<float>();
-            // });
+        const auto dRange = mInfos.depth_range_mm();
+        const auto diff   = dRange.y() - dRange.x();
+        static constexpr std::array<Pt3f,5> depthGradient ={
+            Pt3f{0.f,0.f,1.f},
+            {0.f,1.f,1.f},
+            {0.f,1.f,0.f},
+            {1.f,1.f,0.f},
+            {1.f,0.f,0.f},
+        };
 
-            // Pt3f currentP = fData.depthCloud[idD].template conv<float>();
-            // frame->cloud.vertices[idV] = currentP * 0.001f;
+        auto xyz16Values    = processedCloudData.span().subspan(0, fData.validDepthValues*3);
+        auto xValues        = xyz16Values.subspan(0,                        fData.validDepthValues);
+        auto yValues        = xyz16Values.subspan(fData.validDepthValues,   fData.validDepthValues);
+        auto zValues        = xyz16Values.subspan(fData.validDepthValues*2, fData.validDepthValues);
 
-            // if(addColors){
-            //     frame->cloud.colors[idV] = (fData.depthSizedColor[idD].template conv<float>()/255.f).xyz();
-            // fData.depthCloud;
+        auto rgb8Values     = std::span<std::uint8_t>(reinterpret_cast<std::uint8_t*>(processedCloudData.get_byte_data() + 6*fData.validDepthValues), fData.validDepthValues*3);
+            //processedCloudData.byte_span().subspan(6*fData.validDepthValues, fData.validDepthValues*3);
+        auto rValues        = rgb8Values.subspan(0, fData.validDepthValues);
+        auto gValues        = rgb8Values.subspan(fData.validDepthValues,   fData.validDepthValues);
+        auto bValues        = rgb8Values.subspan(fData.validDepthValues*2, fData.validDepthValues);
 
+        std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
 
-            Buffer<std::uint16_t> processedCloudData;
-
-            // resize cloud data
-            // data mapping: XXYYZZRGB0
-            size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
-            size_t rest                                 = cloudVerticesBufferSize % 128;
-            size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
-            if(processedCloudData.size() < paddeCloudVerticesBufferPaddedSize){
-                processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
+            auto idV = std::get<1>(idC);
+            if(idV == -1){
+                return;
             }
-            std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
+            auto idD = std::get<0>(idC);
 
-            auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
+            xValues[idV] = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idD].x())+4096); // X
+            yValues[idV] = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idD].y())+4096); // Y
+            zValues[idV] = static_cast<std::uint16_t>(fData.depthCloud[idD].z());                                 // Z
+            if(addColors){
+                rValues[idV] = fData.depthSizedColor[idD].r();
+                gValues[idV] = fData.depthSizedColor[idD].g();
+                bValues[idV] = fData.depthSizedColor[idD].b();
+            }else{
+                float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
+                float intPart;
+                float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
+                size_t idG = static_cast<size_t>(intPart);
+                auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
+                rValues[idV] = static_cast<std::uint8_t>(255.f * colorF.x());
+                gValues[idV] = static_cast<std::uint8_t>(255.f * colorF.y());
+                bValues[idV] = static_cast<std::uint8_t>(255.f * colorF.z());
+            }
+        });
 
-            bool addColors = !fData.depthSizedColor.empty() && settings.data.sending.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
-
-            const auto dRange = mInfos.depth_range_mm();
-            const auto diff   = dRange.y() - dRange.x();
-            static constexpr std::array<Pt3f,5> depthGradient ={
-                Pt3f{0.f,0.f,1.f},
-                {0.f,1.f,1.f},
-                {0.f,1.f,0.f},
-                {1.f,1.f,0.f},
-                {1.f,0.f,0.f},
-            };
-
-            // fill data
-            std::for_each(std::execution::par_unseq, std::begin(dIndices.depthVertexCorrrespondance), std::end(dIndices.depthVertexCorrrespondance), [&](const auto &idC){
-
-                auto idD = std::get<0>(idC);
-                if(fData.depth[idD] == dc_invalid_depth_value){
-                    return;
-                }
-                auto idV = std::get<1>(idC);
-
-                processedCloudData[idV]                             = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].x())+4096); // X
-                processedCloudData[fData.validDepthValues   + idV]  = static_cast<std::uint16_t>(static_cast<std::int32_t>(fData.depthCloud[idV].y())+4096); // Y
-                processedCloudData[2*fData.validDepthValues + idV]  = static_cast<std::uint16_t>(fData.depthCloud[idV].z());                                 // Z
-                if(addColors){
-                    processedCloudData8[6*fData.validDepthValues + idV] = fData.depthSizedColor[idV].r();
-                    processedCloudData8[7*fData.validDepthValues + idV] = fData.depthSizedColor[idV].g();
-                    processedCloudData8[8*fData.validDepthValues + idV] = fData.depthSizedColor[idV].b();
-                }else{
-                    float vF = (static_cast<float>(fData.depth[idD]) - dRange.x())/diff;
-                    float intPart;
-                    float decPart = std::modf((vF*(depthGradient.size()-1)), &intPart);
-                    size_t idG = static_cast<size_t>(intPart);
-                    auto colorF = depthGradient[idG]*(1.f-decPart) + depthGradient[idG+1]*decPart;
-                    processedCloudData8[6*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.x());
-                    processedCloudData8[7*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.y());
-                    processedCloudData8[8*fData.validDepthValues + idV] = static_cast<std::uint8_t>(255.f * colorF.z());
-                }
-            });
+        if(settings.data.sending.cloudCM == DCCompressionMode::FastPFor){
 
             if(auto volumeB = dFrame->insert_volume_buffer(DCVolumeBufferType::CloudXYZ16RGB8, DCCompressionMode::FastPFor)){
                 if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), *volumeB)){
@@ -1916,7 +1893,8 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
                 }
             }
         }else if(settings.data.sending.cloudCM == DCCompressionMode::None){
-            // ...
+
+            dFrame->insert_volume_buffer(DCVolumeBufferType::CloudXYZ16RGB8, DCCompressionMode::None, std::span<std::byte>(processedCloudData.get_byte_data(),processedCloudData.size()*2));
         }
     }
 }

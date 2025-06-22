@@ -49,7 +49,6 @@ HEADERS += \
     gui/items/qt_plot_graphic_item.hpp \
     gui/widgets/__grabber_parameters_widget.hpp \
     gui/widgets/__image_viewer.hpp \
-    # gui/widgets/__qt_custom_combobox_w.hpp \
     gui/widgets/__qt_plot_multi_curves_2d_w.h \
     gui/widgets/__qt_rich_text_edit_w.hpp \
     gui/widgets/__qt_sfml_gl_w.hpp \
@@ -57,6 +56,7 @@ HEADERS += \
     gui/widgets/qt_bar_plot_w.hpp \
     gui/widgets/qt_base_sfml_gl_w.hpp \
     gui/widgets/qt_code_editor_w.hpp \
+    gui/widgets/qt_custom_combobox_w.hpp \
     gui/widgets/qt_fast_multi_curves_plot_w.hpp \
     gui/widgets/qt_list_w.hpp \
     gui/widgets/qt_logger_w.hpp \

@@ -23,31 +23,59 @@
 ** DEALINGS IN THE SOFTWARE.                                                  **
 **                                                                            **
 ********************************************************************************/
+#pragma once
 
-#include "ex_pushbutton_w.hpp"
+// Qt
+#include <QDoubleSpinBox>
+#include <QSpinBox>
 
-// qt-utility
-#include "qt_str.hpp"
-#include "qt_logger.hpp"
+namespace tool::ui {
 
-using namespace tool::ex;
+template <typename T>
+class NoScrollFocusWidget : public T{
 
-ExPushButtonW::ExPushButtonW(QString name) : ExItemW<QPushButton>(UiType::PushButton, name){
-}
+public:
+    NoScrollFocusWidget(QWidget *parent){
+        Q_UNUSED(parent)
+        T::setFocusPolicy( Qt::StrongFocus );
+    }
 
-ExPushButtonW *ExPushButtonW::init_widget(QString txt, bool enabled){
-    ui::W::init(w.get(), txt, enabled);
-    connect(w.get(), &QPushButton::clicked, this, &ExPushButtonW::trigger_ui_change);
-    return this;
-}
+    auto wheelEvent(QWheelEvent *e) -> void override {
+        if(T::hasFocus()){
+            T::wheelEvent(e);
+        }
+    }
+};
 
-void ExPushButtonW::update_from_arg(const Arg &arg){
-    ExItemW::update_from_arg(arg);
-    w->setText(arg.to_string_value());
-}
 
-Arg ExPushButtonW::convert_to_arg() const{
-    Arg arg = ExBaseW::convert_to_arg();
-    arg.init_from(w->text());
-    return arg;
+//class NoFocusSpinBox : public QSpinBox{
+
+//public:
+//    NoFocusSpinBox(QWidget *parent){
+//        Q_UNUSED(parent)
+//        setFocusPolicy( Qt::StrongFocus );
+//    }
+
+//    void wheelEvent(QWheelEvent *e) override {
+//        if(hasFocus()){
+//            QSpinBox::wheelEvent(e);
+//        }
+//    }
+//};
+
+
+//class NoFocusDoubleSpinBox : public QDoubleSpinBox{
+
+//public:
+//    NoFocusDoubleSpinBox(QWidget *parent){
+//        Q_UNUSED(parent)
+//        setFocusPolicy( Qt::StrongFocus );
+//    }
+
+//    void wheelEvent(QWheelEvent *e) override {
+//        if(hasFocus()){
+//            QDoubleSpinBox::wheelEvent(e);
+//        }
+//    }
+//};
 }

@@ -15,6 +15,7 @@ class PlotGraphicsItem : public QGraphicsItem{
 public:
 
     PlotGraphicsItem(QGraphicsItem *parent = nullptr);
+    auto reset_data() -> void;
     auto set_raw_data(const tool::Buffer<double> &times, const tool::Buffer<double> &values) -> void;
     auto boundingRect() const -> QRectF override;
 

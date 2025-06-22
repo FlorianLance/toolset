@@ -36,6 +36,7 @@
 using namespace tool;
 using namespace cam;
 
+
 int main(int argc, char *argv[]){
 
     // check application arguments

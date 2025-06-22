@@ -908,7 +908,9 @@ auto DCUIDrawer::draw_dc_recorder_tab_item(
         ImGui::Text("q");
 
         ImGui::EndDisabled();
+
         ImGui::Unindent();
+
 
         ImGui::Separator();
         ImGui::Text("[Secondary]");
@@ -1916,6 +1918,19 @@ auto DCUIDrawer::draw_dc_data_settings(cam::DCType type, cam::DCDataSettings &da
             }
             ImGui::SameLine();
             ImGui::Text("q");
+
+            ImGui::EndDisabled();
+
+            if(ImGui::Checkbox("cloud###stor_cloud", &data.server.sending.addCloud)){
+                update = true;
+            }
+            ImGui::SameLine();
+            ImGui::BeginDisabled(!data.server.sending.addCloud);
+            compress = data.server.sending.cloudCM == cam::DCCompressionMode::FastPFor;
+            if(ImGui::Checkbox("compress###stor_cloud_comp", &compress)){
+                data.server.sending.cloudCM = compress ? cam::DCCompressionMode::FastPFor : cam::DCCompressionMode::None;
+                update = true;
+            }
 
             ImGui::EndDisabled();
             ImGui::Unindent();

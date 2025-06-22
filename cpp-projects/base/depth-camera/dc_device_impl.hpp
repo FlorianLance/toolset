@@ -220,6 +220,8 @@ protected:
     ColorHSV maxDiffColor;
     bool fdc;
 
+    Buffer<std::uint16_t> processedCloudData;
+
     // plane filtering parameters
     geo::Pt3f p1;
     geo::Pt3f p2;
