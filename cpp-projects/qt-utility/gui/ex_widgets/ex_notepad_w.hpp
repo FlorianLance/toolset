@@ -46,7 +46,8 @@ public :
 
     Qt::TextFormat selected_format()const;
 
-    ExTextEditW text = {"text"};
+    ExTextEditW edit = {"edit"};
+    ExTextEditW preview = {"text"};
     ExComboBoxIndexW type = {"type"};
 };
 }

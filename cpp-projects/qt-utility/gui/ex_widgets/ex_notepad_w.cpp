@@ -36,12 +36,24 @@ ExNotepadW::ExNotepadW(QString name) : ExItemW<QFrame>(UiType::Notepad, name){
     auto mainL = new QVBoxLayout();
     w->setLayout(mainL);
     mainL->addWidget(ui::F::old_gen(ui::L::HB(), { ui::W::txt("Type:"), type()}, LStretch{false}, LMargins{false}, QFrame::Box));
-    mainL->addWidget(text());
-    mainL->setStretch(0, 1);
-    mainL->setStretch(1, 20);
+    mainL->addWidget(new QLabel("Text to edit:"));
+    mainL->addWidget(edit());
+    edit.init_widget("...", Qt::TextFormat::PlainText, true);
 
-    connect(&text, &ExTextEditW::ui_change_signal, this, [=]{trigger_ui_change();});
-    connect(&type, &ExComboBoxIndexW::ui_change_signal, this, [=]{
+    mainL->addWidget(new QLabel("Preview:"));
+    mainL->addWidget(preview());
+    mainL->setStretch(0, 1);
+    mainL->setStretch(1, 1);
+    mainL->setStretch(2, 20);
+    mainL->setStretch(3, 1);
+    mainL->setStretch(4, 20);
+
+    connect(&edit, &ExTextEditW::ui_change_signal,      this, [&](){
+        preview.init_widget(edit.get_text(), selected_format(), false);
+        trigger_ui_change();
+    });
+    connect(&type, &ExComboBoxIndexW::ui_change_signal, this, [&](){
+        preview.init_widget(edit.get_text(), selected_format(), false);
         trigger_ui_change();
     });
 }
@@ -58,7 +70,9 @@ ExNotepadW *ExNotepadW::init_widget(QString txt, Qt::TextFormat tf, bool enabled
     }else if(tf == Qt::TextFormat::MarkdownText){
         type.init_widget(items, 2);
     }
-    text.init_widget(txt, Qt::TextFormat::PlainText, enabled);
+
+    edit.init_widget(txt, Qt::TextFormat::PlainText, enabled);
+    preview.init_widget(txt, tf, false);
 
     return this;
 }
@@ -73,7 +87,8 @@ void ExNotepadW::update_from_arg(const Arg &arg){
         return;
     }
     type.update_from_arg(args[0]);
-    text.update_from_arg(args[1]);
+    edit.update_from_arg(args[1]);
+    preview.init_widget(edit.w->toPlainText(), selected_format(), false);
 }
 
 Arg ExNotepadW::convert_to_arg() const{
@@ -82,7 +97,7 @@ Arg ExNotepadW::convert_to_arg() const{
     arg.init_from(
         {
             type.convert_to_arg().value(),
-            text.convert_to_arg().value()
+            edit.convert_to_arg().value()
         },
         "%%%"
     );

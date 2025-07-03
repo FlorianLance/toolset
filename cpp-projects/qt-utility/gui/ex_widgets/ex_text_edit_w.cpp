@@ -78,7 +78,13 @@ void ExTextEditW::update_from_arg(const Arg &arg){
     if(arg.generator.has_value()){
         // ...
     }
-    w->setText(arg.to_string_value());
+    if(tf == Qt::TextFormat::PlainText){
+        w->setPlainText(arg.to_string_value());
+    }else if(tf == Qt::TextFormat::RichText){
+        w->setText(arg.to_string_value());
+    }else if(tf == Qt::TextFormat::MarkdownText){
+        w->setMarkdown(arg.to_string_value());
+    }
 
     w->blockSignals(false);
 }
