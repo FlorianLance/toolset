@@ -73,12 +73,12 @@ auto DCModelSettings::init_from_text(std::string_view &text) -> void  {
     io::Settings::init_from_text(text);
 
     size_t id = 0;
-    for(const auto &line : String::split_view(text, "\n"sv)){
+    for(const auto &line : str::split_view(text, "\n"sv)){
         if(line.length() == 0){
             return;
         }
-        for(auto value : String::split_view(line, " "sv)){
-            transformation.array[id++] = String::to_float(value);
+        for(auto value : str::split_view(line, " "sv)){
+            transformation.array[id++] = str::to_float(value);
             if(id == 16){
                 return;
             }

@@ -194,16 +194,16 @@ auto Settings::load_from_file(const std::string &filePath) -> bool{
 auto Settings::init_from_text(std::string_view &text) -> void{
 
     if(text.starts_with("Type: "sv)){
-        if(auto values = String::split_view(text, " "sv); values.size() == 2){
-            sType = static_cast<SettingsType>(String::to_int(values[1]));
+        if(auto values = str::split_view(text, " "sv); values.size() == 2){
+            sType = static_cast<SettingsType>(str::to_int(values[1]));
         }
-        text = String::advance_view_to_delim(text, "\n"sv);
+        text = str::advance_view_to_delim(text, "\n"sv);
     }
     if(text.starts_with("Version: "sv)){
-        if(auto values = String::split_view(text, " "sv); values.size() == 2){
-            version = static_cast<SettingsVersion>(String::to_int(values[1]));
+        if(auto values = str::split_view(text, " "sv); values.size() == 2){
+            version = static_cast<SettingsVersion>(str::to_int(values[1]));
         }
-        text = String::advance_view_to_delim(text, "\n"sv);
+        text = str::advance_view_to_delim(text, "\n"sv);
     }
 }
 
@@ -342,13 +342,13 @@ auto Settings::init_from_text_file(std::span<Settings*> settingsA, const std::st
 
     std::string_view contentV = content.value();
 
-    auto contents = String::split_view(contentV, "%%%");
+    auto contents = str::split_view(contentV, "%%%");
     if(contents.size() <= 1){
         Log::error("Invalid content for multi settings file.\n");
         return false;
     }
 
-    size_t nbParts = String::to_int(contents[0]);
+    size_t nbParts = str::to_int(contents[0]);
     if(settingsA.size() != nbParts){
         Log::error(std::format("Invalid number of parts ([{}] instead of [{}]) for multi settings file.\n", nbParts, settingsA.size()));
         return false;

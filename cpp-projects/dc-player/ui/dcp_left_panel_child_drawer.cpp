@@ -191,7 +191,7 @@ auto DCPLeftPanelChildDrawer::draw_ui_tab_item(DCPUiSettings &ui) -> void {
 
 auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
     if(filePath.has_value()){
-        auto s = String::split_path_and_filename(filePath.value());
+        auto s = str::split_path_and_filename(filePath.value());
         if(s.second.contains("default")){
             ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{1.f,0.5f,0.15f,1.f});
             return;

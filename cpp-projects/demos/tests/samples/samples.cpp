@@ -193,7 +193,7 @@ auto Sample::parent_update_imgui() -> void{
                     size_t id = 0;
                     auto sPaths = sampleShader->shaders_file_paths();
                     for(const auto &sp : sPaths){
-                        auto ext = String::split(sp, '.').back();
+                        auto ext = str::split(sp, '.').back();
                         if(ImGui::Button(std::format("{}###open_current_shader_{}",ext,ext).c_str())){
                             File::execute_file(sp);
                         }

@@ -419,7 +419,7 @@ auto ShaderProgram::retrieve_uniforms_info() -> void{
             uniforms[uniformName] = UniformInfo{uniformName, get_type(static_cast<GLenum>(type)), location, offset, arrayStride};
         }else{ // uniform block
 
-            auto split = String::split(uniformName, '.');
+            auto split = str::split(uniformName, '.');
             if(split.size() == 2){
 
                 const auto fullBlockName = split[0];

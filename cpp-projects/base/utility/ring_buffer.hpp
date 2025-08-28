@@ -34,22 +34,33 @@ namespace tool{
 template <typename ElementType>
 struct SingleRingBuffer{
 
+    SingleRingBuffer() = default;
+    SingleRingBuffer(size_t count, ElementType initValue){
+        resize(count, initValue);
+    }
+
     constexpr auto resize(size_t count, ElementType initValue) -> void{
+        if(count == 0){
+            count = 1;
+        }
         buffers.resize(count);
         buffers.fill(initValue);
     }
 
     auto set_current(ElementType value) noexcept -> void{
-        if(currentId < buffers.size()){
-            buffers[currentId] = value;
-        }
+        buffers[currentId] = value;
     }
 
     auto current() const noexcept  -> ElementType{
-        if(currentId < buffers.size()){
-            return buffers[currentId];
-        }
-        return {};
+        return buffers[currentId];
+    }
+
+    auto current() noexcept  -> ElementType&{
+        return buffers[currentId];
+    }
+
+    auto current_id() const noexcept -> size_t{
+        return currentId;
     }
 
     auto increment() noexcept -> void{

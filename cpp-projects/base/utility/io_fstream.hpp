@@ -72,6 +72,18 @@ auto read_array(ReadArrayValueType *value, std::ifstream &file, size_t size) -> 
         file.read(reinterpret_cast<char*>(value), sizeof(ReadArrayValueType)*size);
     }
 }
+
+[[maybe_unused]] static inline auto read_text(std::string &text, std::ifstream &file, size_t size = 0) -> void{
+
+    if(size != 0){
+        text.resize(size);
+    }
+
+    if(!text.empty()){
+        read_array<char>(text.data(), file, text.size());
+    }
+}
+
 template<typename ReadArrayValueType>
 auto read_array(std::ifstream &file, size_t size) -> std::vector<ReadArrayValueType>{
     std::vector<ReadArrayValueType> values(size);

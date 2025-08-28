@@ -67,7 +67,7 @@ equals(COMPILER, "vs"){ # Visual studio
     QMAKE_CXXFLAGS *= -w14242 # 'identfier': conversion from 'type1' to 'type1', possible loss of data
 
     # QMAKE_CXXFLAGS *= -arch:AVX512
-
+    # QMAKE_CXXFLAGS *= -openmp
 
     # /w14242 'identfier': conversion from 'type1' to 'type1', possible loss of data
     # /w14254 'operator': conversion from 'type1:field_bits' to 'type2:field_bits', possible loss of data

@@ -30,6 +30,7 @@
 #include <vector>
 #include <algorithm>
 #include <span>
+#include <concepts>
 // #include <assert.h>
 // #include <numeric>
 
@@ -52,7 +53,7 @@ struct Buffer{
     constexpr Buffer(std::initializer_list<ElementType> elements) : values(elements){}
 
     // memory
-    [[nodiscard]] constexpr auto empty()                const noexcept  -> size_t               {return values.empty();}
+    [[nodiscard]] constexpr auto empty()                const noexcept  -> bool                 {return values.empty();}
     [[nodiscard]] constexpr auto size()                 const noexcept  -> size_t               {return values.size();}
     [[nodiscard]] constexpr auto element_bytes_size()   const noexcept  -> size_t               {return sizeof(Elem);}
     [[nodiscard]] constexpr auto bytes_size()           const noexcept  -> size_t               {return size()*element_bytes_size();}
@@ -196,10 +197,12 @@ struct Buffer{
     }
 
     constexpr auto copy_last_values_to(size_t count, Buffer &subBuffer, size_t subBufferStart = 0) const -> size_t {
+
         if(count > size()){
             count = size();
         }
         auto start = size() - count;
+
         return copy_subset_to(start, size(), subBuffer, subBufferStart);
     }
 
@@ -227,7 +230,7 @@ struct Buffer{
             idEnd = values.size();
         }
         values.erase(begin() + idStart, begin() + idEnd);
-    }
+    }        
 
     constexpr auto remove_before(size_t id) -> void{
         if(id <= size()){
@@ -277,6 +280,14 @@ struct Buffer{
     std::vector<Elem> values;
 };
 
+
+
 using BinaryBuffer = Buffer<std::byte>;
+
+template <typename ElementType>
+using Buffer2D  = Buffer<Buffer<ElementType>>;
+
+template <typename ElementType>
+using Buffer3D  = Buffer<Buffer2D<ElementType>>;
 
 }

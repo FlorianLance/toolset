@@ -243,18 +243,18 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
     io::Settings::init_from_text(text);
 
     // skip header
-    text = String::advance_view_to_delim(text, "\n"sv);
+    text = str::advance_view_to_delim(text, "\n"sv);
     
     connectionsS.clear();
 
-    for(const auto &line : String::split_view(text, "\n"sv)){
+    for(const auto &line : str::split_view(text, "\n"sv)){
 
-        if(auto values = String::split_view(line, " "sv); values.size() >= 5){
+        if(auto values = str::split_view(line, " "sv); values.size() >= 5){
             
             if(values[0] != "local"sv){
 
                 auto devS = std::make_unique<DCDeprecatedRemoteDeviceConnectionSettings>();
-                devS->serverS.readingPort    = String::to_int(values[2]);
+                devS->serverS.readingPort    = str::to_int(values[2]);
 
                 // read protocol
                 if(values.size() > 5){
@@ -268,7 +268,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
                 }
 
                 const auto &interfaces = (devS->serverS.protocol == Protocol::ipv6) ? ipv6Interfaces : ipv4Interfaces;
-                size_t idReadingInterface = String::to_int(values[1]);
+                size_t idReadingInterface = str::to_int(values[1]);
                 if(idReadingInterface >= interfaces.size()){
                     Log::error(std::format("[DCClientConnectionSettings::init_from_text] Invalid network config file format.\n"));
                     return;
@@ -283,7 +283,7 @@ auto DCDeprecatedClientConnectionSettings::init_from_text(std::string_view &text
                 }else{
                     devS->serverS.sendingAddress = values[3];
                 }
-                devS->serverS.sendingPort = String::to_int(values[4]);
+                devS->serverS.sendingPort = str::to_int(values[4]);
                 
                 Log::message(std::format("DC client remote device  settings read: RI:[{}] RA:[{}] RP:[{}] SA:[{}] SP:[{}] IPV:[{}].\n",
                                             devS->serverS.idReadingInterface, devS->serverS.readingAdress, devS->serverS.readingPort, devS->serverS.sendingAddress, devS->serverS.sendingPort,

@@ -31,12 +31,13 @@
 #include <numeric>
 #include <sstream>
 #include <charconv>
+#include <algorithm>
 
-auto tool::String::join(std::span<const std::string> parts) -> std::string{
+auto tool::str::join(std::span<const std::string> parts) -> std::string{
     return std::accumulate(parts.begin(), parts.end(), std::string{});
 }
 
-auto tool::String::join(std::span<const std::string> parts, const std::string &delim) -> std::string{
+auto tool::str::join(std::span<const std::string> parts, const std::string &delim) -> std::string{
 
     if (parts.empty()){
         return std::string();
@@ -52,7 +53,15 @@ auto tool::String::join(std::span<const std::string> parts, const std::string &d
     );
 }
 
-auto tool::String::remove_from_left(std::string &str, char delim) -> void{
+auto tool::str::left_trim(std::string &str, char c) -> void{
+    str.erase(str.begin(), std::find_if_not(str.begin(), str.end(), [c](int i) -> int { return i == c; }));
+}
+
+auto tool::str::right_trim(std::string &str, char c) -> void{
+    str.erase((std::find_if_not(str.rbegin(), str.rend(), [c](int i) -> int { return i == c; })).base(), str.end());
+}
+
+auto tool::str::remove_from_left(std::string &str, char delim) -> void{
     auto pos = str.find_last_of(delim);
     if(pos ==  std::string::npos){
         return;
@@ -60,7 +69,7 @@ auto tool::String::remove_from_left(std::string &str, char delim) -> void{
     str.erase(0, pos+1);
 }
 
-auto tool::String::remove_from_right(std::string &str, char delim) -> void{
+auto tool::str::remove_from_right(std::string &str, char delim) -> void{
     auto pos = str.find_last_of(delim);
     if(pos ==  std::string::npos){
         return;
@@ -68,7 +77,7 @@ auto tool::String::remove_from_right(std::string &str, char delim) -> void{
     str.erase(pos);
 }
 
-auto tool::String::remove_after_right(std::string &str, char delim) -> void{
+auto tool::str::remove_after_right(std::string &str, char delim) -> void{
     auto pos = str.find_first_of(delim);
     if(pos ==  std::string::npos){
         return;
@@ -76,7 +85,7 @@ auto tool::String::remove_after_right(std::string &str, char delim) -> void{
     str.erase(pos);
 }
 
-auto tool::String::split_path_and_filename(const std::string &str) -> std::pair<std::string, std::string>{
+auto tool::str::split_path_and_filename(const std::string &str) -> std::pair<std::string, std::string>{
 
     auto pos1 = str.find_last_of('/');
     auto pos2 = str.find_last_of('\\');
@@ -91,7 +100,7 @@ auto tool::String::split_path_and_filename(const std::string &str) -> std::pair<
     return std::make_pair(str.substr(0, pos1), str.substr(pos1+1));
 }
 
-auto tool::String::split(const std::string &str, char delimiter) -> std::vector<std::string>{
+auto tool::str::split(const std::string &str, char delimiter) -> std::vector<std::string>{
     std::vector<std::string> elems;
     std::stringstream ss(str);
     std::string item;
@@ -102,7 +111,7 @@ auto tool::String::split(const std::string &str, char delimiter) -> std::vector<
 }
 
 
-auto tool::String::split(const std::string& str, const std::string &delimiter, bool trimEmpty) -> std::vector<std::string>{
+auto tool::str::split(const std::string& str, const std::string &delimiter, bool trimEmpty) -> std::vector<std::string>{
 
     std::string::size_type pos, lastPos = 0, length = str.length(), dLength = delimiter.length();
     std::vector<std::string> tokens;
@@ -124,7 +133,7 @@ auto tool::String::split(const std::string& str, const std::string &delimiter, b
 }
 
 
-auto tool::String::replace_first(std::string &str, const std::string &from, const std::string &to) -> bool{
+auto tool::str::replace_first(std::string &str, const std::string &from, const std::string &to) -> bool{
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos){
         return false;
@@ -133,7 +142,7 @@ auto tool::String::replace_first(std::string &str, const std::string &from, cons
     return true;
 }
 
-auto tool::String::replace_all(std::string &str, const std::string &from, const std::string &to) -> void{
+auto tool::str::replace_all(std::string &str, const std::string &from, const std::string &to) -> void{
     if(from.empty()){
         return;
     }
@@ -144,7 +153,7 @@ auto tool::String::replace_all(std::string &str, const std::string &from, const 
     }
 }
 
-auto tool::String::replace_all2(std::string &source, const std::string &from, const std::string &to) -> void{
+auto tool::str::replace_all2(std::string &source, const std::string &from, const std::string &to) -> void{
 
     std::string newString;
     newString.reserve(source.length());  // avoids a few memory allocations
@@ -163,14 +172,14 @@ auto tool::String::replace_all2(std::string &source, const std::string &from, co
     source.swap(newString);
 }
 
-auto tool::String::advance_view_to_delim(std::string_view str, std::string_view delims) -> std::string_view{
+auto tool::str::advance_view_to_delim(std::string_view str, std::string_view delims) -> std::string_view{
     if(auto elem = str.find_first_of(delims); elem != std::string_view::npos){
         return str.substr(elem+1);
     }
     return str;
 }
 
-auto tool::String::split_view(std::string_view strv, std::string_view delims) -> std::vector<std::string_view>{
+auto tool::str::split_view(std::string_view strv, std::string_view delims) -> std::vector<std::string_view>{
 
     std::vector<std::string_view> output;
     size_t first = 0;
@@ -188,20 +197,21 @@ auto tool::String::split_view(std::string_view strv, std::string_view delims) ->
     return output;
 }
 
-auto tool::String::to_char(std::string_view str) -> char{
+auto tool::str::to_char(std::string_view str) -> char{
     char value;
     std::from_chars(str.data(), str.data() + str.size(), value);
     return value;
 }
 
-auto tool::String::to_int(std::string_view str) -> int{
+auto tool::str::to_int(std::string_view str) -> int{
     int value;
     std::from_chars(str.data(), str.data() + str.size(), value);
     return value;
 }
 
-auto tool::String::to_float(std::string_view str) -> float{
+auto tool::str::to_float(std::string_view str) -> float{
     float value;
     std::from_chars(str.data(), str.data() + str.size(), value);
     return value;
 }
+

@@ -65,7 +65,7 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     std::string line;
 
     std::getline(in, line);
-    auto split = String::split(line, ' ');
+    auto split = str::split(line, ' ');
     if(split.size() == 5){
         p.minWidth  = std::stoul(split[1]);
         p.maxWidth  = std::stoul(split[2]);
@@ -74,7 +74,7 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 5){
         p.minInfra      = static_cast<std::uint16_t>(std::stoi(split[1]));
         p.maxInfra      = static_cast<std::uint16_t>(std::stoi(split[2]));
@@ -83,7 +83,7 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 4){
         p.yFactor  = std::stof(split[1]);
         p.uFactor  = std::stof(split[2]);
@@ -91,7 +91,7 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 8){
         p.minDepthValue     = std::stof(split[1]);
         p.maxDepthValue     = std::stof(split[2]);
@@ -103,27 +103,27 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 2){
         p.jpegCompressionRate   = static_cast<std::uint8_t>(std::stoi(split[1]));
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 3){
         p.smoothingKernelSize   = static_cast<std::uint8_t>(std::stoi(split[1]));
         p.smoothingMethod       = static_cast<std::uint8_t>(std::stoi(split[2]));
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 3){
         p.nbMinNeighboursNb     = static_cast<std::uint8_t>(std::stoi(split[1]));
         p.minNeighboursLoops    = static_cast<std::uint8_t>(std::stoi(split[2]));
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 4){
         p.erosionSize           = static_cast<std::uint8_t>(std::stoi(split[1]));
         p.erosionType           = static_cast<K2MorphShapes>(std::stoi(split[2]));
@@ -131,13 +131,13 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() == 2){
         p.fps                   = static_cast<std::uint8_t>(std::stoi(split[1]));
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() >= 7){
         p.filterColor           = {static_cast<std::uint8_t>(std::stoi(split[1])),
                                    static_cast<std::uint8_t>(std::stoi(split[2])),
@@ -151,7 +151,7 @@ K2Settings K2Settings::from_string(const std::string &parametersStr){
     }
 
     std::getline(in, line);
-    split = String::split(line, ' ');
+    split = str::split(line, ' ');
     if(split.size() >= 7){
         p.filterDepthWithColor  = (std::stoi(split[1])==1);
         p.infraInvert           = (std::stoi(split[2])==1);

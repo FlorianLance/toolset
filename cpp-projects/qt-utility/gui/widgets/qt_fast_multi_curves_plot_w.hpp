@@ -41,9 +41,13 @@ public:
 
     auto set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void;
     auto set_nb_curves(size_t nbCurves) -> void;
-    auto add_marker(double x, const QString &label) -> void;
-    auto set_left_title(const QString &title) -> void;
+    auto add_vertical_marker(double x, const QString &label) -> void;
+    auto add_horizontal_marker(double y, const QString &label) -> void;
+
+    auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;
     auto set_curve_visibility(size_t idCurve, bool state) -> void;
+
+    auto set_scale_mode(bool automatic, double startScaleY, double endScaleY, bool addTempMeanOffset) -> void;
 
 private:
 

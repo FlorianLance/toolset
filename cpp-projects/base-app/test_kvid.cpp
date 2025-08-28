@@ -627,6 +627,6 @@ auto process_kvid() -> void{
         }
     }
 
-    String::replace_first(path, ".kvid", "-flo-modified.kvid");
+    str::replace_first(path, ".kvid", "-flo-modified.kvid");
     video.save_to_file(path);
 }

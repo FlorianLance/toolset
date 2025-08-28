@@ -82,7 +82,7 @@ auto DCDeviceDrawer::save_current_cloud(const std::string &path) -> void{
                 cloud->colors[ii] = cloud->normals[ii];
             }
             auto nPath = path;
-            tool::String::replace_first(nPath, ".obj", "_normals_colors.obj");
+            tool::str::replace_first(nPath, ".obj", "_normals_colors.obj");
             tool::io::CloudIO::save_cloud(nPath, *cloud);
         }
     }

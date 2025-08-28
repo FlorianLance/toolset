@@ -375,7 +375,7 @@ auto DCMLeftPanelChildDrawer::draw_ui_tab_item(DCMUiSettings &ui) -> void {
 
 auto draw_config_file_name(const std::optional<std::string> &filePath) -> void{
     if(filePath.has_value()){
-        auto s = String::split_path_and_filename(filePath.value());
+        auto s = str::split_path_and_filename(filePath.value());
         if(s.second.contains("default")){
             ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{1.f,0.5f,0.15f,1.f});
             return;
@@ -474,7 +474,7 @@ auto DCMLeftPanelChildDrawer::draw_global_tab_item(DCMModel *model)  -> void {
         ImGui::Text("IPV6:");
         for(size_t id = 0; id < model->client.settings.ipv6Interfaces.size(); ++id){
             auto address = model->client.settings.ipv6Interfaces[id].ipAddress;
-                String::replace_all(address, "%", "[P]");
+                str::replace_all(address, "%", "[P]");
                 ImGuiUiDrawer::text(std::format("[Id]: {}, [A]: {}",
                 id,
                 address
@@ -1003,7 +1003,7 @@ auto DCMLeftPanelChildDrawer::draw_device_tab_item(DCClient &client) -> void {
     }
     // = "0;1;2;3;4;5;6;7;8;9";
     if(ImGui::Button("Apply settings for camera order")){
-        auto values = String::split(order, ';');
+        auto values = str::split(order, ';');
         if(values.size() == client.settings.devicesS.size()){
             std::set<int> allIds;
             std::vector<size_t> ids;

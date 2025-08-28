@@ -78,7 +78,11 @@ int main(int argc, char *argv[]){
     });
     Logger::set_logger_instance(std::move(logger));
 
-    multi_devices_benchmark();
+    // multi_devices_benchmark();
+
+    test_bdf_reader("C:/Users/SDKim/Downloads/bdf_test.bdf");
+    // test_bdf_reader("D:/DEV/Clients/Takasago/TakasagoVision/cpp-projects/_build/bin/takasago-eeg/recordings/direct_25-06-25-15-37-31.bdf");
+
 
     // cam::DCDevice dev;
     // // auto tf = dev.tf();

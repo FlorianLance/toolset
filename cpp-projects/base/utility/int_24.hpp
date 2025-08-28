@@ -31,6 +31,7 @@
 #include <cstdint>
 
 struct signed_24_bit {
+
     uint8_t other_data;
     uint8_t use_by_the_24_bit_int[3];
 

@@ -360,7 +360,7 @@ auto DCPMainWindowDrawer::draw_menu() -> void{
                 for(std::string_view alias : ShadersManager::get_instance()->all_aliases()){
                     if (ImGui::BeginMenu(std::format("Shader {}", alias).c_str())){
                         for(const auto &path : ShadersManager::get_instance()->get_ptr(alias)->shaders_file_paths()){
-                            if(ImGui::MenuItem(std::format("{}",String::split(path, ".").back()).c_str())){
+                            if(ImGui::MenuItem(std::format("{}",str::split(path, ".").back()).c_str())){
                                 File::execute_file(path);
                             }
                         }

@@ -122,3 +122,7 @@ auto QtBarPlotW::set_values(const QVector<QVector<double>> &values) -> void{
 auto QtBarPlotW::set_y_title(const QString &title) -> void{
     setAxisTitle( QwtAxis::YLeft, title);
 }
+
+auto QtBarPlotW::set_y_axis_scale(double min, double max) -> void{
+    setAxisScale(QwtAxis::YLeft, min, max, (max-min)*0.1);
+}

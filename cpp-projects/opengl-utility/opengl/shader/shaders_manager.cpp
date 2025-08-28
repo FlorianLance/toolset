@@ -58,7 +58,7 @@ auto ShadersManager::load_shader(const std::string &alias, std::span<const std::
 
     auto shader = std::make_shared<gl::ShaderProgram>();
     if(!shader->load_from_files(paths)){
-        Log::error(std::format("[ShadersManager] Cannot generate ShaderProgram from paths:\n{}", String::join(paths, "\n")));
+        Log::error(std::format("[ShadersManager] Cannot generate ShaderProgram from paths:\n{}", str::join(paths, "\n")));
         return false;
     }
 

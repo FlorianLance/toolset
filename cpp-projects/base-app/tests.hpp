@@ -45,4 +45,5 @@ auto encode2() -> void;
 
 auto multi_devices_benchmark() -> void;
 
+auto test_bdf_reader(const std::string &path) -> void;
 

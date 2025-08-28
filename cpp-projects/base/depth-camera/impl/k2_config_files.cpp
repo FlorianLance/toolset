@@ -137,7 +137,7 @@ std::vector<K2GrabberTargetInfo> K2ConfigFiles::read_manager_network_config_file
     std::vector<K2GrabberTargetInfo> infos;
     std::string line;
     while (std::getline(inConfigFile, line)){
-        auto split = tool::String::split(line, ' ');
+        auto split = tool::str::split(line, ' ');
         if(split.size() != 4){
             Log::error(std::format("Invalid manager network config file with path:: {}\n", fsPath.string()));
             return {};
@@ -182,7 +182,7 @@ std::vector<tool::geo::Mat4d> K2ConfigFiles::read_manager_calibration_file(std::
 
             std::getline(buffer, line);
 
-            auto split = String::split(line, ' ');
+            auto split = str::split(line, ' ');
             if(split.size() == 4){
                 values.emplace_back(std::stof(split[0]));
                 values.emplace_back(std::stof(split[1]));

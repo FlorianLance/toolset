@@ -47,7 +47,14 @@ struct QtFastMultiCurvesPlotW::Impl{
     QwtPlotGrid *grid = nullptr;
     QwtPlotTextLabel *leftTitle = nullptr;
     std::vector<std::unique_ptr<QwtPlotCurve>> curves;
-    std::vector<std::unique_ptr<QwtPlotMarker>> markers;
+    std::vector<std::unique_ptr<QwtPlotMarker>> vMarkers;
+
+    std::vector<std::unique_ptr<QwtPlotMarker>> hMarkers;
+
+    bool automaticYScale = true;
+    double startYScale = -100.;
+    double endYScale   = +100.;
+    bool addTempMeanOffset = false;
 };
 
 QtFastMultiCurvesPlotW::QtFastMultiCurvesPlotW() : i(std::make_unique<Impl>()){
@@ -57,12 +64,13 @@ QtFastMultiCurvesPlotW::QtFastMultiCurvesPlotW() : i(std::make_unique<Impl>()){
     i->canvas->setPalette( QColor( "NavajoWhite" ) );
     i->canvas->setPalette( QColor( "khaki" ) );
     i->canvas->setFrameStyle( QFrame::Box | QFrame::Plain );
-    i->canvas->setLineWidth( 1 );
+    i->canvas->setLineWidth(1);
     setCanvas(i->canvas);
 
     // set grid
     i->grid = new QwtPlotGrid();
     i->grid->attach(this);
+
 
     // set label
     i->leftTitle = new QwtPlotTextLabel();
@@ -77,7 +85,7 @@ QtFastMultiCurvesPlotW::~QtFastMultiCurvesPlotW(){
     for(auto &curve : i->curves){
         curve->detach();
     }
-    for(auto &marker : i->markers){
+    for(auto &marker : i->vMarkers){
         marker->detach();
     }
 }
@@ -85,30 +93,59 @@ QtFastMultiCurvesPlotW::~QtFastMultiCurvesPlotW(){
 
 auto QtFastMultiCurvesPlotW::set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void{
 
+//        # update fft and eeg curves
+//             with self._gui_lock:
+//                 eeg_channel_height = self._eeg_channel_height
+//             if eeg_channel_height == 0.0:
+//                 eeg_channel_height = self._eeg_data.max() - self._eeg_data.min()
+
+//             with self._eeg_lock:
+//                 for c in range(0, len(eeg_lines)):
+//                     eeg_lines[c].set_ydata(
+//                         self._eeg_data[c] / eeg_channel_height
+//                         + float(self._channels - c)
+//                     )
+
+
     if(idCurve >= i->curves.size()){
         return;
     }
 
     auto first = x.front();
-    auto last = x.back();
+    auto last  = x.back();
 
-    std::vector<std::unique_ptr<QwtPlotMarker>> nMarkers;
-    for(auto &marker : i->markers){
+    std::vector<std::unique_ptr<QwtPlotMarker>> nvMarkers;
+    for(auto &marker : i->vMarkers){
         if(marker->xValue() < first || marker->xValue() > last){
             marker->detach();
             marker = nullptr;
         }else{
-            nMarkers.push_back(std::move(marker));
+            nvMarkers.push_back(std::move(marker));
         }
     }
-    std::swap(i->markers, nMarkers);
+    std::swap(i->vMarkers, nvMarkers);
 
-    setAxisScale(QwtPlot::xBottom, first, last);
+    setAxisAutoScale(xBottom, false);
+    setAxisScale(xBottom, first, last);
+
+    if(i->automaticYScale){
+        setAxisAutoScale(QwtAxis::YLeft, true);
+    }else{
+        setAxisAutoScale(QwtAxis::YLeft, false);
+
+        if(!i->addTempMeanOffset){
+            setAxisScale(QwtAxis::YLeft, i->startYScale, i->endYScale);
+        }else{
+            double mean = std::accumulate(y.begin(), y.end(), 0.0) / y.size();
+            setAxisScale(QwtAxis::YLeft, i->startYScale+mean, i->endYScale+mean);
+        }
+    }
+
     if(x.size() == y.size() && !x.empty() && idCurve < i->curves.size()){
         i->curves[idCurve]->setRawSamples(
             x.data(),
             y.data(), static_cast<int>(x.size())
-            );
+        );
     }
 
     replot();
@@ -125,7 +162,7 @@ auto QtFastMultiCurvesPlotW::set_nb_curves(size_t nbCurves) -> void{
         auto curve = std::make_unique<QwtPlotCurve>("");
         curve->setTitle(u"Some Points %1"_s.arg(ii));
         curve->setPen(colors[ii], 3 ),
-            curve->setRenderHint( QwtPlotItem::RenderAntialiased, true);
+        curve->setRenderHint( QwtPlotItem::RenderAntialiased, true);
         // curve->setPaintAttribute(QwtPlotCurve::FilterPoints, true);
         // curve->setPaintAttribute(QwtPlotCurve::ClipPolygons, true);
         // curve->setPaintAttribute(QwtPlotCurve::FilterPointsAggressive, true);
@@ -134,7 +171,7 @@ auto QtFastMultiCurvesPlotW::set_nb_curves(size_t nbCurves) -> void{
     }
 }
 
-auto QtFastMultiCurvesPlotW::add_marker(double x, const QString &label) -> void{
+auto QtFastMultiCurvesPlotW::add_vertical_marker(double x, const QString &label) -> void{
 
     auto marker = std::make_unique<QwtPlotMarker>();
     marker->setLineStyle(QwtPlotMarker::VLine);
@@ -146,15 +183,33 @@ auto QtFastMultiCurvesPlotW::add_marker(double x, const QString &label) -> void{
     marker->setLinePen(pen);
     marker->setLabel(QwtText(label));
     marker->attach(this);
-    i->markers.push_back(std::move(marker));
+    i->vMarkers.push_back(std::move(marker));
 }
 
-auto QtFastMultiCurvesPlotW::set_left_title(const QString &title) -> void{
+
+auto QtFastMultiCurvesPlotW::add_horizontal_marker(double y, const QString &label) -> void{
+
+    auto marker = std::make_unique<QwtPlotMarker>();
+    marker->setLineStyle(QwtPlotMarker::HLine);
+    marker->setXValue(y);
+
+    QPen pen;
+    pen.setWidthF(2.0);
+    pen.setColor(Qt::darkGreen);
+    marker->setLinePen(pen);
+    marker->setLabel(QwtText(label));
+    marker->setLabelAlignment(Qt::AlignLeft);
+    marker->attach(this);
+    i->hMarkers.push_back(std::move(marker));
+}
+
+auto QtFastMultiCurvesPlotW::set_left_title(const QString &title, const QColor &color) -> void{
     auto t = QwtText(title);
     QFont font;
     font.setBold(true);
     t.setFont(font);
     t.setRenderFlags( Qt::AlignLeft | Qt::AlignTop );
+    t.setColor(color);
     i->leftTitle->setText(t);
 }
 
@@ -165,4 +220,21 @@ auto QtFastMultiCurvesPlotW::set_curve_visibility(size_t idCurve, bool state) ->
     }
 
     i->curves[idCurve]->setVisible(state);
+}
+
+auto QtFastMultiCurvesPlotW::set_scale_mode(bool automatic, double startScaleY, double endScaleY, bool addTempMeanOffset) -> void{
+
+    i->automaticYScale  = automatic;
+    i->startYScale      = startScaleY;
+    i->endYScale        = endScaleY;
+    i->addTempMeanOffset = addTempMeanOffset;
+
+    if(i->automaticYScale){
+        setAxisAutoScale(QwtAxis::YLeft, true);
+    }else{
+        setAxisAutoScale(QwtAxis::YLeft, false);
+        setAxisScale(QwtAxis::YLeft, i->startYScale, i->endYScale);
+    }
+
+    replot();
 }

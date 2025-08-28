@@ -51,6 +51,7 @@ HEADERS += \
 SOURCES += \
     # main
     base_main.cpp \
+    test_bdf.cpp \
     test_dc_settings.cpp \
     test_encoding.cpp \
     test_mic.cpp \

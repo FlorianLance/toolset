@@ -32,25 +32,37 @@
 
 namespace tool{
 
-struct String{
+struct str{
 
+    // join
     static auto join(std::span<const std::string> parts) -> std::string;
     static auto join(std::span<const std::string> parts, const std::string &sep) -> std::string;
-    static auto remove_from_left(std::string &str, char delim) -> void;
-    static auto remove_from_right(std::string &str, char delim) -> void;
-    static auto remove_after_right(std::string &str, char delim) -> void;
+
+    // split
     static auto split_path_and_filename(const std::string &s) -> std::pair<std::string, std::string>;
     static auto split(const std::string &str, char delimiter = ' ') -> std::vector<std::string>;
     static auto split(const std::string &str, const std::string &delimiter = " ", bool trimEmpty = false) -> std::vector<std::string>;
 
+    // trim
+    static auto left_trim(std::string &str, char c) -> void;
+    static auto right_trim(std::string &str, char c) -> void;
+    static auto remove_from_left(std::string &str, char delim) -> void;
+    static auto remove_from_right(std::string &str, char delim) -> void;
+    static auto remove_after_right(std::string &str, char delim) -> void;
+
+    // replace
     static auto replace_first(std::string& str, const std::string& from, const std::string& to) -> bool;
     static auto replace_all(std::string& str, const std::string& from, const std::string& to) -> void;
     static auto replace_all2(std::string& source, const std::string& from, const std::string& to) -> void;
 
+    // view
     static auto advance_view_to_delim(std::string_view str, std::string_view delims) -> std::string_view;
     static auto split_view(std::string_view strv, std::string_view delims = " ") -> std::vector<std::string_view>;
+
+    // convert
     static auto to_char(std::string_view str) -> char;
     static auto to_int(std::string_view str) -> int;
     static auto to_float(std::string_view str) -> float;
+
 };
 }

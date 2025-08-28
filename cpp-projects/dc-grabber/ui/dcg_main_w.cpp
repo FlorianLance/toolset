@@ -56,7 +56,7 @@ auto draw_config_file_name(const std::string &filePath) -> void{
         ImGuiUiDrawer::text("No file loaded"sv, geo::Pt4f{1.f,0.f,0.f,1.f});
     }
 
-    auto s = String::split_path_and_filename(filePath);
+    auto s = str::split_path_and_filename(filePath);
     if(s.second.contains("default")){
         ImGuiUiDrawer::text(std::get<1>(s), geo::Pt4f{1.f,0.5f,0.15f,1.f});
     }else{

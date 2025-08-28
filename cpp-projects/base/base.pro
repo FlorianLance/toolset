@@ -44,7 +44,7 @@ include(../ts-dependencies.pri)
 ####################################### PROJECT FILES
 HEADERS += \
     # io            
-    data/bdf_writer.hpp \
+    data/bdf_header.hpp \
     depth-camera/dc_device_array.hpp \
     depth-camera/frame/dc_data_frame.hpp \
     depth-camera/frame/dc_data_frame_buffer.hpp \
@@ -234,6 +234,7 @@ HEADERS += \
     utility/io_data.hpp \
     utility/io_fstream.hpp \
     utility/math.hpp \
+    utility/numeric_buffer.hpp \
     utility/paths.hpp \
     utility/ring_buffer.hpp \
     utility/safe_queue.hpp \
@@ -329,6 +330,7 @@ HEADERS += \
 
 SOURCES += \
     # io    
+    data/bdf_header.cpp \
     depth-camera/client/dc_client.cpp \
     depth-camera/dc_device_array.cpp \
     depth-camera/frame/dc_data_frame.cpp \
