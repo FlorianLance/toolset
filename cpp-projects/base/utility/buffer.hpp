@@ -106,6 +106,15 @@ struct Buffer{
         // static_assert(sizeof(Elem)%sizeof(TargetType) == 0, "Invalid size");
         return std::span<const TargetType>{reinterpret_cast<const TargetType*>(get_data()), size()*sizeof(TargetType)};
     }
+    [[nodiscard]] auto sub_span(size_t start, size_t subSize) noexcept -> std::span<Elem> {
+        if(start < size()){
+            if(start + subSize < size()){
+                return std::span<Elem>{get_data() + start, subSize};
+            }
+            return std::span<Elem>{get_data() + start, size()-start};
+        }
+        return {};
+    }
 
     // add
     constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}

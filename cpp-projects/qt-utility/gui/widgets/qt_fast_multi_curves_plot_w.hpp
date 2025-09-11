@@ -39,23 +39,70 @@ public:
     QtFastMultiCurvesPlotW();
     ~QtFastMultiCurvesPlotW();
 
+    // curves
+    auto set_nb_curves(size_t nbCurves, bool update = true) -> void;
+    // # color
+    auto set_curves_colors(std::span<QColor> colors, bool update = true) -> void;
+    auto set_curve_color(size_t idCurve, const QColor &color, bool update = true) -> void;
+    // # name
+    auto set_curves_names(std::span<QString> names, bool update = true) -> void;
+    auto set_curve_name(size_t idCurve, const QString &name, bool update = true) -> void;
+    // # width
+    auto set_curves_identical_width(double width, bool update = true) -> void;
+    auto set_curves_widths(std::span<double> widths, bool update = true) -> void;
+    auto set_curve_width(size_t idCurve, double width, bool update = true) -> void;
+    // # visibilty
+    auto set_curve_visibility(size_t idCurve, bool state) -> void;
+    // # data
     auto set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void;
-    auto set_nb_curves(size_t nbCurves) -> void;
+
+    // canvas
+        auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;
+
+    // grid
+    auto set_grid_lines_display(bool showX, bool showY, bool showMinX, bool showMinY) -> void;
+
+    // axis
+    auto set_x_axis_scaling_infos(bool automatic, double startScaleX, double endScaleX, double step = 0.0, bool visible = true) -> void;
+    auto set_y_axis_scaling_infos(bool automatic, double startScaleY, double endScaleY, bool addTempMeanOffset, double step = 0.0, bool visible = true) -> void;
+
+    // markers
+    auto set_nb_horiontal_markers(size_t nbMarkers) -> void;
+    auto set_horizontal_marker_info(size_t idM, double y, const QString &label) -> void;
     auto add_vertical_marker(double x, const QString &label) -> void;
     auto add_horizontal_marker(double y, const QString &label) -> void;
+    auto get_horizontal_marker_name(size_t idM) const -> QString;
 
-    auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;
-    auto set_curve_visibility(size_t idCurve, bool state) -> void;
+    auto disable_y_ticks() -> void;
 
-    auto set_scale_mode(bool automatic, double startScaleY, double endScaleY, bool addTempMeanOffset) -> void;
+    // auto show_tooltip(const QPoint &globalPos, const QString &text) -> void;
+
+signals:
+
+    auto left_click_pressed_signal(QPoint globalPos, int id, const QString &text) -> void;
+    auto right_click_pressed_signal(QPoint globalPos, int id, const QString &text) -> void;
+    auto left_click_released_signal() -> void;
+    auto right_click_released_signal() -> void;
+
+protected:
+
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    bool m_isLeftPressed = false;
+    bool m_isRightPressed = false;
+
+    // QMenu *m_contextMenu = nullptr;
+    // QAction
 
 private:
 
-    static constexpr std::array<Qt::GlobalColor, 5> colors = {
-        Qt::blue, Qt::red, Qt::yellow, Qt::darkCyan, Qt::green
-    };
+    auto update_curves_info() -> void;
 
     struct Impl;
     std::unique_ptr<Impl> i;
+
+    // QWidget interface
+// protected:
+//     void contextMenuEvent(QContextMenuEvent *event) override;
 };
 }

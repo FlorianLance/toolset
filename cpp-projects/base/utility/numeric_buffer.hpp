@@ -15,6 +15,27 @@ template<typename ElementType>
 concept Arithmetic = std::integral<ElementType> or std::floating_point<ElementType>;
 
 template<typename ElementType> requires Arithmetic<ElementType>
+class NumericSpan : public std::span<ElementType>{
+    using Elem = ElementType;
+public:
+
+    // NumericSpan() : std::span<Elem>(){}
+    // NumericSpan(Elem *data, size_t size) : std::span<Elem>(data, size){
+    // }
+
+    [[nodiscard]] constexpr auto sum() const noexcept -> Elem{
+        return std::accumulate(std::span<Elem>::cbegin(), std::span<Elem>::cend(), Elem{0});
+    }
+
+    [[nodiscard]] constexpr auto mean() const noexcept -> Elem{
+        if(!std::span<Elem>::empty()){
+            return sum()/static_cast<Elem>(std::span<Elem>::size());
+        }
+        return {};
+    }
+};
+
+template<typename ElementType> requires Arithmetic<ElementType>
 struct NumericBuffer : public Buffer<ElementType>{
 
     using Elem = ElementType;
@@ -59,6 +80,13 @@ struct NumericBuffer : public Buffer<ElementType>{
         return {};
     }
 
+    [[nodiscard]] auto num_span() noexcept -> NumericSpan<Elem> {
+        return static_cast<NumericSpan<Elem>>(Buffer<Elem>::span());
+    }
+
+    [[nodiscard]] auto num_sub_span(size_t start, size_t subSize) noexcept -> NumericSpan<Elem> {
+        return static_cast<NumericSpan<Elem>>(Buffer<Elem>::sub_span(start, subSize));
+    }
 
     [[nodiscard]] constexpr auto sum(size_t start, size_t lenght) const noexcept -> Elem{
 
@@ -111,5 +139,7 @@ struct NumericBuffer : public Buffer<ElementType>{
         std::sort(Buffer<Elem>::begin(), Buffer<Elem>::end(), std::greater<Elem>());
     }
 };
+
+
 }
 

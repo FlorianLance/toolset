@@ -58,6 +58,7 @@ QtBarPlotW::QtBarPlotW( QWidget* parent ) : QwtPlot( parent ){
     m_barChartItem->attach( this );
     set_titles({"Default"});
 
+
     // legend
     insertLegend( new QwtLegend() );
 
@@ -116,7 +117,6 @@ auto QtBarPlotW::set_titles(QStringList titles) -> void{
 
 auto QtBarPlotW::set_values(const QVector<QVector<double>> &values) -> void{
     m_barChartItem->setSamples(values);
-    //    replot();
 }
 
 auto QtBarPlotW::set_y_title(const QString &title) -> void{
