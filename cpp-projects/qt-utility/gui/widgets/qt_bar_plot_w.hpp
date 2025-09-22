@@ -42,7 +42,7 @@ public:
     auto set_values(const QVector<QVector<double>> &values) -> void;
     auto set_y_title(const QString &title) -> void;
 
-    auto set_y_axis_scale(double min, double max) -> void;
+    auto set_y_axis_scale(double min, double max) -> void;    
 
     auto set_colors(std::vector<QColor> nColors) -> void{
         colors = nColors;

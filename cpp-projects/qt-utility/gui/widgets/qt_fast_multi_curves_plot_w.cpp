@@ -139,6 +139,14 @@ auto QtFastMultiCurvesPlotW::set_curves_colors(std::span<QColor> colors, bool up
     }
 }
 
+auto QtFastMultiCurvesPlotW::set_curves_names(const QStringList &names, bool update) -> void{
+    i->curvesNames.resize(names.size());
+    std::copy(names.begin(), names.end(), i->curvesNames.begin());
+    if(update){
+        update_curves_info();
+    }
+}
+
 auto QtFastMultiCurvesPlotW::set_curves_names(std::span<QString> names, bool update) -> void{
     // OK
     i->curvesNames.resize(names.size());
@@ -197,6 +205,7 @@ auto QtFastMultiCurvesPlotW::set_curve_color(size_t idCurve, const QColor &color
         update_curves_info();
     }
 }
+
 
 
 
@@ -296,16 +305,17 @@ auto QtFastMultiCurvesPlotW::set_grid_lines_display(bool showX, bool showY, bool
 }
 
 
-auto QtFastMultiCurvesPlotW::set_nb_horiontal_markers(size_t nbMarkers) -> void{
+auto QtFastMultiCurvesPlotW::set_nb_horizontal_markers(size_t nbMarkers) -> void{
     i->hMarkers.clear();
-    // int offsetY = height()/nbMarkers;
-    // int currentY = 0;
-    // auto max = axisInterval(QwtAxis::YLeft).maxValue();
-    // auto min = axisInterval(QwtAxis::YLeft).minValue();
-    //(1.0*ii/nbMarkers) *(max-min)
     for(size_t ii = 0; ii < nbMarkers; ++ii){
         add_horizontal_marker(0, u"M%1"_s.arg(QString::number(ii)));
-        // currentY += offsetY;
+    }
+}
+
+auto QtFastMultiCurvesPlotW::set_nb_vertical_markers(size_t nbMarkers) -> void{
+    i->vMarkers.clear();
+    for(size_t ii = 0; ii < nbMarkers; ++ii){
+        add_vertical_marker(0, u"M%1"_s.arg(QString::number(ii)));
     }
 }
 
@@ -316,6 +326,13 @@ auto QtFastMultiCurvesPlotW::set_horizontal_marker_info(size_t idM, double y, co
     }
 }
 
+auto QtFastMultiCurvesPlotW::set_vertical_marker_info(size_t idM, double x, const QString &label) -> void{
+    if(idM < i->vMarkers.size()){
+        i->vMarkers[idM]->setLabel(label);
+        i->vMarkers[idM]->setXValue(x);
+    }
+}
+
 auto QtFastMultiCurvesPlotW::add_vertical_marker(double x, const QString &label) -> void{
 
     auto marker = std::make_unique<QwtPlotMarker>();
@@ -323,15 +340,22 @@ auto QtFastMultiCurvesPlotW::add_vertical_marker(double x, const QString &label)
     marker->setXValue(x);
 
     QPen pen;
-    pen.setWidthF(2.0);
+    pen.setWidthF(0.2);
     pen.setColor(Qt::black);
+    marker->setLinePen(pen);
+
 
     QwtText t(label);
     marker->setLabel(t);
-
-    marker->setLinePen(pen);
+    marker->setLabelAlignment(Qt::AlignBottom);
     marker->attach(this);
     i->vMarkers.push_back(std::move(marker));
+
+    // QwtText t(label);
+    // marker->setLabel(t);
+    // marker->setLinePen(pen);
+    // marker->attach(this);
+    // i->vMarkers.push_back(std::move(marker));
 }
 
 

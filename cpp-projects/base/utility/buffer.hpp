@@ -116,6 +116,60 @@ struct Buffer{
         return {};
     }
 
+    [[nodiscard]] auto split_spans(size_t splitSize) noexcept -> std::vector<std::span<Elem>> {
+
+        if(empty() || splitSize == 0){
+            return {};
+        }
+
+        if(splitSize > size()){
+            splitSize = size();
+        }
+        size_t count       = size() / splitSize;
+        size_t rest        = size() % splitSize;
+        size_t nbSplits    = count + ((rest != 0) ? 1 : 0);
+        std::vector<std::span<Elem>> splits;
+        splits.reserve(nbSplits);
+        for(size_t id = 0; id < nbSplits; ++id){
+            splits.push_back(sub_span(id * splitSize, splitSize));
+        }
+        return splits;
+    }
+
+    [[nodiscard]] auto split_bins_spans(std::span<size_t> bins) noexcept -> std::vector<std::span<Elem>> {
+
+        if(empty() || bins.empty()){
+            // invalid
+            return {};
+        }
+
+        for(size_t id = 1; id < bins.size(); ++id){
+            if(bins[id-1] > bins[id]){
+                // invalid
+                return;
+            }
+        }
+
+        size_t nbBins = 0;
+        for(const auto &bin : bins){
+            ++nbBins;
+            if(bin > size()){
+                break;
+            }
+        }
+
+        std::vector<std::span<Elem>> splits;
+        for(size_t id = 0; id < nbBins; ++id){
+            if(id != 0){
+                splits.push_back(sub_span(bins[id-1],bins[id]-bins[id-1]));
+            }else{
+                splits.push_back(sub_span(0,bins[id]));
+            }
+        }
+        return splits;
+    }
+
+
     // add
     constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}
     constexpr auto push_back(Elem &&nValue)                     -> void {values.push_back(std::move(nValue));}

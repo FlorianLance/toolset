@@ -19,9 +19,19 @@ class NumericSpan : public std::span<ElementType>{
     using Elem = ElementType;
 public:
 
-    // NumericSpan() : std::span<Elem>(){}
-    // NumericSpan(Elem *data, size_t size) : std::span<Elem>(data, size){
-    // }
+
+    [[nodiscard]] constexpr auto min() const noexcept -> Elem{
+        if(!std::span<Elem>::empty()){
+            return *std::min_element(std::span<Elem>::cbegin(), std::span<Elem>::cend());
+        }
+        return {};
+    }
+    [[nodiscard]] constexpr auto max() const noexcept -> Elem{
+        if(!std::span<Elem>::empty()){
+            return *std::max_element(std::span<Elem>::cbegin(), std::span<Elem>::cend());
+        }
+        return {};
+    }
 
     [[nodiscard]] constexpr auto sum() const noexcept -> Elem{
         return std::accumulate(std::span<Elem>::cbegin(), std::span<Elem>::cend(), Elem{0});
@@ -87,6 +97,61 @@ struct NumericBuffer : public Buffer<ElementType>{
     [[nodiscard]] auto num_sub_span(size_t start, size_t subSize) noexcept -> NumericSpan<Elem> {
         return static_cast<NumericSpan<Elem>>(Buffer<Elem>::sub_span(start, subSize));
     }
+
+    [[nodiscard]] auto num_split_spans(size_t splitSize) noexcept -> std::vector<NumericSpan<Elem>> {
+
+        if(Buffer<Elem>::empty() || splitSize == 0){
+            return {};
+        }
+
+        if(splitSize > Buffer<Elem>::size()){
+            splitSize = Buffer<Elem>::size();
+        }
+        size_t count       = Buffer<Elem>::size() / splitSize;
+        size_t rest        = Buffer<Elem>::size() % splitSize;
+        size_t nbSplits    = count + ((rest != 0) ? 1 : 0);
+        std::vector<NumericSpan<Elem>> splits;
+        splits.reserve(nbSplits);
+        for(size_t id = 0; id < nbSplits; ++id){
+            splits.push_back(num_sub_span(id * splitSize, splitSize));
+        }
+        return splits;
+    }
+
+    [[nodiscard]] auto num_split_bins_spans(std::span<size_t> bins) noexcept -> std::vector<NumericSpan<Elem>> {
+
+        if(Buffer<Elem>::empty() || bins.empty()){
+            // invalid
+            return {};
+        }
+
+        for(size_t id = 1; id < bins.size(); ++id){
+            if(bins[id-1] > bins[id]){
+                // invalid
+                return {};
+            }
+        }
+
+        size_t nbBins = 0;
+        for(const auto &bin : bins){
+            ++nbBins;
+            if(bin > Buffer<Elem>::size()){
+                break;
+            }
+        }
+
+        std::vector<NumericSpan<Elem>> splits;
+        for(size_t id = 0; id < nbBins; ++id){
+            if(id != 0){
+                splits.push_back(num_sub_span(bins[id-1],bins[id]-bins[id-1]));
+            }else{
+                splits.push_back(num_sub_span(0,bins[id]));
+            }
+        }
+        return splits;
+    }
+
+
 
     [[nodiscard]] constexpr auto sum(size_t start, size_t lenght) const noexcept -> Elem{
 

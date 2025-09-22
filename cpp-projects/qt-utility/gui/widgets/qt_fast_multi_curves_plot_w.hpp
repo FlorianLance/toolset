@@ -45,6 +45,7 @@ public:
     auto set_curves_colors(std::span<QColor> colors, bool update = true) -> void;
     auto set_curve_color(size_t idCurve, const QColor &color, bool update = true) -> void;
     // # name
+    auto set_curves_names(const QStringList &names, bool update = true) -> void;
     auto set_curves_names(std::span<QString> names, bool update = true) -> void;
     auto set_curve_name(size_t idCurve, const QString &name, bool update = true) -> void;
     // # width
@@ -57,7 +58,7 @@ public:
     auto set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void;
 
     // canvas
-        auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;
+    auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;
 
     // grid
     auto set_grid_lines_display(bool showX, bool showY, bool showMinX, bool showMinY) -> void;
@@ -67,8 +68,10 @@ public:
     auto set_y_axis_scaling_infos(bool automatic, double startScaleY, double endScaleY, bool addTempMeanOffset, double step = 0.0, bool visible = true) -> void;
 
     // markers
-    auto set_nb_horiontal_markers(size_t nbMarkers) -> void;
+    auto set_nb_horizontal_markers(size_t nbMarkers) -> void;
+    auto set_nb_vertical_markers(size_t nbMarkers) -> void;
     auto set_horizontal_marker_info(size_t idM, double y, const QString &label) -> void;
+    auto set_vertical_marker_info(size_t idM, double x, const QString &label) -> void;
     auto add_vertical_marker(double x, const QString &label) -> void;
     auto add_horizontal_marker(double y, const QString &label) -> void;
     auto get_horizontal_marker_name(size_t idM) const -> QString;
