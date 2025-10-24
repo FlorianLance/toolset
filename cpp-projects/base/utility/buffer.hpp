@@ -30,9 +30,6 @@
 #include <vector>
 #include <algorithm>
 #include <span>
-#include <concepts>
-// #include <assert.h>
-// #include <numeric>
 
 namespace tool {
 

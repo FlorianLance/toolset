@@ -53,6 +53,7 @@ HEADERS += \
     gui/widgets/__qt_rich_text_edit_w.hpp \
     gui/widgets/__qt_sfml_gl_w.hpp \
     gui/widgets/__qt_tree_view_w.hpp \
+    gui/widgets/eeg/eeg_screen_list_w.hpp \
     gui/widgets/qt_bar_plot_w.hpp \
     gui/widgets/qt_base_sfml_gl_w.hpp \
     gui/widgets/qt_code_editor_w.hpp \
@@ -118,6 +119,7 @@ SOURCES += \
     gui/widgets/__qt_rich_text_edit_w.cpp \
     gui/widgets/__qt_sfml_gl_w.cpp \
     gui/widgets/__qt_tree_view_w.cpp \
+    gui/widgets/eeg/eeg_screen_list_w.cpp \
     gui/widgets/qt_bar_plot_w.cpp \
     gui/widgets/qt_base_sfml_gl_w.cpp \
     gui/widgets/qt_code_editor_w.cpp \
