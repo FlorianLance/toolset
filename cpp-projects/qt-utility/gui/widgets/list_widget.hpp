@@ -38,7 +38,7 @@ class ListWidget : public QScrollArea{
 
 public:
 
-    ListWidget(QColor contentColor = Qt::white);
+    ListWidget(std::optional<QColor> contentColor = Qt::white);
 
     void set_margins(int left, int top, int right, int bottom, int inter);
 
@@ -74,6 +74,7 @@ private:
     QVBoxLayout *m_layout = nullptr;
     bool m_widgetSelection = false;
     int m_currentId = -1;
+    bool m_customStyle = true;
 
     const static inline QString m_selectedStyle = "QWidget[objectName=\"sub\"] {background-color:lightgray;}";
     const static inline QString m_unselectedStyle = "QWidget[objectName=\"sub\"] {background-color:white;}";

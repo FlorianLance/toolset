@@ -62,6 +62,8 @@ auto EEGScreenListW::update_data(std::shared_ptr<TimeChannelsNBuffer<double>> da
 
     m_data = std::move(data);
 
+
+
     if(m_data == nullptr){
         return;
     }
@@ -125,6 +127,8 @@ auto EEGScreenListW::update_data(std::shared_ptr<TimeChannelsNBuffer<double>> da
         currentY -= offsetY;
     }
 
+    auto diffT = m_data->times.back() - m_data->times.front();
+    plotW->set_x_axis_scaling_infos(true, m_data->times.front(),  m_data->times.back(), diffT*0.1, true);
 }
 
 auto EEGScreenListW::update_display_settings(double heightFactor) -> void{
@@ -135,6 +139,7 @@ auto EEGScreenListW::update_display_settings(double heightFactor) -> void{
 auto EEGScreenListW::update_id(int idUser) -> void{
     m_idUser = idUser;
 }
+
 
 auto EEGScreenListW::update_channels(size_t nbChannels, std::span<QString> channelsNames, std::span<QColor> channelsColors) -> void{
 
@@ -147,7 +152,9 @@ auto EEGScreenListW::update_channels(size_t nbChannels, std::span<QString> chann
 
     plotW->set_left_title("");
     // plotW->set_x_axis_scaling_infos(false, -0.2, 1.0);
-    plotW->set_x_axis_scaling_infos(true, 0.0 , 1.0, 0.0, false);
+    // plotW->set_x_axis_scaling_infos(true, 0.0 , 1.0, 0.0, false);
+
+
     plotW->set_y_axis_scaling_infos(false, 0.0, 1.0, false, 1.0, false);
     plotW->set_grid_lines_display(false, false, false, false);
 

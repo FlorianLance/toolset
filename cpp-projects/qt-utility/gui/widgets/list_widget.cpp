@@ -10,7 +10,7 @@
 using namespace tool::ui;
 
 
-ListWidget::ListWidget(QColor contentColor){
+ListWidget::ListWidget(std::optional<QColor> contentColor){
 
     setWidgetResizable(true);
 
@@ -18,11 +18,13 @@ ListWidget::ListWidget(QColor contentColor){
     m_content = new QWidget(this);
     m_content->installEventFilter(this);
     m_content->setLayout(m_layout);
-    m_content->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-    m_content->setObjectName("content");
-//    m_content->setStyleSheet("QWidget[objectName=\"content\"] {background-color:white;}");
-
-    m_content->setStyleSheet(QSL("QWidget[objectName=\"content\"] {background-color:") % contentColor.name() % QSL(";}"));
+    m_content->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);    
+    if(contentColor.has_value()){
+        m_content->setObjectName("content");
+        m_content->setStyleSheet(QSL("QWidget[objectName=\"content\"] {background-color:") % contentColor->name() % QSL(";}"));
+    }else{
+        m_customStyle = false;
+    }
     setWidget(m_content);
 
     m_layout->setContentsMargins(0,0,0,0);
@@ -158,6 +160,10 @@ bool ListWidget::eventFilter(QObject *obj, QEvent *event){
 }
 
 void ListWidget::update_selection(){
+
+    if(!m_customStyle){
+        return;
+    }
 
     for(int ii = 0; ii < count(); ++ii){
         if(m_widgetSelection){

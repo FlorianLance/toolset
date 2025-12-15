@@ -272,33 +272,46 @@ public:
 
     [[nodiscard]] auto divide() -> std::pair<std::shared_ptr<TimeChannelsC>,std::shared_ptr<TimeChannelsC>>{
 
-        auto subset1 = std::make_shared<TimeChannelsC>();
-        auto subset2 = std::make_shared<TimeChannelsC>();
+        // std::shared_ptr<TimeChannelsC> subset1 = copy();
+        // auto subset2 = copy();
+
+        // auto subset1 = std::make_shared<TimeChannelsC>();
+        // auto subset2 = std::make_shared<TimeChannelsC>();
+
+        auto subset1 = copy();
+        auto subset2 = copy();
 
         auto midSamples = nb_samples()/2;
-        subset1->times.reserve(midSamples);
-        subset1->channels.resize(nb_channels());
-        for(size_t idS = 0; idS < midSamples; ++idS){
-            subset1->times.push_back(times[idS]);
-        }
-        for(auto &nChannel : subset1->channels){
-            nChannel.reserve(midSamples);
-            for(size_t idS = 0; idS < midSamples; ++idS){
-                nChannel.push_back(nChannel[idS]);
-            }
+        subset1->times.remove_after(midSamples);
+        for(auto &channel : subset1->channels){
+            channel.remove_after(midSamples);
         }
 
-        subset2->times.reserve(midSamples);
-        subset2->channels.resize(nb_channels());
-        for(size_t idS = midSamples; idS < nb_samples(); ++idS){
-            subset2->times.push_back(times[idS]);
+        subset2->times.remove_before(midSamples);
+        for(auto &channel : subset2->channels){
+            channel.remove_before(midSamples);
         }
-        for(auto &nChannel : subset2->channels){
-            nChannel.reserve(midSamples);
-            for(size_t idS = midSamples; idS < nb_samples(); ++idS){
-                nChannel.push_back(nChannel[idS]);
-            }
-        }
+
+        // subset1->times
+
+        // auto midSamples = nb_samples()/2;
+        // subset1->times.resize(midSamples);
+        // subset1->channels.resize(nb_channels());
+        // std::copy(times.begin(), times.begin() + midSamples, subset1->times.begin());
+
+        // for (const auto& [channel, nChannel] : std::views::zip(channels, subset1->channels)){
+        //     nChannel.resize(midSamples);
+        //     std::copy(channel.begin(), channel.begin() + midSamples, nChannel.begin());
+        // }
+
+        // subset2->times.reserve(midSamples);
+        // subset2->channels.resize(nb_channels());
+        // std::copy(times.begin() + midSamples, times.end(), subset2->times.begin());
+
+        // for (const auto& [channel, nChannel] : std::views::zip(channels, subset2->channels)){
+        //     nChannel.resize(midSamples);
+        //     std::copy(channel.begin()+ midSamples, channel.end(), nChannel.begin());
+        // }
 
         return {std::move(subset1),std::move(subset2)};
     }
@@ -314,6 +327,15 @@ public:
         return copied;
     }
 
+    [[nodiscard]] static auto diff(std::shared_ptr<TimeChannelsC> before, std::shared_ptr<TimeChannelsC> after) -> std::shared_ptr<TimeChannelsC>{
+        auto diff = after->copy();
+        for (const auto& [d, b, a] : std::views::zip(diff->channels, before->channels, after->channels)){
+            for(size_t idC = 0; idC < d.size(); ++idC){
+                d[idC] = ((b[idC] - a[idC])/ d[idC]);
+            }
+        }
+        return diff;
+    }
 
 
     // auto copy_after_time(double time) -> std::shared_ptr<TimeChannelsC>{
