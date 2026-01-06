@@ -25,18 +25,29 @@
 # ********************************************************************************/
 
 ########################################################## DIRECTORIES
-ASSIMP_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/assimp"
-BIOPAC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/biopac"
-BOOST_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/boost_1_68_0"
+############################################################ HEADERS ONLY
+ANKERL_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ankerl"
+BINPACK2D_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/BinPack2D"
+CATCH_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/catch"
 EIGEN_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/eigen-3.4-rc1"
 EIGEN_MASTER_DIR                     = $$TOOLSET_CPP_THIRDPARTY_DIR"/eigen-master"
+JSON_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/json"
+SIGSLOT_DIR                          = $$TOOLSET_CPP_THIRDPARTY_DIR"/sigslot"
+STB_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/stb"
+TASKFLOW_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/taskflow"
+VERSION2_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/version2-2.02.01"
+############################################################ HEADERS + LIBS
+ASSIMP_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/assimp"
+GLM_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/glm"
 FASTPFOR_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/FastPFor"
+TURBOJPG_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/libjpeg-turbo-2.0.3"
+KINECT4_DIR                          = $$TOOLSET_CPP_THIRDPARTY_DIR"/kinect4"
+
+BIOPAC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/biopac"
+BOOST_DIR                            = $$TOOLSET_CPP_THIRDPARTY_DIR"/boost_1_68_0"
 GLEW_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/glew-2.1.0"
 GLFW_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/glfw-3.3.2"
-GLM_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/glm"
 KINECT2_DIR                          = $$TOOLSET_CPP_THIRDPARTY_DIR"/kinect2"
-KINECT4_DIR                          = $$TOOLSET_CPP_THIRDPARTY_DIR"/kinect4"
-TURBOJPG_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/libjpeg-turbo-2.0.3"
 LIBPNG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/libpng"
 LIBSOUNDIO_DIR                       = $$TOOLSET_CPP_THIRDPARTY_DIR"/libsoundio"
 LIBUSB_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/libusb"
@@ -44,15 +55,46 @@ OPEN3D_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/Open3D-0.18
 OPENCV_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/opencv"
 QWT_DIR                              = $$TOOLSET_CPP_THIRDPARTY_DIR"/qwt-6.3.0"
 SFML_DIR                             = $$TOOLSET_CPP_THIRDPARTY_DIR"/SFML"
-TURBOPFOR_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/TurboPFor-Integer-Compression"
 FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
-MODERN_JSON_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/nlohmann"
-VERSION2_DIR                         = $$TOOLSET_CPP_THIRDPARTY_DIR"/version2-2.02.01"
 JKQTPLOTTER_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/jkqtplotter"
 PCL_DIR                              = "E:/_librairies/PCL 1.14.1"
 
-########################################################## INCLUDES
+########################################################## INCLUDES (HEADERS ONLY)
+
+ANKERL_INCLUDES = \
+    $$ANKERL_DIR"\include"
+
+BINPACK2D_INCLUDES = \
+    $$BINPACK2D_DIR"\include"
+
+CATCH_INCLUDES = \
+    $$CATCH_DIR"\include"
+
+EIGEN_INCLUDES = \
+    $$EIGEN_DIR \
+
+EIGEN_MASTER_INCLUDES = \
+    $$EIGEN_MASTER_DIR \
+
+JSON_INCLUDES = \
+    $$JSON_DIR"\include"
+
+SIGSLOT_INCLUDES = \
+    $$SIGSLOT_DIR"\include"
+
+STB_INCLUDES = \
+    $$STB_DIR"\include"
+
+TASKFLOW_INCLUDES = \
+    $$TASKFLOW_DIR"\include"
+
+VERSION2_INCLUDES = \
+    $$VERSION2_DIR"\include"
+
+
+########################################################## INCLUDES (OTHERS)
+
 
 JKQTPLOTTER_INCLUDES = \
     $$JKQTPLOTTER_DIR"/include"\
@@ -62,18 +104,14 @@ PCL_INCLUDES = \
     # $$PCL_DIR"/3rdParty/VTK/include/vtk-9.3"\
     # $$PCL_DIR"/3rdParty/Boost/include/boost-1_84"\
 
-MODERN_JSON_INCLUDES = \
-    $$TOOLSET_CPP_THIRDPARTY_DIR\
-    $$MODERN_JSON_DIR\
 
-VERSION2_INCLUDES = \
-    $$VERSION2_DIR\
 
-TURBOPFOR_INCLUDES = \
-    $$TURBOPFOR_DIR"/include" \
+# VERSION2_INCLUDES = \
+#     $$VERSION2_DIR\
 
-EIGEN_INCLUDES = \
-    $$EIGEN_DIR \
+# TURBOPFOR_INCLUDES = \
+#     $$TURBOPFOR_DIR"/include" \
+
 
 EIGEN_MASTER_INCLUDES = \
     $$EIGEN_MASTER_DIR \
@@ -147,12 +185,15 @@ equals(COMPILER, "vs"){
 ########################################################## WINDOWS LIBS
     WINDOWS_LIBS = \
         -luser32\
-        -lopengl32\
         -lgdi32\
         -lshell32\
         -lws2_32\
 
-    OS_LIBS = $$WINDOWS_LIBS\
+    GL_LIBS = \
+        -lopengl32\
+
+    OS_LIBS = \
+        $$WINDOWS_LIBS\
 
 
 ########################################################## LIBS
@@ -166,24 +207,30 @@ equals(COMPILER, "vs"){
 
     # BOOST
     equals(CFG, "debug"){
-        BOOST_LIBS =\
+
+        BOOST_SYS_LIBS =\
+            -L$$BOOST_DIR"/lib64-msvc-14.1" \
+            -llibboost_system-vc141-mt-gd-x64-1_68 \
+
+        BOOST_OTHERS_LIBS =\
             -L$$BOOST_DIR"/lib64-msvc-14.1" \
             -llibboost_date_time-vc141-mt-gd-x64-1_68 \
-            -llibboost_system-vc141-mt-gd-x64-1_68 \
             -llibboost_chrono-vc141-mt-gd-x64-1_68 \
             -llibboost_python37-vc141-mt-gd-x64-1_68 \
-            -llibboost_system-vc141-mt-gd-x64-1_68 \
             -llibboost_filesystem-vc141-mt-gd-x64-1_68 \
             -llibboost_iostreams-vc141-mt-gd-x64-1_68 \
     }
     equals(CFG, "release"){
-        BOOST_LIBS =\
+
+        BOOST_SYS_LIBS =\
+            -L$$BOOST_DIR"/lib64-msvc-14.1" \
+            -llibboost_system-vc141-mt-x64-1_68 \
+
+        BOOST_OTHERS_LIBS =\
             -L$$BOOST_DIR"/lib64-msvc-14.1" \
             -llibboost_date_time-vc141-mt-x64-1_68 \
-            -llibboost_system-vc141-mt-x64-1_68 \
             -llibboost_chrono-vc141-mt-x64-1_68 \
             -llibboost_python37-vc141-mt-x64-1_68 \
-            -llibboost_system-vc141-mt-x64-1_68 \
             -llibboost_filesystem-vc141-mt-x64-1_68 \
             -llibboost_iostreams-vc141-mt-x64-1_68 \
     }
@@ -213,16 +260,37 @@ equals(COMPILER, "vs"){
     }
 
     # OPENCV
+    # equals(CFG, "debug"){
+    #     OPENCV_LIBS = \
+    #         -L$$OPENCV_DIR"/x64/vc16/lib" \
+    #         -lopencv_world490d \
+    # }
+    # equals(CFG, "release"){
+    #     OPENCV_LIBS = \
+    #         -L$$OPENCV_DIR"/x64/vc16/lib" \
+    #         -lopencv_world490 \
+    # }
+
     equals(CFG, "debug"){
         OPENCV_LIBS = \
-            -L$$OPENCV_DIR"/x64/vc16/lib" \
-            -lopencv_world490d \
+            -L$$OPENCV_DIR"/x64/vc17/lib" \
+            -lopencv_core4100d \
+            -lopencv_imgproc4100d \
+            -lopencv_video4100d \
+            -lopencv_imgcodecs4100d \
+            -lopencv_videoio4100d \
     }
     equals(CFG, "release"){
         OPENCV_LIBS = \
-            -L$$OPENCV_DIR"/x64/vc16/lib" \
-            -lopencv_world490 \
+            -L$$OPENCV_DIR"/x64/vc17/lib" \
+            -lopencv_core4100 \
+            -lopencv_imgproc4100 \
+            -lopencv_video4100 \
+            -lopencv_imgcodecs4100 \
+            -lopencv_videoio4100 \
     }
+
+opencv_core480
 
     # OPEN3D
     equals(CFG, "debug"){

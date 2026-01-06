@@ -43,7 +43,7 @@
 using namespace tool::gl;
 using namespace tool::graphics;
 
-DCPGlWindow::DCPGlWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) :
+DCPGlWindow::DCPGlWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) :
     BaseSfmlGlWindow(title, screen, context) {    
 }
 

@@ -34,7 +34,7 @@
 #include <opencv2/videoio.hpp> // Video write
 
 // thirdparty
-#include "thirdparty/k4a/k4aaudiomanager.h"
+// #include "thirdparty/k4a/k4aaudiomanager.h"
 
 // base
 // #include "depth-camera/kinect4/k4_device.hpp"

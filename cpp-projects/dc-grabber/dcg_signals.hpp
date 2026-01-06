@@ -26,9 +26,10 @@
 **                                                                            **
 ********************************************************************************/
 
+// sigslot
+#include <sigslot/signal.hpp>
 
 // base
-#include "thirdparty/sigslot/signal.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"

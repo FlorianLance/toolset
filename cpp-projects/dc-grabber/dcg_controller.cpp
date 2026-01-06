@@ -29,9 +29,11 @@
 // std
 #include <iostream>
 
+// colorspace
+#include "thirdparty/ColorSpace/Comparison.h"
+
 // base
 #include "utility/logger.hpp"
-#include "thirdparty/ColorSpace/Comparison.h"
 
 // imgui-opengl-engine
 #include "imgui-tb/imgui_dc_ui_drawer.hpp"
@@ -187,7 +189,7 @@ auto DCGController::set_connections() -> void{
         if(frame == nullptr){
             return;
         }
-        if(auto image = frame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
+        if(auto image = frame->image_buffer<img::ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
 
             double totalDiff = 0.0;
 
@@ -196,9 +198,9 @@ auto DCGController::set_connections() -> void{
                 if(rPos.x() < 0 || rPos.y() < 0){
                     continue;
                 }
-                ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
+                img::ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
                 cCol = image->get(rPos.x()*image->width, rPos.y()*image->height);
-                const ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
+                const img::ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
 
                 ColorSpace::Rgb a(cCol.r(), cCol.g(), cCol.b());
                 ColorSpace::Rgb b(colorCheckerC.r(), colorCheckerC.g(), colorCheckerC.b());
@@ -219,7 +221,7 @@ auto DCGController::set_connections() -> void{
     deviceD->mouse_released_color_signal.connect(               &DCGView::update_selected_color,                    view.get());
     deviceD->mouse_released_depth_sized_color_signal.connect(   &DCGView::update_selected_color,                    view.get());
 
-    deviceD->mouse_released_color_signal.connect( [&](size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, ColorRGBA8 colors){
+    deviceD->mouse_released_color_signal.connect( [&](size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, img::ColorRGBA8 colors){
         if(model->server.settings.colorS.currentColorCheckedId != -1){
             std::get<0>(model->server.settings.colorS.checkerPositions[model->server.settings.colorS.currentColorCheckedId]) = coordsR;
             model->server.settings.colorS.currentColorCheckedId = -1;

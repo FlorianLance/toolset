@@ -30,67 +30,68 @@ PROJECT_NAME = toolset
 TEMPLATE = subdirs
 
 SUBDIRS =\
-    base base-app base-test base-export base-export-app\
-    opengl-utility opengl-utility-app \
-    imgui-opengl-engine \
-    dc-grabber dc-manager demos\
-    qt-utility qt-utility-app qt-utility-qml-app\
-    nodes \
-    guardian dc-monitoring dc-player \
+    # ts
+    ts-base ts-base-test\
+    ts-data ts-network ts-mesh ts-depth-camera\
+    ts-opengl ts-opengl-app \
+    ts-imgui-gl-engine ts-demos \
+    ts-export ts-export-app \
+    ts-global-app \
+    ts-qt ts-qt-gl ts-qt-nodes ts-qt-app \
+    # dc
+    dc-grabber dc-manager dc-player dc-monitoring \
+    # other
+    guardian\
 
 # where to find the sub projects
-## toolset
-### base
-base.subdir                     = cpp-projects/base
-base-app.subdir                 = cpp-projects/base-app
-base-test.subdir                = cpp-projects/base-test
-base-export.subdir              = cpp-projects/base-export
-base-export-app.subdir          = cpp-projects/base-export-app
-### opengl-utility
-opengl-utility.subdir           = cpp-projects/opengl-utility
-opengl-utility-app.subdir       = cpp-projects/opengl-utility-app
-### imgui-opengl-engine
-imgui-opengl-engine.subdir      = cpp-projects/imgui-opengl-engine
-### qt-utility
-qt-utility.subdir               = cpp-projects/qt-utility
-qt-utility-app.subdir           = cpp-projects/qt-utility-app
-qt-utility-qml-app.subdir       = cpp-projects/qt-utility-qml-app
-### nodes
-nodes.subdir                    = cpp-projects/nodes
-### demos
-demos.subdir                    = cpp-projects/demos
-### depth-camera
-guardian.subdir                 = cpp-projects/guardian
+## ts
+ts-base.subdir                  = cpp-projects/ts-base
+ts-base-test.subdir             = cpp-projects/ts-base-test
+ts-data.subdir                  = cpp-projects/ts-data
+ts-network.subdir               = cpp-projects/ts-network
+ts-mesh.subdir                  = cpp-projects/ts-mesh
+ts-depth-camera.subdir          = cpp-projects/ts-depth-camera
+ts-opengl.subdir                = cpp-projects/ts-opengl
+ts-opengl-app.subdir            = cpp-projects/ts-opengl-app
+ts-imgui-gl-engine.subdir       = cpp-projects/ts-imgui-gl-engine
+ts-demos.subdir                 = cpp-projects/ts-demos
+ts-export.subdir                = cpp-projects/ts-export
+ts-export-app.subdir            = cpp-projects/ts-export-app
+ts-global-app.subdir            = cpp-projects/ts-global-app
+ts-qt.subdir                    = cpp-projects/ts-qt
+ts-qt-gl.subdir                 = cpp-projects/ts-qt-gl
+ts-qt-nodes.subdir              = cpp-projects/ts-qt-nodes
+ts-qt-app.subdir                = cpp-projects/ts-qt-app
+## dc
 dc-grabber.subdir               = cpp-projects/dc-grabber
 dc-manager.subdir               = cpp-projects/dc-manager
-dc-monitoring.subdir            = cpp-projects/dc-monitoring
 dc-player.subdir                = cpp-projects/dc-player
+dc-monitoring.subdir            = cpp-projects/dc-monitoring
+## others
+guardian.subdir                 = cpp-projects/guardian
 
 # dependencies
-## toolset
-### base
-base-app.depends                = base
-base-test.depends               = base
-base-export.depends             = base
-base-export-app.depends         = base-export
-### opengl-utility
-opengl-utility.depends          = base
-opengl-utility-app.depends      = opengl-utility
-### imgui-opengl-engine
-imgui-opengl-engine.depends     = opengl-utility
-### qt-utility
-qt-utility.depends              = opengl-utility
-qt-utility-app.depends          = qt-utility
-qt-utility-qml-app.depends      = qt-utility
-### nodes
-nodes.depends                   = base
-demos.depends                   = imgui-opengl-engine
-### depth-camera
-dc-grabber.depends              = imgui-opengl-engine
-dc-manager.depends              = imgui-opengl-engine
-dc-player.depends               = imgui-opengl-engine
-dc-monitoring.depends           = qt-utility
-guardian.depends                = qt-utility
-
-
-
+## ts
+ts-base-test.depends            = ts-base
+ts-data.depends                 = ts-base
+ts-network.depends              = ts-base
+ts-mesh.depends                 = ts-base
+ts-depth-camera.depends         = ts-data ts-network ts-mesh
+ts-opengl.depends               = ts-mesh
+ts-opengl-app.depends           = ts-opengl
+ts-imgui-gl-engine.depends      = ts-opengl#ts-depth-camera
+ts-demos.depends                = ts-imgui-gl-engine
+ts-export.depends               = ts-depth-camera
+ts-export-app.depends           = ts-export
+ts-global-app.depends           = ts-depth-camera
+ts-qt.depends                   = ts-base
+ts-qt-gl.depends                = ts-qt ts-opengl
+ts-qt-nodes.depends             = ts-qt
+ts-qt-app.depends               = ts-qt-gl ts-qt-nodes
+## dc
+dc-grabber.depends              = ts-imgui-gl-engine ts-depth-camera
+dc-manager.depends              = ts-imgui-gl-engine ts-depth-camera
+dc-player.depends               = ts-imgui-gl-engine ts-depth-camera
+dc-monitoring.depends           = ts-qt
+## others
+guardian.depends                = ts-qt

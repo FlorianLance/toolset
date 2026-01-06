@@ -24,403 +24,185 @@
 # **                                                                            **
 # ********************************************************************************/
 
-########################################################### BASE
-BASE_DEP_INCLUDEPATH =\
-    # thirdparty
-    ## general libaries
-    $$BOOST_INCLUDES $$EIGEN_INCLUDES $$ASSIMP_INCLUDES\
-    ## processing
-    $$OPEN3D_INCLUDES $$OPENCV_INCLUDES\
-    ## compression
-    $$TURBOJPG_INCLUDES $$FASTPFOR_INCLUDES\
-    # $$TURBOPFOR_INCLUDES\ # to be removed
-    ## devices
-    $$LIBSOUNDIO_INCLUDES \
-    $$LIBUSB_INCLUDES \
-    # $$KINECT2_INCLUDES \
-    $$KINECT4_INCLUDES $$ORBBEC_INCLUDES\
-    $$MODERN_JSON_INCLUDES\
-    # $$VERSION2_INCLUDES\
+########################################################### TS-BASE
 
-BASE_DEP_LIBS =\
-    ## general
-    $$OS_LIBS $$BOOST_LIBS $$EIGEN_LIBS $$ASSIMP_LIBS\
-    ## processing
-    $$OPEN3D_LIBS $$OPENCV_LIBS\
-    ## compression
-    $$TURBOJPG_LIBS $$FASTPFOR_LIBS\
-    # $$TURBOPFOR_LIBS\ # to be removed
-    ## devices
-    $$LIBSOUNDIO_LIBS \
-    $$LIBUSB_LIBS \
-    # $$KINECT2_LIBS
-    $$KINECT4_LIBS $$ORBBEC_LIBS\
+TS_BASE_THIRDPARTY_INCLUDES =\
+    $$ANKERL_INCLUDES\
+    $$CATCH_INCLUDES\
+    $$JSON_INCLUDES\
+    $$SIGSLOT_INCLUDES\
+    $$STB_INCLUDES\
+    $$BOOST_INCLUDES\
 
+TS_BASE_THIRDPARTY_LIBS =\
+    $$OS_LIBS\
+    $$BOOST_SYS_LIBS\
 
-########################################################### BASE_APP
-BASE_APP_DEP_INCLUDEPATH =\
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
-    $$VERSION2_INCLUDES\
-    # $$PCL_INCLUDES\
+########################################################### TS-BASE-TEST
 
-BASE_APP_DEP_LIBS =\
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
-    # $$PCL_LIBS\
+TS_BASE_TEST_THIRDPARTY_INCLUDES =\
+    $$GLM_INCLUDES\
 
-BASE_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-
-########################################################### BASE_TEST
-BASE_TEST_DEP_INCLUDEPATH =\
-    # thirdparty
-    $$$$GLM_INCLUDES\
-    # local
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
-
-BASE_TEST_DEP_LIBS =\
-    # thidparty
+TS_BASE_TEST_THIRDPARTY_LIBS =\
     $$GLM_LIBS\
-    # local
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
 
-BASE_TEST_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
+########################################################### TS-DATA
 
-########################################################### BASE-EXPORT
-BASE_EXPORT_DEP_INCLUDEPATH =\
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
+TS_DATA_THIRDPARTY_INCLUDES =\
+    $$TURBOJPG_INCLUDES\
+    $$FASTPFOR_INCLUDES\
 
-BASE_EXPORT_DEP_LIBS =\
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
+TS_DATA_THIRDPARTY_LIBS =\
+    $$TURBOJPG_LIBS\
+    $$FASTPFOR_LIBS\
 
-BASE_EXPORT_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
+########################################################### TS-NETWORK
 
-########################################################### BASE-EXPORT-APP
-BASE_EXPORT_APP_DEP_INCLUDEPATH =\
-    $$BASE_EXPORT_DEP_INCLUDEPATH\
-    $$BASE_EXPORT_INCLUDES\
+TS_NETWORK_THIRDPARTY_INCLUDES =\
 
-BASE_EXPORT_APP_DEP_LIBS =\
-    $$BASE_EXPORT_DEP_LIBS\
-    $$BASE_EXPORT_OBJ"\*.obj"\
+TS_NETWORK_THIRDPARTY_LIBS =\
+    #$$BOOST_OTHERS_LIBS\
 
-BASE_EXPORT_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
+########################################################### TS-MESH
 
-########################################################### OPENGL_UTILITY
-OPENGL_UTILITY_DEP_INCLUDEPATH =\
-    # thirdparty
-    $$GLEW_INCLUDES $$GLFW_INCLUDES $$GLM_INCLUDES\
-    # local
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
+TS_MESH_THIRDPARTY_INCLUDES =\
+    $$ASSIMP_INCLUDES\
 
-OPENGL_UTILITY_DEP_LIBS =\
-    # thidparty
-    $$GLEW_LIBS $$GLFW_LIBS $$GLM_LIBS\
-    # local
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
+TS_MESH_THIRDPARTY_LIBS =\
+    $$ASSIMP_LIBS\
 
-OPENGL_UTILITY_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
+########################################################### TS-DEPTH-CAMERA
 
-########################################################### OPENGL_UTILITY_APP
-OPENGL_UTILITY_APP_DEP_INCLUDEPATH =\
-    $$OPENGL_UTILITY_DEP_INCLUDEPATH\
-    $$OPENGL_UTILITY_INCLUDES\
+TS_DEPTH_CAMERA_THIRDPARTY_INCLUDES =\
+    $$TASKFLOW_INCLUDES \
+    $$KINECT4_INCLUDES\
+    $$OPEN3D_INCLUDES\
+    $$OPENCV_INCLUDES\
+    $$LIBSOUNDIO_INCLUDES \
+    $$ORBBEC_INCLUDES\
+    $$EIGEN_INCLUDES \
 
-OPENGL_UTILITY_APP_DEP_LIBS =\
-    $$OPENGL_UTILITY_DEP_LIBS\
-    $$OPENGL_UTILITY_LIB\
+TS_DEPTH_CAMERA_THIRDPARTY_LIBS =\
+    $$KINECT4_LIBS\
+    $$OPEN3D_LIBS\
+    $$OPENCV_LIBS\
+    $$LIBSOUNDIO_LIBS \
+    $$ORBBEC_LIBS \
+    $$EIGEN_LIBS \
 
-OPENGL_UTILITY_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
+########################################################### TS-OPENGL
 
-########################################################### IMGUI_OPENGL_ENGINE
-IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH =\
-    # thidparty
+TS_OPENGL_THIRDPARTY_INCLUDES =\
+    $$GLEW_INCLUDES\
+
+TS_OPENGL_THIRDPARTY_LIBS =\
+    $$GLEW_LIBS\
+    $$GL_LIBS\
+
+########################################################### TS-OPENGL-APP
+
+TS_OPENGL_APP_THIRDPARTY_INCLUDES =\
+    $$GLFW_INCLUDES\
+
+TS_OPENGL_APP_THIRDPARTY_LIBS =\
+    $$GLFW_LIBS\
+
+########################################################### TS-IMGUI-GL-ENGINE
+
+TS_IMGUI_GL_ENGINE_THIRDPARTY_INCLUDES =\
+    $$BINPACK2D_INCLUDES\
     $$SFML_INCLUDES\
-    # local
-    $$OPENGL_UTILITY_DEP_INCLUDEPATH\
-    $$OPENGL_UTILITY_INCLUDES\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES"/imgui"\
+    $$TS_IMGUI_GL_ENGINE_INCLUDES"/imgui"\
 
-IMGUI_OPENGL_ENGINE_DEP_LIBS =\
-    # thidparty
+TS_IMGUI_GL_ENGINE_THIRDPARTY_LIBS =\
     $$SFML_LIBS\
-    # local
-    $$OPENGL_UTILITY_DEP_LIBS\
-    $$OPENGL_UTILITY_LIB\
 
-IMGUI_OPENGL_ENGINE_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
+########################################################### TS-DEMOS
 
-########################################################### QT_UTILITY
-QT_UTILITY_DEP_INCLUDEPATH =\
-    # thirdparty
-    $$SFML_INCLUDES $$QWT_INCLUDES $$JKQTPLOTTER_INCLUDES\
-    # local
-    $$OPENGL_UTILITY_DEP_INCLUDEPATH\
-    $$OPENGL_UTILITY_INCLUDES\
-    $$QT_UTILITY_MOC \
-
-QT_UTILITY_DEP_LIBS =\
-    # thirdparty
-    $$SFML_LIBS $$QWT_LIBS $$JKQTPLOTTER_LIBS\
-    # local
-    $$OPENGL_UTILITY_DEP_LIBS\
-    $$OPENGL_UTILITY_LIB\
-
-QT_UTILITY_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-
-########################################################### QT_UTILITY_APP
-QT_UTILITY_APP_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-QT_UTILITY_APP_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-QT_UTILITY_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-########################################################### QT_UTILITY_QML_APP
-QT_UTILITY_QML_APP_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-QT_UTILITY_QML_APP_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-QT_UTILITY_QML_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-########################################################### GUARDIAN
-GUARDIAN_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-GUARDIAN_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-GUARDIAN_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-########################################################### NODES
-NODES_DEP_INCLUDEPATH =\
-    nodes\
-    nodes/internal\
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
-
-NODES_DEP_LIBS =\
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
-
-NODES_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-
-########################################################### DEMOS
-DEMOS_DEP_INCLUDEPATH =\
-    # thirdparty
+############################## THIRDPARTY
+TS_DEMOS_THIRDPARTY_INCLUDES =\
+    $$GLM_INCLUDES\
     $$BIOPAC_INCLUDES\
-    # local
-    $$IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES\
 
-DEMOS_DEP_LIBS =\
-    # thirdparty
+TS_DEMOS_THIRDPARTY_LIBS =\
+    $$GLM_LIBS\
     $$BIOPAC_LIBS\
-    # local
-    $$IMGUI_OPENGL_ENGINE_DEP_LIBS\
-    $$IMGUI_OPENGL_ENGINE_LIB\
 
-DEMOS_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$IMGUI_OPENGL_ENGINE_LIB_FILE\
+########################################################### TS-EXPORT
+
+TS_EXPORT_THIRDPARTY_INCLUDES =\
+
+TS_EXPORT_THIRDPARTY_LIBS =\
+
+
+########################################################### TS-EXPORT-APP
+
+TS_EXPORT_APP_THIRDPARTY_INCLUDES =\
+
+TS_EXPORT_APP_THIRDPARTY_LIBS =\
+
+########################################################### TS-GLOBAL-APP
+
+TS_GLOBAL_APP_THIRDPARTY_INCLUDES =\
+    $$VERSION2_INCLUDES\
+
+TS_GLOBAL_APP_THIRDPARTY_LIBS =\
+
+
+########################################################### TS-QT
+
+TS_QT_THIRDPARTY_INCLUDES =\
+    $$QWT_INCLUDES\
+
+TS_QT_THIRDPARTY_LIBS =\
+    $$QWT_LIBS\
+
+########################################################### TS-QT-APP
+
+TS_QT_APP_THIRDPARTY_INCLUDES =\
+
+TS_QT_APP_THIRDPARTY_LIBS =\
+
+
+########################################################### TS-QT-GL
+
+TS_QT_GL_THIRDPARTY_INCLUDES =\
+    $$SFML_INCLUDES\
+
+TS_QT_GL_THIRDPARTY_LIBS =\
+    $$SFML_LIBS\
+
+########################################################### TS-QT-NODES
+
+TS_QT_NODES_THIRDPARTY_INCLUDES =\
+
+TS_QT_NODES_THIRDPARTY_LIBS =\
 
 ########################################################### DC-GRABBER
-DC_GRABBER_DEP_INCLUDEPATH =\
-    $$IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES\
 
-DC_GRABBER_DEP_LIBS =\
-    $$IMGUI_OPENGL_ENGINE_DEP_LIBS\
-    $$IMGUI_OPENGL_ENGINE_LIB\
+DC_GRABBER_THIRDPARTY_INCLUDES =\
 
-DC_GRABBER_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$IMGUI_OPENGL_ENGINE_LIB_FILE\
+DC_GRABBER_THIRDPARTY_LIBS =\
 
 ########################################################### DC-MANAGER
-DC_MANAGER_DEP_INCLUDEPATH =\
-    $$IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES\
 
-DC_MANAGER_DEP_LIBS =\
-    $$IMGUI_OPENGL_ENGINE_DEP_LIBS\
-    $$IMGUI_OPENGL_ENGINE_LIB\
+DC_MANAGER_THIRDPARTY_INCLUDES =\
 
-DC_MANAGER_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$IMGUI_OPENGL_ENGINE_LIB_FILE\
-
-########################################################### DC-PLAYER
-DC_PLAYER_DEP_INCLUDEPATH =\
-    $$IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES\
-
-DC_PLAYER_DEP_LIBS =\
-    $$IMGUI_OPENGL_ENGINE_DEP_LIBS\
-    $$IMGUI_OPENGL_ENGINE_LIB\
-
-DC_PLAYER_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$IMGUI_OPENGL_ENGINE_LIB_FILE\
+DC_MANAGER_THIRDPARTY_LIBS =\
 
 ########################################################### DC-MONITORING
-DC_MONITORING_DEP_INCLUDEPATH =\
-    # thirdparty
+
+DC_MONITORING_THIRDPARTY_INCLUDES =\
+    $$OPENCV_INCLUDES\
     $$FFMEPG_INCLUDES \
-    # local
-    "avcpp"\
-    $$IMGUI_OPENGL_ENGINE_DEP_INCLUDEPATH\
-    $$IMGUI_OPENGL_ENGINE_INCLUDES\
+    $$DC_MONITORING_INCLUDES"/avcpp"\
 
-
-DC_MONITORING_DEP_LIBS =\
-    # thirdparty
+DC_MONITORING_THIRDPARTY_LIBS =\
+    $$OPENCV_LIBS\
     $$FFMEPG_LIBS \
-    # local
-    $$IMGUI_OPENGL_ENGINE_DEP_LIBS\
-    $$IMGUI_OPENGL_ENGINE_LIB\
 
-DC_MONITORING_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$IMGUI_OPENGL_ENGINE_LIB_FILE\
+########################################################### GUARDIAN
 
-########################################################### REALSTREAM-EDITOR
-REALSTREAM_EDITOR_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
+GUARDIAN_THIRDPARTY_INCLUDES =\
 
-REALSTREAM_EDITOR_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-REALSTREAM_EDITOR_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-
-########################################################### REALSTREAM-EXPORT
-REALSTREAM_EXPORT_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-REALSTREAM_EXPORT_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-REALSTREAM_EXPORT_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-########################################################### SCANER-COMPONENT [LEGACY]
-SCANER_COMPONENT_DEP_INCLUDEPATH =\
-    $$BASE_DEP_INCLUDEPATH\
-    $$BASE_INCLUDES\
-
-SCANER_COMPONENT_DEP_LIBS =\
-    $$BASE_DEP_LIBS\
-    $$BASE_LIB\
-
-SCANER_COMPONENT_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-
-########################################################### SCANER-GRABBER [LEGACY]
-SCANER_GRABBER_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_UI \
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-SCANER_GRABBER_APP_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-SCANER_GRABBER_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-########################################################### SCANER-MANAGER [LEGACY]
-SCANER_MANAGER_DEP_INCLUDEPATH =\
-    $$QT_UTILITY_UI \
-    $$QT_UTILITY_DEP_INCLUDEPATH\
-    $$QT_UTILITY_INCLUDES\
-
-SCANER_MANAGER_APP_DEP_LIBS =\
-    $$QT_UTILITY_DEP_LIBS\
-    $$QT_UTILITY_LIB\
-
-SCANER_MANAGER_APP_PRE_TARGETDEPS =\
-    $$BASE_LIB_FILE\
-    $$OPENGL_UTILITY_LIB_FILE\
-    $$QT_UTILITY_LIB_FILE\
-
-
-########################################################### FIND CURRENT PROJECT FROM LIST
-PROJECT_FOUND="NULL"
-for(project, TOOLSET_CPP_PROJECTS):{
-    debug_project = $$project"d"
-    TLOW = $$lower($$TARGET)
-
-    equals(TLOW, $$project){
-        PROJECT_FOUND = $$project
-    }
-    equals(TLOW, $$debug_project){
-        PROJECT_FOUND = $$project
-    }
-}
-
-########################################################### GENERATE PROJECTS VARIABLES
-
-!equals(PROJECT_FOUND, "NULL"){
-    UPT = $$upper($$PROJECT_FOUND)
-    UPT = $$replace(UPT, "-", "_")
-
-    INCLUDEPATH     += $$eval($$UPT"_DEP_INCLUDEPATH")
-    LIBS            += $$eval($$UPT"_DEP_LIBS")
-    PRE_TARGETDEPS  += $$eval($$UPT"_PRE_TARGETDEPS")
-}
-
-
-
+GUARDIAN_THIRDPARTY_LIBS =\

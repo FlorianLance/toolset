@@ -32,7 +32,7 @@
 // base
 #include "utility/logger.hpp"
 #include "utility/paths.hpp"
-#include "utility/cmd_args.hpp"
+// #include "utility/cmd_args.hpp"
 
 // opengl-utilityh
 #include "opengl/gl_functions.hpp"
@@ -46,7 +46,7 @@ using namespace tool;
 using namespace tool::gl;
 using namespace tool::graphics;
 
-DCGGlWindow::DCGGlWindow(std::string_view title, graphics::Screen screen, std::optional<sf::ContextSettings> context) :
+DCGGlWindow::DCGGlWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) :
     BaseSfmlGlWindow(title, screen, context) {
 }
 

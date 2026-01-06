@@ -1,20 +1,24 @@
 
 # global
+
+# files extensions
 .qmake.stash
 Makefile
+Makefile*
 .qtc_clangd
 *.pro.user
 *.pro.user*
+*.stash
+*.rc
+*.pch
 
 # cpp-projects
-cpp-projects/**/Makefile
-cpp-projects/**/Makefile*
-cpp-projects/**/*.pch
-cpp-projects/**/*.rc
-
+cpp-projects/_old
+cpp-projects/_tests
 ## build
 cpp-projects/_build/temp
 ### bin
+cpp-projects/_build/bin/**/*.html
 cpp-projects/_build/bin/**/*.dll
 cpp-projects/_build/bin/**/*.exe
 cpp-projects/_build/bin/**/*.lib
@@ -28,32 +32,15 @@ cpp-projects/_build/bin/**/k4a_*.html
 cpp-projects/_build/bin/**/imgui.ini
 cpp-projects/_build/bin/**/*.onnx
 ### project specific
-cpp-projects/_build/bin/base/**/*.html
-cpp-projects/_build/bin/demos/resources/meshes
-cpp-projects/_build/bin/demos/resources/textures
-cpp-projects/_build/bin/demos/*.html
-cpp-projects/_build/bin/demos/*.ini
+cpp-projects/_build/bin/ts-demos/resources/meshes
+cpp-projects/_build/bin/ts-demos/resources/textures
+cpp-projects/_build/bin/ts-demos/*.ini
 cpp-projects/_build/bin/guardian
-cpp-projects/_build/bin/3d-engine
-cpp-projects/_build/bin/nodes
-cpp-projects/_build/bin/scaner-component
-cpp-projects/_build/bin/scaner-manager/logs
-cpp-projects/_build/bin/scaner-grabber/logs
-cpp-projects/_build/bin/k4-scaner-grabber/logs
-cpp-projects/_build/bin/k4-scaner-grabber/*.ini
-cpp-projects/_build/bin/k4-scaner-grabber/*.onnx
-cpp-projects/_build/bin/k4-scaner-manager/logs/*.html
-cpp-projects/_build/bin/k4-scaner-manager/*.ini
-cpp-projects/_build/bin/k4-scaner-manager/*.onnx
-cpp-projects/_build/bin/qt-utility/logs
-cpp-projects/_build/temp
 
 ## thirdparty
 cpp-projects/_thirdparty
 ## resources
-cpp-projects/_resources/textures
-cpp-projects/_resources/splash
-
+cpp-projects/_resources
 
 # unity-projects
 unity-projects/HDRP/DCBodyscan/[Ll]ibrary/

@@ -40,6 +40,38 @@ include(../ts-projects.pri)
 include(../ts-thirdparty.pri)
 include(../ts-dependencies.pri)
 
+####################################### INCLUDES
+
+GUARDIAN_DEP_INCLUDEPATH =\
+    #
+    $$GUARDIAN_THIRDPARTY_INCLUDES\
+    $$TS_QT_THIRDPARTY_INCLUDES\
+    $$TS_BASE_THIRDPARTY_INCLUDES\
+    #
+    $$TS_QT_INCLUDES\
+    $$TS_BASE_INCLUDES\
+
+####################################### LIBS
+
+TS_QT_APP_DEP_LIBS =\
+    #
+    $$GUARDIAN_THIRDPARTY_LIBS\
+    $$TS_QT_THIRDPARTY_LIBS\
+    $$TS_BASE_THIRDPARTY_LIBS\
+    #
+    $$TS_QT_LIB\
+    $$TS_BASE_LIB\
+
+####################################### DEP
+
+GUARDIAN_PRE_TARGETDEPS =\
+    $$TS_QT_LIB_FILE\
+    $$TS_BASE_LIB_FILE\
+
+####################################### GENERATE VARIABLES
+
+include(../ts-gen-var.pri)
+
 ####################################### PROJECT FILES
 SOURCES += \
     guardian_main.cpp \

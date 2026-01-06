@@ -1,6 +1,6 @@
 
 # /*******************************************************************************
-# ** Toolset-dc-grabber                                                  **
+# ** Toolset-dc-grabber                                                         **
 # ** MIT License                                                                **
 # ** Copyright (c) [2018] [Florian Lance]                                       **
 # **                                                                            **
@@ -39,6 +39,63 @@ include(../ts-settings.pri)
 include(../ts-projects.pri)
 include(../ts-thirdparty.pri)
 include(../ts-dependencies.pri)
+
+####################################### INCLUDES
+
+DC_GRABBER_DEP_INCLUDEPATH =\
+    #
+    $$DC_GRABBER_THIRDPARTY_INCLUDES\
+    $$TS_IMGUI_GL_ENGINE_THIRDPARTY_INCLUDES\
+    $$TS_BASE_THIRDPARTY_INCLUDES\
+    $$TS_MESH_THIRDPARTY_INCLUDES\
+    $$TS_DATA_THIRDPARTY_INCLUDES\
+    $$TS_OPENGL_THIRDPARTY_INCLUDES\
+    $$TS_NETWORK_THIRDPARTY_INCLUDES\
+    $$TS_DEPTH_CAMERA_THIRDPARTY_INCLUDES\
+    #
+    $$TS_BASE_INCLUDES\
+    $$TS_OPENGL_INCLUDES\
+    $$TS_MESH_INCLUDES\
+    $$TS_DATA_INCLUDES\
+    $$TS_NETWORK_INCLUDES\
+    $$TS_DEPTH_CAMERA_INCLUDES\
+    $$TS_IMGUI_GL_ENGINE_INCLUDES\
+
+####################################### LIBS
+
+DC_GRABBER_DEP_LIBS =\
+    #
+    $$DC_GRABBER_THIRDPARTY_LIBS\
+    $$TS_IMGUI_GL_ENGINE_THIRDPARTY_LIBS\
+    $$TS_OPENGL_THIRDPARTY_LIBS\
+    $$TS_BASE_THIRDPARTY_LIBS\
+    $$TS_MESH_THIRDPARTY_LIBS\
+    $$TS_DATA_THIRDPARTY_LIBS\
+    $$TS_NETWORK_THIRDPARTY_LIBS\
+    $$TS_DEPTH_CAMERA_THIRDPARTY_LIBS\
+    #
+    $$TS_BASE_LIB\
+    $$TS_OPENGL_LIB\
+    $$TS_MESH_LIB\
+    $$TS_DATA_LIB\
+    $$TS_NETWORK_LIB\
+    $$TS_DEPTH_CAMERA_LIB\
+    $$TS_IMGUI_GL_ENGINE_LIB\
+
+####################################### DEP
+
+DC_GRABBER_PRE_TARGETDEPS =\
+    $$TS_BASE_LIB_FILE\
+    $$TS_OPENGL_LIB_FILE\
+    $$TS_MESH_LIB_FILE\
+    $$TS_DATA_LIB_FILE\
+    $$TS_DEPTH_CAMERA_LIB_FILE\
+    $$TS_NETWORK_LIB_FILE\
+    $$TS_IMGUI_GL_ENGINE_LIB_FILE\
+
+####################################### GENERATE VARIABLES
+
+include(../ts-gen-var.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \

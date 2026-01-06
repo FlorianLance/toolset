@@ -160,7 +160,7 @@ auto DCMController::set_connections() -> void{
     s->save_current_cloud_signal.connect(                   &DCDirectDrawer::save_current_cloud,                directD);
     directD->mouse_released_color_signal.connect(            &DCMView::update_selected_color,                    view.get());
     directD->mouse_released_depth_sized_color_signal.connect(&DCMView::update_selected_color,                    view.get());
-    directD->mouse_released_color_signal.connect( [&](size_t idD, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, ColorRGBA8 colors){
+    directD->mouse_released_color_signal.connect( [&](size_t idD, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coordinates, img::ColorRGBA8 colors){
         auto &colorS = model->client.settings.devicesS[idD].colorS;
         if(colorS.currentColorCheckedId != -1){
             std::get<0>(colorS.checkerPositions[colorS.currentColorCheckedId]) = coordsR;
@@ -237,7 +237,7 @@ auto DCMController::set_connections() -> void{
             return;
         }
 
-        if(auto image = frame->image_buffer<ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
+        if(auto image = frame->image_buffer<img::ColorRGBA8>(DCImageBufferType::OriginalColorRGBA8)){
 
             double totalDiff = 0.0;
 
@@ -246,9 +246,9 @@ auto DCMController::set_connections() -> void{
                 if(rPos.x() < 0 || rPos.y() < 0){
                     continue;
                 }
-                ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
+                img::ColorRGBA8 &cCol = std::get<1>(colorS.checkerPositions[idCP]);
                 cCol = image->get(rPos.x()*image->width, rPos.y()*image->height);
-                const ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
+                const img::ColorRGB8 &colorCheckerC = std::get<0>(DCColorSettings::spyderChecker24Colors[idCP]);
 
                 ColorSpace::Rgb a(cCol.r(), cCol.g(), cCol.b());
                 ColorSpace::Rgb b(colorCheckerC.r(), colorCheckerC.g(), colorCheckerC.b());

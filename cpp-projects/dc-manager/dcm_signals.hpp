@@ -29,13 +29,12 @@
 // std
 #include <memory>
 
-// base
-#include "thirdparty/sigslot/signal.hpp"
-#include "depth-camera/frame/dc_frame.hpp"
-#include "depth-camera/frame/dc_data_frame.hpp"
-#include "network/network_enums.hpp"
+// sigslot
+#include <sigslot/signal.hpp>
 
-// local
+// base
+#include "network/network_enums.hpp"
+#include "depth-camera/dc_types.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
@@ -45,7 +44,10 @@
 #include "depth-camera/settings/dc_video_recorder_settings.hpp"
 #include "depth-camera/settings/dc_video_player_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
-#include "depth-camera/dc_types.hpp"
+
+// depth-camera
+#include "depth-camera/frame/dc_frame.hpp"
+#include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/dc_video.hpp"
 
 namespace tool {

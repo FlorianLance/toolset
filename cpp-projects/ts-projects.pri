@@ -24,123 +24,92 @@
 # **                                                                            **
 # ********************************************************************************/*/
 
-message("TARGET: "$$TARGET)
 
 # projects list
 TOOLSET_CPP_PROJECTS +=\
-    base \
-    base-app \
-    base-test \
-    base-export \
-    base-export-app \
-    opengl-utility \
-    opengl-utility-app \
-    imgui-opengl-engine \
-    demos \
+    # tse
+    ts-base \
+    ts-base-test \
+    ts-data \
+    ts-network \
+    ts-mesh \
+    ts-depth-camera \
+    ts-opengl \
+    ts-opengl-app \
+    ts-imgui-gl-engine \
+    ts-demos \
+    ts-export \
+    ts-export-app \
+    ts-global-app \
+    ts-qt \
+    ts-qt-gl \
+    ts-qt-nodes \
+    ts-qt-app \    
+    # dc
     dc-grabber \
     dc-manager \
-    dc-monitoring \
     dc-player \
-    qt-utility \
-    qt-utility-app \
-    qt-utility-qml-app \
-    nodes \
-    scaner-component \
-    scaner-grabber \
-    scaner-manager \
+    dc-monitoring \
     guardian \
-    realstream-editor \
-    realstream-export \
 
-# define functions
-defineTest(generate_variables) {
-
-    UPT = $$upper($${2})
-    UPT = $$replace(UPT, "-", "_")
-
-    # include
-    eval($$UPT"_INCLUDES" = $${1}/$${2})
-    eval(export($$UPT"_INCLUDES"))
-
-    # objects files
-    eval($$UPT"_OBJ" = $${1}/_build/temp/obj/$${CFG}/$${2})
-    eval(export($$UPT"_OBJ"))
-
-    # moc
-    eval($$UPT"_MOC" = $${1}/_build/temp/moc/$${CFG}/$${2})
-    eval(export($$UPT"_MOC"))
-
-    # rcc
-    eval($$UPT"_RCC" = $${1}/_build/temp/rcc/$${CFG}/$${2})
-    eval(export($$UPT"_RCC"))
-
-    # ui generated files
-    eval($$UPT"_UI" = $${1}/_build/temp/ui/$${CFG}/$${2})
-    eval(export($$UPT"_UI"))
-
-    # destination
-    eval($$UPT"_DEST" = $${1}/_build/bin/$${2})
-    eval(export($$UPT"_DEST"))
-
-    # lib
-    equals(CFG, "debug"){
-        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2}d)
-        eval($$UPT"_LIB_DEP" = $${1}/_build/bin/$${2}/$${2}d".lib") # TODO: remove
-        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}d".lib")
-    }
-    equals(CFG, "release"){
-        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2})
-        eval($$UPT"_LIB_DEP" = $${1}/_build/bin/$${2}/$${2}".lib") # TODO: remove
-        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}".lib")
-    }
-    eval(export($$UPT"_LIB"))
-    eval(export($$UPT"_LIB_DEP"))
-    eval(export($$UPT"_LIB_FILE"))
-}
-
-# sub dir
 TOOLSET_CPP_PROJECTS_DIR    = $$TOOLSET_REPOSITORY_DIR"/cpp-projects"
 TOOLSET_CPP_THIRDPARTY_DIR  = $$TOOLSET_CPP_PROJECTS_DIR"/_thirdparty"
 TOOLSET_CPP_RESOURCES_DIR   = $$TOOLSET_CPP_PROJECTS_DIR"/_resources"
 
-########################################################### generate projects variables
-for(project, TOOLSET_CPP_PROJECTS):{
-    generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$project)
-}
 
-########################################################### FIND CURRENT PROJECT FROM LIST
-PROJECT_FOUND="NULL"
-for(project, TOOLSET_CPP_PROJECTS):{
-    debug_project = $$project"d"
-    TLOW = $$lower($$TARGET)
+# define functions
+defineTest(generate_variables) {
 
-    equals(TLOW, $$project){
-        PROJECT_FOUND = $$project
+    # $${1} -> PROJECT DIRECTORY -> project_dir (C:/toolset/cpp-projects/ts-base)
+    # $${2} -> PROJECT NAME -> ts-base
+
+    UPT = $$upper($${2}) # ts-base -> TS-BASE
+    UPT = $$replace(UPT, "-", "_") # TS-BASE -> TS_BASE
+
+    # directories
+    ## includes
+    eval($$UPT"_INCLUDES" = $${1}/$${2}) # TS_BASE_INCLUDES -> project_dir/ts_base
+    eval(export($$UPT"_INCLUDES"))
+    ## obj
+    eval($$UPT"_OBJ" = $${1}/_build/temp/obj/$${CFG}/$${2}) # TS_BASE_OBJ -> project_dir/_build/temp/obj/[release|debug]/ts_base
+    eval(export($$UPT"_OBJ"))
+    ## moc
+    eval($$UPT"_MOC" = $${1}/_build/temp/moc/$${CFG}/$${2}) # TS_BASE_MOC -> project_dir/_build/temp/moc/[release|debug]/ts_base
+    eval(export($$UPT"_MOC"))
+    ## rcc
+    eval($$UPT"_RCC" = $${1}/_build/temp/rcc/$${CFG}/$${2}) # TS_BASE_RCC -> project_dir/_build/temp/rcc/[release|debug]/ts_base
+    eval(export($$UPT"_RCC"))
+    ## ui
+    eval($$UPT"_UI" = $${1}/_build/temp/ui/$${CFG}/$${2}) # TS_BASE_UI -> project_dir/_build/temp/ui/[release|debug]/ts_base
+    eval(export($$UPT"_UI"))
+    ## dest
+    eval($$UPT"_DEST" = $${1}/_build/bin/$${2}) # TS_BASE_DEST -> project_dir/_build/bin/ts_base
+    eval(export($$UPT"_DEST"))
+
+    # files
+    ## obj
+    eval($$UPT"_OBJ_FILES" = $${1}/_build/temp/obj/$${CFG}/$${2}/*.obj) # TS_BASE_OBJ_FILES -> project_dir/_build/temp/obj/[release|debug]/ts_base/*.obj
+    eval(export($$UPT"_OBJ_FILES"))
+    ## moc obj
+    eval($$UPT"_MOC_OBJ_FILES" = $${1}/_build/temp/moc/$${CFG}/$${2}/*.obj) # TS_BASE_OBJ_FILES -> project_dir/_build/temp/obj/[release|debug]/ts_base/*.obj
+    eval(export($$UPT"_MOC_OBJ_FILES"))
+
+    # lib
+    equals(CFG, "debug"){
+        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2}d)       # TS_BASE_LIB -> -Lproject_dir/_build/bin/ts_base  -lts_based
+        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}d".lib")    # TS_BASE_LIB -> -Lproject_dir/_build/bin/ts_base/ts-based.lib
     }
-    equals(TLOW, $$debug_project){
-        PROJECT_FOUND = $$project
+    equals(CFG, "release"){
+        eval($$UPT"_LIB" = "-L"$${1}/_build/bin/$${2} "-l"$${2})        # TS_BASE_LIB -> -Lproject_dir/_build/bin/ts_base  -lts_base
+        eval($$UPT"_LIB_FILE" = $${1}/_build/bin/$${2}/$${2}".lib")     # TS_BASE_LIB -> -Lproject_dir/_build/bin/ts_base/ts-base.lib
     }
+    eval(export($$UPT"_LIB"))
+    eval(export($$UPT"_LIB_FILE"))
 }
 
-!equals(PROJECT_FOUND, "NULL"){
-    UPT = $$upper($$PROJECT_FOUND)
-    UPT = $$replace(UPT, "-", "_")
 
-    OBJECTS_DIR = $$eval($$UPT"_OBJ")
-    DESTDIR     = $$eval($$UPT"_DEST")
-    RCC_DIR     = $$eval($$UPT"_RCC")
-    UI_DIR      = $$eval($$UPT"_UI")
-    MOC_DIR     = $$eval($$UPT"_MOC")
-
-    message("--TOOLSET--")
-    message("TARGET: "$$TARGET)
-    message("PROJECT_FOUND: "$$PROJECT_FOUND)
-    message("OBJ: "$$OBJECTS_DIR)
-    message("DEST:"$$DESTDIR)
-    message("RCC: "$$RCC_DIR)
-    message("UI:  "$$UI_DIR)
-    message("MOC: "$$MOC_DIR)
+for(PROJECT, TOOLSET_CPP_PROJECTS):{
+    generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$PROJECT)
 }
-
 
 

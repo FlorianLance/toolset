@@ -35,7 +35,7 @@ DCMView::DCMView(size_t id){
 
     // init main window
     // # screen
-    graphics::Screen screen(1920, 1080, 0,0);
+    geo::Screen screen(1920, 1080, 0,0);
     // # gl context
     sf::ContextSettings context;
     context.depthBits         = 24;
@@ -73,6 +73,6 @@ auto DCMView::exit() -> void{
     m_glW->quit();
 }
 
-auto DCMView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coords, ColorRGBA8 color) -> void{
+auto DCMView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coords, img::ColorRGBA8 color) -> void{
     mainW.m_leftPanelD.update_selected_color(color.conv<float>()/255.f);
 }

@@ -30,6 +30,7 @@
 #include "utility/logger.hpp"
 
 using namespace tool;
+using namespace tool::geo;
 using namespace std::string_view_literals;
 
 DCGView::DCGView(size_t id){
@@ -37,7 +38,7 @@ DCGView::DCGView(size_t id){
     auto lg = LogG("DCGView::DCGView"sv);
     // init main window
     // # screen
-    graphics::Screen screen(1920, 1080, 0,0);
+    geo::Screen screen(1920, 1080, 0,0);
     // # gl context
     sf::ContextSettings context;
     context.depthBits         = 24;
@@ -74,6 +75,6 @@ auto DCGView::exit() -> void{
     m_glW->quit();
 }
 
-auto DCGView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coords, ColorRGBA8 color) -> void{
+auto DCGView::update_selected_color(size_t idCloud, size_t idButton, geo::Pt2f coordsR, geo::Pt2<int> coords, img::ColorRGBA8 color) -> void{
     mainW.leftPanelD.update_selected_color(color.conv<float>()/255.f);
 }

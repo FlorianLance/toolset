@@ -37,7 +37,7 @@ class DCPGlWindow : public BaseSfmlGlWindow{
 
 public:
 
-    DCPGlWindow(std::string_view  title, graphics::Screen screen, std::optional<sf::ContextSettings> context = std::nullopt);
+    DCPGlWindow(std::string_view  title, geo::Screen screen, std::optional<sf::ContextSettings> context = std::nullopt);
 
 protected:
 

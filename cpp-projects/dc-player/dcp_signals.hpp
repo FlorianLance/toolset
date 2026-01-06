@@ -29,8 +29,10 @@
 // std
 #include <memory>
 
+// sigslot
+#include <sigslot/signal.hpp>
+
 // base
-#include "thirdparty/sigslot/signal.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 #include "depth-camera/frame/dc_data_frame.hpp"
 #include "network/network_enums.hpp"

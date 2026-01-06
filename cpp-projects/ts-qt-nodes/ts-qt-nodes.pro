@@ -1,0 +1,175 @@
+
+# /*******************************************************************************
+# ** Toolset-qt-nodes                                                           **
+# ** MIT License                                                                **
+# ** Copyright (c) [2018] [Florian Lance]                                       **
+# **                                                                            **
+# ** Permission is hereby granted, free of charge, to any person obtaining a    **
+# ** copy of this software and associated documentation files (the "Software"), **
+# ** to deal in the Software without restriction, including without limitation  **
+# ** the rights to use, copy, modify, merge, publish, distribute, sublicense,   **
+# ** and/or sell copies of the Software, and to permit persons to whom the      **
+# ** Software is furnished to do so, subject to the following conditions:       **
+# **                                                                            **
+# ** The above copyright notice and this permission notice shall be included in **
+# ** all copies or substantial portions of the Software.                        **
+# **                                                                            **
+# ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR **
+# ** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,   **
+# ** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL    **
+# ** THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER **
+# ** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING    **
+# ** FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        **
+# ** DEALINGS IN THE SOFTWARE.                                                  **
+# **                                                                            **
+# ********************************************************************************/
+
+####################################### repo
+TOOLSET_REPOSITORY_DIR      = $$PWD"/../.."
+
+####################################### TARGET/TEMPMATE/CONFIG
+TARGET = ts-qt-nodes
+TEMPLATE = lib
+CONFIG += staticlib
+CONFIG -= console
+CONFIG += qt
+QT += core gui opengl widgets printsupport
+
+####################################### PRI
+include(../ts-settings.pri)
+include(../ts-projects.pri)
+include(../ts-thirdparty.pri)
+include(../ts-dependencies.pri)
+
+####################################### INCLUDES
+
+TS_QT_NODES_DEP_INCLUDEPATH =\
+    #
+    $$TS_QT_NODES_THIRDPARTY_INCLUDES\
+    $$TS_BASE_THIRDPARTY_INCLUDES\
+    $$TS_QT_THIRDPARTY_INCLUDES\
+    #
+    $$TS_BASE_INCLUDES\
+    $$TS_QT_INCLUDES\
+
+####################################### LIBS
+
+TS_QT_NODES_DEP_LIBS =\
+    #
+    $$TS_QT_NODES_THIRDPARTY_LIBS\
+    $$TS_BASE_THIRDPARTY_LIBS\
+    $$TS_QT_THIRDPARTY_LIBS\
+    #
+    $$TS_BASE_LIB\
+    $$TS_QT_LIB\
+
+####################################### DEP
+
+TS_QT_NODES_PRE_TARGETDEPS =\
+    $$TS_BASE_LIB_FILE\
+    $$TS_QT_LIB_FILE\
+
+####################################### GENERATE VARIABLES
+
+include(../ts-gen-var.pri)
+
+####################################### PROJECT FILES
+HEADERS += \
+    nodes/ConnectionBlurEffect.hpp \
+    nodes/ConnectionPainter.hpp \
+    nodes/NodeConnectionInteraction.hpp \
+    nodes/Properties.hpp \
+    nodes/StyleCollection.hpp \
+    nodes/Compiler.hpp \
+    nodes/Connection.hpp \
+    nodes/ConnectionGeometry.hpp \
+    nodes/ConnectionGraphicsObject.hpp \
+    nodes/ConnectionState.hpp \
+    nodes/ConnectionStyle.hpp \
+    nodes/DataModelRegistry.hpp \
+    nodes/Export.hpp \
+    nodes/FlowScene.hpp \
+    nodes/FlowView.hpp \
+    nodes/FlowViewStyle.hpp \
+    nodes/Node.hpp \
+    nodes/NodeData.hpp \
+    nodes/NodeDataModel.hpp \
+    nodes/NodeGeometry.hpp \
+    nodes/NodeGraphicsObject.hpp \
+    nodes/NodePainterDelegate.hpp \
+    nodes/NodeState.hpp \
+    nodes/NodeStyle.hpp \
+    nodes/OperatingSystem.hpp \
+    nodes/PortType.hpp \
+    nodes/QUuidStdHash.hpp \
+    nodes/Serializable.hpp \
+    nodes/Style.hpp \
+    nodes/TypeConverter.hpp \
+    nodes/memory.hpp \
+    samples/calculator/AdditionModel.hpp \
+    samples/calculator/Converters.hpp \
+    samples/calculator/DecimalData.hpp \
+    samples/calculator/DivisionModel.hpp \
+    samples/calculator/IntegerData.hpp \
+    samples/calculator/MathOperationDataModel.hpp \
+    samples/calculator/ModuloModel.hpp \
+    samples/calculator/MultiplicationModel.hpp \
+    samples/calculator/NumberDisplayDataModel.hpp \
+    samples/calculator/NumberSourceDataModel.hpp \
+    samples/calculator/SubtractionModel.hpp \
+    samples/calculator/calculator.hpp \
+    samples/connection_colors/connection_colors.hpp \
+    samples/connection_colors/connections_colors_models.hpp \
+    samples/example2/TextData.hpp \
+    samples/example2/TextDisplayDataModel.hpp \
+    samples/example2/TextSourceDataModel.hpp \
+    samples/example2/example2.hpp \
+    samples/images/ImageLoaderModel.hpp \
+    samples/images/ImageShowModel.hpp \
+    samples/images/PixmapData.hpp \
+    samples/images/images.hpp \
+    samples/styles/styles.hpp \
+    samples/styles/styles_models.hpp
+
+SOURCES += \
+    nodes/Connection.cpp \
+    nodes/ConnectionBlurEffect.cpp \
+    nodes/ConnectionGeometry.cpp \
+    nodes/ConnectionGraphicsObject.cpp \
+    nodes/ConnectionPainter.cpp \
+    nodes/ConnectionState.cpp \
+    nodes/ConnectionStyle.cpp \
+    nodes/DataModelRegistry.cpp \
+    nodes/FlowScene.cpp \
+    nodes/FlowView.cpp \
+    nodes/FlowViewStyle.cpp \
+    nodes/Node.cpp \
+    nodes/NodeConnectionInteraction.cpp \
+    nodes/NodeDataModel.cpp \
+    nodes/NodeGeometry.cpp \
+    nodes/NodeGraphicsObject.cpp \
+    nodes/NodePainter.cpp \
+    nodes/NodeState.cpp \
+    nodes/NodeStyle.cpp \
+    nodes/Properties.cpp \
+    nodes/StyleCollection.cpp \
+    sample_main.cpp \
+    samples/calculator/Converters.cpp \
+    samples/calculator/MathOperationDataModel.cpp \
+    samples/calculator/ModuloModel.cpp \
+    samples/calculator/NumberDisplayDataModel.cpp \
+    samples/calculator/NumberSourceDataModel.cpp \
+    samples/connection_colors/connections_colors_models.cpp \
+    samples/example2/TextDisplayDataModel.cpp \
+    samples/example2/TextSourceDataModel.cpp \
+    samples/images/ImageLoaderModel.cpp \
+    samples/images/ImageShowModel.cpp \
+    samples/styles/styles_models.cpp
+
+RESOURCES += \
+    resources/nodes_resource.qrc \
+
+DISTFILES += \
+    LICENSE \
+
+
