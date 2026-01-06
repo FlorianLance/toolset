@@ -11,6 +11,7 @@ Makefile*
 *.stash
 *.rc
 *.pch
+OrbbecSDK.log.txt
 
 # cpp-projects
 cpp-projects/_old
