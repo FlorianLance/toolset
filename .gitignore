@@ -44,6 +44,8 @@ cpp-projects/_thirdparty
 cpp-projects/_resources
 
 # unity-projects
+
+unity-projects/HDRP/DCBodyscan/[Aa]ssets/Plugins
 unity-projects/HDRP/DCBodyscan/[Ll]ibrary/
 unity-projects/HDRP/DCBodyscan/[Tt]emp/
 unity-projects/HDRP/DCBodyscan/[Oo]bj/
@@ -60,10 +62,8 @@ unity-projects/HDRP/DCBodyscan/.vs
 unity-projects/HDRP/DCBodyscan/UIElementsSchema
 
 
-unity-projects/HDRP/DCBodyscan/plugins
-unity-projects/HDRP/DCBodyscan/platforms
-unity-projects/HDRP/DCBodyscan/imageformats
-unity-projects/HDRP/DCBodyscan/styles
+
+
 
 unity-projects/HDRP/DCBodyscan/Assets/Videos
 unity-projects/HDRP/DCBodyscan/Assets/AllHereReserved

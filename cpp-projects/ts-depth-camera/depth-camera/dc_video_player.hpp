@@ -79,6 +79,7 @@ public:
 
     auto copy_current_cloud(size_t idCamera, std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
     auto copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors) -> size_t;
+    auto copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, bool applyModelTransform) -> size_t;
     auto copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform) -> size_t;
     auto copy_all_current_clouds(std::span<DCVertexMeshData> vertices, bool applyModelTransform) -> size_t;
 

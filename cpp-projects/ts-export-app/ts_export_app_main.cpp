@@ -155,7 +155,7 @@ auto dc_client_export_test(const std::string &clientSettingsFilePath, bool useEx
                     idC,
                     data[idC].positions.data(),
                     data[idC].colors.data(),
-                    data[idC].normals.data(),
+                    // data[idC].normals.data(),
                     sizeVertices,
                     true,
                     false, false, false
@@ -265,7 +265,7 @@ auto dc_video_player_export_test() -> void{
 
             int vvc= get_current_frame_valid_vertices_count__dc_video_player(dcPlayer, jj);
             cloud.resize(vvc, true);
-            copy_camera_cloud_vfx__dc_video_player(dcPlayer, jj, cloud.vertices.get_data(), cloud.colors.get_data(), cloud.normals.get_data(), vvc, true);
+            copy_camera_cloud_vfx__dc_video_player(dcPlayer, jj, cloud.vertices.get_data(), cloud.colors.get_data(), vvc, true);
 
             std::puts(std::format("Current time {} size {} \n", dcPlayer->current_time_ms(), vvc).c_str());
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -354,7 +354,7 @@ auto dc_video_player_export_test() -> void{
         }
 
         for(int idC = 0; idC < nbCameras; ++idC){
-            cloudsData[idC].verticesCopied = copy_camera_cloud_vfx__dc_video_player(dcPlayer, idC, cloudsData[idC].positions.data(), cloudsData[idC].colors.data(), cloudsData[idC].normals.data(), cloudsData[idC].positions.size(), 1);
+            cloudsData[idC].verticesCopied = copy_camera_cloud_vfx__dc_video_player(dcPlayer, idC, cloudsData[idC].positions.data(), cloudsData[idC].colors.data(), cloudsData[idC].positions.size(), 1);
             std::puts(std::format("cloud:[{}] vertices copied:[{}] \n", idC, cloudsData[idC].verticesCopied).c_str());
         }
 

@@ -170,6 +170,7 @@ HEADERS += \
     utility/benchmark.hpp \
     utility/bit_mask.hpp \
     utility/buffer.hpp \
+    utility/callbacks.hpp \
     utility/constants.hpp \
     utility/decimal.hpp \
     utility/export.hpp \

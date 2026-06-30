@@ -67,6 +67,11 @@ public:
     auto elapsed_secondes() const -> float;
     auto main_thread_duration_ms() const -> double;
 
+
+    auto get_window_handle() -> sf::WindowHandle{
+        return m_scene.getNativeHandle();
+    }
+
 public:
 
     // signals

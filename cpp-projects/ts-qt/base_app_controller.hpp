@@ -27,14 +27,32 @@
 #pragma once
 
 // Qt
-#include <QObject>
+#include <QApplication>
 
 namespace tool{
 
+enum class AppType : int {
+    RealStreamManager = 0,
+    BluetoothCommunication,
+    Unknow
+};
+
 class BaseAppController : public QObject{
     Q_OBJECT
+public:
+
+    BaseAppController(QObject *parent, const QString &appName) : QObject(parent), m_appName(appName){
+        m_appNameStd = m_appName.toStdString();
+    }
+
 public slots:
     virtual auto update_parameter_from_json_str(const QString &jsonStr) -> void = 0;
+
+
+protected:
+
+    std::string m_appNameStd;
+    QString m_appName;
 };
 
 }

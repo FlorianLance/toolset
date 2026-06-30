@@ -41,6 +41,7 @@ public:
 
     // curves
     auto set_nb_curves(size_t nbCurves, bool update = true) -> void;
+    auto reset_all_curves(bool update = true) -> void;
     // # color
     auto set_curves_colors(std::span<QColor> colors, bool update = true) -> void;
     auto set_curve_color(size_t idCurve, const QColor &color, bool update = true) -> void;
@@ -55,7 +56,7 @@ public:
     // # visibilty
     auto set_curve_visibility(size_t idCurve, bool state) -> void;
     // # data
-    auto set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void;
+    auto set_curve_points(size_t idCurve, std::span<const double> x, std::span<const double> y) -> void;
 
     // canvas
     auto set_left_title(const QString &title, const QColor &color = Qt::black) -> void;

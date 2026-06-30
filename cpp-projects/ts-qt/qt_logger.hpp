@@ -69,6 +69,8 @@ public:
     auto log(QStringView log) -> void;
     auto log_title(QStringView log, int level) -> void;
 
+    auto set_raw_triggering_state(MessageType type, bool state) -> void;
+    auto set_html_formating_state(MessageType type, bool state) -> void;
     auto set_type_color(MessageType type, const QColor &color) -> void;
     auto set_html_file_background_color(const QString &color) -> void;
 
@@ -78,6 +80,11 @@ signals:
     auto warning_signal(QString warning) -> void;
     auto error_signal(QString error) -> void;
     auto log_signal(QString log) -> void;
+
+    auto raw_message_signal(QString rawMessage) -> void;
+    auto raw_warning_signal(QString rawWarning) -> void;
+    auto raw_error_signal(QString rawError) -> void;
+    auto raw_log_signal(QString rawLog) -> void;
 
 private:
 

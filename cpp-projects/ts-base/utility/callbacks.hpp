@@ -1,8 +1,8 @@
 
 /*******************************************************************************
-** Toolset-ts-depth-camera                                                    **
+** Toolset-ts-base                                                            **
 ** MIT License                                                                **
-** Copyright (c) [2024] [Florian Lance]                                       **
+** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
 ** Permission is hereby granted, free of charge, to any person obtaining a    **
 ** copy of this software and associated documentation files (the "Software"), **
@@ -26,46 +26,4 @@
 
 #pragma once
 
-// local
-#include "depth-camera/dc_device_impl.hpp"
-#include "azure_base_device.hpp"
 
-namespace tool::cam {
-
-
-struct AzureKinectDeviceImpl : public DCDeviceImpl{
-
-    AzureKinectDeviceImpl();
-
-    // actions
-    auto open(const DCConfigSettings &newConfigS) -> bool override final;
-    auto close() -> void override final;
-
-    // getters
-    auto is_opened() const noexcept -> bool override final;
-    // auto nb_devices() const noexcept -> std::uint32_t override final;
-    auto device_name() const noexcept -> std::string override final;    
-
-private:
-
-    // settings
-    auto update_from_colors_settings() -> void override final;
-
-    // read data
-    auto capture_frame(std::int32_t timeoutMs) -> bool override final;
-    auto read_color_image(bool enable) -> bool override final;
-    auto read_depth_image(bool enable) -> bool override final;
-    auto read_infra_image(bool enable) -> bool override final;
-    auto read_audio(bool enable) -> void override final;
-    auto read_IMU(bool enable) -> void override final;
-    auto enqueue_body_tracking(bool enable) -> void override final;
-    auto read_body_tracking(bool enable) -> void override final;
-
-    // process data    
-    auto resize_images() -> void override final;
-    auto generate_cloud(bool enable) -> void override final;
-
-    std::unique_ptr<AzureBaseDevice> azureD = nullptr;
-};
-
-}

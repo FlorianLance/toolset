@@ -112,6 +112,12 @@ auto FemtoBoltDeviceImpl::read_IMU(bool enable) -> void {
     }
 }
 
+auto FemtoBoltDeviceImpl::enqueue_body_tracking(bool enable) -> void{
+    if(enable){
+        orbbecD->enqueue_body_tracking();
+    }
+}
+
 auto FemtoBoltDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){

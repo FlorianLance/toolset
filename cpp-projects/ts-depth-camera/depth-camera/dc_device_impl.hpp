@@ -124,6 +124,7 @@ protected:
     virtual auto read_infra_image(bool enable)          -> bool{static_cast<void>(enable); return false;}
     virtual auto read_audio(bool enable)                -> void{static_cast<void>(enable);}
     virtual auto read_IMU(bool enable)                  -> void{static_cast<void>(enable);}
+    virtual auto enqueue_body_tracking(bool enable)     -> void{static_cast<void>(enable);}
     virtual auto read_body_tracking(bool enable)        -> void{static_cast<void>(enable);}
     virtual auto release_frame()                        -> void{}
     auto check_data_validity() -> bool;

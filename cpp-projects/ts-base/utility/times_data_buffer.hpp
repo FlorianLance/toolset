@@ -95,7 +95,6 @@ struct TimeValuesBuffer{
 
 };
 
-
 template <typename ValueContainer, typename Value>
 struct TimeChannelsC{
 
@@ -107,6 +106,123 @@ private:
     Buffer<size_t> idChannels;
 
 public:
+
+    auto add_both_sides_mirror_padding(int samplingRate, size_t nbSeconds) -> void{
+
+        if(nb_samples() == 0){
+            return;
+        }
+
+        std::for_each(std::execution::par_unseq, std::begin(channels), std::end(channels), [&](auto &channel){
+            channel.mirror_values_both_sides(samplingRate, nbSeconds);
+        });
+    }
+
+    auto remove_both_sides_mirror_padding(size_t originalSize) -> void{
+
+        if(nb_samples() == 0){
+            return;
+        }
+
+        std::for_each(std::execution::par_unseq, std::begin(channels), std::end(channels), [&](auto &channel){
+            channel.remove_mirror_values_both_sides(originalSize);
+        });
+    }
+
+
+    auto add_left_right_mirror_padding(size_t sizePadding) -> void{
+        nb_samples();
+
+        size_t currentSize  = nb_samples();
+        // factor padding ?
+        // 1 * 2 * 3
+
+        //
+
+        // current size
+        // wanted size
+
+        // A B C
+        // C B A B C A B C 1
+
+        //
+
+        // std::vector<int> t;
+        // t.resize(20);
+        // std::iota(t.begin(), t.end(), 1);
+        // t.resize(28);
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+        // std::cout << "\n";
+        // std::rotate(t.rbegin(), t.rbegin() + 4, t.rend());
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+        // std::cout << "\n";
+        // std::copy(t.begin() + 4, t.begin() + 8, t.rbegin()+t.size()-4);
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+        // std::cout << "\n";
+        // std::copy(t.begin() + t.size()-8, t.begin() + t.size()-4, t.rbegin());
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+        // std::cout << "\n";
+        // std::rotate(t.begin(), t.begin() + 4, t.end());
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+
+        // std::cout << "\n";
+        // t.resize(20);
+        // for(auto &v : t){
+        //     std::cout << v << " ";
+        // }
+
+        // return 0;
+        // // 0 1 2 3 4 5 6 7 8 9
+        // // 1 2 3 4 5 6 7 8 9 0
+
+        size_t sizeTotalPadding = 2 * sizePadding;
+
+        if(currentSize == 0){// || (currentSize < sizeTotalPadding)){
+            return;
+        }
+
+        for(auto &channel : channels){
+
+            // resize data to have enough room for the padding
+            channel.resize(currentSize + sizeTotalPadding);
+
+            // rotate data to move the beginning after the left padding
+            std::rotate(channel.rbegin(), channel.rbegin() + sizePadding, channel.rend());
+
+            // add left padding by mirroring the beggining
+            std::copy(channel.begin() + sizePadding + 1, channel.begin() + sizeTotalPadding + 1, channel.rbegin() + channel.size() - sizePadding);
+
+            // add right padding by mirroring the end
+            std::copy(channel.begin() + channel.size() - sizeTotalPadding -1, channel.begin() + channel.size() - sizePadding - 1, channel.rbegin());
+        }
+    }
+
+    auto remove_left_right_mirror_padding(size_t sizePadding) -> void{
+
+        if(nb_samples() == 0 || nb_samples() < (2*sizePadding)){
+            return;
+        }
+
+        for(auto &channel : channels){
+
+            // rotate data to move the beggining back at 0
+            std::rotate(channel.begin(), channel.begin() + sizePadding, channel.end());
+
+            // remove the padding by resizing
+            channel.resize(channel.size() - 2 * sizePadding);
+        }
+    }
+
 
     auto clean() -> void{
         times.clear();
@@ -129,6 +245,13 @@ public:
         }
         idChannels.resize(nbChannels);
         std::iota(idChannels.begin(), idChannels.end(), 0);
+    }
+
+    auto clean_samples() -> void{
+        times.clear();
+        for(auto &channel : channels){
+            channel.clear();
+        }
     }
 
     auto resize_samples(size_t newSize) -> void{
@@ -164,6 +287,15 @@ public:
             times.remove_before(idT);
             for(auto &channel : channels){
                 channel.remove_before(idT);
+            }
+        }
+    }
+
+    auto merge(const TimeChannelsC &iData) -> void{
+        if(channels.size() == iData.channels.size()){
+            times.merge(iData.times);
+            for (const auto& [channel, iChannel] : std::views::zip(channels, iData.channels)){
+                channel.merge(iChannel);
             }
         }
     }
@@ -244,7 +376,7 @@ public:
         });
     }
 
-    [[nodiscard]] auto copy_last_values(size_t size, std::span<std::int8_t> disablingMask) -> std::shared_ptr<TimeChannelsC>{
+    [[nodiscard]] auto copy_last_values(size_t size, std::span<const std::int8_t> disablingMask) -> std::shared_ptr<TimeChannelsC>{
 
         auto subset = std::make_shared<TimeChannelsC>();
         times.copy_last_values_to(size, subset->times);
@@ -331,70 +463,14 @@ public:
         auto diff = after->copy();
         for (const auto& [d, b, a] : std::views::zip(diff->channels, before->channels, after->channels)){
             for(size_t idC = 0; idC < d.size(); ++idC){
-                d[idC] = ((b[idC] - a[idC])/ d[idC]);
+                // d[idC] = ((b[idC] - a[idC])/ d[idC]);
+                d[idC] = ((b[idC] - a[idC]));
             }
         }
         return diff;
     }
 
 
-    // auto copy_after_time(double time) -> std::shared_ptr<TimeChannelsC>{
-
-    //     size_t idT = 0;
-    //     for(const auto &t : times){
-    //         if(time <= t){
-    //             break;
-    //         }
-    //         ++idT;
-    //     }
-
-    //     auto timesSpan  = times.sub_span(idT, times.size()-idT);
-
-    //     Buffer<std::span<
-    //     auto channelsSpan =
-    //     // NumericBuffer<double> times;
-    //     // Buffer<ValueContainer> channels;
-
-    // }
-
-
-    // auto merge_remove_input_overlapping(TimeChannelsC *iData) -> void{
-
-    //     // iData->times.last();
-
-
-    // }
-
-
-    // auto add_data(double time, const tool::Buffer<Value> &eData, size_t limit) -> void{
-
-        //     if(times.size() < limit){
-
-        //         times.push_back(time);
-        //         for(size_t idC = 0; idC < channels.size(); ++idC){
-        //             channels[idC].push_back(eData[idC]);
-        //         }
-
-    //     }else if(times.size() == limit){
-
-        //         times.remove_first();
-        //         times.push_back(time);
-
-    //         for(size_t idC = 0; idC < channels.size(); ++idC){
-    //             channels[idC].remove_first();
-    //             channels[idC].push_back(eData[idC]);
-    //         }
-
-    //     }else{
-    //         times.remove_from_to(0, times.size()+1-limit);
-    //         times.push_back(time);
-
-    //         for(size_t idC = 0; idC < channels.size(); ++idC){
-    //             channels[idC].remove_from_to(0, channels[idC].size()+1-limit);
-    //             channels[idC].push_back(eData[idC]);
-    //         }
-    //     }
-    // }
 };
 
 template<typename Value>

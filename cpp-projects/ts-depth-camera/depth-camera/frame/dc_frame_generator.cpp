@@ -241,7 +241,9 @@ struct DCFrameGenerator::Impl{
         compute_cloud_from_depth();
         create_colored_cloud();
 
+
         tTotal = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
+        // std::cout << "tot [" << tTotal.count() << "]\n";
     }
 
     std::chrono::microseconds tResetCalibration;
@@ -456,7 +458,7 @@ private:
 
                 if((*depth)[id] == dc_invalid_unsigned_depth_value){
                     (*imageB)[id] = ColorRGB8{0,0,0};
-                    continue;;
+                    continue;
                 }
 
                 float vF = (static_cast<float>((*depth)[id]) - dRange(0))/diff;
@@ -585,7 +587,6 @@ private:
 
     auto create_colored_cloud() -> void{
 
-
         if(dFrame->volumesB.contains(DCVolumeBufferType::CloudXYZ16RGB8) && frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) && gSettings.cloud){
 
             // if(dFrame->imagesB.contains(DCImageBufferType::Depth16)){
@@ -596,8 +597,6 @@ private:
             //         std::copy(buffer.begin(), buffer.end(), frame->image_buffer<std::uint16_t>(DCImageBufferType::Depth16)->get_byte_data());
             //     }
             // }
-
-
 
 
             size_t cloudVerticesBufferSize              = dFrame->validVerticesCount*5;
@@ -642,9 +641,6 @@ private:
                 tComputeColoredCloud = Time::difference_micro_s(tStart, Time::nanoseconds_since_epoch());
                 return;
             }
-
-
-
         }
 
         if(dFrame->volumesB.contains(DCVolumeBufferType::VoxelCloudX14Y12Z14RGB8) && frame->volumesB.contains(DCVolumeBufferType::ColoredCloud) && gSettings.cloud){

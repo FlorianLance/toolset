@@ -71,6 +71,8 @@ auto DCConfigSettings::init_from_json(const nlohmann::json &json) -> void{
     btOrientation       = static_cast<DCBTSensorOrientation>(read_and_return_value(json, unreadCount,   "bt_orientation"sv, static_cast<int>(btOrientation)));
     btProcessingMode    = static_cast<DCBTProcessingMode>(read_and_return_value(json, unreadCount,      "bt_processing_mode"sv, static_cast<int>(btProcessingMode)));
     read_and_update_value(json, unreadCount, "bt_GPU_id"sv, btGPUId);
+    read_and_update_value(json, unreadCount, "bt_temporal_smoothing"sv, btTemporalSmoothing);
+
     // misc
     read_and_update_value(json, unreadCount, "disable_LED"sv, disableLED);
     // color - depth calibration
@@ -112,6 +114,7 @@ auto DCConfigSettings::convert_to_json() const -> nlohmann::json {
     add_value(json, "bt_orientation"sv,                         static_cast<int>(btOrientation));
     add_value(json, "bt_processing_mode"sv,                     static_cast<int>(btProcessingMode));
     add_value(json, "bt_GPU_id"sv,                              btGPUId);
+    add_value(json, "bt_temporal_smoothing"sv,                  btTemporalSmoothing);
     // misc
     add_value(json, "disable_LED"sv,                            disableLED);
     // color - depth calibration
@@ -165,6 +168,10 @@ auto DCConfigSettings::init_from_data(std::byte const * const data, size_t &offs
         // color - depth calibration
         read(colorAlignmentTr, data, offset, sizeData);
         read(colorAlignmentRotEuler, data, offset, sizeData);
+    }
+
+    if(version > SettingsVersion::v2_0){
+        // ...
     }
     
     version = SettingsVersion::LastVersion;

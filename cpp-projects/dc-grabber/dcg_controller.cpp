@@ -243,3 +243,7 @@ auto DCGController::update() -> void{
 auto DCGController::draw_ui(geo::Pt2f size) -> void{
     view->draw(size, model.get());
 }
+
+auto DCGController::set_minimized() -> void{
+    view->minimize_window();
+}

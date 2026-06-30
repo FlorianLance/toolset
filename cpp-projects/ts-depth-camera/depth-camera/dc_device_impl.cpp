@@ -1824,17 +1824,17 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
 
     if(!fData.depthCloud.empty() && !fData.depth.empty() && settings.data.sending.addCloud){
 
+        // Log::message("generate cloud\n"sv);
 
         // resize cloud data
         // data mapping: XXYYZZRGB0
         size_t cloudVerticesBufferSize              = fData.validDepthValues*5;
         size_t rest                                 = cloudVerticesBufferSize % 128;
         size_t paddeCloudVerticesBufferPaddedSize   = rest == 0 ? cloudVerticesBufferSize : (cloudVerticesBufferSize + 128 - rest);
-
         processedCloudData.resize(paddeCloudVerticesBufferPaddedSize);
         std::fill(processedCloudData.begin(), processedCloudData.end(), 0);
 
-        auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
+        //auto processedCloudData8 = reinterpret_cast<std::uint8_t*>(processedCloudData.get_data());
 
         bool addColors = !fData.depthSizedColor.empty() && settings.data.sending.cloudColorMode == CloudColorMode::FromDepthSizedColorImage;
 
@@ -1854,7 +1854,6 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
         auto zValues        = xyz16Values.subspan(fData.validDepthValues*2, fData.validDepthValues);
 
         auto rgb8Values     = std::span<std::uint8_t>(reinterpret_cast<std::uint8_t*>(processedCloudData.get_byte_data() + 6*fData.validDepthValues), fData.validDepthValues*3);
-            //processedCloudData.byte_span().subspan(6*fData.validDepthValues, fData.validDepthValues*3);
         auto rValues        = rgb8Values.subspan(0, fData.validDepthValues);
         auto gValues        = rgb8Values.subspan(fData.validDepthValues,   fData.validDepthValues);
         auto bValues        = rgb8Values.subspan(fData.validDepthValues*2, fData.validDepthValues);
@@ -1889,6 +1888,7 @@ auto DCDeviceImpl::update_data_frame_cloud() -> void{
         if(settings.data.sending.cloudCM == DCCompressionMode::FastPFor){
 
             if(auto volumeB = dFrame->insert_volume_buffer(DCVolumeBufferType::CloudXYZ16RGB8, DCCompressionMode::FastPFor)){
+                // Log::message("encode cloud\n"sv);
                 if(!fastPForCloudEncoder.encode(processedCloudData.byte_span(), *volumeB)){
                     dFrame->volumesB.erase(DCVolumeBufferType::CloudXYZ16RGB8);
                 }
@@ -2340,7 +2340,8 @@ auto DCDeviceImpl::read_frame() -> bool{
     {
         // Log::log_unf("[RBT]");
         auto tBT = TimeDiffGuard(timeM, "READ_BODY_TRACKING"sv);
-        read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());        
+        // read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
+        enqueue_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
     }
     {
         auto tRA = TimeDiffGuard(timeM, "READ_AUDIO"sv);
@@ -2417,6 +2418,10 @@ auto DCDeviceImpl::process_data() -> std::tuple<std::shared_ptr<DCFrame>, std::s
             // mix_depth_sized_color_with_body_tracking();
             filter_infra_from_depth();
             // mix_infra_with_body_tracking();
+        }
+
+        {
+            read_body_tracking(settings.data.capture.bodyTracking && settings.config.btEnabled && mInfos.has_depth());
         }
 
         {

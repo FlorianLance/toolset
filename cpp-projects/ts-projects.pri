@@ -90,9 +90,9 @@ defineTest(generate_variables) {
     ## obj
     eval($$UPT"_OBJ_FILES" = $${1}/_build/temp/obj/$${CFG}/$${2}/*.obj) # TS_BASE_OBJ_FILES -> project_dir/_build/temp/obj/[release|debug]/ts_base/*.obj
     eval(export($$UPT"_OBJ_FILES"))
-    ## moc obj
-    eval($$UPT"_MOC_OBJ_FILES" = $${1}/_build/temp/moc/$${CFG}/$${2}/*.obj) # TS_BASE_OBJ_FILES -> project_dir/_build/temp/obj/[release|debug]/ts_base/*.obj
-    eval(export($$UPT"_MOC_OBJ_FILES"))
+    ## moc cpp
+    # eval($$UPT"_MOC_OBJ_FILES" = $${1}/_build/temp/moc/$${CFG}/$${2}/*.obj) # TS_BASE_OBJ_FILES -> project_dir/_build/temp/obj/[release|debug]/ts_base/*.obj
+    # eval(export($$UPT"_MOC_OBJ_FILES"))
 
     # lib
     equals(CFG, "debug"){
@@ -111,5 +111,6 @@ defineTest(generate_variables) {
 for(PROJECT, TOOLSET_CPP_PROJECTS):{
     generate_variables($$TOOLSET_CPP_PROJECTS_DIR, $$PROJECT)
 }
+
 
 

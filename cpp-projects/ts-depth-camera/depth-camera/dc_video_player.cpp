@@ -591,6 +591,44 @@ auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> pos
     return 0;
 }
 
+
+auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, bool applyModelTransform) -> size_t{
+
+    if(auto frame = current_frame(idCamera); frame != nullptr){
+
+        if(auto cloud = frame->volume_buffer<geo::ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+
+            auto verticesCountToCopy = std::min(cloud->size(), positions.size());
+            auto tr = video()->get_transform(idCamera).conv<float>();
+
+            if(applyModelTransform){
+                std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
+                    const auto &pt = cloud->vertices[id];
+                    positions[id] = tr.multiply_point(geo::Pt4f{pt.x(), pt.y(), pt.z(), 1.f}).xyz();
+                    positions[id].x() *= -1.f;
+                    const auto &col = cloud->colors[id];
+                    colors[id] = {
+                        col.x(), col.y(), col.z()
+                    };
+                });
+            }else{
+                std::for_each(std::execution::par_unseq, std::begin(i->ids), std::begin(i->ids) + verticesCountToCopy, [&](size_t id){
+                    const auto &pt = cloud->vertices[id];;
+                    positions[id] = geo::Pt3f{pt.x(), pt.y(), pt.z()};
+                    positions[id].x() *= -1.f;
+                    const auto &col = cloud->colors[id];
+                    colors[id] = {
+                        col.x(), col.y(), col.z()
+                    };
+                });
+            }
+            return verticesCountToCopy;
+        }
+    }
+    return 0;
+}
+
+
 auto DCVideoPlayer::copy_current_cloud(size_t idCamera, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform) -> size_t{
 
     if(auto frame = current_frame(idCamera); frame != nullptr){

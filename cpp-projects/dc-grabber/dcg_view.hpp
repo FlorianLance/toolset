@@ -44,6 +44,8 @@ public:
     auto draw(geo::Pt2f size, DCGModel *model) -> void;
     auto exit() -> void;
 
+    auto minimize_window() -> void;
+
     auto gl() -> graphics::DCGGlWindow*{return m_glW.get();}
 
     graphics::DCGMainW mainW;

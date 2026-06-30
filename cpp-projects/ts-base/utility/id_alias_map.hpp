@@ -46,8 +46,8 @@ public:
             // ...
             return;
         }
-        currentId = aliases.size();        
-        elements.push_back({std::string(alias), std::forward<T>(element)});
+        currentId = aliases.size();
+        elements.push_back(std::make_tuple(std::string(alias), std::forward<T>(element)));
         aliases[alias] = currentId;
     }
 

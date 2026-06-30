@@ -53,8 +53,8 @@ public:
 private:
 
     std::vector<QColor> colors = {
-        Qt::darkBlue, Qt::blue, Qt::cyan, Qt::darkCyan, Qt::green,
-        Qt::darkGreen, Qt::red, Qt::darkRed, Qt::yellow, Qt::darkYellow
+        Qt::darkBlue, Qt::blue, Qt::cyan, Qt::darkCyan, Qt::green, Qt::darkGreen,
+        Qt::darkRed, Qt::red, Qt::yellow, Qt::darkYellow, Qt::darkMagenta
     };
 
     QwtPlotMultiBarChart* m_barChartItem = nullptr;

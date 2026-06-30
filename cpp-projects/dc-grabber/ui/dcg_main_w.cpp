@@ -226,7 +226,7 @@ auto DCGMainW::draw(geo::Pt2f size, DCGModel *model) -> void{
                     ImGuiUiDrawer::title("SETTINGS FILES");
                     ImGui::Spacing();
                     ImGuiUiDrawer::text(std::format("Current local ID [{}]", model->server.settings.idG));
-                    ImGuiUiDrawer::text_wrapped("Defined by the N value of the exe argument: \"-iN\", this id is used to determinewhich settings file to be loaded."sv, geo::Pt4f{0.5f,1.0f,0.5f,1.f});
+                    ImGuiUiDrawer::text_wrapped("Defined by the N value of the exe argument: \"-iN\", this id is used to determine which settings file to be loaded."sv, geo::Pt4f{0.5f,1.0f,0.5f,1.f});
                     ImGui::Separator();
                     ImGui::Spacing();
 

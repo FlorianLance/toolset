@@ -116,6 +116,12 @@ auto AzureKinectDeviceImpl::read_IMU(bool enable) -> void {
     }
 }
 
+auto AzureKinectDeviceImpl::enqueue_body_tracking(bool enable) -> void{
+    if(enable){
+        azureD->enqueue_body_tracking();
+    }
+}
+
 auto AzureKinectDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){

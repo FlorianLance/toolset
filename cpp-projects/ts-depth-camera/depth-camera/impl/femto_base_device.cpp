@@ -271,6 +271,7 @@ auto FemtoBaseDevice::Impl::k4a_convert_calibration(const DCModeInfos &mInfos, c
     k4Calibration.depth_mode       = convert_to_k4a_depth_mode(mInfos.depth_resolution());
     k4Calibration.color_resolution = convert_to_k4a_color_resolution(mInfos.color_resolution());
 
+
     // depth calibration
     auto &cdepthCamCal              = k4Calibration.depth_camera_calibration;
     // # resolutions
@@ -956,7 +957,7 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
 
 
         if((dc_depth_resolution(configS.mode) != DCDepthResolution::OFF) && configS.btEnabled){
-            Log::message("[OrbbecBaseDevice::start_device] Start body tracker\n");
+            Log::fmessage("[OrbbecBaseDevice::start_device] Start body tracker [{}]\n", configS.btTemporalSmoothing);
 
             i->k4aBtConfig.gpu_device_id       = configS.btGPUId;
             i->k4aBtConfig.processing_mode     = convert_to_k4a_body_tracking_processing_mode(configS.btProcessingMode);
@@ -964,7 +965,7 @@ auto FemtoBaseDevice::initialize(const DCModeInfos &mInfos, const DCConfigSettin
             i->k4aBtConfig.model_path          = nullptr;
 
             i->bodyTracker = std::make_unique<k4abt::tracker>(k4abt::tracker::create(i->k4aCalibration, i->k4aBtConfig));
-            // i->bodyTracker->set_temporal_smoothing(dataS.capture.btTemporalSmoothing);
+            i->bodyTracker->set_temporal_smoothing(configS.btTemporalSmoothing);
         }
 
     }catch(ob::Error &e) {
@@ -1163,10 +1164,10 @@ auto FemtoBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
     return {};
 }
 
-auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
+auto FemtoBaseDevice::enqueue_body_tracking() -> void{
 
     if(i->bodyTracker == nullptr || i->depthImage == nullptr || i->infraredImage == nullptr){
-        return {};
+        return;
     }
 
     try{
@@ -1180,7 +1181,7 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
             i->depthImage->dataSize(),
             nullptr,
             nullptr
-        );
+            );
 
         k4a::image k4IRImage = k4a::image::create_from_buffer(
             K4A_IMAGE_FORMAT_DEPTH16,
@@ -1191,7 +1192,7 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
             i->infraredImage->dataSize(),
             nullptr,
             nullptr
-        );
+            );
 
         if(i->bodyCapture == nullptr){
             k4a_capture_t bodyCaptureH = nullptr;
@@ -1202,11 +1203,60 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
         i->bodyCapture.set_depth_image(k4DepthImage);
         i->bodyCapture.set_ir_image(k4IRImage);
 
-        if(!i->bodyTracker->enqueue_capture(i->bodyCapture, std::chrono::milliseconds(1))){
-            return {};
-        }
+        i->bodyTracker->enqueue_capture(i->bodyCapture, std::chrono::milliseconds(0));
 
-        if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+    }  catch (k4a::error error) {
+        Log::error(std::format("[OrbbecBaseDevice::enqueue_body_tracking] error: {}\n", error.what()));
+    }  catch (std::runtime_error error) {
+        Log::error(std::format("[OrbbecBaseDevice::enqueue_body_tracking] error: {}\n", error.what()));
+    }
+
+}
+
+auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std::span<DCBody> >{
+
+    if(i->bodyTracker == nullptr || i->depthImage == nullptr || i->infraredImage == nullptr){
+        return {};
+    }
+
+    // try{
+
+        // k4a::image k4DepthImage = k4a::image::create_from_buffer(
+        //     K4A_IMAGE_FORMAT_DEPTH16,
+        //     i->depthImage->width(),
+        //     i->depthImage->height(),
+        //     i->depthImage->width()*sizeof(std::uint16_t),
+        //     reinterpret_cast<std::uint8_t*>(i->depthImage->data()),
+        //     i->depthImage->dataSize(),
+        //     nullptr,
+        //     nullptr
+        // );
+
+        // k4a::image k4IRImage = k4a::image::create_from_buffer(
+        //     K4A_IMAGE_FORMAT_DEPTH16,
+        //     i->infraredImage->width(),
+        //     i->infraredImage->height(),
+        //     i->infraredImage->width()*sizeof(std::uint16_t),
+        //     reinterpret_cast<std::uint8_t*>(i->infraredImage.get()->data()),
+        //     i->infraredImage->dataSize(),
+        //     nullptr,
+        //     nullptr
+        // );
+
+        // if(i->bodyCapture == nullptr){
+        //     k4a_capture_t bodyCaptureH = nullptr;
+        //     k4a_capture_create(&bodyCaptureH);
+        //     i->bodyCapture = k4a::capture(bodyCaptureH);
+        // }
+
+        // i->bodyCapture.set_depth_image(k4DepthImage);
+        // i->bodyCapture.set_ir_image(k4IRImage);
+
+        // if(!i->bodyTracker->enqueue_capture(i->bodyCapture, std::chrono::milliseconds(1))){
+        //     return {};
+        // }
+
+        if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(0)); bodyFrame != nullptr){
 
             auto bodiesCount = bodyFrame.get_num_bodies();
             i->bodies.resize(bodiesCount);
@@ -1233,11 +1283,11 @@ auto FemtoBaseDevice::read_body_tracking() -> std::tuple<std::span<uint8_t>, std
             return std::make_tuple(biISpan, std::span<DCBody>{i->bodies});
         }
 
-    }  catch (k4a::error error) {
-        Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
-    }  catch (std::runtime_error error) {
-        Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
-    }
+    // }  catch (k4a::error error) {
+    //     Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
+    // }  catch (std::runtime_error error) {
+    //     Log::error(std::format("[OrbbecBaseDevice::read_bodies] error: {}\n", error.what()));
+    // }
 
     return {{},{}};
 }

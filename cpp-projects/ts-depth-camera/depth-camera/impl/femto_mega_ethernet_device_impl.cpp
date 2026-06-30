@@ -137,6 +137,12 @@ auto FemtoMegaEthernetDeviceImpl::read_IMU(bool enable) -> void {
     }
 }
 
+auto FemtoMegaEthernetDeviceImpl::enqueue_body_tracking(bool enable) -> void{
+    if(enable){
+        orbbecD->enqueue_body_tracking();
+    }
+}
+
 auto FemtoMegaEthernetDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){

@@ -187,6 +187,14 @@ auto DCClientExport::is_device_connected(size_t idD) const noexcept -> bool{
     return client.device_connected(idD);
 }
 
+auto DCClientExport::current_frame_total_cloud_size() -> size_t{
+    size_t total = 0;
+    for(size_t idD = 0; idD < devices_nb(); idD++){
+        total = current_frame_cloud_size(idD);
+    }
+    return total;
+}
+
 auto DCClientExport::apply_device_settings(size_t idD) -> void{
     client.apply_device_settings(idD);
     dll_log_message(std::format("[G{}][Config]\n{}", idD, client.settings.devicesS[idD].deviceS.configS.convert_to_json_str()));
@@ -347,6 +355,33 @@ auto DCClientExport::get_closest_cloud_point(const geo::Pt3f &origin, const geo:
     return {closestPoint, minDist};
 }
 
+auto DCClientExport::copy_current_frame_vertices(
+    size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors,bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> size_t{
+
+    if(auto frame = current_frame(idD); frame != nullptr){
+
+        if(auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+
+            auto verticesCountToCopy = std::min(cloud->size(), positions.size());
+            auto tr = device_model(idD);
+
+            if(applyModelTransform){
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    positions[id] = invert_axis(geo::Pt3f(tr.multiply_point(to_pt4(cloud->vertices[id], 1.f)).xyz()), invertX, invertY, invertZ);
+                    colors[id]    = cloud->colors[id];
+                });
+            }else{
+                std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
+                    positions[id] = invert_axis(cloud->vertices[id], invertX, invertY, invertZ);
+                    colors[id]    = cloud->colors[id];
+                });
+            }
+            return verticesCountToCopy;
+        }
+    }
+    return 0;
+}
+
 
 auto DCClientExport::copy_current_frame_vertices(
     size_t idD, std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, std::span<geo::Pt3f> normals, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> size_t{
@@ -362,13 +397,13 @@ auto DCClientExport::copy_current_frame_vertices(
                 std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                     positions[id] = invert_axis(geo::Pt3f(tr.multiply_point(to_pt4(cloud->vertices[id], 1.f)).xyz()), invertX, invertY, invertZ);
                     colors[id]    = cloud->colors[id];
-                    // normals[id]   = invert_axis(geo::Vec3f(normalize(tr.multiply_vector(to_pt4(cloud->normals[id],1.f)).xyz())), invertX, invertY, invertZ);
+                    normals[id]   = invert_axis(geo::Vec3f(normalize(tr.multiply_vector(to_pt4(cloud->normals[id],1.f)).xyz())), invertX, invertY, invertZ);
                 });
             }else{
                 std::for_each(std::execution::par_unseq, std::begin(ids), std::begin(ids) + verticesCountToCopy, [&](size_t id){
                     positions[id] = invert_axis(cloud->vertices[id], invertX, invertY, invertZ);
                     colors[id]    = cloud->colors[id];
-                    // normals[id]   = invert_axis(cloud->normals[id], invertX, invertY, invertZ);
+                    normals[id]   = invert_axis(cloud->normals[id], invertX, invertY, invertZ);
                 });
             }
             return verticesCountToCopy;
@@ -377,42 +412,132 @@ auto DCClientExport::copy_current_frame_vertices(
     return 0;
 }
 
-auto DCClientExport::copy_body_tracking(int idD, int idBody, DCJointType jointType, float *data, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> int{
+auto DCClientExport::copy_current_frame_vertices(std::span<geo::Pt3f> positions, std::span<geo::Pt3f> colors, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> void{
 
-    if(idD < framesToDisplay.size()){
+    size_t nbDevices = devices_nb();
+    std::vector<size_t> startId;
+    size_t count = 0;
+    for(size_t idD = 0; idD < nbDevices; ++idD){
+        startId.push_back(count);
+        count += current_frame_cloud_size(idD);
+    }
 
-        if(auto bodiesSkeleton = framesToDisplay[idD]->data_buffer(cam::DCDataBufferType::BodiesSkeleton)){
+    std::vector<size_t> idDevices;
+    idDevices.resize(nbDevices);
+    std::iota(idDevices.begin(),idDevices.end(), 0);
+
+    std::for_each(std::execution::par_unseq, std::begin(idDevices), std::end(idDevices), [&](size_t idD){
+        size_t currentId = startId[idD];
+        if(auto frame = current_frame(idD); frame != nullptr){
+            if(auto cloud = frame->volume_buffer<ColorCloud>(DCVolumeBufferType::ColoredCloud)){
+                auto verticesCountToCopy = std::min(cloud->size(), positions.size());
+                auto tr = device_model(idD);
+                if(applyModelTransform){
+                    for(size_t idV = 0; idV < verticesCountToCopy; ++idV){
+                        positions[currentId + idV] = invert_axis(geo::Pt3f(tr.multiply_point(to_pt4(cloud->vertices[idV], 1.f)).xyz()), invertX, invertY, invertZ);
+                        colors[currentId + idV]    = cloud->colors[idV];
+                    }
+                }else{
+                    for(size_t idV = 0; idV < verticesCountToCopy; ++idV){
+                        positions[currentId + idV] = invert_axis(cloud->vertices[idV], invertX, invertY, invertZ);
+                        colors[currentId + idV]    = cloud->colors[idV];
+                    }
+                }               
+            }
+        }
+    });
+}
+
+auto DCClientExport::get_body_id_from_index(int idDevice, int index) -> int{
+
+    if(idDevice < framesToDisplay.size()){
+
+        // retrieve bodies corresponding to the wanted device
+        if(auto bodiesSkeleton = framesToDisplay[idDevice]->data_buffer(cam::DCDataBufferType::BodiesSkeleton)){
             size_t nbBodies = bodiesSkeleton->size()/sizeof(cam::DCBody);
-            if(idBody >= nbBodies){
+            if(index >= nbBodies){
                 return -1;
             }
 
-            auto tr = device_model(idD);
-            auto invertV = geo::Pt3f(invertX ? -1.f : 1.f, invertY ? -1.f : 1.f, invertZ ? -1.f : 1.f);
+            auto btData = reinterpret_cast<cam::DCBody*>(bodiesSkeleton->get_data());
+            return btData[index].id;
+        }
+    }
+    return -1;
+}
 
+auto DCClientExport::copy_body_tracking(int idDevice, int idBody, DCJointType jointType, float *outputData, bool applyModelTransform, bool invertX, bool invertY, bool invertZ) -> int{
+
+    if(idDevice < framesToDisplay.size()){
+
+        // retrieve bodies corresponding to the wanted device
+        if(auto bodiesSkeleton = framesToDisplay[idDevice]->data_buffer(cam::DCDataBufferType::BodiesSkeleton)){
+            size_t nbBodies = bodiesSkeleton->size()/sizeof(cam::DCBody);
+            // if(idBody >= nbBodies){
+            //     return -1;
+            // }
+
+            auto tr = device_model(idDevice);
+
+            // retrieve skeletons data
             auto btData = reinterpret_cast<cam::DCBody*>(bodiesSkeleton->get_data());
 
-            const auto &j = btData[idBody].skeleton.joints[static_cast<int>(jointType)];
+            // retrieve skeleton corresponding to the wanted body id
+            DCSkeleton *skeleton = nullptr;
+            for(size_t idB = 0; idB < nbBodies; ++idB){
+                if(btData[idB].id == idBody){
+                    skeleton = &btData[idB].skeleton;
+                    break;
+                }
+            }
+            if(skeleton == nullptr){
+                return -1;
+            }
+
+            // retrieve joint coordinates in correct referential
+            // TODO: check euler
+            const auto &j = skeleton->joints[static_cast<int>(jointType)];
             auto eulerRot = euler_angles(j.orientation)*d180_PI<float>;
 
             if(applyModelTransform){
-                auto trPt = tr.multiply_point(geo::Pt4f{j.position.x(), j.position.y(), j.position.z(), 1.f}).xyz();
-                data[0] = trPt.x() * invertV.x();
-                data[1] = trPt.y() * invertV.y();
-                data[2] = trPt.z() * invertV.z();
 
-                auto trRot = normalize(tr.multiply_vector(geo::Pt4f{eulerRot.x(), eulerRot.y(), eulerRot.z(), 1.f}).xyz());
-                data[3] = trRot.x() * invertV.x();
-                data[4] = trRot.y() * invertV.y();
-                data[5] = trRot.z() * invertV.z();
+                auto trPt = invert_axis(geo::Pt3f(tr.multiply_point(geo::Pt4f{0.001f*j.position.x(), 0.001f*j.position.y(), 0.001f*j.position.z(), 1.f}).xyz()), invertX, invertY, invertZ);
+                outputData[0] = trPt.x();
+                outputData[1] = trPt.y();
+                outputData[2] = trPt.z();
+
+                // auto trPt = tr.multiply_point(geo::Pt4f{j.position.x(), j.position.y(), j.position.z(), 1.f}).xyz();
+                // data[0] = trPt.x() * invertV.x();
+                // data[1] = trPt.y() * invertV.y();
+                // data[2] = trPt.z() * invertV.z();
+
+                auto trRot = invert_axis(geo::Pt3f(normalize(tr.multiply_vector(geo::Pt4f{eulerRot.x(), eulerRot.y(), eulerRot.z(), 1.f}).xyz())), invertX, invertY, invertZ);
+                outputData[3] = trRot.x();
+                outputData[4] = trRot.y();
+                outputData[5] = trRot.z();
+
+                // auto trRot = normalize(tr.multiply_vector(geo::Pt4f{eulerRot.x(), eulerRot.y(), eulerRot.z(), 1.f}).xyz());
+                // data[3] = trRot.x() * invertV.x();
+                // data[4] = trRot.y() * invertV.y();
+                // data[5] = trRot.z() * invertV.z();
             }else{
-                data[0] = j.position.x() * invertV.x();
-                data[1] = j.position.y() * invertV.y();
-                data[2] = j.position.z() * invertV.z();
+                auto trPt = invert_axis(geo::Pt3f{j.position.x(),j.position.y(),j.position.z()}, invertX, invertY, invertZ);
+                outputData[0] = trPt.x();
+                outputData[1] = trPt.y();
+                outputData[2] = trPt.z();
 
-                data[3] = eulerRot.x() * invertV.x();
-                data[4] = eulerRot.y() * invertV.y();
-                data[5] = eulerRot.z() * invertV.z();
+                // data[0] = j.position.x() * invertV.x();
+                // data[1] = j.position.y() * invertV.y();
+                // data[2] = j.position.z() * invertV.z();
+
+                auto trRot = invert_axis(geo::Pt3f(eulerRot.x(), eulerRot.y(), eulerRot.z()), invertX, invertY, invertZ);
+                outputData[3] = trRot.x();
+                outputData[4] = trRot.y();
+                outputData[5] = trRot.z();
+
+                // data[3] = eulerRot.x() * invertV.x();
+                // data[4] = eulerRot.y() * invertV.y();
+                // data[5] = eulerRot.z() * invertV.z();
             }
 
             return static_cast<int>(j.confidence);
@@ -514,18 +639,22 @@ void copy_transform__dc_client_export(DCClientExport *dcCE, int idD, float *tran
     std::copy(transform.array.begin(), transform.array.end(), transformData);
 }
 
+int get_body_id_from_index__dc_client_export(tool::cam::DCClientExport *dcCE, int idDevice, int index){
+    return dcCE->get_body_id_from_index(idDevice, index);
+}
+
 int copy_body_tracking__dc_client_export(tool::cam::DCClientExport *dcCE, int idD, int idBody, int jointType, float* data,
     int applyModelTransform, int invertX, int invertY, int invertZ){
     return dcCE->copy_body_tracking(idD, idBody, static_cast<DCJointType>(jointType), data, applyModelTransform == 1, invertX == 1, invertY == 1, invertZ == 1);
 }
-int has_body__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, int idBody){
-    if(idD < dcClientExport->framesToDisplay.size()){
-        if(dcClientExport->framesToDisplay[idD] != nullptr){
-            return dcClientExport->framesToDisplay[idD]->datasB.contains(tool::cam::DCDataBufferType::BodiesSkeleton) ? 1 : 0;
-        }
-    }
-    return 0;
-}
+// int has_body__dc_client_export(tool::cam::DCClientExport *dcClientExport, int idD, int idBody){
+//     if(idD < dcClientExport->framesToDisplay.size()){
+//         if(dcClientExport->framesToDisplay[idD] != nullptr){
+//             return dcClientExport->framesToDisplay[idD]->datasB.contains(tool::cam::DCDataBufferType::BodiesSkeleton) ? 1 : 0;
+//         }
+//     }
+//     return 0;
+// }
 
 int copy_current_frame_vertices__dc_client_export(DCClientExport *dcCE, int idD, DCVertexMeshData *vertices, int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ){
     return static_cast<int>(dcCE->copy_current_frame_vertices(
@@ -533,16 +662,47 @@ int copy_current_frame_vertices__dc_client_export(DCClientExport *dcCE, int idD,
         applyModelTransform == 1, invertX == 1, invertY == 1, invertZ == 1)
     );
 }
+
+
+DECL_EXPORT int copy_current_frame_vertices_vfx__dc_client_export2(
+    tool::cam::DCClientExport *dcCE,
+    tool::geo::Pt3f *positions, tool::geo::Pt3f *colors,
+    int applyModelTransform, int invertX, int invertY, int invertZ
+    ){
+
+    size_t verticesCount = dcCE->current_frame_total_cloud_size();
+    dcCE->copy_current_frame_vertices(
+        std::span<tool::geo::Pt3f>(positions, verticesCount),
+        std::span<tool::geo::Pt3f>(colors, verticesCount),
+        applyModelTransform == 1, invertX == 1, invertY == 1, invertZ == 1
+    );
+
+    return verticesCount;
+}
+
+
+
 int copy_current_frame_vertices_vfx__dc_client_export(tool::cam::DCClientExport *dcCE, int idD,
-    tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ){
+                                                      tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ){
     return static_cast<int>(dcCE->copy_current_frame_vertices(
         idD,
         std::span<tool::geo::Pt3f>(positions, verticesCount),
         std::span<tool::geo::Pt3f>(colors, verticesCount),
-        std::span<tool::geo::Pt3f>(normals, verticesCount),
         applyModelTransform == 1, invertX == 1, invertY == 1, invertZ == 1
     ));
 }
+
+
+// int copy_current_frame_vertices_vfx__dc_client_export(tool::cam::DCClientExport *dcCE, int idD,
+//     tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform, int invertX, int invertY, int invertZ){
+//     return static_cast<int>(dcCE->copy_current_frame_vertices(
+//         idD,
+//         std::span<tool::geo::Pt3f>(positions, verticesCount),
+//         std::span<tool::geo::Pt3f>(colors, verticesCount),
+//         std::span<tool::geo::Pt3f>(normals, verticesCount),
+//         applyModelTransform == 1, invertX == 1, invertY == 1, invertZ == 1
+//     ));
+// }
 
 float get_closest_cloud_point__dc_client_export(
     tool::cam::DCClientExport *dcCE,

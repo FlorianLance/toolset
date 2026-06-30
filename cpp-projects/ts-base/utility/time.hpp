@@ -33,6 +33,9 @@ namespace tool{
 
 struct Time{
 
+    // If you are benchmarking code or building a timer → steady_clock.
+    // If you are printing a date or scheduling a calendar event → system_clock.
+
     [[nodiscard]] [[maybe_unused]] static auto nanoseconds_since_epoch() noexcept -> std::chrono::nanoseconds{
         using namespace std::chrono;
         return time_point<system_clock, nanoseconds>(system_clock::now()).time_since_epoch();

@@ -30,7 +30,6 @@
 // std
 #include <concepts>
 #include <numeric>
-#include <cmath>
 
 // local
 #include "buffer.hpp"

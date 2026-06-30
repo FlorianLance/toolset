@@ -29,7 +29,7 @@
 using namespace tool::ex;
 
 ExCheckBoxW::ExCheckBoxW(QString name) : ExItemW<QCheckBox>(UiType::Check_box, name){
-    connect(w.get(), &QCheckBox::stateChanged, this, [=]{trigger_ui_change();});
+    connect(w.get(), &QCheckBox::checkStateChanged, this, [=]{trigger_ui_change();});
 }
 
 ExCheckBoxW *ExCheckBoxW::init_widget(QString txt, bool checked, bool enabled){

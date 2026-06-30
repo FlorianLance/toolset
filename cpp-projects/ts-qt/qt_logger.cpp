@@ -61,13 +61,14 @@ struct QtLoggerM::Impl{
         bool saveToFile;
         bool addTimestampToHtml;
         QString color;
+        bool triggerRawSignals;
     };
     std::unordered_map<MessageType, Config> mTypeConfig = {
-        {MessageType::normal,   Config{true,  true, true, true,  false, u"DarkBlue"_s}},
-        {MessageType::error,    Config{true,  true, true, true,  true,  u"Orange"_s}},
-        {MessageType::warning,  Config{true,  true, true, true,  true,  u"DarkRed"_s}},
-        {MessageType::log,      Config{false, false,true, true,  true,  u"LightGrey"_s}},
-        {MessageType::unknow,   Config{false, false,false,false, false, u"Black"_s}},
+        {MessageType::normal,   Config{true,  true, true, true,  false, u"DarkBlue"_s, false}},
+        {MessageType::error,    Config{true,  true, true, true,  true,  u"Orange"_s, false}},
+        {MessageType::warning,  Config{true,  true, true, true,  true,  u"DarkRed"_s, false}},
+        {MessageType::log,      Config{false, false,true, true,  true,  u"LightGrey"_s, false}},
+        {MessageType::unknow,   Config{false, false,false,false, false, u"Black"_s, false}},
     };
 
     Impl(){}
@@ -192,6 +193,10 @@ auto QtLoggerM::message(QStringView message) -> void{
                 emit message_signal(message.toString());
             }
         }
+
+        if(conf.triggerRawSignals){
+            emit raw_message_signal(message.toString());
+        }
     }
 }
 
@@ -218,6 +223,10 @@ auto QtLoggerM::warning(QStringView warning) -> void{
             if(conf.triggerSignals){
                 emit warning_signal(warning.toString());
             }
+        }
+
+        if(conf.triggerRawSignals){
+            emit raw_warning_signal(warning.toString());
         }
     }
 }
@@ -246,6 +255,10 @@ auto QtLoggerM::error(QStringView error) -> void{
                 emit error_signal(error.toString());
             }
         }
+
+        if(conf.triggerRawSignals){
+            emit raw_error_signal(error.toString());
+        }
     }
 }
 
@@ -270,6 +283,10 @@ auto QtLoggerM::log(QStringView log) -> void{
                 emit log_signal(log.toString());
             }
         }
+
+        if(conf.triggerRawSignals){
+            emit raw_log_signal(log.toString());
+        }
     }
 }
 
@@ -286,6 +303,16 @@ auto QtLoggerM::log_title(QStringView log, int level) -> void{
             emit log_signal(log.toString());
         }
     }
+}
+
+auto QtLoggerM::set_raw_triggering_state(MessageType type, bool state) -> void{
+    auto &conf = i->mTypeConfig[type];
+    conf.triggerRawSignals = state;
+}
+
+auto QtLoggerM::set_html_formating_state(MessageType type, bool state) -> void{
+    auto &conf = i->mTypeConfig[type];
+    conf.formatToHtml = state;
 }
 
 auto QtLoggerM::set_type_color(MessageType type, const QColor &color) -> void{

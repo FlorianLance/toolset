@@ -159,12 +159,20 @@ int copy_voxels_cloud_vfx__dc_video_player(tool::cam::DCVideoPlayer *dcPlayer, t
         std::span<tool::geo::Pt3f>(colors, verticesCount)
     ));
 }
-int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform){
+// int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, tool::geo::Pt3f *normals, int verticesCount, int applyModelTransform){
+//     return static_cast<int>(dcPlayer->copy_current_cloud(
+//         idCamera,
+//         std::span<tool::geo::Pt3f>(positions, verticesCount),
+//         std::span<tool::geo::Pt3f>(colors, verticesCount),
+//         std::span<tool::geo::Pt3f>(normals, verticesCount),
+//         applyModelTransform == 1
+//     ));
+// }
+int copy_camera_cloud_vfx__dc_video_player(DCVideoPlayer *dcPlayer, int idCamera, tool::geo::Pt3f *positions, tool::geo::Pt3f *colors, int verticesCount, int applyModelTransform){
     return static_cast<int>(dcPlayer->copy_current_cloud(
         idCamera,
         std::span<tool::geo::Pt3f>(positions, verticesCount),
         std::span<tool::geo::Pt3f>(colors, verticesCount),
-        std::span<tool::geo::Pt3f>(normals, verticesCount),
         applyModelTransform == 1
     ));
 }

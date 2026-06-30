@@ -29,6 +29,7 @@
 // std
 #include <memory>
 #include <string>
+#include <format>
 
 // sigslot
 #include <sigslot/signal.hpp>

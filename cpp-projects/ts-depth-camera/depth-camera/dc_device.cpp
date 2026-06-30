@@ -108,8 +108,6 @@ struct DCDevice::Impl{
 
     // test
     // std::vector<DeviceAction> localActions;
-
-
 };
 
 DCDevice::DCDevice() : i(std::make_unique<Impl>()){
@@ -417,6 +415,7 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
             (newConfigS.btGPUId                         != currConfigS.btGPUId) ||
             (newConfigS.btOrientation                   != currConfigS.btOrientation) ||
             (newConfigS.btProcessingMode                != currConfigS.btProcessingMode) ||
+            (newConfigS.btTemporalSmoothing             != currConfigS.btTemporalSmoothing) ||
             // others
             (newConfigS.disableLED                      != currConfigS.disableLED) ||
             // color - depth calibration

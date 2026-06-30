@@ -112,6 +112,12 @@ auto FemtoMegaUSBDeviceImpl::read_IMU(bool enable) -> void {
     }
 }
 
+auto FemtoMegaUSBDeviceImpl::enqueue_body_tracking(bool enable) -> void{
+    if(enable){
+        orbbecD->enqueue_body_tracking();
+    }
+}
+
 auto FemtoMegaUSBDeviceImpl::read_body_tracking(bool enable) -> void{
 
     if(enable){

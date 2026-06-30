@@ -118,10 +118,24 @@
                     },
                     "connection_type": "Remote",
                     "id_reading_interface": 0,
+                    "max_udp_packet_size": 9000,
                     "protocol": "ipv4",
+                    "reading_ipv4_0": 192,
+                    "reading_ipv4_1": 168,
+                    "reading_ipv4_2": 0,
+                    "reading_ipv4_3": 1,
+                    "reading_ipv6_0": "",
+                    "reading_ipv6_1": "",
+                    "reading_ipv6_2": "",
+                    "reading_ipv6_3": "",
+                    "reading_ipv6_4": "",
+                    "reading_ipv6_5": "",
+                    "reading_ipv6_6": "",
+                    "reading_ipv6_7": "",
                     "reading_port": 8889,
                     "sending_address": "localhost",
-                    "sending_port": 8888
+                    "sending_port": 8888,
+                    "use_specific_reading_ip_address": false
                 },
                 "device": {
                     "base": {
@@ -134,7 +148,7 @@
                             "version": 1
                         },
                         "bt_GPU_id": 0,
-                        "bt_enabled": false,
+                        "bt_enabled": true,
                         "bt_orientation": 0,
                         "bt_processing_mode": 4,
                         "color_alignment_rot": [
@@ -149,7 +163,7 @@
                         ],
                         "delay_between_color_and_depth_usec": 0,
                         "disable_LED": false,
-                        "enable_ir_stream": false,
+                        "enable_ir_stream": true,
                         "id_device": 0,
                         "ipv4_address_1": 192,
                         "ipv4_address_2": 168,
@@ -172,7 +186,7 @@
                         },
                         "c_generation": {
                             "bodies_id_image": false,
-                            "bodies_skeleton": false,
+                            "bodies_skeleton": true,
                             "cloud": true,
                             "cloud_color_mode": 1,
                             "color_image": false,
@@ -182,11 +196,11 @@
                         },
                         "s_capture": {
                             "audio": false,
-                            "body_tracking": false,
+                            "body_tracking": true,
                             "color": true,
                             "depth": true,
                             "imu": false,
-                            "infra": false
+                            "infra": true
                         },
                         "s_generation": {
                             "bodies_id_image": false,
@@ -202,7 +216,7 @@
                             "audio": false,
                             "bodies_id": false,
                             "bodies_id_compression_mode": 0,
-                            "bodies_skeleton": false,
+                            "bodies_skeleton": true,
                             "cloud": false,
                             "cloud_color_mode": 1,
                             "cloud_compression_mode": 2,
@@ -313,19 +327,19 @@
                         "version": 1
                     },
                     "transformation": [
-                        1.0,
+                        0.7209739685058594,
+                        -0.5199664235115051,
+                        0.4580737054347992,
                         0.0,
+                        0.4388762414455414,
+                        0.8541867136955261,
+                        0.2788417935371399,
                         0.0,
+                        -0.5362688302993774,
                         0.0,
+                        0.8440472483634949,
                         0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
+                        1.0230000019073486,
                         0.0,
                         0.0,
                         1.0

@@ -27,6 +27,7 @@
 
 #include <QApplication>
 #include <QTabWidget>
+#include <QLoggingCategory>
 
 // qwt
 #include <qwt_thermo.h>
@@ -86,22 +87,7 @@ using namespace Qt::Literals::StringLiterals;
 // }
 
 
-
-
-auto main(int argc, char *argv[]) -> int{
-
-    QApplication a(argc, argv);
-    QLocale::setDefault(QLocale::c());
-
-    QtLoggerM::set_logger_instance(std::make_unique<QtLoggerM>());
-    auto logger = QtLoggerM::get_instance();
-    logger->init(u""_s,u""_s);
-    QObject::connect(logger, &QtLoggerM::message_signal, [&](QString message){
-        qDebug() << "M " << message;
-    });
-
-    QtLog::message(QSL("Qt-utility"));
-
+auto graphs_tests() -> void{
     // QWidget *w = new QWidget();
     // w->resize(1920,1080);
     // w->show();
@@ -180,6 +166,83 @@ auto main(int argc, char *argv[]) -> int{
     }
 
     tw->show();
+
+}
+
+#include <QBluetoothPermission>
+#include <QMessageBox>
+#include <QBluetoothDeviceInfo>
+#include <QBluetoothLocalDevice>
+#include <QBluetoothUuid>
+
+using namespace Qt::StringLiterals;
+
+// https://doc.qt.io/qt-6/qtbluetooth-btchat-example.html
+auto bluethooth_test() -> void{
+
+    QBluetoothPermission permission{};
+    switch (qApp->checkPermission(permission)) {
+    case Qt::PermissionStatus::Undetermined:
+        // qApp->requestPermission(permission, this, &Chat::initBluetooth);
+        qDebug() << "Undetermined";
+        return;
+    case Qt::PermissionStatus::Denied:
+        // QMessageBox::warning(this, tr("Missing permissions"),
+        //                      tr("Permissions are needed to use Bluetooth. "
+        //                         "Please grant the permissions to this "
+        //                         "application in the system settings."));
+        qDebug() << "denied";
+        qApp->quit();
+        return;
+    case Qt::PermissionStatus::Granted:
+        qDebug() << "granted";
+        break; // proceed to initialization
+    }
+
+    auto localAdapters = QBluetoothLocalDevice::allDevices();
+    qDebug() << "localAdapters: " << localAdapters.size();
+    for(const auto &adapter : localAdapters){
+        qDebug() << adapter.name() << adapter.name();
+    }
+
+    // make discoverable
+    if (!localAdapters.isEmpty()) {
+        QBluetoothLocalDevice adapter(localAdapters.at(0).address());
+        adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+    } else {
+        qWarning("Local adapter is not found! The application might work incorrectly.");
+    }
+
+}
+
+
+auto main(int argc, char *argv[]) -> int{
+
+    QApplication a(argc, argv);
+    QLocale::setDefault(QLocale::c());
+
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
+    QtLoggerM::set_logger_instance(std::make_unique<QtLoggerM>());
+    auto logger = QtLoggerM::get_instance();
+    logger->init(u""_s,u""_s);
+    QObject::connect(logger, &QtLoggerM::message_signal, [&](QString message){
+        qDebug() << "M " << message;
+    });
+
+    QtLog::message(QSL("Qt-utility"));
+
+    auto localAdapters = QBluetoothLocalDevice::allDevices();
+    qDebug() << "localAdapters: " << localAdapters.size();
+    for(const auto &adapter : localAdapters){
+        qDebug() << adapter.name() << adapter.name();
+    }
+
+    // qDebug() << "generate bt server";
+    // BtServer btServer;
+    // btServer.start_server(localAdapters[0].address());
+
+    // bluethooth_test();
 
     return a.exec();
 }

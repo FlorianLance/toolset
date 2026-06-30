@@ -243,7 +243,7 @@ auto create_device(int deviceId ) -> void{
                     if(buffer[jj].z() > 0){
                         geo::Pt3f currentP = buffer[jj].template conv<float>();
                         geo::Pt3f col = (cBuffer[jj].template conv<float>()).xyz();
-                        cc.vertices.push_back({currentP * 0.001f, });
+                        cc.vertices.push_back(currentP * 0.001f);
                         cc.colors.push_back(col);
                     }
                 }

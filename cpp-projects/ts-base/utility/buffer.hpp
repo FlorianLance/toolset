@@ -30,6 +30,7 @@
 #include <vector>
 #include <algorithm>
 #include <span>
+#include <cmath>
 
 namespace tool {
 
@@ -168,34 +169,30 @@ struct Buffer{
 
 
     // add
-    constexpr auto push_back(const Elem &v)                     -> void {values.push_back(v);}
-    constexpr auto push_back(Elem &&nValue)                     -> void {values.push_back(std::move(nValue));}
-    template <typename ...ElementsType>
-    constexpr auto push_back(const ElementsType&... nValues)    -> void {(values.push_back(std::forward(nValues)), ...);}
-    template <typename ...ElementsType>
-    constexpr auto push_back(ElementsType&&... nValue)          -> void {(values.push_back(std::move(nValue)), ...);}
-    template <class... _Valty>
-    constexpr auto emplace_back(_Valty&&... _Val)               -> void{values.emplace_back(std::move(_Val)...);}
-
-    constexpr auto push_front(const Elem &v) -> void{
-        values.push_back(v);
-        std::rotate(rbegin(), rbegin() + 1, rend());
+    template <typename... Args>
+    constexpr auto push_back(Args&&... nValues) {
+        values.push_back(std::forward<Args>(nValues)...);
     }
-    constexpr auto push_front(Elem &&nValue) -> void{
-        values.push_back(std::move(nValue));
+
+    template <typename... Args>
+    constexpr auto emplace_back(Args&&... nValues) {
+        values.emplace_back(std::forward<Args>(nValues)...);
+    }
+
+    template <typename Arg>
+    constexpr auto push_front(Arg &&nValue) -> void{
+        values.push_back(std::forward<Arg>(nValue));
         std::rotate(rbegin(), rbegin() + 1, rend());
     }
 
-    constexpr auto insert_at(size_t id, const Elem &nValue) -> void{
+    template <typename Arg>
+    constexpr auto insert_at(size_t id, Arg &&nValue) -> void{
         if(id <= values.size()){
-            values.insert(values.begin() + id, nValue);
+            values.insert(begin() + id, std::forward<Arg>(nValue));
         }
     }
-    constexpr auto insert_at(size_t id, Elem &&nValue) -> void{
-        if(id <= values.size()){
-            values.insert(begin() + id, std::move(nValue));
-        }
-    }
+
+
 
     constexpr auto merge(const Buffer &valuesToMerge) noexcept -> void{
 
@@ -331,6 +328,37 @@ struct Buffer{
         if(size() > maxSize && newSize < maxSize){
             remove_from_to(0, size() - newSize);
         }
+    }
+
+    constexpr auto mirror_values_both_sides(size_t periodSize, size_t nbPeriodsMirroring) -> void{
+
+        size_t currentSize     = size();
+        size_t currentDuration = currentSize / periodSize;
+
+        if(currentDuration >= nbPeriodsMirroring){
+            size_t paddingSize = nbPeriodsMirroring * periodSize;
+            values.reserve(currentSize + paddingSize * 2);
+            values.insert(end(),    rbegin(),   rbegin() + paddingSize);
+            values.insert(begin(),  begin(),    begin()  + paddingSize);
+            std::reverse(begin(), begin() + paddingSize);
+        }else{
+
+            int multiplier = std::ceil(1.0 * nbPeriodsMirroring / currentDuration);
+            values.reserve(currentSize + currentSize * multiplier*2);
+            for(int id = 0; id < multiplier; ++id){
+                values.insert(end(),    rbegin(), rbegin() + currentSize);
+                values.insert(begin(),  rbegin(), rbegin() + currentSize);
+            }
+        }
+    }
+
+    constexpr auto remove_mirror_values_both_sides(size_t originalSize) -> void{
+        size_t sizePadding = size() - originalSize;
+        size_t oneSidePadding = sizePadding / 2;
+        remove_before(oneSidePadding);
+        resize(originalSize);
+        // values.erase(begin(), oneSidePadding);
+
     }
 
     // [[nodiscard]] constexpr auto sum() const noexcept -> Elem{

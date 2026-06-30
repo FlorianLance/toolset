@@ -1775,6 +1775,22 @@ auto DCUIDrawer::draw_dc_config(cam::DCConfigSettings &config) -> bool{
             update = true;
         }
 
+
+        ImGuiDragS dTempSmoothBt;
+        dTempSmoothBt.displayText = true;
+        dTempSmoothBt.widthDrag = 50;
+
+        ImGui::Text("Temporal smoothing (0.0-1.0):");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(75.f);
+        if(ImGui::DragFloat("###settings_temp_smoothing_body_tracking", &config.btTemporalSmoothing,0.01f,0.0f,1.0f)){
+            update = true;
+        }
+        // if(ImGuiUiDrawer::draw_drag_float_with_buttons("","###settings_temp_smoothing_body_tracking",
+        //     &config.btTemporalSmoothing, ImGuiFloatS{}, dTempSmoothBt)){
+        //     update = true;
+        // }
+
     // }ImGui::EndDisabled();
     ImGui::Unindent();
 

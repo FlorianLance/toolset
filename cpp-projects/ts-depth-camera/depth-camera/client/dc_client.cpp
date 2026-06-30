@@ -473,7 +473,7 @@ auto DCClient::update_calibration_filters_settings(size_t idC, const DCFiltersSe
 }
 
 auto DCClient::update_device_settings(size_t idC, const DCDeviceSettings &deviceS) -> void{
-    
+
     if(idC < devices_nb()){
         settings.devicesS[idC].deviceS = deviceS;
         apply_device_settings(idC);

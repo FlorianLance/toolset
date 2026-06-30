@@ -56,7 +56,7 @@ struct DCConfigSettings : Settings{
     DCBTSensorOrientation btOrientation = DCBTSensorOrientation::default_orientation;
     DCBTProcessingMode btProcessingMode = DCBTProcessingMode::GPU_DIRECTML;
     std::int8_t btGPUId = 0;
-    // float btTemporalSmoothing = 0.f;
+    float btTemporalSmoothing = 0.f;
     // misc
     bool disableLED = false;
     // color - depth calibration

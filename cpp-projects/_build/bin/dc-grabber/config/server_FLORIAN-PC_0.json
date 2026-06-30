@@ -103,7 +103,7 @@
     },
     "device": {
         "base": {
-            "type_string": "device",
+            "type_string": "undefined",
             "version": 1
         },
         "config": {
@@ -112,7 +112,7 @@
                 "version": 1
             },
             "bt_GPU_id": 0,
-            "bt_enabled": false,
+            "bt_enabled": true,
             "bt_orientation": 0,
             "bt_processing_mode": 4,
             "color_alignment_rot": [
@@ -127,7 +127,7 @@
             ],
             "delay_between_color_and_depth_usec": 0,
             "disable_LED": false,
-            "enable_ir_stream": false,
+            "enable_ir_stream": true,
             "id_device": 0,
             "ipv4_address_1": 192,
             "ipv4_address_2": 168,
@@ -150,7 +150,7 @@
             },
             "c_generation": {
                 "bodies_id_image": false,
-                "bodies_skeleton": false,
+                "bodies_skeleton": true,
                 "cloud": true,
                 "cloud_color_mode": 1,
                 "color_image": false,
@@ -160,27 +160,27 @@
             },
             "s_capture": {
                 "audio": false,
-                "body_tracking": false,
+                "body_tracking": true,
                 "color": true,
                 "depth": true,
                 "imu": false,
-                "infra": false
+                "infra": true
             },
             "s_generation": {
                 "bodies_id_image": false,
                 "bodies_skeleton": false,
-                "cloud": true,
+                "cloud": false,
                 "cloud_color_mode": 1,
                 "color_image": false,
                 "depth_image": false,
-                "depth_sized_color_image": true,
+                "depth_sized_color_image": false,
                 "infra_image": false
             },
             "s_sending": {
                 "audio": false,
                 "bodies_id": false,
                 "bodies_id_compression_mode": 0,
-                "bodies_skeleton": false,
+                "bodies_skeleton": true,
                 "cloud": false,
                 "cloud_color_mode": 1,
                 "cloud_compression_mode": 2,
@@ -315,14 +315,22 @@
             "type_string": "UDP server",
             "version": 1
         },
-        "id_interface": 0,
-        "ipv4_0": 192,
-        "ipv4_1": 168,
-        "ipv4_2": 0,
-        "ipv4_3": 2,
+        "id_reading_interface": 0,
         "max_udp_packet_size": 9000,
         "protocol": "ipv4",
+        "reading_ipv4_0": 192,
+        "reading_ipv4_1": 168,
+        "reading_ipv4_2": 0,
+        "reading_ipv4_3": 1,
+        "reading_ipv6_0": "",
+        "reading_ipv6_1": "",
+        "reading_ipv6_2": "",
+        "reading_ipv6_3": "",
+        "reading_ipv6_4": "",
+        "reading_ipv6_5": "",
+        "reading_ipv6_6": "",
+        "reading_ipv6_7": "",
         "reading_port": 8888,
-        "use_specific_ipv4_address": true
+        "use_specific_reading_ip_address": false
     }
 }

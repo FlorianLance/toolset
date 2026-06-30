@@ -77,7 +77,7 @@ auto DCVideo::clean() -> void{
 }
 
 auto DCVideo::add_device() -> void{
-    m_devicesDataFrames.push_back({});
+    m_devicesDataFrames.push_back(DCDataFrameBuffer{});
     m_devicesFrameGenerators.push_back(std::make_unique<DCFrameGenerator>());
     m_devicesTransforms.push_back(geo::Mat4d::identity());
 }

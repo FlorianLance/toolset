@@ -44,6 +44,8 @@ public:
     auto update() -> void;
     auto draw_ui(geo::Pt2f size) -> void;
 
+    auto set_minimized() -> void;
+
 private:
 
     std::unique_ptr<DCGView> view = nullptr;

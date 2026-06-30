@@ -40,11 +40,15 @@ using namespace cam;
 int main(int argc, char *argv[]){
 
     // check application arguments
+    bool minimized = false;
     std::optional<size_t> id = std::nullopt;
     for(int ii = 0; ii < argc; ++ii){
         std::string arg = argv[ii];
         if(arg.starts_with("-i")){
             id = std::stoi(arg.substr(2,1));
+        }
+        if(arg.starts_with("-m")){
+            minimized = true;
         }
     }
 
@@ -65,6 +69,9 @@ int main(int argc, char *argv[]){
     // init controller
     DCGController controller;
     if(controller.initialize(id.value())){
+        if(minimized){
+            controller.set_minimized();
+        }
         controller.start();
         Log::message("Exit DC grabber.\n"sv);
         return 1;

@@ -1,1 +1,1 @@
-guardian.exe dc-grabber.exe -i0
+guardian.exe dc-grabber.exe -i0 -m

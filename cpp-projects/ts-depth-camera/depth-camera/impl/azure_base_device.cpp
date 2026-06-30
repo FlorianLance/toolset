@@ -592,6 +592,8 @@ auto AzureBaseDevice::read_infra_image() -> std::span<std::uint16_t>{
     return {};
 }
 
+
+
 auto AzureBaseDevice::read_from_microphones() -> std::pair<size_t, std::span<float>> {
 
     // i->lastFrameCount = 0;
@@ -658,17 +660,32 @@ auto AzureBaseDevice::read_from_imu() -> BinarySpan{
     return {};
 }
 
-auto AzureBaseDevice::read_body_tracking() -> std::tuple<std::span<ColorGray8>, std::span<DCBody>>{
+auto AzureBaseDevice::enqueue_body_tracking() -> void{
 
     if(i->bodyTracker == nullptr){
-        return {};
+        return;
     }
 
-    if(!i->bodyTracker->enqueue_capture(*i->capture.get(), std::chrono::milliseconds(1))){
-        return {};
+    try{
+        i->bodyTracker->enqueue_capture(*i->capture.get(), std::chrono::milliseconds(0));
+    }  catch (k4a::error error) {
+        Log::error(std::format("[AzureBaseDevice::enqueue_body_tracking] error: {}\n", error.what()));
+    }  catch (std::runtime_error error) {
+        Log::error(std::format("[AzureBaseDevice::enqueue_body_tracking] error: {}\n", error.what()));
     }
+}
 
-    if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(1)); bodyFrame != nullptr){
+auto AzureBaseDevice::read_body_tracking() -> std::tuple<std::span<ColorGray8>, std::span<DCBody>>{
+
+    // if(i->bodyTracker == nullptr){
+    //     return {};
+    // }
+
+    // if(!i->bodyTracker->enqueue_capture(*i->capture.get(), std::chrono::milliseconds(1))){
+    //     return {};
+    // }
+
+    if(k4abt::frame bodyFrame = i->bodyTracker->pop_result(std::chrono::milliseconds(0)); bodyFrame != nullptr){
 
         auto bodiesCount = bodyFrame.get_num_bodies();
         if(i->bodies.size() < bodiesCount){

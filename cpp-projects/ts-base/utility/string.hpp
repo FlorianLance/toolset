@@ -65,4 +65,21 @@ struct str{
     static auto to_float(std::string_view str) -> float;
 
 };
+
+// auto replace_all(std::string &s, std::string_view what, std::string_view with){
+//     for (
+//         std::string::size_type pos{};
+//         s.npos != (pos = s.find(what.data(), pos, what.length()));
+//         pos += with.length()
+//         ){
+//         s.replace(pos, what.length(), with.data(), with.length());
+//     }
+//     return s;
+// }
+
+// auto contains(const std::string &s, const auto& value) -> bool{
+//     return s.find(value) != s.npos;
+// }
+
+
 }

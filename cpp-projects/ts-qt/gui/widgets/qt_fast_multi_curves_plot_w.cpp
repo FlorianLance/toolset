@@ -130,6 +130,7 @@ QtFastMultiCurvesPlotW::~QtFastMultiCurvesPlotW(){
     }
 }
 
+
 auto QtFastMultiCurvesPlotW::set_curves_colors(std::span<QColor> colors, bool update) -> void{
     // OK
     i->curvesColors.resize(colors.size());
@@ -206,26 +207,15 @@ auto QtFastMultiCurvesPlotW::set_curve_color(size_t idCurve, const QColor &color
     }
 }
 
-
-
-
-auto QtFastMultiCurvesPlotW::set_curve_points(size_t idCurve, const std::span<const double> x, const std::span<const double> y) -> void{
-
-//        # update fft and eeg curves
-//             with self._gui_lock:
-//                 eeg_channel_height = self._eeg_channel_height
-//             if eeg_channel_height == 0.0:
-//                 eeg_channel_height = self._eeg_data.max() - self._eeg_data.min()
-
-//             with self._eeg_lock:
-//                 for c in range(0, len(eeg_lines)):
-//                     eeg_lines[c].set_ydata(
-//                         self._eeg_data[c] / eeg_channel_height
-//                         + float(self._channels - c)
-//                     )
-
+auto QtFastMultiCurvesPlotW::set_curve_points(size_t idCurve, std::span<const double> x, std::span<const double> y) -> void{
 
     if(idCurve >= i->curves.size()){
+        return;
+    }
+
+    if(x.empty() || y.empty()){
+        i->curves[idCurve]->setSamples({});
+        replot();
         return;
     }
 
@@ -294,6 +284,16 @@ auto QtFastMultiCurvesPlotW::set_nb_curves(size_t nbCurves, bool update) -> void
 
     if(update){
         update_curves_info();
+    }
+}
+
+auto QtFastMultiCurvesPlotW::reset_all_curves(bool update) -> void{
+
+    for(size_t idCurve = 0; idCurve < i->curves.size(); ++idCurve){
+        i->curves[idCurve]->setSamples({});
+    }
+    if(update){
+        replot();
     }
 }
 

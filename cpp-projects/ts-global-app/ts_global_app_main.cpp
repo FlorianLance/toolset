@@ -391,7 +391,7 @@ int main(int argc, char *argv[]){
         geo::Pt3f pt = { std::cos(theta) * std::sin(phi), std::sin(theta) * std::sin(phi), std::cos(phi)};
         if(pt.x() < 0.f && pt.y() < 0.f && pt.z() < 0.f && (rand()%5 == 0)){
             sCloud.vertices.push_back(pt + geo::Pt3f{1.2f,-2.3f, 4.5f});
-            sCloud.colors.push_back({0.f,1.f,0.f});
+            sCloud.colors.emplace_back(0.f,1.f,0.f);
         }
     }
 

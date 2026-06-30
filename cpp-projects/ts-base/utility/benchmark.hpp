@@ -33,6 +33,7 @@
 #include <memory>
 #include <thread>
 #include <optional>
+#include <string>
 
 namespace tool {
 

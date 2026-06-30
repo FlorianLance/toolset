@@ -50,12 +50,13 @@ QtBarPlotW::QtBarPlotW( QWidget* parent ) : QwtPlot( parent ){
 
     // bar char item
     m_barChartItem = new QwtPlotMultiBarChart( "Bar Chart " );
-    m_barChartItem->setLayoutPolicy( QwtPlotMultiBarChart::AutoAdjustSamples );
+    m_barChartItem->setLayoutPolicy( QwtPlotMultiBarChart::ScaleSampleToCanvas );
     m_barChartItem->setSpacing( 20 );
     m_barChartItem->setMargin( 3 );
     m_barChartItem->setStyle( QwtPlotMultiBarChart::Grouped );
     m_barChartItem->setOrientation( Qt::Vertical );
     m_barChartItem->attach( this );
+
     set_titles({"Default"});
 
 

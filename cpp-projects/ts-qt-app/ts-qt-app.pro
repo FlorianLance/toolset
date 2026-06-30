@@ -33,12 +33,11 @@ TEMPLATE = app
 CONFIG += console
 CONFIG += qt
 
-QT += core gui opengl widgets printsupport network
+QT += core gui opengl widgets printsupport network bluetooth
 DEFINES += QWT_DLL
 
-win32-msvc*: DEFINES += _USE_MATH_DEFINES
-win32-msvc*: DEFINES += NOMINMAX
-DEFINES += JKQTCOMMON_LIB_IN_DLL JKQTFASTPLOTTER_LIB_IN_DLL JKQTMATHTEXT_LIB_IN_DLL JKQTPLOTTER_LIB_IN_DLL
+# win32-msvc*: DEFINES += _USE_MATH_DEFINES
+# win32-msvc*: DEFINES += NOMINMAX
 
 ####################################### PRI
 include(../ts-settings.pri)
@@ -97,11 +96,13 @@ include(../ts-gen-var.pri)
 
 ####################################### PROJECT FILES
 HEADERS += \
-    __JKQtPlotterTest.hpp \
-    lines_counter.hpp
+    # __JKQtPlotterTest.hpp \
+    # bt_server.hpp \
+    # lines_counter.hpp
 
 SOURCES += \
-    __JKQtPlotterTest.cpp \
+    # __JKQtPlotterTest.cpp \
+    # bt_server.cpp \
     qt_utility_main.cpp \
 
 

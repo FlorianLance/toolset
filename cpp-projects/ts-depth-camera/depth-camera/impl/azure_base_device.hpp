@@ -61,6 +61,7 @@ struct AzureBaseDevice{
     auto read_color_image()         -> BinarySpan;
     auto read_depth_image()         -> std::span<std::uint16_t>;
     auto read_infra_image()         -> std::span<std::uint16_t>;
+    auto enqueue_body_tracking() -> void;
     auto read_body_tracking()       -> std::tuple<std::span<img::ColorGray8>, std::span<DCBody>>;
 
     auto read_from_microphones()    -> std::pair<size_t, std::span<float>>;
