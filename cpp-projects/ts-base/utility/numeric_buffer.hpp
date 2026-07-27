@@ -123,7 +123,7 @@ struct NumericBuffer : public Buffer<ElementType>{
         return static_cast<NumericSpan<Elem>>(Buffer<Elem>::sub_span(start, subSize));
     }
 
-    [[nodiscard]] auto num_split_spans(size_t splitSize) noexcept -> std::vector<NumericSpan<Elem>> {
+    [[nodiscard]] auto num_split_spans(size_t splitSize) noexcept -> Buffer<NumericSpan<Elem>> {
 
         if(Buffer<Elem>::empty() || splitSize == 0){
             return {};
@@ -135,7 +135,7 @@ struct NumericBuffer : public Buffer<ElementType>{
         size_t count       = Buffer<Elem>::size() / splitSize;
         size_t rest        = Buffer<Elem>::size() % splitSize;
         size_t nbSplits    = count + ((rest != 0) ? 1 : 0);
-        std::vector<NumericSpan<Elem>> splits;
+        Buffer<NumericSpan<Elem>> splits;
         splits.reserve(nbSplits);
         for(size_t id = 0; id < nbSplits; ++id){
             splits.push_back(num_sub_span(id * splitSize, splitSize));
@@ -143,7 +143,7 @@ struct NumericBuffer : public Buffer<ElementType>{
         return splits;
     }
 
-    [[nodiscard]] auto num_split_bins_spans(std::span<size_t> bins) noexcept -> std::vector<NumericSpan<Elem>> {
+    [[nodiscard]] auto num_split_bins_spans(std::span<size_t> bins) noexcept -> Buffer<NumericSpan<Elem>> {
 
         if(Buffer<Elem>::empty() || bins.empty()){
             // invalid
@@ -165,7 +165,7 @@ struct NumericBuffer : public Buffer<ElementType>{
             }
         }
 
-        std::vector<NumericSpan<Elem>> splits;
+        Buffer<NumericSpan<Elem>> splits;
         for(size_t id = 0; id < nbBins; ++id){
             if(id != 0){
                 splits.push_back(num_sub_span(bins[id-1],bins[id]-bins[id-1]));

@@ -172,6 +172,19 @@ auto EEGScreenListW::update_channels(size_t nbChannels, std::span<QString> chann
     plotW->set_curves_colors(m_curvesColors, true);
 }
 
+auto EEGScreenListW::update_channels_colors(std::span<QColor> channelsColors) -> void{
+
+    if(m_curvesColors.size() != channelsColors.size()){
+        return;
+    }
+
+    auto plotW = dynamic_cast<QtFastMultiCurvesPlotW*>(m_plotW);
+    for(size_t idC =  0; idC < m_curvesColors.size(); ++idC){
+        m_curvesColors[idC] = channelsColors[idC];
+    }
+    plotW->set_curves_colors(m_curvesColors, true);
+}
+
 auto EEGScreenListW::add_marker(double time) -> void{
     auto plotW = dynamic_cast<QtFastMultiCurvesPlotW*>(m_plotW);
     plotW->add_vertical_marker(time, "t");

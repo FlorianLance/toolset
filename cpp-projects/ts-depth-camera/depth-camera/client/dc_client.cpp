@@ -105,6 +105,35 @@ DCClient::~DCClient(){
     clean();
 }
 
+auto DCClient::initialize(DCClientSettings nSettings, bool startThreads) -> void{
+
+    if(devices_nb() != 0){
+        clean();
+    }
+
+    settings = std::move(nSettings);
+    settings.filePath = "";
+
+    for(auto &device : settings.devicesS){
+        device.connectionS.startReadingThread = startThreads;
+    }
+
+    // init other settings
+    i->processing.initialize(settings.devicesS.size(), startThreads);
+
+    // generate clients
+    for(auto &clientDeviceS : settings.devicesS){
+        i->cDevices.push_back(i->generate_client(clientDeviceS));
+        i->lastConnectionTry.push_back(std::chrono::nanoseconds{0});
+    }
+
+    // update clients id
+    for(size_t idD = 0; idD < i->cDevices.size(); ++idD){
+        i->cDevices[idD]->set_id_client(idD);
+        settings.devicesS[idD].id = idD;
+    }
+}
+
 auto DCClient::initialize(const std::string &clientSettingsPath, bool startThreads) -> bool{
 
     if(devices_nb() != 0){
@@ -114,8 +143,9 @@ auto DCClient::initialize(const std::string &clientSettingsPath, bool startThrea
     // read settings file
     if(!settings.load_from_file(clientSettingsPath)){
         return false;
-    }
+    }    
     settings.filePath = clientSettingsPath;
+
     for(auto &device : settings.devicesS){
         device.connectionS.startReadingThread = startThreads;
     }
@@ -151,7 +181,6 @@ auto DCClient::clean() -> void{
     
     Log::log("[DCClient::clean] Clear settings.\n"sv);
     settings.devicesS.clear();
-
 }
 
 
@@ -275,6 +304,18 @@ auto DCClient::init_connection_with_remote_device(size_t idC) -> void{
 
     if(i->cDevices[idC]->type() == DCClientType::Remote){
         dynamic_cast<DCClientRemoteDevice*>(i->cDevices[idC].get())->init_remote_connection(settings.clientId);
+    }
+}
+
+auto DCClient::remote_disconnection(size_t idC) -> void{
+
+    if(idC > devices_nb()){
+        Log::error(std::format("[DCClient::remote_disconnection] Invalid id [{}], nb of devices available [{}].\n"sv, idC, devices_nb()));
+        return;
+    }
+
+    if(i->cDevices[idC]->type() == DCClientType::Remote){
+        dynamic_cast<DCClientRemoteDevice*>(i->cDevices[idC].get())->remote_disconnection();
     }
 }
 

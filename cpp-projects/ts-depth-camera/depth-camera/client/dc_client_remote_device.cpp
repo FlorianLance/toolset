@@ -78,25 +78,25 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     auto lg = LogG("[DCClientRemoteDevice::initialize]");
     i->remoteServerS = connectionS;
     
-    Log::message(
-        std::format(
-            "DCServerRemoteDevice: initialize:"
-            "\n\tReading interface id: [{}]"
-            "\n\tAny reading interface: [{}]"
-            "\n\tReading address: [{}]"
-            "\n\tReading port: [{}]"
-            "\n\tSending address: [{}]"
-            "\n\tSending port: [{}]"
-            "\n\tProtocol: [{}].\n",
-            i->remoteServerS.idReadingInterface,
-            i->remoteServerS.anyReadingInterface,
-            i->remoteServerS.readingAddress,
-            i->remoteServerS.readingPort,
-            i->remoteServerS.processedSendingAddress,
-            i->remoteServerS.sendingPort,
-            static_cast<int>(i->remoteServerS.protocol)
-        )
-    );
+    // Log::message(
+    //     std::format(
+    //         "DCServerRemoteDevice: initialize:"
+    //         "\n\tReading interface id: [{}]"
+    //         "\n\tAny reading interface: [{}]"
+    //         "\n\tReading address: [{}]"
+    //         "\n\tReading port: [{}]"
+    //         "\n\tSending address: [{}]"
+    //         "\n\tSending port: [{}]"
+    //         "\n\tProtocol: [{}].\n",
+    //         i->remoteServerS.idReadingInterface,
+    //         i->remoteServerS.anyReadingInterface,
+    //         i->remoteServerS.readingAddress,
+    //         i->remoteServerS.readingPort,
+    //         i->remoteServerS.processedSendingAddress,
+    //         i->remoteServerS.sendingPort,
+    //         static_cast<int>(i->remoteServerS.protocol)
+    //     )
+    // );
 
     // init reader
     if(!i->udpReader.init_socket(i->remoteServerS.anyReadingInterface ? "" : i->remoteServerS.readingAddress, i->remoteServerS.readingPort, i->remoteServerS.protocol, i->remoteServerS.maxUdpPacketSize)){
@@ -109,7 +109,7 @@ auto DCClientRemoteDevice::initialize(const DCDeviceConnectionSettings &connecti
     }
 
     // init sender
-    Log::fmessage("DCClientRemoteDevice init sender: {} {} {} {}\n",
+    Log::fmessage("[DCClientRemoteDevice] init sender: {} {} {} {}\n",
         i->remoteServerS.processedSendingAddress,
         std::to_string(i->remoteServerS.sendingPort),
         static_cast<int>(i->remoteServerS.protocol),
@@ -139,6 +139,15 @@ auto DCClientRemoteDevice::init_remote_connection(size_t idClient) -> void{
     auto bData = connectionSettings.convert_to_json_binary();
     i->udpSender.set_sender_id(idClient);
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::init_server_client_connection),  std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+}
+
+auto DCClientRemoteDevice::remote_disconnection() -> void{
+
+    if(i->udpSender.is_connected()){
+        Log::log("[DCClientRemoteDevice::clean] Send disconnect message.\n"sv);
+        Command command = Command::disconnect;
+        i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::command), std::span(reinterpret_cast<const std::byte*>(&command), sizeof(Command)));
+    }
 }
 
 auto DCClientRemoteDevice::clean() -> void{

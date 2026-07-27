@@ -44,6 +44,8 @@ public:
     
     auto initialize(const DCDeviceConnectionSettings &connectionS) -> bool override;
     auto init_remote_connection(size_t idClient) -> void;
+    auto remote_disconnection() -> void;
+
     auto clean() -> void override;
 
     // when device thread not started

@@ -24,6 +24,7 @@ public slots:
 
     auto update_data(std::shared_ptr<tool::TimeChannelsNBuffer<double>> data) -> void;
     auto update_channels(size_t nbChannels, std::span<QString> channelsNames, std::span<QColor> channelsColors) -> void;
+    auto update_channels_colors(std::span<QColor> channelsColors) -> void;
     auto add_marker(double time) -> void;
 
 private:

@@ -190,7 +190,7 @@ auto DCClientExport::is_device_connected(size_t idD) const noexcept -> bool{
 auto DCClientExport::current_frame_total_cloud_size() -> size_t{
     size_t total = 0;
     for(size_t idD = 0; idD < devices_nb(); idD++){
-        total = current_frame_cloud_size(idD);
+        total += current_frame_cloud_size(idD);
     }
     return total;
 }

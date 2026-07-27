@@ -119,7 +119,7 @@ auto UdpSender::init_socket(std::string targetName, std::string port, Protocol p
             ));
         }
         
-        Log::message(std::format("ENDPOINT {} {}\n", targetName, port));
+        // Log::message(std::format("ENDPOINT {} {}\n", targetName, port));
 
     }catch (const boost::system::system_error& error){
         Log::error(std::format("[UdpSender::init_socket] Cannot resolve target name [{}] with writing port [{}], error [{}].\n", targetName, port, error.what()));
@@ -291,9 +291,9 @@ auto UdpSender::send_data(Header &header, std::span<const std::byte> dataToSend)
     }
 
     if(header.type != 10 && header.type != 9 && header.type != 6 && header.type != 8){
-        Log::fmessage("Send data {} {} {} {} {} {} {}\n",
-            header.type, header.totalSizeBytes, sizePacketHeader, sizePacketData, nbPacketsNeeded, rest, nbBytesSent
-        );
+        // Log::fmessage("Send data {} {} {} {} {} {} {}\n",
+        //     header.type, header.totalSizeBytes, sizePacketHeader, sizePacketData, nbPacketsNeeded, rest, nbBytesSent
+        // );
     }
 
 
@@ -311,7 +311,7 @@ auto UdpSender::simulate_failure(bool enabled, int percentage) -> void{
 }
 
 auto UdpSender::set_sender_id(size_t idClient) -> void{
-    Log::fmessage("########### UdpSender {}\n", idClient);
+    // Log::fmessage("########### UdpSender {}\n", idClient);
     i->senderId = idClient;
 }
 

@@ -42,6 +42,7 @@ public:
     DCClient();
     ~DCClient();
 
+    auto initialize(DCClientSettings nSettings, bool startThreads = true) -> void;
     auto initialize(const std::string &clientSettingsPath, bool startThreads = true) -> bool;
     auto legacy_initialize(const std::string &legacyNetworkSettingsFilePath) -> bool;
     auto clean() -> void;
@@ -63,6 +64,7 @@ public:
     auto reset_network() -> void;
     auto reset_remote_device(size_t idD) -> void;
     auto init_connection_with_remote_device(size_t idC) -> void;
+    auto remote_disconnection(size_t idC) -> void;
     auto trigger_packets_from_remote_device(size_t idC) -> void;    
 
     // # settings
