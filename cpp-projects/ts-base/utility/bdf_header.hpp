@@ -63,12 +63,52 @@ struct BDFChannelInfo{
     std::string label;
     std::string transducerType        = "active electrode";
     std::string physicalDimension     = "nV";
-    std::string physicalMinimum       = "-262144"; // Physical minimum in units of physical dimension
-    std::string physicalMaximum       = "262143";  // Physical maximum in units of physical dimension
-    std::string digitalMinimum        = "-8388608";
-    std::string digitalMaximum        = "8388607";
+    // std::string physicalMinimum       = "-262144"; // Physical minimum in units of physical dimension
+    // std::string physicalMaximum       = "262143";  // Physical maximum in units of physical dimension
+    // std::string digitalMinimum        = "-8388608";
+    // std::string digitalMaximum        = "8388607";
+    std::int32_t physicalMinimum       = physicalMinimumC; // Physical minimum in units of physical dimension
+    std::int32_t physicalMaximum       = physicalMaximumC;  // Physical maximum in units of physical dimension
+    std::int32_t digitalMinimum        = digitalMinimumC;
+    std::int32_t digitalMaximum        = digitalMaximumC;
     std::string prefiltering;
-    std::string recordNumberOfSamples = "128"; // Number of samples in each data record (Sample-rate if Duration of data record = “1”)
+    // std::string recordNumberOfSamples = "128"; // Number of samples in each data record (Sample-rate if Duration of data record = “1”)
+    std::int32_t recordNumberOfSamples = 128;
+
+    static constexpr std::int32_t physicalMinimumC = -262144;
+    static constexpr std::int32_t physicalMaximumC = 262143;
+    static constexpr std::int32_t digitalMinimumC  = -8388608;
+    static constexpr std::int32_t digitalMaximumC  = 8388607;
+    // todo check
+    // 16 777 215
+    // 524 287
+    // -> 32
+
+    // 0.00005 -> 50 -> 1568 -> 49
+    // 0.0000531 -> 531 -> 169992 -> 530.9
+
+
+    [[nodiscard]] auto compute_physical_from_digital(std::int32_t digitalValue) const -> double{
+        return physicalMinimum + (digitalValue - digitalMinimum) / scale();
+    }
+
+    [[nodiscard]] auto compute_digital_from_physical(double physicalValue) const  -> std::int32_t{
+        return std::max(digitalMinimum, std::min(digitalMaximum, static_cast<int32_t>((physicalValue - physicalMinimum) * scale() + digitalMinimum)));
+    }
+
+    [[nodiscard]] auto process_eeg_to_digital(double value) const -> std::int32_t{
+        return compute_digital_from_physical(volt_to_nano_volt(value));
+    }
+
+private:
+
+    [[nodiscard]] static constexpr auto volt_to_nano_volt(double valueV) noexcept -> double{
+        return valueV * 1000000000.0;
+    }
+
+    [[nodiscard]] auto scale() const -> double{
+        return (1.0 * digitalMaximum - digitalMinimum) / (physicalMaximum - physicalMinimum);
+    }
 };
 
 struct BDFHeader{
@@ -88,7 +128,6 @@ struct BDFHeader{
 
     auto write_header(std::ofstream &file) -> void;
     static auto write_value(std::ofstream &file, double v) -> void;
-    static auto write_values(std::ofstream &file, std::span<double> values) -> void;
 
     auto read_header(std::ifstream &file) -> void;
     auto read_data(std::ifstream &file, Buffer3D<double> &data) -> void;

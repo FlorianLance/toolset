@@ -228,6 +228,18 @@ struct NumericBuffer : public Buffer<ElementType>{
     constexpr auto sort_descendant() noexcept -> void{
         std::sort(Buffer<Elem>::begin(), Buffer<Elem>::end(), std::greater<Elem>());
     }
+
+    [[nodiscard]] auto derivative_mean() const noexcept -> double{
+
+        if(Buffer<Elem>::size() >= 2){
+            double sum = 0.0;
+            for (size_t ii = 1; ii < Buffer<Elem>::size(); ++ii){
+                sum += Buffer<Elem>::values[ii] - Buffer<Elem>::values[ii-1];
+            }
+            return sum/Buffer<Elem>::size();
+        }
+        return 0.0;
+    }
 };
 
 

@@ -107,26 +107,34 @@ auto BDFHeader::read_header(std::ifstream &file) -> void{
 
     // Physical minimum in units of physical dimension  (N x 8 bytes)
     for(auto &channel : channels){
-        read_text(channel.physicalMinimum, file, 8);
-        str::right_trim(channel.physicalMinimum, ' ');
+        std::string physicalMinimumStr;
+        read_text(physicalMinimumStr, file, 8);
+        str::right_trim(physicalMinimumStr, ' ');
+        channel.physicalMinimum = std::stoi(physicalMinimumStr);
     }
 
     // Physical maximum in units of physical dimension (N x 8 bytes)
     for(auto &channel : channels){
-        read_text(channel.physicalMaximum, file, 8);
-        str::right_trim(channel.physicalMaximum, ' ');
+        std::string physicalMaximumStr;
+        read_text(physicalMaximumStr, file, 8);
+        str::right_trim(physicalMaximumStr, ' ');
+        channel.physicalMaximum = std::stoi(physicalMaximumStr);
     }
 
     // Digital minimum (N x 8 bytes)
     for(auto &channel : channels){
-        read_text(channel.digitalMinimum, file, 8);
-        str::right_trim(channel.digitalMinimum, ' ');
+        std::string digitalMinimumStr;
+        read_text(digitalMinimumStr, file, 8);
+        str::right_trim(digitalMinimumStr, ' ');
+        channel.digitalMinimum = std::stoi(digitalMinimumStr);
     }
 
     // Digital maximum (N x 8 bytes)
     for(auto &channel : channels){
-        read_text(channel.digitalMaximum, file, 8);
-        str::right_trim(channel.digitalMaximum, ' ');
+        std::string digitalMaximumStr;
+        read_text(digitalMaximumStr, file, 8);
+        str::right_trim(digitalMaximumStr, ' ');
+        channel.digitalMaximum = std::stoi(digitalMaximumStr);
     }
 
     // Prefiltering (N x 80 bytes)
@@ -137,8 +145,10 @@ auto BDFHeader::read_header(std::ifstream &file) -> void{
 
     // Number of samples in each data record (Sample-rate if Duration of data record = "1") (N x 8 bytes)
     for(auto &channel : channels){
-        read_text(channel.recordNumberOfSamples, file, 8);
-        str::right_trim(channel.recordNumberOfSamples, ' ');
+        std::string recordNumberOfSamplesStr;
+        read_text(recordNumberOfSamplesStr, file, 8);
+        str::right_trim(recordNumberOfSamplesStr, ' ');
+        channel.recordNumberOfSamples = std::stoi(recordNumberOfSamplesStr);
     }
 
     // Reserved (N x 32 bytes)
@@ -155,32 +165,27 @@ auto BDFHeader::read_data(std::ifstream &file, Buffer3D<double> &data) -> void{
         return;
     }
 
-
     data.resize(nbOfDataRecords);
 
     for(size_t idR = 0; idR < static_cast<size_t>(nbOfDataRecords); ++idR){
 
         data[idR].resize(channels.size());
 
-        // std::cout << "R " << idR << ":\n";
-        for(size_t idC = 0; idC < channels.size(); ++idC){
-            size_t nbOfSamples = std::stoi(channels[idC].recordNumberOfSamples);
-            // std::cout << "nb samples " << nbOfSamples << "\n";
-            data[idR][idC].resize(nbOfSamples);
+        for(size_t idC = 0; idC < channels.size(); ++idC){;
 
-            for(size_t idS = 0; idS < nbOfSamples; ++idS){
+            data[idR][idC].resize(channels[idC].recordNumberOfSamples);
+
+            for(size_t idS = 0; idS < data[idR][idC].size(); ++idS){
                 signed_24_bit i24;
                 tool::read(i24.use_by_the_24_bit_int[0], file);
                 tool::read(i24.use_by_the_24_bit_int[1], file);
                 tool::read(i24.use_by_the_24_bit_int[2], file);
-                // tool::read(i24, file);
-                auto v = static_cast<double>(signed_24_bit::decode(i24));
-                data[idR][idC][idS] = v;
-
+                data[idR][idC][idS] = channels[idC].compute_physical_from_digital(signed_24_bit::decode(i24));
+                // todo depending physicalDimension scale and transducer
+                // ...
             }
         }
     }
-
 }
 
 auto BDFHeader::write_header(std::ofstream &file) -> void{
@@ -253,26 +258,30 @@ auto BDFHeader::write_header(std::ofstream &file) -> void{
 
     // Physical minimum in units of physical dimension  (N x 8 bytes)
     for(auto &c : channels){
-        padding(c.physicalMinimum, 8);
-        tool::write_array(c.physicalMinimum.data(), file, c.physicalMinimum.size());
+        std::string physicalMinimumStr = std::to_string(c.physicalMinimum);
+        padding(physicalMinimumStr, 8);
+        tool::write_array(physicalMinimumStr.data(), file, physicalMinimumStr.size());
     }
 
     // Physical maximum in units of physical dimension (N x 8 bytes)
     for(auto &c : channels){
-        padding(c.physicalMaximum, 8);
-        tool::write_array(c.physicalMaximum.data(), file, c.physicalMaximum.size());
+        std::string physicalMaximumStr = std::to_string(c.physicalMaximum);
+        padding(physicalMaximumStr, 8);
+        tool::write_array(physicalMaximumStr.data(), file, physicalMaximumStr.size());
     }
 
     // Digital minimum (N x 8 bytes)
     for(auto &c : channels){
-        padding(c.digitalMinimum, 8);
-        tool::write_array(c.digitalMinimum.data(), file, c.digitalMinimum.size());
+        std::string digitalMinimumStr = std::to_string(c.digitalMinimum);
+        padding(digitalMinimumStr, 8);
+        tool::write_array(digitalMinimumStr.data(), file, digitalMinimumStr.size());
     }
 
     // Digital maximum (N x 8 bytes)
     for(auto &c : channels){
-        padding(c.digitalMaximum, 8);
-        tool::write_array(c.digitalMaximum.data(), file, c.digitalMaximum.size());
+        std::string digitalMaximumStr = std::to_string(c.digitalMaximum);
+        padding(digitalMaximumStr, 8);
+        tool::write_array(digitalMaximumStr.data(), file, digitalMaximumStr.size());
     }
 
     // Prefiltering (N x 80 bytes)
@@ -283,8 +292,9 @@ auto BDFHeader::write_header(std::ofstream &file) -> void{
 
     // Number of samples in each data record (Sample-rate if Duration of data record = "1") (N x 8 bytes)
     for(auto &c : channels){
-        padding(c.recordNumberOfSamples, 8);
-        tool::write_array(c.recordNumberOfSamples.data(), file, c.recordNumberOfSamples.size());
+        std::string recordNumberOfSamplesStr = std::to_string(c.recordNumberOfSamples);
+        padding(recordNumberOfSamplesStr, 8);
+        tool::write_array(recordNumberOfSamplesStr.data(), file, recordNumberOfSamplesStr.size());
     }
 
     // Reserved (N x 32 bytes)
@@ -296,8 +306,6 @@ auto BDFHeader::write_header(std::ofstream &file) -> void{
     }
 }
 
-
-
 auto BDFHeader::write_value(std::ofstream &file, double v) -> void{
     v = std::clamp(v, -8388608.0, 8388607.0);
     auto eb = signed_24_bit::encode(static_cast<std::int32_t>(v));
@@ -306,11 +314,6 @@ auto BDFHeader::write_value(std::ofstream &file, double v) -> void{
     file.write(reinterpret_cast<const char*>(&eb.use_by_the_24_bit_int[2]), 1);
 }
 
-auto BDFHeader::write_values(std::ofstream &file, std::span<double> values) -> void{
-    for(const auto &v : values){
-        write_value(file, v);
-    }
-}
 
 auto BDFHeader::padding(std::string &text, size_t size, char fillC) -> void{
 
