@@ -43,8 +43,8 @@
 using namespace tool::graphics;
 using namespace tool::gl;
 
-ImguiFboUiDrawer::ImguiFboUiDrawer() : m_camera(&m_screen, {0,0,0}, {0,0,1}){
-    m_camera.set_fov(60.);
+ImguiFboUiDrawer::ImguiFboUiDrawer(geo::Camera camera) : m_camera(camera) {
+    m_screen.set_fov(60.);
 }
 
 auto ImguiFboUiDrawer::initialize() -> void{
@@ -60,9 +60,7 @@ auto ImguiFboUiDrawer::resize(const geo::Pt2<int> &size) -> void{
         return;
     }
     m_screenUpdated = true;
-
     m_screen.resize(size.x(), size.y());
-    m_camera.update_projection();
 
     // color texture
     m_texture.clean();
@@ -178,11 +176,11 @@ auto ImguiFboUiDrawer::check_inputs() -> void{
         const double wheel   = io.MouseWheel;
 
         if(ImGui::IsMouseDown(0)){
-            m_camera.set_direction(rotationSpeed*xoffset,rotationSpeed*yoffset,0.);
+            m_camera.rotate({rotationSpeed*xoffset,-rotationSpeed*yoffset,0.});
             m_cameraUpdated = true;
         }
         if(ImGui::IsMouseDown(1)){
-            m_camera.set_direction(0.,0.,rotationSpeed*xoffset);
+            m_camera.rotate({0.,0.,rotationSpeed*xoffset});
             m_cameraUpdated = true;
         }
         if(ImGui::IsMouseDown(2)){
@@ -217,6 +215,7 @@ auto ImguiFboUiDrawer::check_inputs() -> void{
         }
         // R key
         if(ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_R, false)){
+            Log::fmessage("Reset camera {} {} {}\n", m_camera.init_rotation().x(), m_camera.init_rotation().y(), m_camera.init_rotation().z());
             m_camera.reset_init_values();
             m_cameraUpdated = true;
         }
@@ -242,11 +241,11 @@ auto ImguiFboUiDrawer::check_inputs() -> void{
             geo::Vec4f ray_dir_ndc(x_ndc, y_ndc, 1, 0);
 
             // Transform through inverse projection matrix
-            geo::Mat4d inv_proj = inverse(m_camera.projection());
+            geo::Mat4d inv_proj = inverse(m_screen.projection());
             auto ray_dir_world = inv_proj.multiply_vector(ray_dir_ndc.conv<double>());
 
-            // Transform through inverse view matrix
-            geo::Mat4d inv_view = inverse(m_camera.view());
+            // Transform through inverse view_matrix matrix
+            geo::Mat4d inv_view = inverse(m_camera.view_matrix());
             geo::Vec4d world_pos = inv_view.multiply_vector(ray_dir_world);
             world_pos /= world_pos.w();
 
@@ -258,7 +257,7 @@ auto ImguiFboUiDrawer::check_inputs() -> void{
                 world_pos2 = normalize(world_pos2);
 
                 geo::Vec4d orig(0,0,0,1);
-                orig = m_camera.projection().multiply_point(orig);
+                orig = m_screen.projection().multiply_point(orig);
                 // raycast_signal(world_pos.xyz(), world_pos.xyz() + world_pos2.xyz()*10.0);
             }
 

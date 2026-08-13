@@ -190,7 +190,7 @@ auto AiLoader::load_model(std::string_view path, bool verbose) -> std::shared_pt
                 for(size_t kk = 0; kk < keys.rotationTimes.size(); ++kk){
                     auto &key = assimpChannel->mRotationKeys[kk];
                     keys.rotationTimes[kk] = key.mTime;
-                    keys.rotationKeys[kk]  = {key.mValue.x,key.mValue.y,key.mValue.z, key.mValue.w};
+                    keys.rotationKeys[kk]  = {key.mValue.w, key.mValue.x,key.mValue.y,key.mValue.z};
                 }
 
                 keys.scalingTimes.resize(assimpChannel->mNumScalingKeys);

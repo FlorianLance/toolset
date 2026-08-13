@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-ts-demos                                                           **
+** Toolset-ts-base                                                            **                      **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -24,46 +24,18 @@
 **                                                                            **
 ********************************************************************************/
 
-
 #pragma once
 
-// imgui
-#include "imgui/extra/implot/implot.h"
-
 // local
-#include "windows/base_sfml_gl_window.hpp"
-#include "biopac.hpp"
+#include "geometry/point3.hpp"
 
-namespace tool::graphics {
+namespace tool::geo {
 
-class BiopacControlWindow : public BaseSfmlGlWindow{
-
-public:
-
-    BiopacControlWindow(std::string_view title, geo::Screen screen, geo::Camera camera, std::optional<sf::ContextSettings> context) :
-          BaseSfmlGlWindow(title, screen, camera, context){
-
-        std::fill(std::begin(serialBuffer), std::end(serialBuffer), ' ');
-        serialBuffer[0] = 'a';
-        serialBuffer[1] = 'u';
-        serialBuffer[2] = 't';
-        serialBuffer[3] = 'o';
-    }
-
-private:
-
-    // gl
-    bool initialize_gl() override;
-    void post_update() override;
-    // imgui
-    void draw_imgui() override;
-
-
-protected:
-
-    std::array<char, 20> serialBuffer;
-    BiopacDevice biopac;
-    // imgui
-    ImPlotContext *imPlotContext = nullptr;
+template<typename acc>
+struct Ray3{
+    Pt3<acc> origin;
+    Vec3<acc> direction;
 };
+
+
 }

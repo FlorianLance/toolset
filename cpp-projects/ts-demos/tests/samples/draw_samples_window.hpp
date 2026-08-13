@@ -44,7 +44,7 @@ class DrawSampleWindow : public BaseSfmlGlWindow{
 
 public:
 
-    DrawSampleWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context);
+    DrawSampleWindow(std::string_view title, geo::Screen screen, geo::Camera camera, std::optional<sf::ContextSettings> context);
 
 private:
 

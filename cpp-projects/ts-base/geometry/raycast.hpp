@@ -1,6 +1,6 @@
 
 /*******************************************************************************
-** Toolset-base                                                               **
+** Toolset-ts-base                                                            **
 ** MIT License                                                                **
 ** Copyright (c) [2018] [Florian Lance]                                       **
 **                                                                            **
@@ -25,6 +25,41 @@
 ********************************************************************************/
 
 #pragma once
+
+// local
+#include "camera.hpp"
+#include "screen.hpp"
+#include "ray3.hpp"
+
+namespace tool::geo{
+
+auto screen_raycast(const Pt2<int> &position, const Screen &screen, const Camera &camera) -> Ray3<double>{
+
+    // convert to NDC
+    double ndcX = (2.0 * position.x()) / screen.width() - 1.0;
+    double ndcY = 1.0 - (2.0 * position.y()) / screen.height(); // flip Y-axis
+
+    // create a ray in NDC space (x, y, z = 1.0)
+    Vec3d ndcRay(ndcX, ndcY, 1.0);
+
+    // convert NDC to clip space (homogeneous coordinates)
+    Vec4d clipSpaceRay = to_pt4(ndcRay, 1.);
+
+    // compute the inverse of the view-projection matrix
+    geo::Mat4d viewProjection        = screen.projection() * camera.view_matrix();
+    geo::Mat4d inverseViewProjection = geo::inverse(viewProjection);
+
+    // transform the ray to world space
+    auto worldRay = to_row4(inverseViewProjection * to_col4(clipSpaceRay));
+    worldRay /= worldRay.w(); // perspective division
+
+    // extract the ray origin and direction
+    Pt3d rayOrigin     = camera.position();
+    Vec3d rayDirection = normalize(worldRay.xyz() - rayOrigin);
+    return {rayOrigin, rayDirection};
+}
+
+}
 
 // local
 //#include "geometry/point3.hpp"

@@ -248,14 +248,14 @@ auto ShaderProgram::set_uniform(std::string_view name, std::span<geo::Mat4f> val
 }
 
 auto ShaderProgram::set_model_matrix_uniform(const Mat4d &model) -> bool{
-    return set_uniform_matrix(MM, model.conv<float>());
+    return set_uniform_matrix(MM, model.conv<float>(), true);
 }
 
 auto ShaderProgram::set_camera_matrices_uniforms(const geo::CameraMatrices &camM) -> bool{
     bool validUniforms = true;
-    validUniforms &= set_uniform_matrix(MVM, camM.mv.conv<float>());
-    validUniforms &= set_uniform_matrix(NM,  camM.normal.conv<float>());
-    validUniforms &= set_uniform_matrix(MVP, camM.mvp.conv<float>());
+    validUniforms &= set_uniform_matrix(MVM, camM.mv.conv<float>(), true);
+    validUniforms &= set_uniform_matrix(NM,  camM.normal.conv<float>(), true);
+    validUniforms &= set_uniform_matrix(MVP, camM.mvp.conv<float>(), true);
     validUniforms &= set_model_matrix_uniform(camM.m);
     return validUniforms;
 }

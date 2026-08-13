@@ -41,13 +41,12 @@
 // imgui-opengl-engine
 #include "engine/managers.hpp"
 
-
 using namespace tool;
 using namespace tool::gl;
 using namespace tool::graphics;
 
-DCGGlWindow::DCGGlWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) :
-    BaseSfmlGlWindow(title, screen, context) {
+DCGGlWindow::DCGGlWindow(std::string_view title, geo::Screen screen, geo::Camera camera, std::optional<sf::ContextSettings> context) :
+    BaseSfmlGlWindow(title, screen, camera, context) {
 }
 
 auto DCGGlWindow::init_shaders() -> bool{
@@ -106,9 +105,6 @@ auto DCGGlWindow::initialize_gl() -> bool{
     if(!init_shaders()){
         return m_glInitialized = false;
     }
-
-    // camera
-    m_camera.set_direction(0.,0.,0.);
 
     VAO::unbind();
 

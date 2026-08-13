@@ -44,6 +44,9 @@ enum class PlaneFilteringMode : std::int8_t{
 
 struct DCFiltersSettings : Settings{
 
+    // todo
+    // add cylinder filtering
+
     // depth filtering
     // # basic
     float minWidthF  = 0.f;
@@ -95,6 +98,11 @@ struct DCFiltersSettings : Settings{
 
     // infra filtering
     bool invalidateInfraFromDepth   = false;
+
+
+    // test
+    geo::Pt4<std::uint8_t> invalidColorValue = {0,0,0,0};
+
 
     DCFiltersSettings(){
         sType   = SettingsType::Filters;

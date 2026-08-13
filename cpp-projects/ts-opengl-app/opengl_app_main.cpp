@@ -26,7 +26,13 @@
 // glfw
 #include "glfw/glfw_gl_windows.hpp"
 
-int main(){
+#include "utility/paths.hpp"
+
+int main(int argc, char **argv){
+
+    tool::Paths::get()->initialize(argv);
+
+
 
     tool::gl::GlfwGlWindow win;
     win.init(800,800);

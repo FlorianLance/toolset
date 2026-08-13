@@ -43,7 +43,7 @@ struct CameraMatrices{
 
     auto update() -> void{
         mv     = m * v;
-        normal = geo::rotation_m3x3(mv);
+        normal = geo::get_rotation_m3x3(mv);
         mvp    = mv * p;
     }
 

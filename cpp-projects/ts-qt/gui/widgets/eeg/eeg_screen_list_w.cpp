@@ -54,6 +54,7 @@ EEGScreenListW::EEGScreenListW(){
 auto EEGScreenListW::resize(size_t nbElectrodes) -> void{
 
     auto plotW = dynamic_cast<QtFastMultiCurvesPlotW*>(m_plotW);
+
     m_minB.resize(nbElectrodes);
     m_maxB.resize(nbElectrodes);
     m_curvesColors.resize(nbElectrodes);
@@ -68,13 +69,17 @@ auto EEGScreenListW::update_data(std::shared_ptr<TimeChannelsNBuffer<double>> da
     m_data = std::move(data);
 
 
-
     if(m_data == nullptr){
+        auto plotW = dynamic_cast<QtFastMultiCurvesPlotW*>(m_plotW);
+        plotW->reset_all_curves();
         return;
     }
     if(m_data->nb_channels() == 0 || m_data->nb_samples() == 0){
+        auto plotW = dynamic_cast<QtFastMultiCurvesPlotW*>(m_plotW);
+        plotW->reset_all_curves();
         return;
     }
+
 
 
     // resize data
@@ -122,10 +127,14 @@ auto EEGScreenListW::update_data(std::shared_ptr<TimeChannelsNBuffer<double>> da
     for(size_t idC = 0; idC < m_data->nb_channels(); ++idC){
         for(size_t idS = 0; idS < m_data->nb_samples(); ++idS){
             auto d = (m_data->channels[idC][idS]);
-            d -= m_minB[idC];
-            d -= (m_maxB[idC] - m_minB[idC]) * 0.5;
-            d /= diff;
-            m_plotYData[idC][idS] = m_heightFactor*d / m_data->nb_channels() + currentY;
+            if(m_auto){
+                d -= m_minB[idC];
+                d -= (m_maxB[idC] - m_minB[idC]) * 0.5;
+                d /= diff;
+                m_plotYData[idC][idS] =d / m_data->nb_channels() + currentY;
+            }else{
+                m_plotYData[idC][idS] = m_manualScalingFactor*d / m_data->nb_channels() + currentY;
+            }
         }
 
         plotW->set_curve_points(idC, m_data->times.span(), m_plotYData[idC].span());
@@ -136,9 +145,9 @@ auto EEGScreenListW::update_data(std::shared_ptr<TimeChannelsNBuffer<double>> da
     plotW->set_x_axis_scaling_infos(true, m_data->times.front(),  m_data->times.back(), diffT*0.1, true);
 }
 
-auto EEGScreenListW::update_display_settings(double heightFactor) -> void{
-    // m_auto = automatic;
-    m_heightFactor = heightFactor;
+auto EEGScreenListW::set_display_info(bool automaticScaling, int manualScalingValue) -> void{
+    m_auto = automaticScaling;
+    m_manualScalingFactor = manualScalingValue;
 }
 
 auto EEGScreenListW::update_id(int idUser) -> void{

@@ -27,141 +27,84 @@
 #pragma once
 
 // local
-#include "screen.hpp"
-#include "matrix4.hpp"
+#include "quaternion.hpp"
 
 namespace tool::geo{
 
 class Camera{
 public:
 
-    enum class Mode : int{
-        Perspective, Orhtographic
-    };
+    // order: yaw / pitch / roll
+    Camera(geo::Pt3d position = {0.,0.,0.}, geo::Pt3d eulerAngles = {0.,0.,0.}){
 
-    Camera(Screen *screen, geo::Pt3d position = {0.,0.,0.}, geo::Vec3d direction = {0.,0.,1.}, geo::Vec3d up = {0.,1.,0.});
-    auto reset_init_values() -> void;
+        // store initial
+        m_initPosition = position;
+        m_initRotation = eulerAngles;
+
+        // apply
+        m_position = m_initPosition;
+        rotate(m_initRotation);
+
+        update_vectors();
+    }
+
+    auto reset_init_values() noexcept -> void{
+        m_position    = m_initPosition;
+        m_orientation = {};
+        rotate(m_initRotation);
+        update_vectors();
+    }
 
     // view    
     // # get
-    [[nodiscard]] constexpr auto position() const noexcept -> geo::Pt3d{return m_position;}
-    [[nodiscard]] constexpr auto up() const noexcept -> geo::Vec3d{return m_up;}
-    [[nodiscard]] constexpr auto direction() const noexcept -> geo::Vec3d{return m_direction;}
-    [[nodiscard]] constexpr auto view() const noexcept -> geo::Mat4d{return m_view;}
-    [[nodiscard]] auto look_at() const -> geo::Mat4d;
-    // # move
-    auto move_up(double amount) -> void;
-    auto move_down(double amount) -> void;
-    auto move_front(double amount) -> void;
-    auto move_left(double amount) -> void;
-    auto move_right(double amount) -> void;
-    auto move_back(double amount) -> void;
-    // # set
-    auto set_position(geo::Pt3d position) -> void;
-    auto set_up_vector(geo::Vec3d up) -> void;
-    auto set_direction(double yaw, double pitch, double roll) -> void;
-    auto set_direction(geo::Vec3d direction, geo::Vec3d up = {0.,1.,0.}) -> void;
+    [[nodiscard]] constexpr auto position()             const noexcept  -> geo::Pt3d{   return m_position;}
+    [[nodiscard]] constexpr auto up()                   const noexcept  -> geo::Vec3d{  return m_up;}
+    [[nodiscard]] constexpr auto direction()            const noexcept  -> geo::Vec3d{  return m_direction;}
+    [[nodiscard]] constexpr auto view_matrix()          const noexcept  -> geo::Mat4d{  return geo::look_at(m_position, m_position + m_direction, m_up);}
+    [[nodiscard]] constexpr auto translation_matrix()   const noexcept  -> Mat4d{       return geo::translation_m4x4(m_position);}
+    [[nodiscard]] constexpr auto rotation_matrix()      const noexcept  -> Mat4d{       return geo::rotation_m4x4(m_orientation);}
 
-    // projection
-    // # get
-    [[nodiscard]] constexpr auto projection() const noexcept -> geo::Mat4d{return m_projection;}
-    [[nodiscard]] constexpr auto fov() const noexcept -> double{return m_fov;}
-    [[nodiscard]] constexpr auto z_range() const noexcept -> geo::Pt2d{return m_zRange;}
-    [[nodiscard]] constexpr Screen *screen() const noexcept{return m_screen;}
-    // # set
-    auto set_mode(Mode mode) -> void;
-    auto set_screen(Screen *screen) -> void;
-    auto set_fov(double fov) -> void;
-    auto set_range(double min, double max) -> void;
-    // # update
-    auto update_projection() -> void;
+    [[nodiscard]] constexpr auto init_position()        const noexcept  -> geo::Pt3d{   return m_initPosition;}
+    [[nodiscard]] constexpr auto init_rotation()        const noexcept  -> geo::Vec3d{  return m_initRotation;}
 
+    // move absolute
+    constexpr auto set_position(geo::Pt3d position) -> void{m_position = position;}
+    // move relative to camera orientation
+    constexpr auto translate(geo::Vec3d direction)  noexcept -> void{m_position += geo::rotate(m_orientation, direction);}
+    constexpr auto move_up(double amount)           noexcept -> void{m_position += m_up*amount;}
+    constexpr auto move_down(double amount)         noexcept -> void{m_position -= m_up*amount;}
+    constexpr auto move_front(double amount)        noexcept -> void{m_position += m_direction*amount;}
+    constexpr auto move_left(double amount)         noexcept -> void{m_position -= m_right * amount;}
+    constexpr auto move_right(double amount)        noexcept -> void{m_position += m_right * amount;;}
+    constexpr auto move_back(double amount)         noexcept -> void{m_position -= m_direction*amount;}
 
-    auto screen_raycast(geo::Pt2<int> screenPos) -> geo::Vec3d;
-    // static auto normal(const geo::Mat4d &modelView) -> geo::Mat3d{
-    //     const auto &mv = modelView;
-    //     return {
-    //         mv.at(0,0),mv.at(0,1),mv.at(0,2),
-    //         mv.at(1,0),mv.at(1,1),mv.at(1,2),
-    //         mv.at(2,0),mv.at(2,1),mv.at(2,2),
-    //     };
-    // }
-
-    // auto test() -> geo::Pt3d {
-    //     geo::Pt4<int> pixel;
-
-    //     auto cPix = pixel.conv<double>();
-    //     cPix.x() /= m_screen->width();
-    //     cPix.x() -= 0.5;
-    //     cPix.x() *= 2.0;
-
-    //     cPix.y() /= m_screen->height();
-    //     cPix.y() -= 0.5;
-    //     cPix.y() *= 2.0;
-
-    //     cPix.z() = m_zRange.x();
-    //     cPix.w() = 1.0;
-
-    //     auto invP = inverse(m_projection);
-    //     auto invV = inverse(m_view);
-
-    //     cPix = invP.multiply_point(cPix);
-    //     cPix = invV.multiply_point(cPix);
-    //         // geo::Pt3d(m_screen->width(), m_screen->height());
-    //     return cPix.
-    // }
-
-
-    // float imageAspectRatio = imageWidth / (float)imageHeight; // assuming width > height
-    // float Px = (2 * ((x + 0.5) / imageWidth) - 1) * tan(fov / 2 * M_PI / 180) * imageAspectRatio;
-    // float Py = (1 - 2 * ((y + 0.5) / imageHeight) * tan(fov / 2 * M_PI / 180);
-    // Vec3f rayOrigin(0);
-    // Vec3f rayDirection = Vec3f(Px, Py, -1) - rayOrigin; // note that this just equal to Vec3f(Px, Py, -1);
-    // rayDirection = normalize(rayDirection); // it's a direction so don't forget to normalize
-
-    // auto
-    // auto generate_camera_matrices() const -> CameraMatrices;
-
-    // rotation * (pixel.x - imageCentreX, pixel.y - imageCentreY, focalLength)
-
-    // 0
-    //
-    // 0   0
-    // inverse projection * inverse view
-
-    // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays.html
-    // auto dir_vector_from_pixel(double x, double y) -> geo::Pt3d{
-
-    // }
-
+    // rotate absolute
+    auto set_rotation(geo::Pt3d eulerAngles) -> void;
+    // rotate relative
+    auto rotate(geo::Pt3d eulerAngles) -> void;
 
 private :
 
-    auto update_right() -> void;
-    auto update_up() -> void;
-    auto update_view() -> void;
+    constexpr auto update_vectors() noexcept -> void{
+        m_direction = geo::rotate(m_orientation, Vec3d{0.0f, 0.0f, -1.0f});
+        m_right     = geo::rotate(m_orientation, Vec3d{1.0f, 0.0f, 0.0f});
+        m_up        = geo::rotate(m_orientation, Vec3d{0.0f, 1.0f, 0.0f});
+    }
 
-    Screen *m_screen = nullptr;
+    // current
+    geo::Quatd m_orientation;
+    geo::Pt3d m_position;
 
-    geo::Pt3d m_position   = {0.,0.,0.};
+    // init values
+    geo::Pt3d m_initPosition;
+    geo::Vec3d m_initRotation;
+
+    // computed vectors
     geo::Vec3d m_up        = {0.,1.,0.};
     geo::Vec3d m_direction = {0.,0.,1.};
-    geo::Vec3d m_right;
-
-    geo::Pt3d m_initPosition   = {0.,0.,0.};
-    geo::Vec3d m_initUp        = {0.,1.,0.};
-    geo::Vec3d m_initDirection = {1.,0.,0.};
-    // geo::Mat4d m_initLookAt = geo::Mat4d::identity();
-
-    geo::Mat4d m_view;
-    geo::Mat4d m_projection;
-
-
-
-    double m_fov = 60.0;
-    geo::Pt2d m_zRange = {0.1, 10000.};
-
-    Mode m_mode = Mode::Perspective;
+    geo::Vec3d m_right     = {1.,0.,0.};
 };
+
+
 }
 

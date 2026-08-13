@@ -17,7 +17,7 @@ public:
 
     EEGScreenListW();
     auto resize(size_t nbElectrodes) -> void;
-    auto update_display_settings(double heightFactor) -> void;
+    auto set_display_info(bool automaticScaling, int manualScalingValue) -> void;
     auto update_id(int idUser) -> void;
 
 public slots:
@@ -39,12 +39,11 @@ private:
 
     QWidget *m_plotW = nullptr;
     std::shared_ptr<tool::TimeChannelsNBuffer<double>> m_data  = nullptr;
-    // tool::Buffer<double> m_plotXData;
     tool::Buffer<tool::Buffer<double>> m_plotYData;
     tool::Buffer<double> m_minB;
     tool::Buffer<double> m_maxB;
     bool m_auto = true;
-    double m_heightFactor = 1.00;
+    double m_manualScalingFactor = 1.00;
 };
 
 }

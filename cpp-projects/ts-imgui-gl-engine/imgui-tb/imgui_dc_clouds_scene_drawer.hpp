@@ -104,7 +104,7 @@ struct DCCloudsSceneDrawer{
     // # clouds
     std::vector<std::unique_ptr<DCCloudDrawer>> cloudsD;
     // # fbo
-    ImguiFboUiDrawer fboD;
+    ImguiFboUiDrawer fboD = ImguiFboUiDrawer(geo::Camera({},{0.,180,180}));
 
     // settings
     cam::DCSceneDisplaySettings display;

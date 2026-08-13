@@ -38,6 +38,7 @@
 
 // base
 #include "geometry/camera.hpp"
+#include "geometry/screen.hpp"
 
 // opengl
 #include "opengl/draw/lines_drawers.hpp"
@@ -59,7 +60,7 @@ namespace tool::graphics {
 
 struct Sample{
 
-    Sample(geo::Camera *cam);
+    Sample(geo::Camera *cam, geo::Screen *screen);
     virtual ~Sample(){}
 
     auto parent_init() -> bool;    
@@ -173,6 +174,7 @@ protected:
     DrawersManager  *drawersM   = nullptr;
     // # camera / transform
     geo::Camera *camera = nullptr;
+    geo::Screen *screen = nullptr;
     geo::CameraMatrices camM;
     // # UBO
     gl::LightUBO lightUBO;
@@ -202,7 +204,7 @@ protected:
 
 
 struct CloudSample : public Sample{
-    CloudSample(geo::Camera *cam) : Sample(cam){}
+    CloudSample(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -215,7 +217,7 @@ struct CloudSample : public Sample{
 
 // ############################################## CH3
 struct Ch3Diffuse : public Sample{
-    Ch3Diffuse(geo::Camera *cam) : Sample(cam){}
+    Ch3Diffuse(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -223,13 +225,13 @@ struct Ch3Diffuse : public Sample{
     geo::Pt3f ld = geo::Pt3f{0.5f, 0.5f, 0.5f};
 };
 struct Ch3Flat : public Sample{
-    Ch3Flat(geo::Camera *cam) : Sample(cam){}
+    Ch3Flat(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch3Discard : public Sample{
-    Ch3Discard(geo::Camera *cam) : Sample(cam){}
+    Ch3Discard(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -239,44 +241,44 @@ private:
     float scaleV = 15.f;
 };
 struct Ch3TwoSide : public Sample{
-    Ch3TwoSide(geo::Camera *cam) : Sample(cam){}
+    Ch3TwoSide(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch3Phong : public Sample{
-    Ch3Phong(geo::Camera *cam) : Sample(cam){}
+    Ch3Phong(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 // ############################################## CH4
 struct Ch4PhongDirectionnalLight : public Sample{
-    Ch4PhongDirectionnalLight(geo::Camera *cam) : Sample(cam){}
+    Ch4PhongDirectionnalLight(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4PhongMultiLights : public Sample{
-    Ch4PhongMultiLights(geo::Camera *cam) : Sample(cam){}
+    Ch4PhongMultiLights(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4PhongPerFragment : public Sample{
-    Ch4PhongPerFragment(geo::Camera *cam) : Sample(cam){}
+    Ch4PhongPerFragment(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4BlinnPhong : public Sample{
-    Ch4BlinnPhong(geo::Camera *cam) : Sample(cam){}
+    Ch4BlinnPhong(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch4Cartoon : public Sample{
-    Ch4Cartoon(geo::Camera *cam) : Sample(cam){}
+    Ch4Cartoon(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -285,7 +287,7 @@ private:
     int levels = 5;
 };
 struct Ch4PBR : public Sample{
-    Ch4PBR(geo::Camera *cam) : Sample(cam){}
+    Ch4PBR(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -296,7 +298,7 @@ private:
 };
 // ############################################## CH5
 struct Ch5DiscardPixels : public Sample{
-    Ch5DiscardPixels(geo::Camera *cam) : Sample(cam){}
+    Ch5DiscardPixels(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -306,25 +308,25 @@ private:
     std::shared_ptr<gl::BaseDrawer> cementMossD = nullptr;
 };
 struct Ch5SceneTexture : public Sample{
-    Ch5SceneTexture(geo::Camera *cam) : Sample(cam){}
+    Ch5SceneTexture(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_parameters() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch5SceneMutliTexture : public Sample{
-    Ch5SceneMutliTexture(geo::Camera *cam) : Sample(cam){}
+    Ch5SceneMutliTexture(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 private:
     std::shared_ptr<gl::BaseDrawer> brickMossD = nullptr;
 };
 struct Ch5NormalMap : public Sample{
-    Ch5NormalMap(geo::Camera *cam) : Sample(cam){}
+    Ch5NormalMap(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 };
 struct Ch5ParallaxMapping : public Sample{
-    Ch5ParallaxMapping(geo::Camera *cam) : Sample(cam){}
+    Ch5ParallaxMapping(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -334,7 +336,7 @@ private:
     std::shared_ptr<gl::BaseDrawer> mutlitTextPlaneD = nullptr;
 };
 struct Ch5SteepParallaxMapping : public Sample{
-    Ch5SteepParallaxMapping(geo::Camera *cam) : Sample(cam){}
+    Ch5SteepParallaxMapping(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -343,7 +345,7 @@ private:
     std::shared_ptr<gl::BaseDrawer> mutlitTextPlaneD = nullptr;
 };
 struct Ch5ReflectCubeMap : public Sample{
-    Ch5ReflectCubeMap(geo::Camera *cam) : Sample(cam){}
+    Ch5ReflectCubeMap(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -352,7 +354,7 @@ private:
     geo::Pt4f matColor = {0.5f, 0.5f, 0.5f, 1.0f};
 };
 struct Ch5RefractCubeMap : public Sample{
-    Ch5RefractCubeMap(geo::Camera *cam) : Sample(cam){}
+    Ch5RefractCubeMap(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -361,7 +363,7 @@ private:
     float eta = 0.94f;
 };
 struct Ch5ProjectTexture : public Sample{
-    Ch5ProjectTexture(geo::Camera *cam) : Sample(cam){}
+    Ch5ProjectTexture(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -375,7 +377,7 @@ private:
     img::TextureOptions projOptions;
 };
 struct Ch5DiffuseImageBasedLighting : public Sample{
-    Ch5DiffuseImageBasedLighting(geo::Camera *cam) : Sample(cam){}
+    Ch5DiffuseImageBasedLighting(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -385,7 +387,7 @@ private:
 };
 
 struct Ch5SamplerObject : public Sample{
-    Ch5SamplerObject(geo::Camera *cam) : Sample(cam){}
+    Ch5SamplerObject(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -418,7 +420,7 @@ private:
 };
 
 struct Ch5RenderToTexture: public Sample{
-    Ch5RenderToTexture(geo::Camera *cam) : Sample(cam){}
+    Ch5RenderToTexture(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -438,7 +440,7 @@ private:
 };
 
 struct Ch6EdgeDetectionFilter: public Sample{
-    Ch6EdgeDetectionFilter(geo::Camera *cam) : Sample(cam){}
+    Ch6EdgeDetectionFilter(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -453,7 +455,7 @@ private:
 };
 
 struct Ch6GaussianFilter : public Sample{
-    Ch6GaussianFilter(geo::Camera *cam) : Sample(cam){}
+    Ch6GaussianFilter(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -472,7 +474,7 @@ private:
 };
 
 struct Ch6HdrLightingToneMapping : public Sample{
-    Ch6HdrLightingToneMapping(geo::Camera *cam) : Sample(cam){}
+    Ch6HdrLightingToneMapping(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -488,7 +490,7 @@ private:
 };
 
 struct Ch6HdrBloom : public Sample{
-    Ch6HdrBloom(geo::Camera *cam) : Sample(cam){}
+    Ch6HdrBloom(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -518,7 +520,7 @@ private:
 };
 
 struct Ch6Deferred : public Sample{
-    Ch6Deferred(geo::Camera *cam) : Sample(cam){}
+    Ch6Deferred(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -533,7 +535,7 @@ private:
     std::vector<geo::Pt3f> lightsColors;
 };
 struct Ch6SSAO : public Sample{
-    Ch6SSAO(geo::Camera *cam) : Sample(cam){}
+    Ch6SSAO(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -559,7 +561,7 @@ struct Ch6OIT : public Sample{
     //     GLfloat depth;
     //     GLuint next;
     // };
-    Ch6OIT(geo::Camera *cam) : Sample(cam){}
+    Ch6OIT(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -595,7 +597,7 @@ private:
 };
 
 struct Ch7BezCurve : public Sample{
-    Ch7BezCurve(geo::Camera *cam) : Sample(cam){}
+    Ch7BezCurve(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -606,7 +608,7 @@ private:
 };
 
 struct Ch7ShadeWire : public Sample{
-    Ch7ShadeWire(geo::Camera *cam) : Sample(cam){}
+    Ch7ShadeWire(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto update_screen_size() -> void final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
@@ -616,7 +618,7 @@ private:
     gl::ShaderProgram *shader = nullptr;
 };
 struct Ch7ScenePointSprite : public Sample{
-    Ch7ScenePointSprite(geo::Camera *cam) : Sample(cam){}
+    Ch7ScenePointSprite(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -627,13 +629,13 @@ private:
     // std::unique_ptr<gl::CloudPointsDrawer> pointsSprites = nullptr;
 };
 struct Ch7Silhouette : public Sample{
-    Ch7Silhouette(geo::Camera *cam) : Sample(cam){}
+    Ch7Silhouette(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
 private:
 };
 struct Ch8ShadowMap : public Sample{
-    Ch8ShadowMap(geo::Camera *cam) : Sample(cam){}
+    Ch8ShadowMap(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -660,7 +662,7 @@ private:
 };
 
 struct Ch8ShadowPcf : public Sample{
-    Ch8ShadowPcf(geo::Camera *cam) : Sample(cam){}
+    Ch8ShadowPcf(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     auto update_imgui() -> void final override;
@@ -685,7 +687,7 @@ private:
 
 
 struct Ch8ShadowMap2 : public Sample{
-    Ch8ShadowMap2(geo::Camera *cam) : Sample(cam){}
+    Ch8ShadowMap2(geo::Camera *cam, geo::Screen *screen) : Sample(cam, screen){}
     auto init() -> bool final override;
     auto draw(gl::BaseDrawer *drawer = nullptr) -> void final override;
     void render_scene(gl::ShaderProgram *shader);

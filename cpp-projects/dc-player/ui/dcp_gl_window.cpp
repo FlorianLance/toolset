@@ -43,8 +43,8 @@
 using namespace tool::gl;
 using namespace tool::graphics;
 
-DCPGlWindow::DCPGlWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) :
-    BaseSfmlGlWindow(title, screen, context) {    
+DCPGlWindow::DCPGlWindow(std::string_view title, geo::Screen screen, geo::Camera camera, std::optional<sf::ContextSettings> context) :
+    BaseSfmlGlWindow(title, screen, camera, context) {
 }
 
 auto DCPGlWindow::init_shaders() -> bool{
@@ -112,7 +112,7 @@ auto DCPGlWindow::initialize_gl() -> bool{
 
     // camera
     Log::message("Init camera\n");
-    m_camera.set_direction(0.,0.,0.);
+    m_camera.set_rotation({0.,0.,0.});
 
     VAO::unbind();
 

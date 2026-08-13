@@ -31,6 +31,7 @@
 
 // base
 #include "geometry/camera.hpp"
+#include "geometry/screen.hpp"
 
 // opengl
 #include "opengl/buffer/framebuffer_object.hpp"
@@ -48,7 +49,7 @@ class ImguiFboUiDrawer{
 
 public:
 
-    ImguiFboUiDrawer();
+    ImguiFboUiDrawer(geo::Camera camera);
 
     auto initialize() -> void;
     auto resize(const geo::Pt2<int> &size) -> void;
@@ -61,6 +62,8 @@ public:
     auto update_viewport() -> void;
 
     inline auto camera() -> geo::Camera* {return &m_camera;}
+    inline auto screen() -> geo::Screen* {return &m_screen;}
+
     auto texture_size() const noexcept -> geo::Pt2<int>{return {m_texture.width(),m_texture.height()};}
     auto texture_id() const noexcept -> GLuint {return m_texture.id();}
     auto is_camera_updated() const noexcept -> bool{return m_cameraUpdated;}
@@ -90,6 +93,7 @@ private:
     gl::FBO m_fbo;
     gl::Texture2D m_texture;
     gl::RBO m_depthTexture;
+
     geo::Camera m_camera;
     geo::Screen m_screen;
     geo::Pt2<int> m_sizeI;

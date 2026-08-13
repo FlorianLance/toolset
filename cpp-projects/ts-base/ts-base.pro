@@ -94,6 +94,10 @@ HEADERS += \
     depth-camera/states/dc_video_recorder_states.hpp \
     depth-camera/states/dc_calibrator_states.hpp \
     ## geometry
+    geometry/glm_camera.hpp \
+    geometry/ray3.hpp \
+    geometry/raycast.hpp \
+    geometry/transform.hpp \
     geometry/triangle.hpp \
     geometry/aabb3.hpp \
     geometry/circle.hpp \
@@ -121,10 +125,7 @@ HEADERS += \
     geometry/_line2.hpp \
     geometry/_line3.hpp \
     geometry/_octree.hpp \
-    geometry/_ray3.hpp \
-    geometry/_raycast.hpp \
     geometry/_rectangle.hpp \
-    geometry/_transform.hpp \
     geometry/color_cloud.hpp \
     geometry/color_voxel_grid.hpp \
     geometry/geometry_formatter.hpp \
@@ -235,6 +236,7 @@ SOURCES += \
     geometry/cloud_io.cpp\
     geometry/camera.cpp \
     ## image
+    geometry/glm_camera.cpp \
     image/color_utility.cpp \
     image/texture.cpp \
     image/cube_map.cpp \

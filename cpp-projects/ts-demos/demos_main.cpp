@@ -74,6 +74,7 @@ int main(int, char *argv[]){
     // init main window
     // # screen
     tool::geo::Screen screen(1600, 900, 0,0);
+    tool::geo::Camera camera{};
     // # gl context
     sf::ContextSettings context;
     context.depthBits         = 24;
@@ -88,10 +89,10 @@ int main(int, char *argv[]){
     std::unique_ptr<tool::graphics::BaseSfmlGlWindow> scene = nullptr;
     switch (demo) {
     case DemoType::Samples:
-        scene = std::make_unique<tool::graphics::DrawSampleWindow>("Samples", screen, context);
+        scene = std::make_unique<tool::graphics::DrawSampleWindow>("Samples", screen, camera, context);
         break;
     case DemoType::Biopac:
-        scene = std::make_unique<tool::graphics::BiopacControlWindow>("Biopac controller", screen, context);
+        scene = std::make_unique<tool::graphics::BiopacControlWindow>("Biopac controller", screen, camera, context);
         break;
     default:
         return 0;

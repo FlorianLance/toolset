@@ -79,7 +79,7 @@ HEADERS += \
     opengl/gl_draw.hpp \
     opengl/gl_functions.hpp \
     opengl/gl_material.hpp \
-    opengl/gl_types.hpp \    
+    opengl/gl_types.hpp \
     opengl/vao.hpp \
     opengl/shapes.hpp \
     ## buffer
@@ -103,6 +103,8 @@ HEADERS += \
     opengl/texture/texture_2d_tbo.hpp \
     ## utility
     opengl/utility/gl_utility.hpp \
+    ## samples
+    opengl/samples/diffuse_gl_sample.hpp \
     ## draw
     opengl/draw/drawers_manager.hpp \
     opengl/draw/base_drawer.hpp \

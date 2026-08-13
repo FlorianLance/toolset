@@ -31,9 +31,8 @@
 // local
 #include "utility/logger.hpp"
 
-// static inline std::unique_ptr<tool::Logger> logger = nullptr;
 
-TEST_CASE( "1: All test cases reside in other .cpp files (empty)", "[multi-file:1]" ) {
+TEST_CASE("A. MAIN") {
 
     auto logger = std::make_unique<tool::Logger>();
     logger->nofile_init();
@@ -42,7 +41,7 @@ TEST_CASE( "1: All test cases reside in other .cpp files (empty)", "[multi-file:
     logger->config(tool::Logger::MessageType::error).displayToConsole = true;
     logger->config(tool::Logger::MessageType::log).displayToConsole = true;
     tool::Logger::set_logger_instance(std::move(logger));
-
+    tool::Log::message("## Logger initialized ##\n");
     tool::Log::message("## Start all tests ##\n");
 }
 

@@ -33,10 +33,12 @@ TS_BASE_THIRDPARTY_INCLUDES =\
     $$SIGSLOT_INCLUDES\
     $$STB_INCLUDES\
     $$BOOST_INCLUDES\
+    # $$GLM_INCLUDES\
 
 TS_BASE_THIRDPARTY_LIBS =\
     $$OS_LIBS\
     $$BOOST_SYS_LIBS\
+    # $$GLM_LIBS\
 
 ########################################################### TS-BASE-TEST
 

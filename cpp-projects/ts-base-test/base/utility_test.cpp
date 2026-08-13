@@ -36,9 +36,7 @@
 
 using namespace tool;
 
-
 TEST_CASE("Utility"){ Log::message("# Utility #\n");
-
 
     SECTION("Paths"){ Log::message("## Paths\n");
 

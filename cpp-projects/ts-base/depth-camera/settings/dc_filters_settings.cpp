@@ -101,6 +101,9 @@ auto DCFiltersSettings::init_from_json(const nlohmann::json &json) -> void{
     // infra filtering
     read_and_update_value(json, unreadCount, "invalidate_infra_from_depth"sv, invalidateInfraFromDepth);
 
+    read_and_update_value(json, unreadCount, "invalid_color_value"sv, invalidColorValue.array);
+
+
     if(unreadCount != 0){
         tool::Log::warning(std::format("[DCFiltersSettings::init_from_json] [{}] values have not been initialized from json data.\n", unreadCount));
     }
@@ -163,6 +166,8 @@ auto DCFiltersSettings::convert_to_json() const -> nlohmann::json{
     // infra filtering
     add_value(json, "invalidate_infra_from_depth"sv,        invalidateInfraFromDepth);
 
+    add_value(json, "invalid_color_value"sv,        invalidColorValue.array);
+
     return json;
 }
 
@@ -205,6 +210,9 @@ auto DCFiltersSettings::init_from_data(std::byte const * const data, size_t &off
     read(maxDistanceAfterClosestPoint, data, offset, sizeData);
     read(invalidateColorFromDepth, data, offset, sizeData);
     read(invalidateInfraFromDepth, data, offset, sizeData);
+
+    // test
+    read(invalidColorValue, data, offset, sizeData);
 
     version = SettingsVersion::LastVersion;
 }

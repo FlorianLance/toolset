@@ -40,7 +40,7 @@ using namespace tool::ui;
 using namespace tool::gl;
 using namespace Qt::Literals::StringLiterals;
 
-QtBaseSfmlGlW::QtBaseSfmlGlW(QWidget *Parent) : QWidget(Parent), m_camera(&m_screen){
+QtBaseSfmlGlW::QtBaseSfmlGlW(QWidget *Parent) : QWidget(Parent), m_camera(geo::Vec3d{0.,0.,0.}, geo::Vec3d{0.0, 180.0, 180.0}){
 
     // rendering in widget
     setAttribute(Qt::WA_PaintOnScreen);
@@ -123,7 +123,6 @@ auto QtBaseSfmlGlW::resizeEvent(QResizeEvent *event) -> void{
 
     QScreen *screen = this->window()->windowHandle()->screen();
     m_screen.resize(static_cast<unsigned int>(event->size().width()),static_cast<unsigned int>(event->size().height()), screen->devicePixelRatio());
-    m_camera.update_projection();
 
     if(!m_windowInitialized){
         return;
@@ -169,15 +168,16 @@ auto QtBaseSfmlGlW::mouseMoveEvent(QMouseEvent *event) -> void{
     yoffset *= sensitivity;
 
     if(mouseLeftClickPressed){
-        m_camera.set_direction(xoffset,-yoffset,0.);
+        m_camera.rotate({xoffset,yoffset,0.});
     }else if(mouseMiddleClickPressed){
         m_camera.move_up(-0.1*yoffset);
         m_camera.move_right(0.1*xoffset);
     }else if(mouseRighClickPressed){
-        m_camera.set_direction(0.,0.,xoffset);
+        m_camera.rotate({0.,0.,xoffset});
     }
     update();
 }
+
 
 auto QtBaseSfmlGlW::wheelEvent(QWheelEvent *event) -> void{
     m_camera.move_front(event->angleDelta().y()*0.001);
@@ -200,14 +200,21 @@ auto QtBaseSfmlGlW::keyPressEvent(QKeyEvent *event) -> void {
     if(event->key() == Qt::Key_Down){
         m_camera.move_back(m_cameraSpeed);
     }
+    // if(event->key() == Qt::Key_A){
+    //     m_camera.rotate({0,-1.0,0.});
+    // }
+    // if(event->key() == Qt::Key_B){
+    //     m_camera.rotate({0,0.0,-1.0});
+    // }
+    // if(event->key() == Qt::Key_C){
+    //     m_camera.rotate({1.0,0.0,0.0});
+    // }
     if(event->key() == Qt::Key_R){
         m_camera.reset_init_values();
-        m_camera.set_direction(0.,0.,0.);
     }
 
     update();
 }
-
 
 auto QtBaseSfmlGlW::on_init() -> bool{
 

@@ -168,7 +168,7 @@ DCServer::Impl::Impl(){
         for(const auto &packet : packets){
 
             if(packet.header.type != 8){
-                Log::fmessage("[PACKKET HEADER TYPE-{}]", packet.header.type);
+                // Log::fmessage("[PACKKET HEADER TYPE-{}]", packet.header.type);
             }
 
             switch (static_cast<DCMessageType>(packet.header.type)) {

@@ -272,24 +272,40 @@ auto FrustumDrawerLinesDrawer::initialize(bool dynamic, float fovy, float ar, fl
     }
 }
 
-auto FrustumDrawerLinesDrawer::update(float fovy, float ar, float nearDist, float farDist) -> void{
+auto FrustumDrawerLinesDrawer::update(float fovy, float ar, float nearDist, float farDist, float factorWMin, float factorWMax , float factorHMin, float factorHMax) -> void{
 
     if(nearDist > farDist){
         nearDist = farDist;
     }
 
+
     float dy   = nearDist * tanf( deg_2_rad(fovy) / 2.0f );
     float dx   = ar * dy;
+    float dz   = nearDist;
+
+    float diffX  = (2 * dx * (1 - factorWMin));
+    float diffMX = (2 * dx * (1 - factorWMax));
+
+    // -dx dx
+    //  (2 * dx * (1 - factorWMin))
+
     float fdy  = farDist * tanf( deg_2_rad(fovy) / 2.0f );
-    float fdx  = ar * fdy;
+    float fdx  = ar * fdy;    
+    float fdz  = farDist;
 
     std::array<Pt3f,9> vertices = {
         Pt3f
-        {0,0,0},                {dx, dy, nearDist},    {-dx, dy,   nearDist},
-        {-dx, -dy,  nearDist},  {dx, -dy, nearDist},   {fdx, fdy,  farDist},
-        {-fdx, fdy, farDist},   {-fdx, -fdy, farDist}, {fdx, -fdy, farDist}
+        {0,0,0},
+        { dx - diffMX,   dy, dz},
+        {-dx + diffX,  dy, dz},
+        {-dx + diffX,  -dy, dz},
+        { dx - diffMX,   -dy, dz},
+        { fdx,  fdy, fdz},
+        {-fdx,  fdy, fdz},
+        {-fdx, -fdy, fdz},
+        { fdx, -fdy, fdz}
     };
-    
+
     auto lm = dynamic_cast<LinesRenderer*>(m_vaoRenderer.get());
     if(!lm->update_data({}, 0, vertices, 0)){
         Log::error("[FrustumDrawerLinesDrawer::update] Error during update.\n"sv);

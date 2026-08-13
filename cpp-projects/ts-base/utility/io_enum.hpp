@@ -40,7 +40,8 @@ enum class SettingsVersion : std::uint16_t{
     v1_0=0,
     v1_9,
     v2_0,
-    LastVersion = v2_0,
+    V3_0,
+    LastVersion = V3_0,
     Undefined,
     SizeEnum
 };

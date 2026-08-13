@@ -123,9 +123,9 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, Mat4f::identity());
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view_matrix().conv<float>(), true);
+            shader->set_uniform_matrix("projection"sv, fboD.screen()->projection().conv<float>(), true);
+            shader->set_uniform_matrix("model"sv, Mat4f::identity(), true);
             // colors
             shader->set_uniform("enable_unicolor"sv, true);
             shader->set_uniform("unicolor"sv, Pt4f{1.f,1.f,1.f,1.f});
@@ -133,15 +133,15 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
         }
     }
 
-    bool displayRaycast = true;
+    bool displayRaycast = false;
     if(displayRaycast){
         if(auto shader = solidShader){
 
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, Mat4f::identity());
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view_matrix().conv<float>(), true);
+            shader->set_uniform_matrix("projection"sv, fboD.screen()->projection().conv<float>(), true);
+            shader->set_uniform_matrix("model"sv, Mat4f::identity(), true);
             // colors
             shader->set_uniform("enable_unicolor"sv, true);
             shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f,1.f});
@@ -151,7 +151,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
         }
     }
 
-    // shader->set_uniform_matrix("model"sv,  cloudD->model);
+    // shader->set_uniform_matrix("model"sv,  cloudD->model, true);
 
 
     size_t idC = 0;
@@ -166,9 +166,9 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
         if(auto shader = cloudD->display.circles ? circlesCloudShader : pointsCloudShader){
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, cloudD->model);
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view_matrix().conv<float>(), true);
+            shader->set_uniform_matrix("projection"sv, fboD.screen()->projection().conv<float>(), true);
+            shader->set_uniform_matrix("model"sv, cloudD->model, true);
             // camera
             shader->set_uniform("camera_position"sv, fboD.camera()->position().conv<float>());
             shader->set_uniform("camera_direction"sv, fboD.camera()->direction().conv<float>());
@@ -203,9 +203,9 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
             shader->use();
             // transforms
-            shader->set_uniform_matrix("view"sv, fboD.camera()->view().conv<float>());
-            shader->set_uniform_matrix("projection"sv, fboD.camera()->projection().conv<float>());
-            shader->set_uniform_matrix("model"sv, cloudD->model);
+            shader->set_uniform_matrix("view"sv, fboD.camera()->view_matrix().conv<float>(), true);
+            shader->set_uniform_matrix("projection"sv, fboD.screen()->projection().conv<float>(), true);
+            shader->set_uniform_matrix("model"sv, cloudD->model, true);
 
             // color
             shader->set_uniform("enable_unicolor"sv, true);
@@ -232,7 +232,7 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                         }else{
                             continue;
                         }
-                        shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(0.3f,0.3f,0.3f), Pt3f{0.f,0.f,0.f}, Pt3f{0.f,0.f,0.f}) * std::get<1>(jm) * cloudD->model);
+                        shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(0.3f,0.3f,0.3f), Pt3f{0.f,0.f,0.f}, Pt3f{0.f,0.f,0.f}) * std::get<1>(jm) * cloudD->model, true);
                         shader->set_uniform("enable_unicolor"sv, false);
                         cloudD->btJointDirD.draw();
                         glLineWidth(3.f);
@@ -252,24 +252,24 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
                     auto p3 = cloudD->filtersS.p1C;
                     Pt3f meanPt    = (p1+p2+p3)/3.f;
 
-                    shader->set_uniform_matrix("model"sv,  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model);
+                    shader->set_uniform_matrix("model"sv,  transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p1) * cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{0.f,1.f,0.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model);
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p2) * cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model);
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, p3) * cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{0.f,0.f,1.f, 1.f});
                     filteringPlanesDotD.draw();
 
-                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model);
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, meanPt) * cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{0.f,1.f,1.f, 1.f});
                     filteringPlanesDotD.draw();
 
                     shader->set_uniform("unicolor"sv, Pt4f{1.f,0.f,0.f, 1.f});
-                    shader->set_uniform_matrix("model"sv, cloudD->model);
+                    shader->set_uniform_matrix("model"sv, cloudD->model, true);
 
                     auto v1 = vec(meanPt,p1);
                     auto v2 = vec(meanPt,p2);
@@ -285,13 +285,13 @@ auto DCCloudsSceneDrawer::draw_clouds_to_fbo(ImguiFboUiDrawer &fboD) -> void {
 
                 if(cloudD->filtersS.removeFromPointDistance){
                     auto sp = cloudD->filtersS.pSphere;
-                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model);
+                    shader->set_uniform_matrix("model"sv, transform<float>(Pt3f(1.f,1.f,1.f), Pt3f{0.f,0.f,0.f}, sp) * cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{0.5f,0.5f,1.f, 1.f});
                     filteringPlanesDotD.draw();
                 }
 
                 if(cloudD->filtersS.keepOnlyPointsInsideOOB){
-                    shader->set_uniform_matrix("model"sv,  cloudD->model);
+                    shader->set_uniform_matrix("model"sv,  cloudD->model, true);
                     shader->set_uniform("unicolor"sv, Pt4f{0.5f,0.5f,0.5f, 1.f});
                     cloudD->oobLinesD.update(cloudD->filtersS.oob);
                     cloudD->oobLinesD.draw();

@@ -33,6 +33,8 @@
 #include "opengl/vao.hpp"
 #include "opengl/shapes.hpp"
 
+#include "utility/paths.hpp"
+
 using namespace tool::gl;
 
 GlfwGlWindow::GlfwGlWindow(){
@@ -50,22 +52,27 @@ auto GlfwGlWindow::init(int width, int height) -> bool{
         return false;
     }
 
+    m_screen.resize(width, height);
+    m_screen.set_fov(60.0);
+    m_screen.set_range(0.1, 100.);
+
+
     if(!init_glew()){
         return false;
     }
 
-    // test
-//    triVao.init();
-    std::vector<std::uint32_t> ids = {0,1,2};
-//    triVao.update_data(&triangle_vertices[0], 3, ids.data(), 1, GL_STATIC_DRAW);
+    axesD.initialize(0.15f);
+    gridD.initialize(0.2f, 0.2f, 1000.f, 1000.f);
+
+    std::vector<std::string> paths;
+    paths.push_back("D:/DEV/Perso/toolset/cpp-projects/_resources/shaders/lines.vert.glsl");
+    paths.push_back("D:/DEV/Perso/toolset/cpp-projects/_resources/shaders/lines.frag.glsl");
 
     // init shaders
-//    if(!meshShader.load_from_files("G:/DEV/Projets/RealityEx/expyvr/ressources/shaders/depth_camera_mesh.vert",
-//                                   "G:/DEV/Projets/RealityEx/expyvr/ressources/shaders/depth_camera_mesh.frag")){
-//        std::cerr << "Failed to load shaders. \n";
-//        return false;
-//    }
-
+    if(!linesShader.load_from_files(paths)){
+        std::cerr << "Failed to load shaders. \n";
+        return false;
+    }
 
     return true;
 }
@@ -83,19 +90,17 @@ auto GlfwGlWindow::start() -> void{
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
-
         // set polygon mode
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        meshShader.use();
-        meshShader.set_uniform_matrix("view"sv,         view.conv<float>());
-        meshShader.set_uniform_matrix("model"sv,        model.conv<float>());
-        meshShader.set_uniform_matrix("projection"sv,   projection.conv<float>());
+        linesShader.use();
+        linesShader.set_uniform_matrix("view"sv,         m_camera.view_matrix().conv<float>(), true);
+        linesShader.set_uniform_matrix("model"sv,        model.conv<float>(), true);
+        linesShader.set_uniform_matrix("projection"sv,   m_screen.projection().conv<float>(), true);
 
         // draw
-//        triVao.draw();
-
+        axesD.draw();
+        gridD.draw();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -145,10 +150,41 @@ auto GlfwGlWindow::process_input(GLFWwindow *window) -> void{
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
+
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+        m_camera.move_left(0.05);
+    }
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+        m_camera.move_right(0.05);
+    }
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+        m_camera.move_up(0.05);
+    }
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+        m_camera.move_down(0.05);
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+        m_camera.rotate({1.0,0,0});
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
+        m_camera.rotate({0.,1.0,0});
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS){
+        m_camera.rotate({0.,0.,1.});
+    }
+
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS){
+        std::cout << "click 1";
+    }
 }
 
 auto GlfwGlWindow::framebuffer_size_callback(GLFWwindow *window, int width, int height) -> void{
     static_cast<void>(window);
+    std::cout << "framebuffer_size_callback" << width << height << "\n";
+    // cam.
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);

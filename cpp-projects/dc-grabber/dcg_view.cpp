@@ -37,8 +37,6 @@ DCGView::DCGView(size_t id){
 
     auto lg = LogG("DCGView::DCGView"sv);
     // init main window
-    // # screen
-    geo::Screen screen(1920, 1080, 0,0);
     // # gl context
     sf::ContextSettings context;
     context.depthBits         = 24;
@@ -48,7 +46,12 @@ DCGView::DCGView(size_t id){
     context.minorVersion      = 6;
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
     // # window
-    m_glW = std::make_unique<graphics::DCGGlWindow>(std::format("DC grabber id[{}] v[{}]", id, cam::dc_version_name(cam::current_dc_version())), screen,context);
+    m_glW = std::make_unique<graphics::DCGGlWindow>(
+        std::format("DC grabber id[{}] v[{}]", id, cam::dc_version_name(cam::current_dc_version())),
+        geo::Screen(1920, 1080, 0,0),
+        geo::Camera({},{0,0,180}),
+        context
+    );
     m_glW->init();
 }
 

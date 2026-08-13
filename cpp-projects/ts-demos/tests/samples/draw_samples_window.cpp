@@ -48,8 +48,8 @@
 using namespace tool::gl;
 using namespace tool::graphics;
 
-DrawSampleWindow::DrawSampleWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) :
-    BaseSfmlGlWindow(title, screen, context){
+DrawSampleWindow::DrawSampleWindow(std::string_view title, geo::Screen screen, geo::Camera camera, std::optional<sf::ContextSettings> context) :
+    BaseSfmlGlWindow(title, screen, camera, context){
     
     auto logger = std::make_unique<Logger>();
     logger->init("./", "draw_sample.html");
@@ -449,48 +449,48 @@ auto DrawSampleWindow::init_drawers() -> bool{
 
 auto DrawSampleWindow::init_samples() -> bool{
 
-    uiSamples.add_element("cloud", std::make_unique<CloudSample>(&m_camera));
+    // uiSamples.add_element("cloud", std::make_unique<CloudSample>(&m_camera, &m_screen));
     // ch3
-    uiSamples.add_element("ch3Diffuse", std::make_unique<Ch3Diffuse>(&m_camera));
-    uiSamples.add_element("ch3TwoSide",  std::make_unique<Ch3TwoSide>(&m_camera));
-    uiSamples.add_element("ch3Flat",     std::make_unique<Ch3Flat>(&m_camera));
-    uiSamples.add_element("ch3Discard", std::make_unique<Ch3Discard>(&m_camera));
-    uiSamples.add_element("ch3Phong",   std::make_unique<Ch3Phong>(&m_camera));
+    uiSamples.add_element("ch3Diffuse", std::make_unique<Ch3Diffuse>(&m_camera, &m_screen));
+    uiSamples.add_element("ch3TwoSide",  std::make_unique<Ch3TwoSide>(&m_camera, &m_screen));
+    uiSamples.add_element("ch3Flat",     std::make_unique<Ch3Flat>(&m_camera, &m_screen));
+    uiSamples.add_element("ch3Discard", std::make_unique<Ch3Discard>(&m_camera, &m_screen));
+    uiSamples.add_element("ch3Phong",   std::make_unique<Ch3Phong>(&m_camera, &m_screen));
     // ch4
-    uiSamples.add_element("ch4PhongDirectionnalLight",  std::make_unique<Ch4PhongDirectionnalLight>(&m_camera));
-    uiSamples.add_element("ch4PhongMultiLights",  std::make_unique<Ch4PhongMultiLights>(&m_camera));
-    uiSamples.add_element("ch4PhongPerFragment",  std::make_unique<Ch4PhongPerFragment>(&m_camera));
-    uiSamples.add_element("ch4BlinnPhong",  std::make_unique<Ch4BlinnPhong>(&m_camera));
-    uiSamples.add_element("ch4Cartoon",  std::make_unique<Ch4Cartoon>(&m_camera));
-    uiSamples.add_element("ch4PBR",  std::make_unique<Ch4PBR>(&m_camera));
+    uiSamples.add_element("ch4PhongDirectionnalLight",  std::make_unique<Ch4PhongDirectionnalLight>(&m_camera, &m_screen));
+    uiSamples.add_element("ch4PhongMultiLights",  std::make_unique<Ch4PhongMultiLights>(&m_camera, &m_screen));
+    uiSamples.add_element("ch4PhongPerFragment",  std::make_unique<Ch4PhongPerFragment>(&m_camera, &m_screen));
+    uiSamples.add_element("ch4BlinnPhong",  std::make_unique<Ch4BlinnPhong>(&m_camera, &m_screen));
+    uiSamples.add_element("ch4Cartoon",  std::make_unique<Ch4Cartoon>(&m_camera, &m_screen));
+    uiSamples.add_element("ch4PBR",  std::make_unique<Ch4PBR>(&m_camera, &m_screen));
     // ch5
-    uiSamples.add_element("ch5DiscardPixels",  std::make_unique<Ch5DiscardPixels>(&m_camera));
-    uiSamples.add_element("ch5SceneTexture",  std::make_unique<Ch5SceneTexture>(&m_camera));
-    uiSamples.add_element("ch5SceneMutliTexture",  std::make_unique<Ch5SceneMutliTexture>(&m_camera));
-    uiSamples.add_element("ch5NormalMap",  std::make_unique<Ch5NormalMap>(&m_camera));
-    uiSamples.add_element("ch5ParallaxMapping",  std::make_unique<Ch5ParallaxMapping>(&m_camera));
-    uiSamples.add_element("ch5SteepParallaxMapping",  std::make_unique<Ch5SteepParallaxMapping>(&m_camera));
-    uiSamples.add_element("ch5ReflectCubeMap",  std::make_unique<Ch5ReflectCubeMap>(&m_camera));
-    uiSamples.add_element("ch5RefractCubeMap",  std::make_unique<Ch5RefractCubeMap>(&m_camera));
-    uiSamples.add_element("ch5ProjectTexture",  std::make_unique<Ch5ProjectTexture>(&m_camera));
-    uiSamples.add_element("ch5DiffuseImageBasedLighting",  std::make_unique<Ch5DiffuseImageBasedLighting>(&m_camera));
-    uiSamples.add_element("ch5SamplerObject",  std::make_unique<Ch5SamplerObject>(&m_camera));
-    uiSamples.add_element("ch5RenderToTexture",  std::make_unique<Ch5RenderToTexture>(&m_camera));
-    uiSamples.add_element("ch6EdgeDetectionFilter",  std::make_unique<Ch6EdgeDetectionFilter>(&m_camera));
-    uiSamples.add_element("ch6GaussianFilter",  std::make_unique<Ch6GaussianFilter>(&m_camera));
-    uiSamples.add_element("ch6HdrLightingToneMapping",  std::make_unique<Ch6HdrLightingToneMapping>(&m_camera));
-    uiSamples.add_element("ch6HdrBloom",  std::make_unique<Ch6HdrBloom>(&m_camera));
-    uiSamples.add_element("ch6Deferred",  std::make_unique<Ch6Deferred>(&m_camera));
-    uiSamples.add_element("ch6SSAO",  std::make_unique<Ch6SSAO>(&m_camera));
-    uiSamples.add_element("ch6OIT",  std::make_unique<Ch6OIT>(&m_camera));
-    uiSamples.add_element("ch7BezCurve",  std::make_unique<Ch7BezCurve>(&m_camera));
-//    uiSamples.add_element("ch7ShadeWire",  std::make_unique<Ch7ShadeWire>(&m_camera));
-    uiSamples.add_element("ch7ScenePointSprite",  std::make_unique<Ch7ScenePointSprite>(&m_camera));
-    uiSamples.add_element("ch7Silhouette",  std::make_unique<Ch7Silhouette>(&m_camera));
+    uiSamples.add_element("ch5DiscardPixels",  std::make_unique<Ch5DiscardPixels>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5SceneTexture",  std::make_unique<Ch5SceneTexture>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5SceneMutliTexture",  std::make_unique<Ch5SceneMutliTexture>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5NormalMap",  std::make_unique<Ch5NormalMap>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5ParallaxMapping",  std::make_unique<Ch5ParallaxMapping>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5SteepParallaxMapping",  std::make_unique<Ch5SteepParallaxMapping>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5ReflectCubeMap",  std::make_unique<Ch5ReflectCubeMap>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5RefractCubeMap",  std::make_unique<Ch5RefractCubeMap>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5ProjectTexture",  std::make_unique<Ch5ProjectTexture>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5DiffuseImageBasedLighting",  std::make_unique<Ch5DiffuseImageBasedLighting>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5SamplerObject",  std::make_unique<Ch5SamplerObject>(&m_camera, &m_screen));
+    uiSamples.add_element("ch5RenderToTexture",  std::make_unique<Ch5RenderToTexture>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6EdgeDetectionFilter",  std::make_unique<Ch6EdgeDetectionFilter>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6GaussianFilter",  std::make_unique<Ch6GaussianFilter>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6HdrLightingToneMapping",  std::make_unique<Ch6HdrLightingToneMapping>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6HdrBloom",  std::make_unique<Ch6HdrBloom>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6Deferred",  std::make_unique<Ch6Deferred>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6SSAO",  std::make_unique<Ch6SSAO>(&m_camera, &m_screen));
+    uiSamples.add_element("ch6OIT",  std::make_unique<Ch6OIT>(&m_camera, &m_screen));
+    uiSamples.add_element("ch7BezCurve",  std::make_unique<Ch7BezCurve>(&m_camera, &m_screen));
+//    uiSamples.add_element("ch7ShadeWire",  std::make_unique<Ch7ShadeWire>(&m_camera, &m_screen));
+    uiSamples.add_element("ch7ScenePointSprite",  std::make_unique<Ch7ScenePointSprite>(&m_camera, &m_screen));
+    uiSamples.add_element("ch7Silhouette",  std::make_unique<Ch7Silhouette>(&m_camera, &m_screen));
 
-    uiSamples.add_element("ch8ShadowMap",  std::make_unique<Ch8ShadowMap>(&m_camera));
-    uiSamples.add_element("ch8ShadowMap2",  std::make_unique<Ch8ShadowMap2>(&m_camera));
-    uiSamples.add_element("ch8ShadowPcf",  std::make_unique<Ch8ShadowPcf>(&m_camera));
+    uiSamples.add_element("ch8ShadowMap",  std::make_unique<Ch8ShadowMap>(&m_camera, &m_screen));
+    uiSamples.add_element("ch8ShadowMap2",  std::make_unique<Ch8ShadowMap2>(&m_camera, &m_screen));
+    uiSamples.add_element("ch8ShadowPcf",  std::make_unique<Ch8ShadowPcf>(&m_camera, &m_screen));
 
     for(auto &sample : uiSamples.get_span()){
         Log::message(std::format("Init sample {}\n", std::get<0>(sample)));
@@ -542,7 +542,7 @@ auto DrawSampleWindow::initialize_gl() -> bool{
     // camera
     Log::message("Init camera\n");
     m_camera.set_position({0.,0.,5.});
-    m_camera.set_direction({0.,0.,-1.},{0.,1.,0.});
+    m_camera.set_rotation({0.,0.,-90.});
     
     Log::message("Init drawers\n");
     init_drawers();

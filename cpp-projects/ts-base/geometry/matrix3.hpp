@@ -26,9 +26,7 @@
 
 #pragma once
 
-
 // local
-#include "utility/constants.hpp"
 #include "geometry/matrix.hpp"
 
 namespace tool::geo {
@@ -153,6 +151,16 @@ constexpr auto operator*(const Matrix<acc,3,3> &l, const Matrix<acc,3,3> &r) noe
 }
 
 template <typename acc>
+[[nodiscard]] constexpr auto transpose(const Matrix<acc,3,3> &m) noexcept -> Matrix<acc,3,3>{
+    return {{
+        m(0,0), m(1,0), m(2,0),
+        m(0,1), m(1,1), m(2,1),
+        m(0,2), m(1,2), m(2,2)
+    }};
+}
+
+
+template <typename acc>
 constexpr auto trace(const Matrix<acc,3,3> &m) noexcept -> acc{
     return m(0) + m(4) + m(8);
 }
@@ -187,56 +195,8 @@ constexpr auto inverse(const Matrix<acc,3,3> &m) noexcept -> Matrix<acc,3,3>{
     }};
 }
 
-/**
- * @param pitch: angle in degrees
- */
 template<typename acc>
-constexpr auto x_rotation_m3x3(acc pitch) noexcept -> Matrix<acc,3,3>{
-    pitch = deg_2_rad<acc>(pitch);
-    const acc cosA = cos(pitch);
-    const acc sinA = sin(pitch);
-    return {{
-        1,  0,     0,
-        0,  cosA, -sinA,
-        0,  sinA,  cosA
-    }};
-}
-
-/**
- * @param head: angle in degrees
- */
-template<typename acc>
-static constexpr auto y_rotation_m3x3(acc head) noexcept -> Matrix<acc,3,3>{
-    head = deg_2_rad<acc>(head);
-    const acc cosA = cos(head);
-    const acc sinA = sin(head);
-    return {{
-        cosA,   0,  sinA,
-        0,      1,  0,
-        -sinA,  0,  cosA
-    }};
-}
-
-/**
- * @param roll: angle in degrees
- */
-template<typename acc>
-constexpr auto z_rotation_m3x3(acc roll) noexcept -> Matrix<acc,3,3>{
-    roll = deg_2_rad<acc>(roll);
-    const acc cosA = cos(roll);
-    const acc sinA = sin(roll);
-    return {{
-        cosA,   -sinA,  0,
-        sinA,   cosA,   0,
-        0,      0,      1
-    }};
-}
-
-/**
- * equivalent to: return y_rotation_matrix(angles.y())*x_rotation_matrix(angles.x())*z_rotation_matrix(angles.z());
- */
-template<typename acc>
-constexpr auto rotation_m3x3(const RowVec<acc,3> &angles) noexcept -> Matrix<acc,3,3>{
+constexpr auto rotation_m3x3(const RowVec<acc,3> &angles) noexcept  -> Mat3<acc>{
 
     const auto cosH = std::cos(angles.y());
     const auto cosP = std::cos(angles.x());
@@ -245,55 +205,104 @@ constexpr auto rotation_m3x3(const RowVec<acc,3> &angles) noexcept -> Matrix<acc
     const auto sinP = std::sin(angles.x());
     const auto sinR = std::sin(angles.z());
 
-    return {{
+    return {
         cosR*cosH-sinR*sinP*sinH, -sinR*cosP, cosR*sinH+sinR*sinP*cosH,
         sinR*cosH+cosR*sinP*sinH, cosR*cosP,  sinR*sinH-cosR*sinP*cosH,
-        -cosP*sinH,               sinP,       cosP*cosH
-    }};
+        -cosP*sinH,               sinP,       cosP*cosH,
+    };
 }
 
-template<typename acc>
-auto axis_angle_m3x3(const RowVec<acc,3> &axis, acc angle) noexcept -> Matrix<acc,3,3>{
 
-    angle = deg_2_rad<acc>(angle);
-    auto u = normalize(axis);
-    const auto cA = cos(angle);
-    const auto sA = sin(angle);
-    const auto ux = u.x();
-    const auto uy = u.y();
-    const auto uz = u.z();
-    const auto ux2 = ux*ux;
-    const auto uy2 = uy*uy;
-    const auto uz2 = uz*uz;
 
-    return {{
-        cA + ux2*(1-cA), ux*uy*(1-cA) - uz*sA, ux*uz*(1-cA) + uy*sA,
-        uy*ux*(1-cA) + uz*sA,   cA+uy2*(1-cA), uy*uz*(1-cA)-ux*sA,
-        uz*ux*(1-cA)-uy*sA, uz*uy*(1-cA) +ux*sA,    cA +uz2*(1-cA)
-    }};
+// template<typename acc>
+// auto axis_angle_m3x3(const RowVec<acc,3> &axis, acc angle) noexcept -> Mat3<acc>{
+
+//     angle = deg_2_rad<acc>(angle);
+//     auto u = normalize(axis);
+//     const auto cA = cos(angle);
+//     const auto sA = sin(angle);
+//     const auto ux = u.x();
+//     const auto uy = u.y();
+//     const auto uz = u.z();
+//     const auto ux2 = ux*ux;
+//     const auto uy2 = uy*uy;
+//     const auto uz2 = uz*uz;
+
+//     return {
+//         cA + ux2*(1-cA), ux*uy*(1-cA) - uz*sA, ux*uz*(1-cA) + uy*sA,
+//         uy*ux*(1-cA) + uz*sA,   cA+uy2*(1-cA), uy*uz*(1-cA)-ux*sA,
+//         uz*ux*(1-cA)-uy*sA, uz*uy*(1-cA) +ux*sA,    cA +uz2*(1-cA)
+//     };
+// }
+
+
 }
+
+
 
 /**
  * @return head/pitch/roll angles in degrees
  */
-template<typename acc>
-constexpr auto to_hpr_angles(const Matrix<acc,3,3> &m) noexcept -> RowVec<acc,3>{ // head/pitch/roll
+// template<typename acc>
+// constexpr auto to_hpr_angles(const Matrix<acc,3,3> &m) noexcept -> RowVec<acc,3>{ // head/pitch/roll
 
-    const auto p = std::asin(m(1,2));
-    if(almost_equal<acc>(std::abs(p), PI_2<acc>)){ // grimbal lock
-        return{
-            0,
-            d180_PI<acc>*p,
-            d180_PI<acc>*(std::atan2(m(0,1),m(0,0)))
-        };
-    }
+//     const auto p = std::asin(m(1,2));
+//     if(almost_equal<acc>(std::abs(p), PI_2<acc>)){ // grimbal lock
+//         return{
+//             0,
+//             d180_PI<acc>*p,
+//             d180_PI<acc>*(std::atan2(m(0,1),m(0,0)))
+//         };
+//     }
 
-    return {{
-        d180_PI<acc>*std::atan2(-m(0,2),m(2,2)),
-        d180_PI<acc>*p,
-        d180_PI<acc>*std::atan2(-m(1,0),m(1,1))
-    }};
-}
+//     return {{
+//         d180_PI<acc>*std::atan2(-m(0,2),m(2,2)),
+//         d180_PI<acc>*p,
+//         d180_PI<acc>*std::atan2(-m(1,0),m(1,1))
+//     }};
+// }
 
+// /**
+//  * @param pitch: angle in degrees
+//  */
+// template<typename acc>
+// constexpr auto x_rotation_m3x3(acc pitch) noexcept -> Matrix<acc,3,3>{
+//     pitch = deg_2_rad<acc>(pitch);
+//     const acc cosA = cos(pitch);
+//     const acc sinA = sin(pitch);
+//     return {{
+//         1,  0,     0,
+//         0,  cosA, -sinA,
+//         0,  sinA,  cosA
+//     }};
+// }
 
-}
+// /**
+//  * @param head: angle in degrees
+//  */
+// template<typename acc>
+// static constexpr auto y_rotation_m3x3(acc head) noexcept -> Matrix<acc,3,3>{
+//     head = deg_2_rad<acc>(head);
+//     const acc cosA = cos(head);
+//     const acc sinA = sin(head);
+//     return {{
+//         cosA,   0,  sinA,
+//         0,      1,  0,
+//         -sinA,  0,  cosA
+//     }};
+// }
+
+// /**
+//  * @param roll: angle in degrees
+//  */
+// template<typename acc>
+// constexpr auto z_rotation_m3x3(acc roll) noexcept -> Matrix<acc,3,3>{
+//     roll = deg_2_rad<acc>(roll);
+//     const acc cosA = cos(roll);
+//     const acc sinA = sin(roll);
+//     return {{
+//         cosA,   -sinA,  0,
+//         sinA,   cosA,   0,
+//         0,      0,      1
+//     }};
+// }

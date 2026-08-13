@@ -30,6 +30,12 @@
 // glfw
 #include <GLFW/glfw3.h>
 
+
+#include "opengl/draw/lines_drawers.hpp"
+
+#include "geometry/camera.hpp"
+#include "geometry/screen.hpp"
+
 namespace tool::gl  {
 
 class GlfwGlWindow{
@@ -54,12 +60,16 @@ private :
 
     GLFWwindow *window = nullptr;
 
-    ShaderProgram meshShader;
+    ShaderProgram linesShader;
+
+    tool::gl::AxesLinesDrawer axesD;
+    tool::gl::GridLinesDrawer gridD;
 
     // transformations
-    geo::Mat4<double> projection;
-    geo::Mat4<double> model;
-    geo::Mat4<double> view;
+    geo::Mat4<double> model = geo::Mat4<double>::identity();
+
+    geo::Camera m_camera;
+    geo::Screen m_screen;
 };
 
 }

@@ -100,6 +100,29 @@ template <typename acc>
 constexpr auto to_pt4(const Point<acc,3> &pt, acc w) noexcept -> Pt4<acc>{
     return {pt[0],pt[1],pt[2],w};
 }
+template <typename acc>
+constexpr auto to_row4(const Point<acc,3> &pt, acc w) noexcept -> RowVec<acc,4>{
+    return {{pt[0],pt[1],pt[2],w}};
+}
+template <typename acc>
+constexpr auto to_col4(const Point<acc,3> &pt, acc w) noexcept -> ColVec<acc,4>{
+    return {{pt[0],pt[1],pt[2],w}};
+}
+
+template <typename acc>
+constexpr auto to_row4(const Point<acc,4> &pt) noexcept -> RowVec<acc,4>{
+    return {{pt[0],pt[1],pt[2],pt[3]}};
+}
+template <typename acc>
+constexpr auto to_row4(const ColVec<acc,4> &c) noexcept -> RowVec<acc,4>{
+    return {{c[0],c[1],c[2],c[3]}};
+}
+template <typename acc>
+constexpr auto to_col4(const Point<acc,4> &pt) noexcept -> ColVec<acc,4>{
+    return {{pt[0],pt[1],pt[2],pt[3]}};
+}
+
+
 
 template <typename acc>
 constexpr auto invert_axis(const Point4<acc> &p, bool x, bool y, bool z, bool w) noexcept -> Point4<acc>{

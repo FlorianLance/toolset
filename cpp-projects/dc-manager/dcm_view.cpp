@@ -35,7 +35,7 @@ DCMView::DCMView(size_t id){
 
     // init main window
     // # screen
-    geo::Screen screen(1920, 1080, 0,0);
+
     // # gl context
     sf::ContextSettings context;
     context.depthBits         = 24;
@@ -44,7 +44,12 @@ DCMView::DCMView(size_t id){
     context.majorVersion      = 4;
     context.minorVersion      = 6;
     context.attributeFlags    = sf::ContextSettings::Attribute::Default;
-    m_glW = std::make_unique<graphics::DCMGlWindow>(std::format("DC manager id[{}] v[{}]", id, cam::dc_version_name(cam::current_dc_version())), screen,context);
+    m_glW = std::make_unique<graphics::DCMGlWindow>(
+        std::format("DC manager id[{}] v[{}]", id, cam::dc_version_name(cam::current_dc_version())),
+        geo::Screen(1920, 1080, 0,0),
+        geo::Camera({},{0.0,180,180}),
+        context
+    );
     m_glW->init();
 }
 

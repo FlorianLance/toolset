@@ -43,6 +43,7 @@
 
 // base
 #include "geometry/camera.hpp"
+#include "geometry/screen.hpp"
 #include "utility/monitoring.hpp"
 
 namespace tool::graphics {
@@ -56,6 +57,7 @@ public:
     BaseSfmlGlWindow(
         std::string_view title,
         geo::Screen screen,
+        geo::Camera camera,        
         std::optional<sf::ContextSettings> context
     );
     virtual ~BaseSfmlGlWindow();

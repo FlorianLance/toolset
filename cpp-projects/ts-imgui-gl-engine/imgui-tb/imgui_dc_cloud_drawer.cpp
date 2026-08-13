@@ -56,6 +56,13 @@ auto DCCloudDrawer::initialize() -> void {
     cpD.set_indice_count(0);
 
     frustumD.initialize(true);
+    auto dr     = cam::dc_depth_resolution(cam::DCMode::FB_C1280x720_DI640x576_NV12_F30);
+    auto range  = cam::dc_depth_range(dr);
+    auto hFov   = dc_depth_h_fov(dr);
+    auto vFov   = dc_depth_v_fov(dr);
+    auto diff   = range.y() - range.x();
+    frustumD.update(1.f*vFov, 1.f*hFov/vFov, range.x() + filtersS.minDepthF*diff, range.x() + filtersS.maxDepthF*diff);
+
     geo::OBB3<float> obb;
     oobLinesD.initialize(true, obb);
     planeFilteringLinesD.initialize(true);

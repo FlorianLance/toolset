@@ -35,6 +35,7 @@
 
 // base
 #include "geometry/camera.hpp"
+#include "geometry/screen.hpp"
 
 namespace tool::ui {
 

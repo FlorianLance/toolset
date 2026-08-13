@@ -45,13 +45,15 @@
 #include "opengl/vao.hpp"
 #include "opengl/gl_functions.hpp"
 
+
+
 using namespace tool::gl;
 using namespace tool::geo;
 using namespace tool::graphics;
 using namespace std::string_view_literals;
 
-BaseSfmlGlWindow::BaseSfmlGlWindow(std::string_view title, geo::Screen screen, std::optional<sf::ContextSettings> context) ://, std::optional<sf::Style> style) :
-      m_title(title), m_screen(screen), m_camera(&m_screen, {0,0,0}, {0,0,1}) {
+BaseSfmlGlWindow::BaseSfmlGlWindow(std::string_view title, Screen screen, Camera camera, std::optional<sf::ContextSettings> context) ://, std::optional<sf::Style> style) :
+    m_title(title), m_screen(screen), m_camera(camera) {
 
     if(context.has_value()){
         glContext = context.value();
@@ -224,8 +226,8 @@ auto BaseSfmlGlWindow::start() -> void{
             imguiMouse = false;
             draw_imgui();
             draw_imgui_signal(geo::Pt2f{
-                1.f*m_camera.screen()->width(),
-                1.f*m_camera.screen()->height()
+                1.f*m_screen.width(),
+                1.f*m_screen.height()
             });
 
             ImGui::EndFrame();
@@ -295,13 +297,10 @@ auto BaseSfmlGlWindow::init_sfml_window() -> bool{
     return true;
 }
 
-auto BaseSfmlGlWindow::base_resize_windows(sf::Event::Resized event) -> void{
-    
+auto BaseSfmlGlWindow::base_resize_windows(sf::Event::Resized event) -> void{    
     auto lg = LogG("BaseSfmlGlWindow::base_resize_windows"sv);
-    m_screen = geo::Screen{event.size.x, event.size.y};
-    m_camera.update_projection();
+    m_screen.resize(event.size.x, event.size.y);
     glViewport(0, 0, static_cast<GLsizei>(m_screen.width()), static_cast<GLsizei>(m_screen.height()));
-
     resize_windows();
 }
 
@@ -380,9 +379,10 @@ auto BaseSfmlGlWindow::update_camera_with_mouse_button_released_event(sf::Event:
     lastY = -1;
 
     if(mouseLeftClickReleasedEvent){
-        m_camera.screen_raycast({lastX, lastY});
+        // m_camera.screen_raycast({lastX, lastY});
     }
 }
+
 
 auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyPressed event)  -> void{
 
@@ -399,15 +399,23 @@ auto BaseSfmlGlWindow::update_camera_with_keyboardpress_event(sf::Event::KeyPres
     case sf::Keyboard::Key::Down:
         m_camera.move_back(cameraMovingSpeed);
         break;
+    case sf::Keyboard::Key::A:
+        m_camera.rotate({1.0,0,0.});
+        break;
+    case sf::Keyboard::Key::Numpad9:
+        m_camera.rotate({-0.1,0,0.});
+        break;
+
     case sf::Keyboard::Key::R:
+        Log::get()->message("Reset\n");
         m_camera.reset_init_values();
-        m_camera.set_direction(0.,0.,0.);
+        // m_camera.rotate({0.,0.,0.});
         break;
     case sf::Keyboard::Key::O:
-        m_camera.set_mode(Camera::Mode::Orhtographic);
+        m_screen.set_mode(Screen::Mode::Orhtographic);
         break;
     case sf::Keyboard::Key::P:
-        m_camera.set_mode(Camera::Mode::Perspective);
+        m_screen.set_mode(Screen::Mode::Perspective);
         break;
     default:
         break;
@@ -438,12 +446,12 @@ auto BaseSfmlGlWindow::update_camera_with_mouse_moved_event(sf::Event::MouseMove
     yoffset *= sensitivity;
 
     if(mouseLeftClickPressed){
-        m_camera.set_direction(xoffset,-yoffset,0.);
+        m_camera.rotate({xoffset,-yoffset,0.});
     }else if(mouseMiddleClickPressed){
         m_camera.move_up(-0.1*yoffset);
         m_camera.move_right(0.1*xoffset);
     }else if(mouseRightClickPressed){
-        m_camera.set_direction(0.,0.,xoffset);
+        m_camera.rotate({0.,0.,xoffset});
     }
 
 

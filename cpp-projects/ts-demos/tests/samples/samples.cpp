@@ -51,13 +51,14 @@ using namespace tool::geo;
 using namespace tool::graphics;
 using namespace tool::gl;
 
-Sample::Sample(Camera *cam) : // managers
-      shadersM(ShadersManager::get_instance()),
-      texturesM(gl::TexturesManager::get_instance()),
-      modelsM(mesh::ModelsManager::get_instance()),
-      drawersM(DrawersManager::get_instance()),
-      // camera
-      camera(cam)
+Sample::Sample(Camera *cam,geo::Screen *screen) : // managers
+    shadersM(ShadersManager::get_instance()),
+    texturesM(gl::TexturesManager::get_instance()),
+    modelsM(mesh::ModelsManager::get_instance()),
+    drawersM(DrawersManager::get_instance()),
+    // camera
+    camera(cam),
+    screen(screen)
 {}
 
 auto Sample::parent_init() -> bool{
@@ -134,8 +135,8 @@ auto Sample::parent_init() -> bool{
 
 auto Sample::update(float elapsedSeconds) -> void{
 
-    camera->set_fov(camFov);
-    camM.update_vp(camera->view(),camera->projection());
+    screen->set_fov(camFov);
+    camM.update_vp(camera->view_matrix(),screen->projection());
 
     this->elapsedSeconds = elapsedSeconds;
 
@@ -164,7 +165,7 @@ auto Sample::parent_draw(tool::gl::BaseDrawer *drawer) -> void {
     if(drawLights){
         draw_lights();
     }
-    draw_skybox();
+    // draw_skybox();
 
     if(drawFloor){
         draw_floor();
@@ -244,10 +245,7 @@ auto Sample::parent_update_imgui() -> void{
                             camera->set_position(p.conv<double>());
                         }
                         if(ImGui::DragFloat3("Direction###Camera3",d.array.data(), 0.01f, -1.f, 1.f)){
-                            camera->set_direction(d.conv<double>(), u.conv<double>());
-                        }
-                        if(ImGui::DragFloat3("Up###Camera4",u.array.data(), 0.01f, -1.f, 1.f)){
-                            camera->set_up_vector(u.conv<double>());
+                            camera->set_rotation(d.conv<double>());
                         }
                     }
 
@@ -396,7 +394,7 @@ auto Sample::draw_floor() -> void{
     fs->use();
     fs->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     fs->set_uniform("Light.La", Vec3f{0.2f,0.2f,0.2f});
-    fs->set_uniform("Light.Position",camera->view().conv<float>().multiply_point(Sample::worldLight));
+    fs->set_uniform("Light.Position",camera->view_matrix().conv<float>().multiply_point(Sample::worldLight));
     fs->set_camera_matrices_uniforms(camM);
 
     materialFloorUBO.update(floorM);
@@ -519,7 +517,7 @@ auto Ch3Diffuse::draw(tool::gl::BaseDrawer *drawer) -> void {
     parent_draw(drawer);
 
     sampleShader->use();    
-    sampleShader->set_uniform("LightPosition", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("LightPosition", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform("Kd", kd);
     sampleShader->set_uniform("Ld", ld);
     draw_nb(sampleShader.get(), drawer);
@@ -558,7 +556,7 @@ auto Ch3Flat::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->use();
 
-    lInfo.Position = camera->view().multiply_point(worldLight.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(worldLight.conv<double>()).conv<float>();
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
@@ -595,7 +593,7 @@ auto Ch3Discard::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->use();
 
-    lInfo.Position = camera->view().multiply_point(worldLight.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(worldLight.conv<double>()).conv<float>();
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
@@ -640,7 +638,7 @@ auto Ch3TwoSide::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->use();
 
-    lInfo.Position = camera->view().multiply_point(worldLight.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(worldLight.conv<double>()).conv<float>();
     lightUBO.update(lInfo);
     lightUBO.bind(0);
 
@@ -677,7 +675,7 @@ auto Ch3Phong::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->use();
 
-    lInfo.Position = camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
 
     lightUBO.update(lInfo);
     lightUBO.bind(0);
@@ -712,7 +710,7 @@ auto Ch4PhongDirectionnalLight::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", lInfo.La);
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(worldLight.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(worldLight.conv<double>()).conv<float>()});
 
     materialUBO.bind(0);
 
@@ -748,7 +746,7 @@ auto Ch4BlinnPhong::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->use();
 
-    lInfo.Position = camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
 
     lightUBO.update(lInfo);
     lightUBO.bind(0);
@@ -782,7 +780,7 @@ auto Ch4Cartoon::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  lInfo.Ld);//Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", lInfo.La);
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform("levels", levels);
 
     materialUBO.bind(0);
@@ -815,11 +813,11 @@ auto Ch4PhongMultiLights::draw(tool::gl::BaseDrawer *drawer) -> void {
     parent_draw(drawer);
 
     std::vector<Pt4f> lPos ={
-        Pt4f{camera->view().multiply_point(Pt4d{5.0,5.0,2.0,1.0}).conv<float>()},
-        Pt4f{camera->view().multiply_point(Pt4d{0.0,5.0,2.0,1.0}).conv<float>()},
-        Pt4f{camera->view().multiply_point(Pt4d{5.0,0.0,2.0,1.0}).conv<float>()},
-        Pt4f{camera->view().multiply_point(Pt4d{5.0,5.0,0.0,1.0}).conv<float>()},
-        Pt4f{camera->view().multiply_point(Pt4d{0.0,5.0,0.0,1.0}).conv<float>()},
+        Pt4f{camera->view_matrix().multiply_point(Pt4d{5.0,5.0,2.0,1.0}).conv<float>()},
+        Pt4f{camera->view_matrix().multiply_point(Pt4d{0.0,5.0,2.0,1.0}).conv<float>()},
+        Pt4f{camera->view_matrix().multiply_point(Pt4d{5.0,0.0,2.0,1.0}).conv<float>()},
+        Pt4f{camera->view_matrix().multiply_point(Pt4d{5.0,5.0,0.0,1.0}).conv<float>()},
+        Pt4f{camera->view_matrix().multiply_point(Pt4d{0.0,5.0,0.0,1.0}).conv<float>()},
     };
 
     std::vector<Vec3f> lL ={
@@ -875,7 +873,7 @@ auto Ch4PhongPerFragment::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", lInfo.La);
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.update(mInfo);
     materialUBO.bind(0);
@@ -910,9 +908,9 @@ auto Ch4PBR::draw(tool::gl::BaseDrawer *drawer) -> void {
     parent_draw(drawer);
 
     sampleShader->use();
-    lights[0].Position = camera->view().conv<float>().multiply_point(mobileLightPos1);
-    lights[1].Position = camera->view().conv<float>().multiply_point(mobileLightPos2);
-    lights[2].Position = camera->view().conv<float>().multiply_point(worldLight);
+    lights[0].Position = camera->view_matrix().conv<float>().multiply_point(mobileLightPos1);
+    lights[1].Position = camera->view_matrix().conv<float>().multiply_point(mobileLightPos2);
+    lights[2].Position = camera->view_matrix().conv<float>().multiply_point(worldLight);
     lightsUBO.update_data(lights.data(), lights.size()*sizeof(img::Light2));
     lightsUBO.bind(0);
 
@@ -956,7 +954,7 @@ auto Ch5DiscardPixels::draw(tool::gl::BaseDrawer *) -> void{
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", lInfo.La);
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform_matrix("ModelViewMatrix",   camM.mv.conv<float>());
     sampleShader->set_uniform("decay_factor",      decayFactor);
 
@@ -992,7 +990,7 @@ auto Ch5SceneTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.bind(0);
 
@@ -1019,7 +1017,7 @@ auto Ch5SceneMutliTexture::draw(tool::gl::BaseDrawer *) -> void{
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.update(mInfo);
     materialUBO.bind(0);
@@ -1047,7 +1045,7 @@ auto Ch5NormalMap::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("animate", nbAnimations > 0);
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.update(mInfo);
     materialUBO.bind(0);
@@ -1080,7 +1078,7 @@ auto Ch5ParallaxMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("bumpFactor", bumpFactor);
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.update(mInfo);
     materialUBO.bind(0);
@@ -1116,7 +1114,7 @@ auto Ch5SteepParallaxMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.8f,0.8f,0.8f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform("bumpScale", bumpScale);
 
     materialUBO.bind(0);
@@ -1205,7 +1203,7 @@ auto Ch5ProjectTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
     auto frustumM =  geo::transform(Vec3d{1,1,1},projRot.conv<double>(),projPos.conv<double>());
     commonShaders["unicolor"sv]->use();
     commonShaders["unicolor"sv]->set_uniform("unicolor", Vec3f{1.0f,0.0f,0.0f});
-    commonShaders["unicolor"sv]->set_uniform_matrix("MVP",((frustumM*camera->view())*camera->projection()).conv<float>());
+    commonShaders["unicolor"sv]->set_uniform_matrix("MVP",((frustumM*camera->view_matrix())*screen->projection()).conv<float>());
 
     auto frustum = dynamic_cast<gl::FrustumDrawerLinesDrawer*>(commonDrawers["frustum"sv].get());
     frustum->update(fov, aspectRatio, zNear, zFar);
@@ -1222,7 +1220,7 @@ auto Ch5ProjectTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     sampleShader->set_uniform("Light.L",  Vec3f{0.8f,0.8f,0.8f});
     sampleShader->set_uniform("Light.La", Vec3f{0.2f,0.2f,0.2f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     materialUBO.update(mInfo);
     materialUBO.bind(0);
@@ -1295,7 +1293,7 @@ auto Ch5SamplerObject::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->use();
     sampleShader->set_uniform("Light.L", Vec3f{1.0f,1.0f, 1.0f});
     sampleShader->set_uniform("Light.La", lInfo.La);
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     sampleShader->set_uniform("Material.Ks", mInfo.Ks);
     sampleShader->set_uniform("Material.Shininess", mInfo.Shininess);
 
@@ -1440,7 +1438,7 @@ auto Ch5RenderToTexture::draw(tool::gl::BaseDrawer *drawer) -> void {
     gl::FBO::unbind();
     renderTexCh5RenderToTexture.bind(0);
 
-    glViewport(0,0, camera->screen()->width(), camera->screen()->height());
+    glViewport(0,0, screen->width(), screen->height());
 
     sampleShader->set_uniform("Light.Position", lInfo.Position);
     sampleShader->set_uniform("Material.Ks", mInfo.Ks);
@@ -1487,7 +1485,7 @@ auto Ch6EdgeDetectionFilter::update_screen_size() -> void{
 
     // Create the texture object
     screenRenderTexture.clean();
-    screenRenderTexture.init_render(camera->screen()->width(),camera->screen()->height());
+    screenRenderTexture.init_render(screen->width(),screen->height());
 
     TextureOptions options;
     options.minFilter = TextureMinFilter::nearest;
@@ -1499,7 +1497,7 @@ auto Ch6EdgeDetectionFilter::update_screen_size() -> void{
     screenDepthBuffer.clean();
     screenDepthBuffer.initialize();
     screenDepthBuffer.bind();
-    screenDepthBuffer.set_data_storage(camera->screen()->width(),camera->screen()->height());
+    screenDepthBuffer.set_data_storage(screen->width(),screen->height());
 
     // Bind the texture to the FBO
     screenFBO.attach_color0_texture(screenRenderTexture);
@@ -1530,7 +1528,7 @@ auto Ch6EdgeDetectionFilter::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("Pass", 1);
     sampleShader->set_uniform("EdgeThreshold", edgeThreshold);
 
-    lInfo.Position = camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
 
     lightUBO.update(lInfo);
     lightUBO.bind(0);
@@ -1605,7 +1603,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
 
         // Create the texture object
         screenRenderTexture.clean();
-        screenRenderTexture.init_render(camera->screen()->width(),camera->screen()->height());
+        screenRenderTexture.init_render(screen->width(),screen->height());
 
         TextureOptions options;
         options.minFilter = TextureMinFilter::nearest;
@@ -1617,7 +1615,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
         screenDepthBuffer.clean();
         screenDepthBuffer.initialize();
         screenDepthBuffer.bind();
-        screenDepthBuffer.set_data_storage(camera->screen()->width(),camera->screen()->height());
+        screenDepthBuffer.set_data_storage(screen->width(),screen->height());
 
         // Bind the texture to the FBO
         screenFBO.attach_color0_texture(screenRenderTexture);
@@ -1640,7 +1638,7 @@ auto Ch6GaussianFilter::update_screen_size() -> void {
 
         // Create the texture object
         intermediateRenderTexture.clean();
-        intermediateRenderTexture.init_render(camera->screen()->width(),camera->screen()->height());
+        intermediateRenderTexture.init_render(screen->width(),screen->height());
 
         TextureOptions options;
         options.minFilter = TextureMinFilter::nearest;
@@ -1678,7 +1676,7 @@ auto Ch6GaussianFilter::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("Weight[0]", weights);
     sampleShader->set_uniform("Pass", 1);
 
-    lInfo.Position = camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
+    lInfo.Position = camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>();
 
     lightUBO.update(lInfo);
     lightUBO.bind(0);
@@ -1746,7 +1744,7 @@ auto Ch6HdrLightingToneMapping::init() -> bool {
 
 auto Ch6HdrLightingToneMapping::update_screen_size() -> void {
 
-    int size = camera->screen()->size_pixels();
+    int size = screen->size_pixels();
     texData.resize(size*3);
 
     // Generate and bind the framebuffer
@@ -1758,11 +1756,11 @@ auto Ch6HdrLightingToneMapping::update_screen_size() -> void {
     hdrDepthBuffer.clean();
     hdrDepthBuffer.initialize();
     hdrDepthBuffer.bind();
-    hdrDepthBuffer.set_data_storage(camera->screen()->width(),camera->screen()->height());
+    hdrDepthBuffer.set_data_storage(screen->width(),screen->height());
 
     // Create the  HDR texture object
     hdrRenderTexture.clean();
-    hdrRenderTexture.init_hdr_render(camera->screen()->width(),camera->screen()->height(), 4);
+    hdrRenderTexture.init_hdr_render(screen->width(),screen->height(), 4);
 
     TextureOptions options;
     options.minFilter = TextureMinFilter::nearest;
@@ -1813,17 +1811,17 @@ auto Ch6HdrLightingToneMapping::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     auto lightPos = Vec4f{0.0f, 4.0f, 2.5f, 1.0f};
     lightPos.x() = -7.0f;
-    sampleShader->set_uniform("Lights[0].Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[0].Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     lightPos.x() = 0.0f;
-    sampleShader->set_uniform("Lights[1].Position", Pt4f{camera->view().multiply_point(lightPos.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[1].Position", Pt4f{camera->view_matrix().multiply_point(lightPos.conv<double>()).conv<float>()});
     lightPos.x() = 7.0f;
-    sampleShader->set_uniform("Lights[2].Position", Pt4f{camera->view().multiply_point(lightPos.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[2].Position", Pt4f{camera->view_matrix().multiply_point(lightPos.conv<double>()).conv<float>()});
 
     materialUBO.bind(0);
     draw_scene1(sampleShader.get());
 
     // compute log avg luminance
-    const int size = camera->screen()->size_pixels();
+    const int size = screen->size_pixels();
     hdrRenderTexture.bind(0);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, texData.data());
     //    glGetTextureImage(hdrRenderTexture.id(), 0, GL_RGB, GL_FLOAT, static_cast<GLsizei>(texData.size()*4), texData.data());
@@ -1893,7 +1891,7 @@ auto Ch6HdrBloom::init() -> bool {
 
 auto Ch6HdrBloom::update_screen_size() -> void {
 
-    int size = camera->screen()->size_pixels();
+    int size = screen->size_pixels();
     texData.resize(size*3);
 
     //    gl::FBO::unbind();
@@ -1907,11 +1905,11 @@ auto Ch6HdrBloom::update_screen_size() -> void {
         hdrDepthBuffer.clean();
         hdrDepthBuffer.initialize();
         hdrDepthBuffer.bind();
-        hdrDepthBuffer.set_data_storage(camera->screen()->width(),camera->screen()->height());
+        hdrDepthBuffer.set_data_storage(screen->width(),screen->height());
 
         // Create the  HDR texture object
         hdrRenderTexture.clean();
-        hdrRenderTexture.init_hdr_render(camera->screen()->width(),camera->screen()->height(), 4);
+        hdrRenderTexture.init_hdr_render(screen->width(),screen->height(), 4);
 
         TextureOptions options;
         options.minFilter = TextureMinFilter::nearest;
@@ -1937,8 +1935,8 @@ auto Ch6HdrBloom::update_screen_size() -> void {
         blurFBO.initialize();
         blurFBO.bind();
 
-        bloomBufWidth  = camera->screen()->width()/8;
-        bloomBufHeight = camera->screen()->height()/8;
+        bloomBufWidth  = screen->width()/8;
+        bloomBufHeight = screen->height()/8;
 
         // Create two texture objects to ping-pong for the bright-pass filter
         // and the two-pass blur
@@ -1983,11 +1981,11 @@ auto Ch6HdrBloom::draw(tool::gl::BaseDrawer *drawer) -> void {
 
     auto lightPos = Vec4f{0.0f, 4.0f, 2.5f, 1.0f};
     lightPos.x() = -7.0f;
-    sampleShader->set_uniform("Lights[0].Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[0].Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
     lightPos.x() = 0.0f;
-    sampleShader->set_uniform("Lights[1].Position", Pt4f{camera->view().multiply_point(lightPos.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[1].Position", Pt4f{camera->view_matrix().multiply_point(lightPos.conv<double>()).conv<float>()});
     lightPos.x() = 7.0f;
-    sampleShader->set_uniform("Lights[2].Position", Pt4f{camera->view().multiply_point(lightPos.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Lights[2].Position", Pt4f{camera->view_matrix().multiply_point(lightPos.conv<double>()).conv<float>()});
 
     // pass 1
     sampleShader->set_uniform("Pass", 1);
@@ -2001,7 +1999,7 @@ auto Ch6HdrBloom::draw(tool::gl::BaseDrawer *drawer) -> void {
     draw_scene1(sampleShader.get());
 
     // compute log average luminance
-    const int size = camera->screen()->size_pixels();
+    const int size = screen->size_pixels();
     hdrRenderTexture.bind(0);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, texData.data());
     //    glGetTextureImage(hdrRenderTexture.id(), 0, GL_RGB, GL_FLOAT, static_cast<GLsizei>(texData.size()*4), texData.data());
@@ -2063,7 +2061,7 @@ auto Ch6HdrBloom::draw(tool::gl::BaseDrawer *drawer) -> void {
     gl::FBO::unbind();
     GL::clear(GL_COLOR_BUFFER_BIT);
 
-    glViewport(0,0,camera->screen()->width(), camera->screen()->height());
+    glViewport(0,0,screen->width(), screen->height());
 
     // In this pass, we're reading from tex1 (unit 1) and we want
     // linear sampling to get an extra blur
@@ -2127,8 +2125,8 @@ auto Ch6Deferred::init() -> bool {
 
 auto Ch6Deferred::update_screen_size() -> void {
 
-    const auto width = camera->screen()->width();
-    const auto height = camera->screen()->height();
+    const auto width = screen->width();
+    const auto height = screen->height();
 
     // Generate and bind the framebuffer
     deferredFBO.clean();
@@ -2201,7 +2199,7 @@ auto Ch6Deferred::draw(tool::gl::BaseDrawer *drawer) -> void {
             sampleShader->set_uniform("Material.Kd", lightsColors[count]);
 
             auto lightP = Pt4f{-10.f+ii*4,2,-10.f+jj*4, 1.f};
-            sampleShader->set_uniform((lightName + "Position").c_str(), Pt4f{camera->view().multiply_point(lightP.conv<double>()).conv<float>()});
+            sampleShader->set_uniform((lightName + "Position").c_str(), Pt4f{camera->view_matrix().multiply_point(lightP.conv<double>()).conv<float>()});
             ++count;
 
             camM.m = geo::transform(Vec3d{0.1,0.1,0.1},Vec3d{0.,0.,0.},lightP.xyz().conv<double>());
@@ -2312,8 +2310,8 @@ auto Ch6SSAO::init() -> bool {
 
 auto Ch6SSAO::update_screen_size() -> void {
 
-    const auto width  = camera->screen()->width();
-    const auto height = camera->screen()->height();
+    const auto width  = screen->width();
+    const auto height = screen->height();
 
     // Generate and bind the framebuffer
     deferredFBO.clean();
@@ -2387,7 +2385,7 @@ auto Ch6SSAO::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("doBlurPass", doBlurPass);
     sampleShader->set_uniform("randScale", geo::Vec2f{800.f/factorScale, 600.f/factorScale});
     sampleShader->set_uniform("SampleKernel[0]", kern);
-    sampleShader->set_uniform_matrix("ProjectionMatrix", camera->projection().conv<float>());
+    sampleShader->set_uniform_matrix("ProjectionMatrix", screen->projection().conv<float>());
     sampleShader->set_uniform("Radius", radius);
 
     // pass 1 : Render to G-Buffers
@@ -2399,7 +2397,7 @@ auto Ch6SSAO::draw(tool::gl::BaseDrawer *drawer) -> void {
     sampleShader->set_uniform("Light.L", geo::Vec3f{0.3f, 0.3f, 0.3f});
     sampleShader->set_uniform("Light.La", lInfo.La);
     // shader->set_uniform("Light.Position", Pt4f{3.0f, 3.0f, 1.5f, 1.0f});
-    sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
+    sampleShader->set_uniform("Light.Position", Pt4f{camera->view_matrix().multiply_point(mobileLightPos1.conv<double>()).conv<float>()});
 
     // floor
     gl::TBO::bind({texturesM->texture_id("hardwood_diffuse")}, 5);
@@ -2547,8 +2545,8 @@ auto Ch6OIT::init() -> bool {
 
 auto Ch6OIT::update_screen_size() -> void {
 
-    // const auto width  = camera->screen()->width();
-    // const auto height = camera->screen()->height();
+    // const auto width  = screen->width();
+    // const auto height = screen->height();
 
     // GLuint maxNodes = 20 * width * height;
     // GLint nodeSize  = 5 * sizeof(GLfloat) + sizeof(GLuint); // The size of a linked list node
@@ -2578,8 +2576,8 @@ auto Ch6OIT::update_screen_size() -> void {
 
 auto Ch6OIT::draw(tool::gl::BaseDrawer*) -> void{
 
-    // const auto width  = camera->screen()->width();
-    // const auto height = camera->screen()->height();
+    // const auto width  = screen->width();
+    // const auto height = screen->height();
 
     // headPtrTexture.bind_image(0, 0, GL_FALSE, 0, GL_READ_WRITE);
     // linkedListBuffer.bind_to_index(0);
@@ -2763,8 +2761,8 @@ auto Ch7ShadeWire::init() -> bool {
 
 auto Ch7ShadeWire::update_screen_size() -> void {
 
-    const auto width  = camera->screen()->width();
-    const auto height = camera->screen()->height();
+    const auto width  = screen->width();
+    const auto height = screen->height();
 
     float w2 = width / 2.0f;
     float h2 = height / 2.0f;
@@ -2834,7 +2832,7 @@ auto Ch7ScenePointSprite::draw(tool::gl::BaseDrawer *drawer) -> void {
     // sampleShader->set_uniform("Size2", sizeSprite);
     // gl::TBO::bind({texturesM->texture_id("flower")},0);
 
-    // sampleShader->set_uniform_matrix("ProjectionMatrix", camera->projection().conv<float>());
+    // sampleShader->set_uniform_matrix("ProjectionMatrix", screen->projection().conv<float>());
     // draw_nb(sampleShader.get(), nullptr);//, pointsSprites.get());
 }
 
@@ -2998,12 +2996,12 @@ auto Ch8ShadowMap::draw(tool::gl::BaseDrawer *drawer) -> void {
     // # clean
     GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // # viewport
-    glViewport(0,0,camera->screen()->width(), camera->screen()->height());
+    glViewport(0,0,screen->width(), screen->height());
     // # uniforms
     glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
-    viewP = camera->view().conv<float>();
-    projP = camera->projection().conv<float>();
-    sampleShader->set_uniform("Light.Position", camera->view().conv<float>().multiply_point(to_pt4(lightPos,1.0f)));
+    viewP = camera->view_matrix().conv<float>();
+    projP = screen->projection().conv<float>();
+    sampleShader->set_uniform("Light.Position", camera->view_matrix().conv<float>().multiply_point(to_pt4(lightPos,1.0f)));
     // # draw
     draw_scene();
 
@@ -3012,7 +3010,7 @@ auto Ch8ShadowMap::draw(tool::gl::BaseDrawer *drawer) -> void {
     commonShaders["ch8-solid"sv]->use();
     // # uniforms
     commonShaders["ch8-solid"sv]->set_uniform("Color", Vec4f{1.0f,0.0f,0.0f,1.0f});
-    commonShaders["ch8-solid"sv]->set_uniform_matrix("MVP",((lightFrustumV*camera->view())*camera->projection()).conv<float>());
+    commonShaders["ch8-solid"sv]->set_uniform_matrix("MVP",((lightFrustumV*camera->view_matrix())*screen->projection()).conv<float>());
     // # draw
     commonDrawers["frustum"sv]->draw();
 }
@@ -3198,12 +3196,12 @@ auto Ch8ShadowMap2::draw(tool::gl::BaseDrawer *) -> void{
 
     // 2. then render scene as normal with shadow mapping (using depth map)
     sampleShader->use();
-    sampleShader->set_uniform_matrix("projection", camera->projection().conv<float>());
-    sampleShader->set_uniform_matrix("view", camera->view().conv<float>());
+    sampleShader->set_uniform_matrix("projection", screen->projection().conv<float>());
+    sampleShader->set_uniform_matrix("view", camera->view_matrix().conv<float>());
     sampleShader->set_uniform("viewPos", camera->position().conv<float>());
     sampleShader->set_uniform("lightPos", lightPos);//camera->view().conv<float>().multiply_point(Pt4f(lightPos,1.0f)).xyz());
     sampleShader->set_uniform_matrix("lightSpaceMatrix", lightSpaceMatrix);
-    glViewport(0, 0, camera->screen()->width(), camera->screen()->height());
+    glViewport(0, 0, screen->width(), screen->height());
     gl::FBO::unbind();
     GL::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gl::TBO::bind({texturesM->texture_tbo("hardwood_diffuse")->id(), depthMap.id()},0);
@@ -3369,10 +3367,10 @@ auto Ch8ShadowPcf::draw(tool::gl::BaseDrawer *drawer) -> void {
     // sampleShader->set_uniform("Light.Position", Pt4f{camera->view().multiply_point(lp.conv<double>()).conv<float>()});
 
     // gl::FBO::unbind();
-    // glViewport(0,0,camera->screen()->width(),camera->screen()->height());
+    // glViewport(0,0,screen->width(),screen->height());
     // glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
 
-    // update_matrices_mvp(camM.m, camera->view(), camera->projection());
+    // update_matrices_mvp(camM.m, camera->view(), screen->projection());
     // sampleShader->set_camera_matrices_uniforms(camM);
     // commonDrawers["notext-plane-40x40"sv]->draw();
     // //commonDrawers["building"sv]->draw(sampleShader.get());
@@ -3389,7 +3387,7 @@ auto Ch8ShadowPcf::draw(tool::gl::BaseDrawer *drawer) -> void {
     // commonShaders["ch8-solid"sv]->use();
     // // # uniforms
     // commonShaders["ch8-solid"sv]->set_uniform("Color", Vec4f{1.0f,0.0f,0.0f,1.0f});
-    // commonShaders["ch8-solid"sv]->set_uniform_matrix("MVP",((lightFrustumV*camera->view())*camera->projection()).conv<float>());
+    // commonShaders["ch8-solid"sv]->set_uniform_matrix("MVP",((lightFrustumV*camera->view())*screen->projection()).conv<float>());
     // // # draw
     // commonDrawers["frustum"sv]->draw();
 
@@ -3423,8 +3421,8 @@ auto CloudSample::draw(gl::BaseDrawer *drawer) -> void{
     parent_draw(drawer);
 
     sampleShader->use();    
-    sampleShader->set_uniform_matrix("view",       camera->view().conv<float>());
-    sampleShader->set_uniform_matrix("projection", camera->projection().conv<float>());
+    sampleShader->set_uniform_matrix("view",       camera->view_matrix().conv<float>());
+    sampleShader->set_uniform_matrix("projection", screen->projection().conv<float>());
     sampleShader->set_uniform_matrix("model",      geo::transform(Vec3f{scale,scale,scale}, modelRot, modelPos).conv<float>());
     sampleShader->set_uniform("enable_unicolor", enableUnicolor);
     sampleShader->set_uniform("factor_unicolor", factorUnicolor);

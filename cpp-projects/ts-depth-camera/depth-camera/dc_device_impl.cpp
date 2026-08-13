@@ -1334,7 +1334,7 @@ auto DCDeviceImpl::filter_depth_sized_color_from_depth() -> void{
     std::for_each(std::execution::par_unseq, std::begin(dIndices.depths1D), std::end(dIndices.depths1D), [&](size_t id){
         if(settings.filters.invalidateColorFromDepth){
             if(fData.depth[id] == dc_invalid_depth_value){
-                fData.depthSizedColor[id] = ColorRGBA8{dc_invalid_color_value};
+                fData.depthSizedColor[id] = ColorRGBA8{settings.filters.invalidColorValue};
             }
             // else{
             //     if(settings.filters.keepOnlyBiggestCluster){

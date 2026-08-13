@@ -118,13 +118,13 @@ public:
     auto set_uniform(std::string_view name, unsigned int value) -> bool;
     auto set_uniform(std::string_view name, std::span<float> values) -> bool;
     auto set_uniform(std::string_view name, std::span<geo::Vec3f> values) -> bool;
-    auto set_uniform(std::string_view name, std::span<geo::Mat4f> values, bool transpose=false) -> bool;
+    auto set_uniform(std::string_view name, std::span<geo::Mat4f> values, bool transpose=true) -> bool;
     auto set_uniform(std::string_view name, const geo::Vec2f &values) -> bool;
     auto set_uniform(std::string_view name, const geo::Vec3f &values) -> bool;
     auto set_uniform(std::string_view name, const geo::Vec4f &values) -> bool;
-    auto set_uniform_matrix(std::string_view name, const geo::Mat3f &values, bool transpose=false) -> bool;
-    auto set_uniform_matrix(std::string_view name, const geo::Mat4f &values, bool transpose=false) -> bool;
-    auto set_uniform_matrix(std::string_view name, std::span<float> values, bool transpose=false) -> bool;
+    auto set_uniform_matrix(std::string_view name, const geo::Mat3f &values, bool transpose=true) -> bool;
+    auto set_uniform_matrix(std::string_view name, const geo::Mat4f &values, bool transpose=true) -> bool;
+    auto set_uniform_matrix(std::string_view name, std::span<float> values, bool transpose) -> bool;
     // ## samplers
     auto set_uniform_sampler_2d(std::string_view name, int value) -> bool;
     auto set_uniform_sampler_2d_shadow(std::string_view name, int value) -> bool;

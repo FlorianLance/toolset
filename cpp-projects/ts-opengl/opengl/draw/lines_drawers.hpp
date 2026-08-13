@@ -74,7 +74,7 @@ class FrustumDrawerLinesDrawer : public BaseDrawer{
 public:
     FrustumDrawerLinesDrawer() : BaseDrawer(DrawerType::Lines){}
     auto initialize(bool dynamic, float fovy = 50.0f, float ar = 1.0f, float nearDist = 0.5f, float farDist = 100.0f) -> void;
-    auto update(float fovy, float ar, float nearDist, float farDist) -> void;
+    auto update(float fovy, float ar, float nearDist, float farDist, float factorWMin = 1.f, float factorWMax = 1.f, float factorHMin = 1.f, float factorHMax = 1.f) -> void;
 };
 
 class GridLinesDrawer : public BaseDrawer{

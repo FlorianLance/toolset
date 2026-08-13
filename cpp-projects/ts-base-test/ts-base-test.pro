@@ -68,6 +68,14 @@ HEADERS += \
     base/glm_utility.hpp\
 
 SOURCES += \
+    base/geometry/matrix2_test.cpp \
+    base/geometry/matrix3_test.cpp \
+    base/geometry/matrix4_test.cpp \
+    base/geometry/matrix_test.cpp \
+    base/geometry/point2_test.cpp \
+    base/geometry/point3_test.cpp \
+    base/geometry/point4_test.cpp \
+    base/geometry/quaternion_test.cpp \
     base/main_base_test.cpp\
     base/geometry_test.cpp\
     base/utility_test.cpp\

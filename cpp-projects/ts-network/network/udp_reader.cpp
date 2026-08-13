@@ -254,9 +254,9 @@ auto UdpReader::receive_data() -> size_t{
         Header header(headerData);
 
         if(header.type != 10 && header.type != 9 && header.type != 6 && header.type != 8){
-            Log::fmessage("Receive data {} {} {} \n",
-                header.type, header.totalSizeBytes, nbBytesReceived
-            );
+            // Log::fmessage("Receive data {} {} {} \n",
+            //     header.type, header.totalSizeBytes, nbBytesReceived
+            // );
         }
 
 

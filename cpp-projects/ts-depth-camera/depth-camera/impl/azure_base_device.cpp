@@ -180,7 +180,7 @@ auto AzureBaseDevice::Impl::update_k4_body(DCBody &body, const k4abt_body_t &k4a
         const auto &p = kaKoint.position;
         joint.position = {-p.v[0],-p.v[1],p.v[2]};
         const auto &o = kaKoint.orientation;
-        joint.orientation = {o.wxyz.x,o.wxyz.y,o.wxyz.z,o.wxyz.w};
+        joint.orientation = {o.wxyz.w, o.wxyz.x,o.wxyz.y,o.wxyz.z};
     }
 }
 
