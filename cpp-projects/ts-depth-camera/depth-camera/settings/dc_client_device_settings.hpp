@@ -34,6 +34,7 @@
 #include "depth-camera/settings/dc_misc_settings.hpp"
 #include "depth-camera/settings/dc_model_settings.hpp"
 #include "depth-camera/settings/dc_display_settings.hpp"
+#include "depth-camera/settings/dc_mouse_ray_settings.hpp"
 
 // local
 #include "dc_device_connection_settings.hpp"
@@ -71,6 +72,8 @@ struct DCClientDeviceSettings : public Settings{
     net::UdpDataStatus receivedDataStatus;
     int processindUCUsage = 0;
     double averageProcesingDurationMicroS = 0.0;
+
+    DCMouseRaySettings mouseRayS;
 };
 
 }

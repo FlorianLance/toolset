@@ -74,10 +74,13 @@ struct DCDevice::Impl{
     std::optional<DCFiltersSettings> nFiltersS = std::nullopt;
     std::optional<DCColorSettings> nColorsS = std::nullopt;
     std::optional<DCMiscSettings> nMiscS = std::nullopt;
+    std::optional<DCMouseRaySettings> nMouseRayS = std::nullopt;
+
     DCDeviceSettings deviceS;
     DCFiltersSettings filtersS;
     DCColorSettings colorsS;
     DCMiscSettings miscS;
+    DCMouseRaySettings mouseRayS;
 
     // device
     std::unique_ptr<DCDeviceImpl> device = nullptr;
@@ -371,14 +374,16 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
     // auto tStart = Time::nanoseconds_since_epoch();
 
     i->locker.lock();
-    std::optional<DCDeviceSettings> nDeviceS   = i->nDeviceS;
-    std::optional<DCColorSettings> nColorS     = i->nColorsS;
-    std::optional<DCFiltersSettings> nFiltersS = i->nFiltersS;
-    std::optional<DCMiscSettings> nMisc        = i->nMiscS;
-    i->nDeviceS  = std::nullopt;
-    i->nColorsS  = std::nullopt;
-    i->nFiltersS = std::nullopt;
-    i->nMiscS   = std::nullopt;
+    std::optional<DCDeviceSettings> nDeviceS        = i->nDeviceS;
+    std::optional<DCColorSettings> nColorS          = i->nColorsS;
+    std::optional<DCFiltersSettings> nFiltersS      = i->nFiltersS;
+    std::optional<DCMiscSettings> nMisc             = i->nMiscS;
+    std::optional<DCMouseRaySettings> nMouseRayS    = i->nMouseRayS;
+    i->nDeviceS     = std::nullopt;
+    i->nColorsS     = std::nullopt;
+    i->nFiltersS    = std::nullopt;
+    i->nMiscS       = std::nullopt;
+    i->nMouseRayS   = std::nullopt;
     i->locker.unlock();
 
     if(nDeviceS.has_value()){
@@ -552,6 +557,15 @@ auto DCDevice::read_frames() -> std::tuple<std::shared_ptr<DCFrame>, std::shared
         }
     }
 
+    if(nMouseRayS.has_value()){
+        i->mouseRayS = *nMouseRayS;
+        if(i->device != nullptr){
+            if(i->device->is_opened()){
+                i->device->set_mouse_ray_settings(i->mouseRayS);
+            }
+        }
+    }
+
 
     // process frame
     if(i->device != nullptr){
@@ -611,6 +625,11 @@ auto DCDevice::update_filters_settings(const DCFiltersSettings &filtersS) -> voi
 auto DCDevice::update_misc_settings(const DCMiscSettings &miscS) -> void{
     std::unique_lock<std::mutex> lock(i->locker);
     i->nMiscS = miscS;
+}
+
+auto DCDevice::update_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void{
+    std::unique_lock<std::mutex> lock(i->locker);
+    i->nMouseRayS = mouseRayS;
 }
 
 auto DCDevice::get_duration_ms(std::string_view id) noexcept -> double{

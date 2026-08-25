@@ -33,7 +33,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 CONFIG -= console
 CONFIG += qt
-QT += core gui opengl widgets printsupport network
+QT += core gui widgets network# opengl printsupport
 DEFINES += QWT_DLL
 
 ####################################### PRI

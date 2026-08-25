@@ -27,9 +27,7 @@
 #pragma once
 
 // local
-// #include "geometry/matrix4.hpp"
 #include "geometry/quaternion.hpp"
-// #include "utility/vector.hpp"
 
 namespace tool::geo {
 

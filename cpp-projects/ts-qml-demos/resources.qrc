@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/texture"/>
+    <qresource prefix="/">
+        <file>qml/AppWindow.qml</file>
+        <file>qml/Samples.qml</file>
+        <file>qml/utility/HorizontalLine.qml</file>
+        <file>qml/samples/DiffuseGlSampleControl.qml</file>
+    </qresource>
+    <qresource prefix="/shader">
+        <file alias="lines.frag">shaders/lines.frag.glsl</file>
+        <file alias="lines.vert">shaders/lines.vert.glsl</file>
+        <file alias="ch3/diffuse.fs">shaders/samples/ch3/diffuse.fs</file>
+        <file alias="ch3/diffuse.vs">shaders/samples/ch3/diffuse.vs</file>
+        <file>shaders/samples/ch3/discard.fs</file>
+        <file>shaders/samples/ch3/discard.vs</file>
+        <file>shaders/samples/ch3/flat.fs</file>
+        <file>shaders/samples/ch3/flat.vs</file>
+        <file>shaders/samples/ch3/phong.fs</file>
+        <file>shaders/samples/ch3/phong.vs</file>
+        <file>shaders/samples/ch3/twoside.fs</file>
+        <file>shaders/samples/ch3/twoside.vs</file>
+    </qresource>
+</RCC>

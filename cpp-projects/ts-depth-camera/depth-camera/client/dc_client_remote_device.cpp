@@ -235,6 +235,11 @@ auto DCClientRemoteDevice::update_misc_settings(const cam::DCMiscSettings &miscS
     i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::update_misc_settings), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
 }
 
+auto DCClientRemoteDevice::update_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void{
+    auto bData = mouseRayS.convert_to_json_binary();
+    i->udpSender.send_message(static_cast<MessageTypeId>(DCMessageType::mouse_ray), std::span(reinterpret_cast<const std::byte*>(bData.data()), bData.size()));
+}
+
 auto DCClientRemoteDevice::device_connected() const noexcept -> bool {
     return i->remoteDeviceConnected;
 }

@@ -53,6 +53,7 @@ public:
     auto update_color_settings(const cam::DCColorSettings &colorS) -> void override;
     auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void override;
     auto update_misc_settings(const cam::DCMiscSettings &delayS) -> void override;
+    auto update_mouse_ray_settings(const cam::DCMouseRaySettings &mouseRayS) -> void override;
 
     constexpr auto type() const noexcept -> DCClientType override {return DCClientType::Local;}
     auto device_connected() const noexcept -> bool override;

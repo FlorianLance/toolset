@@ -29,6 +29,7 @@
 // local
 #include "dc_client_device_settings.hpp"
 
+
 namespace tool::cam {
 
 struct DCClientSettings : public Settings{

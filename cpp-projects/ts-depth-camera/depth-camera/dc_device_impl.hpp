@@ -59,6 +59,7 @@ struct DCSettings{
     DCFiltersSettings filters;
     DCColorSettings color;
     DCMiscSettings misc;
+    DCMouseRaySettings mouseRayS;
 };
 
 struct DCFramesBuffer{
@@ -92,6 +93,7 @@ struct DCDeviceImpl{
     auto set_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto set_color_settings(const DCColorSettings &colorS) -> void;
     auto set_misc_settings(const DCMiscSettings &miscS) -> void;
+    auto set_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void;
     virtual auto update_from_colors_settings() -> void{}
 
     // getters

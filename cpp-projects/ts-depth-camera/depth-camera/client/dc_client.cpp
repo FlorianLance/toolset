@@ -32,6 +32,7 @@
 // base
 #include "utility/logger.hpp"
 #include "utility/time.hpp"
+#include "geometry/point4.hpp"
 
 // local
 #include "dc_client_local_device.hpp"
@@ -546,6 +547,19 @@ auto DCClient::update_misc_settings(size_t idC, const DCMiscSettings &miscS) -> 
 auto DCClient::update_model_settings(size_t idC, const DCModelSettings &modelS) -> void{
     settings.devicesS[idC].modelS = modelS;
     update_model_settings_signal(idC, settings.devicesS[idC].modelS);
+}
+
+auto DCClient::update_mouse_ray_settings(size_t idC, const DCMouseRaySettings &mouseRayS) -> void{
+
+    auto invModel = geo::inverse(settings.devicesS[idC].modelS.transformation);
+    auto rStart = invModel.multiply_point(geo::to_pt4(mouseRayS.rayStart, 1.f));
+    auto rEnd   = invModel.multiply_point(geo::to_pt4(mouseRayS.rayEnd, 1.f));
+
+    settings.devicesS[idC].mouseRayS = mouseRayS;
+    settings.devicesS[idC].mouseRayS.rayStart = rStart.xyz();
+    settings.devicesS[idC].mouseRayS.rayEnd   = rEnd.xyz();
+
+    Log::fmessage("[DCClient::update_mouse_ray_settings] {} {} {}, {} {} {}.\n"sv, rStart.x(), rStart.y(), rStart.z(), rEnd.x(), rEnd.y(), rEnd.z());
 }
 
 auto DCClient::apply_device_settings(size_t idC) -> void{

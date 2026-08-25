@@ -45,6 +45,7 @@ TOOLSET_CPP_PROJECTS +=\
     ts-qt-gl \
     ts-qt-nodes \
     ts-qt-app \    
+    ts-qml-demos \
     # dc
     dc-grabber \
     dc-manager \

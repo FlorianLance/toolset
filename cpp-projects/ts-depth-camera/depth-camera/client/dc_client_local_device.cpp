@@ -120,6 +120,12 @@ auto DCClientLocalDevice::update_misc_settings(const cam::DCMiscSettings &miscS)
     }
 }
 
+auto DCClientLocalDevice::update_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void{
+    if(i->device){
+        i->device->update_mouse_ray_settings(mouseRayS);
+    }
+}
+
 auto DCClientLocalDevice::device_connected() const noexcept -> bool{
     if(i->device){
         return true;

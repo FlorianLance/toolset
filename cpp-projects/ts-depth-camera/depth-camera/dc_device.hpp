@@ -44,6 +44,7 @@
 #include "depth-camera/frame/dc_data_frame.hpp"
 #include "depth-camera/frame/dc_frame.hpp"
 #include "depth-camera/settings/dc_device_settings.hpp"
+#include "depth-camera/settings/dc_mouse_ray_settings.hpp"
 
 
 namespace tool::cam {
@@ -67,6 +68,7 @@ public:
     auto update_color_settings(const DCColorSettings &colorS) -> void;
     auto update_filters_settings(const DCFiltersSettings &filtersS) -> void;
     auto update_misc_settings(const DCMiscSettings &delayS) -> void;
+    auto update_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void;
 
     // getters
     // # states

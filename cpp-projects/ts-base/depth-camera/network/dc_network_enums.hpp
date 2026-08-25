@@ -46,6 +46,7 @@ enum class DCMessageType : std::int8_t {
     feedback,
     synchro,
     ping,
+    mouse_ray,
     SizeEnum
 };
 
@@ -63,6 +64,7 @@ static constexpr TupleArray<DCMessageType::SizeEnum, TDCMessageTypes> DCMessageT
     {DCMessageType::feedback,                       "feedback"sv},
     {DCMessageType::synchro,                        "synchro"sv},
     {DCMessageType::ping,                           "ping"sv},
+    {DCMessageType::mouse_ray,                      "mouse_ray"sv},
 }};
 
 [[nodiscard]] [[maybe_unused]] static constexpr auto to_string(DCMessageType m) -> Name{

@@ -2270,6 +2270,11 @@ auto DCDeviceImpl::set_misc_settings(const DCMiscSettings &miscS) -> void{
     settings.misc = miscS;
 }
 
+auto DCDeviceImpl::set_mouse_ray_settings(const DCMouseRaySettings &mouseRayS) -> void{
+    auto lg = LogG("DCDeviceImpl::set_mouse_ray_settings"sv);
+    settings.mouseRayS = mouseRayS;
+}
+
 auto DCDeviceImpl::get_duration_ms(std::string_view id) -> std::optional<std::chrono::milliseconds>{
     std::unique_lock<std::mutex> lock(timesLocker, std::try_to_lock);
     if(!lock.owns_lock()){

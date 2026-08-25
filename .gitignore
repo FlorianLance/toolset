@@ -38,6 +38,9 @@ cpp-projects/_build/bin/ts-demos/resources/textures
 cpp-projects/_build/bin/ts-demos/*.ini
 cpp-projects/_build/bin/guardian
 
+cpp-projects/_build/bin/ts-qml-demos/translations
+cpp-projects/_build/bin/ts-qml-demos/qml
+
 ## thirdparty
 cpp-projects/_thirdparty
 ## resources

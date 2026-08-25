@@ -36,6 +36,7 @@
 #include "depth-camera/settings/dc_color_settings.hpp"
 #include "depth-camera/settings/dc_filters_settings.hpp"
 #include "depth-camera/settings/dc_misc_settings.hpp"
+#include "depth-camera/settings/dc_mouse_ray_settings.hpp"
 
 // local
 #include "depth-camera/settings/dc_device_connection_settings.hpp"
@@ -53,6 +54,7 @@ public:
     virtual auto update_color_settings(const cam::DCColorSettings &colorS) -> void{static_cast<void>(colorS);}
     virtual auto update_filters_settings(const cam::DCFiltersSettings &filtersS) -> void{static_cast<void>(filtersS);}
     virtual auto update_misc_settings(const cam::DCMiscSettings &miscS) -> void{static_cast<void>(miscS);}
+    virtual auto update_mouse_ray_settings(const cam::DCMouseRaySettings &mouseRayS) -> void{static_cast<void>(mouseRayS);}
 
     virtual constexpr auto type() const noexcept -> DCClientType {return DCClientType::Undefined;}
     virtual auto device_connected() const noexcept -> bool{return false;}

@@ -180,6 +180,12 @@ TS_QT_NODES_THIRDPARTY_INCLUDES =\
 
 TS_QT_NODES_THIRDPARTY_LIBS =\
 
+########################################################### TS-QML-DEMOS
+
+TS_QML_DEMOS_THIRDPARTY_INCLUDES =\
+
+TS_QML_DEMOS_THIRDPARTY_LIBS =\
+
 ########################################################### DC-GRABBER
 
 DC_GRABBER_THIRDPARTY_INCLUDES =\

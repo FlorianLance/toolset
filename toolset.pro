@@ -38,6 +38,7 @@ SUBDIRS =\
     ts-export ts-export-app \
     ts-global-app \
     ts-qt ts-qt-gl ts-qt-nodes ts-qt-app \
+    ts-qml-demos \
     # dc
     dc-grabber dc-manager dc-player dc-monitoring \
     # other
@@ -62,6 +63,7 @@ ts-qt.subdir                    = cpp-projects/ts-qt
 ts-qt-gl.subdir                 = cpp-projects/ts-qt-gl
 ts-qt-nodes.subdir              = cpp-projects/ts-qt-nodes
 ts-qt-app.subdir                = cpp-projects/ts-qt-app
+ts-qml-demos.subdir             = cpp-projects/ts-qml-demos
 ## dc
 dc-grabber.subdir               = cpp-projects/dc-grabber
 dc-manager.subdir               = cpp-projects/dc-manager
@@ -88,6 +90,7 @@ ts-qt.depends                   = ts-base
 ts-qt-gl.depends                = ts-qt ts-opengl
 ts-qt-nodes.depends             = ts-qt
 ts-qt-app.depends               = ts-qt-gl ts-qt-nodes
+ts-qml-demos.depends            = ts-qt-gl ts-depth-camera
 ## dc
 dc-grabber.depends              = ts-imgui-gl-engine ts-depth-camera
 dc-manager.depends              = ts-imgui-gl-engine ts-depth-camera

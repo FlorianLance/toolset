@@ -79,6 +79,7 @@ HEADERS += \
     depth-camera/settings/dc_frame_generation_settings.hpp \
     depth-camera/settings/dc_misc_settings.hpp \
     # depth-camera/settings/dc_server_settings.hpp \
+    depth-camera/settings/dc_mouse_ray_settings.hpp \
     depth-camera/settings/dc_video_player_settings.hpp \
     depth-camera/settings/dc_video_recorder_settings.hpp \
     depth-camera/settings/dc_settings_paths.hpp \
@@ -221,6 +222,7 @@ SOURCES += \
     depth-camera/settings/dc_display_settings.cpp \
     depth-camera/settings/dc_data_settings.cpp \
     depth-camera/settings/dc_device_settings.cpp \
+    depth-camera/settings/dc_mouse_ray_settings.cpp \
     depth-camera/settings/dc_settings_paths.cpp \
     depth-camera/settings/dc_capture_settings.cpp \
     # depth-camera/settings/dc_client_device_settings.cpp \
