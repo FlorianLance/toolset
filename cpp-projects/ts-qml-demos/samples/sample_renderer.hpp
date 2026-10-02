@@ -35,6 +35,7 @@ protected:
 
 protected:
 
+    tool::geo::Screen cSreen;
     CommonUniforms cUniforms;
     std::shared_ptr<tool::gl::BaseScene> currentScene = nullptr;
 

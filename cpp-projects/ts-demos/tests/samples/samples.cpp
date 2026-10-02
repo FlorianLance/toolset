@@ -2480,7 +2480,6 @@ auto Ch6OIT::init() -> bool {
         return false;
     }
 
-
     // quad VAO
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);

@@ -254,6 +254,12 @@ public:
         }
     }
 
+    auto fill_channel(size_t idChannel, Value init) -> void{
+        if(idChannel < channels.size()){
+            channels[idChannel].fill(init);
+        }
+    }
+
     auto resize_samples(size_t newSize) -> void{
         times.resize(newSize);
         for(auto &channel : channels){
@@ -358,6 +364,7 @@ public:
         });
     }
 
+
     auto add_data(double time, std::span<std::span<Value>> eData) -> void{
 
         if(eData.empty()){
@@ -375,6 +382,25 @@ public:
             }
         });
     }
+
+    auto add_data(double time, double timeOffset, std::span<std::span<Value>> eData) -> void{
+
+        if(eData.empty()){
+            return;
+        }
+
+        // add times
+        for(size_t id = 0; id < eData.size(); ++id){
+            times.push_back(time + id* timeOffset);
+        }
+
+        std::for_each(std::execution::par_unseq, std::begin(idChannels), std::begin(idChannels) + eData.back().size(), [&](size_t idC){
+            for(size_t idS = 0; idS < eData.size(); ++idS){
+                channels[idC].push_back(eData[idS][idC]);
+            }
+        });
+    }
+
 
     [[nodiscard]] auto copy_last_values(size_t size, std::span<const std::int8_t> disablingMask) -> std::shared_ptr<TimeChannelsC>{
 

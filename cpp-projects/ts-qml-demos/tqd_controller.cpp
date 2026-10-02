@@ -6,6 +6,8 @@
 
 // local
 #include "samples/base_sample.hpp"
+#include "samples/oit_sample.hpp"
+#include "samples/stencil_sample.hpp"
 
 
 bool MyEventFilter::eventFilter(QObject *watched, QEvent *event) {
@@ -70,6 +72,15 @@ auto TqdController::register_types() -> void{
 
     qmlRegisterType<tool::gl::BaseGlSample>("samples", 1, 0, "BaseGlSample");
     qmlRegisterType<tool::gl::DiffuseGlSample>("samples", 1, 0, "DiffuseGlSample");
+    qmlRegisterType<tool::gl::FlatGlSample>("samples", 1, 0, "FlatGlSample");
+    qmlRegisterType<tool::gl::SilhouetteSample>("samples", 1, 0, "SilhouetteSample");
+    qmlRegisterType<tool::gl::EdgeDetectionGlSample>("samples", 1, 0, "EdgeDetectionGlSample");
+    qmlRegisterType<tool::gl::OitSample>("samples", 1, 0, "OitSample");
+    qmlRegisterType<tool::gl::StencilSample>("samples", 1, 0, "StencilSample");
+
+
+
+
 
     // Sample3dItemViewer
 

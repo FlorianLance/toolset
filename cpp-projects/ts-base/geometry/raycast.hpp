@@ -40,7 +40,8 @@ auto screen_raycast(const Pt2<int> &position, const Screen &screen, const Camera
     double ndcY = 1.0 - (2.0 * position.y()) / screen.height(); // flip Y-axis
 
     // create a ray in NDC space (x, y, z = 1.0)
-    Vec3d ndcRay(ndcX, ndcY, 1.0);
+    // Vec3d ndcRay(ndcX, ndcY, 1.0);
+    Vec3d ndcRay(ndcX, ndcY, 0.5);
 
     // convert NDC to clip space (homogeneous coordinates)
     Vec4d clipSpaceRay = to_pt4(ndcRay, 1.);
@@ -53,10 +54,17 @@ auto screen_raycast(const Pt2<int> &position, const Screen &screen, const Camera
     auto worldRay = to_row4(inverseViewProjection * to_col4(clipSpaceRay));
     worldRay /= worldRay.w(); // perspective division
 
+    double radiusPix = 10.f;
+    double ndcRadius = (2.0f * radiusPix) / screen.width();
+    double distanceToCenter = geo::norm(camera.position() - ndcRay);
+
+    const auto ratio = 1.*screen.width()/ screen.height();
+    double worldRadius = ndcRadius * distanceToCenter * tanf(screen.fov() / 2.0) * ratio;
+
     // extract the ray origin and direction
     Pt3d rayOrigin     = camera.position();
     Vec3d rayDirection = normalize(worldRay.xyz() - rayOrigin);
-    return {rayOrigin, rayDirection};
+    return {rayOrigin, rayDirection, worldRadius};
 }
 
 }

@@ -12,13 +12,31 @@
         <file alias="lines.vert">shaders/lines.vert.glsl</file>
         <file alias="ch3/diffuse.fs">shaders/samples/ch3/diffuse.fs</file>
         <file alias="ch3/diffuse.vs">shaders/samples/ch3/diffuse.vs</file>
-        <file alias="shaders/samples/ch3/discard.fs">shaders/samples/ch3/discard.fs</file>
-        <file alias="shaders/samples/ch3/discard.vs">shaders/samples/ch3/discard.vs</file>
-        <file alias="shaders/samples/ch3/flat.fs">shaders/samples/ch3/flat.fs</file>
-        <file alias="shaders/samples/ch3/flat.vs">shaders/samples/ch3/flat.vs</file>
+        <file alias="ch3/discard.fs">shaders/samples/ch3/discard.fs</file>
+        <file alias="ch3/discard.vs">shaders/samples/ch3/discard.vs</file>
+        <file alias="ch3/flat.fs">shaders/samples/ch3/flat.fs</file>
+        <file alias="ch3/flat.vs">shaders/samples/ch3/flat.vs</file>
         <file alias="shaders/samples/ch3/phong.fs">shaders/samples/ch3/phong.fs</file>
         <file alias="shaders/samples/ch3/phong.vs">shaders/samples/ch3/phong.vs</file>
         <file alias="shaders/samples/ch3/twoside.fs">shaders/samples/ch3/twoside.fs</file>
         <file alias="shaders/samples/ch3/twoside.vs">shaders/samples/ch3/twoside.vs</file>
+        <file alias="ch7/silhouette.fs">shaders/samples/ch7/silhouette.fs</file>
+        <file alias="ch7/silhouette.gs">shaders/samples/ch7/silhouette.gs</file>
+        <file alias="ch7/silhouette.vs">shaders/samples/ch7/silhouette.vs</file>
+        <file alias="ch6/edge-detection-filter.fs">shaders/samples/ch6/edge-detection-filter.fs</file>
+        <file alias="ch6/edge-detection-filter.vs">shaders/samples/ch6/edge-detection-filter.vs</file>
+        <file alias="ch6/oit.vs">shaders/samples/ch6/oit.vs</file>
+        <file alias="ch6/oit.fs">shaders/samples/ch6/oit.fs</file>
+        <file alias="learn/oit/solid.vs">shaders/samples/learn/oit/solid.vs</file>
+        <file alias="learn/oit/solid.fs">shaders/samples/learn/oit/solid.fs</file>
+        <file alias="learn/oit/composite.vs">shaders/samples/learn/oit/composite.vs</file>
+        <file alias="learn/oit/composite.fs">shaders/samples/learn/oit/composite.fs</file>
+        <file alias="learn/oit/screen.vs">shaders/samples/learn/oit/screen.vs</file>
+        <file alias="learn/oit/screen.fs">shaders/samples/learn/oit/screen.fs</file>
+        <file alias="learn/oit/transparent.vs">shaders/samples/learn/oit/transparent.vs</file>
+        <file alias="learn/oit/transparent.fs">shaders/samples/learn/oit/transparent.fs</file>
+        <file alias="learn/stencil/stencil_single_color.fs">shaders/samples/learn/stencil/stencil_single_color.fs</file>
+        <file alias="learn/stencil/stencil_testing.fs">shaders/samples/learn/stencil/stencil_testing.fs</file>
+        <file alias="learn/stencil/stencil_testing.vs">shaders/samples/learn/stencil/stencil_testing.vs</file>
     </qresource>
 </RCC>

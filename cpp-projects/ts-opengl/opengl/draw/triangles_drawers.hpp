@@ -48,11 +48,33 @@ public:
     auto update(std::span<const geo::Pt3f,4> vertices) -> void;
 };
 
+class OuterQuadTrianglesDrawer : public BaseDrawer{
+public:
+    OuterQuadTrianglesDrawer() : BaseDrawer(DrawerType::Triangles){}
+    auto initialize(bool dynamic, float thicknessFactor) -> void;
+    auto update(std::span<const geo::Pt3f,8> vertices) -> void;
+};
+
 class CubeTrianglesDrawer : public BaseDrawer{
 public:
     CubeTrianglesDrawer() : BaseDrawer(DrawerType::Triangles){}
     auto initialize(float side) -> void;
 };
+
+class CircleTrianglesDrawer : public BaseDrawer{
+public:
+    CircleTrianglesDrawer() : BaseDrawer(DrawerType::Triangles){}
+    auto initialize(float radius, size_t nbSegments) -> void;
+    auto initialize(const geo::Pt3f &center, const geo::Vec3f &normal, float radius, size_t nbSegments) -> void;
+};
+
+class CylinderTrianglesDrawer : public BaseDrawer{
+public:
+    CylinderTrianglesDrawer() : BaseDrawer(DrawerType::Triangles){}
+    auto initialize(float height, float radius, size_t nbSegments) -> void;
+    auto initialize(const geo::Pt3f &center, const geo::Vec3f &normal, float radius, float height, size_t nbSegments) -> void;
+};
+
 
 class SkyboxTrianglesDrawer : public BaseDrawer{
 public:

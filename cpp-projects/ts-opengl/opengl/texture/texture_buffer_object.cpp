@@ -65,6 +65,8 @@ auto TBO::clean() -> void{
     m_levelsNb  = 1;
 }
 
+
+
 auto TBO::set_texture_options(const TextureOptions &options) -> void{
     GL::texture_parameter_i(m_handle,   GL_TEXTURE_WRAP_S,          to_gl(options.wrapS));
     GL::texture_parameter_i(m_handle,   GL_TEXTURE_WRAP_T,          to_gl(options.wrapT));
@@ -73,6 +75,264 @@ auto TBO::set_texture_options(const TextureOptions &options) -> void{
     GL::texture_parameter_i(m_handle,   GL_TEXTURE_MAG_FILTER,      to_gl(options.magFilter));
     GL::texture_parameter_i(m_handle,   GL_TEXTURE_MAX_LEVEL,       options.maxLevel);
     GL::texture_parameter_fv(m_handle,  GL_TEXTURE_BORDER_COLOR,    options.borderColor.array.data());
+}
+
+auto TBO::init_data(GLsizei width, GLsizei height, GLsizei depth, TextureFormat format, TextureDataType dataType, int levels) -> void{
+    m_width          = width;
+    m_height         = height;
+    m_depth          = depth;
+    m_type           = to_gl(dataType);
+    m_format         = to_gl(format);
+    if(levels == 0){
+        m_levelsNb = std::min(5, static_cast<int>(std::log2f((float)std::max(m_width, m_height))));
+    }else{
+        m_levelsNb = levels;
+    }
+
+    // switch(format){
+    // case TextureFormat::red:
+    //     switch(dataType){
+    //         case TextureDataType::byte_t:
+    //             m_internalFormat    = GL_R8I;
+    //             break;
+    //         case TextureDataType::unsigned_byte_t:
+    //             m_internalFormat    = GL_R8UI;
+    //             break;
+    //         case TextureDataType::short_t:
+    //             m_internalFormat    = GL_R16I;
+    //             break;
+    //         case TextureDataType::unsigned_short_t:
+    //             m_internalFormat    = GL_R16UI;
+    //             break;
+    //         case TextureDataType::int_t:
+    //             m_internalFormat    = GL_R32I;
+    //             break;
+    //         case TextureDataType::unsigned_int_t:
+    //             m_internalFormat    = GL_R32UI;
+    //             break;
+    //         case TextureDataType::half_float_t:
+    //             m_internalFormat    = GL_R16F;
+    //             break;
+    //         case TextureDataType::float_t:
+    //             m_internalFormat    = GL_R32F;
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    //     break;
+    // case TextureFormat::red_green:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RG8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RG8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RG16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RG16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RG32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RG32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RG16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RG32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+
+    //     break;
+    // case TextureFormat::red_green_blue:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RGB8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RGB8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RGB16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RGB16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RGB32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RGB32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RGB16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RGB32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     break;
+    // case TextureFormat::red_green_blue_alpha:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RGBA8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RGBA8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RGBA16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RGBA16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RGBA32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RGBA32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RGBA16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RGBA32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     break;
+    // case TextureFormat::red_integer:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_R8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_R8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_R16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_R16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_R32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_R32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_R16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_R32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     break;
+    // case TextureFormat::red_green:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RG8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RG8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RG16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RG16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RG32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RG32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RG16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RG32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+
+    //     break;
+    // case TextureFormat::red_green_blue:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RGB8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RGB8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RGB16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RGB16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RGB32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RGB32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RGB16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RGB32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     break;
+    // case TextureFormat::red_green_blue_alpha:
+    //     switch(dataType){
+    //     case TextureDataType::byte_t:
+    //         m_internalFormat    = GL_RGBA8I;
+    //         break;
+    //     case TextureDataType::unsigned_byte_t:
+    //         m_internalFormat    = GL_RGBA8UI;
+    //         break;
+    //     case TextureDataType::short_t:
+    //         m_internalFormat    = GL_RGBA16I;
+    //         break;
+    //     case TextureDataType::unsigned_short_t:
+    //         m_internalFormat    = GL_RGBA16UI;
+    //         break;
+    //     case TextureDataType::int_t:
+    //         m_internalFormat    = GL_RGBA32I;
+    //         break;
+    //     case TextureDataType::unsigned_int_t:
+    //         m_internalFormat    = GL_RGBA32UI;
+    //         break;
+    //     case TextureDataType::half_float_t:
+    //         m_internalFormat    = GL_RGBA16F;
+    //         break;
+    //     case TextureDataType::float_t:
+    //         m_internalFormat    = GL_RGBA32F;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     break;
+    // }
 }
 
 auto TBO::init_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels) -> void{
@@ -143,7 +403,7 @@ auto TBO::init_data_f16(GLsizei width, GLsizei height, GLsizei depth, int nbChan
     m_width          = width;
     m_height         = height;
     m_depth          = depth;
-    m_type           = GL_FLOAT;
+    m_type           = GL_HALF_FLOAT;
     if(levels == 0){
         m_levelsNb = std::min(5, static_cast<int>(std::log2f((float)std::max(m_width, m_height))));
     }else{
@@ -206,6 +466,7 @@ auto TBO::init_multisample_data_u8(GLsizei width, GLsizei height, GLsizei depth,
     m_height         = height;
     m_depth          = depth;
     m_type           = GL_UNSIGNED_BYTE;
+
     if(levels == 0){
         m_levelsNb = std::min(5, static_cast<int>(std::log2f((float)std::max(m_width, m_height))));
     }else{

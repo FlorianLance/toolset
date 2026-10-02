@@ -173,6 +173,21 @@ auto GL::clear_named_framebuffer_fv(GLuint framebuffer, GLenum buffer, GLint dra
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearBuffer.xhtml
 }
 
+auto GL::clear_named_framebuffer_fi(GLuint framebuffer, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) -> void{
+    // clear individual buffers of a framebuffer
+    glClearNamedFramebufferfi(
+        framebuffer,    // Specifies the name of the framebuffer object for glClearNamedFramebuffer*.
+                        //  framebuffer is zero, indicating the default draw framebuffer, or the name of a framebuffer object.
+        buffer,         // Specify the buffer to clear.
+                        //  GL_COLOR,  GL_DEPTH,  GL_STENCIL
+        drawbuffer,     // Specify a particular draw buffer to clear.
+                        // Must be 0 if GL_DEPTH or GL_STENCIL
+        depth,          // The value to clear the depth buffer to.
+        stencil         // The value to clear the stencil buffer to.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearBuffer.xhtml
+}
+
 auto GL::enable(GLenum cap) -> void{
     // Enable server-side GL capabilities.
     glEnable(
@@ -292,6 +307,59 @@ auto GL::disable_i(GLenum cap, GLuint index) -> void{
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml
 }
 
+auto GL::get_integer_v(GLenum pname, GLint *data) -> void{
+    // return the value or values of a selected parameter
+    glGetIntegerv(
+        pname,  // Specifies the parameter value to be returned for non-indexed versions of glGet.
+                // The symbolic constants in the list below are accepted.
+        data    // Returns the value or values of the specified parameter.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGet.xhtml
+    // go to website to see symbolic constants
+}
+
+auto GL::blend_func_separate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) -> void{
+    // specify pixel arithmetic for RGB and alpha components separately
+    glBlendFuncSeparate(
+        srcRGB,     // Specifies how the red, green, and blue blending factors are computed. The initial value is GL_ONE.
+        dstRGB,     // Specifies how the red, green, and blue destination blending factors are computed. The initial value is GL_ZERO.
+        srcAlpha,   // Specified how the alpha source blending factor is computed. The initial value is GL_ONE.
+        dstAlpha    // Specified how the alpha destination blending factor is computed. The initial value is GL_ZERO.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendFuncSeparate.xhtml
+}
+
+auto GL::blend_func_separate_i(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) -> void{
+    // specify pixel arithmetic for RGB and alpha components separately
+    glBlendFuncSeparatei(
+        buf,        // For glBlendFuncSeparatei, specifies the index of the draw buffer for which to set the blend functions.
+        srcRGB,     // Specifies how the red, green, and blue blending factors are computed. The initial value is GL_ONE.
+        dstRGB,     // Specifies how the red, green, and blue destination blending factors are computed. The initial value is GL_ZERO.
+        srcAlpha,   // Specified how the alpha source blending factor is computed. The initial value is GL_ONE.
+        dstAlpha    // Specified how the alpha destination blending factor is computed. The initial value is GL_ZERO.
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendFuncSeparate.xhtml
+}
+
+auto GL::blend_equation_separate(GLenum modeRGB, GLenum modeAlpha) -> void{
+    // set the RGB blend equation and the alpha blend equation separately
+    glBlendEquationSeparate(
+        modeRGB,
+        modeAlpha
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendEquationSeparate.xhtml
+}
+
+auto GL::blend_equation_separate_i(GLuint buf, GLenum modeRGB, GLenum modeAlpha) -> void{
+    // set the RGB blend equation and the alpha blend equation separately
+    glBlendEquationSeparatei(
+        buf,
+        modeRGB,
+        modeAlpha
+    );
+    // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBlendEquationSeparate.xhtml
+}
+
 auto GL::create_buffers(GLsizei n, GLuint *buffers) -> void{    
     // Create buffer objects.
     glCreateBuffers(
@@ -310,6 +378,24 @@ auto GL::delete_buffers(GLsizei n, GLuint *buffers) -> void{
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDeleteBuffers.xhtml
 }
 
+auto GL::depth_func(GLenum func) -> void{
+    // specify the value used for depth buffer comparisons
+    glDepthFunc(
+        func    // pecifies the depth comparison function.
+                // Symbolic constants GL_NEVER, GL_LESS, GL_EQUAL, GL_LEQUAL, GL_GREATER, GL_NOTEQUAL, GL_GEQUAL, and GL_ALWAYS are accepted.
+                // The initial value is GL_LESS.
+    );
+
+    // GL_NEVER:    Never passes.
+    // GL_LESS:     Passes if the incoming depth value is less than the stored depth value.
+    // GL_EQUAL:    Passes if the incoming depth value is equal to the stored depth value.
+    // GL_LEQUAL:   Passes if the incoming depth value is less than or equal to the stored depth value.
+    // GL_GREATER:  Passes if the incoming depth value is greater than the stored depth value.
+    // GL_NOTEQUAL: Passes if the incoming depth value is not equal to the stored depth value.
+    // GL_GEQUAL:   Passes if the incoming depth value is greater than or equal to the stored depth value.
+    // GL_ALWAYS:   Always passes.
+}
+
 auto GL::depth_mask(GLboolean flag) -> void{
     // Enable or disable writing into the depth buffer.
     glDepthMask(
@@ -318,6 +404,63 @@ auto GL::depth_mask(GLboolean flag) -> void{
                     // Otherwise, it is enabled. Initially, depth buffer writing is enabled.
     );
     // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthMask.xhtml
+}
+
+auto GL::stencil_mask_separate(GLenum face, GLuint mask) -> void{
+    // control the front and/or back writing of individual bits in the stencil planes
+    glStencilMaskSeparate(
+        face,   // Specifies whether the front and/or back stencil writemask is updated.
+                // Three symbolic constants are valid: GL_FRONT, GL_BACK, and GL_FRONT_AND_BACK.
+        mask    // Specifies a bit mask to enable and disable writing of individual bits in the stencil planes. Initially, the mask is all 1's.
+    );
+}
+
+auto GL::stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) -> void{
+    // set front and/or back function and reference value for stencil testing
+    glStencilFuncSeparate(
+        face,   // Specifies whether front and/or back stencil state is updated.
+                // Three symbolic constants are valid: GL_FRONT, GL_BACK, and GL_FRONT_AND_BACK.
+        func,   // Specifies the test function. Eight symbolic constants are valid:
+                // GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEQUAL, and GL_ALWAYS. The initial value is GL_ALWAYS.
+        ref,    // Specifies the reference value for the stencil test. ref is clamped to the range [0,2n−1],
+                // where n is the number of bitplanes in the stencil buffer. The initial value is 0.
+        mask    // Specifies a mask that is ANDed with both the reference value and the stored stencil value when the test is done. The initial value is all 1's.
+    );
+
+    // GL_NEVER:    Always fails.
+    // GL_LESS:     Passes if ( ref & mask ) < ( stencil & mask ).
+    // GL_LEQUAL:   Passes if ( ref & mask ) <= ( stencil & mask ).
+    // GL_GREATER:  Passes if ( ref & mask ) > ( stencil & mask ).
+    // GL_GEQUAL:   Passes if ( ref & mask ) >= ( stencil & mask ).
+    // GL_EQUAL:    Passes if ( ref & mask ) = ( stencil & mask ).
+    // GL_NOTEQUAL: Passes if ( ref & mask ) != ( stencil & mask ).
+    // GL_ALWAYS:   Always passes.
+}
+
+auto GL::stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) -> void{
+    // set front and/or back stencil test actions
+    glStencilOpSeparate(
+        face,   // Specifies whether front and/or back stencil state is updated.
+                // Three symbolic constants are valid: GL_FRONT, GL_BACK, and GL_FRONT_AND_BACK.
+        sfail,  // Specifies the action to take when the stencil test fails.
+                // Eight symbolic constants are accepted: GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, and GL_INVERT.
+                // The initial value is GL_KEEP.
+        dpfail, // Specifies the stencil action when the stencil test passes,
+                // but the depth test fails. dpfail accepts the same symbolic constants as sfail.
+                // The initial value is GL_KEEP.
+        dppass  // Specifies the stencil action when both the stencil test and the depth test pass,
+                // or when the stencil test passes and either there is no depth buffer or depth testing is not enabled. dppass accepts the same symbolic constants as sfail.
+                // The initial value is GL_KEEP.
+    );
+
+    // GL_KEEP:         Keeps the current value.
+    // GL_ZERO:         Sets the stencil buffer value to 0.
+    // GL_REPLACE:      Sets the stencil buffer value to ref, as specified by glStencilFunc.
+    // GL_INCR:         Increments the current stencil buffer value. Clamps to the maximum representable unsigned value.
+    // GL_INCR_WRAP:    Increments the current stencil buffer value. Wraps stencil buffer value to zero when incrementing the maximum representable unsigned value.
+    // GL_DECR:         Decrements the current stencil buffer value. Clamps to 0.
+    // GL_DECR_WRAP:    Decrements the current stencil buffer value. Wraps stencil buffer value to the maximum representable unsigned value when decrementing a stencil buffer value of zero.
+    // GL_INVERT:       Bitwise inverts the current stencil buffer value.
 }
 
 auto GL::create_framebuffers(GLsizei n, GLuint *framebuffers) -> void{

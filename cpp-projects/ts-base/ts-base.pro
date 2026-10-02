@@ -237,8 +237,9 @@ SOURCES += \
     geometry/color_voxel_grid.cpp \
     geometry/cloud_io.cpp\
     geometry/camera.cpp \
-    ## image
+    geometry/vertices.cpp \
     geometry/glm_camera.cpp \
+    ## image
     image/color_utility.cpp \
     image/texture.cpp \
     image/cube_map.cpp \

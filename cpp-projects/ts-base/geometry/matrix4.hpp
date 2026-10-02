@@ -64,6 +64,15 @@ struct Matrix4 : Matrix<acc,4,4>{
         };
     }
 
+    constexpr Matrix4(RowVec<acc,3> r1, RowVec<acc,3> r2, RowVec<acc,3> r3) noexcept{
+        this->array = {
+            r1.x(),  r2.y(), r3.z(), 0,
+            r1.x(),  r2.y(), r3.z(), 0,
+            r1.x(),  r2.y(), r3.z(), 0,
+            0,          0,   0,    1
+        };
+    }
+
     constexpr Matrix4(RowVec<acc,4> r1, RowVec<acc,4> r2, RowVec<acc,4> r3, RowVec<acc,4> r4) noexcept{
         this->array = {
             r1.x(), r1.y(), r1.z(), r1.w(),
@@ -252,7 +261,7 @@ template<typename acc>
 }
 
 template<typename acc>
-[[nodiscard]] constexpr auto rotation_m4x4(const RowVec<acc,3> &angles) noexcept  -> Mat4<acc>{
+[[nodiscard]] constexpr auto rotation_m4x4(const RowVec<acc,3> &angles) noexcept -> Mat4<acc>{
 
     const auto cosH = std::cos(angles.y());
     const auto cosP = std::cos(angles.x());
@@ -266,6 +275,17 @@ template<typename acc>
         sinR*cosH+cosR*sinP*sinH, cosR*cosP,  sinR*sinH-cosR*sinP*cosH, 0,
         -cosP*sinH,               sinP,       cosP*cosH,                0,
         0,                        0,          0,                        1
+    };
+}
+
+// [TEST]
+template<typename acc>
+[[nodiscard]] constexpr auto rotation_m4x4(RowVec<acc,3> right, RowVec<acc,3> up, RowVec<acc,3> direction) noexcept  -> Mat4<acc>{
+    return {
+        right.x(),  up.y(), -direction.z(), 0,
+        right.x(),  up.y(), -direction.z(), 0,
+        right.x(),  up.y(), -direction.z(), 0,
+        0,          0,      0,      1
     };
 }
 
@@ -344,10 +364,16 @@ template<typename acc>
     };
 }
 
+
+// [TEST]
+template<typename acc>
+[[nodiscard]] constexpr auto transform(const Mat4<acc> &scale, const Mat4<acc> &rotation, const Mat4<acc> &translate)  -> Mat4<acc>{
+    return translate*rotation*scale;
+}
+
 template<typename acc>
 [[nodiscard]] constexpr auto transform(const RowVec<acc,3> &scale, const RowVec<acc,3> &rotation, const RowVec<acc,3> &translate)  -> Mat4<acc>{
    return translation_m4x4(translate)*rotation_m4x4(rotation*PI_180<acc>)*scale_m4x4(scale);
-    // return scale_m4x4(scale)*rotation_m4x4(rotation*PI_180<acc>)*translation_m4x4(translate);
 }
 
 template<typename acc>

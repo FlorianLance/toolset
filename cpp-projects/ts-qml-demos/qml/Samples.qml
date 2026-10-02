@@ -55,13 +55,13 @@ Page {
         Sample3dItemViewer{
             id: sampleV
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: parent.height * 0.8
         }
 
         Item{
             id: uiControl
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            // Layout.fillHeight: true
         }
 
         Button{

@@ -39,8 +39,10 @@ vec3 toonShade( )
 void main() {
     if( GIsEdge == 1 ) {
         FragColor = LineColor;
+            FragColor = vec4(0,1,0,1);
     } else {
         FragColor =  vec4( toonShade(), 1.0 );
+
     }
 
 }

@@ -59,6 +59,7 @@ public:
     // # get
     [[nodiscard]] constexpr auto position()             const noexcept  -> geo::Pt3d{   return m_position;}
     [[nodiscard]] constexpr auto up()                   const noexcept  -> geo::Vec3d{  return m_up;}
+    [[nodiscard]] constexpr auto right()                const noexcept  -> geo::Vec3d{  return m_right;}
     [[nodiscard]] constexpr auto direction()            const noexcept  -> geo::Vec3d{  return m_direction;}
     [[nodiscard]] constexpr auto view_matrix()          const noexcept  -> geo::Mat4d{  return geo::look_at(m_position, m_position + m_direction, m_up);}
     [[nodiscard]] constexpr auto translation_matrix()   const noexcept  -> Mat4d{       return geo::translation_m4x4(m_position);}

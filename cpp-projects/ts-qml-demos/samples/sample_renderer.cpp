@@ -18,13 +18,17 @@ using namespace tool::geo;
 using namespace Qt::Literals::StringLiterals;
 
 
-SampleRenderer::SampleRenderer() {
+SampleRenderer::SampleRenderer() : cSreen(0,0){
 
 }
 
 SampleRenderer::~SampleRenderer(){
     // solidShaderP.clean();
     // cloudShaderP.clean();
+
+    if(currentSample){
+        currentSample->clean();
+    }
 }
 
 auto SampleRenderer::initialize_gl() -> void{
@@ -114,10 +118,23 @@ void SampleRenderer::synchronize(QQuickFramebufferObject *item) {
     cUniforms.view        = sampleViewer->camera().view_matrix().conv<float>();
     cUniforms.camPosition = sampleViewer->camera().position().conv<float>();
 
+
+    bool resize = false;
     if(sampleViewer->newSample){
         currentSample = sampleViewer->currentSample;
         initSample = true;
+        resize = true;
         sampleViewer->newSample = false;
+    }
+
+    auto nScreen = sampleViewer->screen();
+    if(cSreen.width() != nScreen.width() || cSreen.height() != nScreen.height()){
+        resize = true;
+    }
+
+    // call resize if necessary
+    if(resize){
+        currentSample->resize(nScreen.width(), nScreen.height());
     }
 }
 
@@ -133,14 +150,15 @@ void SampleRenderer::render() {
         initSample = false;
     }
 
-
     // enable
-    GL::enable(GL_DEPTH_TEST);
-    GL::enable(GL_STENCIL_TEST);
-    GL::enable(GL_MULTISAMPLE);
     GL::enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    GL::enable(GL_PROGRAM_POINT_SIZE);
-    glLineWidth(4.f);
+    // GL::enable(GL_MULTISAMPLE);
+    // GL::enable(GL_STENCIL_TEST);
+    GL::enable(GL_DEPTH_TEST);
+
+    // GL::enable(GL_PROGRAM_POINT_SIZE);
+
+    // glLineWidth(4.f);
 
     // clear
     GL::clear_color(m_backgoundColor.x(), m_backgoundColor.y(), m_backgoundColor.z(), m_backgoundColor.w());
@@ -149,8 +167,12 @@ void SampleRenderer::render() {
     // set polygon mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    cUniforms.model = geo::Mat4f::identity();
+    cUniforms.update();
 
     solidShaderP.use();
+
+
     solidShaderP.set_uniform_matrix("view",         cUniforms.view, true);
     solidShaderP.set_uniform_matrix("model",        geo::Mat4f::identity(), true);
     solidShaderP.set_uniform_matrix("projection",   cUniforms.projection, true);

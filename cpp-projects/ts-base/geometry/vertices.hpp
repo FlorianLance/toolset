@@ -232,7 +232,7 @@ struct Vertices3D : public Buffer<Pt3f>{
         }
         return {};
     }
-    // [[nodiscard]] auto sphere() const -> Sphere<float>;
+
     [[nodiscard]] auto sphere(float ray) const -> Sphere<float>{
         Pt3f center = mean();
         for (const auto& v : values) {
@@ -325,5 +325,7 @@ struct Vertices3D : public Buffer<Pt3f>{
             return lhs.z() > rhs.z();
         });
     }
+
+    auto compute_average_normal(const Pt3f &center) const  -> Vec3f;
 };
 }

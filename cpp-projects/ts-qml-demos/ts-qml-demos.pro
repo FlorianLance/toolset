@@ -108,14 +108,18 @@ HEADERS += \
     items/sample_3d_item_viewer.hpp \
     samples/base_sample.hpp \
     samples/common.hpp \
+    samples/oit_sample.hpp \
     samples/sample_renderer.hpp \
+    samples/stencil_sample.hpp \
     scenes/base_scene.hpp \
     tqd_controller.hpp
 
 SOURCES += \
     items/base_3d_item_viewer.cpp \
     items/sample_3d_item_viewer.cpp \
+    samples/oit_sample.cpp \
     samples/sample_renderer.cpp \
+    samples/stencil_sample.cpp \
     tqd_controller.cpp \
     tqd_main.cpp
 

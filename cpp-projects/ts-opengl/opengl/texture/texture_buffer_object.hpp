@@ -38,6 +38,66 @@
 
 namespace tool::gl{
 
+
+enum class TextureFormat : std::int8_t{
+    red,                            // Each element is a single red component. For fixed point normalized components, the GL converts it to floating point, clamps to the range [0,1], and assembles it into an RGBA element by attaching 0.0 for green and blue, and 1.0 for alpha.
+    red_integer,                    // Each element is a single red component. The GL performs assembles it into an RGBA element by attaching 0 for green and blue, and 1 for alpha.
+    red_green,                      // Each element is a red/green double. For fixed point normalized components, the GL converts each component to floating point, clamps to the range [0,1], and assembles them into an RGBA element by attaching 0.0 for blue, and 1.0 for alpha.
+    red_green_integer,              // Each element is a red/green double. The GL assembles them into an RGBA element by attaching 0 for blue, and 1 for alpha.
+    red_green_blue,                 // Each element is an RGB triple. For fixed point normalized components, the GL converts each component to floating point, clamps to the range [0,1], and assembles them into an RGBA element by attaching 1.0 for alpha.
+    red_green_blue_integer,         // Each element is an RGB triple. The GL assembles them into an RGBA element by attaching 1 for alpha.
+    red_green_blue_alpha,           // Each element contains all four components. For fixed point normalized components, the GL converts each component to floating point and clamps them to the range [0,1].
+    red_green_blue_alpha_integer,   // Each element contains all four components.
+    depth_component,                // Each element is a single depth value. The GL converts it to floating point, and clamps to the range [0,1].
+    depth_stencil,                  // Each element is a pair of depth and stencil values. The depth component of the pair is interpreted as in GL_DEPTH_COMPONENT. The stencil component is interpreted based on specified the depth + stencil internal format.
+    luminance,                      // Each element is a single luminance component. The GL converts it to floating point, clamps to the range [0,1], and assembles it into an RGBA element by placing the luminance value in the red, green and blue channels, and attaching 1.0 to the alpha channel.
+    luminance_alpha,                // Each element is an luminance/alpha double. The GL converts each component to floating point, clamps to the range [0,1], and assembles them into an RGBA element by placing the luminance value in the red, green and blue channels.
+    alpha,                          // Each element is a single alpha component. The GL converts it to floating point, clamps to the range [0,1], and assembles it into an RGBA element by placing attaching 0.0 to the red, green and blue channels.
+    SizeEnum,
+    R       = red,
+    RG      = red_green,
+    RGB     = red_green_blue,
+    RGBA    = red_green_blue_alpha,
+    R_I     = red_integer,
+    RG_I    = red_green_integer,
+    RGB_I   = red_green_blue_integer,
+    RGBA_I  = red_green_blue_alpha_integer,
+    DC      = depth_component,
+    DS      = depth_stencil,
+    L       = luminance,
+    LA      = luminance_alpha
+};
+
+enum class TextureDataType{
+    unsigned_byte_t,
+    byte_t,
+    unsigned_short_t,
+    short_t,
+    unsigned_int_t,
+    int_t,
+    half_float_t,
+    float_t,
+    SizeEnum
+};
+
+using TTextureDataTypeGl = std::tuple<
+    TextureDataType,     unsigned int>;
+static constexpr TupleArray<TextureDataType::SizeEnum, TTextureDataTypeGl> textureDataTypesGl ={{
+    TTextureDataTypeGl
+    {TextureDataType::unsigned_byte_t,  GL_UNSIGNED_BYTE},
+    {TextureDataType::byte_t,           GL_BYTE},
+    {TextureDataType::unsigned_short_t, GL_UNSIGNED_SHORT},
+    {TextureDataType::short_t,          GL_SHORT},
+    {TextureDataType::unsigned_int_t,   GL_UNSIGNED_INT},
+    {TextureDataType::int_t,            GL_INT},
+    {TextureDataType::half_float_t,     GL_HALF_FLOAT},
+    {TextureDataType::float_t,          GL_FLOAT}
+}};
+[[maybe_unused]] static constexpr auto to_gl(TextureDataType t) -> unsigned int{
+    return textureDataTypesGl.at<0,1>(t);
+}
+
+
 using TextureType       = img::TextureType;
 using TextureOptions    = img::TextureOptions;
 
@@ -109,6 +169,31 @@ static constexpr TupleArray<TextureWrapMode::SizeEnum, TTexWrapModeGl> textureWr
     return textureWrapModesGl.at<0,1>(t);
 }
 
+using TTextureFormatGl = std::tuple<
+    TextureFormat,     unsigned int>;
+static constexpr TupleArray<TextureFormat::SizeEnum, TTextureFormatGl> textureFormatsGl ={{
+    TTextureFormatGl
+    {TextureFormat::red,                            GL_RED},
+    {TextureFormat::red_integer,                    GL_RED_INTEGER},
+    {TextureFormat::red_green,                      GL_RG},
+    {TextureFormat::red_green_blue,                 GL_RG_INTEGER},
+    {TextureFormat::red_green_blue_integer,         GL_RGB_INTEGER},
+    {TextureFormat::red_green_blue_alpha,           GL_RGBA},
+    {TextureFormat::red_green_blue_alpha_integer,   GL_RGBA_INTEGER},
+    {TextureFormat::depth_component,                GL_DEPTH_COMPONENT},
+    {TextureFormat::depth_stencil,                  GL_DEPTH_STENCIL},
+    {TextureFormat::luminance,                      GL_LUMINANCE},
+    {TextureFormat::luminance_alpha,                GL_LUMINANCE_ALPHA},
+    {TextureFormat::alpha,                          GL_ALPHA},
+
+}};
+
+[[maybe_unused]] static constexpr auto to_gl(TextureFormat t) -> unsigned int{
+    return textureFormatsGl.at<0,1>(t);
+}
+
+
+
 struct TBO{
 
     TBO() = default;
@@ -131,6 +216,8 @@ struct TBO{
     auto clean() -> void;
 
     // init
+    auto init_data(GLsizei width, GLsizei height, GLsizei depth, TextureFormat format, TextureDataType dataType, int levels = 0) -> void;
+
     auto init_data_u8(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels = 0) -> void;
     auto init_data_u32(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels = 0) -> void;
     auto init_data_f16(GLsizei width, GLsizei height, GLsizei depth, int nbChannels, int levels = 0) -> void;

@@ -29,10 +29,11 @@
 
 // base
 #include "utility/logger.hpp"
+#include "utility/constants.hpp"
+#include "geometry/vertices.hpp"
 
 // local
 #include "triangles_renderer.hpp"
-#include <iostream>
 
 
 using namespace tool::geo;
@@ -171,6 +172,317 @@ auto CubeTrianglesDrawer::initialize(float side) -> void{
     }
 }
 
+
+auto CircleTrianglesDrawer::initialize(float radius, size_t nbSegments) -> void{
+
+    geo::Pt3f center{};
+    std::vector<Pt3f> vertices;
+    std::vector<Pt3f> normals;
+    std::vector<Pt2f> texCoords;
+    vertices.reserve(nbSegments+2);
+    texCoords.reserve(nbSegments+2);
+    normals.resize(nbSegments+2);
+    std::fill(normals.begin(), normals.end(), Pt3f{0.f, 0.f, 1.f});
+
+    vertices.push_back(center);
+    texCoords.push_back({0.5f,0.5f});
+
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = center.x() + radius * std::cosf(angle);
+        float y = center.y() + radius * std::sinf(angle);
+        vertices.push_back({x,y,center.z()});
+
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+        texCoords.push_back({s,t});
+    }
+
+    std::vector<Pt3<GLuint>> elements;
+    elements.reserve(nbSegments);
+    for (GLuint idS = 0; idS < nbSegments; ++idS) {
+        elements.push_back({0,idS+1,idS+2});
+    }
+
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    tm->initialize(true, true);
+    if(!tm->load_data(elements, vertices, normals, texCoords)){
+        Log::error("[CircleTrianglesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto CircleTrianglesDrawer::initialize(const geo::Pt3f &center, const geo::Vec3f &normal, float radius, size_t nbSegments) -> void{
+
+    std::vector<Pt3f> vertices;
+    std::vector<Pt3f> normals;
+    std::vector<Pt2f> texCoords;
+
+    vertices.reserve(nbSegments+2);
+    texCoords.reserve(nbSegments+2);
+    normals.resize(nbSegments+2, normal);
+
+    vertices.push_back(center);
+    texCoords.push_back({0.5f,0.5f});
+
+    auto up     = geo::Vec3f{0,1,0};
+    auto right  = normalize(geo::cross(up,normal));
+    up          = normalize(geo::cross(normal, right));
+
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = radius * std::cosf(angle);
+        float y = radius * std::sinf(angle);
+
+        vertices.push_back(center + x * right + y * up);
+
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+        texCoords.push_back({s,t});
+    }
+
+    std::vector<Pt3<GLuint>> elements;
+    elements.reserve(nbSegments);
+    for (GLuint idS = 0; idS < nbSegments; ++idS) {
+        elements.push_back({0,idS+1,idS+2});
+    }
+
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    tm->initialize(true, true);
+    if(!tm->load_data(elements, vertices, normals, texCoords)){
+        Log::error("[CircleTrianglesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto CylinderTrianglesDrawer::initialize(const geo::Pt3f &center, const geo::Vec3f &normal, float radius, float height, size_t nbSegments) -> void{
+
+    std::vector<Pt3f> vertices;
+    std::vector<Pt3f> normals;
+    std::vector<Pt2f> texCoords;
+
+    auto up     = geo::Vec3f{0,1,0};
+    auto right  = normalize(geo::cross(up,normal));
+    up          = normalize(geo::cross(normal, right));
+
+    // bottom circle
+    vertices.push_back(center);
+    texCoords.push_back({0.5f,0.5f});
+    normals.push_back(normal*(-1.f));
+    for (size_t idS = 0; idS < nbSegments; ++idS) {
+
+        float angle = 2.0f * tool::PI<float> * idS / (nbSegments-1);
+        float x = radius * std::cosf(angle);
+        float y = radius * std::sinf(angle);
+
+        vertices.push_back(center + x * right + y * up);
+
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+        texCoords.push_back({s,t});
+
+        normals.push_back(normal*(-1.f));
+    }
+
+    // top circle
+    vertices.push_back(center + normal * height);
+    texCoords.push_back({0.5f,0.5f});
+    normals.push_back(normal);
+    for (size_t idS = 0; idS < nbSegments; ++idS) {
+
+        float angle = 2.0f * tool::PI<float> * idS / (nbSegments-1);
+        float x = radius * std::cosf(angle);
+        float y = radius * std::sinf(angle);
+
+        vertices.push_back(center + x * right + y * up + normal * height);
+
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+        texCoords.push_back({s,t});
+
+        normals.push_back(normal);
+    }
+
+    // ...
+
+    // side vertices (for the side faces)
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = radius * cosf(angle);
+        float y = radius * sinf(angle);
+        float s = (float)idS / nbSegments; // Texture coordinate for bottom
+        float t = 0.0f;
+
+        auto dir = x * right + y * up;
+        vertices.push_back(center + dir);
+        texCoords.push_back({s,t});
+
+        t = 1.0f;
+        vertices.push_back(center + dir + normal * height);
+        texCoords.push_back({s,t});
+
+        dir = normalize(dir);
+        normals.push_back(dir);
+        normals.push_back(dir);
+    }
+
+    std::vector<Pt3<GLuint>> elements;
+
+    // Bottom face (triangle fan)
+    for (GLuint idS = 1; idS < nbSegments+1; ++idS) {
+        auto lastId = static_cast<GLuint>((idS+1)%(nbSegments+1));
+        elements.push_back(Pt3<GLuint>{0,idS,lastId});
+    }
+
+    // Top face (triangle fan)
+    GLuint topCenter = nbSegments + 1;
+    for (GLuint idS = topCenter + 1; idS  < topCenter + nbSegments  ; ++idS) {
+        auto lastId = static_cast<GLuint>((idS+1)%(topCenter + nbSegments + 1));
+        elements.push_back({topCenter,idS,lastId});
+    }
+
+    // Side faces (triangle strip)
+    GLuint sideOffset = 2 * nbSegments + 2;
+    for (int i = 0; i < nbSegments; ++i) {
+        elements.push_back({
+            sideOffset + 2 * i,         // Bottom vertex
+            sideOffset + 2 * i + 1,     // Top vertex
+            sideOffset + 2 * (i + 1)    // Next bottom vertex
+        });
+
+        elements.push_back({
+            sideOffset + 2 * (i + 1),       // Next Bottom vertex
+            sideOffset + 2 * i + 1,         // Top vertex
+            sideOffset + 2 * (i + 1) + 1    // Next top vertex
+        });
+    }
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    tm->initialize(true, true);
+    if(!tm->load_data(elements, vertices, normals, texCoords)){
+        Log::error("[CylinderTrianglesDrawer::initialize] Error during loading.\n"sv);
+    }
+
+}
+
+
+
+
+auto CylinderTrianglesDrawer::initialize(float height, float radius, size_t nbSegments) -> void{
+
+    std::vector<Pt3f> vertices;
+    std::vector<Pt3f> normals;
+    std::vector<Pt2f> texCoords;
+
+    // bottom circle (z = -height/2)
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = radius * cosf(angle);
+        float y = radius * sinf(angle);
+        float z = -height / 2.0f;
+
+        // Texture coordinates: Map the bottom circle to the texture
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+
+        // Normal: Point downward for the bottom face
+        float nx = 0.0f;
+        float ny = 0.0f;
+        float nz = -1.0f;
+
+        vertices.push_back({x, y, z});
+        texCoords.push_back({s,t});
+        normals.push_back({nx,ny,nz});
+    }
+
+    // top circle (z = height/2)
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = radius * cosf(angle);
+        float y = radius * sinf(angle);
+        float z = height / 2.0f;
+
+        // Texture coordinates: Map the top circle to the texture
+        float s = 0.5f + 0.5f * cosf(angle);
+        float t = 0.5f + 0.5f * sinf(angle);
+
+        // Normal: Point upward for the top face
+        float nx = 0.0f;
+        float ny = 0.0f;
+        float nz = 1.0f;
+
+        vertices.push_back({x, y, z});
+        texCoords.push_back({s,t});
+        normals.push_back({nx,ny,nz});
+    }
+
+    // side vertices (for the side faces)
+    for (size_t idS = 0; idS <= nbSegments; ++idS) {
+        float angle = 2.0f * tool::PI<float> * idS / nbSegments;
+        float x = radius * cosf(angle);
+        float y = radius * sinf(angle);
+
+        // Bottom vertex (z = -height/2)
+        float z = -height / 2.0f;
+        float s = (float)idS / nbSegments; // Texture coordinate for bottom
+        float t = 0.0f;
+
+        // Normal: Point outward for the side faces
+        float nx = cosf(angle);
+        float ny = sinf(angle);
+        float nz = 0.0f;
+
+        vertices.push_back({x, y, z});
+        texCoords.push_back({s,t});
+        normals.push_back({nx,ny,nz});
+
+        // Top vertex (z = height/2)
+        z = height / 2.0f;
+        s = (float)idS / nbSegments; // Texture coordinate for top
+        t = 1.0f;
+
+        vertices.push_back({x, y, z});
+        texCoords.push_back({s,t});
+        normals.push_back({nx,ny,nz});
+    }
+
+    std::vector<Pt3<GLuint>> elements;
+
+    // Bottom face (triangle fan)
+    for (GLuint idS = 1; idS <= nbSegments; ++idS) {
+        elements.push_back({0,idS,idS+1});
+    }
+
+    // Top face (triangle fan)
+    GLuint topCenter = nbSegments + 1;
+    for (GLuint idS = nbSegments + 2; idS <= 2 * nbSegments + 1; ++idS) {
+        elements.push_back({topCenter,idS,idS+1});
+    }
+
+    // Side faces (triangle strip)
+    GLuint sideOffset = 2 * nbSegments + 2;
+    for (int i = 0; i < nbSegments; ++i) {
+        elements.push_back({
+            sideOffset + 2 * i,         // Bottom vertex
+            sideOffset + 2 * i + 1,     // Top vertex
+            sideOffset + 2 * (i + 1)    // Next bottom vertex
+        });
+
+        elements.push_back({
+            sideOffset + 2 * (i + 1),       // Next Bottom vertex
+            sideOffset + 2 * i + 1,         // Top vertex
+            sideOffset + 2 * (i + 1) + 1    // Next top vertex
+        });
+    }
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    tm->initialize(true, true);
+    if(!tm->load_data(elements, vertices, normals, texCoords)){
+        Log::error("[CylinderTrianglesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+
+
+
 auto SkyboxTrianglesDrawer::initialize(float side, std::optional<GLuint> cubemap) -> void{
 
     GLfloat hSide = side / 2.0f;
@@ -269,7 +581,7 @@ auto QuadTrianglesDrawer::initialize(bool dynamic) -> void{
         Pt2f{0.f, 1.f},
         Pt2f{1.f, 1.f},
         Pt2f{1.f, 0.f},
-        Pt2f{0.f, 0.f},
+        Pt2f{0.f, 0.f}
     };
 
     constexpr static std::array<Pt3f,4> normals = {
@@ -294,7 +606,9 @@ auto QuadTrianglesDrawer::initialize(bool dynamic) -> void{
 
 auto QuadTrianglesDrawer::update(std::span<const geo::Pt3f, 4> vertices) -> void{
 
-    auto normalV = normalize((normalize(vec(vertices[0],vertices[1])), normalize(vec(vertices[0],vertices[2]))));
+    Vec3f vec1 = normalize(vec(vertices[0],vertices[1]));
+    Vec3f vec2 = normalize(vec(vertices[0],vertices[2]));
+    auto normalV = cross(vec1,vec2);
     std::array<Pt3f,4> normals;
     std::fill(std::begin(normals), std::end(normals), normalV);
 
@@ -305,6 +619,83 @@ auto QuadTrianglesDrawer::update(std::span<const geo::Pt3f, 4> vertices) -> void
         normals,    0
     )){
         Log::error("[QuadTrianglesDrawer::update] Error during update.\n"sv);
+    }
+}
+
+auto OuterQuadTrianglesDrawer::initialize(bool dynamic, float thicknessFactor) -> void{
+
+    constexpr static std::array<Pt3<GLuint>,8> elements = {
+        Pt3<GLuint>{0,1,5},
+        Pt3<GLuint>{0,5,4},
+        Pt3<GLuint>{1,2,6},
+        Pt3<GLuint>{1,6,5},
+        Pt3<GLuint>{2,3,7},
+        Pt3<GLuint>{2,7,6},
+        Pt3<GLuint>{3,0,4},
+        Pt3<GLuint>{3,4,7}
+    };
+
+    float l = std::clamp(1.f - thicknessFactor, 0.1f, 0.99f);
+    std::array<Pt3f,8> vertices = {
+        Pt3f{-1.f,   -1.f,   0.f},
+        Pt3f{ 1.f,   -1.f,   0.f},
+        Pt3f{ 1.f,    1.f,   0.f},
+        Pt3f{-1.f,    1.f,   0.f},
+        Pt3f{-l,      -l,    0.f},
+        Pt3f{ l,      -l,    0.f},
+        Pt3f{ l,       l,    0.f},
+        Pt3f{-l,       l,    0.f}
+    };
+
+    constexpr static std::array<Pt2f,8> texCoords = {
+        Pt2f{0.f, 1.f},
+        Pt2f{1.f, 1.f},
+        Pt2f{1.f, 0.f},
+        Pt2f{0.f, 0.f},
+        Pt2f{0.25f, 0.75f},
+        Pt2f{0.75f, 0.75f},
+        Pt2f{0.75f, 0.25f},
+        Pt2f{0.25f, 0.25f}
+    };
+
+    constexpr static std::array<Pt3f,8> normals = {
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f},
+        Pt3f{0.f, 0.f, 1.f}
+    };
+
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    if(dynamic){
+        tm->positionBufferUsage     = GL_DYNAMIC_STORAGE_BIT;
+        tm->normalBufferUsage       = GL_DYNAMIC_STORAGE_BIT;
+    }
+
+    tm->initialize(true, true);
+    if(!tm->load_data(elements, vertices, normals, texCoords)){
+        Log::error("[OuterQuadTrianglesDrawer::initialize] Error during loading.\n"sv);
+    }
+}
+
+auto OuterQuadTrianglesDrawer::update(std::span<const geo::Pt3f, 8> vertices) -> void{
+
+    Vec3f vec1 = normalize(vec(vertices[0],vertices[1]));
+    Vec3f vec2 = normalize(vec(vertices[0],vertices[2]));
+    auto normalV = cross(vec1,vec2);
+    std::array<Pt3f,8> normals;
+    std::fill(std::begin(normals), std::end(normals), normalV);
+
+    auto tm = dynamic_cast<TrianglesRenderer*>(m_vaoRenderer.get());
+    if(!tm->update_data(
+            {},         0,
+            vertices,   0,
+            normals,    0
+        )){
+        Log::error("[OuterQuadTrianglesDrawer::update] Error during update.\n"sv);
     }
 }
 
@@ -634,10 +1025,10 @@ auto ModelMeshDrawer::initialize(const ModelMesh &modelMesh, const std::vector<T
     clean();
 
     // initialize current level drawers
-    std::cout << "init model mesh " << modelMesh.meshes.size() << "\n";
+    // std::cout << "init model mesh " << modelMesh.meshes.size() << "\n";
     for(const auto &gmesh : modelMesh.meshes){
         auto gmeshD = std::make_unique<GMeshDrawer>();
-        std::cout << "->" << gmesh->name << " " << gmesh->mesh.vertices.size() << "\n";
+        // std::cout << "->" << gmesh->name << " " << gmesh->mesh.vertices.size() << "\n";
         gmeshD->initialize(*gmesh, texturesInfo);
         drawers.push_back(std::move(gmeshD));
     }
@@ -649,4 +1040,5 @@ auto ModelMeshDrawer::initialize(const ModelMesh &modelMesh, const std::vector<T
         children.push_back(std::move(modelDrawer));
     }
 }
+
 

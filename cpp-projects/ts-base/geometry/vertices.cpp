@@ -27,9 +27,25 @@
 
 #include "vertices.hpp"
 
+using namespace tool;
 using namespace tool::geo;
 
+auto Vertices3D::compute_average_normal(const Pt3f &center) const -> Vec3f{
 
+    if(Buffer::size() < 2){
+        return {};
+    }
 
+    Vec3f normal;
+    for(size_t idV = 0; idV < Buffer::size()-1; ++idV){
 
-
+        auto v1 = (values[idV]-center);
+        auto v2 = (values[idV+1]-center);
+        Vec3f cross = geo::cross(v1,v2);
+        if(almost_equal(norm(cross),0.f)){
+            continue;
+        }
+        normal += normalize(cross);
+    }
+    return normalize(normal);
+}

@@ -29,6 +29,9 @@
 // glew
 #include <GL/glew.h>
 
+// base
+#include "geometry/point4.hpp"
+
 namespace tool::gl{
 
 struct GL{
@@ -37,21 +40,36 @@ struct GL{
     static auto init_glew() -> bool;
     static auto display_glew_info() -> void;
 
-    [[deprecated]] static auto clear(GLbitfield mask) -> void;
-    [[deprecated]] static auto clear_color(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) -> void;
-    static auto clear_named_framebuffer_fv(GLuint framebuffer, GLenum buffer, GLint drawbuffer, GLfloat *values) -> void;
+    // states
     static auto enable(GLenum cap) -> void;
     static auto disable(GLenum cap) -> void;
     static auto enable_i(GLenum cap, GLuint index) -> void;
     static auto disable_i(GLenum cap, GLuint index) -> void;
 
-    static auto create_buffers(GLsizei n, GLuint *buffers) -> void;
-    static auto delete_buffers(GLsizei n, GLuint *buffers) -> void;
+    // get
+    static auto get_integer_v(GLenum pname, GLint * data) -> void;
 
     // blend
-    static auto depth_mask(GLboolean flag) -> void;
+    static auto blend_func_separate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) -> void;
+    static auto blend_func_separate_i(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) -> void;
+    static auto blend_equation_separate(GLenum modeRGB, GLenum modeAlpha) -> void;
+    static auto blend_equation_separate_i(GLuint buf, GLenum modeRGB, GLenum modeAlpha) -> void;
 
-    // framebuffer
+    // buffers
+    // # create / destroy
+    static auto create_buffers(GLsizei n, GLuint *buffers) -> void;
+    static auto delete_buffers(GLsizei n, GLuint *buffers) -> void;
+    // # common
+    static auto clear_named_framebuffer_fv(GLuint framebuffer, GLenum buffer, GLint drawbuffer, GLfloat *values) -> void;
+    static auto clear_named_framebuffer_fi(GLuint framebuffer, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) -> void;
+    // # depth
+    static auto depth_func(GLenum func) -> void;
+    static auto depth_mask(GLboolean flag) -> void;
+    // # stencil
+    static auto stencil_mask_separate(GLenum face, GLuint mask) -> void;
+    static auto stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask) -> void;
+    static auto stencil_op_separate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) -> void;
+    // # framebuffer
     static auto create_framebuffers(GLsizei n, GLuint *framebuffers) -> void;
     static auto bind_framebuffer(GLenum target, GLuint framebuffer) -> void;
     static auto named_framebuffer_texture(GLuint framebuffer, GLenum attachment, GLuint texture, GLint level) -> void;
@@ -61,12 +79,12 @@ struct GL{
     static auto named_framebuffer_draw_buffers(GLuint framebuffer, GLsizei n, const GLenum *bufs) -> void;
     static auto check_named_framebuffer_status(GLuint framebuffer, GLenum target) -> GLenum;
 
-    // texture
+    // samplers
     static auto create_samplers(GLsizei n, GLuint *samplers) -> void;
     static auto delete_samplers(GLsizei n, const GLuint * samplers) -> void;
     static auto bind_samplers(GLuint first, GLsizei count, const GLuint *samplers) -> void;
 
-
+    // textures
     static auto create_textures(GLenum target, GLsizei n, GLuint *textures) -> void;
     static auto delete_textures(GLsizei n, GLuint *textures) -> void;
     static auto bind_textures(GLuint first, GLsizei count, const GLuint *textures) -> void;
@@ -135,7 +153,32 @@ struct GL{
     [[deprecated]] static auto enable_vertex_attrib_array(GLuint index) -> void;
     [[deprecated]] static auto vertex_attrib_i_pointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void * pointer) -> void;
     [[deprecated]] static auto vertex_attrib_pointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer) -> void;
+    [[deprecated]] static auto clear(GLbitfield mask) -> void;
+    [[deprecated]] static auto clear_color(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) -> void;
+
+    // helpers
+    static auto dsa_clear_color(GLuint framebuffer, geo::Pt4f colorValue) -> void{
+        GL::clear_named_framebuffer_fv(framebuffer, GL_COLOR, 0, colorValue.array.data());
+    }
+
+    static auto dsa_clear_depth_stencil(GLuint framebuffer, GLfloat depthValue, GLint stencilValue) -> void{
+        GL::clear_named_framebuffer_fi(framebuffer, GL_DEPTH_STENCIL, 0, depthValue, stencilValue);
+    }
+    static auto get_current_framebuffer() -> GLint{
+        GLint currentDrawFBO;
+        get_integer_v(GL_DRAW_FRAMEBUFFER_BINDING, &currentDrawFBO);
+        return currentDrawFBO;
+    }
+
+    template<size_t S>
+    static auto bind_textures(GLuint first, const std::array<GLuint,S> &textures) -> void {
+        GL::bind_textures(first, S, textures.data());
+    }
+
 };
+
+
+
 }
 
 // Examples:

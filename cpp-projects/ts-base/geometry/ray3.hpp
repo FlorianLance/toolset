@@ -35,6 +35,7 @@ template<typename acc>
 struct Ray3{
     Pt3<acc> origin;
     Vec3<acc> direction;
+    acc radius;
 };
 
 
