@@ -195,8 +195,10 @@ DC_GRABBER_THIRDPARTY_LIBS =\
 ########################################################### DC-MANAGER
 
 DC_MANAGER_THIRDPARTY_INCLUDES =\
+    $$LIBSODIUM_INCLUDES\
 
 DC_MANAGER_THIRDPARTY_LIBS =\
+    $$LIBSODIUM_LIBS\
 
 ########################################################### DC-MONITORING
 

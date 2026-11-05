@@ -59,8 +59,11 @@ FFMEPG_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/ffmpeg"
 ORBBEC_DIR                           = $$TOOLSET_CPP_THIRDPARTY_DIR"/orbbec"
 JKQTPLOTTER_DIR                      = $$TOOLSET_CPP_THIRDPARTY_DIR"/jkqtplotter"
 PCL_DIR                              = "E:/_librairies/PCL 1.14.1"
+LIBSODIUM_DIR                        = $$TOOLSET_CPP_THIRDPARTY_DIR"/libsodium"
 
 ########################################################## INCLUDES (HEADERS ONLY)
+LIBSODIUM_INCLUDES =\
+    $$LIBSODIUM_DIR"/include" \
 
 ANKERL_INCLUDES = \
     $$ANKERL_DIR"\include"
@@ -197,6 +200,13 @@ equals(COMPILER, "vs"){
 
 
 ########################################################## LIBS
+
+    # LIBSODIUM
+    equals(CFG, "release"){
+        LIBSODIUM_LIBS =\
+            -L$$LIBSODIUM_DIR"/x64/Release/v143/dynamic" \
+            -llibsodium\
+    }
 
     equals(CFG, "release"){
         PCL_LIBS =\

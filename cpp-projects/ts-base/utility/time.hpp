@@ -51,6 +51,11 @@ struct Time{
         return duration_cast<milliseconds>(nanoseconds_since_epoch());
     }
 
+    [[nodiscard]] [[maybe_unused]] static auto seconds_since_epoch() noexcept -> std::chrono::seconds{
+        using namespace std::chrono;
+        return duration_cast<seconds>(nanoseconds_since_epoch());
+    }
+
     [[nodiscard]] [[maybe_unused]] static auto to_micro_s(std::chrono::nanoseconds t) noexcept -> std::chrono::microseconds{
         using namespace std::chrono;
         return duration_cast<microseconds>(t);

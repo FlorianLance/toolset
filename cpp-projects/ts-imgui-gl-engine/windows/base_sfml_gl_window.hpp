@@ -74,6 +74,9 @@ public:
         return m_scene.getNativeHandle();
     }
 
+
+    auto set_title(const std::string &title) -> void;
+
 public:
 
     // signals

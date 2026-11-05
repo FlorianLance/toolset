@@ -277,6 +277,10 @@ auto BaseSfmlGlWindow::main_thread_duration_ms() const -> double{
     return mainThreadDurationMSA.get();
 }
 
+auto BaseSfmlGlWindow::set_title(const std::string &title) -> void{
+    m_scene.setTitle(m_title = title);
+}
+
 auto BaseSfmlGlWindow::quit() -> void{
     running = false;
 }
